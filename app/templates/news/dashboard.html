@@ -34,7 +34,7 @@ content %}
           />
           <button
             type="submit"
-            class="px-4 py-2.5 bg-white text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
+            class="px-4 py-2.5 bg-white text-primary-600 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
           >
             Subscribe Free
           </button>
@@ -73,7 +73,7 @@ content %}
       {% endif %}
     </div>
     <div class="flex justify-between text-sm">
-      <span class="text-blue-600 font-medium"
+      <span class="text-primary-600 font-medium"
         >{{ coverage.left_pct }}% Left ({{ coverage.left_count }})</span
       >
       <span class="text-purple-600 font-medium"
@@ -99,7 +99,7 @@ content %}
             name="q"
             value="{{ search_term or '' }}"
             placeholder="Search by headline, summary, or source..."
-            class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
           />
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -113,7 +113,7 @@ content %}
             Clear
           </button>
         </div>
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+        <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
           Search
         </button>
       </form>
@@ -128,7 +128,7 @@ content %}
       <div class="flex flex-wrap gap-2">
         <button
           data-filter="all"
-          class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white"
+          class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-primary-600 text-white"
         >
           All
         </button>
@@ -196,7 +196,7 @@ content %}
           Filter Sources
           <span
             id="source-count-badge"
-            class="hidden bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full"
+            class="hidden bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full"
           ></span>
         </button>
 
@@ -210,7 +210,7 @@ content %}
               <div class="flex gap-2">
                 <button
                   id="select-all-sources-btn"
-                  class="text-xs text-blue-600 hover:underline"
+                  class="text-xs text-primary-600 hover:underline"
                 >
                   All
                 </button>
@@ -226,13 +226,13 @@ content %}
               type="text"
               id="source-search"
               placeholder="Search sources..."
-              class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
 
           <!-- Left Sources -->
           <div class="p-2 source-section" data-leaning="left">
-            <div class="text-xs font-bold text-blue-600 uppercase px-2 py-1">
+            <div class="text-xs font-bold text-primary-600 uppercase px-2 py-1">
               Left-leaning
             </div>
             {% for source in left_sources %}
@@ -243,7 +243,7 @@ content %}
               <input
                 type="checkbox"
                 value="{{ source.id }}"
-                class="source-checkbox rounded text-blue-600"
+                class="source-checkbox rounded text-primary-600"
                 checked
 
               />
@@ -310,11 +310,11 @@ content %}
       <div
         class="sticky top-20 bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200"
       >
-        <h2 class="text-lg font-bold text-blue-800 flex items-center gap-2">
-          <span class="w-3 h-3 bg-blue-600 rounded-full"></span>
+        <h2 class="text-lg font-bold text-primary-800 flex items-center gap-2">
+          <span class="w-3 h-3 bg-primary-600 rounded-full"></span>
           Left-Leaning Sources
         </h2>
-        <p class="text-sm text-blue-600 mt-1">
+        <p class="text-sm text-primary-600 mt-1">
           {{ left_sources|length }} sources, {{ left_articles|length }} articles
         </p>
       </div>
@@ -332,13 +332,13 @@ content %}
         >
           <div class="flex flex-wrap items-center gap-2 mb-2">
             <span
-              class="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded"
+              class="inline-block bg-blue-100 text-primary-700 text-xs font-medium px-2 py-0.5 rounded"
             >
               {{ article.source_name }}
             </span>
             {% if article.is_podcast %}
             <span
-              class="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded"
+              class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded"
             >
               Podcast
             </span>
@@ -352,7 +352,7 @@ content %}
             href="{{ article.url }}"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-gray-900 font-medium hover:text-blue-600 transition-colors block mb-2"
+            class="text-gray-900 font-medium hover:text-primary-600 transition-colors block mb-2"
           >
             {{ article.title }}
           </a>
@@ -373,7 +373,7 @@ content %}
             {% endif %} {% if article.relevance_score is not none %} {% set
             rel_pct = (article.relevance_score * 100)|int %}
             <span
-              class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}"
+              class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-primary-700{% else %}bg-gray-100 text-gray-600{% endif %}"
             >
               Civic Relevance: {{ rel_pct }}%
             </span>
@@ -418,7 +418,7 @@ content %}
             </span>
             {% if article.is_podcast %}
             <span
-              class="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded"
+              class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded"
             >
               Podcast
             </span>
@@ -453,7 +453,7 @@ content %}
             {% endif %} {% if article.relevance_score is not none %} {% set
             rel_pct = (article.relevance_score * 100)|int %}
             <span
-              class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}"
+              class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-primary-700{% else %}bg-gray-100 text-gray-600{% endif %}"
             >
               Civic Relevance: {{ rel_pct }}%
             </span>
@@ -498,7 +498,7 @@ content %}
             </span>
             {% if article.is_podcast %}
             <span
-              class="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded"
+              class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded"
             >
               Podcast
             </span>
@@ -533,7 +533,7 @@ content %}
             {% endif %} {% if article.relevance_score is not none %} {% set
             rel_pct = (article.relevance_score * 100)|int %}
             <span
-              class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}"
+              class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-primary-700{% else %}bg-gray-100 text-gray-600{% endif %}"
             >
               Civic Relevance: {{ rel_pct }}%
             </span>
@@ -594,9 +594,9 @@ content %}
     buttons.forEach((btn) => {
       if (btn.dataset.filter === leaning) {
         btn.classList.remove("bg-gray-100", "text-gray-700");
-        btn.classList.add("bg-blue-600", "text-white");
+        btn.classList.add("bg-primary-600", "text-white");
       } else {
-        btn.classList.remove("bg-blue-600", "text-white");
+        btn.classList.remove("bg-primary-600", "text-white");
         btn.classList.add("bg-gray-100", "text-gray-700");
       }
     });

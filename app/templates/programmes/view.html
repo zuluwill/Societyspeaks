@@ -36,12 +36,12 @@
          style="background-image: url('{{ url_for('profiles.get_image', filename=banner_img) }}'); background-size: cover; background-position: center;">
       <div class="absolute inset-0 bg-black bg-opacity-20"></div>
     {% else %}
-    <div class="relative h-36 sm:h-48 {% if journey_mode %}bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900{% else %}bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700{% endif %}">
+    <div class="relative h-36 sm:h-48 {% if journey_mode %}bg-gradient-to-br from-primary-900 via-primary-800 to-blue-900{% else %}bg-gradient-to-br from-blue-700 via-blue-600 to-primary-700{% endif %}">
       {# Subtle decorative circles #}
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white opacity-5"></div>
-        <div class="absolute bottom-0 left-1/3 w-64 h-64 rounded-full bg-indigo-900 opacity-10"></div>
-        <div class="absolute top-4 left-8 w-24 h-24 rounded-full bg-blue-400 opacity-10"></div>
+        <div class="absolute bottom-0 left-1/3 w-64 h-64 rounded-full bg-primary-900 opacity-10"></div>
+        <div class="absolute top-4 left-8 w-24 h-24 rounded-full bg-primary-400 opacity-10"></div>
       </div>
     {% endif %}
       {% if programme.status == 'archived' and not (can_edit or can_steward) %}
@@ -65,7 +65,7 @@
         </a>
         {% endif %}
         {% if can_steward %}
-        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-400 text-white text-xs font-medium rounded-lg transition-colors">
+        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 hover:bg-primary-400 text-white text-xs font-medium rounded-lg transition-colors">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span class="hidden sm:inline">Export CSV</span>
         </a>
@@ -89,7 +89,7 @@
             'Ireland': '🇮🇪', 'Germany': '🇩🇪', 'France': '🇫🇷', 'Canada': '🇨🇦',
             'Singapore': '🇸🇬', 'Japan': '🇯🇵', 'China': '🇨🇳'
           } %}
-          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-md flex-shrink-0 bg-gradient-to-br from-indigo-600 to-blue-700 flex items-center justify-center">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-md flex-shrink-0 bg-gradient-to-br from-primary-600 to-blue-700 flex items-center justify-center">
             {% if programme.country %}
             <span class="text-3xl sm:text-4xl leading-none select-none" aria-hidden="true">{{ _hf.get(programme.country, '🌍') }}</span>
             {% else %}
@@ -99,7 +99,7 @@
             {% endif %}
           </div>
         {% else %}
-        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-md flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-md flex-shrink-0 bg-gradient-to-br from-blue-500 to-primary-600 flex items-center justify-center">
           <span class="text-white text-2xl sm:text-3xl font-bold select-none">{{ programme.name[0] | upper }}</span>
         </div>
         {% endif %}
@@ -138,7 +138,7 @@
         <p class="text-gray-700 text-sm sm:text-base leading-relaxed read-more-target--collapsed" id="programme-description">{{ programme.description }}</p>
         <button data-read-more-btn aria-expanded="false" aria-controls="programme-description"
                 type="button"
-                class="read-more-toggle md:hidden text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">
+                class="read-more-toggle md:hidden text-primary-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded">
           Read more
         </button>
       </div>
@@ -148,18 +148,18 @@
       {% if programme.company_profile %}
       <div>
         <a href="{{ url_for('profiles.view_company_profile', company_name=programme.company_profile.slug) }}"
-           class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">
+           class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded">
           {% if programme.company_profile.logo %}
           <img src="{{ url_for('profiles.get_image', filename=programme.company_profile.logo) }}"
                alt="{{ programme.company_profile.company_name }}"
                class="h-5 w-5 rounded-full object-cover ring-1 ring-gray-200 flex-shrink-0">
           {% else %}
-          <span class="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold ring-1 ring-gray-200 flex-shrink-0">
+          <span class="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xs font-bold ring-1 ring-gray-200 flex-shrink-0">
             {{ programme.company_profile.company_name[0] }}
           </span>
           {% endif %}
-          <span>By <span class="font-medium text-gray-700 group-hover:text-blue-600">{{ programme.company_profile.company_name }}</span></span>
-          <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span>By <span class="font-medium text-gray-700 group-hover:text-primary-600">{{ programme.company_profile.company_name }}</span></span>
+          <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
         </a>
@@ -216,10 +216,10 @@
 
   {# ── In-progress / not-started journey banner ─────────────────────────── #}
   {% else %}
-  <div class="bg-gradient-to-r from-indigo-600 to-blue-700 rounded-xl shadow-md text-white px-4 sm:px-6 py-5 mb-5">
+  <div class="bg-gradient-to-r from-primary-600 to-blue-700 rounded-xl shadow-md text-white px-4 sm:px-6 py-5 mb-5">
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-200 mb-1">Guided journey</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary-200 mb-1">Guided journey</p>
         {% set themes_left = jp.total_themes - jp.completed_themes %}
         {% if jp.completed_themes == 0 %}
         <h2 class="text-lg sm:text-xl font-bold">Start your civic journey</h2>
@@ -230,7 +230,7 @@
         {% endif %}
 
         {# Progress text + bar #}
-        <p class="text-sm text-indigo-100 mt-1 mb-2">
+        <p class="text-sm text-primary-100 mt-1 mb-2">
           {{ jp.completed_themes }} of {{ jp.total_themes }} themes completed
           {% if not current_user.is_authenticated %}
           — <a href="{{ url_for('auth.login') }}" class="underline font-medium text-white">sign in</a> to track your progress.
@@ -246,12 +246,12 @@
              aria-valuemax="100"
              aria-valuenow="{{ journey_pct }}"
              aria-label="Votes across all themes in this journey">
-          <div class="h-full rounded-full {% if jp.votes_pct > 60 %}bg-emerald-400{% else %}bg-indigo-200{% endif %}"
+          <div class="h-full rounded-full {% if jp.votes_pct > 60 %}bg-emerald-400{% else %}bg-primary-200{% endif %}"
                style="width:0;transition:width 1s cubic-bezier(0.4,0,0.2,1)"
                data-journey-progress
                data-journey-target="{{ journey_pct }}%"></div>
         </div>
-        <p class="text-xs text-indigo-200/95 mt-3 max-w-xl leading-relaxed">
+        <p class="text-xs text-primary-200/95 mt-3 max-w-xl leading-relaxed">
           Most people complete this over several short sessions — often about 20–40 minutes per theme, but there is no deadline. Take breaks whenever you like.
         </p>
       </div>
@@ -259,7 +259,7 @@
       <div class="flex flex-col sm:items-end gap-2 shrink-0">
         {% if jp.next_item %}
         <a href="{{ url_for('discussions.view_discussion', discussion_id=jp.next_item.discussion.id, slug=jp.next_item.discussion.slug) }}"
-           class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white text-indigo-800 text-sm font-semibold shadow hover:bg-indigo-50 transition-colors">
+           class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white text-primary-800 text-sm font-semibold shadow hover:bg-primary-50 transition-colors">
           <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>
           {% if jp.completed_themes == 0 %}Begin:{% else %}Continue:{% endif %}
           {{ (jp.next_item.discussion.programme_theme or jp.next_item.discussion.title) | truncate(38, True) }}
@@ -274,7 +274,7 @@
 
     {# Theme checklist with per-theme mini progress #}
     <div class="mt-4 border-t border-white/20 pt-4">
-      <p class="text-xs font-semibold text-indigo-200 uppercase tracking-wide mb-2.5">Themes</p>
+      <p class="text-xs font-semibold text-primary-200 uppercase tracking-wide mb-2.5">Themes</p>
       <ol class="grid grid-cols-1 sm:grid-cols-2 gap-y-2.5 gap-x-4">
         {% for item in jp.theme_items %}
         <li>
@@ -283,36 +283,36 @@
             {# Status indicator #}
             {% if item.is_complete %}
             <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-400 flex items-center justify-center flex-shrink-0" title="Completed">
-              <svg class="w-3 h-3 text-indigo-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <svg class="w-3 h-3 text-primary-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
             </span>
             {% elif item.user_votes > 0 %}
-            <span class="mt-0.5 w-5 h-5 rounded-full bg-indigo-400 flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-white" title="{{ item.user_votes }}/{{ item.statement_total }} votes">
+            <span class="mt-0.5 w-5 h-5 rounded-full bg-primary-400 flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-white" title="{{ item.user_votes }}/{{ item.statement_total }} votes">
               {{ item.user_votes }}
             </span>
             {% else %}
-            <span class="mt-0.5 w-5 h-5 rounded-full border-2 border-indigo-300/60 flex-shrink-0" title="Not started"></span>
+            <span class="mt-0.5 w-5 h-5 rounded-full border-2 border-primary-300/60 flex-shrink-0" title="Not started"></span>
             {% endif %}
 
             <div class="flex-1 min-w-0">
               <div class="flex items-baseline justify-between gap-2">
-                <span class="text-sm {% if item.is_complete %}text-indigo-100{% else %}text-indigo-50 group-hover:text-white{% endif %} font-medium leading-snug block">
+                <span class="text-sm {% if item.is_complete %}text-primary-100{% else %}text-primary-50 group-hover:text-white{% endif %} font-medium leading-snug block">
                   {{ item.discussion.programme_theme or item.discussion.title }}
                 </span>
                 {% if not item.is_complete %}
                 {% set _est = [(item.statement_total * 2), 5] | max %}
-                <span class="text-[10px] text-indigo-300 whitespace-nowrap flex-shrink-0">~{{ _est }} min</span>
+                <span class="text-[10px] text-primary-300 whitespace-nowrap flex-shrink-0">~{{ _est }} min</span>
                 {% endif %}
               </div>
               {% if not item.is_complete and item.user_votes > 0 %}
               {# Mini per-theme progress bar — only shown once the user has started #}
               <div class="mt-1 flex items-center gap-1.5">
                 <div class="h-1 flex-1 max-w-[5rem] bg-white/15 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full bg-indigo-200"
+                  <div class="h-full rounded-full bg-primary-200"
                        style="width:0;transition:width 0.7s cubic-bezier(0.4,0,0.2,1)"
                        data-theme-bar
                        data-journey-target="{{ [item.pct | int, 1] | max }}%"></div>
                 </div>
-                <span class="text-[10px] text-indigo-300">{{ item.user_votes }}/{{ item.statement_total }}</span>
+                <span class="text-[10px] text-primary-300">{{ item.user_votes }}/{{ item.statement_total }}</span>
               </div>
               {% endif %}
             </div>
@@ -332,10 +332,10 @@
   #}
   {% if journey_mode and journey_progress and not journey_progress.is_journey_complete and journey_progress.completed_themes >= 1 %}
   {% if not journey_reminder_subscription or journey_reminder_subscription.unsubscribed_at %}
-  <div id="journey-reminder-panel" class="bg-white rounded-xl shadow-sm border border-indigo-100 px-4 sm:px-6 py-4 mb-5">
+  <div id="journey-reminder-panel" class="bg-white rounded-xl shadow-sm border border-primary-100 px-4 sm:px-6 py-4 mb-5">
     <div class="flex items-start gap-3">
       <div class="flex-shrink-0 mt-0.5">
-        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
         </svg>
       </div>
@@ -348,7 +348,7 @@
           <div>
             <label for="journey-reminder-email" class="block text-xs font-medium text-gray-600 mb-1">Email for reminders</label>
             <input type="email" id="journey-reminder-email" name="journey-reminder-email" placeholder="you@example.com"
-                   class="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                   class="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
                    autocomplete="email" inputmode="email">
           </div>
           {% endif %}
@@ -357,17 +357,17 @@
             <p id="journey-reminder-cadence-label" class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">How often?</p>
             <div class="flex flex-wrap gap-2">
               <button type="button" data-cadence="weekly"
-                      class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400"
                       aria-pressed="false">
                 Weekly
               </button>
               <button type="button" data-cadence="twice_weekly"
-                      class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400"
                       aria-pressed="false">
                 Twice a week
               </button>
               <button type="button" data-cadence="weekend"
-                      class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400"
                       aria-pressed="false">
                 Weekend mornings
               </button>
@@ -377,11 +377,11 @@
           <div>
             <label for="journey-preferred-time" class="block text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">What time? <span class="normal-case font-normal text-gray-500">(your device’s local time)</span></label>
             <input type="time" id="journey-preferred-time" value="08:00"
-                   class="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 w-32">
+                   class="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 w-32">
           </div>
 
           <button type="button" id="journey-reminder-submit"
-                  class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed">
             Turn on reminders
           </button>
           <p class="text-xs text-gray-400 leading-relaxed">We only use this to send journey nudges. You can stop anytime from the link in our emails.</p>
@@ -432,12 +432,12 @@
       <div class="flex flex-nowrap items-center gap-2 shrink-0">
         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Theme</span>
         <a href="{{ url_for('programmes.view_programme', slug=programme.slug, phase=selected_phase) }}"
-           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if not selected_theme %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if not selected_theme %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
           All
         </a>
         {% for theme in programme.themes %}
         <a href="{{ url_for('programmes.view_programme', slug=programme.slug, theme=theme, phase=selected_phase) }}"
-           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if selected_theme == theme %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if selected_theme == theme %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
           {{ theme }}
         </a>
         {% endfor %}
@@ -450,12 +450,12 @@
       <div class="flex flex-nowrap items-center gap-2 shrink-0">
         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Phase</span>
         <a href="{{ url_for('programmes.view_programme', slug=programme.slug, theme=selected_theme) }}"
-           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if not selected_phase %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if not selected_phase %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
           All
         </a>
         {% for phase in programme.phases %}
         <a href="{{ url_for('programmes.view_programme', slug=programme.slug, theme=selected_theme, phase=phase) }}"
-           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if selected_phase == phase %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+           class="px-3 py-1.5 rounded-full text-sm border whitespace-nowrap font-medium transition-colors {% if selected_phase == phase %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
           {{ phase }}
         </a>
         {% endfor %}
@@ -470,7 +470,7 @@
   <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <h2 class="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-        <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
         </svg>
         Discussions
@@ -482,7 +482,7 @@
       </h2>
       {% if can_edit %}
       <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id, programme_theme=selected_theme, programme_phase=selected_phase) }}"
-         class="inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium whitespace-nowrap transition-colors">
+         class="inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium whitespace-nowrap transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add discussion
       </a>
@@ -493,19 +493,19 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       {% for discussion in discussions.items %}
       <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-         class="group block border border-gray-200 rounded-xl p-4 hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+         class="group block border border-gray-200 rounded-xl p-4 hover:border-primary-200 hover:bg-primary-50 hover:shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1">
         <div class="flex items-start gap-3">
-          <div class="mt-0.5 w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center flex-shrink-0 transition-colors">
-            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="mt-0.5 w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center flex-shrink-0 transition-colors">
+            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
             </svg>
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-gray-900 leading-snug text-sm sm:text-base group-hover:text-blue-700 transition-colors">{{ discussion.title }}</h3>
+            <h3 class="font-semibold text-gray-900 leading-snug text-sm sm:text-base group-hover:text-primary-700 transition-colors">{{ discussion.title }}</h3>
             {% if discussion.programme_theme or discussion.programme_phase %}
             <div class="flex flex-wrap gap-1.5 mt-2">
               {% if discussion.programme_theme %}
-              <span class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">{{ discussion.programme_theme }}</span>
+              <span class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-primary-100 text-primary-700 font-medium">{{ discussion.programme_theme }}</span>
               {% endif %}
               {% if discussion.programme_phase %}
               <span class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 font-medium">{{ discussion.programme_phase }}</span>
@@ -513,7 +513,7 @@
             </div>
             {% endif %}
           </div>
-          <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-400 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-400 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
         </div>
@@ -526,7 +526,7 @@
     <div class="mt-6 flex justify-center gap-2">
       {% if discussions.has_prev %}
       <a href="{{ url_for('programmes.view_programme', slug=programme.slug, page=discussions.prev_num, theme=selected_theme, phase=selected_phase) }}"
-         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         Previous
       </a>
@@ -534,7 +534,7 @@
       <span class="px-3 py-2 text-sm text-gray-500">Page {{ discussions.page }} of {{ discussions.pages }}</span>
       {% if discussions.has_next %}
       <a href="{{ url_for('programmes.view_programme', slug=programme.slug, page=discussions.next_num, theme=selected_theme, phase=selected_phase) }}"
-         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1">
         Next
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       </a>
@@ -551,11 +551,11 @@
       </div>
       {% if selected_theme or selected_phase %}
       <p class="text-gray-600 font-medium mb-1">No discussions match this filter</p>
-      <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="text-sm text-blue-600 hover:underline">Clear filters</a>
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="text-sm text-primary-600 hover:underline">Clear filters</a>
       {% else %}
       <p class="text-gray-600 font-medium mb-1">No discussions yet</p>
       {% if can_edit %}
-      <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id) }}" class="text-sm text-blue-600 hover:underline">Create the first discussion &rarr;</a>
+      <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id) }}" class="text-sm text-primary-600 hover:underline">Create the first discussion &rarr;</a>
       {% endif %}
       {% endif %}
     </div>
@@ -635,11 +635,11 @@
       document.querySelectorAll('.journey-cadence-choice').forEach(function (b) {
         var on = b.dataset.cadence === selectedCadence;
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        b.classList.toggle('border-indigo-600', on);
-        b.classList.toggle('bg-indigo-50', on);
-        b.classList.toggle('text-indigo-900', on);
+        b.classList.toggle('border-primary-600', on);
+        b.classList.toggle('bg-primary-50', on);
+        b.classList.toggle('text-primary-900', on);
         b.classList.toggle('ring-2', on);
-        b.classList.toggle('ring-indigo-300', on);
+        b.classList.toggle('ring-primary-300', on);
         b.classList.toggle('border-gray-300', !on);
         b.classList.toggle('text-gray-600', !on);
       });

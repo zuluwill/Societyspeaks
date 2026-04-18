@@ -11,11 +11,11 @@
     <div class="flex items-center gap-2">
     {% if current_user.is_authenticated %}
     <a href="{{ url_for('programmes.workspace_programmes') }}"
-       class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-700 border border-blue-200 rounded-md hover:bg-blue-50 text-sm font-medium whitespace-nowrap transition-colors">
+       class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-white text-primary-700 border border-blue-200 rounded-md hover:bg-blue-50 text-sm font-medium whitespace-nowrap transition-colors">
       My workspace
     </a>
     <a href="{{ url_for('programmes.create_programme') }}"
-       class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium whitespace-nowrap transition-colors">
+       class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium whitespace-nowrap transition-colors">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
@@ -46,8 +46,8 @@
   {% if journey_progs %}
   <div class="mb-10">
     <div class="flex items-center gap-3 mb-5">
-      <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="w-7 h-7 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
       </div>
@@ -57,12 +57,12 @@
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {% for programme in journey_progs %}
-      <div class="group relative flex flex-col bg-white rounded-xl border border-indigo-100 hover:border-indigo-300 hover:shadow-lg transition-all overflow-hidden">
-        <div class="h-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+      <div class="group relative flex flex-col bg-white rounded-xl border border-primary-100 hover:border-primary-300 hover:shadow-lg transition-all overflow-hidden">
+        <div class="h-1 bg-gradient-to-r from-primary-500 to-blue-500"></div>
         <div class="flex flex-col flex-1 p-4">
           <div class="flex items-start gap-3 mb-3">
             {# Flag / globe avatar #}
-            <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
               {% if programme.country %}
               <span class="text-2xl leading-none" aria-hidden="true">{{ _lf.get(programme.country, '🌍') }}</span>
               {% else %}
@@ -72,10 +72,10 @@
               {% endif %}
             </div>
             <div class="min-w-0 flex-1 pt-0.5">
-              <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-0.5">
+              <p class="text-xs font-semibold text-primary-500 uppercase tracking-wide mb-0.5">
                 {{ programme.country or 'Global' }}
               </p>
-              <h3 class="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 leading-snug transition-colors line-clamp-2">
+              <h3 class="text-sm font-semibold text-gray-900 group-hover:text-primary-700 leading-snug transition-colors line-clamp-2">
                 <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
                    class="after:absolute after:inset-0">Big Questions Journey</a>
               </h3>
@@ -90,7 +90,7 @@
               {% if programme.themes and programme.geographic_scope %} · {% endif %}
               {{ programme.geographic_scope | capitalize }}
             </span>
-            <span class="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors whitespace-nowrap">Start →</span>
+            <span class="text-xs font-medium text-primary-500 group-hover:text-primary-700 transition-colors whitespace-nowrap">Start →</span>
           </div>
         </div>
       </div>
@@ -119,7 +119,7 @@
       {% endif %}
       <div class="flex flex-col flex-1 p-5">
         <div class="flex items-start justify-between gap-2 mb-2">
-          <h2 class="text-base font-semibold text-gray-900 group-hover:text-blue-600 leading-snug transition-colors">
+          <h2 class="text-base font-semibold text-gray-900 group-hover:text-primary-600 leading-snug transition-colors">
             <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
                class="after:absolute after:inset-0">{{ programme.name }}</a>
           </h2>
@@ -135,7 +135,7 @@
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 pt-3 border-t border-gray-100">
           {% if programme.company_profile %}
           <a href="{{ url_for('profiles.view_company_profile', company_name=programme.company_profile.slug) }}"
-             class="relative z-10 inline-flex items-center gap-1 font-medium text-gray-600 hover:text-blue-600 transition-colors">
+             class="relative z-10 inline-flex items-center gap-1 font-medium text-gray-600 hover:text-primary-600 transition-colors">
             {% if programme.company_profile.logo %}
             <img src="{{ url_for('profiles.get_image', filename=programme.company_profile.logo) }}"
                  alt="{{ programme.company_profile.company_name }}"
@@ -195,7 +195,7 @@
     {# Hero #}
     <div class="px-8 py-10 sm:px-12 sm:py-12 text-center border-b border-gray-100">
       <div class="mx-auto mb-5 w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
-        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
         </svg>
@@ -206,7 +206,7 @@
       </p>
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('programmes.create_programme') }}"
-         class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors">
+         class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -214,7 +214,7 @@
       </a>
       {% else %}
       <a href="{{ url_for('auth.login') }}"
-         class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors">
+         class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium transition-colors">
         Sign in to get started
       </a>
       {% endif %}
@@ -224,7 +224,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 bg-gray-50">
       <div class="px-6 py-6">
         <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
           </svg>
         </div>
@@ -233,7 +233,7 @@
       </div>
       <div class="px-6 py-6">
         <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
         </div>
@@ -242,7 +242,7 @@
       </div>
       <div class="px-6 py-6">
         <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
         </div>

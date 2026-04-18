@@ -6,13 +6,13 @@ endblock %} {% block content %}
     <nav class="text-sm">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Discussions</a
       >
       <span class="mx-2">/</span>
       <a
         href="{{ url_for('discussions.view_discussion', discussion_id=response.statement.discussion.id, slug=response.statement.discussion.slug) }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >{{ response.statement.discussion.title }}</a
       >
       <span class="mx-2">/</span>
@@ -22,7 +22,7 @@ endblock %} {% block content %}
 
   <!-- Thread Context -->
   {% if thread|length > 1 %}
-  <div class="mb-6 bg-gray-50 border-l-4 border-blue-500 p-4">
+  <div class="mb-6 bg-gray-50 border-l-4 border-primary-500 p-4">
     <h3 class="font-semibold mb-3">Thread Context:</h3>
     {% for parent in thread[:-1] %}
     <div class="mb-2 pl-4 border-l-2 border-gray-300">
@@ -58,7 +58,7 @@ endblock %} {% block content %}
         {% if current_user.id == response.user_id %}
         <a
           href="{{ url_for('statements.edit_response', response_id=response.id) }}"
-          class="text-blue-600 hover:underline text-sm"
+          class="text-primary-600 hover:underline text-sm"
           >Edit</a
         >
         {% endif %}
@@ -94,7 +94,7 @@ endblock %} {% block content %}
         <a
           href="{{ ev.source_url }}"
           target="_blank"
-          class="text-blue-600 hover:underline text-sm"
+          class="text-primary-600 hover:underline text-sm"
           >{{ ev.source_url }}</a
         >
         {% endif %} {% if ev.citation %}
@@ -102,7 +102,7 @@ endblock %} {% block content %}
         {% endif %} {% if ev.storage_key %}
         <a
           href="{{ url_for('statements.download_evidence', evidence_id=ev.id) }}"
-          class="text-blue-600 hover:underline text-sm"
+          class="text-primary-600 hover:underline text-sm"
           >Download attachment</a
         >
         {% endif %}
@@ -139,7 +139,7 @@ endblock %} {% block content %}
       <div class="text-gray-800">{{ child.content }}</div>
       <a
         href="{{ url_for('statements.view_response', response_id=child.id) }}"
-        class="text-blue-600 hover:underline text-sm mt-2 inline-block"
+        class="text-primary-600 hover:underline text-sm mt-2 inline-block"
         >View thread</a
       >
     </div>
@@ -187,7 +187,7 @@ endblock %} {% block content %}
 
       <button
         type="submit"
-        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        class="bg-primary-600 text-white px-6 py-2 rounded hover:bg-primary-700"
       >
         Post Reply
       </button>
@@ -196,7 +196,7 @@ endblock %} {% block content %}
   {% else %}
   <div class="bg-gray-50 rounded-lg p-6 text-center">
     <p class="text-gray-600 mb-3">Please log in to reply to this response.</p>
-    <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline"
+    <a href="{{ url_for('auth.login') }}" class="text-primary-600 hover:underline"
       >Log In</a
     >
   </div>

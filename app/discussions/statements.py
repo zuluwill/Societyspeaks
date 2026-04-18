@@ -1317,6 +1317,25 @@ def vote_statement(statement_id):
     return jsonify(response_payload)
 
 
+def _viewer_statement_vote_value(statement_id):
+    """Current viewer's vote on this statement (authenticated or anon cookie)."""
+    if current_user.is_authenticated:
+        row = StatementVote.query.filter_by(
+            statement_id=statement_id,
+            user_id=current_user.id,
+        ).first()
+        return row.vote if row else None
+    fp = get_statement_vote_fingerprint()
+    if not fp:
+        return None
+    row = StatementVote.query.filter_by(
+        statement_id=statement_id,
+        session_fingerprint=fp,
+        user_id=None,
+    ).first()
+    return row.vote if row else None
+
+
 @statements_bp.route('/statements/<int:statement_id>')
 @with_db_retry()
 def view_statement(statement_id):
@@ -1332,6 +1351,8 @@ def view_statement(statement_id):
             statement_id=statement_id,
             user_id=current_user.id
         ).first()
+
+    viewer_vote_value = _viewer_statement_vote_value(statement_id)
     
     # Get responses with eager loading to prevent N+1 queries
     from sqlalchemy.orm import joinedload
@@ -1346,6 +1367,7 @@ def view_statement(statement_id):
                          statement=statement,
                          discussion=discussion,
                          user_vote=user_vote,
+                         viewer_vote_value=viewer_vote_value,
                          responses=responses)
 
 

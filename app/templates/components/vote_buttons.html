@@ -13,12 +13,12 @@
   quick_response_url : str   — AJAX endpoint for this statement
   seeded_vote        : int|none — user's existing vote (1/-1/0) or none
 #}
-<div class="vote-buttons-grid"
-     role="group"
-     aria-label="Vote options for this statement"
-     data-statement-id="{{ statement_id }}"
-     data-quick-response-url="{{ quick_response_url }}"
-     data-user-vote="{{ seeded_vote if seeded_vote is not none else '' }}">
+<fieldset class="border-0 p-0 m-0 min-w-0">
+  <legend class="sr-only">Vote options for this statement: agree, disagree, or unsure</legend>
+  <div class="vote-buttons-grid"
+       data-statement-id="{{ statement_id }}"
+       data-quick-response-url="{{ quick_response_url }}"
+       data-user-vote="{{ seeded_vote if seeded_vote is not none else '' }}">
 
   {% for opt in [
     {'value': '1',  'cls': 'vote-btn-agree',    'label': 'Agree',    'aria': 'Agree with this statement'},
@@ -44,5 +44,67 @@
   </button>
   {% endfor %}
 
+  </div>
+</fieldset>
+{% endmacro %}
+
+
+{% macro vote_buttons_form_post(statement_id, vote_post_url, csrf_token_value, seeded_vote=none, anon_submit_title=false) %}
+{#
+  Same visual system as vote_buttons(), but each option POSTs to vote_post_url
+  (e.g. statement vote form). Use on pages without the native AJAX vote script.
+
+  vote_post_url      — url_for('statements.vote_statement', ...)
+  csrf_token_value   — csrf_token() string from parent template
+  anon_submit_title  — if true, add title="Vote without an account" on submits
+#}
+<fieldset class="border-0 p-0 m-0 min-w-0" id="statement-{{ statement_id }}-vote-forms">
+  <legend class="sr-only">Vote options for this statement: agree, disagree, or unsure</legend>
+  <div class="vote-buttons-grid vote-buttons-grid--form">
+  {% for opt in [
+    {'value': '1',  'cls': 'vote-btn-agree',    'label': 'Agree',    'aria': 'Agree with this statement'},
+    {'value': '-1', 'cls': 'vote-btn-disagree', 'label': 'Disagree', 'aria': 'Disagree with this statement'},
+    {'value': '0',  'cls': 'vote-btn-unsure',   'label': 'Unsure',   'aria': 'Unsure about this statement'},
+  ] %}
+  {% set is_selected = seeded_vote is not none and seeded_vote|string == opt.value %}
+  <form method="POST" action="{{ vote_post_url }}" class="vote-button-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}" />
+    <input type="hidden" name="vote" value="{{ opt.value }}" />
+    <button type="submit"
+            class="vote-btn {{ opt.cls }}"
+            data-vote="{{ opt.value }}"
+            aria-label="{{ opt.aria }}"
+            aria-pressed="{{ 'true' if is_selected else 'false' }}"
+            {% if is_selected %}data-vote-selected="1"{% endif %}
+            {% if anon_submit_title %}title="Vote without an account"{% endif %}>
+      <span class="vote-content">
+        <span class="vote-label">{{ opt.label }}</span>
+      </span>
+    </button>
+  </form>
+  {% endfor %}
+  </div>
+</fieldset>
+{% endmacro %}
+
+
+{% macro statement_vote_stats_footer(statement_id, total_votes, agreement_rate, controversy_score, viewer_has_voted) %}
+<div class="mt-3 pt-3 border-t border-gray-100">
+  <div class="flex items-center justify-between text-sm">
+    {% if viewer_has_voted %}
+    <div class="text-gray-600 statement-stats" data-statement-id="{{ statement_id }}" role="status" aria-live="polite" aria-atomic="true">
+      <span class="font-semibold total-votes">{{ total_votes }}</span>
+      total votes {% if total_votes > 0 %} ·
+      <span class="font-semibold agreement-rate">{{ "%.0f"|format(agreement_rate * 100) }}%</span>
+      agreement {% if controversy_score > 0.7 %} ·
+      <span class="text-red-600 font-semibold">🔥 Controversial</span>
+      {% endif %} {% endif %}
+    </div>
+    {% else %}
+    <div class="text-gray-400 text-xs italic statement-stats" data-statement-id="{{ statement_id }}" role="status" aria-live="polite" aria-atomic="true">
+      Vote to see results
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endmacro %}

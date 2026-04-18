@@ -18,7 +18,7 @@
                 Subscribers
             </a>
             <a href="{{ url_for('admin.create_daily_question') }}" 
-               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+               class="inline-flex items-center px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -99,7 +99,7 @@
                 {% endif %}
                 <label for="days" class="text-sm text-gray-600">Period:</label>
                 <select id="days" name="days" class="auto-submit-select"
-                        class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                        class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500">
                     <option value="7" {% if analytics_days == 7 %}selected{% endif %}>7d</option>
                     <option value="14" {% if analytics_days == 14 %}selected{% endif %}>14d</option>
                     <option value="30" {% if analytics_days == 30 %}selected{% endif %}>30d</option>
@@ -116,7 +116,7 @@
                 </div>
                 <div class="bg-blue-50 rounded-lg p-4">
                     <p class="text-xs font-medium text-gray-500 uppercase">Reason Rate</p>
-                    <p class="text-2xl font-bold text-blue-700 mt-1">{{ analytics.overview.reason_rate }}%</p>
+                    <p class="text-2xl font-bold text-primary-700 mt-1">{{ analytics.overview.reason_rate }}%</p>
                 </div>
                 <div class="bg-yellow-50 rounded-lg p-4">
                     <p class="text-xs font-medium text-gray-500 uppercase">Unsure Rate</p>
@@ -130,9 +130,9 @@
                     <p class="text-xs font-medium text-gray-500 uppercase">Avg Source Clicks</p>
                     <p class="text-2xl font-bold text-purple-700 mt-1">{{ analytics.overview.avg_source_link_clicks }}</p>
                 </div>
-                <div class="bg-indigo-50 rounded-lg p-4">
+                <div class="bg-primary-50 rounded-lg p-4">
                     <p class="text-xs font-medium text-gray-500 uppercase">With Reasons</p>
-                    <p class="text-2xl font-bold text-indigo-700 mt-1">{{ analytics.overview.responses_with_reason }}</p>
+                    <p class="text-2xl font-bold text-primary-700 mt-1">{{ analytics.overview.responses_with_reason }}</p>
                 </div>
             </div>
 
@@ -225,8 +225,8 @@
                     <input type="hidden" name="days" value="{{ analytics_days }}">
                     <input type="text" name="q" value="{{ search_query or '' }}"
                            placeholder="Search question text or #"
-                           class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                    <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Search</button>
+                           class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500">
+                    <button type="submit" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700">Search</button>
                     {% if search_query %}
                     <a href="{{ url_for('admin.list_daily_questions', days=analytics_days) }}"
                        class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">Clear</a>
@@ -260,7 +260,7 @@
                             {% if q.status == 'published' %}
                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Published</span>
                             {% elif q.status == 'scheduled' %}
-                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Scheduled</span>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-primary-800">Scheduled</span>
                             {% elif q.status == 'archived' %}
                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Archived</span>
                             {% else %}
@@ -269,7 +269,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ q.response_count }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <a href="{{ url_for('admin.view_daily_question', question_id=q.id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                            <a href="{{ url_for('admin.view_daily_question', question_id=q.id) }}" class="text-primary-600 hover:text-primary-900">View</a>
                             <a href="{{ url_for('admin.edit_daily_question', question_id=q.id) }}" class="text-gray-600 hover:text-gray-900">Edit</a>
                             {% if q.status == 'scheduled' %}
                             <form action="{{ url_for('admin.publish_daily_question', question_id=q.id) }}" method="POST" class="inline">
@@ -307,7 +307,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p>No daily questions created yet.</p>
-            <a href="{{ url_for('admin.create_daily_question') }}" class="mt-4 inline-block text-blue-600 hover:text-blue-800">Create your first question</a>
+            <a href="{{ url_for('admin.create_daily_question') }}" class="mt-4 inline-block text-primary-600 hover:text-primary-800">Create your first question</a>
         </div>
         {% endif %}
     </div>

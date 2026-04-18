@@ -5,7 +5,7 @@
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 py-8">
     <div class="mb-6">
-        <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+        <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}" class="text-primary-600 hover:text-primary-800 flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -29,7 +29,7 @@
         </div>
         <div class="bg-white rounded-lg shadow-sm border p-6">
             <div class="text-sm font-medium text-gray-500 mb-1">Open Rate</div>
-            <div class="text-3xl font-bold text-blue-600">{{ open_rate }}%</div>
+            <div class="text-3xl font-bold text-primary-600">{{ open_rate }}%</div>
         </div>
         <div class="bg-white rounded-lg shadow-sm border p-6">
             <div class="text-sm font-medium text-gray-500 mb-1">Click Rate</div>
@@ -58,7 +58,7 @@
                         <td class="py-3 px-2 text-right text-gray-600">{{ data.sent }}</td>
                         <td class="py-3 px-2 text-right text-green-600">{{ data.opens }}</td>
                         <td class="py-3 px-2 text-right text-purple-600">{{ data.clicks }}</td>
-                        <td class="py-3 px-2 text-right text-blue-600">
+                        <td class="py-3 px-2 text-right text-primary-600">
                             {% if data.sent > 0 %}
                                 {{ ((data.opens / data.sent) * 100)|round(1) }}%
                             {% else %}
@@ -77,7 +77,7 @@
 
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 class="text-lg font-semibold text-blue-900 mb-2">About Analytics</h3>
-        <ul class="text-sm text-blue-800 space-y-2">
+        <ul class="text-sm text-primary-800 space-y-2">
             <li><strong>Open tracking:</strong> Opens are tracked via a transparent pixel in emails. Some email clients block images by default.</li>
             <li><strong>Click tracking:</strong> Link clicks are tracked via redirect. Users are seamlessly sent to the original destination.</li>
             <li><strong>Privacy:</strong> We hash recipient identifiers to protect privacy while enabling accurate deduplication.</li>

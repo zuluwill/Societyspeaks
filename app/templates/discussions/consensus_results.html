@@ -24,7 +24,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div>
         <div class="text-gray-600 text-sm">Opinion Groups</div>
-        <div class="text-3xl font-bold text-blue-600">
+        <div class="text-3xl font-bold text-primary-600">
           {{ analysis.num_clusters }}
         </div>
       </div>
@@ -118,7 +118,7 @@
     <h3 class="font-semibold text-blue-900 mb-2">
       💡 Optional: Generate AI Summary
     </h3>
-    <p class="text-blue-800 mb-3">
+    <p class="text-primary-800 mb-3">
       Get a human-readable summary of this analysis using AI. Requires an API
       key (free to add in settings).
     </p>
@@ -129,13 +129,13 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button
         type="submit"
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
       >
         Generate AI Summary
       </button>
       <a
         href="{{ url_for('api_keys.add_api_key') }}"
-        class="ml-3 text-blue-600 hover:underline"
+        class="ml-3 text-primary-600 hover:underline"
         >Add API Key</a
       >
     </form>
@@ -169,7 +169,7 @@
     <div class="grid grid-cols-1 {% if opinion_groups|length > 1 %}lg:grid-cols-2{% endif %} gap-6">
       {% for group in opinion_groups %}
       <div class="border rounded-lg overflow-hidden">
-        <div class="bg-blue-600 text-white px-4 py-3">
+        <div class="bg-primary-600 text-white px-4 py-3">
           <div class="flex items-center justify-between">
             <h3 class="font-semibold text-lg">{{ group.name }}</h3>
             <span class="bg-blue-500 px-2 py-1 rounded text-sm">
@@ -286,7 +286,7 @@
     <div class="flex space-x-4">
       <a
         href="{{ url_for('consensus.export_analysis', discussion_id=discussion.id, format='json') }}"
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
       >
         Download JSON
       </a>
@@ -346,7 +346,7 @@
   <div class="mt-8">
     <a
       href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-      class="text-blue-600 hover:underline"
+      class="text-primary-600 hover:underline"
     >
       ← Back to Discussion
     </a>

@@ -10,22 +10,22 @@
         </span>
         <a href="{{ url_for('partner.portal_dashboard') }}"
            class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors
-                  {% if portal_page == 'dashboard' %}bg-blue-50 text-blue-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
+                  {% if portal_page == 'dashboard' %}bg-blue-50 text-primary-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
           Dashboard
         </a>
         <a href="{{ url_for('partner.portal_discussions') }}"
            class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors
-                  {% if portal_page in ('discussions', 'detail') %}bg-blue-50 text-blue-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
+                  {% if portal_page in ('discussions', 'detail') %}bg-blue-50 text-primary-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
           Discussions
         </a>
         <a href="{{ url_for('partner.portal_getting_started') }}"
            class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors
-                  {% if portal_page == 'setup' %}bg-blue-50 text-blue-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
+                  {% if portal_page == 'setup' %}bg-blue-50 text-primary-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
           Setup guide
         </a>
         <a href="{{ url_for('partner.api_docs') }}"
            class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors
-                  {% if portal_page == 'api_docs' %}bg-blue-50 text-blue-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
+                  {% if portal_page == 'api_docs' %}bg-blue-50 text-primary-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
           API docs
         </a>
       </div>
@@ -34,7 +34,7 @@
         {% if is_admin_preview %}
         <form method="POST" action="{{ url_for('admin.stop_partner_preview') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition-colors">
+          <button class="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-semibold text-primary-800 hover:bg-blue-100 transition-colors">
             Admin preview &middot; Exit
           </button>
         </form>

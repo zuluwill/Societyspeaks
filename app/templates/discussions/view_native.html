@@ -11,18 +11,18 @@
 <div id="journey-focused-wrapper" class="mb-4">
 
   <!-- Statement card -->
-  <div id="journey-focus-card" class="bg-white rounded-xl shadow-lg overflow-hidden border border-indigo-100">
+  <div id="journey-focus-card" class="bg-white rounded-xl shadow-lg overflow-hidden border border-primary-100">
 
     <!-- Progress header strip -->
-    <div class="bg-gradient-to-r from-indigo-700 to-blue-900 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+    <div class="bg-gradient-to-r from-primary-700 to-blue-900 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <div id="journey-dots" class="flex gap-1.5" aria-hidden="true"></div>
-        <span class="text-xs font-medium text-indigo-200 whitespace-nowrap">
+        <span class="text-xs font-medium text-primary-200 whitespace-nowrap">
           Statement <span id="journey-current-num">—</span> of {{ _gjc_ti.statement_total }}
         </span>
       </div>
       <button type="button" id="journey-see-all-btn"
-              class="text-xs text-indigo-200 hover:text-white underline whitespace-nowrap flex-shrink-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">
+              class="text-xs text-primary-200 hover:text-white underline whitespace-nowrap flex-shrink-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">
         See all ↓
       </button>
     </div>
@@ -34,25 +34,37 @@
          id="journey-statement-text" aria-live="polite" aria-atomic="true"></p>
     </div>
 
-    <!-- Vote buttons -->
+    <!-- Vote buttons (same .vote-btn design system as discussion list / daily question) -->
     <div class="px-4 sm:px-8 pb-5 sm:pb-6">
-      <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-3" role="group" aria-label="Vote on this statement">
-        <button type="button" id="journey-btn-agree" data-journey-vote="1"
-                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-sm focus-visible:ring-emerald-500">
-          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-          <span class="text-sm">Agree</span>
+      <fieldset class="border-0 p-0 m-0 min-w-0">
+        <legend class="sr-only">Vote on the statement above: agree, disagree, or unsure</legend>
+        <div class="vote-buttons-grid mb-3">
+        <button type="button" id="journey-btn-agree" data-journey-vote="1" data-vote="1"
+                class="vote-btn vote-btn-agree journey-vote-btn"
+                aria-label="Agree with this statement" aria-pressed="false">
+          <span class="vote-content">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span class="vote-label">Agree</span>
+          </span>
         </button>
-        <button type="button" id="journey-btn-disagree" data-journey-vote="-1"
-                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-white text-rose-700 border-rose-300 hover:bg-rose-50 hover:border-rose-500 hover:shadow-sm focus-visible:ring-rose-500">
-          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-          <span class="text-sm">Disagree</span>
+        <button type="button" id="journey-btn-disagree" data-journey-vote="-1" data-vote="-1"
+                class="vote-btn vote-btn-disagree journey-vote-btn"
+                aria-label="Disagree with this statement" aria-pressed="false">
+          <span class="vote-content">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span class="vote-label">Disagree</span>
+          </span>
         </button>
-        <button type="button" id="journey-btn-unsure" data-journey-vote="0"
-                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-500 hover:shadow-sm focus-visible:ring-amber-500">
-          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="text-sm">Unsure</span>
+        <button type="button" id="journey-btn-unsure" data-journey-vote="0" data-vote="0"
+                class="vote-btn vote-btn-unsure journey-vote-btn"
+                aria-label="Unsure about this statement" aria-pressed="false">
+          <span class="vote-content">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="vote-label">Unsure</span>
+          </span>
         </button>
-      </div>
+        </div>
+      </fieldset>
 
       <div class="flex items-center justify-between">
         <button type="button" id="journey-skip-btn"
@@ -94,7 +106,7 @@
       <!-- Add Statement Button - Available to everyone (anonymous & authenticated) -->
       <a
         href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}"
-        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center justify-center whitespace-nowrap"
+        class="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 font-semibold flex items-center justify-center whitespace-nowrap"
       >
         <svg
           class="w-5 h-5 mr-2 flex-shrink-0"
@@ -174,7 +186,7 @@
           name="q"
           value="{{ statement_search_term }}"
           placeholder="Search statements..."
-          class="w-full sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="w-full sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
         <button type="submit" class="px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50">
           Search
@@ -188,7 +200,7 @@
         >
         <select
           id="sortSelect"
-          class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+          class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none bg-white"
           style="
             background-image: url(&quot;data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e&quot;);
             background-repeat: no-repeat;
@@ -222,7 +234,7 @@
 
   {% set _gj_consensus_unlocked = (current_user.is_authenticated and current_user.id == discussion.creator_id) or (user_vote_count|default(0) >= participation_threshold|default(5)) %}
   {% if guided_journey_context and not _gj_consensus_unlocked %}
-  <div class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="note">
+  <div class="mb-4 rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-950" role="note">
     <strong class="font-semibold">Consensus map.</strong>
     It unlocks after <strong>{{ participation_threshold|default(5) }}</strong> votes in this theme (you’re at {{ user_vote_count|default(0) }}).
     The map is for <em>this</em> topic only — not a single left–right score across the whole journey.
@@ -234,16 +246,16 @@
     Showing {{ statements_pagination.total if statements_pagination else 0 }} matching statement{{ '' if (statements_pagination and statements_pagination.total == 1) else 's' }} for
     <span class="font-medium text-gray-700">"{{ statement_search_term }}"</span>.
     {% if cohort_slug %}
-    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, sort=sort, cohort=cohort_slug) }}" class="text-blue-600 hover:text-blue-700 hover:underline">Clear search</a>
+    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, sort=sort, cohort=cohort_slug) }}" class="text-primary-600 hover:text-primary-700 hover:underline">Clear search</a>
     {% else %}
-    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, sort=sort) }}" class="text-blue-600 hover:text-blue-700 hover:underline">Clear search</a>
+    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, sort=sort) }}" class="text-primary-600 hover:text-primary-700 hover:underline">Clear search</a>
     {% endif %}
     <span class="mx-1">·</span>
-    <a href="{{ url_for('discussions.search_statements', q=statement_search_term) }}" class="text-blue-600 hover:text-blue-700 hover:underline">Search all statements</a>
+    <a href="{{ url_for('discussions.search_statements', q=statement_search_term) }}" class="text-primary-600 hover:text-primary-700 hover:underline">Search all statements</a>
   </div>
   {% else %}
   <div class="mb-4 text-sm text-gray-500">
-    Need to find a specific claim? <a href="{{ url_for('discussions.search_statements') }}" class="text-blue-600 hover:text-blue-700 hover:underline">Search all statements</a>.
+    Need to find a specific claim? <a href="{{ url_for('discussions.search_statements') }}" class="text-primary-600 hover:text-primary-700 hover:underline">Search all statements</a>.
   </div>
   {% endif %}
 
@@ -275,7 +287,7 @@
     class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg"
   >
     <div class="text-center">
-      <div class="text-2xl font-bold text-blue-600">
+      <div class="text-2xl font-bold text-primary-600">
         {{ statement_metrics.statement_count|default(statements|length) }}
       </div>
       <div class="text-sm text-gray-600">Statements</div>
@@ -302,14 +314,14 @@
   {% else %}
   <!-- Encourage participation when counts are low - avoid "lonely" feeling -->
   <div
-    class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200"
+    class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-primary-50 rounded-lg border border-blue-200"
   >
     <div class="flex items-center justify-center">
       <div class="text-center">
-        <div class="text-lg font-semibold text-blue-800 mb-1">
+        <div class="text-lg font-semibold text-primary-800 mb-1">
           🗳️ Join the conversation
         </div>
-        <div class="text-sm text-blue-600">
+        <div class="text-sm text-primary-600">
           {{ statement_metrics.statement_count|default(statements|length) }} statements to vote on •
           <span
             class="cursor-help"
@@ -414,11 +426,11 @@
   {% if not guided_journey_context %}
   <!-- Anonymous Voter Welcome (Show Once at Top) -->
   {% if not current_user.is_authenticated and statements %}
-  <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+  <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-primary-500">
     <div class="flex items-start">
       <div class="flex-shrink-0">
         <svg
-          class="h-5 w-5 text-blue-600 mt-0.5"
+          class="h-5 w-5 text-primary-600 mt-0.5"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -433,12 +445,12 @@
         <h3 class="text-sm font-semibold text-blue-900">
           Your votes count
         </h3>
-        <div class="mt-1 text-sm text-blue-800">
+        <div class="mt-1 text-sm text-primary-800">
           <p>
             No account needed &mdash; your votes are saved and included in the consensus analysis.
             <a
               href="{{ url_for('auth.register') }}?next={{ request.path | urlencode }}"
-              class="underline font-semibold hover:text-blue-900"
+              class="underline font-semibold hover:text-primary-900"
               >Create an account</a
             >
             to track your voting history and add statements.
@@ -479,7 +491,7 @@
     </p>
     <a
       href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}"
-      class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+      class="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 font-semibold"
     >
       Post the First Statement
     </a>
@@ -488,7 +500,7 @@
       No account needed! (Optional:
       <a
         href="{{ url_for('auth.register') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Create account</a
       >
       for advanced features)
@@ -512,7 +524,7 @@
       id="loadMoreStatementsBtn"
       type="button"
       {% if not statements_pagination.has_next %}hidden{% endif %}
-      class="px-3 py-2 rounded-lg border border-blue-300 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
+      class="px-3 py-2 rounded-lg border border-blue-300 text-sm text-primary-700 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
     >
       Load more
     </button>
@@ -526,7 +538,7 @@
   <div class="flex items-start justify-between">
     <div class="flex-1">
       <h3 class="font-semibold text-blue-900 mb-2">💡 How This Works</h3>
-      <ul class="text-blue-800 space-y-1 text-sm">
+      <ul class="text-primary-800 space-y-1 text-sm">
         <li>
           • <strong>Add Statements:</strong> Post claims or questions (10-500
           characters)
@@ -546,7 +558,7 @@
     </div>
     <button
       id="keyboardHelpBtn"
-      class="ml-4 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+      class="ml-4 px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded hover:bg-primary-700 transition-colors whitespace-nowrap"
     >
       ⌨️ Shortcuts
     </button>
@@ -560,7 +572,7 @@
 <div class="text-center mb-6">
   <a
     href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}"
-    class="text-blue-600 hover:underline inline-flex items-center"
+    class="text-primary-600 hover:underline inline-flex items-center"
   >
     <svg
       class="w-5 h-5 mr-1"
@@ -617,10 +629,6 @@
     justify-content: center;
   }
 
-  /* Journey vote button selected states */
-  #journey-btn-agree[data-journey-selected="1"]    { background-color: rgb(209 250 229); border-color: rgb(16 185 129); }
-  #journey-btn-disagree[data-journey-selected="1"] { background-color: rgb(255 228 230); border-color: rgb(244 63 94); }
-  #journey-btn-unsure[data-journey-selected="1"]   { background-color: rgb(254 243 199); border-color: rgb(217 119 6); }
 </style>
 
 <!-- Seed optimistic vote state for authenticated users -->
@@ -792,54 +800,37 @@
   }
 
   async function voteOnStatement(statementId, voteValue, confidence = 3) {
-      const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
-      const buttons = statementDiv.querySelectorAll('.vote-btn');
-      const clickedButton = statementDiv.querySelector(`[data-vote="${voteValue}"]`);
+      const statementCard = document.getElementById(`statement-${statementId}`);
+      const voteGrid = statementCard
+          ? statementCard.querySelector('[data-statement-id][data-quick-response-url]')
+          : document.querySelector(`[data-statement-id="${statementId}"][data-quick-response-url]`);
+      if (!voteGrid) return;
+      const buttons = voteGrid.querySelectorAll('.vote-btn');
+      const clickedButton = voteGrid.querySelector(`[data-vote="${voteValue}"]`);
+      if (!clickedButton) return;
 
       // Disable all buttons to prevent double-submit
       buttons.forEach(btn => btn.disabled = true);
 
-      // Map vote integers to data-count-type attribute names
-      const countTypeMap = { '1': 'agree', '-1': 'disagree', '0': 'unsure' };
-
-      // Snapshot current counts so we can revert exactly on error
-      const snapshot = {};
-      ['agree', 'disagree', 'unsure'].forEach(type => {
-          const el = statementDiv.querySelector(`[data-count-type="${type}"]`);
-          snapshot[type] = el ? (parseInt(el.textContent, 10) || 0) : 0;
-      });
       const previousVote = window.userVotes ? window.userVotes[statementId] : undefined;
 
-      // === Optimistic update: apply counts immediately, no waiting ===
-      // Update selection highlight — data-vote-selected drives CSS, no class needed
+      // Optimistic selection — data-vote-selected drives CSS (no per-option counts in DOM)
       buttons.forEach(btn => { btn.removeAttribute('data-vote-selected'); btn.setAttribute('aria-pressed', 'false'); });
       clickedButton.setAttribute('data-vote-selected', '1');
       clickedButton.setAttribute('aria-pressed', 'true');
 
-      // Adjust counts only when the vote is changing
-      if (previousVote !== voteValue) {
-          const newEl = statementDiv.querySelector(`[data-count-type="${countTypeMap[String(voteValue)]}"]`);
-          if (newEl) newEl.textContent = snapshot[countTypeMap[String(voteValue)]] + 1;
-
-          if (previousVote !== undefined && previousVote !== null) {
-              const oldEl = statementDiv.querySelector(`[data-count-type="${countTypeMap[String(previousVote)]}"]`);
-              if (oldEl) oldEl.textContent = Math.max(0, snapshot[countTypeMap[String(previousVote)]] - 1);
-          }
-      }
-
-      // Track the user's current vote in memory
       window.userVotes[statementId] = voteValue;
 
+      function syncVoteGridUserVoteAttr(value) {
+          if (!voteGrid || !voteGrid.hasAttribute('data-user-vote')) return;
+          voteGrid.setAttribute('data-user-vote', value === undefined || value === null ? '' : String(value));
+      }
+      syncVoteGridUserVoteAttr(voteValue);
+
       function revertOptimistic() {
-          // Restore counts from pre-click snapshot
-          ['agree', 'disagree', 'unsure'].forEach(type => {
-              const el = statementDiv.querySelector(`[data-count-type="${type}"]`);
-              if (el) el.textContent = snapshot[type];
-          });
-          // Restore selection highlight
           buttons.forEach(btn => { btn.removeAttribute('data-vote-selected'); btn.setAttribute('aria-pressed', 'false'); });
           if (previousVote !== undefined && previousVote !== null) {
-              const prevBtn = statementDiv.querySelector(`[data-vote="${previousVote}"]`);
+              const prevBtn = voteGrid.querySelector(`[data-vote="${previousVote}"]`);
               if (prevBtn) { prevBtn.setAttribute('data-vote-selected', '1'); prevBtn.setAttribute('aria-pressed', 'true'); }
           }
           if (previousVote === undefined || previousVote === null) {
@@ -847,24 +838,31 @@
           } else {
               window.userVotes[statementId] = previousVote;
           }
+          syncVoteGridUserVoteAttr(previousVote === undefined || previousVote === null ? '' : previousVote);
           buttons.forEach(btn => btn.disabled = false);
       }
 
       function applyServerCounts(data) {
-          // Reconcile with authoritative server values
-          // [data-count-type] elements are absent in the new design (counts not shown in buttons)
-          const agreeEl = statementDiv.querySelector('[data-count-type="agree"]');
-          const disagreeEl = statementDiv.querySelector('[data-count-type="disagree"]');
-          const unsureEl = statementDiv.querySelector('[data-count-type="unsure"]');
+          // Legacy [data-count-type] inside buttons (embed / old HTML) — no-op on native cards
+          const agreeEl = voteGrid.querySelector('[data-count-type="agree"]');
+          const disagreeEl = voteGrid.querySelector('[data-count-type="disagree"]');
+          const unsureEl = voteGrid.querySelector('[data-count-type="unsure"]');
           if (agreeEl) agreeEl.textContent = data.vote_count_agree;
           if (disagreeEl) disagreeEl.textContent = data.vote_count_disagree;
           if (unsureEl) unsureEl.textContent = data.vote_count_unsure;
 
-          const statsContainer = document.querySelector(`#statement-${statementId} .statement-stats`);
+          const statsContainer = statementCard
+              ? statementCard.querySelector('.statement-stats')
+              : document.querySelector(`#statement-${statementId} .statement-stats`);
           if (statsContainer && data.total_votes !== undefined) {
-              const agreementPct = Math.round(data.agreement_rate * 100);
-              // Ensure the container shows the voted state styling (may have been "Vote to see results")
+              const ar = typeof data.agreement_rate === 'number' ? data.agreement_rate : parseFloat(data.agreement_rate);
+              const agreementPct = Math.round((Number.isFinite(ar) ? ar : 0) * 100);
+              const controversy = Number(data.controversy_score);
+              statsContainer.setAttribute('data-statement-id', String(statementId));
               statsContainer.className = 'text-gray-600 text-sm statement-stats';
+              statsContainer.setAttribute('role', 'status');
+              statsContainer.setAttribute('aria-live', 'polite');
+              statsContainer.setAttribute('aria-atomic', 'true');
               statsContainer.textContent = '';
               const totalSpan = document.createElement('span');
               totalSpan.className = 'font-semibold total-votes';
@@ -878,7 +876,7 @@
                   pctSpan.textContent = agreementPct + '%';
                   statsContainer.appendChild(pctSpan);
                   statsContainer.appendChild(document.createTextNode(' agreement'));
-                  if (data.controversy_score > 0.7) {
+                  if (Number.isFinite(controversy) && controversy > 0.7) {
                       statsContainer.appendChild(document.createTextNode(' \u00B7 '));
                       const controversySpan = document.createElement('span');
                       controversySpan.className = 'text-red-600 font-semibold';
@@ -1179,7 +1177,7 @@
   if (!focusCard || !statementEl) return;
 
   // ── Build statement queue from rendered DOM ──────────────────────────────
-  var allStatements = Array.from(document.querySelectorAll('[data-statement-id]')).map(function (grid) {
+  var allStatements = Array.from(document.querySelectorAll('[data-statement-id][data-quick-response-url]')).map(function (grid) {
     var sid = parseInt(grid.getAttribute('data-statement-id'), 10);
     var wrapper = document.getElementById('statement-' + sid);
     var textEl  = wrapper ? wrapper.querySelector('.text-lg') : null;
@@ -1235,9 +1233,9 @@
     voteButtons.forEach(function (btn) {
       var bv = parseInt(btn.getAttribute('data-journey-vote'), 10);
       var sel = voted && votedVal === bv;
-      btn.setAttribute('data-journey-selected', sel ? '1' : '');
-      btn.style.outline = sel ? '3px solid currentColor' : '';
-      btn.style.outlineOffset = sel ? '2px' : '';
+      btn.removeAttribute('data-vote-selected');
+      btn.setAttribute('aria-pressed', sel ? 'true' : 'false');
+      if (sel) btn.setAttribute('data-vote-selected', '1');
       btn.disabled = false;
     });
   }
@@ -1322,11 +1320,12 @@
       var stmt  = allStatements[currentIndex];
       var vote  = parseInt(btn.getAttribute('data-journey-vote'), 10);
       voteButtons.forEach(function (b) { b.disabled = true; });
-      // Optimistic selection highlight
-      voteButtons.forEach(function (b) { b.style.outline = ''; b.style.outlineOffset = ''; b.setAttribute('data-journey-selected', ''); });
-      btn.style.outline = '3px solid currentColor';
-      btn.style.outlineOffset = '2px';
-      btn.setAttribute('data-journey-selected', '1');
+      voteButtons.forEach(function (b) {
+        b.removeAttribute('data-vote-selected');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.setAttribute('data-vote-selected', '1');
+      btn.setAttribute('aria-pressed', 'true');
       // Delegate to existing AJAX vote handler
       if (typeof voteOnStatement === 'function') voteOnStatement(stmt.id, vote);
     });
@@ -1336,7 +1335,11 @@
   document.addEventListener('ss:voteFailed', function (e) {
     var detail = e.detail || {};
     if (!allStatements[currentIndex] || detail.statementId !== allStatements[currentIndex].id) return;
-    voteButtons.forEach(function (b) { b.disabled = false; b.style.outline = ''; b.style.outlineOffset = ''; b.setAttribute('data-journey-selected', ''); });
+    voteButtons.forEach(function (b) {
+      b.disabled = false;
+      b.removeAttribute('data-vote-selected');
+      b.setAttribute('aria-pressed', 'false');
+    });
   });
 
   // ── Auto-advance after confirmed vote ────────────────────────────────────

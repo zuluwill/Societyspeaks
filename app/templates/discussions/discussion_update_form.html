@@ -18,7 +18,7 @@
 
       <div>
         {{ form.update_type.label(class="block text-sm font-medium text-gray-700") }}
-        {{ form.update_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+        {{ form.update_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500") }}
         {% if form.update_type.errors %}{% for error in form.update_type.errors %}
         <p class="mt-1 text-sm text-red-600">{{ error }}</p>
         {% endfor %}{% endif %}
@@ -26,7 +26,7 @@
 
       <div>
         {{ form.title.label(class="block text-sm font-medium text-gray-700") }}
-        {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="What changed?") }}
+        {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="What changed?") }}
         {% if form.title.errors %}{% for error in form.title.errors %}
         <p class="mt-1 text-sm text-red-600">{{ error }}</p>
         {% endfor %}{% endif %}
@@ -34,7 +34,7 @@
 
       <div>
         {{ form.body.label(class="block text-sm font-medium text-gray-700") }}
-        {{ form.body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="8", placeholder="Summarise the outcome, decision, or next step using Markdown.") }}
+        {{ form.body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="8", placeholder="Summarise the outcome, decision, or next step using Markdown.") }}
         <p class="mt-1 text-xs text-gray-500">Markdown is supported. Raw HTML is not allowed.</p>
         {% if form.body.errors %}{% for error in form.body.errors %}
         <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -43,7 +43,7 @@
 
       <div>
         {{ form.links.label(class="block text-sm font-medium text-gray-700") }}
-        {{ form.links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Minutes|https://example.com/minutes") }}
+        {{ form.links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Minutes|https://example.com/minutes") }}
         <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>.</p>
         {% if form.links.errors %}{% for error in form.links.errors %}
         <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -55,7 +55,7 @@
            class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
           Cancel
         </a>
-        {{ form.submit(class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700", value=submit_label) }}
+        {{ form.submit(class="px-6 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700", value=submit_label) }}
       </div>
     </form>
   </div>

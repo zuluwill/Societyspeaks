@@ -13,55 +13,55 @@
                     <!-- Desktop Navigation -->
                     <div class="hidden lg:ml-4 lg:flex lg:space-x-4 overflow-x-auto">
                         <a href="{{ url_for('admin.dashboard') }}"
-                           class="{% if request.endpoint == 'admin.dashboard' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if request.endpoint == 'admin.dashboard' %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Dashboard
                         </a>
                         <a href="{{ url_for('admin.list_profiles') }}"
-                           class="{% if 'profile' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'profile' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Profiles
                         </a>
                         <a href="{{ url_for('admin.list_discussions') }}"
-                           class="{% if 'discussion' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'discussion' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Discussions
                         </a>
                         <a href="{{ url_for('admin.list_partners') }}"
-                           class="{% if request.endpoint in ['admin.list_partners', 'admin.preview_partner_portal', 'admin.stop_partner_preview'] %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if request.endpoint in ['admin.list_partners', 'admin.preview_partner_portal', 'admin.stop_partner_preview'] %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Partners
                         </a>
                         <a href="{{ url_for('admin.partner_metrics') }}"
-                           class="{% if request.endpoint in ['admin.partner_metrics', 'admin.partner_metrics_csv'] %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if request.endpoint in ['admin.partner_metrics', 'admin.partner_metrics_csv'] %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Partner Metrics
                         </a>
                         <a href="{{ url_for('admin.list_users') }}"
-                           class="{% if 'user' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'user' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Users
                         </a>
                         <a href="{{ url_for('trending.dashboard') }}"
-                           class="{% if 'trending' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'trending' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Trending
                         </a>
                         <a href="{{ url_for('admin.list_daily_questions') }}"
-                           class="{% if 'daily' in request.endpoint or 'question' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'daily' in request.endpoint or 'question' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Questions
                         </a>
                         <a href="{{ url_for('brief_admin.dashboard') }}"
-                           class="{% if request.endpoint and (request.endpoint.startswith('brief_admin.') or request.endpoint.startswith('brief.')) %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if request.endpoint and (request.endpoint.startswith('brief_admin.') or request.endpoint.startswith('brief.')) %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Daily Brief
                         </a>
                         <a href="{{ url_for('briefings_admin.subscriptions') }}"
-                           class="{% if request.endpoint and request.endpoint.startswith('briefings_admin.') %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if request.endpoint and request.endpoint.startswith('briefings_admin.') %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Briefings
                         </a>
                         <a href="{{ url_for('admin.list_response_flags') }}"
-                           class="{% if 'flag' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'flag' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Flags
                         </a>
                         <a href="{{ url_for('admin.source_claims') }}"
-                           class="{% if 'source' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'source' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Source Claims
                         </a>
                         <a href="{{ url_for('admin.list_markets') }}"
-                           class="{% if 'polymarket' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                           class="{% if 'polymarket' in request.endpoint %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Polymarket
                         </a>
                     </div>
@@ -69,7 +69,7 @@
                 <!-- Mobile menu button -->
                 <div class="flex items-center lg:hidden">
                     <button id="admin-mobile-menu-btn" type="button"
-                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
                             aria-expanded="false">
                         <span class="sr-only">Open main menu</span>
                         <!-- Hamburger icon -->
@@ -89,55 +89,55 @@
         <div id="admin-mobile-menu" class="hidden lg:hidden border-t border-gray-200">
             <div class="pt-2 pb-3 space-y-1">
                 <a href="{{ url_for('admin.dashboard') }}"
-                   class="{% if request.endpoint == 'admin.dashboard' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if request.endpoint == 'admin.dashboard' %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Dashboard
                 </a>
                 <a href="{{ url_for('admin.list_profiles') }}"
-                   class="{% if 'profile' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'profile' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Profiles
                 </a>
                 <a href="{{ url_for('admin.list_discussions') }}"
-                   class="{% if 'discussion' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'discussion' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Discussions
                 </a>
                 <a href="{{ url_for('admin.list_partners') }}"
-                   class="{% if request.endpoint in ['admin.list_partners', 'admin.preview_partner_portal', 'admin.stop_partner_preview'] %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if request.endpoint in ['admin.list_partners', 'admin.preview_partner_portal', 'admin.stop_partner_preview'] %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Partners
                 </a>
                 <a href="{{ url_for('admin.partner_metrics') }}"
-                   class="{% if request.endpoint in ['admin.partner_metrics', 'admin.partner_metrics_csv'] %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if request.endpoint in ['admin.partner_metrics', 'admin.partner_metrics_csv'] %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Partner Metrics
                 </a>
                 <a href="{{ url_for('admin.list_users') }}"
-                   class="{% if 'user' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'user' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Users
                 </a>
                 <a href="{{ url_for('trending.dashboard') }}"
-                   class="{% if 'trending' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'trending' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Trending Topics
                 </a>
                 <a href="{{ url_for('admin.list_daily_questions') }}"
-                   class="{% if 'daily' in request.endpoint or 'question' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'daily' in request.endpoint or 'question' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Daily Questions
                 </a>
                 <a href="{{ url_for('brief_admin.dashboard') }}"
-                   class="{% if request.endpoint and (request.endpoint.startswith('brief_admin.') or request.endpoint.startswith('brief.')) %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if request.endpoint and (request.endpoint.startswith('brief_admin.') or request.endpoint.startswith('brief.')) %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Daily Brief
                 </a>
                 <a href="{{ url_for('briefings_admin.subscriptions') }}"
-                   class="{% if request.endpoint and request.endpoint.startswith('briefings_admin.') %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if request.endpoint and request.endpoint.startswith('briefings_admin.') %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Briefings
                 </a>
                 <a href="{{ url_for('admin.list_response_flags') }}"
-                   class="{% if 'flag' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'flag' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Flags
                 </a>
                 <a href="{{ url_for('admin.source_claims') }}"
-                   class="{% if 'source' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'source' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Source Claims
                 </a>
                 <a href="{{ url_for('admin.list_markets') }}"
-                   class="{% if 'polymarket' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                   class="{% if 'polymarket' in request.endpoint %}bg-blue-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Polymarket
                 </a>
             </div>

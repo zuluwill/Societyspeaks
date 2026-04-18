@@ -24,16 +24,16 @@
         <input type="hidden" name="next" value="{{ next_url }}">
         {% endif %}
         <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
 
         <label class="block text-sm font-medium text-gray-700 mt-4">Password</label>
-        <input type="password" name="password" autocomplete="current-password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="password" name="password" autocomplete="current-password" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
 
         <div class="flex items-center justify-between mt-2">
-            <a href="{{ url_for('auth.password_reset_request') }}" class="text-sm text-blue-500 hover:underline">Forgot Password?</a>
+            <a href="{{ url_for('auth.password_reset_request') }}" class="text-sm text-primary-500 hover:underline">Forgot Password?</a>
         </div>
 
-        <button type="submit" id="login-submit-btn" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition min-h-11">Login</button>
+        <button type="submit" id="login-submit-btn" class="w-full mt-6 bg-blue-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg transition min-h-11">Login</button>
     </form>
     <script>
       (function () {
@@ -48,6 +48,6 @@
       })();
     </script>
 
-    <p class="text-center mt-4 text-sm text-gray-600">Don't have an account? <a href="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}" class="text-blue-500 hover:underline">Register</a></p>
+    <p class="text-center mt-4 text-sm text-gray-600">Don't have an account? <a href="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}" class="text-primary-500 hover:underline">Register</a></p>
 </div>
 {% endblock %}

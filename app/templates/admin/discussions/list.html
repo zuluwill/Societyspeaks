@@ -16,9 +16,9 @@
                     name="q"
                     value="{{ search_query or '' }}"
                     placeholder="Search discussion title"
-                    class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                <button type="submit" class="px-3 py-1.5 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700">Search</button>
+                <button type="submit" class="px-3 py-1.5 rounded-md text-sm bg-primary-600 text-white hover:bg-primary-700">Search</button>
                 {% if search_query %}
                 <a href="{{ url_for('admin.list_discussions', status=status_filter or '') }}"
                    class="px-3 py-1.5 rounded-md text-sm border bg-white text-gray-700 border-gray-200 hover:bg-gray-50">
@@ -31,15 +31,15 @@
         <div class="mt-4 flex flex-wrap items-center gap-3">
             <span class="text-sm text-gray-500">Filter:</span>
             <a href="{{ url_for('admin.list_discussions', status='', q=search_query or '') }}"
-               class="px-3 py-1.5 rounded-md text-sm border {% if not status_filter %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
+               class="px-3 py-1.5 rounded-md text-sm border {% if not status_filter %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
                 All
             </a>
             <a href="{{ url_for('admin.list_discussions', status='open', q=search_query or '') }}"
-               class="px-3 py-1.5 rounded-md text-sm border {% if status_filter == 'open' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
+               class="px-3 py-1.5 rounded-md text-sm border {% if status_filter == 'open' %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
                 Open
             </a>
             <a href="{{ url_for('admin.list_discussions', status='closed', q=search_query or '') }}"
-               class="px-3 py-1.5 rounded-md text-sm border {% if status_filter == 'closed' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
+               class="px-3 py-1.5 rounded-md text-sm border {% if status_filter == 'closed' %}bg-primary-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
                 Closed
             </a>
         </div>
@@ -78,7 +78,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-2">
                                 <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
-                                   class="text-blue-600 hover:text-blue-900">View</a>
+                                   class="text-primary-600 hover:text-primary-900">View</a>
                                 <form action="{{ url_for('admin.toggle_discussion_closed', discussion_id=discussion.id) }}" method="POST" class="inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit"
@@ -109,7 +109,7 @@
                 {% endif %}
                 {% for page_num in discussions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
-                        <li><a href="?page={{ page_num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="px-3 py-2 border rounded-md {% if page_num == discussions.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                        <li><a href="?page={{ page_num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="px-3 py-2 border rounded-md {% if page_num == discussions.page %}bg-primary-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
                     {% else %}
                         <li class="px-3 py-2">...</li>
                     {% endif %}

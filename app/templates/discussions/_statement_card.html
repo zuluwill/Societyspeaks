@@ -1,4 +1,4 @@
-{% from 'components/vote_buttons.html' import vote_buttons %}
+{% from 'components/vote_buttons.html' import vote_buttons, statement_vote_stats_footer %}
 <div
   class="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors"
   id="statement-{{ statement.id }}"
@@ -37,12 +37,12 @@
   <div class="flex flex-col sm:flex-row gap-2">
     <a
       href="{{ url_for('statements.view_statement', statement_id=statement.id) }}"
-      class="flex-1 text-center px-4 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium transition-colors"
+      class="flex-1 text-center px-4 py-3 bg-blue-50 text-primary-700 hover:bg-blue-100 rounded-lg font-medium transition-colors"
       title="See full discussion thread with all responses"
     >
       <div class="font-bold">
         💬 View Discussion {% set response_count = statement.responses|rejectattr('is_deleted')|list|length %} {% if response_count > 0 %}
-        <span class="ml-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{{ response_count }}</span>
+        <span class="ml-1 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">{{ response_count }}</span>
         {% endif %}
       </div>
       <div style="font-size: 11px; color: #64748b">
@@ -61,22 +61,11 @@
     {% endif %}
   </div>
 
-  <div class="mt-3 pt-3 border-t border-gray-100">
-    <div class="flex items-center justify-between text-sm">
-      {% if statement_seeded_vote is not none %}
-      <div class="text-gray-600 statement-stats" data-statement-id="{{ statement.id }}">
-        <span class="font-semibold total-votes">{{ statement.total_votes }}</span>
-        total votes {% if statement.total_votes > 0 %} ·
-        <span class="font-semibold agreement-rate">{{ "%.0f"|format(statement.agreement_rate * 100) }}%</span>
-        agreement {% if statement.controversy_score > 0.7 %} ·
-        <span class="text-red-600 font-semibold">🔥 Controversial</span>
-        {% endif %} {% endif %}
-      </div>
-      {% else %}
-      <div class="text-gray-400 text-xs italic statement-stats" data-statement-id="{{ statement.id }}">
-        Vote to see results
-      </div>
-      {% endif %}
-    </div>
-  </div>
+  {{ statement_vote_stats_footer(
+      statement.id,
+      statement.total_votes,
+      statement.agreement_rate,
+      statement.controversy_score,
+      statement_seeded_vote is not none
+  ) }}
 </div>

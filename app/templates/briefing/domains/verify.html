@@ -33,7 +33,7 @@
                     <form action="{{ url_for('briefing.check_domain_verification', domain_id=domain.id) }}" method="POST" class="inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit"
-                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                             </svg>
@@ -41,7 +41,7 @@
                         </button>
                     </form>
                     <button type="button" id="refresh-status-btn"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
@@ -57,7 +57,7 @@
         {% if messages %}
         <div class="mb-6">
             {% for category, message in messages %}
-            <div class="rounded-md p-4 mb-2 {% if category == 'error' %}bg-red-50 text-red-800{% elif category == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+            <div class="rounded-md p-4 mb-2 {% if category == 'error' %}bg-red-50 text-red-800{% elif category == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-primary-800{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}
@@ -147,8 +147,8 @@
 
         <!-- Instructions -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 class="text-sm font-medium text-blue-800 mb-2">How to verify your domain</h3>
-            <ol class="list-decimal list-inside text-sm text-blue-700 space-y-2">
+            <h3 class="text-sm font-medium text-primary-800 mb-2">How to verify your domain</h3>
+            <ol class="list-decimal list-inside text-sm text-primary-700 space-y-2">
                 <li>Log in to your domain registrar or DNS provider (e.g., GoDaddy, Cloudflare, Namecheap)</li>
                 <li>Navigate to DNS settings for <strong>{{ domain.domain }}</strong></li>
                 <li>Add each DNS record shown above</li>
@@ -235,7 +235,7 @@ function showStatusMessage(message, type) {
     messageDiv.className = `mt-4 rounded-md p-4 ${
         type === 'success' ? 'bg-green-50 text-green-800' :
         type === 'error' ? 'bg-red-50 text-red-800' :
-        'bg-blue-50 text-blue-800'
+        'bg-blue-50 text-primary-800'
     }`;
     messageDiv.textContent = message;
     

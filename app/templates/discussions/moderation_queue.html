@@ -17,7 +17,7 @@ discussion.title }}{% endblock %} {% block content %}
       <div class="text-3xl font-bold text-green-900">{{ stats.approved }}</div>
     </div>
     <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-      <div class="text-blue-800 text-sm font-semibold">Rejected</div>
+      <div class="text-primary-800 text-sm font-semibold">Rejected</div>
       <div class="text-3xl font-bold text-blue-900">{{ stats.rejected }}</div>
     </div>
     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -59,14 +59,14 @@ discussion.title }}{% endblock %} {% block content %}
         <button
           type="button"
           id="select-all-btn"
-          class="text-sm text-blue-600 hover:underline"
+          class="text-sm text-primary-600 hover:underline"
         >
           Select All
         </button>
         <button
           type="button"
           id="select-none-btn"
-          class="text-sm text-blue-600 hover:underline"
+          class="text-sm text-primary-600 hover:underline"
         >
           Select None
         </button>
@@ -219,7 +219,7 @@ discussion.title }}{% endblock %} {% block content %}
   <div class="mt-8">
     <a
       href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-      class="text-blue-600 hover:underline"
+      class="text-primary-600 hover:underline"
     >
       ← Back to Discussion
     </a>

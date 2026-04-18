@@ -99,11 +99,11 @@
                                 <span class="text-gray-400">|</span>
                                 {% set leaning_label = source.political_leaning_label %}
                                 {% if leaning_label == 'Left' %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-primary-800">
                                     {{ leaning_label }}
                                 </span>
                                 {% elif leaning_label == 'Centre-Left' %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-primary-700">
                                     {{ leaning_label }}
                                 </span>
                                 {% elif leaning_label == 'Centre' %}
@@ -127,7 +127,7 @@
                             {% if website %}
                             <div class="mt-2">
                                 <a href="{{ website }}" target="_blank" rel="noopener noreferrer"
-                                   class="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center">
+                                   class="text-primary-600 hover:text-primary-800 text-sm inline-flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                     </svg>
@@ -156,7 +156,7 @@
                         </span>
                         {% elif can_claim %}
                         <a href="{{ url_for('sources.claim_source', slug=source.slug) }}"
-                           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
@@ -164,7 +164,7 @@
                         </a>
                         {% elif current_user.is_authenticated and not current_user.company_profile %}
                         <a href="{{ url_for('profiles.create_company_profile') }}"
-                           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                             Create Profile to Claim
                         </a>
                         {% endif %}
@@ -244,25 +244,25 @@
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-3xl font-bold text-blue-600">{{ stats.discussion_count }}</div>
+                    <div class="text-3xl font-bold text-primary-600">{{ stats.discussion_count }}</div>
                     <div class="text-sm text-gray-500">Discussions</div>
                 </div>
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-3xl font-bold text-blue-600">{{ stats.total_participants }}</div>
+                    <div class="text-3xl font-bold text-primary-600">{{ stats.total_participants }}</div>
                     <div class="text-sm text-gray-500">Participants</div>
                 </div>
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-3xl font-bold text-blue-600">{{ stats.total_votes }}</div>
+                    <div class="text-3xl font-bold text-primary-600">{{ stats.total_votes }}</div>
                     <div class="text-sm text-gray-500">Total Votes</div>
                 </div>
                 {% if stats.avg_opinion_groups > 0 %}
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-3xl font-bold text-blue-600">{{ stats.avg_opinion_groups }}</div>
+                    <div class="text-3xl font-bold text-primary-600">{{ stats.avg_opinion_groups }}</div>
                     <div class="text-sm text-gray-500">Avg Opinion Groups</div>
                 </div>
                 {% else %}
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-3xl font-bold text-blue-600">{{ stats.article_count }}</div>
+                    <div class="text-3xl font-bold text-primary-600">{{ stats.article_count }}</div>
                     <div class="text-sm text-gray-500">Articles</div>
                 </div>
                 {% endif %}
@@ -300,7 +300,7 @@
                     {% for page_num in discussions.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
                         {% if page_num %}
                         <a href="{{ url_for('sources.view_source', slug=source.slug, page=page_num) }}"
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page_num == discussions.page %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page_num == discussions.page %}text-primary-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
                             {{ page_num }}
                         </a>
                         {% else %}

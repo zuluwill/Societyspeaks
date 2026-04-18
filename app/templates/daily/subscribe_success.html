@@ -43,13 +43,13 @@
                 You can change frequency, day, time, and time zone anytime from the preferences link in any email we send.
                 {% if can_manage_daily_preferences %}
                 If you are logged in, you can also
-                <a href="{{ url_for('daily.manage_preferences') }}" class="text-blue-600 hover:underline font-medium">open preferences now</a>.
+                <a href="{{ url_for('daily.manage_preferences') }}" class="text-primary-600 hover:underline font-medium">open preferences now</a>.
                 {% endif %}
             </p>
 
             <div class="bg-blue-50 rounded-lg p-4">
                 <h3 class="text-sm font-semibold text-blue-900 mb-2">What happens next?</h3>
-                <ol class="text-sm text-blue-800 space-y-2">
+                <ol class="text-sm text-primary-800 space-y-2">
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">1.</span>
                         <span>Check your email for the welcome message</span>
@@ -75,11 +75,11 @@
 
         <div class="space-y-3">
             <a href="{{ url_for('daily.today') }}"
-               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+               class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                 Try today's question
             </a>
             <p class="text-sm text-gray-500">
-                Or <a href="/" class="text-blue-600 hover:underline">explore more discussions</a>
+                Or <a href="/" class="text-primary-600 hover:underline">explore more discussions</a>
             </p>
         </div>
     </div>

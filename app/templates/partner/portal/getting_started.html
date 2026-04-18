@@ -39,7 +39,7 @@
       <p class="text-sm text-blue-900">
         <strong>Newsroom workflow:</strong> use <code>external_id</code> for CMS mapping, webhook callbacks for downstream sync, and team roles in the portal for controlled access.
       </p>
-      <p class="text-xs text-blue-800 mt-2">
+      <p class="text-xs text-primary-800 mt-2">
         <strong>Embed submissions:</strong> default is vote/report-only. Enable inline statement submissions per discussion only when you want higher participation and have moderation capacity.
       </p>
     </div>
@@ -82,7 +82,7 @@
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Support</h3>
         <p class="text-sm text-gray-700 mb-3">Need help? We can assist with rollout.</p>
-        <a href="mailto:info@societyspeaks.io" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+        <a href="mailto:info@societyspeaks.io" class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
           Contact us
         </a>
       </div>
@@ -116,7 +116,7 @@
               {% else %}
               <form method="POST" action="{{ url_for('partner.portal_verify_domain', domain_id=domain.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="text-xs font-semibold text-blue-600 hover:underline">Verify now</button>
+                <button class="text-xs font-semibold text-primary-600 hover:underline">Verify now</button>
               </form>
               {% endif %}
             </div>
@@ -154,7 +154,7 @@
           <form method="POST" action="{{ url_for('partner.portal_create_key') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="env" value="live">
-            <button class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">New live key</button>
+            <button class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">New live key</button>
           </form>
           {% endif %}
         </div>
@@ -178,7 +178,7 @@
         <p class="text-sm text-gray-600 mb-3">Store the discussion ID in your CMS for consistent embeds. Use an <code>Idempotency-Key</code> on create to safely retry failed requests. You can create discussions with either <code>article_url</code> or <code>external_id</code> (for non-article contexts such as campaign hubs or live blogs).</p>
         <p class="text-sm text-gray-600 mb-4">
           Prefer Python or Node.js over raw HTTP?
-          <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="font-semibold text-blue-600 hover:underline">Download our SDKs →</a>
+          <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="font-semibold text-primary-600 hover:underline">Download our SDKs →</a>
         </p>
         <div class="code-block relative group">
           <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
@@ -240,7 +240,7 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
           <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">&lt;iframe src="{{ base_url }}/discussions/{id}/embed" width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
         </div>
-        <a href="{{ url_for('partner.portal_getting_started_success') }}" class="inline-flex items-center mt-4 text-sm font-semibold text-blue-600 hover:underline">
+        <a href="{{ url_for('partner.portal_getting_started_success') }}" class="inline-flex items-center mt-4 text-sm font-semibold text-primary-600 hover:underline">
           I embedded it successfully →
         </a>
       </div>
@@ -268,7 +268,7 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
           </button>
         </form>
       </div>
-      <p class="text-xs text-gray-400">Need more? <a href="mailto:info@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a> for Enterprise pricing.</p>
+      <p class="text-xs text-gray-400">Need more? <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">Contact us</a> for Enterprise pricing.</p>
       {% endif %}
       {% if partner.stripe_customer_id %}
       <div class="flex flex-wrap gap-2 mt-3">
@@ -291,8 +291,8 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
   -H "X-API-Key: sspk_live_..."</pre>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a href="{{ url_for('partner.portal_dashboard') }}" class="text-sm font-semibold text-blue-600 hover:underline">Manage webhooks on dashboard →</a>
-        <a href="{{ url_for('partner.api_docs') }}#webhooks-api" class="text-sm font-semibold text-blue-600 hover:underline">Webhook signing docs →</a>
+        <a href="{{ url_for('partner.portal_dashboard') }}" class="text-sm font-semibold text-primary-600 hover:underline">Manage webhooks on dashboard →</a>
+        <a href="{{ url_for('partner.api_docs') }}#webhooks-api" class="text-sm font-semibold text-primary-600 hover:underline">Webhook signing docs →</a>
       </div>
     </div>
 
@@ -306,14 +306,14 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
         <li>Keep disabled for most article pages; enable for campaign/live-blog workflows.</li>
         <li>When enabled, readers can submit 10-500 character statements directly in embed.</li>
       </ul>
-      <a href="{{ url_for('partner.portal_discussions') }}" class="text-sm font-semibold text-blue-600 hover:underline">Manage discussion policies →</a>
+      <a href="{{ url_for('partner.portal_discussions') }}" class="text-sm font-semibold text-primary-600 hover:underline">Manage discussion policies →</a>
     </div>
 
     {% if can_manage_team %}
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-6">
       <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 8: Invite your team</h2>
       <p class="text-sm text-gray-600 mb-3">Add engineers or editors so onboarding is not blocked on one account.</p>
-      <a href="{{ url_for('partner.portal_dashboard') }}" class="text-sm font-semibold text-blue-600 hover:underline">Manage team access on dashboard →</a>
+      <a href="{{ url_for('partner.portal_dashboard') }}" class="text-sm font-semibold text-primary-600 hover:underline">Manage team access on dashboard →</a>
     </div>
     {% endif %}
   </div>

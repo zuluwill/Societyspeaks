@@ -46,7 +46,7 @@
 
   <!-- Header -->
   <div class="mb-8">
-    <a href="{{ url_for('help.help') }}" class="text-sm text-blue-600 hover:underline">← Help Center</a>
+    <a href="{{ url_for('help.help') }}" class="text-sm text-primary-600 hover:underline">← Help Center</a>
     <h1 class="text-3xl font-bold mt-3 mb-3">Programmes</h1>
     <p class="text-gray-600 text-lg">Run structured deliberation campaigns — group multiple discussions under one project with shared themes, phases, and access controls.</p>
   </div>
@@ -107,7 +107,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-gray-900">Public</h3>
-            <p class="text-sm text-gray-700 mt-1">Your programme appears in the <a href="{{ url_for('programmes.list_programmes') }}" class="text-blue-600 hover:underline">public catalogue</a>. Anyone can browse and participate — no account required to read, an account is needed to vote or submit statements.</p>
+            <p class="text-sm text-gray-700 mt-1">Your programme appears in the <a href="{{ url_for('programmes.list_programmes') }}" class="text-primary-600 hover:underline">public catalogue</a>. Anyone can browse and participate — no account required to read, an account is needed to vote or submit statements.</p>
             <p class="text-sm text-gray-500 mt-1">Best for: open public consultations, transparent policy debates.</p>
           </div>
         </div>
@@ -153,7 +153,7 @@
       <div class="space-y-3">
         <div class="p-4 bg-gray-50 rounded-lg">
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wide bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Owner / Editor</span>
+            <span class="text-xs font-bold uppercase tracking-wide bg-blue-100 text-primary-800 px-2 py-0.5 rounded">Owner / Editor</span>
           </div>
           <p class="text-sm text-gray-700">Creates and manages the programme. Can edit settings, invite or remove stewards and participants, archive the programme, and export all data. If the programme belongs to an organisation, any editor of that organisation shares these permissions.</p>
         </div>
@@ -177,23 +177,23 @@
       <h2 class="text-xl font-semibold mb-4">Creating a programme</h2>
       <ol class="space-y-3 text-gray-700">
         <li class="flex gap-3">
-          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">1</span>
-          <div><strong>Go to Programmes → New programme</strong> from the navigation menu, or visit <a href="{{ url_for('programmes.create_programme') }}" class="text-blue-600 hover:underline">/programmes/new</a>.</div>
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">1</span>
+          <div><strong>Go to Programmes → New programme</strong> from the navigation menu, or visit <a href="{{ url_for('programmes.create_programme') }}" class="text-primary-600 hover:underline">/programmes/new</a>.</div>
         </li>
         <li class="flex gap-3">
-          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">2</span>
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">2</span>
           <div><strong>Name and describe it.</strong> Give it a clear name that participants will recognise. The description appears on the public programme page.</div>
         </li>
         <li class="flex gap-3">
-          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">3</span>
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">3</span>
           <div><strong>Set visibility.</strong> Choose Public, Unlisted, Invite-only, or Private depending on your audience and privacy needs.</div>
         </li>
         <li class="flex gap-3">
-          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">4</span>
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">4</span>
           <div><strong>Add themes and phases (optional).</strong> These become selectable tags when creating discussions inside the programme, letting you filter and group discussions later.</div>
         </li>
         <li class="flex gap-3">
-          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">5</span>
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">5</span>
           <div><strong>Add discussions.</strong> Create new discussions and assign them to this programme via the discussion's edit page. Each discussion inherits the programme's access restrictions.</div>
         </li>
       </ol>
@@ -294,11 +294,11 @@
       <h2 class="text-xl font-semibold mb-4">Next steps</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <a href="{{ url_for('programmes.create_programme') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
-          <h3 class="font-semibold text-blue-700">Create a Programme →</h3>
+          <h3 class="font-semibold text-primary-700">Create a Programme →</h3>
           <p class="text-sm text-gray-600 mt-1">Start a new programme from scratch</p>
         </a>
         <a href="{{ url_for('programmes.list_programmes') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
-          <h3 class="font-semibold text-blue-700">Browse Public Programmes →</h3>
+          <h3 class="font-semibold text-primary-700">Browse Public Programmes →</h3>
           <p class="text-sm text-gray-600 mt-1">See what programmes are currently live</p>
         </a>
         <a href="{{ url_for('help.creating_discussions') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
@@ -318,7 +318,7 @@
   <div class="mt-8 text-center">
     <p class="text-gray-600">
       Still need help?
-      <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-blue-600 hover:underline">
+      <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-primary-600 hover:underline">
         Send us feedback
       </a>
     </p>

@@ -90,7 +90,7 @@
                 <!-- Question Number Badge -->
                 <div class="px-6 pt-5 pb-2">
                     <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full
-                        {% if q_data.has_voted %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                        {% if q_data.has_voted %}bg-green-100 text-green-700{% else %}bg-blue-100 text-primary-700{% endif %}">
                         Question {{ loop.index }} of {{ total_questions }}
                         {% if q_data.has_voted %} - Voted{% endif %}
                     </span>
@@ -118,17 +118,17 @@
                             <div class="space-y-2">
                                 {% for article in q_data.source_articles %}
                                 <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer"
-                                   class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors group bg-white">
-                                    <svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition-colors group bg-white">
+                                    <svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-blue-600 group-hover:text-blue-800 leading-snug line-clamp-2">{{ article.title }}</p>
+                                        <p class="text-sm font-medium text-primary-600 group-hover:text-primary-800 leading-snug line-clamp-2">{{ article.title }}</p>
                                         {% if article.source and article.source.name %}
                                         <p class="text-xs text-gray-500 mt-0.5">{{ article.source.name }}</p>
                                         {% endif %}
                                     </div>
-                                    <svg class="w-3.5 h-3.5 text-gray-400 ml-1 mt-0.5 shrink-0 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 text-gray-400 ml-1 mt-0.5 shrink-0 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                     </svg>
                                 </a>
@@ -147,7 +147,7 @@
                     <div class="vote-results">
                         <p class="text-sm text-gray-500 mb-3">
                             You voted:
-                            <span class="font-medium {% if q_data.user_vote == 1 %}text-blue-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-gray-500{% endif %}">
+                            <span class="font-medium {% if q_data.user_vote == 1 %}text-primary-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-gray-500{% endif %}">
                                 {% if q_data.user_vote == 1 %}Agree{% elif q_data.user_vote == -1 %}Disagree{% else %}Unsure{% endif %}
                             </span>
                         </p>
@@ -155,7 +155,7 @@
                         <!-- Results Bar -->
                         <div class="results-bar mb-2">
                             <div class="flex h-full">
-                                <div class="results-segment bg-blue-600" style="width: {{ q_data.vote_results.agree_pct }}%"></div>
+                                <div class="results-segment bg-primary-600" style="width: {{ q_data.vote_results.agree_pct }}%"></div>
                                 <div class="results-segment bg-red-600" style="width: {{ q_data.vote_results.disagree_pct }}%"></div>
                                 <div class="results-segment bg-gray-500" style="width: {{ q_data.vote_results.unsure_pct }}%"></div>
                             </div>
@@ -163,7 +163,7 @@
 
                         <!-- Results Legend -->
                         <div class="flex justify-between text-xs text-gray-600">
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-blue-600 mr-1"></span>Agree {{ q_data.vote_results.agree_pct }}%</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>Agree {{ q_data.vote_results.agree_pct }}%</span>
                             <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree {{ q_data.vote_results.disagree_pct }}%</span>
                             <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unsure {{ q_data.vote_results.unsure_pct }}%</span>
                         </div>
@@ -171,7 +171,9 @@
                     </div>
                     {% else %}
                     <!-- Vote Buttons -->
-                    <div class="vote-buttons vote-buttons-grid" role="group" aria-label="Vote options">
+                    <fieldset class="vote-buttons border-0 p-0 m-0 min-w-0">
+                    <legend class="sr-only">Vote on this question: agree, disagree, or unsure</legend>
+                    <div class="vote-buttons-grid">
                         <button type="button" class="vote-btn vote-btn-agree"
                                 data-vote="agree" data-question="{{ q_data.question.id }}"
                                 aria-label="Agree with this statement" aria-pressed="false">
@@ -188,15 +190,16 @@
                           <span class="vote-content"><span class="vote-label">Unsure</span></span>
                         </button>
                     </div>
+                    </fieldset>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                        <select class="confidence-select rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        <select class="confidence-select rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
                                 data-question="{{ q_data.question.id }}">
                             <option value="">Confidence (optional)</option>
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
                         </select>
-                        <select class="reason-tag-select rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        <select class="reason-tag-select rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
                                 data-question="{{ q_data.question.id }}">
                             <option value="">Reason category (optional)</option>
                             <option value="evidence">Evidence</option>
@@ -219,7 +222,7 @@
                     <p class="text-sm text-gray-600">
                         &#128172; {{ q_data.discussion_stats.participant_count }} people discussing
                         <a href="{{ q_data.discussion_stats.discussion_url }}?source=weekly_batch&q={{ q_data.question.id }}"
-                           class="text-blue-600 hover:text-blue-700 underline ml-1">
+                           class="text-primary-600 hover:text-primary-700 underline ml-1">
                             View discussion &rarr;
                         </a>
                     </p>
@@ -231,7 +234,7 @@
 
         <!-- Footer Actions -->
         <div class="mt-8 text-center space-y-4">
-            <a href="{{ url_for('daily.today') }}" class="inline-block text-blue-600 hover:text-blue-700 font-medium">
+            <a href="{{ url_for('daily.today') }}" class="inline-block text-primary-600 hover:text-primary-700 font-medium">
                 &#8592; Back to Today's Question
             </a>
             {% if token %}
@@ -291,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!buttonsContainer) return;
 
         const voteLabels = {agree: 'Agree', disagree: 'Disagree', unsure: 'Unsure'};
-        const voteColors = {agree: 'text-blue-600', disagree: 'text-red-600', unsure: 'text-gray-500'};
+        const voteColors = {agree: 'text-primary-600', disagree: 'text-red-600', unsure: 'text-gray-500'};
         const voteEmojis = {agree: '✓', disagree: '✗', unsure: '?'};
 
         // Build source articles HTML
@@ -301,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
             articlesHtml = `<div class="mt-3 pt-3 border-t border-gray-200"><p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">${label}</p><div class="space-y-2">`;
             sourceArticles.slice(0, 3).forEach(article => {
                 const sourceName = (article.source_name && article.source_name !== 'Unknown') ? `<p class="text-xs text-gray-500 mt-0.5">${article.source_name}</p>` : '';
-                articlesHtml += `<a href="${article.url}" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors group"><svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg><div class="flex-1 min-w-0"><p class="text-sm font-medium text-blue-600 leading-snug">${article.title}</p>${sourceName}</div><svg class="w-3.5 h-3.5 text-gray-400 ml-1 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>`;
+                articlesHtml += `<a href="${article.url}" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition-colors group"><svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg><div class="flex-1 min-w-0"><p class="text-sm font-medium text-primary-600 leading-snug">${article.title}</p>${sourceName}</div><svg class="w-3.5 h-3.5 text-gray-400 ml-1 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>`;
             });
             articlesHtml += '</div></div>';
         }
@@ -311,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (discussionStats && discussionStats.has_discussion && discussionStats.discussion_url) {
             discussionHtml = `
                 <a href="${discussionStats.discussion_url}?source=weekly_batch" 
-                   class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium mb-3">
+                   class="block w-full text-center py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition text-sm font-medium mb-3">
                     Join ${discussionStats.participant_count || 0} people discussing →
                 </a>
             `;
@@ -324,17 +327,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-xs text-gray-500 mb-2">Research with AI:</p>
                 <div class="grid grid-cols-3 gap-2 mb-3">
                     <a href="https://perplexity.ai/search?q=${questionText}" target="_blank" 
-                       class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-center">
+                       class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <span class="text-xs font-medium text-gray-900">Perplexity</span>
                         <span class="text-xs text-gray-500">Web search</span>
                     </a>
                     <a href="https://chat.openai.com/?q=${questionText}" target="_blank" 
-                       class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-center">
+                       class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <span class="text-xs font-medium text-gray-900">ChatGPT</span>
                         <span class="text-xs text-gray-500">Discuss</span>
                     </a>
                     <a href="https://claude.ai/new?q=${questionText}" target="_blank" 
-                       class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-center">
+                       class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <span class="text-xs font-medium text-gray-900">Claude</span>
                         <span class="text-xs text-gray-500">Analyze</span>
                     </a>
@@ -353,14 +356,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <div class="results-bar mb-2">
                     <div class="flex h-full">
-                        <div class="results-segment bg-blue-600" style="width: ${results.agree_pct}%"></div>
+                        <div class="results-segment bg-primary-600" style="width: ${results.agree_pct}%"></div>
                         <div class="results-segment bg-red-600" style="width: ${results.disagree_pct}%"></div>
                         <div class="results-segment bg-gray-500" style="width: ${results.unsure_pct}%"></div>
                     </div>
                 </div>
 
                 <div class="flex justify-between text-xs text-gray-600 mb-2">
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-blue-600 mr-1"></span>Agree ${results.agree_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>Agree ${results.agree_pct}%</span>
                     <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree ${results.disagree_pct}%</span>
                     <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unsure ${results.unsure_pct}%</span>
                 </div>
@@ -384,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update badge
         const badge = card.querySelector('.inline-block.px-3');
         if (badge) {
-            badge.classList.remove('bg-blue-100', 'text-blue-700');
+            badge.classList.remove('bg-blue-100', 'text-primary-700');
             badge.classList.add('bg-green-100', 'text-green-700');
             badge.textContent = badge.textContent.replace(/ - Voted$/, '') + ' - Voted';
         }

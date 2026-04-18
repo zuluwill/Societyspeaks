@@ -20,7 +20,7 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <a href="{{ url_for('briefings_admin.briefings') }}"
-           class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if not status_filter and not cadence_filter and not owner_type_filter and not search_query %}ring-2 ring-blue-400{% endif %}">
+           class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if not status_filter and not cadence_filter and not owner_type_filter and not search_query %}ring-2 ring-primary-400{% endif %}">
             <p class="text-sm text-gray-500">Total Briefings</p>
             <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
         </a>
@@ -47,12 +47,12 @@
                     <label for="q" class="block text-sm font-medium text-gray-700 mb-1">Search by name</label>
                     <input type="text" name="q" id="q" value="{{ search_query or '' }}"
                            placeholder="Briefing name…"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                 </div>
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select name="status" id="status"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
                         <option value="">All Statuses</option>
                         <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
                         <option value="paused" {% if status_filter == 'paused' %}selected{% endif %}>Paused</option>
@@ -61,7 +61,7 @@
                 <div>
                     <label for="cadence" class="block text-sm font-medium text-gray-700 mb-1">Cadence</label>
                     <select name="cadence" id="cadence"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
                         <option value="">All Cadences</option>
                         <option value="daily" {% if cadence_filter == 'daily' %}selected{% endif %}>Daily</option>
                         <option value="weekly" {% if cadence_filter == 'weekly' %}selected{% endif %}>Weekly</option>
@@ -70,7 +70,7 @@
                 <div>
                     <label for="owner_type" class="block text-sm font-medium text-gray-700 mb-1">Owner</label>
                     <select name="owner_type" id="owner_type"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
                         <option value="">All Owners</option>
                         <option value="user" {% if owner_type_filter == 'user' %}selected{% endif %}>User</option>
                         <option value="org" {% if owner_type_filter == 'org' %}selected{% endif %}>Organisation</option>
@@ -79,7 +79,7 @@
             </div>
             <div class="mt-4 flex flex-wrap items-center gap-3">
                 <button type="submit"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                        class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -130,7 +130,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">
                                 <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}"
-                                   class="hover:text-blue-600 hover:underline" target="_blank" rel="noopener">
+                                   class="hover:text-primary-600 hover:underline" target="_blank" rel="noopener">
                                     {{ briefing.name }}
                                 </a>
                             </div>
@@ -144,7 +144,7 @@
                                     {% if briefing.owner_type == 'user' %}
                                         {{ briefing._owner.email }}
                                     {% else %}
-                                        <span class="text-indigo-700">{{ briefing._owner.name }}</span>
+                                        <span class="text-primary-700">{{ briefing._owner.name }}</span>
                                         <span class="text-xs text-gray-400 ml-1">(org)</span>
                                     {% endif %}
                                 {% else %}
@@ -154,7 +154,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
-                                {% if briefing.cadence == 'weekly' %}bg-blue-50 text-blue-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                                {% if briefing.cadence == 'weekly' %}bg-blue-50 text-primary-700{% else %}bg-gray-100 text-gray-700{% endif %}">
                                 {{ briefing.cadence | title }}
                             </span>
                             <div class="text-xs text-gray-400 mt-0.5">{{ briefing.timezone }} @ {{ '%02d' % briefing.preferred_send_hour }}:{{ '%02d' % briefing.preferred_send_minute }}</div>

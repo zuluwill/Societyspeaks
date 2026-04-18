@@ -27,6 +27,16 @@
         gap: 8px;
     }
 
+    /* Forms participate in the same grid as AJAX vote rows */
+    .vote-button-form {
+        display: contents;
+    }
+
+    /* Programme journey: same tokens, slightly taller tap targets under icons */
+    .journey-vote-btn.vote-btn {
+        min-height: 80px;
+    }
+
     @screen sm {
         .vote-buttons-grid {
             grid-template-columns: repeat(3, 1fr);

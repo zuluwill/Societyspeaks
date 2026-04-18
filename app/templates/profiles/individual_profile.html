@@ -72,7 +72,7 @@
                             {% if current_user.is_authenticated and current_user.profile_type == 'individual' and current_user.individual_profile and current_user.individual_profile.id == profile.id %}
                             <a href="{{ url_for('profiles.edit_individual_profile', username=profile.slug) }}"
                                aria-label="Edit individual profile"
-                               class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                               class="inline-flex items-center px-3 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
                                 <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
@@ -95,7 +95,7 @@
                         <p class="text-gray-600 text-base md:text-lg read-more-target--collapsed" id="profile-description">{{ profile.bio }}</p>
                         <button data-read-more-btn aria-expanded="false" aria-controls="profile-description"
                                 type="button"
-                                class="read-more-toggle md:hidden text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">
+                                class="read-more-toggle md:hidden text-primary-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded">
                             Read more
                         </button>
                     </div>
@@ -124,7 +124,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
                     {% if profile.email %}
-                        <a href="mailto:{{ profile.email }}" class="hover:text-blue-600 break-all">{{ profile.email }}</a>
+                        <a href="mailto:{{ profile.email }}" class="hover:text-primary-600 break-all">{{ profile.email }}</a>
                     {% else %}
                         <span class="text-gray-400">No email provided</span>
                     {% endif %}
@@ -135,7 +135,7 @@
                     </svg>
                     {% if profile.website %}
                         <a href="{{ profile.website }}" target="_blank" rel="noopener noreferrer"
-                           class="hover:text-blue-600">Visit Website</a>
+                           class="hover:text-primary-600">Visit Website</a>
                     {% else %}
                         <span class="text-gray-400">No website provided</span>
                     {% endif %}

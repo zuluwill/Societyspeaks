@@ -187,14 +187,14 @@
 
         <div class="flex flex-col sm:flex-row gap-4">
           {% if current_user.is_authenticated %}
-          <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-create-brief">
+          <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-create-brief">
             Create your brief
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
           </a>
           {% else %}
-          <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-start-trial">
+          <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-start-trial">
             Start free 30-day trial
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -226,12 +226,12 @@
             <!-- Brief content - showing real synthesis -->
             <div class="p-5 space-y-4">
               <!-- Lead story -->
-              <div class="border-l-4 border-blue-500 pl-4 py-2">
+              <div class="border-l-4 border-primary-500 pl-4 py-2">
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xs font-bold uppercase text-blue-600">Lead Story</span>
+                  <span class="text-xs font-bold uppercase text-primary-600">Lead Story</span>
                 </div>
                 <h4 class="font-bold text-slate-900 text-base mb-2">EU AI Act enforcement begins: What changes for UK tech companies</h4>
-                <p class="text-sm text-slate-600 leading-relaxed">The first compliance deadlines under the EU AI Act take effect this week. Companies deploying high-risk AI systems must now document training data sources and implement human oversight mechanisms. <span class="text-blue-600 font-medium">Three implications for UK firms operating in EU markets...</span></p>
+                <p class="text-sm text-slate-600 leading-relaxed">The first compliance deadlines under the EU AI Act take effect this week. Companies deploying high-risk AI systems must now document training data sources and implement human oversight mechanisms. <span class="text-primary-600 font-medium">Three implications for UK firms operating in EU markets...</span></p>
                 <div class="flex items-center gap-3 mt-3 text-xs text-slate-500">
                   <span class="bg-slate-100 px-2 py-0.5 rounded">Financial Times</span>
                   <span class="bg-slate-100 px-2 py-0.5 rounded">The Economist</span>
@@ -349,7 +349,7 @@
     <div class="grid lg:grid-cols-3 gap-8">
       <!-- ICP 1: Overloaded Professional -->
       <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-6">
+        <div class="w-12 h-12 rounded-xl bg-blue-100 text-primary-600 flex items-center justify-center mb-6">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
@@ -359,19 +359,19 @@
         <p class="text-slate-700 mb-6">"I want to feel on top of things without constantly checking."</p>
         <ul class="space-y-2 text-sm text-slate-600 mb-6">
           <li class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <svg class="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             One daily brief across all your interests
           </li>
           <li class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <svg class="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             Calm, structured, no hype
           </li>
           <li class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <svg class="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             Delivered before your day starts
           </li>
           <li class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <svg class="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             Private, shareable, or public — you choose
           </li>
         </ul>
@@ -460,17 +460,17 @@
 
     <div class="grid md:grid-cols-3 gap-8">
       <div class="text-center">
-        <div class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
+        <div class="w-14 h-14 rounded-full bg-primary-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
         <h3 class="font-semibold text-slate-900 mb-2">Pick a template</h3>
         <p class="text-slate-600 text-sm">Politics, Tech, Climate, Markets — or start from scratch with your own sources.</p>
       </div>
       <div class="text-center">
-        <div class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
+        <div class="w-14 h-14 rounded-full bg-primary-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
         <h3 class="font-semibold text-slate-900 mb-2">Add your sources</h3>
         <p class="text-slate-600 text-sm">RSS feeds, Substacks, PDFs, web pages. We synthesise them all.</p>
       </div>
       <div class="text-center">
-        <div class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
+        <div class="w-14 h-14 rounded-full bg-primary-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
         <h3 class="font-semibold text-slate-900 mb-2">Get your brief</h3>
         <p class="text-slate-600 text-sm">Daily or weekly, at the time you choose. Auto-send or review first.</p>
       </div>
@@ -506,7 +506,7 @@
             <!-- Story 1 -->
             <div>
               <div class="flex items-center gap-2 mb-2">
-                <span class="text-xs font-bold text-blue-600 uppercase">Lead</span>
+                <span class="text-xs font-bold text-primary-600 uppercase">Lead</span>
                 <span class="text-xs text-slate-400">•</span>
                 <span class="text-xs text-slate-500">4 sources covering this</span>
               </div>
@@ -557,7 +557,7 @@
       <div class="lg:col-span-2 space-y-6">
         <div class="bg-slate-800 rounded-xl p-6">
           <h4 class="font-semibold text-white mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
             Multi-source synthesis
@@ -586,7 +586,7 @@
           <p class="text-slate-300 text-sm">Every claim links back to its source. You can verify anything and go deeper when you need to.</p>
         </div>
 
-        <a href="{{ url_for('brief.today') }}" class="block bg-blue-600 hover:bg-blue-500 rounded-xl p-6 text-center transition-colors" data-ph-capture-attribute-cta="view-daily-brief-example">
+        <a href="{{ url_for('brief.today') }}" class="block bg-primary-600 hover:bg-primary-500 rounded-xl p-6 text-center transition-colors" data-ph-capture-attribute-cta="view-daily-brief-example">
           <span class="text-white font-semibold">View our free Daily Brief →</span>
           <p class="text-blue-200 text-sm mt-1">See the format in action (public example)</p>
         </a>
@@ -606,7 +606,7 @@
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <!-- Politics -->
       <div class="group bg-slate-50 hover:bg-blue-50 rounded-xl p-5 border border-slate-200 hover:border-blue-300 transition-all cursor-pointer">
-        <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 text-primary-600 flex items-center justify-center mb-3 group-hover:bg-primary-600 group-hover:text-white transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
           </svg>
@@ -705,8 +705,8 @@
       </div>
 
       <!-- Policy Monitoring (Org) -->
-      <div class="group bg-slate-50 hover:bg-indigo-50 rounded-xl p-5 border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer">
-        <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+      <div class="group bg-slate-50 hover:bg-primary-50 rounded-xl p-5 border border-slate-200 hover:border-primary-300 transition-all cursor-pointer">
+        <div class="w-10 h-10 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center mb-3 group-hover:bg-primary-600 group-hover:text-white transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
@@ -714,7 +714,7 @@
         <h4 class="font-semibold text-slate-900 mb-1">Policy Monitoring</h4>
         <p class="text-sm text-slate-500 mb-2">Regulatory changes, compliance updates</p>
         <p class="text-xs text-slate-400">8 sources • Weekly</p>
-        <span class="inline-block mt-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">For Teams</span>
+        <span class="inline-block mt-2 text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">For Teams</span>
       </div>
 
       <!-- Sector Intelligence (Org) -->
@@ -758,7 +758,7 @@
     </div>
 
     <div class="text-center">
-      <button id="show-more-templates" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium" data-ph-capture-attribute-cta="show-all-templates">
+      <button id="show-more-templates" class="inline-flex items-center text-primary-600 hover:text-primary-800 font-medium" data-ph-capture-attribute-cta="show-all-templates">
         <span id="templates-btn-text">Show all 12 templates</span>
         <svg id="templates-btn-icon" class="ml-1 w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -810,7 +810,7 @@
 
       <div class="bg-white rounded-xl p-6 border border-slate-200">
         <div class="flex items-center gap-3 mb-3">
-          <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+          <div class="w-10 h-10 rounded-lg bg-blue-100 text-primary-600 flex items-center justify-center">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
             </svg>
@@ -1159,7 +1159,7 @@
           </p>
         </div>
         <div class="mt-8 flex items-center gap-4">
-          <a href="{{ url_for('main.index') }}" class="text-blue-400 hover:text-blue-300 font-medium text-sm" data-ph-capture-attribute-cta="why-explore-platform">
+          <a href="{{ url_for('main.index') }}" class="text-primary-400 hover:text-primary-200 font-medium text-sm" data-ph-capture-attribute-cta="why-explore-platform">
             Explore the free platform →
           </a>
           <a href="https://github.com/zuluwill/Societyspeaks" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-slate-300 font-medium text-sm" data-ph-capture-attribute-cta="why-github">
@@ -1172,7 +1172,7 @@
         <ul class="space-y-4">
           <li class="flex items-start gap-3">
             <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
             </div>
@@ -1265,7 +1265,7 @@
           <h3 class="font-semibold text-slate-900 mb-1">For organisations: additional controls</h3>
           <p class="text-slate-600 text-sm">Team and Enterprise plans include approval workflows, audit logs, custom data retention, and SSO/SAML integration.</p>
         </div>
-        <a href="#pricing-organisations" id="org-plan-link" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
+        <a href="#pricing-organisations" id="org-plan-link" class="inline-flex items-center text-primary-600 hover:text-primary-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
           View organisation plans →
         </a>
       </div>
@@ -1333,14 +1333,14 @@
         Set up your brief in 2 minutes. First delivery arrives tomorrow.
       </p>
       {% if current_user.is_authenticated %}
-      <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white hover:bg-blue-500 transition-all" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4)" data-ph-capture-attribute-cta="footer-create-brief">
+      <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-lg font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4)" data-ph-capture-attribute-cta="footer-create-brief">
         Create your brief
         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
         </svg>
       </a>
       {% else %}
-      <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white hover:bg-blue-500 transition-all" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4)" data-ph-capture-attribute-cta="footer-start-trial">
+      <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-lg font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4)" data-ph-capture-attribute-cta="footer-start-trial">
         Start free 30-day trial
         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>

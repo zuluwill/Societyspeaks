@@ -6,19 +6,19 @@ statement.content[:50] }}...{% endblock %} {% block content %}
     <nav class="text-sm">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Discussions</a
       >
       <span class="mx-2">/</span>
       <a
         href="{{ url_for('discussions.view_discussion', discussion_id=statement.discussion_id, slug=statement.discussion.slug) }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >{{ statement.discussion.title }}</a
       >
       <span class="mx-2">/</span>
       <a
         href="{{ url_for('statements.view_statement', statement_id=statement.id) }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Statement</a
       >
       <span class="mx-2">/</span>

@@ -15,7 +15,7 @@
         </svg>
         Print
       </button>
-      <a href="{{ url_for('consensus.view_results', discussion_id=discussion.id) }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      <a href="{{ url_for('consensus.view_results', discussion_id=discussion.id) }}" class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
         Back to Analysis
       </a>
     </div>
@@ -25,7 +25,7 @@
     <h2 class="text-xl font-semibold mb-4">Report Summary</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
       <div class="text-center p-3 bg-gray-50 rounded">
-        <div class="text-2xl font-bold text-blue-600">{{ analysis.num_clusters }}</div>
+        <div class="text-2xl font-bold text-primary-600">{{ analysis.num_clusters }}</div>
         <div class="text-sm text-gray-600">Opinion Groups</div>
       </div>
       <div class="text-center p-3 bg-gray-50 rounded">
@@ -73,7 +73,7 @@
 
   {% if bridge_statements %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4 text-blue-700">Bridge Statements</h2>
+    <h2 class="text-xl font-semibold mb-4 text-primary-700">Bridge Statements</h2>
     <p class="text-gray-600 mb-4">Statements that find common ground between different opinion groups.</p>
     <div class="space-y-3">
       {% for stmt in bridge_statements %}
@@ -81,7 +81,7 @@
         <p class="text-gray-800">{{ stmt.content | e }}</p>
         {% set stmt_data = analysis.cluster_data.get('bridge_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
         {% if stmt_data %}
-        <div class="mt-2 text-sm text-blue-700">
+        <div class="mt-2 text-sm text-primary-700">
           Bridge score: {{ "%.2f"|format(stmt_data.get('bridge_score', 0)) }}
         </div>
         {% endif %}

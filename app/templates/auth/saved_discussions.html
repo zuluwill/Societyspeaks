@@ -22,7 +22,7 @@
       </p>
     </div>
     <a href="{{ url_for('discussions.search_discussions') }}"
-       class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 shrink-0">
+       class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 shrink-0">
       Browse discussions
     </a>
   </div>
@@ -37,7 +37,7 @@
         name="q"
         value="{{ q }}"
         placeholder="Search saved discussions..."
-        class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
       >
     </div>
   </form>
@@ -63,7 +63,7 @@
         {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
           {% if p %}
             {% if p == pagination.page %}
-              <span class="px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
+              <span class="px-3 py-1.5 text-sm font-semibold bg-primary-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
             {% else %}
               <a href="{{ url_for('auth.saved_discussions', page=p, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ p }}</a>
             {% endif %}
@@ -83,11 +83,11 @@
     <div class="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
       {% if q %}
         <p class="text-sm font-medium text-gray-600 mb-1">No saved discussions match "{{ q }}"</p>
-        <a href="{{ url_for('auth.saved_discussions') }}" class="text-sm text-blue-600 hover:underline">Clear search</a>
+        <a href="{{ url_for('auth.saved_discussions') }}" class="text-sm text-primary-600 hover:underline">Clear search</a>
       {% else %}
         <p class="text-sm font-medium text-gray-600 mb-1">No saved discussions yet</p>
         <p class="text-xs text-gray-400 mb-4">Save a discussion from its page to build your watchlist.</p>
-        <a href="{{ url_for('discussions.search_discussions') }}" class="inline-block bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+        <a href="{{ url_for('discussions.search_discussions') }}" class="inline-block bg-primary-600 text-white px-5 py-2 rounded-md hover:bg-primary-700 text-sm font-medium">
           Explore discussions
         </a>
       {% endif %}

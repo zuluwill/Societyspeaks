@@ -23,22 +23,22 @@
         <input type="hidden" name="next" value="{{ next_url }}">
         {% endif %}
         <label class="block text-sm font-medium text-gray-700">Username</label>
-        <input type="text" name="username" autocomplete="username" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="text" name="username" autocomplete="username" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
 
         <label class="block text-sm font-medium text-gray-700 mt-4">Email</label>
-        <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
 
         <label class="block text-sm font-medium text-gray-700 mt-4">Password</label>
-        <input type="password" name="password" autocomplete="new-password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="password" name="password" autocomplete="new-password" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
 
         <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700">Verify you're human: What is {{ captcha_num1 }} + {{ captcha_num2 }}?</label>
-            <input type="number" name="verification" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+            <input type="number" name="verification" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
         </div>
 
-        <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition min-h-11">Register</button>
+        <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg transition min-h-11">Register</button>
     </form>
 
-    <p class="text-center mt-4 text-sm text-gray-600">Already have an account? <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}" class="text-blue-500 hover:underline">Login</a></p>
+    <p class="text-center mt-4 text-sm text-gray-600">Already have an account? <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}" class="text-primary-500 hover:underline">Login</a></p>
 </div>
 {% endblock %}

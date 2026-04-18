@@ -1,0 +1,28 @@
+{#
+  Society Speaks — design tokens (DRY).
+
+  Tailwind `primary` is defined in tailwind.config.js as the blue scale.
+  Use these macros for primary actions, default in-content links, and form
+  focus so product surfaces stay aligned.
+
+  Do not use `primary` / these macros for political-spectrum UI (e.g. centre
+  coverage in briefs, market-signal bands) where indigo/violet/blue shades
+  encode meaning — keep those explicit palette classes.
+#}
+
+{% macro btn_primary_lg() -%}inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors{%- endmacro %}
+
+{% macro btn_primary_md() -%}inline-flex items-center justify-center rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors{%- endmacro %}
+
+{% macro btn_primary_sm() -%}inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors{%- endmacro %}
+
+{% macro link_primary() -%}text-primary-600 font-medium hover:text-primary-800 hover:underline{%- endmacro %}
+
+{% macro link_primary_semibold() -%}text-primary-600 font-semibold hover:text-primary-800{%- endmacro %}
+
+{% macro icon_trust() -%}text-primary-500{%- endmacro %}
+
+{% macro focus_ring_input() -%}focus:outline-none focus:ring-1 focus:ring-primary-400{%- endmacro %}
+
+{# Matches common @tailwindcss/forms / hand-built controls (ring-2 + border). #}
+{% macro focus_ring_input_2() -%}focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500{%- endmacro %}

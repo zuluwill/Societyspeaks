@@ -13,9 +13,9 @@
     <header class="space-y-4">
       <nav class="text-sm text-gray-500">
         {% if partner %}
-        <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-blue-600">Partner Portal</a>
+        <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-primary-600">Partner Portal</a>
         {% else %}
-        <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
+        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">For Publishers</a>
         {% endif %}
         <span class="mx-2">/</span>
         <span class="text-gray-900">API Reference</span>
@@ -28,7 +28,7 @@
             with JSON APIs built for newsroom workflows and developer velocity.
           </p>
           <div class="flex flex-wrap gap-3">
-            <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+            <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
               Open API Playground
             </a>
             <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
@@ -44,7 +44,7 @@
         </div>
         <div class="lg:col-span-4">
           <div class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-wide text-blue-600">Quick start</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">Quick start</p>
             <div class="code-block relative group mt-3">
               <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
@@ -71,13 +71,13 @@
 
       <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
-        <ul class="text-blue-800 text-sm space-y-1">
+        <ul class="text-primary-800 text-sm space-y-1">
           <li><strong>Partner Portal:</strong> <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="underline font-medium">{{ 'Open your dashboard' if partner else 'Create a portal' }}</a> to get your test API key and DNS verification token.</li>
           <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.</li>
           <li><strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.</li>
           <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
         </ul>
-        <p class="text-xs text-blue-800 mt-2">
+        <p class="text-xs text-primary-800 mt-2">
           Newsroom workflow quick map: <code>external_id</code> for CMS mapping, webhook callbacks for system sync, and Partner Portal roles for access control.
         </p>
       </div>
@@ -158,7 +158,7 @@
         </div>
         <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p class="text-sm font-semibold text-blue-900 mb-1">HTTPS required</p>
-          <p class="text-sm text-blue-800">
+          <p class="text-sm text-primary-800">
             All API requests must be made over HTTPS and enforced at your edge/proxy layer in production.
             Never log your API key or include it in URLs — always send it in the <code>X-API-Key</code> header.
           </p>
@@ -189,7 +189,7 @@
         <div class="mb-8">
           <h3 class="font-semibold text-gray-900 mb-2">1. Add to your project</h3>
           <p class="text-gray-600 text-sm mb-3">Download the file and place it alongside your application code.</p>
-          <a href="{{ url_for('partner.sdk_python') }}" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors mb-4">
+          <a href="{{ url_for('partner.sdk_python') }}" class="inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors mb-4">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
             Download societyspeaks_partner.py
           </a>
@@ -239,7 +239,7 @@ except PartnerApiError as e:
         </div>
 
         <details class="group">
-          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 mb-3">
+          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-500 mb-3">
             <span class="group-open:hidden">▶ View full source</span>
             <span class="hidden group-open:inline">▼ Hide source</span>
             <span class="text-xs font-mono text-gray-400 font-normal">societyspeaks_partner.py</span>
@@ -256,7 +256,7 @@ except PartnerApiError as e:
         <div class="mb-8">
           <h3 class="font-semibold text-gray-900 mb-2">1. Add to your project</h3>
           <p class="text-gray-600 text-sm mb-3">Download the file and place it alongside your application code.</p>
-          <a href="{{ url_for('partner.sdk_node') }}" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors mb-4">
+          <a href="{{ url_for('partner.sdk_node') }}" class="inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors mb-4">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
             Download societyspeaks_partner.js
           </a>
@@ -308,7 +308,7 @@ try {
         </div>
 
         <details class="group">
-          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 mb-3">
+          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-500 mb-3">
             <span class="group-open:hidden">▶ View full source</span>
             <span class="hidden group-open:inline">▼ Hide source</span>
             <span class="text-xs font-mono text-gray-400 font-normal">societyspeaks_partner.js</span>
@@ -377,7 +377,7 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <code class="text-sm">
-            <span class="text-blue-600 font-bold">GET</span>
+            <span class="text-primary-600 font-bold">GET</span>
             <span class="text-gray-900">/api/discussions/by-article-url</span>
           </code>
         </div>
@@ -483,7 +483,7 @@ const embedUrl = data.embed_url;</pre>
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <code class="text-sm">
-            <span class="text-blue-600 font-bold">GET</span>
+            <span class="text-primary-600 font-bold">GET</span>
             <span class="text-gray-900">/api/discussions/{discussion_id}/snapshot</span>
           </code>
         </div>
@@ -618,7 +618,7 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p class="text-sm text-blue-800">
+            <p class="text-sm text-primary-800">
               <strong>Allowed fonts:</strong> system-ui, Georgia, Inter, Lato, Open Sans, Source Serif Pro
             </p>
           </div>
@@ -709,7 +709,7 @@ const embedUrl = data.embed_url;</pre>
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <code class="text-sm">
-            <span class="text-blue-600 font-bold">GET</span>
+            <span class="text-primary-600 font-bold">GET</span>
             <span class="text-gray-900">/api/oembed</span>
           </code>
         </div>
@@ -769,7 +769,7 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div class="p-3 bg-blue-50 rounded-lg">
-            <p class="text-sm text-blue-800">
+            <p class="text-sm text-primary-800">
               <strong>Auto-discovery:</strong> Discussion pages include a <code>&lt;link rel="alternate" type="application/json+oembed"&gt;</code> tag for automatic oEmbed discovery by compatible platforms.
             </p>
           </div>
@@ -1246,8 +1246,8 @@ app.post(
   <!-- Footer -->
   <div class="mt-12 pt-8 border-t border-gray-200">
     <p class="text-gray-500 text-sm">
-      Questions? <a href="mailto:info@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a>
-      or visit the <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.hub') }}" class="text-blue-600 hover:underline">{{ 'Partner Dashboard' if partner else 'Partner Hub' }}</a>.
+      Questions? <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">Contact us</a>
+      or visit the <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.hub') }}" class="text-primary-600 hover:underline">{{ 'Partner Dashboard' if partner else 'Partner Hub' }}</a>.
     </p>
   </div>
 </div>
@@ -1329,7 +1329,7 @@ app.post(
       if (el) sections.push({ id: id, el: el, link: link });
     });
 
-    var activeClass = ['bg-blue-50', 'text-blue-700', 'font-semibold'];
+    var activeClass = ['bg-blue-50', 'text-primary-700', 'font-semibold'];
     var inactiveClass = ['text-gray-600'];
 
     function highlight(activeId) {

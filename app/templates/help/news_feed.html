@@ -31,7 +31,7 @@
 {% block content %}
 <div class="max-w-4xl mx-auto p-6">
   <div class="mb-8">
-    <a href="{{ url_for('help.help') }}" class="text-blue-600 hover:underline mb-4 inline-block">
+    <a href="{{ url_for('help.help') }}" class="text-primary-600 hover:underline mb-4 inline-block">
       &larr; Back to Help
     </a>
     <h1 class="text-3xl font-bold mb-4">How Our News Feed Works</h1>
@@ -68,11 +68,11 @@
             <p class="text-xs text-gray-500 mb-3">Articles from these outlets become discussions:</p>
             <div class="space-y-3">
               <div>
-                <span class="text-xs font-medium text-blue-800 uppercase tracking-wide">Left</span>
+                <span class="text-xs font-medium text-primary-800 uppercase tracking-wide">Left</span>
                 <p class="text-sm text-gray-700">The Guardian, The New Yorker, The Atlantic, The Independent, The Intercept, New Statesman, Ezra Klein, The News Agents, Matt Taibbi, Freddie deBoer, Vox</p>
               </div>
               <div>
-                <span class="text-xs font-medium text-blue-600 uppercase tracking-wide">Centre-Left</span>
+                <span class="text-xs font-medium text-primary-600 uppercase tracking-wide">Centre-Left</span>
                 <p class="text-sm text-gray-700">ProPublica, Slow Boring, Noahpinion, Commonweal, The New York Times, Politico, Yascha Mounk, Anne Applebaum, Jonathan Rauch, Zeynep Tufekci, Cory Doctorow, Chartbook</p>
               </div>
               <div>
@@ -176,7 +176,7 @@
       
       <div class="space-y-4">
         <div class="flex items-start gap-4">
-          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</div>
+          <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</div>
           <div>
             <h3 class="font-semibold">Article Collection</h3>
             <p class="text-gray-600 text-sm">We gather articles from our sources 4 times daily to catch major news cycles.</p>
@@ -184,7 +184,7 @@
         </div>
         
         <div class="flex items-start gap-4">
-          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
+          <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
           <div>
             <h3 class="font-semibold">Topic Filtering</h3>
             <p class="text-gray-600 text-sm">Articles are filtered to find debate-worthy civic topics while removing celebrity/lifestyle content.</p>
@@ -192,7 +192,7 @@
         </div>
         
         <div class="flex items-start gap-4">
-          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
+          <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
           <div>
             <h3 class="font-semibold">AI Scoring</h3>
             <p class="text-gray-600 text-sm">Topics are scored for debate potential and civic relevance using AI.</p>
@@ -200,7 +200,7 @@
         </div>
         
         <div class="flex items-start gap-4">
-          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</div>
+          <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</div>
           <div>
             <h3 class="font-semibold">Clustering</h3>
             <p class="text-gray-600 text-sm">Similar articles from different sources are grouped into single topics.</p>
@@ -208,7 +208,7 @@
         </div>
         
         <div class="flex items-start gap-4">
-          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
+          <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
           <div>
             <h3 class="font-semibold">Discussion Creation</h3>
             <p class="text-gray-600 text-sm">A neutral discussion title and balanced seed statements are generated to frame the debate fairly.</p>
@@ -216,7 +216,7 @@
         </div>
         
         <div class="flex items-start gap-4">
-          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">6</div>
+          <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">6</div>
           <div>
             <h3 class="font-semibold">Quality Checks</h3>
             <p class="text-gray-600 text-sm">Automated checks ensure topics meet quality thresholds before going live.</p>
@@ -240,7 +240,7 @@
     <div class="bg-white rounded-lg shadow-md p-6">
       <h2 class="text-xl font-semibold mb-4">The Daily Brief</h2>
       <p class="text-gray-700 mb-4">
-        Prefer to receive a curated summary? Subscribe to <a href="{{ url_for('brief.today') }}" class="text-blue-600 hover:underline">The Daily Brief</a> - 
+        Prefer to receive a curated summary? Subscribe to <a href="{{ url_for('brief.today') }}" class="text-primary-600 hover:underline">The Daily Brief</a> —
         our email newsletter that delivers the day's top stories with coverage analysis from multiple perspectives.
       </p>
       <div class="bg-gray-50 p-4 rounded-lg">
@@ -258,7 +258,7 @@
         New discussions are shared on Bluesky throughout the day. Follow us to catch trending topics as they emerge:
       </p>
       <a href="https://bsky.app/profile/societyspeaks.bsky.social" target="_blank" rel="noopener noreferrer" 
-         class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+         class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 6.5c-.28 0-.5.22-.5.5v6c0 .28.22.5.5.5s.5-.22.5-.5V9c0-.28-.22-.5-.5-.5zm-9 0c-.28 0-.5.22-.5.5v6c0 .28.22.5.5.5s.5-.22.5-.5V9c0-.28-.22-.5-.5-.5zm4.5 0c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
         </svg>
@@ -272,7 +272,7 @@
         This system is always evolving. If you think we're missing important topics, 
         including too much noise, or could improve our selection process, we'd love to hear from you.
       </p>
-      <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+      <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="inline-block bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
         Send Feedback
       </a>
     </div>

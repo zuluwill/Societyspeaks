@@ -21,7 +21,7 @@
     <div class="px-4 py-3 rounded-md text-sm
       {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200
       {% elif category == 'success' %}bg-green-50 text-green-700 border border-green-200
-      {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+      {% else %}bg-blue-50 text-primary-700 border border-blue-200{% endif %}">
       {{ message }}
     </div>
     {% endfor %}
@@ -43,7 +43,7 @@
       <div class="space-y-4">
         <div>
           {{ form.title.label(class="block text-sm font-medium text-gray-700") }}
-          {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Enter a descriptive title for your discussion") }}
+          {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="Enter a descriptive title for your discussion") }}
           {% if form.title.errors %}{% for error in form.title.errors %}
           <p class="mt-1 text-sm text-red-600">{{ error }}</p>
           {% endfor %}{% endif %}
@@ -51,7 +51,7 @@
 
         <div>
           {{ form.description.label(class="block text-sm font-medium text-gray-700") }}
-          {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Provide context about what you want to discuss") }}
+          {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Provide context about what you want to discuss") }}
           {% if form.description.errors %}{% for error in form.description.errors %}
           <p class="mt-1 text-sm text-red-600">{{ error }}</p>
           {% endfor %}{% endif %}
@@ -60,14 +60,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             {{ form.topic.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.topic(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+            {{ form.topic(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }}
             {% if form.topic.errors %}{% for error in form.topic.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div>
             {{ form.keywords.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.keywords(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="e.g. climate, energy, policy") }}
+            {{ form.keywords(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="e.g. climate, energy, policy") }}
             {% if form.keywords.errors %}{% for error in form.keywords.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -77,14 +77,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+            {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }}
             {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div id="country_wrapper">
             {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+            {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }}
             {% if form.country.errors %}{% for error in form.country.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -95,7 +95,7 @@
           {{ form.city.label(class="block text-sm font-medium text-gray-700") }}
           {% set selected_city = (form.city.data or discussion.city or '') %}
           <select id="city" name="city"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
             {% if selected_city %}
             <option value="{{ selected_city }}" selected>{{ selected_city }}</option>
             {% else %}
@@ -115,7 +115,7 @@
           Link this discussion to a Programme to group it with related discussions for combined analysis and reporting.
           {% if not programme_meta %}
           <span class="block mt-2">You don't have any active programmes.
-            <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Create a programme →</a>
+            <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline font-medium">Create a programme →</a>
             (opens in a new tab)
           </span>
           {% endif %}
@@ -123,14 +123,14 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             {{ form.programme_id.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+            {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }}
             {% if form.programme_id.errors %}{% for error in form.programme_id.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div>
             {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+            {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
             <p class="mt-1 text-xs text-gray-400" id="theme_hint">{% if not discussion.programme %}Select a programme first{% endif %}</p>
             {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -138,7 +138,7 @@
           </div>
           <div>
             {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+            {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
             <p class="mt-1 text-xs text-gray-400" id="phase_hint">{% if not discussion.programme %}Select a programme first{% endif %}</p>
             {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -156,21 +156,21 @@
         <div class="space-y-4">
           <div>
             {{ form.information_title.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Why this discussion matters") }}
+            {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="Why this discussion matters") }}
             {% if form.information_title.errors %}{% for error in form.information_title.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div>
             {{ form.information_body.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
+            {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
             {% if form.information_body.errors %}{% for error in form.information_body.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div>
             {{ form.information_links.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
+            {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
             <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>. Only http/https links are kept.</p>
             {% if form.information_links.errors %}{% for error in form.information_links.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -184,7 +184,7 @@
            class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
           Cancel
         </a>
-        {{ form.submit(class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700") }}
+        {{ form.submit(class="px-6 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700") }}
       </div>
     </form>
   </div>

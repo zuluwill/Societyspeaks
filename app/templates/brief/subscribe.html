@@ -35,13 +35,13 @@
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email address</label>
                         {% if current_user.is_authenticated and current_user.email %}
                         <input type="email" id="email" name="email" required
-                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                value="{{ current_user.email }}"
                                readonly>
                         <p class="text-xs text-gray-500 mt-1">Using your account email</p>
                         {% else %}
                         <input type="email" id="email" name="email" required
-                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                placeholder="you@example.com">
                         {% endif %}
                     </div>
@@ -49,20 +49,20 @@
                     <div>
                         <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Your time zone</label>
                         {% from 'components/timezone_select.html' import timezone_select %}
-                        {{ timezone_select(name='timezone', selected='Europe/London', css_class='w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500') }}
+                        {{ timezone_select(name='timezone', selected='Europe/London', css_class='w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500') }}
                     </div>
 
                     {# Cadence selection #}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">How often?</label>
                         <div class="grid grid-cols-2 gap-3">
-                            <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
+                            <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-primary-500 has-[:checked]:border-primary-500 has-[:checked]:bg-blue-50 transition-all">
                                 <input type="radio" name="cadence" value="daily" class="sr-only" checked id="sub-cadence-daily">
                                 <span class="text-2xl mb-1">📰</span>
                                 <span class="text-sm font-bold text-gray-900">Daily</span>
                                 <span class="text-xs text-gray-500 text-center">Every day</span>
                             </label>
-                            <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
+                            <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-primary-500 has-[:checked]:border-primary-500 has-[:checked]:bg-blue-50 transition-all">
                                 <input type="radio" name="cadence" value="weekly" class="sr-only" id="sub-cadence-weekly">
                                 <span class="text-2xl mb-1">📬</span>
                                 <span class="text-sm font-bold text-gray-900">Weekly</span>
@@ -75,7 +75,7 @@
                     <div id="signup-weekly-day" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Delivery day</label>
                         <select name="preferred_weekly_day"
-                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <option value="6" selected>Sunday</option>
                             <option value="0">Monday</option>
                             <option value="1">Tuesday</option>
@@ -89,7 +89,7 @@
                     <div>
                         <label for="preferred_hour" class="block text-sm font-medium text-gray-700 mb-2">When should we deliver?</label>
                         <select id="preferred_hour" name="preferred_hour"
-                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <optgroup label="Morning — includes yesterday's catch-up">
                                 <option value="6">6:00 am — Early bird</option>
                                 <option value="7">7:00 am</option>
@@ -110,7 +110,7 @@
                     </div>
 
                     <button type="submit" 
-                            class="w-full py-4 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 transition-colors shadow-lg">
+                            class="w-full py-4 px-6 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 transition-colors shadow-lg">
                         Sign Up Free
                     </button>
                 </form>
@@ -134,16 +134,16 @@
                         <!-- Brief content preview -->
                         <div class="p-4 space-y-3">
                             <!-- Story 1 -->
-                            <div class="border-l-4 border-blue-500 pl-3 bg-blue-50 py-2 pr-3 rounded-r-lg">
+                            <div class="border-l-4 border-primary-500 pl-3 bg-blue-50 py-2 pr-3 rounded-r-lg">
                                 <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                                    <span class="text-xs font-bold tracking-wide uppercase text-blue-600">POLICY</span>
+                                    <span class="text-xs font-bold tracking-wide uppercase text-primary-600">POLICY</span>
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-800 text-white text-xs font-semibold">
                                         12 sources
                                     </span>
                                 </div>
                                 <!-- Coverage breakdown -->
                                 <div class="flex items-center gap-1.5 mb-2 text-xs">
-                                    <span class="text-blue-600 font-medium">35% L</span>
+                                    <span class="text-primary-600 font-medium">35% L</span>
                                     <span class="text-gray-400">·</span>
                                     <span class="text-purple-600 font-medium">40% C</span>
                                     <span class="text-gray-400">·</span>
@@ -189,7 +189,7 @@
                         </svg>
                         Context included
                     </span>
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-primary-700 text-xs font-semibold">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
@@ -230,37 +230,37 @@
                     </h3>
                     <ul class="space-y-3 text-gray-600">
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>3-5 curated stories</strong> selected for civic importance</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>Coverage analysis</strong> showing left/centre/right perspectives</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>News Transparency Dashboard</strong> with 140+ sources by political leaning</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>Verification links</strong> to primary sources and documents</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>Full archive access</strong> to past briefs</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>Discussion links</strong> to join community deliberation</span>
@@ -270,7 +270,7 @@
 
                 <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
                     <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
-                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-primary-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                         Open-Source Democracy
@@ -297,7 +297,7 @@
                         </li>
                     </ul>
                     <a href="https://github.com/zuluwill/Societyspeaks" target="_blank" rel="noopener" 
-                       class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
+                       class="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
                         View on GitHub
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -308,7 +308,7 @@
         </div>
 
         <div class="mt-12 text-center">
-            <a href="{{ url_for('brief.today') }}" class="text-blue-600 hover:text-blue-700 font-medium">
+            <a href="{{ url_for('brief.today') }}" class="text-primary-600 hover:text-primary-700 font-medium">
                 &larr; Back to Daily Brief
             </a>
         </div>

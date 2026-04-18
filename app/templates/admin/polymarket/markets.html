@@ -66,7 +66,7 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-6 w-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
@@ -88,12 +88,12 @@
                 <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
                 <input type="text" name="search" id="search" value="{{ search or '' }}"
                        placeholder="Question or description..."
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
             </div>
             <div class="w-full sm:w-auto">
                 <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
                 <select name="category" id="category"
-                        class="mt-1 block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        class="mt-1 block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
                     <option value="">All Categories</option>
                     {% for cat in categories %}
                     <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat|title }}</option>
@@ -103,7 +103,7 @@
             <div class="w-full sm:w-auto">
                 <label for="quality_tier" class="block text-sm font-medium text-gray-700">Quality</label>
                 <select name="quality_tier" id="quality_tier"
-                        class="mt-1 block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        class="mt-1 block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
                     <option value="">All</option>
                     <option value="high" {% if quality_tier == 'high' %}selected{% endif %}>High</option>
                     <option value="medium" {% if quality_tier == 'medium' %}selected{% endif %}>Medium</option>
@@ -112,11 +112,11 @@
             </div>
             <div class="flex items-center">
                 <input type="checkbox" name="active_only" id="active_only" value="true" {% if active_only %}checked{% endif %}
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                       class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
                 <label for="active_only" class="ml-2 block text-sm text-gray-700">Active only</label>
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button type="submit" class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                     Search
                 </button>
                 {% if search or category or quality_tier or not active_only %}
@@ -166,7 +166,7 @@
                             {% if market.probability is not none %}
                             <div class="flex items-center gap-2">
                                 <div class="flex-1 bg-gray-200 rounded-full h-2 max-w-[60px]">
-                                    <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ (market.probability * 100)|round }}%"></div>
+                                    <div class="bg-primary-600 h-2 rounded-full" style="width: {{ (market.probability * 100)|round }}%"></div>
                                 </div>
                                 <span class="text-sm font-medium text-gray-900">{{ (market.probability * 100)|round }}%</span>
                             </div>
@@ -230,7 +230,7 @@
             {% for page_num in markets.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
                 {% if page_num %}
                     <li><a href="?page={{ page_num }}{% if search %}&search={{ search }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if quality_tier %}&quality_tier={{ quality_tier }}{% endif %}{% if not active_only %}&active_only=false{% endif %}" 
-                           class="px-3 py-2 border rounded-md text-sm {% if page_num == markets.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                           class="px-3 py-2 border rounded-md text-sm {% if page_num == markets.page %}bg-primary-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
                 {% else %}
                     <li class="px-2 py-2 text-sm">...</li>
                 {% endif %}

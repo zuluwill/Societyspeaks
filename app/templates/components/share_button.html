@@ -1,7 +1,7 @@
 {% macro share_button(title, url, description="Join this discussion on SocietySpeaks", button_style="primary") %}
 <div class="relative">
     <button type="button" 
-            class="share-toggle-btn inline-flex items-center px-4 py-2 {% if button_style == 'primary' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %} rounded-md transition-colors"
+            class="share-toggle-btn inline-flex items-center px-4 py-2 {% if button_style == 'primary' %}bg-primary-600 text-white hover:bg-primary-700{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %} rounded-md transition-colors"
             aria-haspopup="true" 
             aria-expanded="false" 
             aria-label="Share">

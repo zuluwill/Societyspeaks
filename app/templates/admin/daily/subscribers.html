@@ -23,11 +23,11 @@
         <form action="{{ url_for('admin.bulk_import_subscribers') }}" method="POST" class="p-6">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <textarea name="emails" rows="5" 
-                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
             <div class="flex items-center justify-between mt-4">
                 <span class="text-sm text-gray-500">Duplicates will be skipped automatically</span>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
@@ -71,7 +71,7 @@
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-500" id="selected-count">0 selected</span>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
@@ -89,8 +89,8 @@
                 <input type="hidden" name="frequency" value="{{ frequency_filter or '' }}">
                 <input type="text" name="q" value="{{ search_query or '' }}"
                        placeholder="Search by email or username"
-                       class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Search</button>
+                       class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500">
+                <button type="submit" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700">Search</button>
                 {% if search_query %}
                 <a href="{{ url_for('admin.list_daily_subscribers', status=status_filter or '', frequency=frequency_filter or '') }}"
                    class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">Clear</a>
@@ -101,7 +101,7 @@
                 <!-- Status Filter -->
                 <div class="flex items-center gap-2">
                     <a href="{{ url_for('admin.list_daily_subscribers', frequency=frequency_filter, q=search_query or '') }}"
-                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not status_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not status_filter %}bg-blue-100 text-primary-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         All ({{ total_count }})
                     </a>
                     <a href="{{ url_for('admin.list_daily_subscribers', status='active', frequency=frequency_filter, q=search_query or '') }}"
@@ -117,19 +117,19 @@
                 <!-- Frequency Filter (only shown for active/all views) -->
                 <div class="flex items-center gap-2 border-l border-gray-200 pl-4">
                     <a href="{{ url_for('admin.list_daily_subscribers', status=status_filter, q=search_query or '') }}"
-                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not frequency_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not frequency_filter %}bg-blue-100 text-primary-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         All Frequencies
                     </a>
                     <a href="{{ url_for('admin.list_daily_subscribers', frequency='daily', status=status_filter, q=search_query or '') }}"
-                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'daily' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'daily' %}bg-blue-100 text-primary-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Daily ({{ frequency_counts.daily }})
                     </a>
                     <a href="{{ url_for('admin.list_daily_subscribers', frequency='weekly', status=status_filter, q=search_query or '') }}"
-                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'weekly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'weekly' %}bg-blue-100 text-primary-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Weekly ({{ frequency_counts.weekly }})
                     </a>
                     <a href="{{ url_for('admin.list_daily_subscribers', frequency='monthly', status=status_filter, q=search_query or '') }}"
-                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'monthly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'monthly' %}bg-blue-100 text-primary-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Monthly ({{ frequency_counts.monthly }})
                     </a>
                 </div>
@@ -139,7 +139,7 @@
             <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" class="inline"
                   data-confirm="This will subscribe ALL remaining {{ available_users|length }} users. Continue?">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">
+                <button type="submit" class="text-sm text-primary-600 hover:text-primary-800">
                     Add all {{ available_users|length }} remaining users
                 </button>
             </form>
@@ -191,7 +191,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="relative inline-block freq-dropdown">
                                 <button type="button" class="freq-toggle-btn inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80
-                                    {% if sub.email_frequency == 'daily' %}bg-blue-100 text-blue-800
+                                    {% if sub.email_frequency == 'daily' %}bg-blue-100 text-primary-800
                                     {% elif sub.email_frequency == 'weekly' %}bg-green-100 text-green-800
                                     {% elif sub.email_frequency == 'monthly' %}bg-purple-100 text-purple-800
                                     {% else %}bg-gray-100 text-gray-800{% endif %}">
@@ -278,7 +278,7 @@
                                 <form action="{{ url_for('admin.resend_daily_question', subscriber_id=sub.id) }}" method="POST" class="inline"
                                       data-confirm="Resend today's daily question to {{ sub.email }}?">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="text-blue-600 hover:text-blue-800" title="Resend Today's Question">
+                                    <button type="submit" class="text-primary-600 hover:text-primary-800" title="Resend Today's Question">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
@@ -327,7 +327,7 @@
                 {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if p %}
                     <a href="{{ url_for('admin.list_daily_subscribers', page=p, status=status_filter, frequency=frequency_filter, q=search_query or '') }}"
-                       class="px-3 py-1.5 text-sm font-medium rounded-lg {% if p == pagination.page %}bg-blue-600 text-white{% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                       class="px-3 py-1.5 text-sm font-medium rounded-lg {% if p == pagination.page %}bg-primary-600 text-white{% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
                         {{ p }}
                     </a>
                     {% else %}

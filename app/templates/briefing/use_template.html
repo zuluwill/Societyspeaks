@@ -6,7 +6,7 @@
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 py-8">
     <div class="mb-6">
-        <a href="{{ url_for('briefing.marketplace') }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+        <a href="{{ url_for('briefing.marketplace') }}" class="text-primary-600 hover:text-primary-800 flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -32,21 +32,21 @@
         <form method="POST" class="p-6 space-y-6">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-800">{{ template.description }}</p>
+                <p class="text-sm text-primary-800">{{ template.description }}</p>
             </div>
 
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Briefing Name</label>
                 <input type="text" id="name" name="name" 
                        value="My {{ template.name }}"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                        placeholder="Give your briefing a name">
             </div>
 
             <div>
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
                 <textarea id="description" name="description" rows="2"
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                           placeholder="Add a description for your briefing">{{ template.description }}</textarea>
             </div>
 
@@ -55,11 +55,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Owner</label>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="owner_type" value="user" checked class="text-blue-600">
+                        <input type="radio" name="owner_type" value="user" checked class="text-primary-600">
                         <span class="text-sm text-gray-700">Personal</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="owner_type" value="org" class="text-blue-600">
+                        <input type="radio" name="owner_type" value="org" class="text-primary-600">
                         <span class="text-sm text-gray-700">Organization</span>
                     </label>
                 </div>
@@ -76,7 +76,7 @@
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="cadence" value="{{ option }}" 
                                {% if option == template.default_cadence %}checked{% endif %}
-                               class="text-blue-600">
+                               class="text-primary-600">
                         <span class="text-sm text-gray-700">{{ option|title }}</span>
                     </label>
                     {% endfor %}
@@ -95,7 +95,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="timezone" class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-                    <select id="timezone" name="timezone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select id="timezone" name="timezone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         {% for tz in timezones %}
                         <option value="{{ tz }}" {% if tz == 'UTC' %}selected{% endif %}>{{ tz }}</option>
                         {% endfor %}
@@ -104,13 +104,13 @@
                 <div>
                     <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700 mb-1">Send Time</label>
                     <div class="flex gap-2">
-                        <select id="preferred_send_hour" name="preferred_send_hour" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select id="preferred_send_hour" name="preferred_send_hour" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             {% for hour in range(24) %}
                             <option value="{{ hour }}" {% if hour == 18 %}selected{% endif %}>{{ '%02d'|format(hour) }}</option>
                             {% endfor %}
                         </select>
                         <span class="flex items-center text-gray-500">:</span>
-                        <select id="preferred_send_minute" name="preferred_send_minute" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select id="preferred_send_minute" name="preferred_send_minute" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             {% for minute in range(0, 60, 5) %}
                             <option value="{{ minute }}" {% if minute == 0 %}selected{% endif %}>{{ '%02d'|format(minute) }}</option>
                             {% endfor %}
@@ -125,15 +125,15 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="visibility" value="private" checked class="text-blue-600">
+                        <input type="radio" name="visibility" value="private" checked class="text-primary-600">
                         <span class="text-sm text-gray-700">Private</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="visibility" value="org_only" class="text-blue-600">
+                        <input type="radio" name="visibility" value="org_only" class="text-primary-600">
                         <span class="text-sm text-gray-700">Organization Only</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="visibility" value="public" class="text-blue-600">
+                        <input type="radio" name="visibility" value="public" class="text-primary-600">
                         <span class="text-sm text-gray-700">Public</span>
                     </label>
                 </div>
@@ -145,11 +145,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Mode</label>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="mode" value="auto_send" checked class="text-blue-600">
+                        <input type="radio" name="mode" value="auto_send" checked class="text-primary-600">
                         <span class="text-sm text-gray-700">Auto-send</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="mode" value="approval_required" class="text-blue-600">
+                        <input type="radio" name="mode" value="approval_required" class="text-primary-600">
                         <span class="text-sm text-gray-700">Require Approval</span>
                     </label>
                 </div>
@@ -200,7 +200,7 @@
             </div>
 
             <div class="flex gap-4 pt-4 border-t">
-                <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <button type="submit" class="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
                     Create My Briefing
                 </button>
                 <a href="{{ url_for('briefing.marketplace') }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">

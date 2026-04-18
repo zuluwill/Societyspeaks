@@ -14,7 +14,7 @@
       </div>
       {% if can_create %}
       <a href="#new-discussion-form"
-         class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+         class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
         + New discussion
       </a>
       {% endif %}
@@ -48,29 +48,29 @@
           <div class="sm:col-span-2">
             <label for="disc-title" class="block text-sm font-medium text-gray-700 mb-1">Discussion title <span class="text-red-500">*</span></label>
             <input id="disc-title" name="title" type="text" required maxlength="200" placeholder="e.g. Should the UK rejoin the EU single market?"
-                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
           </div>
           <div>
             <label for="disc-url" class="block text-sm font-medium text-gray-700 mb-1">Article URL</label>
             <input id="disc-url" name="article_url" type="url" maxlength="2048" placeholder="https://observer.com/your-article"
-                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
             <p class="text-xs text-gray-400 mt-1">Used to link the discussion to a specific article.</p>
           </div>
           <div>
             <label for="disc-ext-id" class="block text-sm font-medium text-gray-700 mb-1">External / CMS ID</label>
             <input id="disc-ext-id" name="external_id" type="text" maxlength="128" placeholder="e.g. observer-cms-12345"
-                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
             <p class="text-xs text-gray-400 mt-1">Your own stable reference. Useful when there is no article URL.</p>
           </div>
           <div class="sm:col-span-2">
             <label for="disc-desc" class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-gray-400 font-normal">(optional)</span></label>
             <textarea id="disc-desc" name="description" rows="2" maxlength="1000"
                       placeholder="A sentence or two providing context for readers — what is being debated and why it matters."
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"></textarea>
           </div>
           <div>
             <label for="disc-topic" class="block text-sm font-medium text-gray-700 mb-1">Topic <span class="text-gray-400 font-normal">(optional)</span></label>
-            <select id="disc-topic" name="topic" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 w-full">
+            <select id="disc-topic" name="topic" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-primary-500 w-full">
               <option value="">— No topic —</option>
               {% for t in discussion_topics %}
               <option value="{{ t }}">{{ t }}</option>
@@ -81,7 +81,7 @@
             <label for="disc-excerpt" class="block text-sm font-medium text-gray-700 mb-1">Article excerpt <span class="text-gray-400 font-normal">(optional — used to generate opening statements)</span></label>
             <textarea id="disc-excerpt" name="excerpt" rows="3" maxlength="2000"
                       placeholder="Paste a short excerpt from the article to help generate balanced opening statements for readers…"
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"></textarea>
           </div>
           <div class="sm:col-span-2">
             <label class="inline-flex items-start gap-3 text-sm text-gray-700">
@@ -94,7 +94,7 @@
           </div>
           <div>
             <label for="disc-env" class="block text-sm font-medium text-gray-700 mb-1">Environment</label>
-            <select id="disc-env" name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500">
+            <select id="disc-env" name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-primary-500">
               <option value="test">Test</option>
               {% if partner.billing_status == 'active' %}<option value="live">Live</option>{% endif %}
             </select>
@@ -102,7 +102,7 @@
         </div>
         <div class="flex items-center gap-3">
           <button type="submit" id="create-discussion-btn"
-                  class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             Create discussion
           </button>
           <p class="text-xs text-gray-400" id="create-discussion-hint">Article URL or external ID is required.</p>
@@ -218,7 +218,7 @@
                     <span class="text-emerald-700 font-medium">Open</span>
                   {% endif %}
                   {% if d.integrity_mode %}<span class="text-xs text-gray-500">· Integrity</span>{% endif %}
-                  <span class="text-xs {{ 'text-blue-700' if d.embed_statement_submissions_enabled else 'text-gray-500' }}">
+                  <span class="text-xs {{ 'text-primary-700' if d.embed_statement_submissions_enabled else 'text-gray-500' }}">
                     · Embed submit {{ 'on' if d.embed_statement_submissions_enabled else 'off' }}
                   </span>
                   {% if can_edit %}
@@ -246,9 +246,9 @@
                 {{ d.partner_article_url or '—' }}
               </td>
               <td class="px-4 py-3 space-x-2 whitespace-nowrap">
-                <a href="{{ url_for('partner.portal_discussion_detail', discussion_id=d.id) }}" class="text-blue-600 hover:underline">View</a>
-                <a href="{{ row.embed_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">Embed</a>
-                <a href="{{ row.consensus_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">Consensus</a>
+                <a href="{{ url_for('partner.portal_discussion_detail', discussion_id=d.id) }}" class="text-primary-600 hover:underline">View</a>
+                <a href="{{ row.embed_url }}" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Embed</a>
+                <a href="{{ row.consensus_url }}" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Consensus</a>
               </td>
             </tr>
             {% else %}
@@ -256,7 +256,7 @@
               <td colspan="9" class="px-4 py-10 text-center">
                 <p class="text-gray-500 mb-2">No discussions found.</p>
                 {% if can_create %}
-                <a href="#new-discussion-form" class="text-sm font-semibold text-blue-600 hover:underline">Create your first discussion ↑</a>
+                <a href="#new-discussion-form" class="text-sm font-semibold text-primary-600 hover:underline">Create your first discussion ↑</a>
                 {% else %}
                 <p class="text-xs text-gray-400">Use <code class="bg-gray-100 px-1 rounded">POST /api/partner/discussions</code> from your backend, or ask an admin to create one here.</p>
                 {% endif %}

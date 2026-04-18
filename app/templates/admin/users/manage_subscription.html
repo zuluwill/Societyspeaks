@@ -5,7 +5,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-4 sm:mb-6">
-            <a href="{{ url_for('admin.list_users') }}" class="text-blue-600 hover:text-blue-800 text-sm">
+            <a href="{{ url_for('admin.list_users') }}" class="text-primary-600 hover:text-primary-800 text-sm">
                 ← Back to Users
             </a>
             <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-2">
@@ -42,7 +42,7 @@
                                     🎁 FREE ACCESS (Lifetime)
                                 </span>
                             {% elif active_sub.status == 'trialing' %}
-                                <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800">
+                                <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-primary-800">
                                     🔄 TRIALING
                                 </span>
                             {% elif active_sub.status == 'active' %}
@@ -180,7 +180,7 @@
                 <!-- Grant Trial -->
                 <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h3 class="text-base sm:text-lg font-semibold text-blue-900 mb-1 sm:mb-2">🔄 Grant Trial</h3>
-                    <p class="text-xs sm:text-sm text-blue-700 mb-3 sm:mb-4">30-day trial, no Stripe</p>
+                    <p class="text-xs sm:text-sm text-primary-700 mb-3 sm:mb-4">30-day trial, no Stripe</p>
 
                     <form action="{{ url_for('admin.manage_user_subscription', user_id=user.id) }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -189,7 +189,7 @@
 
                         <div class="mb-3">
                             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Select Plan</label>
-                            <select name="plan_id" class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            <select name="plan_id" class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" required>
                                 <option value="">Choose a plan...</option>
                                 {% for plan in plans %}
                                 <option value="{{ plan.id }}">{{ plan.name }}</option>
@@ -199,7 +199,7 @@
 
                         <button type="submit"
                                 data-confirm="Grant 30-day trial to this user?"
-                                class="w-full px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium">
+                                class="w-full px-3 sm:px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 font-medium">
                             Grant 30-Day Trial
                         </button>
                     </form>
@@ -277,7 +277,7 @@
                         </div>
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                             {% if sub.status == 'active' %}bg-green-100 text-green-800
-                            {% elif sub.status == 'trialing' %}bg-blue-100 text-blue-800
+                            {% elif sub.status == 'trialing' %}bg-blue-100 text-primary-800
                             {% elif sub.status == 'past_due' %}bg-yellow-100 text-yellow-800
                             {% elif sub.status == 'canceled' %}bg-gray-100 text-gray-800
                             {% else %}bg-red-100 text-red-800{% endif %}">
@@ -328,7 +328,7 @@
                             <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                     {% if sub.status == 'active' %}bg-green-100 text-green-800
-                                    {% elif sub.status == 'trialing' %}bg-blue-100 text-blue-800
+                                    {% elif sub.status == 'trialing' %}bg-blue-100 text-primary-800
                                     {% elif sub.status == 'past_due' %}bg-yellow-100 text-yellow-800
                                     {% elif sub.status == 'canceled' %}bg-gray-100 text-gray-800
                                     {% else %}bg-red-100 text-red-800{% endif %}">

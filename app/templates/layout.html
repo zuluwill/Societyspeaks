@@ -399,7 +399,7 @@
     <!-- Skip to main content (hidden until focused for keyboard/screen reader users) -->
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-gray-900 focus:font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-gray-900 focus:font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
       >Skip to main content</a
     >
     <!-- Header -->
@@ -434,7 +434,7 @@
           <div class="hidden lg:flex lg:items-center lg:space-x-6">
             <a
               href="/"
-              class="text-base font-medium text-white hover:text-blue-50 transition"
+              class="text-base font-medium text-white hover:text-primary-50 transition"
               >Home</a
             >
 
@@ -443,7 +443,7 @@
               <button
                 type="button"
                 id="products-dropdown-btn"
-                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
+                class="flex items-center text-base font-medium text-white hover:text-primary-50 transition"
                 aria-expanded="false"
                 aria-haspopup="true"
               >
@@ -469,12 +469,12 @@
               >
                 <a
                   href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
-                  class="flex items-center px-4 py-2.5 text-sm text-gray-800 hover:bg-indigo-50 font-medium"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-800 hover:bg-blue-50 font-medium"
                   role="menuitem"
                 >
-                  <svg class="w-4 h-4 mr-2 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <svg class="w-4 h-4 mr-2 text-primary-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                   Big Questions Journey
-                  <span class="ml-auto text-xs text-indigo-500 font-semibold">Featured</span>
+                  <span class="ml-auto text-xs text-primary-600 font-semibold">Featured</span>
                 </a>
                 <div class="border-t border-gray-100 my-1"></div>
                 <div
@@ -513,7 +513,7 @@
                 >
                   Personal Briefs
                   <span
-                    class="ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-primary-800"
                     >Pro</span
                   >
                 </a>
@@ -524,7 +524,7 @@
                 >
                   For Publishers
                   <span
-                    class="ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-primary-800"
                     >Pro</span
                   >
                 </a>
@@ -536,7 +536,7 @@
               <button
                 type="button"
                 id="explore-dropdown-btn"
-                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
+                class="flex items-center text-base font-medium text-white hover:text-primary-50 transition"
                 aria-expanded="false"
                 aria-haspopup="true"
               >
@@ -592,7 +592,7 @@
               <button
                 type="button"
                 id="about-dropdown-btn"
-                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
+                class="flex items-center text-base font-medium text-white hover:text-primary-50 transition"
                 aria-expanded="false"
                 aria-haspopup="true"
               >
@@ -640,7 +640,7 @@
             <!-- Donate CTA — always visible in primary nav -->
             <a
               href="{{ url_for('main.donate') }}"
-              class="ml-4 inline-flex items-center rounded-full border border-white/70 px-4 py-1.5 text-sm font-semibold text-white hover:bg-white hover:text-blue-700 transition"
+              class="ml-4 inline-flex items-center rounded-full border border-white/70 px-4 py-1.5 text-sm font-semibold text-white hover:bg-white hover:text-primary-700 transition"
             >Donate</a>
 
             {% if current_user.is_authenticated %}
@@ -649,7 +649,7 @@
               <button
                 type="button"
                 id="desktop-user-menu"
-                class="flex items-center text-white hover:text-blue-50"
+                class="flex items-center text-white hover:text-primary-50"
                 aria-expanded="false"
                 aria-haspopup="true"
               >
@@ -745,7 +745,7 @@
                 >
                   <span>Notifications</span>
                   {% if current_user.unread_notification_count %}
-                  <span class="ml-3 inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold text-white">
+                  <span class="ml-3 inline-flex min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 py-0.5 text-xs font-semibold text-white">
                     {{ current_user.unread_notification_count }}
                   </span>
                   {% endif %}
@@ -792,7 +792,7 @@
             <div class="flex items-center space-x-4">
               <a
                 href="{{ url_for('auth.login') }}"
-                class="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-blue-600 hover:bg-blue-50 transition"
+                class="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-primary-600 hover:bg-blue-50 transition"
                 >Sign in</a
               >
               <a
@@ -809,7 +809,7 @@
             <button
               type="button"
               id="mobile-menu-button"
-              class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-blue-50 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-primary-50 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
             >
               <span class="sr-only">Open main menu</span>
               <svg
@@ -835,41 +835,41 @@
           <div class="space-y-1 px-2 pb-3 pt-2">
             <a
               href="/"
-              class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+              class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >Home</a
             >
 
             <!-- Participate Section -->
-            <div class="border-t border-blue-500/30 pt-2 mt-2">
+            <div class="border-t border-primary-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
                 >Participate</span
               >
               <a
                 href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
-                class="flex items-center rounded-md px-3 py-2 text-base font-semibold text-white hover:bg-blue-500"
+                class="flex items-center rounded-md px-3 py-2 text-base font-semibold text-white hover:bg-primary-500"
               >
-                <svg class="w-4 h-4 mr-2 text-indigo-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <svg class="w-4 h-4 mr-2 text-blue-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Big Questions Journey
               </a>
               <a
                 href="{{ url_for('daily.today') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Today's Question</a
               >
               <a
                 href="{{ url_for('brief.today') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Daily Brief</a
               >
               <a
                 href="{{ url_for('main.platform') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Discussions &amp; Programmes</a
               >
               <a
                 href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >
                 Personal Briefs
                 <span
@@ -879,7 +879,7 @@
               </a>
               <a
                 href="{{ url_for('partner.hub') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >
                 For Publishers
                 <span
@@ -890,63 +890,63 @@
             </div>
 
             <!-- Explore Section -->
-            <div class="border-t border-blue-500/30 pt-2 mt-2">
+            <div class="border-t border-primary-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
                 >Explore</span
               >
               <a
                 href="{{ url_for('news.dashboard') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >News</a
               >
               <a
                 href="/discussions/search"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Discussions</a
               >
               <a
                 href="{{ url_for('programmes.list_programmes') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Programmes</a
               >
               <a
                 href="{{ url_for('sources.index') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Sources</a
               >
             </div>
 
             <!-- About Section -->
-            <div class="border-t border-blue-500/30 pt-2 mt-2">
+            <div class="border-t border-primary-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
                 >About</span
               >
               <a
                 href="/about"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >About Us</a
               >
               <a
                 href="{{ url_for('help.help') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >Help</a
               >
               <a
                 href="{{ url_for('main.faq') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >FAQ</a
               >
               <a
                 href="{{ url_for('main.donate') }}"
-                class="mt-1 block rounded-full border border-white/70 px-4 py-2 text-center text-base font-semibold text-white hover:bg-white hover:text-blue-700 transition"
+                class="mt-1 block rounded-full border border-white/70 px-4 py-2 text-center text-base font-semibold text-white hover:bg-white hover:text-primary-700 transition"
                 >Donate</a
               >
             </div>
 
             {% if current_user.is_authenticated %}
-            <div class="border-t border-blue-500 pt-4 pb-3">
+            <div class="border-t border-primary-500 pt-4 pb-3">
               <div class="flex items-center px-5">
                 <div class="flex-shrink-0">
                   {% if current_user.profile_type == 'individual' %}
@@ -993,65 +993,65 @@
                 current_user.profile_type == 'individual' %}
                 <a
                   href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Your Profile</a
                 >
                 {% else %}
                 <a
                   href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Your Profile</a
                 >
                 {% endif %} {% else %}
                 <a
                   href="{{ url_for('profiles.select_profile_type') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Create Profile</a
                 >
                 {% endif %}
                 <a
                   href="{{ url_for('auth.dashboard') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Dashboard</a
                 >
                 <a
                   href="{{ url_for('auth.notifications') }}"
-                  class="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >
                   <span>Notifications</span>
                   {% if current_user.unread_notification_count %}
-                  <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-xs font-semibold text-blue-700">
+                  <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-xs font-semibold text-primary-700">
                     {{ current_user.unread_notification_count }}
                   </span>
                   {% endif %}
                 </a>
                 <a
                   href="{{ url_for('briefing.list_briefings') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >My Briefings</a
                 >
                 <a
                   href="{{ url_for('settings.view_settings') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Settings</a
                 >
                 {% if session.get('partner_portal_id') %}
                 <a
                   href="{{ url_for('partner.portal_dashboard') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Partner Portal</a
                 >
                 {% endif %}
                 {% if current_user.is_admin %}
                 <a
                   href="{{ url_for('admin.dashboard') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Admin</a
                 >
                 {% endif %}
                 <a
                   href="{{ url_for('auth.logout') }}"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >Sign out</a
                 >
               </div>
@@ -1060,7 +1060,7 @@
             <div class="mt-4 space-y-2 px-2">
               <a
                 href="{{ url_for('auth.login') }}"
-                class="block w-full bg-white py-2 px-4 text-center rounded-md text-base font-medium text-blue-600 hover:bg-blue-50"
+                class="block w-full bg-white py-2 px-4 text-center rounded-md text-base font-medium text-primary-600 hover:bg-blue-50"
                 >Sign in</a
               >
               <a
@@ -1162,7 +1162,7 @@
                   href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
                   class="text-gray-400 hover:text-white transition"
                   >Personal Briefs
-                  <span class="text-xs text-blue-400">Pro</span></a
+                  <span class="text-xs text-primary-400">Pro</span></a
                 >
               </li>
               <li>
@@ -1170,7 +1170,7 @@
                   href="{{ url_for('partner.hub') }}"
                   class="text-gray-400 hover:text-white transition"
                   >For Publishers
-                  <span class="text-xs text-blue-400">Pro</span></a
+                  <span class="text-xs text-primary-400">Pro</span></a
                 >
               </li>
               <li>

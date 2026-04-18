@@ -20,7 +20,7 @@
         View Public Page ↗
       </a>
       <a href="{{ url_for('admin.edit_company_profile', profile_id=profile.id) }}"
-         class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+         class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700">
         Edit Profile
       </a>
     </div>
@@ -55,7 +55,7 @@
               {{ prog.status }}
             </span>
             <span class="px-2 py-0.5 text-xs rounded-full
-              {% if prog.visibility == 'public' %}bg-blue-100 text-blue-700
+              {% if prog.visibility == 'public' %}bg-blue-100 text-primary-700
               {% else %}bg-yellow-100 text-yellow-700{% endif %}">
               {{ prog.visibility }}
             </span>
@@ -70,7 +70,7 @@
           </p>
         </div>
         <a href="{{ url_for('programmes.view_programme', slug=prog.slug) }}" target="_blank"
-           class="text-sm text-blue-600 hover:underline whitespace-nowrap">View ↗</a>
+           class="text-sm text-primary-600 hover:underline whitespace-nowrap">View ↗</a>
       </li>
       {% endfor %}
     </ul>
@@ -85,43 +85,43 @@
 
           <div class="sm:col-span-2">
             {{ programme_form.name.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.name(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500", placeholder="e.g. The Next 50 Years") }}
+            {{ programme_form.name(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500", placeholder="e.g. The Next 50 Years") }}
           </div>
 
           <div class="sm:col-span-2">
             {{ programme_form.description.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.description(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500", rows=3, placeholder="Brief description of the programme…") }}
+            {{ programme_form.description(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500", rows=3, placeholder="Brief description of the programme…") }}
           </div>
 
           <div>
             {{ programme_form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.geographic_scope(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+            {{ programme_form.geographic_scope(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
           </div>
 
           <div>
             {{ programme_form.country.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.country(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500", placeholder="e.g. United Kingdom") }}
+            {{ programme_form.country(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500", placeholder="e.g. United Kingdom") }}
           </div>
 
           <div class="sm:col-span-2">
             {{ programme_form.themes.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.themes(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500", placeholder="e.g. Economy, Democracy, Healthcare, Environment") }}
+            {{ programme_form.themes(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500", placeholder="e.g. Economy, Democracy, Healthcare, Environment") }}
             <p class="mt-1 text-xs text-gray-400">Separate themes with commas. These appear as filter pills on the programme page.</p>
           </div>
 
           <div>
             {{ programme_form.logo_url.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.logo_url(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500", placeholder="https://…") }}
+            {{ programme_form.logo_url(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500", placeholder="https://…") }}
           </div>
 
           <div>
             {{ programme_form.visibility.label(class="block text-sm font-medium text-gray-700") }}
-            {{ programme_form.visibility(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+            {{ programme_form.visibility(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
           </div>
 
         </div>
         <div class="mt-4">
-          <button type="submit" class="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+          <button type="submit" class="px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700">
             Create Programme
           </button>
         </div>
@@ -183,7 +183,7 @@
         <div class="flex gap-6 mb-4">
           {% for subfield in member_form.assignment_type %}
           <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-            {{ subfield(class="h-4 w-4 text-blue-600") }}
+            {{ subfield(class="h-4 w-4 text-primary-600") }}
             {{ subfield.label.text }}
           </label>
           {% endfor %}
@@ -192,7 +192,7 @@
         {# Existing user panel #}
         <div id="mem-existing-panel">
           {{ member_form.existing_user.label(class="block text-sm font-medium text-gray-700") }}
-          {{ member_form.existing_user(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+          {{ member_form.existing_user(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
         </div>
 
         {# New user panel #}
@@ -200,15 +200,15 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               {{ member_form.username.label(class="block text-sm font-medium text-gray-700") }}
-              {{ member_form.username(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+              {{ member_form.username(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
             </div>
             <div>
               {{ member_form.email.label(class="block text-sm font-medium text-gray-700") }}
-              {{ member_form.email(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+              {{ member_form.email(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
             </div>
             <div>
               {{ member_form.password.label(class="block text-sm font-medium text-gray-700") }}
-              {{ member_form.password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+              {{ member_form.password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
             </div>
           </div>
         </div>
@@ -216,9 +216,9 @@
         <div class="mt-4 flex items-end gap-4">
           <div>
             {{ member_form.role.label(class="block text-sm font-medium text-gray-700") }}
-            {{ member_form.role(class="mt-1 block border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500") }}
+            {{ member_form.role(class="mt-1 block border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500") }}
           </div>
-          <button type="submit" class="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+          <button type="submit" class="px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700">
             Add Member
           </button>
         </div>

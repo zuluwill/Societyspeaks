@@ -17,22 +17,22 @@
         <!-- Existing User Selection -->
         <div id="existing-user-section">
             {{ user_form.existing_user.label(class="block text-sm font-medium text-gray-700", for="existing_user") }}
-            {{ user_form.existing_user(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="existing_user") }}
+            {{ user_form.existing_user(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm", id="existing_user") }}
         </div>
 
         <!-- New User Fields -->
         <div id="new-user-section" class="hidden space-y-4">
             {{ user_form.username.label(class="block text-sm font-medium text-gray-700", for="new_user_username") }}
-            {{ user_form.username(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="new_user_username") }}
+            {{ user_form.username(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm", id="new_user_username") }}
 
             {{ user_form.email.label(class="block text-sm font-medium text-gray-700", for="new_user_email") }}
-            {{ user_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="new_user_email") }}
+            {{ user_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm", id="new_user_email") }}
 
             {{ user_form.password.label(class="block text-sm font-medium text-gray-700", for="new_user_password") }}
-            {{ user_form.password(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="new_user_password") }}
+            {{ user_form.password(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm", id="new_user_password") }}
 
             {{ user_form.confirm_password.label(class="block text-sm font-medium text-gray-700", for="confirm_password") }}
-            {{ user_form.confirm_password(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="confirm_password") }}
+            {{ user_form.confirm_password(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm", id="confirm_password") }}
         </div>
 
     </div>

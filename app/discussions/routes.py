@@ -69,14 +69,27 @@ def _statement_queries_for_discussion(discussion):
 
 
 def _build_user_votes_map(statement_ids):
-    """Return {statement_id: vote} for the current authenticated user."""
-    if not current_user.is_authenticated or not statement_ids:
+    """Return {statement_id: vote} for the current viewer (logged-in user or anon cookie)."""
+    if not statement_ids:
         return {}
 
     from app.models import StatementVote as SVModel
+    from app.discussions.statements import get_statement_vote_fingerprint
+
+    if current_user.is_authenticated:
+        rows = db.session.query(SVModel.statement_id, SVModel.vote).filter(
+            SVModel.user_id == current_user.id,
+            SVModel.statement_id.in_(statement_ids),
+        ).all()
+        return {row.statement_id: row.vote for row in rows}
+
+    fingerprint = get_statement_vote_fingerprint()
+    if not fingerprint:
+        return {}
     rows = db.session.query(SVModel.statement_id, SVModel.vote).filter(
-        SVModel.user_id == current_user.id,
-        SVModel.statement_id.in_(statement_ids)
+        SVModel.session_fingerprint == fingerprint,
+        SVModel.user_id.is_(None),
+        SVModel.statement_id.in_(statement_ids),
     ).all()
     return {row.statement_id: row.vote for row in rows}
 
@@ -840,7 +853,7 @@ def view_discussion(discussion_id, slug):
         }
         discussion_participant_count = consensus_ui_state['consensus_progress']['participant_count']
 
-    # Build per-statement vote map for optimistic UI seeding (authenticated only)
+    # Per-statement vote map for UI seeding (logged-in user or anonymous client cookie)
     user_votes_map = _build_user_votes_map([s.id for s in statements])
     cohort_slug = (request.args.get('cohort') or '').strip() or None
     if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):

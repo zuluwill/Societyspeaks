@@ -42,7 +42,7 @@
                 {% endif %}
 
                 {% if discussion.is_featured %}
-                <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 whitespace-nowrap">
+                <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-primary-800 whitespace-nowrap">
                     <svg class="w-4 h-4 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
                     </svg>
@@ -68,9 +68,9 @@
         </div>
 
         <!-- Title with hover effect -->
-        <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+        <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
             <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-               class="hover:text-blue-600 focus:outline-none focus:underline">
+               class="hover:text-primary-600 focus:outline-none focus:underline">
                 {{ discussion.title }}
             </a>
         </h3>

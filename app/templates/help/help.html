@@ -66,7 +66,7 @@
       class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
     >
       <div class="flex items-center mb-4">
-        <span class="text-blue-600">
+        <span class="text-primary-600">
           <!-- Icon based on category -->
           {% if category.icon == 'book-open' %}
           <svg
@@ -132,37 +132,37 @@
       {% if key == 'getting-started' %}
       <a
         href="{{ url_for('help.getting_started') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Learn more →</a
       >
       {% elif key == 'creating-discussions' %}
       <a
         href="{{ url_for('help.creating_discussions') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Learn more →</a
       >
       {% elif key == 'native-system' %}
       <a
         href="{{ url_for('help.native_system') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Learn more →</a
       >
       {% elif key == 'managing-discussions' %}
       <a
         href="{{ url_for('help.managing_discussions') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Learn more →</a
       >
       {% elif key == 'news-feed' %}
       <a
         href="{{ url_for('help.news_feed') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Learn more →</a
       >
       {% elif key == 'programmes' %}
       <a
         href="{{ url_for('help.programmes') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Learn more →</a
       >
       {% endif %}
@@ -217,13 +217,13 @@
     <div class="flex space-x-4">
       <a
         href="{{ url_for('help.native_system') }}"
-        class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors min-h-11"
+        class="inline-flex items-center bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors min-h-11"
       >
         Learn More
       </a>
       <a
         href="{{ url_for('discussions.create_discussion') }}"
-        class="inline-flex items-center bg-white border border-blue-600 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-50 transition-colors min-h-11"
+        class="inline-flex items-center bg-white border border-blue-600 text-primary-600 px-4 py-2 rounded-md hover:bg-blue-50 transition-colors min-h-11"
       >
         Create Native Discussion →
       </a>
@@ -240,7 +240,7 @@
       <div class="flex space-x-3">
         <a
           href="{{ url_for('help.polis_algorithms') }}"
-          class="text-blue-600 hover:underline text-sm"
+          class="text-primary-600 hover:underline text-sm"
         >
           Explore Tech →
         </a>
@@ -248,7 +248,7 @@
         <a
           href="https://compdemocracy.org/FAQ/"
           target="_blank"
-          class="text-blue-600 hover:underline text-sm"
+          class="text-primary-600 hover:underline text-sm"
         >
           Official Docs →
         </a>
@@ -262,7 +262,7 @@
       </p>
       <a
         href="{{ url_for('brief.today') }}"
-        class="text-blue-600 hover:underline text-sm"
+        class="text-primary-600 hover:underline text-sm"
       >
         Learn More →
       </a>
@@ -276,7 +276,7 @@
       <a
         href="https://forms.gle/g3BQVhJgFLiGjmSP6"
         target="_blank"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
       >
         Send us feedback
       </a>

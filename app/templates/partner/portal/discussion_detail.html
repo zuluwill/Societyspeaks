@@ -9,7 +9,7 @@
 
     {# Breadcrumb #}
     <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-      <a href="{{ url_for('partner.portal_discussions') }}" class="hover:text-blue-600">Discussions</a>
+      <a href="{{ url_for('partner.portal_discussions') }}" class="hover:text-primary-600">Discussions</a>
       <span>/</span>
       <span class="text-gray-800 font-medium">{{ discussion.title|truncate(60) }}</span>
     </nav>
@@ -41,7 +41,7 @@
               <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">Open</span>
             {% endif %}
             {% if discussion.integrity_mode %}
-              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">Integrity mode</span>
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-primary-800">Integrity mode</span>
             {% endif %}
           </div>
           <h1 class="text-2xl font-bold text-gray-900 leading-snug">{{ discussion.title }}</h1>
@@ -50,7 +50,7 @@
           {% endif %}
           {% if discussion.partner_article_url %}
             <a href="{{ discussion.partner_article_url }}" target="_blank" rel="noopener"
-               class="text-sm text-blue-600 hover:underline break-all">{{ discussion.partner_article_url }}</a>
+               class="text-sm text-primary-600 hover:underline break-all">{{ discussion.partner_article_url }}</a>
           {% endif %}
         </div>
         <div class="flex flex-wrap gap-2 shrink-0">
@@ -59,7 +59,7 @@
             View embed ↗
           </a>
           <a href="{{ consensus_url }}" target="_blank" rel="noopener"
-            class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+            class="rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700">
             Consensus ↗
           </a>
           {% if can_edit %}
@@ -112,7 +112,7 @@
         <h2 class="text-lg font-semibold text-gray-900">Consensus analysis</h2>
         {% if latest_consensus %}
         <a href="{{ consensus_url }}" target="_blank" rel="noopener"
-           class="text-xs font-semibold text-blue-600 hover:underline">View full consensus ↗</a>
+           class="text-xs font-semibold text-primary-600 hover:underline">View full consensus ↗</a>
         {% endif %}
       </div>
       {% if latest_consensus %}
@@ -153,7 +153,7 @@
         <div class="flex flex-wrap items-center gap-2">
           <span class="text-xs text-gray-500">Quick presets:</span>
           <button type="button" data-embed-preset="recommended" class="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Recommended (vote/report only)</button>
-          <button type="button" data-embed-preset="high-engagement" class="rounded-md border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100">High-engagement (allow inline submit)</button>
+          <button type="button" data-embed-preset="high-engagement" class="rounded-md border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-primary-700 hover:bg-blue-100">High-engagement (allow inline submit)</button>
         </div>
         <label class="inline-flex items-start gap-3 text-sm text-gray-700">
           <input
@@ -219,7 +219,7 @@
                 {% if s.source == 'user_submitted' %}
                   <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">Reader submitted</span>
                 {% elif s.source == 'ai_generated' %}
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">AI generated</span>
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-primary-600">AI generated</span>
                 {% elif s.source == 'partner_provided' %}
                   <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">Partner added</span>
                 {% elif s.is_seed %}
@@ -288,7 +288,7 @@
           </label>
           <textarea name="content" rows="3" maxlength="500" required
                     placeholder="e.g. Stricter emissions targets would cost more jobs than they create."
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
                     id="statement-content-input"></textarea>
           <p class="text-xs text-gray-400 mt-1" id="statement-char-count">0 / 500</p>
         </div>
@@ -311,7 +311,7 @@
         </div>
         <div>
           <button type="submit" id="add-statement-btn"
-                  class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             Add statement
           </button>
         </div>

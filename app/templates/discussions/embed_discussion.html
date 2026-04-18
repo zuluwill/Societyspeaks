@@ -165,7 +165,7 @@
       margin-bottom: 8px;
     }
 
-    /* Vote buttons grid */
+    /* Vote buttons — outlined system (aligned with main app / deliberation UX) */
     .vote-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -178,75 +178,94 @@
       }
     }
 
-    .vote-btn {
+    .statement-card .vote-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 12px 8px;
-      min-height: 70px;
-      border: none;
-      border-radius: 8px;
+      padding: 14px 10px;
+      min-height: 72px;
+      border: 2px solid;
+      border-radius: 12px;
       cursor: pointer;
       font-family: inherit;
-      font-weight: 700;
-      color: white;
-      transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s;
+      font-weight: 600;
+      font-size: 0.875rem;
+      background: #ffffff;
+      transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
     }
 
-    .vote-btn:hover {
+    .statement-card .vote-btn:hover:not(:disabled) {
       transform: translateY(-1px);
     }
 
-    .vote-btn:active {
+    .statement-card .vote-btn:active:not(:disabled) {
       transform: translateY(0);
     }
 
-    .vote-btn:disabled {
-      opacity: 0.7;
+    .statement-card .vote-btn:disabled {
+      opacity: 0.65;
       cursor: not-allowed;
       transform: none;
     }
 
-    .vote-btn--agree {
-      background-color: var(--embed-agree);
+    .statement-card .vote-btn[data-vote="1"] {
+      color: var(--embed-agree);
+      border-color: color-mix(in srgb, var(--embed-agree) 40%, #ffffff);
     }
-    .vote-btn--agree:hover:not(:disabled) {
-      background-color: var(--embed-agree-hover);
+    .statement-card .vote-btn[data-vote="1"]:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--embed-agree) 10%, #ffffff);
+      border-color: var(--embed-agree-hover);
     }
-    .vote-btn--agree.vote-btn--selected {
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
-    }
-
-    .vote-btn--disagree {
-      background-color: var(--embed-disagree);
-    }
-    .vote-btn--disagree:hover:not(:disabled) {
-      background-color: var(--embed-disagree-hover);
-    }
-    .vote-btn--disagree.vote-btn--selected {
-      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.4);
+    .statement-card .vote-btn[data-vote="1"][data-vote-selected="1"] {
+      background: color-mix(in srgb, var(--embed-agree) 16%, #ffffff);
+      border-color: var(--embed-agree);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--embed-agree) 22%, transparent);
     }
 
-    .vote-btn--unsure {
-      background-color: var(--embed-unsure);
+    .statement-card .vote-btn[data-vote="-1"] {
+      color: var(--embed-disagree);
+      border-color: color-mix(in srgb, var(--embed-disagree) 40%, #ffffff);
     }
-    .vote-btn--unsure:hover:not(:disabled) {
-      background-color: var(--embed-unsure-hover);
+    .statement-card .vote-btn[data-vote="-1"]:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--embed-disagree) 10%, #ffffff);
+      border-color: var(--embed-disagree-hover);
     }
-    .vote-btn--unsure.vote-btn--selected {
-      box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.4);
+    .statement-card .vote-btn[data-vote="-1"][data-vote-selected="1"] {
+      background: color-mix(in srgb, var(--embed-disagree) 16%, #ffffff);
+      border-color: var(--embed-disagree);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--embed-disagree) 22%, transparent);
+    }
+
+    .statement-card .vote-btn[data-vote="0"] {
+      color: var(--embed-unsure);
+      border-color: color-mix(in srgb, var(--embed-unsure) 45%, #ffffff);
+    }
+    .statement-card .vote-btn[data-vote="0"]:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--embed-unsure) 12%, #ffffff);
+      border-color: var(--embed-unsure-hover);
+    }
+    .statement-card .vote-btn[data-vote="0"][data-vote-selected="1"] {
+      background: color-mix(in srgb, var(--embed-unsure) 18%, #ffffff);
+      border-color: var(--embed-unsure);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--embed-unsure) 25%, transparent);
+    }
+
+    @supports not (background: color-mix(in srgb, red 10%, white)) {
+      .statement-card .vote-btn[data-vote="1"] { border-color: var(--embed-agree); }
+      .statement-card .vote-btn[data-vote="1"]:hover:not(:disabled) { background: #eff6ff; }
+      .statement-card .vote-btn[data-vote="1"][data-vote-selected="1"] { background: #dbeafe; }
+      .statement-card .vote-btn[data-vote="-1"] { border-color: var(--embed-disagree); }
+      .statement-card .vote-btn[data-vote="-1"]:hover:not(:disabled) { background: #fff1f2; }
+      .statement-card .vote-btn[data-vote="-1"][data-vote-selected="1"] { background: #ffe4e6; }
+      .statement-card .vote-btn[data-vote="0"] { border-color: var(--embed-unsure); }
+      .statement-card .vote-btn[data-vote="0"]:hover:not(:disabled) { background: #f9fafb; }
+      .statement-card .vote-btn[data-vote="0"][data-vote-selected="1"] { background: #f3f4f6; }
     }
 
     .vote-btn__label {
-      font-size: 0.625rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-
-    .vote-btn__count {
-      font-size: 1.5rem;
+      font-size: 0.8125rem;
+      letter-spacing: 0.02em;
     }
 
     .vote-btn__loading {
@@ -259,6 +278,39 @@
 
     .vote-btn--loading .vote-btn__content {
       display: none;
+    }
+
+    .vote-breakdown {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--embed-text-light);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .vote-breakdown__counts {
+      display: none;
+    }
+
+    .statement-card--voted .vote-breakdown__counts {
+      display: block;
+    }
+
+    .vote-breakdown__hint {
+      display: block;
+      margin: 0;
+    }
+
+    .statement-card--voted .vote-breakdown__hint {
+      display: none;
+    }
+
+    .statement-card .vote-stats {
+      display: none;
+    }
+
+    .statement-card--voted .vote-stats {
+      display: block;
     }
 
     @keyframes spin {
@@ -482,13 +534,9 @@
         padding: 12px;
       }
 
-      .vote-btn {
+      .statement-card .vote-btn {
         padding: 10px 6px;
         min-height: 60px;
-      }
-
-      .vote-btn__count {
-        font-size: 1.25rem;
       }
     }
 
@@ -505,14 +553,14 @@
       border: 0;
     }
 
-    .vote-btn:focus-visible {
+    .statement-card .vote-btn:focus-visible {
       outline: 3px solid var(--embed-primary);
       outline-offset: 2px;
     }
 
     /* Reduced motion support */
     @media (prefers-reduced-motion: reduce) {
-      .vote-btn,
+      .statement-card .vote-btn,
       .toast,
       .vote-progress__fill {
         transition: none;
@@ -719,12 +767,12 @@
         <p class="statement-content">{{ statement.content }}</p>
 
         <div class="vote-grid" role="group" aria-label="Vote options for this statement">
-          <!-- Agree -->
           <button
             type="button"
-            class="vote-btn vote-btn--agree"
+            class="vote-btn"
             data-vote="1"
             aria-label="Agree with this statement"
+            aria-pressed="false"
             {% if is_closed %}disabled{% endif %}
           >
             <span class="vote-btn__loading">
@@ -735,16 +783,15 @@
             </span>
             <span class="vote-btn__content">
               <span class="vote-btn__label">Agree</span>
-              <span class="vote-btn__count" data-count="agree">{{ statement.vote_count_agree }}</span>
             </span>
           </button>
 
-          <!-- Disagree -->
           <button
             type="button"
-            class="vote-btn vote-btn--disagree"
+            class="vote-btn"
             data-vote="-1"
             aria-label="Disagree with this statement"
+            aria-pressed="false"
             {% if is_closed %}disabled{% endif %}
           >
             <span class="vote-btn__loading">
@@ -755,16 +802,15 @@
             </span>
             <span class="vote-btn__content">
               <span class="vote-btn__label">Disagree</span>
-              <span class="vote-btn__count" data-count="disagree">{{ statement.vote_count_disagree }}</span>
             </span>
           </button>
 
-          <!-- Unsure -->
           <button
             type="button"
-            class="vote-btn vote-btn--unsure"
+            class="vote-btn"
             data-vote="0"
             aria-label="Unsure about this statement"
+            aria-pressed="false"
             {% if is_closed %}disabled{% endif %}
           >
             <span class="vote-btn__loading">
@@ -775,9 +821,17 @@
             </span>
             <span class="vote-btn__content">
               <span class="vote-btn__label">Unsure</span>
-              <span class="vote-btn__count" data-count="unsure">{{ statement.vote_count_unsure }}</span>
             </span>
           </button>
+        </div>
+
+        <div class="vote-breakdown" aria-live="polite">
+          <p class="vote-breakdown__hint">Vote to see how others split on this claim.</p>
+          <p class="vote-breakdown__counts">
+            <span data-count="agree">{{ statement.vote_count_agree }}</span> agree ·
+            <span data-count="disagree">{{ statement.vote_count_disagree }}</span> disagree ·
+            <span data-count="unsure">{{ statement.vote_count_unsure }}</span> unsure
+          </p>
         </div>
 
         <div class="vote-stats" aria-live="polite">
@@ -1089,18 +1143,15 @@
 
       card.classList.add('statement-card--voted');
 
-      // Clear all selected states and aria-pressed first
       card.querySelectorAll('.vote-btn').forEach(btn => {
-        btn.classList.remove('vote-btn--selected');
+        btn.removeAttribute('data-vote-selected');
         btn.setAttribute('aria-pressed', 'false');
       });
 
-      // Mark the selected vote
-      const voteMap = { 1: 'agree', '-1': 'disagree', 0: 'unsure' };
-      const voteClass = voteMap[voteValue] || voteMap[String(voteValue)];
-      const selectedBtn = card.querySelector(`.vote-btn--${voteClass}`);
+      const vKey = String(voteValue);
+      const selectedBtn = card.querySelector(`.vote-btn[data-vote="${vKey}"]`);
       if (selectedBtn) {
-        selectedBtn.classList.add('vote-btn--selected');
+        selectedBtn.setAttribute('data-vote-selected', '1');
         selectedBtn.setAttribute('aria-pressed', 'true');
       }
     }
@@ -1263,15 +1314,18 @@
           const data = await submitVoteToServer(statementId, voteValue);
 
           if (data.success) {
-            // Update vote counts from server
-            card.querySelector('[data-count="agree"]').textContent = data.vote_count_agree;
-            card.querySelector('[data-count="disagree"]').textContent = data.vote_count_disagree;
-            card.querySelector('[data-count="unsure"]').textContent = data.vote_count_unsure;
+            const agreeCt = card.querySelector('[data-count="agree"]');
+            const disagreeCt = card.querySelector('[data-count="disagree"]');
+            const unsureCt = card.querySelector('[data-count="unsure"]');
+            if (agreeCt) agreeCt.textContent = data.vote_count_agree;
+            if (disagreeCt) disagreeCt.textContent = data.vote_count_disagree;
+            if (unsureCt) unsureCt.textContent = data.vote_count_unsure;
 
             // Update stats safely (avoid innerHTML)
             const statsEl = card.querySelector('.vote-stats');
             const total = data.total_votes;
-            const agreePct = Math.round(data.agreement_rate * 100);
+            const ar = typeof data.agreement_rate === 'number' ? data.agreement_rate : parseFloat(data.agreement_rate);
+            const agreePct = Math.round((Number.isFinite(ar) ? ar : 0) * 100);
             statsEl.textContent = '';
             const totalSpan = document.createElement('span');
             totalSpan.className = 'total-votes';

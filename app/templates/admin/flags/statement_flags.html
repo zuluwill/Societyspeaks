@@ -23,8 +23,8 @@
                 <input type="hidden" name="reason" value="{{ reason_filter or '' }}">
                 <input type="text" name="q" value="{{ search_query or '' }}"
                        placeholder="Search statement, reason, or flagger"
-                       class="w-full sm:w-80 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Search</button>
+                       class="w-full sm:w-80 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500">
+                <button type="submit" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700">Search</button>
                 {% if search_query %}
                 <a href="{{ url_for('admin.list_statement_flags', status=status_filter, reason=reason_filter or '') }}"
                    class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">Clear</a>
@@ -34,19 +34,19 @@
         <div class="border-b border-gray-200">
             <nav class="flex -mb-px">
                 <a href="{{ url_for('admin.list_statement_flags', status='pending', q=search_query or '') }}"
-                   class="{% if status_filter == 'pending' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                   class="{% if status_filter == 'pending' %}border-primary-500 text-primary-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
                     Pending ({{ pending_count }})
                 </a>
                 <a href="{{ url_for('admin.list_statement_flags', status='reviewed', q=search_query or '') }}"
-                   class="{% if status_filter == 'reviewed' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                   class="{% if status_filter == 'reviewed' %}border-primary-500 text-primary-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
                     Reviewed ({{ reviewed_count }})
                 </a>
                 <a href="{{ url_for('admin.list_statement_flags', status='dismissed', q=search_query or '') }}"
-                   class="{% if status_filter == 'dismissed' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                   class="{% if status_filter == 'dismissed' %}border-primary-500 text-primary-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
                     Dismissed ({{ dismissed_count }})
                 </a>
                 <a href="{{ url_for('admin.list_statement_flags', status='all', q=search_query or '') }}"
-                   class="{% if status_filter == 'all' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                   class="{% if status_filter == 'all' %}border-primary-500 text-primary-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
                     All
                 </a>
             </nav>
@@ -99,7 +99,7 @@
                                     'spam': 'bg-red-100 text-red-800',
                                     'offensive': 'bg-orange-100 text-orange-800',
                                     'off_topic': 'bg-yellow-100 text-yellow-800',
-                                    'duplicate': 'bg-blue-100 text-blue-800'
+                                    'duplicate': 'bg-blue-100 text-primary-800'
                                 } %}
                                 <span class="px-2 py-1 text-xs font-medium rounded-full {{ reason_colors.get(flag.flag_reason, 'bg-gray-100 text-gray-800') }}">
                                     {{ flag.flag_reason.replace('_', ' ').title() }}

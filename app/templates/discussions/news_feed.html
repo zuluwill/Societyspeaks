@@ -68,7 +68,7 @@ discussion_card %} {% block head %}
   <div class="mb-8">
     <div class="flex items-center gap-3 mb-2">
       <svg
-        class="w-8 h-8 text-blue-600"
+        class="w-8 h-8 text-primary-600"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -90,7 +90,7 @@ discussion_card %} {% block head %}
   </div>
 
   <div
-    class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-6 mb-8 border border-blue-100"
+    class="bg-gradient-to-r from-blue-50 to-primary-50 rounded-lg p-4 sm:p-6 mb-8 border border-blue-100"
   >
     <div class="flex flex-col sm:flex-row sm:items-start gap-4">
       <div class="flex-shrink-0">
@@ -98,7 +98,7 @@ discussion_card %} {% block head %}
           class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"
         >
           <svg
-            class="w-5 h-5 text-blue-600"
+            class="w-5 h-5 text-primary-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -185,7 +185,7 @@ discussion_card %} {% block head %}
   <div class="mb-4">
     <a
       href="{{ url_for('discussions.news_feed') }}"
-      class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+      class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800"
     >
       <svg
         class="w-4 h-4 mr-1"
@@ -209,13 +209,13 @@ discussion_card %} {% block head %}
     <div class="flex flex-wrap gap-2">
       <a
         href="{{ url_for('discussions.news_feed') }}"
-        class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'latest' and not topic_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+        class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'latest' and not topic_filter %}bg-primary-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
       >
         Latest
       </a>
       <a
         href="{{ url_for('discussions.news_feed', view='topics') }}"
-        class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'topics' and not topic_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+        class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'topics' and not topic_filter %}bg-primary-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
       >
         By Topic
       </a>
@@ -223,7 +223,7 @@ discussion_card %} {% block head %}
       {% for topic in topics %}
       <a
         href="{{ url_for('discussions.news_feed', topic=topic) }}"
-        class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if topic_filter == topic %} {% if topic == 'Healthcare' %}bg-emerald-600 text-white {% elif topic == 'Environment' %}bg-green-600 text-white {% elif topic == 'Education' %}bg-blue-600 text-white {% elif topic == 'Technology' %}bg-purple-600 text-white {% elif topic == 'Economy' %}bg-yellow-600 text-white {% elif topic == 'Politics' %}bg-red-600 text-white {% elif topic == 'Society' %}bg-orange-600 text-white {% elif topic == 'Infrastructure' %}bg-gray-600 text-white {% elif topic == 'Geopolitics' %}bg-indigo-600 text-white {% elif topic == 'Business' %}bg-teal-600 text-white {% elif topic == 'Culture' %}bg-pink-600 text-white {% else %}bg-slate-600 text-white{% endif %} {% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+        class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if topic_filter == topic %} {% if topic == 'Healthcare' %}bg-emerald-600 text-white {% elif topic == 'Environment' %}bg-green-600 text-white {% elif topic == 'Education' %}bg-primary-600 text-white {% elif topic == 'Technology' %}bg-purple-600 text-white {% elif topic == 'Economy' %}bg-yellow-600 text-white {% elif topic == 'Politics' %}bg-red-600 text-white {% elif topic == 'Society' %}bg-orange-600 text-white {% elif topic == 'Infrastructure' %}bg-gray-600 text-white {% elif topic == 'Geopolitics' %}bg-indigo-600 text-white {% elif topic == 'Business' %}bg-teal-600 text-white {% elif topic == 'Culture' %}bg-pink-600 text-white {% else %}bg-slate-600 text-white{% endif %} {% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
       >
         {{ topic }}
       </a>
@@ -267,7 +267,7 @@ discussion_card %} {% block head %}
             name="q"
             type="text"
             value="{{ search_term or '' }}"
-            class="block w-full pl-9 pr-20 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            class="block w-full pl-9 pr-20 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
             placeholder="Search titles, topics, descriptions..."
           />
           <button
@@ -294,7 +294,7 @@ discussion_card %} {% block head %}
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-2">
         <span
-          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {% if topic == 'Healthcare' %}bg-emerald-100 text-emerald-800 {% elif topic == 'Environment' %}bg-green-100 text-green-800 {% elif topic == 'Education' %}bg-blue-100 text-blue-800 {% elif topic == 'Technology' %}bg-purple-100 text-purple-800 {% elif topic == 'Economy' %}bg-yellow-100 text-yellow-800 {% elif topic == 'Politics' %}bg-red-100 text-red-800 {% elif topic == 'Society' %}bg-orange-100 text-orange-800 {% elif topic == 'Infrastructure' %}bg-gray-100 text-gray-800 {% elif topic == 'Geopolitics' %}bg-indigo-100 text-indigo-800 {% elif topic == 'Business' %}bg-teal-100 text-teal-800 {% elif topic == 'Culture' %}bg-pink-100 text-pink-800 {% else %}bg-slate-100 text-slate-800{% endif %}"
+          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {% if topic == 'Healthcare' %}bg-emerald-100 text-emerald-800 {% elif topic == 'Environment' %}bg-green-100 text-green-800 {% elif topic == 'Education' %}bg-blue-100 text-primary-800 {% elif topic == 'Technology' %}bg-purple-100 text-purple-800 {% elif topic == 'Economy' %}bg-yellow-100 text-yellow-800 {% elif topic == 'Politics' %}bg-red-100 text-red-800 {% elif topic == 'Society' %}bg-orange-100 text-orange-800 {% elif topic == 'Infrastructure' %}bg-gray-100 text-gray-800 {% elif topic == 'Geopolitics' %}bg-indigo-100 text-indigo-800 {% elif topic == 'Business' %}bg-teal-100 text-teal-800 {% elif topic == 'Culture' %}bg-pink-100 text-pink-800 {% else %}bg-slate-100 text-slate-800{% endif %}"
         >
           {{ topic }}
         </span>
@@ -305,7 +305,7 @@ discussion_card %} {% block head %}
       </div>
       <a
         href="{{ url_for('discussions.news_feed', topic=topic) }}"
-        class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+        class="text-sm text-primary-600 hover:text-primary-800 font-medium"
       >
         View all {{ topic }}
       </a>
@@ -344,7 +344,7 @@ discussion_card %} {% block head %}
     <div class="mt-6">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
       >
         Explore Community Discussions
       </a>
@@ -389,7 +389,7 @@ discussion_card %} {% block head %}
       left_current=2, right_current=3, right_edge=2) %} {% if page_num %}
       <a
         href="{{ url_for('discussions.news_feed', page=page_num, topic=topic_filter, view=view_mode, q=search_term or None) }}"
-        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page_num == discussions.page %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}"
+        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page_num == discussions.page %}text-primary-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}"
       >
         {{ page_num }}
       </a>
@@ -443,7 +443,7 @@ discussion_card %} {% block head %}
     <div class="mt-6">
       <a
         href="{{ url_for('discussions.news_feed') }}"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
       >
         View All Topics
       </a>
@@ -473,7 +473,7 @@ discussion_card %} {% block head %}
     <div class="mt-6">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
       >
         Explore Community Discussions
       </a>

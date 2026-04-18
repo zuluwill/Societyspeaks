@@ -18,11 +18,11 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="md:col-span-2">
         <label for="q" class="block text-sm font-medium text-gray-700">Search</label>
-        <input id="q" type="search" name="q" value="{{ q }}" placeholder="Search statement text..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <input id="q" type="search" name="q" value="{{ q }}" placeholder="Search statement text..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
       </div>
       <div>
         <label for="topic" class="block text-sm font-medium text-gray-700">Topic</label>
-        <select id="topic" name="topic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <select id="topic" name="topic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
           <option value="">All topics</option>
           {% for topic_option in topics %}
           <option value="{{ topic_option }}" {% if topic_option == topic %}selected{% endif %}>{{ topic_option }}</option>
@@ -31,7 +31,7 @@
       </div>
       <div>
         <label for="sort" class="block text-sm font-medium text-gray-700">Sort</label>
-        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
           <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recent</option>
           <option value="most_voted" {% if sort == 'most_voted' %}selected{% endif %}>Most voted</option>
           <option value="best" {% if sort == 'best' %}selected{% endif %}>Most agreed</option>
@@ -40,7 +40,7 @@
       </div>
     </div>
     <div class="mt-4 flex items-center gap-3">
-      <button type="submit" class="inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+      <button type="submit" class="inline-flex items-center px-4 py-2 rounded-md bg-primary-600 text-white text-sm font-medium hover:bg-primary-700">
         Search
       </button>
       {% if q or topic %}
@@ -74,7 +74,7 @@
         {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
           {% if p %}
             {% if p == pagination.page %}
-              <span class="px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
+              <span class="px-3 py-1.5 text-sm font-semibold bg-primary-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
             {% else %}
               <a href="{{ url_for('discussions.search_statements', page=p, q=q, topic=topic, sort=sort) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ p }}</a>
             {% endif %}

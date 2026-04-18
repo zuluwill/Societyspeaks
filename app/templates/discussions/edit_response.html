@@ -27,14 +27,14 @@ block content %}
       <div class="mb-6">
         {{ form.position.label(class="block text-gray-700 font-semibold mb-2")
         }} {{ form.position(class="w-full border border-gray-300 rounded-lg px-4
-        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+        py-3 focus:outline-none focus:ring-2 focus:ring-primary-500") }}
       </div>
 
       <!-- Content -->
       <div class="mb-6">
         {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
         {{ form.content(class="w-full border border-gray-300 rounded-lg px-4
-        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500", rows="6") }}
+        py-3 focus:outline-none focus:ring-2 focus:ring-primary-500", rows="6") }}
         {% if form.content.errors %}
         <p class="text-red-600 text-sm mt-1">{{ form.content.errors[0] }}</p>
         {% endif %}
@@ -42,8 +42,8 @@ block content %}
 
       <!-- Submit Buttons -->
       <div class="flex space-x-4">
-        {{ form.submit(class="bg-blue-600 text-white px-8 py-3 rounded-lg
-        hover:bg-blue-700 font-semibold cursor-pointer") }}
+        {{ form.submit(class="bg-primary-600 text-white px-8 py-3 rounded-lg
+        hover:bg-primary-700 font-semibold cursor-pointer") }}
         <a
           href="{{ url_for('statements.view_response', response_id=response.id) }}"
           class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block"

@@ -26,10 +26,10 @@
         ></div>
         <div
           id="step1Indicator"
-          class="flex flex-col items-center text-blue-600"
+          class="flex flex-col items-center text-primary-600"
         >
           <div
-            class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center"
+            class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center"
           >
             1
           </div>
@@ -113,10 +113,10 @@
           id="polisSection"
           class="bg-blue-50 border border-blue-200 rounded-lg p-6"
         >
-          <h3 class="text-lg font-medium text-blue-800 mb-3">
+          <h3 class="text-lg font-medium text-primary-800 mb-3">
             Or use Pol.is (Traditional)
           </h3>
-          <ol class="list-decimal list-inside space-y-2 text-blue-700 text-sm">
+          <ol class="list-decimal list-inside space-y-2 text-primary-700 text-sm">
             <li>Click the button below to open Pol.is in a new tab</li>
             <li>Sign in or create a Pol.is account</li>
             <li>Create and configure your discussion</li>
@@ -132,7 +132,7 @@
               href="https://pol.is"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm"
             >
               Open Pol.is Configuration
             </a>
@@ -152,7 +152,7 @@
         <div class="space-y-2">
           <textarea
             id="embedCode"
-            class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-primary-500"
             placeholder="Enter embed code or Pol.is URL"
           ></textarea>
           <div id="embedWarning" class="hidden">
@@ -206,7 +206,7 @@
                 >Title</label
               >
               {{ form.title(class="block w-full rounded-md border-gray-300
-              shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+              shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
               placeholder="Enter a descriptive title for your discussion") }} {%
               if form.title.errors %} {% for error in form.title.errors %}
               <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -218,7 +218,7 @@
                 >Description</label
               >
               {{ form.description(class="block w-full rounded-md border-gray-300
-              shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+              shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
               rows="4", placeholder="Provide context about what you want to
               discuss") }} {% if form.description.errors %} {% for error in
               form.description.errors %}
@@ -236,7 +236,7 @@
                 </p>
                 {{ form.topic(class="mt-1 block w-full px-3 py-2 border
                 border-gray-300 rounded-md shadow-sm focus:outline-none
-                focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }} {% if
+                focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }} {% if
                 form.topic.errors %} {% for error in form.topic.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                 {% endfor %} {% endif %}
@@ -249,7 +249,7 @@
                 </p>
                 {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2
                 border border-gray-300 rounded-md shadow-sm focus:outline-none
-                focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }} {% if
+                focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }} {% if
                 form.geographic_scope.errors %} {% for error in
                 form.geographic_scope.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -263,7 +263,7 @@
                 {{ form.country.label(class="block text-sm font-medium
                 text-gray-700") }} {{ form.country(class="mt-1 block w-full px-3
                 py-2 border border-gray-300 rounded-md shadow-sm
-                focus:outline-none focus:ring-blue-500 focus:border-blue-500
+                focus:outline-none focus:ring-primary-500 focus:border-primary-500
                 sm:text-sm") }} {% if
                 form.country.errors %} {% for error in form.country.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -276,7 +276,7 @@
                 <select
                   id="city"
                   name="city"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                 >
                   <option value="">Select a city</option>
                 </select>
@@ -293,7 +293,7 @@
                 A <strong>Programme</strong> is a structured dialogue — for example, a national consultation, a research project, or a multi-discussion public engagement campaign. Linking this discussion to a Programme lets organisers export a combined analysis across all discussions in the programme, and group discussions by theme or phase.
                 {% if not programme_meta %}
                 <span class="block mt-2">You don't have any programmes yet.
-                  <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Create a programme →</a>
+                  <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline font-medium">Create a programme →</a>
                   (opens in a new tab — come back here to continue.)
                 </span>
                 {% endif %}
@@ -301,14 +301,14 @@
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   {{ form.programme_id.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                  {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm") }}
                   {% if form.programme_id.errors %}{% for error in form.programme_id.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
                 <div id="programme_theme_wrapper">
                   {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+                  {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
                   <p class="mt-1 text-xs text-gray-400" id="theme_hint">Select a programme first</p>
                   {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -316,7 +316,7 @@
                 </div>
                 <div id="programme_phase_wrapper">
                   {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+                  {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
                   <p class="mt-1 text-xs text-gray-400" id="phase_hint">Select a programme first</p>
                   {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -334,21 +334,21 @@
               <div class="space-y-4">
                 <div>
                   {{ form.information_title.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Why this discussion matters") }}
+                  {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="Why this discussion matters") }}
                   {% if form.information_title.errors %}{% for error in form.information_title.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
                 <div>
                   {{ form.information_body.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
+                  {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
                   {% if form.information_body.errors %}{% for error in form.information_body.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
                 <div>
                   {{ form.information_links.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
+                  {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
                   <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>. Only http/https links are kept.</p>
                   {% if form.information_links.errors %}{% for error in form.information_links.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -372,33 +372,33 @@
         <!-- Research Tools Help Section -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-primary-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div class="flex-1">
               <h3 class="text-sm font-semibold text-blue-900 mb-2">💡 Need Help Writing Statements?</h3>
-              <p class="text-sm text-blue-800 mb-3">Use these AI tools to quickly generate diverse perspectives on your topic:</p>
+              <p class="text-sm text-primary-800 mb-3">Use these AI tools to quickly generate diverse perspectives on your topic:</p>
               <div class="flex flex-wrap gap-2">
-                <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-primary-700 hover:bg-blue-50 transition-colors">
                   <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                   </svg>
                   Claude AI
                 </a>
-                <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-primary-700 hover:bg-blue-50 transition-colors">
                   <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                   </svg>
                   ChatGPT
                 </a>
-                <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-primary-700 hover:bg-blue-50 transition-colors">
                   <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                   </svg>
                   Perplexity
                 </a>
               </div>
-              <p class="text-xs text-blue-700 mt-2">💬 Try asking: "Generate 5-7 diverse viewpoint statements about [your topic]"</p>
+              <p class="text-xs text-primary-700 mt-2">💬 Try asking: "Generate 5-7 diverse viewpoint statements about [your topic]"</p>
             </div>
           </div>
         </div>
@@ -418,13 +418,13 @@
               type="text"
               id="newStatementInput"
               placeholder="Enter a statement for people to vote on..."
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               maxlength="280"
             />
             <button
               type="button"
               id="addStatementBtn"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Add
             </button>
@@ -468,7 +468,7 @@
       <div class="ml-auto flex gap-4">
         <button
           id="nextButton"
-          class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          class="inline-flex items-center px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
         >
           Next
           <svg
@@ -488,7 +488,7 @@
 
         <button
           id="submitButton"
-          class="hidden px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          class="hidden px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
         >
           Publish Discussion
         </button>
@@ -718,8 +718,8 @@
       const indicator = document.getElementById(`step${i}Indicator`);
       const div = indicator.querySelector("div");
 
-      indicator.classList.toggle("text-blue-600", i <= currentStep);
-      div.classList.toggle("bg-blue-600", i <= currentStep);
+      indicator.classList.toggle("text-primary-600", i <= currentStep);
+      div.classList.toggle("bg-primary-600", i <= currentStep);
       div.classList.toggle("bg-gray-200", i > currentStep);
     }
 

@@ -1,6 +1,7 @@
 const typographyPlugin = require('@tailwindcss/typography')
 const formsPlugin = require('@tailwindcss/forms')
 const aspectRatioPlugin = require('@tailwindcss/aspect-ratio')
+const colors = require('tailwindcss/colors')
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -24,6 +25,10 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      /** Single marketing primary — maps to blue; use bg-primary-600, text-primary-600, etc. */
+      colors: {
+        primary: colors.blue,
+      },
       typography: require('./typography'),  // This links to our simplified typography
       minHeight: {
         '11': '2.75rem', // 44px - mobile touch target minimum

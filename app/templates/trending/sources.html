@@ -5,7 +5,7 @@
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="mb-6">
-        <a href="{{ url_for('trending.dashboard') }}" class="text-blue-600 hover:underline">&larr; Back to Dashboard</a>
+        <a href="{{ url_for('trending.dashboard') }}" class="text-primary-600 hover:underline">&larr; Back to Dashboard</a>
     </div>
 
     <h1 class="text-3xl font-bold text-gray-900 mb-8">Manage News Sources</h1>
@@ -20,7 +20,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Source Name</label>
                     <input type="text" name="name" required placeholder="e.g., Financial Times"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Source Type</label>
@@ -34,15 +34,15 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Feed URL / API Endpoint</label>
                     <input type="url" name="feed_url" required placeholder="https://..."
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Reputation Score (0-1)</label>
                     <input type="number" name="reputation_score" min="0" max="1" step="0.05" value="0.7"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500">
                 </div>
             </div>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <button type="submit" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700">
                 Add Source
             </button>
         </form>

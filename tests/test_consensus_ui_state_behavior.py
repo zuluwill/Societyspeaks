@@ -1,3 +1,6 @@
+import hashlib
+import secrets
+
 from app.api.utils import get_discussion_participant_count
 from app.discussions.consensus import build_consensus_ui_state
 from app.discussions import statements as statements_module
@@ -212,3 +215,49 @@ def test_idempotency_cached_response_survives_ui_refresh_failure(app, db, monkey
     data = response.get_json()
     assert data['success'] is True
     assert data['vote'] == 1
+
+
+def test_anonymous_discussion_page_seeds_vote_buttons_from_fingerprint_cookie(app, db):
+    """Gated footer + selected vote must match DB for anonymous users (not only logged-in)."""
+    client_id = secrets.token_hex(32)
+    fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
+
+    with app.app_context():
+        discussion = Discussion(
+            title='Anon vote seed discussion',
+            slug=generate_slug('Anon vote seed discussion'),
+            has_native_statements=True,
+            topic='Society',
+            geographic_scope='global',
+        )
+        db.session.add(discussion)
+        db.session.flush()
+        statement = Statement(
+            discussion_id=discussion.id,
+            content='Statement long enough for validation rules.',
+            mod_status=1,
+            is_deleted=False,
+        )
+        db.session.add(statement)
+        db.session.flush()
+        db.session.add(
+            StatementVote(
+                statement_id=statement.id,
+                discussion_id=discussion.id,
+                user_id=None,
+                session_fingerprint=fingerprint,
+                vote=1,
+            )
+        )
+        db.session.commit()
+        discussion_id = discussion.id
+        discussion_slug = discussion.slug
+
+    client = app.test_client()
+    client.set_cookie('statement_client_id', client_id)
+    response = client.get(f'/discussions/{discussion_id}/{discussion_slug}')
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'data-vote-selected="1"' in html
+    assert 'Vote to see results' not in html
+    assert 'total votes' in html

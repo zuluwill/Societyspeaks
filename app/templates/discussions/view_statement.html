@@ -1,5 +1,7 @@
-{% extends 'layout.html' %} {% block title %}Statement - {{ discussion.title
-}}{% endblock %} {% block content %}
+{% extends 'layout.html' %}
+{% from 'components/vote_buttons.html' import vote_buttons_form_post, statement_vote_stats_footer %}
+{% block title %}Statement - {{ discussion.title }}{% endblock %}
+{% block content %}
 <div class="container mx-auto px-4 py-8">
   <!-- Back Button (Top) -->
   <div class="mb-4">
@@ -29,13 +31,13 @@
     <nav class="text-sm">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Discussions</a
       >
       <span class="mx-2">/</span>
       <a
         href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >{{ discussion.title }}</a
       >
       <span class="mx-2">/</span>
@@ -44,7 +46,7 @@
   </div>
 
   <!-- Statement Card -->
-  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+  <div id="statement-{{ statement.id }}" class="bg-white rounded-lg shadow-lg p-6 mb-6">
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
         <div class="flex items-center space-x-2 text-sm text-gray-500 mb-3">
@@ -65,78 +67,27 @@
       </div>
     </div>
 
-    <!-- Voting Buttons - Mobile First Design (authenticated and anonymous) -->
-    {% set vote_btn_base = "w-full px-4 py-4 rounded-lg font-bold transition-colors duration-150 flex flex-col items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500" %}
-    {% set vote_btn_anon = " opacity-75 hover:opacity-100" if not current_user.is_authenticated else "" %}
-    {% set vote_btn_title = ' title="Vote without an account"' if not current_user.is_authenticated else "" %}
     <div class="border-t border-gray-200 pt-4">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Vote options for this statement">
-        <form
-          method="POST"
-          action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <input type="hidden" name="vote" value="1" />
-          <button
-            type="submit"
-            class="{{ vote_btn_base }} bg-blue-600 hover:bg-blue-700 text-white{{ vote_btn_anon }}"
-            aria-label="Agree with this statement"
-            {{ vote_btn_title|safe }}
-          >
-            <div class="text-base tracking-wide">&#10003; Agree</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_agree }}</div>
-          </button>
-        </form>
-        <form
-          method="POST"
-          action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <input type="hidden" name="vote" value="-1" />
-          <button
-            type="submit"
-            class="{{ vote_btn_base }} bg-red-600 hover:bg-red-700 text-white{{ vote_btn_anon }}"
-            aria-label="Disagree with this statement"
-            {{ vote_btn_title|safe }}
-          >
-            <div class="text-base tracking-wide">&#10007; Disagree</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_disagree }}</div>
-          </button>
-        </form>
-        <form
-          method="POST"
-          action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <input type="hidden" name="vote" value="0" />
-          <button
-            type="submit"
-            class="{{ vote_btn_base }} bg-gray-500 hover:bg-gray-600 text-white{{ vote_btn_anon }}"
-            aria-label="Unsure about this statement"
-            {{ vote_btn_title|safe }}
-          >
-            <div class="text-base tracking-wide">? Unsure</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_unsure }}</div>
-          </button>
-        </form>
-      </div>
-
-      <!-- Statistics -->
-      <div class="mt-4 text-center sm:text-right">
-        <div class="text-3xl font-bold text-gray-900">
-          {{ statement.total_votes }}
-        </div>
-        <div class="text-sm text-gray-500">Total Votes</div>
-        {% if statement.total_votes > 0 %}
-        <div class="text-sm text-gray-600 mt-1">
-          {{ "%.0f"|format(statement.agreement_rate * 100) }}% agreement
-        </div>
-        {% if statement.controversy_score > 0.7 %}
-        <div class="text-sm text-red-600 font-semibold mt-1">
-          🔥 Controversial
-        </div>
-        {% endif %} {% endif %}
-      </div>
+      {% if discussion.is_closed %}
+      <p class="text-sm text-amber-800 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+        This discussion is closed — voting is no longer open.
+      </p>
+      {% else %}
+      {{ vote_buttons_form_post(
+          statement.id,
+          url_for('statements.vote_statement', statement_id=statement.id),
+          csrf_token(),
+          seeded_vote=viewer_vote_value,
+          anon_submit_title=(not current_user.is_authenticated)
+      ) }}
+      {% endif %}
+      {{ statement_vote_stats_footer(
+          statement.id,
+          statement.total_votes,
+          statement.agreement_rate,
+          statement.controversy_score,
+          viewer_vote_value is not none
+      ) }}
     </div>
   </div>
 
@@ -155,8 +106,7 @@
 
         <div class="mb-4">
           <label class="block text-gray-700 font-medium mb-2">Position</label>
-          {% set vote_val = user_vote.vote if user_vote and user_vote.vote is
-          not none else none %}
+          {% set vote_val = user_vote.vote if user_vote and user_vote.vote is not none else (viewer_vote_value if viewer_vote_value is defined else none) %}
           <select
             name="position"
             id="position-select"
@@ -196,7 +146,7 @@
 
         <button
           type="submit"
-          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold min-h-11"
+          class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 font-semibold min-h-11"
         >
           Post Response
         </button>
@@ -209,7 +159,7 @@
       </p>
       <a
         href="{{ url_for('auth.login') }}"
-        class="text-blue-600 hover:underline font-semibold"
+        class="text-primary-600 hover:underline font-semibold"
         >Log In</a
       >
     </div>
@@ -289,7 +239,7 @@
   <div class="mt-8">
     <a
       href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-      class="text-blue-600 hover:underline"
+      class="text-primary-600 hover:underline"
     >
       ← Back to Discussion
     </a>

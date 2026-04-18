@@ -6,13 +6,13 @@
     <nav class="text-sm">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >Discussions</a
       >
       <span class="mx-2">/</span>
       <a
         href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-        class="text-blue-600 hover:underline"
+        class="text-primary-600 hover:underline"
         >{{ discussion.title }}</a
       >
       <span class="mx-2">/</span>
@@ -31,7 +31,7 @@
   <!-- Guidelines -->
   <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
     <h3 class="font-semibold text-blue-900 mb-3">✍️ Statement Guidelines</h3>
-    <ul class="text-blue-800 space-y-2 text-sm">
+    <ul class="text-primary-800 space-y-2 text-sm">
       <li>• <strong>Be clear and concise:</strong> 10-500 characters</li>
       <li>
         • <strong>Make one point:</strong> Each statement should focus on a
@@ -63,7 +63,7 @@
         <div class="flex space-x-4">
           {% for subfield in form.statement_type %}
           <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-50">
-            {{ subfield(class="text-blue-600 cursor-pointer") }}
+            {{ subfield(class="text-primary-600 cursor-pointer") }}
             <span class="text-gray-700 cursor-pointer">{{ subfield.label.text.split()[-1] }}</span>
           </label>
           {% endfor %}
@@ -81,7 +81,7 @@
       <div class="mb-6">
         {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
         {{ form.content(class="w-full border border-gray-300 rounded-lg px-4
-        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500", rows="4",
+        py-3 focus:outline-none focus:ring-2 focus:ring-primary-500", rows="4",
         placeholder="Enter your statement (10-500 characters)...",
         maxlength="500") }}
 
@@ -100,7 +100,7 @@
 
       <!-- Submit Buttons -->
       <div class="flex space-x-4">
-        {{ form.submit(class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold cursor-pointer transition-colors min-h-11 min-w-11") }}
+        {{ form.submit(class="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 font-semibold cursor-pointer transition-colors min-h-11 min-w-11") }}
         <a
           href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
           class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors inline-block min-h-11 min-w-11"

@@ -18,6 +18,7 @@ def test_vote_response_exposes_consensus_progress_fields():
 
 def test_native_template_contains_live_progress_hooks():
     source = NATIVE_TEMPLATE_PATH.read_text(encoding="utf-8")
+    assert "[data-statement-id][data-quick-response-url]" in source
     assert 'id="consensus-analysis-link"' in source
     assert 'id="analysis-vote-progress"' in source
     assert 'id="consensus-participants-count"' in source

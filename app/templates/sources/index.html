@@ -78,7 +78,7 @@ source_logo %} {% block head %}
           name="q"
           value="{{ current_search }}"
           placeholder="Search sources..."
-          class="block w-full pl-10 pr-16 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          class="block w-full pl-10 pr-16 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
         />
         <button
           id="source-search-clear"
@@ -98,7 +98,7 @@ source_logo %} {% block head %}
           >
           <select
             name="category"
-            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
           >
             <option value="">All Types</option>
             <option value="podcast" {% if current_category == "podcast" %}selected{% endif %}>
@@ -123,7 +123,7 @@ source_logo %} {% block head %}
           >
           <select
             name="country"
-            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
           >
             <option value="">All Countries</option>
             {% for country in countries %}
@@ -141,7 +141,7 @@ source_logo %} {% block head %}
           >
           <select
             name="leaning"
-            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
           >
             <option value="">All Leanings</option>
             <option value="left" {% if current_leaning == "left" %}selected{% endif %}>
@@ -163,7 +163,7 @@ source_logo %} {% block head %}
           >
           <select
             name="sort"
-            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
           >
             <option value="name" {% if current_sort == "name" %}selected{% endif %}>
               Name (A-Z)
@@ -181,7 +181,7 @@ source_logo %} {% block head %}
       <div class="flex justify-end">
         <button
           type="submit"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Apply Filters
         </button>
@@ -208,7 +208,7 @@ source_logo %} {% block head %}
 
           <div class="ml-3 flex-1 min-w-0">
             <h3
-              class="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate"
+              class="text-base font-semibold text-gray-900 group-hover:text-primary-600 transition-colors truncate"
             >
               {{ source.name }} {% if source.is_claimed %}
               <svg
@@ -296,13 +296,13 @@ source_logo %} {% block head %}
           {% set leaning_label = source.political_leaning_label %} {% if
           leaning_label == 'Left' %}
           <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-primary-800"
           >
             {{ leaning_label }}
           </span>
           {% elif leaning_label == 'Centre-Left' %}
           <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700"
+            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-primary-700"
           >
             {{ leaning_label }}
           </span>
@@ -383,7 +383,7 @@ source_logo %} {% block head %}
       left_current=2, right_current=3, right_edge=2) %} {% if page_num %}
       <a
         href="{{ url_for('sources.index', page=page_num, q=current_search, category=current_category, country=current_country, leaning=current_leaning, sort=current_sort) }}"
-        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page_num == pagination.page %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}"
+        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page_num == pagination.page %}text-primary-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}"
       >
         {{ page_num }}
       </a>
@@ -441,7 +441,7 @@ source_logo %} {% block head %}
     <div class="mt-6">
       <a
         href="{{ url_for('sources.index') }}"
-        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
       >
         Clear Filters
       </a>

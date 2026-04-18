@@ -26,9 +26,9 @@
                 <p class="text-sm text-gray-500">Active</p>
                 <p class="text-2xl font-bold text-green-600">{{ stats.active }}</p>
             </a>
-            <a href="{{ url_for('brief_admin.subscribers', status='active', tier='trial') }}" class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if tier_filter == 'trial' %}ring-2 ring-blue-400{% endif %}">
+            <a href="{{ url_for('brief_admin.subscribers', status='active', tier='trial') }}" class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if tier_filter == 'trial' %}ring-2 ring-primary-400{% endif %}">
                 <p class="text-sm text-gray-500">Trial</p>
-                <p class="text-2xl font-bold text-blue-600">{{ stats.trial }}</p>
+                <p class="text-2xl font-bold text-primary-600">{{ stats.trial }}</p>
             </a>
             <a href="{{ url_for('brief_admin.subscribers', status='active', tier='free') }}" class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if tier_filter == 'free' %}ring-2 ring-emerald-400{% endif %}">
                 <p class="text-sm text-gray-500">Free</p>
@@ -55,12 +55,12 @@
                         <label for="q" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                         <input type="text" name="q" id="q" value="{{ search_query or '' }}"
                                placeholder="Search by email address..."
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                     </div>
                     <div>
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select name="status" id="status"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
                             <option value="">All Statuses</option>
                             <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
                             <option value="paused" {% if status_filter == 'paused' %}selected{% endif %}>Paused</option>
@@ -70,7 +70,7 @@
                     <div>
                         <label for="cadence" class="block text-sm font-medium text-gray-700 mb-1">Cadence</label>
                         <select name="cadence" id="cadence"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
                             <option value="">All Cadences</option>
                             <option value="daily" {% if cadence_filter == 'daily' %}selected{% endif %}>Daily</option>
                             <option value="weekly" {% if cadence_filter == 'weekly' %}selected{% endif %}>Weekly</option>
@@ -79,7 +79,7 @@
                     <div>
                         <label for="tier" class="block text-sm font-medium text-gray-700 mb-1">Tier</label>
                         <select name="tier" id="tier"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
                             <option value="">All Tiers</option>
                             <option value="paid" {% if tier_filter == 'paid' %}selected{% endif %}>Paid (Individual + Team)</option>
                             <option value="individual" {% if tier_filter == 'individual' %}selected{% endif %}>Individual</option>
@@ -89,7 +89,7 @@
                         </select>
                     </div>
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                        <button type="submit" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition">
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
@@ -125,15 +125,15 @@
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input type="email" name="email" required placeholder="email@example.com"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-                        {{ timezone_select(name='timezone', selected='UTC', css_class='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500') }}
+                        {{ timezone_select(name='timezone', selected='UTC', css_class='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500') }}
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Access Type</label>
-                        <select name="tier" id="add-tier-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <select name="tier" id="add-tier-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
                             <option value="trial">Trial</option>
                             <option value="free">Free (Permanent)</option>
                         </select>
@@ -141,10 +141,10 @@
                     <div id="trial-days-container">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Trial Days</label>
                         <input type="number" name="trial_days" value="14" min="1" max="365"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
                     </div>
                     <div class="flex items-end">
-                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                        <button type="submit" class="w-full px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                             Add Subscriber
                         </button>
                     </div>
@@ -161,16 +161,16 @@
             <form action="{{ url_for('brief_admin.bulk_import_subscribers') }}" method="POST" class="p-6">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <textarea name="emails" rows="4" 
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                           placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-                        {{ timezone_select(name='timezone', selected='UTC', css_class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500') }}
+                        {{ timezone_select(name='timezone', selected='UTC', css_class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500') }}
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Access Type</label>
-                        <select name="tier" id="bulk-tier-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <select name="tier" id="bulk-tier-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
                             <option value="trial">Trial</option>
                             <option value="free">Free (Permanent)</option>
                         </select>
@@ -178,10 +178,10 @@
                     <div id="bulk-trial-days-container">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Trial Days</label>
                         <input type="number" name="trial_days" value="14" min="1" max="365"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
                     </div>
                     <div class="flex items-end">
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
@@ -245,9 +245,9 @@
                                     {% if subscriber.tier == 'free' %}bg-emerald-100 text-emerald-800
                                     {% elif subscriber.tier == 'trial' %}
                                         {% if subscriber.is_trial_expired %}bg-red-100 text-red-800
-                                        {% else %}bg-blue-100 text-blue-800{% endif %}
+                                        {% else %}bg-blue-100 text-primary-800{% endif %}
                                     {% elif subscriber.tier == 'individual' %}bg-purple-100 text-purple-800
-                                    {% elif subscriber.tier == 'team' %}bg-indigo-100 text-indigo-800
+                                    {% elif subscriber.tier == 'team' %}bg-primary-100 text-primary-800
                                     {% else %}bg-gray-100 text-gray-800{% endif %}">
                                     {{ subscriber.subscription_status_display }}
                                 </span>
@@ -268,7 +268,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {% if subscriber.cadence == 'weekly' %}
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 mr-1">W</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-primary-600 mr-1">W</span>
                             {% endif %}
                             {{ subscriber.timezone }} @ {{ subscriber.preferred_send_hour }}:00
                         </td>
@@ -296,7 +296,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             {% set clicks = subscriber.total_clicks or 0 %}
-                            <span class="{% if clicks > 0 %}text-blue-700 font-medium{% else %}text-gray-400{% endif %}">
+                            <span class="{% if clicks > 0 %}text-primary-700 font-medium{% else %}text-gray-400{% endif %}">
                                 {{ clicks }}
                             </span>
                         </td>
@@ -327,7 +327,7 @@
                                 {% endif %}
                                 
                                 <!-- Resend Brief (using AJAX) -->
-                                <button type="button" data-action="resend" data-id="{{ subscriber.id }}" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
+                                <button type="button" data-action="resend" data-id="{{ subscriber.id }}" class="text-primary-600 hover:text-primary-800 p-1" title="Resend Today's Brief">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
@@ -366,7 +366,7 @@
                                                     <option value="5" {% if wd == 5 %}selected{% endif %}>Sat</option>
                                                     <option value="6" {% if wd == 6 %}selected{% endif %}>Sun</option>
                                                 </select>
-                                                <button type="button" data-action="cadence" data-cadence="weekly" data-id="{{ subscriber.id }}" class="text-sm text-blue-700 hover:text-blue-900 whitespace-nowrap">
+                                                <button type="button" data-action="cadence" data-cadence="weekly" data-id="{{ subscriber.id }}" class="text-sm text-primary-700 hover:text-primary-900 whitespace-nowrap">
                                                     {% if current_cadence == 'weekly' %}Update{% else %}Set Weekly{% endif %}
                                                 </button>
                                             </div>
@@ -386,13 +386,13 @@
                                             <div class="px-4 py-2 flex items-center gap-2">
                                                 <input type="number" id="extend-days-{{ subscriber.id }}" value="14" min="1" max="365" 
                                                        class="w-16 px-2 py-1 text-sm border border-gray-300 rounded">
-                                                <button type="button" data-action="extend-trial" data-id="{{ subscriber.id }}" class="text-sm text-blue-700 hover:text-blue-900">
+                                                <button type="button" data-action="extend-trial" data-id="{{ subscriber.id }}" class="text-sm text-primary-700 hover:text-primary-900">
                                                     +days
                                                 </button>
                                             </div>
                                             {% endif %}
                                             {% if subscriber.tier != 'trial' %}
-                                            <button type="button" data-action="tier" data-tier="trial" data-id="{{ subscriber.id }}" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
+                                            <button type="button" data-action="tier" data-tier="trial" data-id="{{ subscriber.id }}" class="w-full text-left px-4 py-2 text-sm text-primary-700 hover:bg-blue-50">
                                                 Reset to Trial
                                             </button>
                                             {% endif %}

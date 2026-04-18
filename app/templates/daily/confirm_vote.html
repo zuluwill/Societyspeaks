@@ -36,12 +36,12 @@
                     <div class="space-y-2">
                         {% for article in source_articles %}
                         <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer"
-                           class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors group">
-                            <svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition-colors group">
+                            <svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-blue-600 group-hover:text-blue-800 leading-snug line-clamp-2">{{ article.title }}</p>
+                                <p class="text-sm font-medium text-primary-600 group-hover:text-primary-800 leading-snug line-clamp-2">{{ article.title }}</p>
                                 {% if (article.source and article.source.name) or article.published_at %}
                                 <p class="text-xs text-gray-500 mt-0.5">
                                     {% if article.source and article.source.name %}{{ article.source.name }}{% endif %}
@@ -50,7 +50,7 @@
                                 </p>
                                 {% endif %}
                             </div>
-                            <svg class="w-3.5 h-3.5 text-gray-400 ml-1 mt-0.5 shrink-0 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-gray-400 ml-1 mt-0.5 shrink-0 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                         </a>
@@ -70,7 +70,7 @@
                 <input type="hidden" name="context_expanded" value="0">
                 <input type="hidden" name="source_link_click_count" value="0">
                 <button type="submit" 
-                        class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center text-lg">
+                        class="w-full py-4 px-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center text-lg">
                     <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
@@ -100,7 +100,7 @@
                                     Confidence (optional)
                                 </label>
                                 <select id="confidence_level" name="confidence_level"
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
                                     <option value="">Select confidence</option>
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
@@ -112,7 +112,7 @@
                                     Main reason (optional)
                                 </label>
                                 <select id="reason_tag" name="reason_tag"
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
                                     <option value="">Select category</option>
                                     <option value="evidence">Evidence</option>
                                     <option value="fairness">Fairness</option>
@@ -130,7 +130,7 @@
                             Share why you feel this way
                         </label>
                         <textarea id="reason" name="reason" rows="3" maxlength="500"
-                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                                   placeholder="Your perspective helps others understand different viewpoints..."></textarea>
                         <p class="text-sm text-gray-500 mt-1">
                             <span id="charCount">0</span>/500 characters
@@ -143,16 +143,16 @@
                             </label>
                             <div class="space-y-2">
                                 {% if current_user.is_authenticated %}
-                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition">
-                                    <input type="radio" name="reason_visibility" value="public_named" class="mt-0.5 mr-3 text-blue-600" checked>
+                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 cursor-pointer transition">
+                                    <input type="radio" name="reason_visibility" value="public_named" class="mt-0.5 mr-3 text-primary-600" checked>
                                     <div>
                                         <span class="text-sm font-medium text-gray-900">Public (with my name)</span>
                                         <p class="text-xs text-gray-500">Others can see your reason with your display name</p>
                                     </div>
                                 </label>
                                 {% endif %}
-                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition">
-                                    <input type="radio" name="reason_visibility" value="public_anonymous" class="mt-0.5 mr-3 text-blue-600" {% if not current_user.is_authenticated %}checked{% endif %}>
+                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 cursor-pointer transition">
+                                    <input type="radio" name="reason_visibility" value="public_anonymous" class="mt-0.5 mr-3 text-primary-600" {% if not current_user.is_authenticated %}checked{% endif %}>
                                     <div>
                                         <span class="text-sm font-medium text-gray-900">Public (anonymous)</span>
                                         <p class="text-xs text-gray-500">Others can see your reason, but not who wrote it</p>
@@ -169,7 +169,7 @@
                         </div>
                         
                         <button type="submit" 
-                                class="mt-4 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
+                                class="mt-4 w-full py-3 px-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>

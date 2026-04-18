@@ -36,7 +36,7 @@
             <!-- Provider Selection -->
             <div class="mb-6">
                 <label class="block text-gray-700 font-semibold mb-2">Provider</label>
-                <select name="provider" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <select name="provider" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                     <option value="">Select a provider...</option>
                     <option value="openai" {% if provider == 'openai' %}selected{% endif %}>OpenAI (GPT-4o-mini)</option>
                     <option value="anthropic" {% if provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude Haiku)</option>
@@ -48,7 +48,7 @@
             <!-- API Key Input -->
             <div class="mb-6">
                 <label class="block text-gray-700 font-semibold mb-2">API Key</label>
-                <input type="password" name="api_key" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" required placeholder="sk-...">
+                <input type="password" name="api_key" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono" required placeholder="sk-...">
                 <p class="text-sm text-gray-500 mt-1">
                     Your API key will be encrypted and validated before storage
                 </p>
@@ -56,7 +56,7 @@
 
             <!-- Submit -->
             <div class="flex space-x-4">
-                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+                <button type="submit" class="bg-primary-600 text-white px-8 py-3 rounded-lg hover:bg-primary-700 font-semibold">
                     Validate & Save Key
                 </button>
                 <a href="{{ url_for('api_keys.list_api_keys') }}" class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block">
@@ -71,10 +71,10 @@
         <h2 class="text-xl font-semibold mb-4">How to Get an API Key</h2>
         
         <div class="space-y-4">
-            <div class="border-l-4 border-blue-500 pl-4">
+            <div class="border-l-4 border-primary-500 pl-4">
                 <h3 class="font-semibold text-blue-900 mb-2">OpenAI (Recommended for most users)</h3>
                 <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                    <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-600 hover:underline">platform.openai.com/api-keys</a></li>
+                    <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank" class="text-primary-600 hover:underline">platform.openai.com/api-keys</a></li>
                     <li>Sign up or log in to your OpenAI account</li>
                     <li>Click "Create new secret key"</li>
                     <li>Copy the key (it starts with "sk-")</li>
@@ -86,7 +86,7 @@
             <div class="border-l-4 border-orange-500 pl-4">
                 <h3 class="font-semibold text-orange-900 mb-2">Anthropic Claude</h3>
                 <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                    <li>Visit <a href="https://console.anthropic.com/" target="_blank" class="text-blue-600 hover:underline">console.anthropic.com</a></li>
+                    <li>Visit <a href="https://console.anthropic.com/" target="_blank" class="text-primary-600 hover:underline">console.anthropic.com</a></li>
                     <li>Create an account or log in</li>
                     <li>Go to "API Keys" section</li>
                     <li>Generate a new API key</li>
@@ -110,7 +110,7 @@
             <li>• Keys are never logged or transmitted in plain text</li>
             <li>• Validation only checks if the key is active</li>
             <li>• You can delete your key anytime</li>
-            <li>• Open source: <a href="https://github.com/societyspeaks" class="text-blue-600 hover:underline">view the encryption code</a></li>
+            <li>• Open source: <a href="https://github.com/societyspeaks" class="text-primary-600 hover:underline">view the encryption code</a></li>
         </ul>
     </div>
 </div>

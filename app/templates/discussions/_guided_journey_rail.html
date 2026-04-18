@@ -4,16 +4,16 @@
 {% set jp = gjc.progress %}
 {% set ti = gjc.theme_item %}
 {% set prog = gjc.programme %}
-<div class="mb-4 rounded-xl bg-gradient-to-r from-indigo-700 to-blue-900 text-white shadow-md px-4 sm:px-5 py-3 border border-indigo-500/30"
+<div class="mb-4 rounded-xl bg-gradient-to-r from-primary-700 to-blue-900 text-white shadow-md px-4 sm:px-5 py-3 border border-primary-500/30"
      role="region"
      aria-label="Big Questions journey progress for this theme"
      id="journey-rail">
   <div class="flex items-center gap-3 justify-between">
     <div class="min-w-0 flex-1">
       <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-0.5">
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-200">Big Questions</p>
-        <span class="text-indigo-400 text-xs" aria-hidden="true">·</span>
-        <p class="text-xs text-indigo-200">
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary-200">Big Questions</p>
+        <span class="text-primary-400 text-xs" aria-hidden="true">·</span>
+        <p class="text-xs text-primary-200">
           Theme <span class="font-bold text-white">{{ gjc.theme_index }}</span> of <span class="font-bold text-white">{{ jp.total_themes }}</span>
         </p>
       </div>
@@ -25,14 +25,14 @@
                id="journey-rail-bar"
                style="width: {{ ([ti.pct | int, (1 if ti.user_votes > 0 else 0)] | max) }}%; background: {% if ti.is_complete %}#34d399{% else %}#a5b4fc{% endif %}"></div>
         </div>
-        <span class="text-xs text-indigo-200 whitespace-nowrap" id="journey-rail-counter">
+        <span class="text-xs text-primary-200 whitespace-nowrap" id="journey-rail-counter">
           {% if ti.is_complete %}All done ✓
           {% elif ti.user_votes > 0 %}{{ ti.statement_total - ti.user_votes }} to go
           {% else %}{{ ti.statement_total }} statements{% endif %}
         </span>
       </div>
       {% elif not current_user.is_authenticated %}
-      <p class="text-xs text-indigo-200/80 mt-0.5">
+      <p class="text-xs text-primary-200/80 mt-0.5">
         <a href="{{ url_for('auth.login') }}" class="underline font-medium text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">Sign in</a> to track your progress
       </p>
       {% endif %}
@@ -41,23 +41,23 @@
     <div class="flex-shrink-0">
       {% if ti.is_complete and jp.is_journey_complete %}
       <a href="{{ url_for('programmes.programme_journey_recap', slug=prog.slug) }}"
-         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-indigo-900 text-xs font-bold shadow hover:bg-indigo-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-primary-900 text-xs font-bold shadow hover:bg-primary-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
         <svg class="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
         Your recap
       </a>
       {% elif ti.is_complete and jp.next_item %}
       <a href="{{ url_for('discussions.view_discussion', discussion_id=jp.next_item.discussion.id, slug=jp.next_item.discussion.slug) }}"
-         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-indigo-900 text-xs font-bold shadow hover:bg-indigo-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-primary-900 text-xs font-bold shadow hover:bg-primary-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
         Next theme →
       </a>
       {% elif ti.is_complete %}
       <a href="{{ url_for('programmes.programme_journey_recap', slug=prog.slug) }}"
-         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-indigo-900 text-xs font-bold shadow hover:bg-indigo-50 transition-colors">
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-primary-900 text-xs font-bold shadow hover:bg-primary-50 transition-colors">
         View recap
       </a>
       {% else %}
       <a href="{{ url_for('programmes.programme_journey_recap', slug=prog.slug) }}"
-         class="text-xs text-indigo-200 hover:text-white underline font-medium focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">
+         class="text-xs text-primary-200 hover:text-white underline font-medium focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">
         All themes →
       </a>
       {% endif %}

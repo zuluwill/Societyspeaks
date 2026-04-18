@@ -7,7 +7,7 @@
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 py-8">
     <div class="mb-6">
-        <a href="{{ url_for('briefing.marketplace') }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+        <a href="{{ url_for('briefing.marketplace') }}" class="text-primary-600 hover:text-primary-800 flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -55,7 +55,7 @@
             <div class="border-b border-gray-200">
                 <nav class="flex -mb-px">
                     <button id="tab-about" data-tab="about"
-                            class="tab-btn w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors border-blue-500 text-blue-600">
+                            class="tab-btn w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors border-primary-500 text-primary-600">
                         <svg class="w-5 h-5 inline-block mr-2 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
@@ -159,8 +159,8 @@
                     {% if template.custom_prompt_prefix %}
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
                         <h3 class="font-semibold text-blue-900 mb-2">AI Guidance</h3>
-                        <p class="text-sm text-blue-800 italic">"{{ template.custom_prompt_prefix[:200] }}{% if template.custom_prompt_prefix|length > 200 %}..."{% endif %}</p>
-                        <p class="text-xs text-blue-600 mt-2">You can customize this prompt after creating your briefing.</p>
+                        <p class="text-sm text-primary-800 italic">"{{ template.custom_prompt_prefix[:200] }}{% if template.custom_prompt_prefix|length > 200 %}..."{% endif %}</p>
+                        <p class="text-xs text-primary-600 mt-2">You can customize this prompt after creating your briefing.</p>
                     </div>
                     {% endif %}
                 </div>
@@ -214,7 +214,7 @@
                         <div class="border border-gray-200 rounded-lg p-5">
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                                     </svg>
                                 </div>
@@ -287,7 +287,7 @@
 
                 <div class="flex flex-col sm:flex-row gap-4 pt-8 mt-8 border-t">
                     <a href="{{ url_for('briefing.use_template', template_id=template.id) }}" 
-                       class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-center">
+                       class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-center">
                         Use This Template
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -313,12 +313,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const targetTab = this.dataset.tab;
             
             tabBtns.forEach(function(b) {
-                b.classList.remove('border-blue-500', 'text-blue-600');
+                b.classList.remove('border-primary-500', 'text-primary-600');
                 b.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
             });
             
             this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-            this.classList.add('border-blue-500', 'text-blue-600');
+            this.classList.add('border-primary-500', 'text-primary-600');
             
             tabPanels.forEach(function(panel) {
                 panel.classList.add('hidden');

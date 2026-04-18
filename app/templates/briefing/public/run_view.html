@@ -17,7 +17,7 @@
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
             <div class="text-center">
-                <p class="text-sm font-medium text-blue-600 uppercase tracking-wide">{{ briefing.name }}</p>
+                <p class="text-sm font-medium text-primary-600 uppercase tracking-wide">{{ briefing.name }}</p>
                 <h1 class="mt-2 text-3xl font-bold text-gray-900">
                     {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Brief' }}
                 </h1>
@@ -83,7 +83,7 @@
                 <div class="mb-4">
                     <button data-item-id="{{ item.id }}" 
                             data-prefix="public"
-                            class="toggle-deeper-context-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                            class="toggle-deeper-context-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                         <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -109,7 +109,7 @@
                 {% if item.ingested_item and item.ingested_item.url %}
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <a href="{{ item.ingested_item.url }}" target="_blank" rel="noopener"
-                       class="text-sm text-blue-600 hover:text-blue-800">
+                       class="text-sm text-primary-600 hover:text-primary-800">
                         Read original source &rarr;
                     </a>
                 </div>
@@ -121,7 +121,7 @@
 
         <!-- Footer -->
         <div class="mt-12 text-center text-sm text-gray-500">
-            <p>This briefing is powered by <a href="{{ url_for('main.index') }}" class="text-blue-600 hover:underline">Society Speaks</a></p>
+            <p>This briefing is powered by <a href="{{ url_for('main.index') }}" class="text-primary-600 hover:underline">Society Speaks</a></p>
         </div>
     </div>
 </div>

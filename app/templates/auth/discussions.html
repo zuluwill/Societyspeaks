@@ -25,7 +25,7 @@
       </p>
     </div>
     <a href="{{ url_for('discussions.create_discussion') }}"
-       class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 shrink-0">
+       class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 shrink-0">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       New Discussion
     </a>
@@ -42,7 +42,7 @@
         name="q"
         value="{{ q }}"
         placeholder="Search your discussions…"
-        class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
         {% if q %}autofocus{% endif %}
       >
     </div>
@@ -75,7 +75,7 @@
         {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
           {% if p %}
             {% if p == pagination.page %}
-              <span class="px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
+              <span class="px-3 py-1.5 text-sm font-semibold bg-primary-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
             {% else %}
               <a href="{{ url_for('auth.my_discussions', page=p, q=q) }}"
                  class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ p }}</a>
@@ -103,12 +103,12 @@
       </svg>
       {% if q %}
         <p class="text-sm font-medium text-gray-600 mb-1">No discussions match "{{ q }}"</p>
-        <a href="{{ url_for('auth.my_discussions') }}" class="text-sm text-blue-600 hover:underline">Clear search</a>
+        <a href="{{ url_for('auth.my_discussions') }}" class="text-sm text-primary-600 hover:underline">Clear search</a>
       {% else %}
         <p class="text-sm font-medium text-gray-600 mb-1">No discussions yet</p>
         <p class="text-xs text-gray-400 mb-4">Start a discussion to gather opinions and build consensus.</p>
         <a href="{{ url_for('discussions.create_discussion') }}"
-           class="inline-block bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+           class="inline-block bg-primary-600 text-white px-5 py-2 rounded-md hover:bg-primary-700 text-sm font-medium">
           Start your first discussion
         </a>
       {% endif %}

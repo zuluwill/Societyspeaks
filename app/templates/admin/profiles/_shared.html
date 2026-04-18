@@ -38,7 +38,7 @@
                         individual_page=page_num if profile_type == 'individual' else individual_page,
                         company_page=page_num if profile_type == 'company' else company_page
                     ) }}"
-                    class="px-3 py-2 border rounded-md {% if page_num == pagination.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}"
+                    class="px-3 py-2 border rounded-md {% if page_num == pagination.page %}bg-primary-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}"
                 >
                     {{ page_num }}
                 </a>

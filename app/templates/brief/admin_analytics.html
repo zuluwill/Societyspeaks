@@ -11,7 +11,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
             <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Active Subscribers</div>
-            <div class="mt-2 text-3xl font-bold text-blue-600">{{ total_subscribers }}</div>
+            <div class="mt-2 text-3xl font-bold text-primary-600">{{ total_subscribers }}</div>
         </div>
         
         <div class="bg-white rounded-lg shadow p-6">
@@ -103,15 +103,15 @@
 
     <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 class="text-lg font-semibold text-blue-900 mb-2">Webhook Setup</h3>
-        <p class="text-blue-800 mb-4">To receive email events, configure the webhook in your Resend dashboard:</p>
+        <p class="text-primary-800 mb-4">To receive email events, configure the webhook in your Resend dashboard:</p>
         <div class="bg-white rounded p-4 font-mono text-sm break-all">
             {{ config.get('APP_BASE_URL', 'https://societyspeaks.io') }}/brief/webhooks/resend
         </div>
-        <p class="text-sm text-blue-700 mt-3">Select events: email.sent, email.delivered, email.opened, email.clicked, email.bounced, email.complained</p>
+        <p class="text-sm text-primary-700 mt-3">Select events: email.sent, email.delivered, email.opened, email.clicked, email.bounced, email.complained</p>
     </div>
 
     <div class="mt-6">
-        <a href="{{ url_for('brief_admin.dashboard') }}" class="text-blue-600 hover:text-blue-800">&larr; Back to Brief Admin</a>
+        <a href="{{ url_for('brief_admin.dashboard') }}" class="text-primary-600 hover:text-primary-800">&larr; Back to Brief Admin</a>
     </div>
 </div>
 {% endblock %}

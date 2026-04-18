@@ -11,7 +11,7 @@
   {# ── Breadcrumb ──────────────────────────────────────────────────────── #}
   <nav class="text-sm text-gray-500 mb-4">
     <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
-       class="hover:text-blue-600 inline-flex items-center gap-1">
+       class="hover:text-primary-600 inline-flex items-center gap-1">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       {{ programme.name }}
     </a>
@@ -46,12 +46,12 @@
 
   {% elif current_user.is_authenticated and recap.total_user_votes > 0 %}
   {# Partial progress summary #}
-  <div class="bg-indigo-600 rounded-2xl shadow-md text-white px-6 py-5 mb-8">
+  <div class="bg-primary-600 rounded-2xl shadow-md text-white px-6 py-5 mb-8">
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wider text-indigo-200 mb-1">Your progress</p>
+        <p class="text-xs font-semibold uppercase tracking-wider text-primary-200 mb-1">Your progress</p>
         <h1 class="text-xl font-bold mb-0.5">{{ programme.name }} — journey recap</h1>
-        <p class="text-indigo-100 text-sm">
+        <p class="text-primary-100 text-sm">
           You've fully explored {{ recap.themes_completed_by_user }} of {{ recap.total_themes }} themes
           and cast {{ recap.total_user_votes }} votes in total.
           {% if recap.themes_completed_by_user < recap.total_themes %}
@@ -76,7 +76,7 @@
     <p class="text-gray-600">Theme-by-theme participation and where the crowd leans overall.</p>
     {% if not current_user.is_authenticated %}
     <p class="mt-3 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-      <a href="{{ url_for('auth.login') }}" class="text-blue-600 font-semibold hover:underline">Sign in</a>
+      <a href="{{ url_for('auth.login') }}" class="text-primary-600 font-semibold hover:underline">Sign in</a>
       to see your votes alongside the crowd on every statement.
     </p>
     {% endif %}
@@ -119,7 +119,7 @@
           Completed
         </span>
         {% elif row.user_vote_count > 0 %}
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-semibold flex-shrink-0">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-xs font-semibold flex-shrink-0">
           {{ row.user_vote_count }}/{{ row.statement_count }} votes
         </span>
         {% else %}
@@ -190,7 +190,7 @@
           </span>
           {% endif %}
           {% if row.bridge_n %}
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 font-medium border border-blue-200">
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-primary-800 font-medium border border-blue-200">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             {{ row.bridge_n }} bridge idea{{ 's' if row.bridge_n != 1 }}
           </span>
@@ -208,7 +208,7 @@
         <div class="flex flex-wrap gap-2">
           {% if row.is_theme_complete %}
           <a href="{{ url_for('consensus.view_results', discussion_id=d.id) }}"
-             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             View consensus map
           </a>
@@ -218,7 +218,7 @@
           </a>
           {% else %}
           <a href="{{ url_for('discussions.view_discussion', discussion_id=d.id, slug=d.slug) }}"
-             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
+             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>
             {% if row.user_vote_count > 0 %}Continue voting{% else %}Start voting{% endif %}
           </a>
@@ -278,7 +278,7 @@
   {# ── Footer CTA ──────────────────────────────────────────────────────── #}
   <div class="mt-10 text-center">
     <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
-       class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
+       class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       Back to {{ programme.name }}
     </a>

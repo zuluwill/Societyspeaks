@@ -38,7 +38,7 @@
         <p class="font-medium text-gray-700 mb-2">Themes</p>
         <ul class="space-y-1">
           {% for theme in programme.themes %}
-          <li class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs inline-block mr-1 mb-1">{{ theme }}</li>
+          <li class="px-2 py-0.5 bg-blue-50 text-primary-700 rounded text-xs inline-block mr-1 mb-1">{{ theme }}</li>
           {% endfor %}
         </ul>
       </div>
@@ -99,10 +99,10 @@
       {{ invite_form.csrf_token }}
       <div>
         {{ invite_form.email.label(class="block text-sm font-medium text-gray-700") }}
-        {{ invite_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+        {{ invite_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500") }}
       </div>
       <div>
-        {{ invite_form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700") }}
+        {{ invite_form.submit(class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700") }}
       </div>
     </form>
   </div>
@@ -152,10 +152,10 @@
       {{ invite_access_form.csrf_token }}
       <div>
         {{ invite_access_form.email.label(class="block text-sm font-medium text-gray-700") }}
-        {{ invite_access_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", disabled=(programme.visibility == 'private')) }}
+        {{ invite_access_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500", disabled=(programme.visibility == 'private')) }}
       </div>
       <div>
-        {{ invite_access_form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed", disabled=(programme.visibility == 'private')) }}
+        {{ invite_access_form.submit(class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed", disabled=(programme.visibility == 'private')) }}
       </div>
     </form>
   </div>

@@ -24,21 +24,21 @@
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">Briefing Name *</label>
                     <input type="text" name="name" id="name" required value="{{ briefing.name }}"
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                 </div>
 
                 <!-- Description -->
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
                     <textarea name="description" id="description" rows="3"
-                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ briefing.description or '' }}</textarea>
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">{{ briefing.description or '' }}</textarea>
                 </div>
 
                 <!-- Cadence -->
                 <div>
                     <label for="cadence" class="block text-sm font-medium text-gray-700">Frequency</label>
                     <select name="cadence" id="cadence"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                         <option value="daily" {% if briefing.cadence == 'daily' %}selected{% endif %}>Daily</option>
                         <option value="weekly" {% if briefing.cadence == 'weekly' %}selected{% endif %}>Weekly</option>
                     </select>
@@ -48,7 +48,7 @@
                 <div>
                     <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
                     <select name="timezone" id="timezone"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                         {% for tz in all_timezones %}
                         <option value="{{ tz }}" {% if briefing.timezone == tz %}selected{% endif %}>{{ tz }}</option>
                         {% endfor %}
@@ -61,7 +61,7 @@
                     <div>
                         <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700">Send Hour</label>
                         <select name="preferred_send_hour" id="preferred_send_hour"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             {% for hour in range(0, 24) %}
                             <option value="{{ hour }}" {% if briefing.preferred_send_hour == hour %}selected{% endif %}>
                                 {{ "%02d:00"|format(hour) }} {% if hour < 12 %}AM{% else %}PM{% endif %}
@@ -72,7 +72,7 @@
                     <div>
                         <label for="preferred_send_minute" class="block text-sm font-medium text-gray-700">Send Minute</label>
                         <select name="preferred_send_minute" id="preferred_send_minute"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             {% for minute in range(0, 60, 5) %}
                             <option value="{{ minute }}" {% if (briefing.preferred_send_minute|default(0)) == minute %}selected{% endif %}>{{ "%02d"|format(minute) }}</option>
                             {% endfor %}
@@ -85,7 +85,7 @@
                 <div>
                     <label for="mode" class="block text-sm font-medium text-gray-700">Approval Mode</label>
                     <select name="mode" id="mode"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                         <option value="auto_send" {% if briefing.mode == 'auto_send' %}selected{% endif %}>Auto-send</option>
                         <option value="approval_required" {% if briefing.mode == 'approval_required' %}selected{% endif %}>Require approval</option>
                     </select>
@@ -95,7 +95,7 @@
                 <div>
                     <label for="visibility" class="block text-sm font-medium text-gray-700">Visibility</label>
                     <select name="visibility" id="visibility"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                         <option value="private" {% if briefing.visibility == 'private' %}selected{% endif %}>Private</option>
                         <option value="org_only" {% if briefing.visibility == 'org_only' %}selected{% endif %}>Organisation only</option>
                         <option value="public" {% if briefing.visibility == 'public' %}selected{% endif %}>Public</option>
@@ -106,7 +106,7 @@
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
                     <select name="status" id="status"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                         <option value="active" {% if briefing.status == 'active' %}selected{% endif %}>Active</option>
                         <option value="paused" {% if briefing.status == 'paused' %}selected{% endif %}>Paused</option>
                     </select>
@@ -127,9 +127,9 @@
                                 {% for topic, weight in topic_prefs.items() %}
                                 <div class="flex items-center space-x-2 topic-row">
                                     <input type="text" name="topic_names[]" value="{{ topic }}" 
-                                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                            placeholder="e.g., Football, Technology, Politics">
-                                    <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                         <option value="1" {% if weight == 1 %}selected{% endif %}>Low</option>
                                         <option value="2" {% if weight == 2 %}selected{% endif %}>Medium</option>
                                         <option value="3" {% if weight == 3 %}selected{% endif %}>High</option>
@@ -142,7 +142,7 @@
                                 </div>
                                 {% endfor %}
                             </div>
-                            <button type="button" class="add-topic-row-btn mt-2 text-sm text-blue-600 hover:text-blue-800">
+                            <button type="button" class="add-topic-row-btn mt-2 text-sm text-primary-600 hover:text-primary-800">
                                 + Add topic priority
                             </button>
                         </div>
@@ -153,7 +153,7 @@
                             {% set filters = briefing.filters_json or {} %}
                             <input type="text" name="include_keywords" id="include_keywords"
                                    value="{{ (filters.get('include_keywords', []) or [])|join(', ') }}"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                    placeholder="e.g., Premier League, Champions League, World Cup">
                             <p class="mt-1 text-sm text-gray-500">Comma-separated keywords. Stories containing these will be prioritised.</p>
                         </div>
@@ -163,7 +163,7 @@
                             <label for="exclude_keywords" class="block text-sm font-medium text-gray-700">Exclude Keywords</label>
                             <input type="text" name="exclude_keywords" id="exclude_keywords"
                                    value="{{ (filters.get('exclude_keywords', []) or [])|join(', ') }}"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                    placeholder="e.g., betting, gambling, sponsored">
                             <p class="mt-1 text-sm text-gray-500">Comma-separated keywords. Stories containing these will be excluded.</p>
                         </div>
@@ -180,7 +180,7 @@
                         <div>
                             <label for="tone" class="block text-sm font-medium text-gray-700">Writing Tone</label>
                             <select name="tone" id="tone"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="calm_neutral" {% if (briefing.tone or 'calm_neutral') == 'calm_neutral' %}selected{% endif %}>Calm & Neutral</option>
                                 <option value="formal" {% if briefing.tone == 'formal' %}selected{% endif %}>Formal & Professional</option>
                                 <option value="conversational" {% if briefing.tone == 'conversational' %}selected{% endif %}>Conversational & Friendly</option>
@@ -192,7 +192,7 @@
                         <div>
                             <label for="max_items" class="block text-sm font-medium text-gray-700">Maximum Stories</label>
                             <select name="max_items" id="max_items"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 {% for num in [5, 7, 10, 15, 20] %}
                                 <option value="{{ num }}" {% if (briefing.max_items|default(10)) == num %}selected{% endif %}>{{ num }} stories</option>
                                 {% endfor %}
@@ -204,7 +204,7 @@
                         <div>
                             <label for="custom_prompt" class="block text-sm font-medium text-gray-700">Custom AI Instructions</label>
                             <textarea name="custom_prompt" id="custom_prompt" rows="4"
-                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                       placeholder="Add custom instructions for the AI, e.g., 'Focus on transfer news and match analysis' or 'Highlight underdog stories and upsets'">{{ briefing.custom_prompt or '' }}</textarea>
                             <p class="mt-1 text-sm text-gray-500">Tell the AI how to write and what to focus on. This shapes the tone and content of your briefs.</p>
                         </div>
@@ -222,7 +222,7 @@
                             <label for="logo_url" class="block text-sm font-medium text-gray-700">Logo URL</label>
                             <input type="url" name="logo_url" id="logo_url"
                                    value="{{ briefing.logo_url or '' }}"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                    placeholder="https://example.com/logo.png">
                             <p class="mt-1 text-sm text-gray-500">URL to your logo image (PNG, JPG, SVG)</p>
                             {% if briefing.logo_url %}
@@ -241,7 +241,7 @@
                                        class="h-10 w-14 border-gray-300 rounded cursor-pointer">
                                 <input type="text" id="accent_color_hex" 
                                        value="{{ briefing.accent_color or '#3B82F6' }}"
-                                       class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                        placeholder="#3B82F6" pattern="^#[0-9A-Fa-f]{6}$">
                             </div>
                             <p class="mt-1 text-sm text-gray-500">Color used for headers, links, and accents</p>
@@ -252,7 +252,7 @@
                             <label for="header_text" class="block text-sm font-medium text-gray-700">Custom Header Text</label>
                             <input type="text" name="header_text" id="header_text"
                                    value="{{ briefing.header_text or '' }}"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                    placeholder="e.g., Your Daily Industry Update">
                             <p class="mt-1 text-sm text-gray-500">Custom text shown at the top of each brief (optional)</p>
                         </div>
@@ -268,7 +268,7 @@
                     <div class="mb-4">
                         <label for="sending_domain_id" class="block text-sm font-medium text-gray-700">Sending Domain</label>
                         <select name="sending_domain_id" id="sending_domain_id"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Use default (societyspeaks.io)</option>
                             {% for domain in available_domains %}
                             <option value="{{ domain.id }}" 
@@ -279,7 +279,7 @@
                             {% endfor %}
                         </select>
                         <p class="mt-1 text-sm text-gray-500">
-                            <a href="{{ url_for('briefing.list_domains') }}" class="text-blue-600 hover:text-blue-800">Manage domains</a>
+                            <a href="{{ url_for('briefing.list_domains') }}" class="text-primary-600 hover:text-primary-800">Manage domains</a>
                         </p>
                     </div>
                     
@@ -288,7 +288,7 @@
                         <label for="from_name" class="block text-sm font-medium text-gray-700">Sender Name</label>
                         <input type="text" name="from_name" id="from_name" 
                                value="{{ briefing.from_name or '' }}"
-                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                placeholder="e.g., Acme Corp Briefings">
                         <p class="mt-1 text-sm text-gray-500">Name shown as email sender (defaults to briefing name)</p>
                     </div>
@@ -301,7 +301,7 @@
                         </label>
                         <input type="email" name="from_email" id="from_email" 
                                value="{{ briefing.from_email or '' }}"
-                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                placeholder="briefings@yourdomain.com">
                         <p class="mt-1 text-sm text-gray-500" id="email-help-text">
                             Must match selected domain. Leave empty to use default.
@@ -318,7 +318,7 @@
                         Cancel
                     </a>
                     <button type="submit"
-                            class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         Save Changes
                     </button>
                 </div>
@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (emailHelpText) {
                     emailHelpText.textContent = `Required. Must match selected domain: ${domainMatch[1]}`;
                     emailHelpText.classList.remove('text-gray-500');
-                    emailHelpText.classList.add('text-blue-600');
+                    emailHelpText.classList.add('text-primary-600');
                 }
                 
                 validateEmailDomain();
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (emailHelpText) {
                     emailHelpText.textContent = 'Must match selected domain. Leave empty to use default.';
-                    emailHelpText.classList.remove('text-blue-600');
+                    emailHelpText.classList.remove('text-primary-600');
                     emailHelpText.classList.add('text-gray-500');
                 }
                 if (emailErrorText) {
@@ -512,9 +512,9 @@ function addTopicRow() {
     row.className = 'flex items-center space-x-2 topic-row';
     row.innerHTML = `
         <input type="text" name="topic_names[]" value="" 
-               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                placeholder="e.g., Football, Technology, Politics">
-        <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
             <option value="1">Low</option>
             <option value="2">Medium</option>
             <option value="3" selected>High</option>

@@ -33,7 +33,7 @@
             <div class="flex items-center gap-2 flex-wrap">
               <h2 class="text-lg font-semibold text-gray-900">{{ notification.title }}</h2>
               {% if not notification.is_read %}
-              <span class="inline-flex rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">Unread</span>
+              <span class="inline-flex rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">Unread</span>
               {% endif %}
             </div>
             <p class="mt-2 text-sm text-gray-600">{{ notification.message }}</p>
@@ -42,7 +42,7 @@
           <div class="flex items-center gap-3">
             {% if notification.discussion %}
             <a href="{{ url_for('discussions.view_discussion', discussion_id=notification.discussion_id, slug=notification.discussion.slug) }}"
-               class="text-sm text-blue-600 hover:text-blue-700 hover:underline">
+               class="text-sm text-primary-600 hover:text-primary-700 hover:underline">
               Open discussion
             </a>
             {% endif %}
@@ -74,7 +74,7 @@
         {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
           {% if p %}
             {% if p == pagination.page %}
-            <span class="px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
+            <span class="px-3 py-1.5 text-sm font-semibold bg-primary-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
             {% else %}
             <a href="{{ url_for('auth.notifications', page=p) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ p }}</a>
             {% endif %}

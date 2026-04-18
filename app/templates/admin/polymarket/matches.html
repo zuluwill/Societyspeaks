@@ -49,7 +49,7 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-6 w-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
@@ -85,7 +85,7 @@
                         <td class="px-4 lg:px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">
                                 <a href="{{ url_for('trending.topic_detail', topic_id=match.trending_topic.id) }}" 
-                                   class="text-blue-600 hover:text-blue-800">
+                                   class="text-primary-600 hover:text-primary-800">
                                     {{ match.trending_topic.title[:60] }}{% if match.trending_topic.title|length > 60 %}...{% endif %}
                                 </a>
                             </div>
@@ -94,7 +94,7 @@
                         <td class="px-4 lg:px-6 py-4">
                             <div class="text-sm text-gray-900">
                                 <a href="{{ match.market.polymarket_url }}" target="_blank" rel="noopener"
-                                   class="text-blue-600 hover:text-blue-800">
+                                   class="text-primary-600 hover:text-primary-800">
                                     {{ match.market.question[:60] }}{% if match.market.question|length > 60 %}...{% endif %}
                                 </a>
                             </div>
@@ -103,7 +103,7 @@
                         <td class="px-4 lg:px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-2">
                                 <div class="flex-1 bg-gray-200 rounded-full h-2 max-w-[80px]">
-                                    <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ (match.similarity_score * 100)|round }}%"></div>
+                                    <div class="bg-primary-600 h-2 rounded-full" style="width: {{ (match.similarity_score * 100)|round }}%"></div>
                                 </div>
                                 <span class="text-sm font-medium text-gray-900">{{ (match.similarity_score * 100)|round }}%</span>
                             </div>
@@ -113,7 +113,7 @@
                         </td>
                         <td class="px-4 lg:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                {% if match.match_method == 'embedding' %}bg-blue-100 text-blue-800
+                                {% if match.match_method == 'embedding' %}bg-blue-100 text-primary-800
                                 {% elif match.match_method == 'keyword' %}bg-purple-100 text-purple-800
                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ match.match_method|title }}
@@ -158,7 +158,7 @@
             {% for page_num in matches.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
                 {% if page_num %}
                     <li><a href="?page={{ page_num }}" 
-                           class="px-3 py-2 border rounded-md text-sm {% if page_num == matches.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                           class="px-3 py-2 border rounded-md text-sm {% if page_num == matches.page %}bg-primary-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
                 {% else %}
                     <li class="px-2 py-2 text-sm">...</li>
                 {% endif %}
