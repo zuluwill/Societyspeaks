@@ -153,9 +153,20 @@ class BriefGenerator:
             existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').with_for_update().first()
             if existing:
                 if existing.status in ('ready', 'published'):
-                    logger.info(f"Brief for {brief_date} already {existing.status}, skipping generation")
-                    return existing
-                logger.warning(f"Brief already exists for {brief_date} with status '{existing.status}', updating...")
+                    existing_count = existing.item_count or 0
+                    if existing_count >= 3:
+                        logger.info(f"Brief for {brief_date} already {existing.status} with {existing_count} items, skipping generation")
+                        return existing
+                    logger.warning(
+                        f"Brief for {brief_date} is {existing.status} but only has {existing_count} item(s) "
+                        f"(minimum 3). Allowing regeneration to replace under-populated brief."
+                    )
+                    # Clear old items before regenerating
+                    BriefItem.query.filter_by(brief_id=existing.id).delete()
+                    existing.status = 'draft'
+                    db.session.flush()
+                else:
+                    logger.warning(f"Brief already exists for {brief_date} with status '{existing.status}', updating...")
                 brief = existing
             else:
                 brief = DailyBrief(
@@ -1132,9 +1143,17 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
             existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').with_for_update().first()
             if existing:
                 if existing.status in ('ready', 'published'):
-                    logger.info(f"Brief for {brief_date} already {existing.status}, skipping")
-                    return existing
-                logger.warning(f"Brief exists for {brief_date} with status '{existing.status}', updating...")
+                    existing_count = existing.item_count or 0
+                    if existing_count >= 3:
+                        logger.info(f"Brief for {brief_date} already {existing.status} with {existing_count} items, skipping")
+                        return existing
+                    logger.warning(
+                        f"Brief for {brief_date} is {existing.status} but only has {existing_count} item(s) "
+                        f"(minimum 3). Allowing regeneration to replace under-populated brief."
+                    )
+                    existing.status = 'draft'
+                else:
+                    logger.warning(f"Brief exists for {brief_date} with status '{existing.status}', updating...")
                 brief = existing
                 # Clear old items for regeneration
                 BriefItem.query.filter_by(brief_id=existing.id).delete()

@@ -1704,12 +1704,29 @@ def init_scheduler(app):
             logger.info("Starting daily brief generation (sectioned mode)")
 
             try:
+                # Guard: do not generate the brief before 14:00 UTC to avoid locking in
+                # a low-quality brief when very few topics have been published yet
+                # (e.g. a misfire triggered just after midnight).
+                current_hour = utcnow_naive().hour
+                if current_hour < 14:
+                    logger.info(
+                        f"Daily brief generation skipped: current hour is {current_hour:02d}:xx UTC "
+                        f"(minimum 14:00 UTC). Will run at scheduled time."
+                    )
+                    return
+
                 existing = DailyBrief.query.filter_by(
                     date=date.today(), brief_type='daily'
                 ).first()
                 if existing and existing.status in ('ready', 'published'):
-                    logger.info(f"Brief already exists with status '{existing.status}', skipping")
-                    return
+                    existing_count = existing.item_count or 0
+                    if existing_count >= 3:
+                        logger.info(f"Brief already exists with status '{existing.status}' and {existing_count} items, skipping")
+                        return
+                    logger.warning(
+                        f"Brief exists with status '{existing.status}' but only {existing_count} item(s). "
+                        f"Allowing regeneration."
+                    )
 
                 brief = generate_daily_brief(
                     brief_date=date.today(),
@@ -1804,8 +1821,17 @@ def init_scheduler(app):
                 return
 
             if existing:
-                logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}), skipping")
-                return
+                existing_count = existing.item_count or 0
+                if existing_count >= 3:
+                    logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}, {existing_count} items), skipping")
+                    return
+                # Brief exists but is under-populated — safety-net will regenerate it
+                msg = (
+                    f"ALERT: Daily brief safety-net: brief for {today} has only {existing_count} item(s) "
+                    f"(minimum 3). Regenerating to replace under-populated brief."
+                )
+                logger.warning(msg)
+                _send_ops_alert(msg)
 
             msg = (
                 f"ALERT: Daily brief safety-net triggered for {today}. "
