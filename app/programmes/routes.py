@@ -1,5 +1,9 @@
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for, jsonify, send_file
 from flask_login import current_user, login_required
+try:
+    import posthog as _posthog
+except ImportError:
+    _posthog = None
 from sqlalchemy import distinct, func
 from sqlalchemy.orm import load_only, joinedload
 from io import BytesIO
@@ -400,6 +404,42 @@ def view_programme(slug):
             candidate = db.session.get(JourneyReminderSubscription, sub_id)
             if candidate and candidate.programme_id == programme.id:
                 journey_reminder_subscription = candidate
+
+        # PostHog: fire journey_started once per session per journey
+        if _posthog and getattr(_posthog, 'project_api_key', None):
+            _start_key = f'ph_journey_started_{programme.id}'
+            if not session.get(_start_key):
+                try:
+                    import uuid as _uuid
+                    if current_user.is_authenticated:
+                        _ph_id = str(current_user.id)
+                    else:
+                        _ph_id = (
+                            session.get('statement_vote_fingerprint')
+                            or session.get('journey_anon_id')
+                        )
+                        if not _ph_id:
+                            _ph_id = str(_uuid.uuid4())
+                            session['journey_anon_id'] = _ph_id
+                    _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
+                    _posthog.capture(
+                        distinct_id=_ph_id,
+                        event='journey_started',
+                        properties={
+                            'journey_id': programme.id,
+                            'journey_type': _journey_type,
+                            'journey_slug': programme.slug,
+                            'journey_name': programme.name,
+                            'total_steps': len(ordered),
+                            'is_authenticated': current_user.is_authenticated,
+                        },
+                    )
+                    _posthog.flush()
+                    session[_start_key] = True
+                    session.modified = True
+                except Exception as _e:
+                    current_app.logger.warning(f"PostHog journey_started error: {_e}")
+
     return render_template(
         'programmes/view.html',
         programme=programme,
@@ -444,6 +484,43 @@ def programme_journey_recap(slug):
         slug=programme.slug,
         _external=True,
     )
+
+    # PostHog: fire journey_completed once per session when user reaches the recap page
+    if _posthog and getattr(_posthog, 'project_api_key', None):
+        _complete_key = f'ph_journey_completed_{programme.id}'
+        if not session.get(_complete_key):
+            try:
+                import uuid as _uuid
+                if current_user.is_authenticated:
+                    _ph_id = str(current_user.id)
+                else:
+                    _ph_id = (
+                        session.get('statement_vote_fingerprint')
+                        or session.get('journey_anon_id')
+                    )
+                    if not _ph_id:
+                        _ph_id = str(_uuid.uuid4())
+                        session['journey_anon_id'] = _ph_id
+                _ordered = ordered_discussions
+                _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
+                _posthog.capture(
+                    distinct_id=_ph_id,
+                    event='journey_completed',
+                    properties={
+                        'journey_id': programme.id,
+                        'journey_type': _journey_type,
+                        'journey_slug': programme.slug,
+                        'journey_name': programme.name,
+                        'total_steps': len(_ordered),
+                        'is_authenticated': current_user.is_authenticated,
+                    },
+                )
+                _posthog.flush()
+                session[_complete_key] = True
+                session.modified = True
+            except Exception as _e:
+                current_app.logger.warning(f"PostHog journey_completed error: {_e}")
+
     return render_template(
         'programmes/journey_recap.html',
         programme=programme,

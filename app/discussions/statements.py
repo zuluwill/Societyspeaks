@@ -1224,6 +1224,63 @@ def vote_statement(statement_id):
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
+    # PostHog: track journey step completion for guided journey discussions
+    if (
+        posthog
+        and getattr(posthog, 'project_api_key', None)
+        and current_user.is_authenticated
+        and discussion.programme_id
+        and discussion.has_native_statements
+    ):
+        try:
+            from app.programmes.journey import (
+                is_guided_journey_programme,
+                ordered_journey_discussions,
+            )
+            _programme = discussion.programme
+            if _programme and is_guided_journey_programme(_programme):
+                _step_key = f'ph_journey_step_{_programme.id}_{discussion.id}'
+                if not session.get(_step_key):
+                    # Check if the user has now voted on every statement in this discussion
+                    _uid = current_user.id
+                    _total = Statement.query.filter_by(discussion_id=discussion.id).count()
+                    _voted = StatementVote.query.filter_by(
+                        discussion_id=discussion.id, user_id=_uid
+                    ).count()
+                    if _total > 0 and _voted >= _total:
+                        _ordered = ordered_journey_discussions(_programme)
+                        _step_num = next(
+                            (i + 1 for i, d in enumerate(_ordered) if d.id == discussion.id),
+                            None,
+                        )
+                        if _step_num is not None:
+                            _total_steps = len(_ordered)
+                            _is_final = _step_num == _total_steps
+                            _jtype = 'global' if getattr(_programme, 'geographic_scope', 'global') == 'global' else 'country'
+                            _ph_id = str(current_user.id)
+                            posthog.capture(
+                                distinct_id=_ph_id,
+                                event='journey_step_completed',
+                                properties={
+                                    'journey_id': _programme.id,
+                                    'journey_type': _jtype,
+                                    'journey_slug': _programme.slug,
+                                    'journey_name': _programme.name,
+                                    'step_number': _step_num,
+                                    'step_name': discussion.programme_theme or discussion.slug,
+                                    'step_type': 'voting',
+                                    'total_steps': _total_steps,
+                                    'is_final_step': _is_final,
+                                    'is_authenticated': True,
+                                },
+                            )
+                            session[_step_key] = True
+                            session.modified = True
+                            if _is_final:
+                                posthog.flush()
+        except Exception as _e:
+            current_app.logger.warning(f"PostHog journey_step_completed error: {_e}")
+
     # Consolidate participant tracking + analytics event into a single commit
     try:
         discussion = statement.discussion
