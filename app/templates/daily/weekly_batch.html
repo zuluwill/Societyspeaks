@@ -14,16 +14,6 @@
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-    .vote-btn {
-        transition: all 0.15s ease;
-    }
-    .vote-btn:hover:not(:disabled) {
-        transform: scale(1.02);
-    }
-    .vote-btn:disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-    }
     .results-bar {
         height: 8px;
         border-radius: 4px;
@@ -90,7 +80,7 @@
                 <!-- Question Number Badge -->
                 <div class="px-6 pt-5 pb-2">
                     <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full
-                        {% if q_data.has_voted %}bg-green-100 text-green-700{% else %}bg-blue-100 text-primary-700{% endif %}">
+                        {% if q_data.has_voted %}bg-green-100 text-green-700{% else %}bg-primary-100 text-primary-700{% endif %}">
                         Question {{ loop.index }} of {{ total_questions }}
                         {% if q_data.has_voted %} - Voted{% endif %}
                     </span>
@@ -147,7 +137,7 @@
                     <div class="vote-results">
                         <p class="text-sm text-gray-500 mb-3">
                             You voted:
-                            <span class="font-medium {% if q_data.user_vote == 1 %}text-primary-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-gray-500{% endif %}">
+                            <span class="font-medium {% if q_data.user_vote == 1 %}text-primary-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-amber-600{% endif %}">
                                 {% if q_data.user_vote == 1 %}Agree{% elif q_data.user_vote == -1 %}Disagree{% else %}Unsure{% endif %}
                             </span>
                         </p>
@@ -157,7 +147,7 @@
                             <div class="flex h-full">
                                 <div class="results-segment bg-primary-600" style="width: {{ q_data.vote_results.agree_pct }}%"></div>
                                 <div class="results-segment bg-red-600" style="width: {{ q_data.vote_results.disagree_pct }}%"></div>
-                                <div class="results-segment bg-gray-500" style="width: {{ q_data.vote_results.unsure_pct }}%"></div>
+                                <div class="results-segment bg-amber-500" style="width: {{ q_data.vote_results.unsure_pct }}%"></div>
                             </div>
                         </div>
 
@@ -165,7 +155,7 @@
                         <div class="flex justify-between text-xs text-gray-600">
                             <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>Agree {{ q_data.vote_results.agree_pct }}%</span>
                             <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree {{ q_data.vote_results.disagree_pct }}%</span>
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unsure {{ q_data.vote_results.unsure_pct }}%</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>Unsure {{ q_data.vote_results.unsure_pct }}%</span>
                         </div>
                         <p class="text-xs text-gray-400 mt-1">{{ q_data.vote_results.total }} votes</p>
                     </div>
