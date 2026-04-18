@@ -996,6 +996,10 @@
       // Only activate if not typing in an input/textarea
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+      // Journey focused mode uses A/D/U — suppress 1/2/3 there to avoid voting on hidden DOM nodes
+      var _journeyCard = document.getElementById('journey-focus-card');
+      if (_journeyCard && !_journeyCard.classList.contains('hidden')) return;
+
       // Get first visible statement (for now - can be enhanced to track focus)
       const firstStatement = document.querySelector('[data-statement-id]');
       if (!firstStatement) return;
@@ -1091,24 +1095,22 @@
 
   // Show keyboard shortcuts help
   function showKeyboardHelp() {
+      var _jc = document.getElementById('journey-focus-card');
+      var inJourneyMode = _jc && !_jc.classList.contains('hidden');
+      var row = function(key, label, color) {
+          return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">' +
+              '<span style="font-weight:600;font-family:monospace;background:#f3f4f6;padding:2px 6px;border-radius:4px;">' + key + '</span>' +
+              '<span style="color:' + color + '">' + label + '</span></div>';
+      };
+      var rows = inJourneyMode
+          ? row('A', 'Agree', '#059669') + row('D', 'Disagree', '#dc2626') + row('U', 'Unsure', '#6b7280')
+          : row('1', 'Vote Agree', '#059669') + row('2', 'Vote Disagree', '#dc2626') + row('3', 'Vote Unsure', '#6b7280');
       const helpHTML = `
-          <div id="keyboard-help-panel" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 1000; max-width: 400px;">
-              <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">⌨️ Keyboard Shortcuts</h3>
-              <div style="space-y: 8px;">
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                      <span style="font-weight: 600;">1</span>
-                      <span style="color: #2563eb;">Vote Agree</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                      <span style="font-weight: 600;">2</span>
-                      <span style="color: #dc2626;">Vote Disagree</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                      <span style="font-weight: 600;">3</span>
-                      <span style="color: #6b7280;">Vote Unsure</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                      <span style="font-weight: 600;">Shift + ?</span>
+          <div id="keyboard-help-panel" role="dialog" aria-modal="true" aria-labelledby="keyboard-help-title" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 1000; max-width: 400px; width: calc(100vw - 48px);">
+              <h3 id="keyboard-help-title" style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">Keyboard Shortcuts</h3>
+              <div>${rows}
+                  <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                      <span style="font-weight:600;font-family:monospace;background:#f3f4f6;padding:2px 6px;border-radius:4px;">Shift+?</span>
                       <span>Show this help</span>
                   </div>
               </div>
@@ -1209,6 +1211,9 @@
     setTimeout(function () {
       statementEl.textContent = stmt.text;
       statementEl.style.cssText = 'opacity:1;transform:translateY(0);transition:opacity 0.2s ease,transform 0.2s ease;';
+      // Move focus so keyboard/screenreader users track the new statement
+      statementEl.setAttribute('tabindex', '-1');
+      statementEl.focus({ preventScroll: true });
     }, 200);
 
     if (currentNumEl) currentNumEl.textContent = String(idx + 1);
