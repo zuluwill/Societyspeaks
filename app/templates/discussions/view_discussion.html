@@ -4,7 +4,7 @@
 {% set _disc_canonical = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
 {% set seo_title = discussion_translation.title if discussion_translation else discussion.title %}
 {% set seo_desc = (discussion_translation.description if discussion_translation else '') or (discussion.description or '') %}
-{% set author_ld_name = discussion.creator.name if discussion.creator else _('Society Speaks') %}
+{% set author_ld_name = discussion.creator.username if discussion.creator else _('Society Speaks') %}
 
 {% block title %}{{ seo_title }} — Society Speaks{% endblock %}
 
