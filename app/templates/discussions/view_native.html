@@ -1,12 +1,15 @@
 <!-- Native Statement System UI (Phase 1) -->
 <!-- This template is included within view_discussion.html for native discussions -->
 
+{# Creator / admin — used across header, journey script, and moderation link #}
+{% set is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id %}
+{% set is_admin = current_user.is_authenticated and current_user.is_admin %}
+
 {% if guided_journey_context %}
 {% set _gjc = guided_journey_context %}
 {% set _gjc_prog = _gjc.programme %}
 {% set _gjc_ti = _gjc.theme_item %}
 {% set _gjc_jp = _gjc.progress %}
-{% set _gjc_next = _gjc_jp.next_item %}
 <!-- ── Journey Focused Card (one statement at a time) ──────────────────── -->
 <div id="journey-focused-wrapper" class="mb-4">
 
@@ -92,7 +95,8 @@
     <p class="text-emerald-100 text-sm mb-6 max-w-sm mx-auto" id="journey-complete-msg">
       You've voted on all {{ _gjc_ti.statement_total }} statements in this theme.
     </p>
-    <div id="journey-complete-actions" class="flex flex-col sm:flex-row gap-3 justify-center"></div>
+    <div id="journey-complete-actions" class="flex flex-col gap-4 items-stretch max-w-lg mx-auto w-full"></div>
+    <p class="text-xs text-emerald-50/90 mt-2 max-w-md mx-auto leading-relaxed" id="journey-complete-follow-hint"></p>
   </div>
 
 </div>
@@ -125,8 +129,7 @@
       </a>
 
       <!-- Consensus Analysis Link - with participation progress -->
-      {% set is_creator = current_user.is_authenticated and current_user.id ==
-      discussion.creator_id %} {% set is_unlocked = is_creator or
+      {% set is_unlocked = is_creator or is_admin or
       (user_vote_count|default(0) >= participation_threshold|default(5)) %}
       <a
         id="consensus-analysis-link"
@@ -232,7 +235,7 @@
   </div>
   {% endif %}{# end not guided_journey_context — header actions #}
 
-  {% set _gj_consensus_unlocked = (current_user.is_authenticated and current_user.id == discussion.creator_id) or (user_vote_count|default(0) >= participation_threshold|default(5)) %}
+  {% set _gj_consensus_unlocked = is_creator or is_admin or (user_vote_count|default(0) >= participation_threshold|default(5)) %}
   {% if guided_journey_context and not _gj_consensus_unlocked %}
   <div class="mb-4 rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-950" role="note">
     <strong class="font-semibold">Consensus map.</strong>
@@ -566,9 +569,8 @@
 </div>
 {% endif %}{# end not guided_journey_context — help section #}
 
-<!-- Moderation Link (Owner Only) -->
-{% if current_user.is_authenticated and current_user.id == discussion.creator_id
-%}
+<!-- Moderation Link (Owner / Admin) -->
+{% if is_creator or is_admin %}
 <div class="text-center mb-6">
   <a
     href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}"
@@ -1140,7 +1142,6 @@
 {% set _gjc2_prog = _gjc2.programme %}
 {% set _gjc2_ti = _gjc2.theme_item %}
 {% set _gjc2_jp = _gjc2.progress %}
-{% set _gjc2_next = _gjc2_jp.next_item %}
 <style>
 @keyframes ssConfettiFall {
   0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
@@ -1154,14 +1155,33 @@
   // ── Server-seeded config ─────────────────────────────────────────────────
   var TOTAL_STATEMENTS = {{ _gjc2_ti.statement_total }};
   var RECAP_URL  = {{ url_for('programmes.programme_journey_recap', slug=_gjc2_prog.slug) | tojson }};
-  {% if _gjc2_next and _gjc2_next.discussion.id != _gjc2_ti.discussion.id %}
-  var NEXT_THEME_URL  = {{ url_for('discussions.view_discussion', discussion_id=_gjc2_next.discussion.id, slug=_gjc2_next.discussion.slug) | tojson }};
-  var NEXT_THEME_NAME = {{ (_gjc2_next.discussion.programme_theme or _gjc2_next.discussion.title) | tojson }};
+  {% set _gjc2_next_theme = guided_journey_context.next_theme_in_programme %}
+  {% if _gjc2_next_theme %}
+  var NEXT_THEME_URL  = {{ url_for('discussions.view_discussion', discussion_id=_gjc2_next_theme.discussion.id, slug=_gjc2_next_theme.discussion.slug) | tojson }};
+  var NEXT_THEME_NAME = {{ (_gjc2_next_theme.discussion.programme_theme or _gjc2_next_theme.discussion.title) | tojson }};
   {% else %}
   var NEXT_THEME_URL  = null;
   var NEXT_THEME_NAME = null;
   {% endif %}
   var IS_JOURNEY_COMPLETE = {{ 'true' if _gjc2_jp.is_journey_complete else 'false' }};
+  var CONSENSUS_URL = {{ url_for('consensus.view_results', discussion_id=discussion.id) | tojson }};
+  var CONSENSUS_THRESHOLD = {{ participation_threshold | int }};
+  var CONSENSUS_INITIAL_UNLOCKED = {{ 'true' if is_consensus_unlocked else 'false' }};
+  {# Staff bypass matches server participation exceptions (creator + admin). #}
+  var CONSENSUS_STAFF_BYPASS = {{ 'true' if (is_creator or is_admin) else 'false' }};
+  var SHARE_URL = {{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) | tojson }};
+  var SHARE_TITLE = {{ (discussion.programme_theme or discussion.title) | tojson }};
+
+  /** Escape text for safe insertion into HTML (theme titles, etc.). */
+  function escHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   // ── DOM references ───────────────────────────────────────────────────────
   var focusCard     = document.getElementById('journey-focus-card');
@@ -1264,29 +1284,153 @@
     completeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     var actionsEl = document.getElementById('journey-complete-actions');
+    var followHintEl = document.getElementById('journey-complete-follow-hint');
+    function distinctClientVotes() {
+      var n = 0;
+      if (!window.userVotes) return n;
+      for (var k in window.userVotes) {
+        if (!Object.prototype.hasOwnProperty.call(window.userVotes, k)) continue;
+        var v = window.userVotes[k];
+        if (v !== undefined && v !== null) n++;
+      }
+      return n;
+    }
+    function consensusUnlockedClient() {
+      return CONSENSUS_STAFF_BYPASS || CONSENSUS_INITIAL_UNLOCKED || distinctClientVotes() >= CONSENSUS_THRESHOLD;
+    }
+    var btnClass = 'inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow transition-colors text-sm sm:text-base';
+    function wireJourneyShareControls() {
+      var shareBtn = document.getElementById('journey-share-btn');
+      var copyBtn = document.getElementById('journey-copy-link-btn');
+      if (shareBtn) {
+        if (!navigator.share) {
+          shareBtn.style.display = 'none';
+        } else {
+          shareBtn.addEventListener('click', function () {
+            navigator.share({ title: SHARE_TITLE, text: SHARE_TITLE, url: SHARE_URL }).catch(function () {});
+          });
+        }
+      }
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+          function ok() {
+            var prev = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(function () { copyBtn.textContent = prev; }, 2000);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(SHARE_URL).then(ok).catch(function () {});
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = SHARE_URL;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'absolute';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+              document.execCommand('copy');
+              ok();
+            } catch (e) {}
+            document.body.removeChild(ta);
+          }
+        });
+      }
+    }
+    function buildConsensusSecondaryHtml() {
+      var unlocked = consensusUnlockedClient();
+      var consClass = unlocked
+        ? btnClass + ' bg-white/95 text-emerald-900 hover:bg-white'
+        : btnClass + ' bg-white/10 text-white/75 hover:bg-white/15';
+      var consTitle = unlocked
+        ? ''
+        : ' title="Vote on at least ' + CONSENSUS_THRESHOLD + ' statements in this theme to open full analysis (you can still open the page for a reminder)."';
+      var consInner =
+        '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' +
+        '<span>Consensus analysis</span>';
+      var consLink =
+        '<a href="' +
+        CONSENSUS_URL +
+        '" class="' +
+        consClass +
+        '"' +
+        consTitle +
+        '>' +
+        consInner +
+        '</a>';
+      var shareRow =
+        '<button type="button" id="journey-share-btn" class="' +
+        btnClass +
+        ' bg-white/15 text-white hover:bg-white/25" aria-label="Share this discussion">' +
+        '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>' +
+        '<span>Share</span></button>' +
+        '<button type="button" id="journey-copy-link-btn" class="' +
+        btnClass +
+        ' bg-white/15 text-white hover:bg-white/25" aria-label="Copy link to this discussion">' +
+        '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>' +
+        '<span>Copy link</span></button>';
+      return (
+        '<div class="border-t border-white/25 pt-4 mt-1 text-left">' +
+        '<p class="text-xs text-emerald-50/95 mb-3 leading-relaxed text-center">Open the deliberation map for this theme, or share this page. If analysis is still computing, the results page explains what happens next.</p>' +
+        '<div class="flex flex-col sm:flex-row flex-wrap gap-2 justify-center">' +
+        consLink +
+        shareRow +
+        '</div></div>'
+      );
+    }
     if (actionsEl) {
       actionsEl.innerHTML = '';
-      var btnClass = 'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold shadow transition-colors';
       // IS_JOURNEY_COMPLETE is baked at page load; also infer completion when this
-      // is the final theme (no next) and all statements are now voted.
+      // is the final theme (no next theme in programme order) and all statements are now voted.
       var journeyNowComplete = IS_JOURNEY_COMPLETE || (!NEXT_THEME_URL && allVoted());
+      var primaryRow = '';
       if (journeyNowComplete) {
         document.getElementById('journey-complete-msg').textContent =
           "You've completed the entire Big Questions Journey! See how your views compare to everyone else's.";
-        actionsEl.innerHTML =
-          '<a href="' + RECAP_URL + '" class="' + btnClass + ' bg-white text-emerald-800 hover:bg-emerald-50">' +
-          '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' +
+        primaryRow =
+          '<a href="' +
+          RECAP_URL +
+          '" class="' +
+          btnClass +
+          ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">' +
+          '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' +
           'View your full recap</a>';
       } else if (NEXT_THEME_URL) {
-        actionsEl.innerHTML =
-          '<a href="' + NEXT_THEME_URL + '" class="' + btnClass + ' bg-white text-emerald-800 hover:bg-emerald-50">' +
-          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>' +
-          'Next: ' + (NEXT_THEME_NAME || 'Continue') + '</a>' +
-          '<a href="' + RECAP_URL + '" class="' + btnClass + ' bg-white/20 text-white hover:bg-white/30">View progress</a>';
+        primaryRow =
+          '<a href="' +
+          NEXT_THEME_URL +
+          '" class="' +
+          btnClass +
+          ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">' +
+          '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>' +
+          '<span class="text-left">Continue to next theme' +
+          (NEXT_THEME_NAME ? ': <span class="font-normal opacity-90">' + escHtml(NEXT_THEME_NAME) + '</span>' : '') +
+          '</span></a>' +
+          '<a href="' +
+          RECAP_URL +
+          '" class="' +
+          btnClass +
+          ' bg-white/20 text-white hover:bg-white/30 w-full sm:w-auto">Journey recap so far</a>';
       } else {
-        actionsEl.innerHTML =
-          '<a href="' + RECAP_URL + '" class="' + btnClass + ' bg-white text-emerald-800 hover:bg-emerald-50">View your recap</a>';
+        primaryRow =
+          '<a href="' +
+          RECAP_URL +
+          '" class="' +
+          btnClass +
+          ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">View your recap</a>';
       }
+      actionsEl.innerHTML =
+        '<div class="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">' +
+        primaryRow +
+        '</div>' +
+        buildConsensusSecondaryHtml();
+      wireJourneyShareControls();
+    }
+    if (followHintEl) {
+      followHintEl.innerHTML =
+        '<strong class="text-white">Email updates:</strong> there is no separate mailing list for consensus alone. ' +
+        'Use <a href="#save-discussion-actions" class="text-white underline font-medium decoration-white/80 hover:decoration-white">Save this discussion</a> ' +
+        '(free account) so organisers can reach you when there are important updates or new analysis for this theme.';
     }
 
     // Confetti burst (respects prefers-reduced-motion)

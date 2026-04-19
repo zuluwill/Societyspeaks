@@ -947,6 +947,7 @@ def view_discussion(discussion_id, slug):
                          user_vote_count=consensus_ui_state['user_vote_count'],
                          user_votes_map=user_votes_map,
                          discussion_participant_count=discussion_participant_count,
+                         is_consensus_unlocked=consensus_ui_state['is_consensus_unlocked'],
                          participation_threshold=consensus_ui_state['participation_threshold'],
                          consensus_thresholds=consensus_thresholds_dict(),
                          safe_information_html=safe_information_html,

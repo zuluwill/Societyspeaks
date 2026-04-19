@@ -148,7 +148,8 @@ def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_c
         dict with:
           - user_vote_count
           - participation_threshold
-          - is_consensus_unlocked
+          - is_consensus_unlocked (True for creator, site admin, or enough votes —
+            aligned with ``view_results`` participation exceptions)
           - consensus_progress
     """
     from sqlalchemy import func
@@ -158,6 +159,7 @@ def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_c
     user_vote_count, _ = get_user_vote_count(discussion.id)
     participation_threshold = PARTICIPATION_THRESHOLD
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
+    is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
 
     # Compute visibility filter once, only when at least one query path will run.
     if precomputed_metrics is None or participant_count is None:
@@ -199,7 +201,9 @@ def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_c
     return {
         'user_vote_count': int(user_vote_count or 0),
         'participation_threshold': int(participation_threshold),
-        'is_consensus_unlocked': bool(is_creator or user_vote_count >= participation_threshold),
+        'is_consensus_unlocked': bool(
+            is_creator or is_admin or user_vote_count >= participation_threshold
+        ),
         'consensus_progress': {
             'participant_count': int(participant_count or 0),
             'min_participants': int(thresholds.get('min_participants', 7)),

@@ -111,8 +111,8 @@
         {% endif %}
       </div>
 
-      <!-- Right side actions -->
-      <div class="flex items-center gap-2">
+      <!-- Right side actions (anchor for post-completion “save / email updates” guidance) -->
+      <div class="flex items-center gap-2" id="save-discussion-actions">
         {% if current_user.is_authenticated %}
         <form method="POST" action="{{ url_for('discussions.unfollow_discussion', discussion_id=discussion.id) if is_following else url_for('discussions.follow_discussion', discussion_id=discussion.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -581,6 +581,20 @@
         <div>
           <h2 class="text-xl font-semibold text-gray-900">What Happened Next</h2>
           <p class="text-sm text-gray-500 mt-1">Organiser and steward updates, outcomes, and next steps.</p>
+          {% if guided_journey_context %}
+          <p class="text-sm text-gray-600 mt-2 leading-relaxed">
+            These posts are written by <strong>discussion organisers</strong> (for example policy outcomes, hearings, or next steps).
+            They are <strong>not</strong> where you suggest new voting statements — use
+            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">Suggest a statement</a>
+            instead. Suggestions go through the
+            {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
+            <a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">moderation queue</a>
+            {% else %}
+            moderation queue
+            {% endif %}
+            before they appear for voting.
+          </p>
+          {% endif %}
         </div>
         {% if can_manage_updates %}
         <a href="{{ url_for('discussions.create_discussion_update', discussion_id=discussion.id) }}"
@@ -637,12 +651,54 @@
       </div>
     </div>
   </div>
+  {% elif guided_journey_context %}
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div class="max-w-3xl mx-auto space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">What Happened Next</h2>
+          <p class="text-sm text-gray-600 mt-2 leading-relaxed">
+            This section is a short <strong>news-style timeline</strong> from organisers (decisions, hearings, what changed in the real world).
+            It is separate from voting on the fixed statement list above.
+          </p>
+          <p class="text-sm text-gray-600 mt-2 leading-relaxed">
+            <strong>Want to propose a new statement</strong> for this theme? Use
+            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">Suggest a statement</a>.
+            Your text is reviewed in the
+            {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
+            <a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">moderation queue</a>
+            {% else %}
+            moderation queue
+            {% endif %}
+            before it can appear for others to vote on.
+          </p>
+          {% if can_manage_updates %}
+          <p class="text-sm text-gray-500 mt-2">
+            <strong>Stewards:</strong> use &quot;Add organiser update&quot; to post an official timeline entry for everyone following this discussion.
+          </p>
+          {% endif %}
+        </div>
+        <div class="flex flex-col sm:flex-shrink-0 gap-2">
+          <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}"
+             class="inline-flex items-center justify-center px-4 py-2 rounded-md bg-primary-600 text-white text-sm font-medium hover:bg-primary-700">
+            Suggest a statement
+          </a>
+          {% if can_manage_updates %}
+          <a href="{{ url_for('discussions.create_discussion_update', discussion_id=discussion.id) }}"
+             class="inline-flex items-center justify-center px-4 py-2 rounded-md border border-gray-300 text-gray-800 text-sm font-medium hover:bg-gray-50">
+            Add organiser update
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
   {% elif can_manage_updates %}
   <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
     <div class="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h2 class="text-xl font-semibold text-gray-900">What Happened Next</h2>
-        <p class="text-sm text-gray-500 mt-1">Add the first update to capture outcomes, decisions, or next steps.</p>
+        <p class="text-sm text-gray-500 mt-1">Add the first official timeline update (outcomes, decisions, or next steps). Members propose new voting statements via &quot;Add statement&quot; on the discussion, not here.</p>
       </div>
       <a href="{{ url_for('discussions.create_discussion_update', discussion_id=discussion.id) }}"
          class="inline-flex items-center px-4 py-2 rounded-md bg-primary-600 text-white text-sm font-medium hover:bg-primary-700">

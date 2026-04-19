@@ -48,6 +48,29 @@
     </div>
     {% endif %}
 
+    {% if guided_journey_context and guided_journey_context.theme_item.is_complete %}
+    <div class="rounded-md border border-emerald-200 bg-emerald-50/80 px-4 py-3 mb-4">
+      <p class="text-sm text-emerald-950 font-medium mb-2">You have already finished voting on every statement in this theme.</p>
+      <p class="text-xs text-emerald-900/90 mb-3">Use the green summary below for recap, sharing, and the next theme (if there is one). You do not need to press &quot;Continue to voting&quot; again.</p>
+      <div class="flex flex-wrap gap-2">
+        <a href="#journey-theme-complete"
+           class="inline-flex items-center px-4 py-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 transition-colors text-sm font-medium">
+          Jump to theme summary
+        </a>
+        {% set _nt = guided_journey_context.next_theme_in_programme %}
+        {% if _nt %}
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=_nt.discussion.id, slug=_nt.discussion.slug) }}"
+           class="inline-flex items-center px-4 py-2 bg-white border border-emerald-300 text-emerald-900 rounded-md hover:bg-emerald-100 transition-colors text-sm font-medium">
+          Continue to next theme →
+        </a>
+        {% endif %}
+        <a href="{{ url_for('programmes.programme_journey_recap', slug=guided_journey_context.programme.slug) }}"
+           class="inline-flex items-center px-4 py-2 bg-white border border-emerald-300 text-emerald-900 rounded-md hover:bg-emerald-100 transition-colors text-sm font-medium">
+          Journey recap
+        </a>
+      </div>
+    </div>
+    {% else %}
     <form method="POST" action="{{ url_for('discussions.mark_information_viewed', discussion_id=discussion.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% if cohort_slug %}
@@ -65,5 +88,6 @@
         {% if guided_journey_context %}Continue to voting{% else %}Continue{% endif %}
       </button>
     </form>
+    {% endif %}
   </div>
 </div>

@@ -104,8 +104,8 @@ discussion.title }}{% endblock %} {% block content %}
                 {{ flag.flag_reason }}
               </span>
               <span class="text-gray-600 text-sm">
-                Flagged by {% if flag.flagger_user %}{{
-                flag.flagger_user.username }}{% else %}Unknown{% endif %} on {{
+                Flagged by {% if flag.flagger %}{{
+                flag.flagger.username }}{% else %}Unknown{% endif %} on {{
                 flag.created_at.strftime('%b %d, %Y') }}
               </span>
             </div>

@@ -1,6 +1,8 @@
 import hashlib
 import secrets
 
+from flask_login import login_user
+
 from app.api.utils import get_discussion_participant_count
 from app.discussions.consensus import build_consensus_ui_state
 from app.discussions import statements as statements_module
@@ -149,6 +151,32 @@ def test_consensus_ui_state_hides_moderated_statements_for_non_owner(app, db):
 
         assert state['consensus_progress']['statement_count'] == 1
         assert state['consensus_progress']['total_votes'] == 4
+
+
+def test_build_consensus_ui_state_unlocks_for_site_admin_without_votes(app, db):
+    """Site admins bypass the participation gate (same as consensus view_results)."""
+    with app.app_context():
+        creator = _create_user(db, 'creatoradm', 'creatoradm@example.com')
+        admin = _create_user(db, 'siteadminui', 'siteadminui@example.com')
+        admin.is_admin = True
+        db.session.flush()
+        discussion = Discussion(
+            title='Admin UI unlock',
+            slug=generate_slug('Admin UI unlock'),
+            has_native_statements=True,
+            topic='Society',
+            geographic_scope='global',
+            creator_id=creator.id,
+        )
+        db.session.add(discussion)
+        db.session.commit()
+
+        with app.test_request_context('/'):
+            login_user(admin)
+            state = build_consensus_ui_state(discussion)
+
+        assert state['user_vote_count'] == 0
+        assert state['is_consensus_unlocked'] is True
 
 
 def test_idempotency_cached_response_survives_ui_refresh_failure(app, db, monkeypatch):

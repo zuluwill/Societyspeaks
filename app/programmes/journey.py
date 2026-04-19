@@ -492,7 +492,10 @@ def guided_journey_context_for_discussion(
 
     Used for in-discussion orientation (rail UI) and the information-step copy.
     Dict keys include ``has_source_articles`` (whether linked source articles render
-    above the optional-reading box). Returns None if not applicable.
+    above the optional-reading box), and ``next_theme_in_programme`` (the following
+    theme in programme order for navigation — unlike ``progress["next_item"]``,
+    which is the first *incomplete* theme and is often the current discussion).
+    Returns None if not applicable.
     """
     if not discussion.programme or not discussion.has_native_statements:
         return None
@@ -510,10 +513,19 @@ def guided_journey_context_for_discussion(
             break
     if theme_item is None:
         return None
+    # Next theme in programme order (not ``progress["next_item"]``, which is the
+    # first *incomplete* theme — often the current discussion while still voting).
+    next_theme_in_programme: Optional[JourneyProgressItem] = None
+    items = progress["theme_items"]
+    for i, it in enumerate(items):
+        if it.discussion.id == discussion.id and i + 1 < len(items):
+            next_theme_in_programme = items[i + 1]
+            break
     return {
         "programme": programme,
         "progress": progress,
         "theme_item": theme_item,
         "theme_index": theme_index,
         "has_source_articles": discussion_has_linked_source_articles(discussion),
+        "next_theme_in_programme": next_theme_in_programme,
     }

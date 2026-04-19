@@ -2,63 +2,79 @@
 """
 Moderation Queue System (Phase 2.3)
 
-Allows discussion owners to review and act on flagged content
+Allows discussion owners (and site administrators) to review and act on flagged content.
 """
 from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import Discussion, Statement, StatementFlag, Response
 from sqlalchemy import desc, func
-from datetime import datetime
+from sqlalchemy.orm import joinedload
 from app.lib.time import utcnow_naive
 
 moderation_bp = Blueprint('moderation', __name__)
+
+
+def _can_moderate_discussion(discussion: Discussion) -> bool:
+    """Whether the current user may access moderation for this discussion (owner or site admin)."""
+    if not current_user.is_authenticated:
+        return False
+    if getattr(current_user, 'is_admin', False):
+        return True
+    return discussion.creator_id == current_user.id
 
 
 @moderation_bp.route('/discussions/<int:discussion_id>/moderation')
 @login_required
 def moderation_queue(discussion_id):
     """
-    View moderation queue for a discussion
-    Only accessible to discussion owner
+    View moderation queue for a discussion.
+    Accessible to the discussion owner and site administrators.
     """
     discussion = db.get_or_404(Discussion, discussion_id)
-    
-    # Check if current user is the discussion owner
-    if discussion.creator_id != current_user.id:
-        flash("Only the discussion owner can access the moderation queue", "danger")
-        return redirect(url_for('discussions.view_discussion', 
-                              discussion_id=discussion.id, 
+
+    if not _can_moderate_discussion(discussion):
+        flash("You do not have permission to access the moderation queue.", "danger")
+        return redirect(url_for('discussions.view_discussion',
+                              discussion_id=discussion.id,
                               slug=discussion.slug))
     
-    # Get all pending flags
-    pending_flags = StatementFlag.query.join(Statement).filter(
-        Statement.discussion_id == discussion_id,
-        StatementFlag.status == 'pending'
-    ).order_by(StatementFlag.created_at.desc()).all()
-    
-    # Get moderation statistics
+    # Eager-load statement + authors so the queue template does not N+1
+    pending_flags = (
+        StatementFlag.query
+        .options(
+            joinedload(StatementFlag.statement).joinedload(Statement.user),
+            joinedload(StatementFlag.flagger),
+        )
+        .join(Statement)
+        .filter(
+            Statement.discussion_id == discussion_id,
+            StatementFlag.status == 'pending',
+        )
+        .order_by(StatementFlag.created_at.desc())
+        .all()
+    )
+
+    # Two grouped queries replace five individual counts
+    flag_counts = dict(
+        db.session.query(StatementFlag.status, func.count(StatementFlag.id))
+        .join(Statement)
+        .filter(Statement.discussion_id == discussion_id)
+        .group_by(StatementFlag.status)
+        .all()
+    )
+    stmt_counts = dict(
+        db.session.query(Statement.is_deleted, func.count(Statement.id))
+        .filter_by(discussion_id=discussion_id)
+        .group_by(Statement.is_deleted)
+        .all()
+    )
     stats = {
-        'pending': StatementFlag.query.join(Statement).filter(
-            Statement.discussion_id == discussion_id,
-            StatementFlag.status == 'pending'
-        ).count(),
-        'approved': StatementFlag.query.join(Statement).filter(
-            Statement.discussion_id == discussion_id,
-            StatementFlag.status == 'approved'
-        ).count(),
-        'rejected': StatementFlag.query.join(Statement).filter(
-            Statement.discussion_id == discussion_id,
-            StatementFlag.status == 'rejected'
-        ).count(),
-        'total_statements': Statement.query.filter_by(
-            discussion_id=discussion_id,
-            is_deleted=False
-        ).count(),
-        'deleted_statements': Statement.query.filter_by(
-            discussion_id=discussion_id,
-            is_deleted=True
-        ).count()
+        'pending':            flag_counts.get('pending', 0),
+        'approved':           flag_counts.get('approved', 0),
+        'rejected':           flag_counts.get('rejected', 0),
+        'total_statements':   sum(stmt_counts.values()),
+        'deleted_statements': stmt_counts.get(True, 0),
     }
     
     # Group flags by reason
@@ -87,11 +103,10 @@ def review_flag(discussion_id, flag_id):
     discussion = db.get_or_404(Discussion, discussion_id)
     flag = db.get_or_404(StatementFlag, flag_id)
     
-    # Check permissions
-    if discussion.creator_id != current_user.id:
-        flash("Only the discussion owner can review flags", "danger")
-        return redirect(url_for('discussions.view_discussion', 
-                              discussion_id=discussion.id, 
+    if not _can_moderate_discussion(discussion):
+        flash("You do not have permission to review flags for this discussion.", "danger")
+        return redirect(url_for('discussions.view_discussion',
+                              discussion_id=discussion.id,
                               slug=discussion.slug))
     
     # Check that flag belongs to this discussion
@@ -145,31 +160,32 @@ def bulk_moderation_action(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
     
-    # Check permissions
-    if discussion.creator_id != current_user.id:
-        flash("Only the discussion owner can perform bulk actions", "danger")
-        return redirect(url_for('discussions.view_discussion', 
-                              discussion_id=discussion.id, 
+    if not _can_moderate_discussion(discussion):
+        flash("You do not have permission to perform bulk moderation on this discussion.", "danger")
+        return redirect(url_for('discussions.view_discussion',
+                              discussion_id=discussion.id,
                               slug=discussion.slug))
     
-    flag_ids = request.form.getlist('flag_ids')
+    raw_ids = request.form.getlist('flag_ids')
+    flag_ids = [int(x) for x in raw_ids if x.isdigit()]
     action = request.form.get('action')
-    
+
     if not flag_ids:
         flash("No flags selected", "warning")
         return redirect(url_for('moderation.moderation_queue', discussion_id=discussion_id))
-    
-    # Get all selected flags
-    flags = StatementFlag.query.filter(
-        StatementFlag.id.in_(flag_ids),
-        StatementFlag.status == 'pending'
-    ).all()
-    
-    # Verify all flags belong to this discussion
-    for flag in flags:
-        if flag.statement.discussion_id != discussion_id:
-            flash("Invalid flag detected in selection", "danger")
-            return redirect(url_for('moderation.moderation_queue', discussion_id=discussion_id))
+
+    # Discussion constraint is enforced in SQL; eager-load for the write loop
+    flags = (
+        StatementFlag.query
+        .options(joinedload(StatementFlag.statement))
+        .join(Statement)
+        .filter(
+            StatementFlag.id.in_(flag_ids),
+            Statement.discussion_id == discussion_id,
+            StatementFlag.status == 'pending',
+        )
+        .all()
+    )
     
     count = 0
     if action == 'approve_all':
@@ -208,11 +224,10 @@ def moderation_stats(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
     
-    # Check permissions
-    if discussion.creator_id != current_user.id:
-        flash("Only the discussion owner can view moderation stats", "danger")
-        return redirect(url_for('discussions.view_discussion', 
-                              discussion_id=discussion.id, 
+    if not _can_moderate_discussion(discussion):
+        flash("You do not have permission to view moderation stats for this discussion.", "danger")
+        return redirect(url_for('discussions.view_discussion',
+                              discussion_id=discussion.id,
                               slug=discussion.slug))
     
     # Calculate comprehensive stats
@@ -280,8 +295,7 @@ def moderation_summary_api(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
     
-    # Check permissions
-    if discussion.creator_id != current_user.id:
+    if not _can_moderate_discussion(discussion):
         return jsonify({'error': 'Permission denied'}), 403
     
     stats = {
