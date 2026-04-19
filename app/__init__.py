@@ -422,12 +422,12 @@ def create_app():
 
     @app.context_processor
     def inject_i18n():
-        from app.lib.locale_utils import resolve_locale
+        from app.lib.locale_utils import resolve_locale, SUPPORTED_LANGUAGES
         try:
             lang = resolve_locale()
         except Exception:
             lang = 'en'
-        return dict(current_lang=lang)
+        return dict(current_lang=lang, supported_languages=SUPPORTED_LANGUAGES)
 
     app.jinja_env.globals.update(current_user=current_user)
 
