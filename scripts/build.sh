@@ -9,6 +9,9 @@ echo "Running database migrations..."
 # (personal_impact on brief_item). Use normal Alembic upgrades only.
 SQLALCHEMY_MIGRATE=1 flask db upgrade
 
+echo "Compiling translation catalogs (.po -> .mo)..."
+pybabel compile -d translations
+
 echo "Installing Node.js dependencies..."
 npm install --silent
 
