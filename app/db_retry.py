@@ -12,6 +12,7 @@ from typing import TypeVar, Callable, Any
 
 from flask import current_app
 from sqlalchemy.exc import OperationalError, DBAPIError
+from werkzeug.exceptions import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,9 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
                     
                     time.sleep(base_delay * attempt)
                     
+                except HTTPException:
+                    raise
+
                 except Exception as e:
                     logger.error(f"Unexpected error in {func.__name__}: {e}")
                     try:
