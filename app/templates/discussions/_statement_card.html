@@ -17,12 +17,19 @@
           >{{ statement.statement_type|upper }}</span
         >
         <span
-          >Posted by {% if statement.user %}{{ statement.user.username }}{% else %}<span class="text-gray-400">Anonymous</span>{% endif %}</span
+          >{{ _('Posted by') }} {% if statement.user %}{{ statement.user.username }}{% else %}<span class="text-gray-400">{{ _('Anonymous') }}</span>{% endif %}</span
         >
         <span>•</span>
         <span>{{ statement.created_at.strftime('%b %d, %Y') }}</span>
       </div>
-      <div class="text-lg text-gray-900 mb-3">{{ statement.content }}</div>
+      {% set _translated_content = translation_map.get(statement.id) if translation_map is defined and translation_map else none %}
+      <div class="text-lg text-gray-900 mb-3">{{ _translated_content if _translated_content else statement.content }}</div>
+      {% if _translated_content %}
+      <details class="text-xs text-gray-400 mb-2">
+        <summary class="cursor-pointer list-none underline hover:text-gray-600">{{ _('AI translated') }} · {{ _('Show original') }}</summary>
+        <p class="mt-1 italic text-gray-500 text-sm">{{ statement.content }}</p>
+      </details>
+      {% endif %}
     </div>
   </div>
 
@@ -41,7 +48,7 @@
       title="See full discussion thread with all responses"
     >
       <div class="font-bold">
-        💬 View Discussion {% set response_count = statement.responses|rejectattr('is_deleted')|list|length %} {% if response_count > 0 %}
+        💬 {{ _('View Discussion') }} {% set response_count = statement.responses|rejectattr('is_deleted')|list|length %} {% if response_count > 0 %}
         <span class="ml-1 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">{{ response_count }}</span>
         {% endif %}
       </div>
@@ -55,7 +62,7 @@
       class="flex-1 text-center px-4 py-3 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg font-medium transition-colors"
       title="Write a detailed argument or counter-argument"
     >
-      <div class="font-bold">✍️ Add Argument</div>
+      <div class="font-bold">✍️ {{ _('Add Argument') }}</div>
       <div style="font-size: 11px; color: #64748b">Write detailed response</div>
     </a>
     {% endif %}

@@ -1,0 +1,874 @@
+# Society Speaks UI translations
+# Language: zh
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-04-19 15:46+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/templates/layout.html:8
+msgid "Society Speaks.io - Join the Conversation"
+msgstr "Society Speaks.io - 加入对话"
+
+#: app/templates/layout.html:49
+msgid "Latest Discussions"
+msgstr "最新讨论"
+
+#: app/templates/layout.html:438 app/templates/layout.html:1178
+msgid "Home"
+msgstr "首页"
+
+#: app/templates/layout.html:450
+msgid "Participate"
+msgstr "参与"
+
+#: app/templates/layout.html:476 app/templates/programmes/list.html:82
+msgid "Big Questions Journey"
+msgstr "大问题之旅"
+
+#: app/templates/layout.html:477
+msgid "Featured"
+msgstr "精选"
+
+#: app/templates/layout.html:483
+msgid "Free"
+msgstr "免费"
+
+#: app/templates/layout.html:489 app/templates/layout.html:1192
+msgid "Today's Question"
+msgstr "今日问题"
+
+#: app/templates/layout.html:495 app/templates/layout.html:1199
+msgid "Daily Brief"
+msgstr "每日简报"
+
+#: app/templates/layout.html:501 app/templates/layout.html:1185
+msgid "Discussions & Programmes"
+msgstr "讨论与项目"
+
+#: app/templates/layout.html:507
+msgid "Premium"
+msgstr "高级"
+
+#: app/templates/layout.html:514 app/templates/layout.html:1206
+msgid "Personal Briefs"
+msgstr "个人简报"
+
+#: app/templates/layout.html:517 app/templates/layout.html:528
+#: app/templates/layout.html:1207 app/templates/layout.html:1215
+msgid "Pro"
+msgstr "Pro"
+
+#: app/templates/layout.html:525 app/templates/layout.html:1214
+msgid "For Publishers"
+msgstr "面向出版方"
+
+#: app/templates/layout.html:543
+msgid "Explore"
+msgstr "探索"
+
+#: app/templates/layout.html:567
+msgid "News"
+msgstr "新闻"
+
+#: app/templates/layout.html:573
+msgid "Discussions"
+msgstr "讨论"
+
+#: app/templates/layout.html:579
+msgid "Programmes"
+msgstr "项目"
+
+#: app/templates/layout.html:585
+msgid "Sources"
+msgstr "来源"
+
+#: app/templates/layout.html:599
+msgid "About"
+msgstr "关于"
+
+#: app/templates/layout.html:623 app/templates/layout.html:1229
+msgid "About Us"
+msgstr "关于我们"
+
+#: app/templates/layout.html:629
+msgid "Help"
+msgstr "帮助"
+
+#: app/templates/layout.html:635 app/templates/layout.html:1236
+msgid "FAQ"
+msgstr "常见问题"
+
+#: app/templates/discussions/embed_discussion.html:803
+#: app/templates/layout.html:646
+msgid "Select language"
+msgstr "选择语言"
+
+#: app/templates/layout.html:655
+msgid "Language options"
+msgstr "语言选项"
+
+#: app/templates/layout.html:672 app/templates/layout.html:1222
+msgid "Donate"
+msgstr "捐赠"
+
+#: app/templates/layout.html:951
+msgid "Language"
+msgstr "语言"
+
+#: app/templates/layout.html:1127
+msgid "Please verify your email"
+msgstr "请验证您的电子邮件"
+
+#: app/templates/layout.html:1127
+msgid "Check your inbox for the verification link."
+msgstr "请查收收件箱中的验证链接。"
+
+#: app/templates/layout.html:1133
+msgid "Resend verification email"
+msgstr "重新发送验证邮件"
+
+#: app/templates/layout.html:1167
+msgid "About Society Speaks"
+msgstr "关于 Society Speaks"
+
+#: app/templates/layout.html:1170
+msgid ""
+"A sense-making system that turns disagreement into understanding. We "
+"reveal where society agrees, where it divides, and which ideas can bridge"
+" the gap."
+msgstr "一个将分歧转化为理解的共识系统。我们揭示社会在何处一致、在何处分裂，以及哪些想法可以架起桥梁。"
+
+#: app/templates/layout.html:1174
+msgid "Quick Links"
+msgstr "快速链接"
+
+#: app/templates/components/vote_buttons.html:24
+#: app/templates/components/vote_buttons.html:65
+#: app/templates/discussions/embed_discussion.html:866
+#: app/templates/discussions/view_native.html:47
+msgid "Agree"
+msgstr "同意"
+
+#: app/templates/components/vote_buttons.html:24
+#: app/templates/components/vote_buttons.html:65
+#: app/templates/discussions/embed_discussion.html:855
+#: app/templates/discussions/view_native.html:44
+msgid "Agree with this statement"
+msgstr "同意此陈述"
+
+#: app/templates/components/vote_buttons.html:25
+#: app/templates/components/vote_buttons.html:66
+#: app/templates/discussions/embed_discussion.html:885
+#: app/templates/discussions/view_native.html:55
+msgid "Disagree"
+msgstr "不同意"
+
+#: app/templates/components/vote_buttons.html:25
+#: app/templates/components/vote_buttons.html:66
+#: app/templates/discussions/embed_discussion.html:874
+#: app/templates/discussions/view_native.html:52
+msgid "Disagree with this statement"
+msgstr "不同意此陈述"
+
+#: app/templates/components/vote_buttons.html:26
+#: app/templates/components/vote_buttons.html:67
+#: app/templates/discussions/embed_discussion.html:904
+#: app/templates/discussions/view_native.html:63
+msgid "Unsure"
+msgstr "不确定"
+
+#: app/templates/components/vote_buttons.html:26
+#: app/templates/components/vote_buttons.html:67
+#: app/templates/discussions/embed_discussion.html:893
+#: app/templates/discussions/view_native.html:60
+msgid "Unsure about this statement"
+msgstr "对此陈述不确定"
+
+#: app/templates/discussions/_information_step.html:10
+msgid "This background may be machine-translated. Quality may vary."
+msgstr "此背景可能为机器翻译，质量或有差异。"
+
+#: app/templates/discussions/_statement_card.html:20
+msgid "Posted by"
+msgstr "发布者"
+
+#: app/templates/discussions/_statement_card.html:20
+msgid "Anonymous"
+msgstr "匿名"
+
+#: app/templates/discussions/_statement_card.html:29
+#: app/templates/discussions/embed_discussion.html:844
+msgid "AI translated"
+msgstr "AI 翻译"
+
+#: app/templates/discussions/_statement_card.html:29
+#: app/templates/discussions/embed_discussion.html:845
+msgid "Show original"
+msgstr "显示原文"
+
+#: app/templates/discussions/_statement_card.html:51
+msgid "View Discussion"
+msgstr "查看讨论"
+
+#: app/templates/discussions/_statement_card.html:65
+msgid "Add Argument"
+msgstr "添加论点"
+
+#: app/templates/discussions/consensus_results.html:5
+#: app/templates/discussions/consensus_results.html:20
+#: app/templates/discussions/view_native.html:153
+msgid "Consensus Analysis"
+msgstr "共识分析"
+
+#: app/templates/discussions/consensus_results.html:28
+msgid "Opinion Groups"
+msgstr "意见群体"
+
+#: app/templates/discussions/consensus_results.html:34
+msgid "Participants"
+msgstr "参与者"
+
+#: app/templates/discussions/consensus_results.html:38
+msgid "Statements"
+msgstr "陈述"
+
+#: app/templates/discussions/consensus_results.html:167
+#: app/templates/discussions/consensus_results.html:204
+msgid "What Each Group Believes"
+msgstr "每个群体的观点"
+
+#: app/templates/discussions/consensus_results.html:169
+msgid ""
+"These are the statements each opinion group agrees on most strongly. This"
+" helps understand the core beliefs that define each group."
+msgstr "这些是各意见群体最强烈认同的陈述，有助于理解定义各群体的核心信念。"
+
+#: app/templates/discussions/consensus_results.html:183
+msgid "Top beliefs:"
+msgstr "主要观点："
+
+#: app/templates/discussions/consensus_results.html:190
+msgid "% agree"
+msgstr "% 同意"
+
+#: app/templates/discussions/consensus_results.html:216
+msgid "Areas of Consensus"
+msgstr "共识领域"
+
+#: app/templates/discussions/consensus_results.html:219
+msgid "These statements have broad agreement across all opinion groups."
+msgstr "这些陈述在所有意见群体中都有广泛共识。"
+
+#: app/templates/discussions/consensus_results.html:225
+#: app/templates/discussions/consensus_results.html:250
+#: app/templates/discussions/consensus_results.html:272
+#: app/templates/discussions/embed_discussion.html:912
+msgid "agree"
+msgstr "同意"
+
+#: app/templates/discussions/consensus_results.html:226
+#: app/templates/discussions/consensus_results.html:251
+#: app/templates/discussions/consensus_results.html:273
+#: app/templates/discussions/embed_discussion.html:913
+msgid "disagree"
+msgstr "不同意"
+
+#: app/templates/discussions/consensus_results.html:227
+#: app/templates/discussions/consensus_results.html:252
+#: app/templates/discussions/consensus_results.html:274
+#: app/templates/discussions/embed_discussion.html:914
+msgid "unsure"
+msgstr "不确定"
+
+#: app/templates/discussions/consensus_results.html:229
+#: app/templates/discussions/embed_discussion.html:921
+#: app/templates/discussions/embed_discussion.html:1138
+msgid "agreement"
+msgstr "一致"
+
+#: app/templates/discussions/consensus_results.html:241
+msgid "Bridge Statements"
+msgstr "桥梁陈述"
+
+#: app/templates/discussions/consensus_results.html:244
+msgid "These statements unite different opinion groups and offer common ground."
+msgstr "这些陈述联结不同意见群体并提供共识基础。"
+
+#: app/templates/discussions/consensus_results.html:263
+msgid "Points of Division"
+msgstr "分歧点"
+
+#: app/templates/discussions/consensus_results.html:266
+msgid "These statements show significant disagreement between opinion groups."
+msgstr "这些陈述显示意见群体之间存在显著分歧。"
+
+#: app/templates/discussions/consensus_results.html:277
+msgid "controversy"
+msgstr "争议"
+
+#: app/templates/discussions/consensus_results.html:287
+msgid "Export & Share"
+msgstr "导出与分享"
+
+#: app/templates/discussions/consensus_results.html:293
+msgid "Download JSON"
+msgstr "下载 JSON"
+
+#: app/templates/discussions/consensus_results.html:299
+msgid "Generate Report"
+msgstr "生成报告"
+
+#: app/templates/discussions/consensus_results.html:313
+msgid "Re-run Analysis"
+msgstr "重新分析"
+
+#: app/templates/discussions/consensus_results.html:322
+msgid "Methodology"
+msgstr "方法论"
+
+#: app/templates/discussions/consensus_results.html:353
+msgid "Back to Discussion"
+msgstr "返回讨论"
+
+#: app/templates/discussions/embed_discussion.html:6
+#: app/templates/discussions/embed_discussion.html:1017
+#: app/templates/discussions/view_discussion.html:7
+msgid "Society Speaks"
+msgstr "Society Speaks"
+
+#: app/templates/discussions/embed_discussion.html:786
+msgid "Skip to statements"
+msgstr "跳转到陈述"
+
+#: app/templates/discussions/embed_discussion.html:790
+msgid "You're offline. Votes will be saved when you reconnect."
+msgstr "您已离线。重新连接后将保存投票。"
+
+#: app/templates/discussions/embed_discussion.html:795
+#: app/templates/discussions/embed_discussion.html:1114
+msgid "This discussion is closed. You can still view the full record."
+msgstr "此讨论已关闭。您仍然可以查看完整记录。"
+
+#: app/templates/discussions/embed_discussion.html:816
+#, python-format
+msgid "%(num)d statement to vote on"
+msgid_plural "%(num)d statements to vote on"
+msgstr[0] "%(num)d 条陈述可投票"
+
+#: app/templates/discussions/embed_discussion.html:824
+msgid "Your progress"
+msgstr "你的进度"
+
+#: app/templates/discussions/embed_discussion.html:825
+#: app/templates/discussions/embed_discussion.html:1115
+#, python-format
+msgid "%(current)d / %(threshold)d votes"
+msgstr "%(current)d / %(threshold)d 票"
+
+#: app/templates/discussions/embed_discussion.html:830
+msgid "Vote on statements to help build consensus"
+msgstr "投票支持陈述以建立共识"
+
+#: app/templates/discussions/embed_discussion.html:836
+msgid "Statements to vote on"
+msgstr "可投票的陈述"
+
+#: app/templates/discussions/embed_discussion.html:845
+msgid "Hide original"
+msgstr "隐藏原文"
+
+#: app/templates/discussions/embed_discussion.html:850
+msgid "Vote options for this statement"
+msgstr "此陈述的投票选项"
+
+#: app/templates/discussions/embed_discussion.html:910
+msgid "Vote to see how others split on this claim."
+msgstr "投票查看其他人如何看待这个主张。"
+
+#: app/templates/discussions/embed_discussion.html:919
+msgid "total votes"
+msgstr "总票数"
+
+#: app/templates/discussions/embed_discussion.html:930
+#: app/templates/discussions/embed_discussion.html:1029
+msgid "Report this statement"
+msgstr "举报此陈述"
+
+#: app/templates/discussions/embed_discussion.html:935
+msgid "Report"
+msgstr "举报"
+
+#: app/templates/discussions/embed_discussion.html:947
+msgid "No statements yet. Check back soon!"
+msgstr "暂无陈述，请稍后回来！"
+
+#: app/templates/discussions/embed_discussion.html:949
+msgid "This discussion is not currently available for embed voting."
+msgstr "此讨论目前不可用于嵌入式投票。"
+
+#: app/templates/discussions/embed_discussion.html:950
+msgid "View the full discussion on Society Speaks"
+msgstr "在 Society Speaks 上查看完整讨论"
+
+#: app/templates/discussions/embed_discussion.html:956
+msgid "Statement pages"
+msgstr "陈述页面"
+
+#: app/templates/discussions/embed_discussion.html:957
+#, python-format
+msgid "Page %(page)d of %(pages)d"
+msgstr "第 %(page)d 页，共 %(pages)d 页"
+
+#: app/templates/discussions/embed_discussion.html:966
+msgid "Previous"
+msgstr "上一页"
+
+#: app/templates/discussions/embed_discussion.html:976
+msgid "Next"
+msgstr "下一页"
+
+#: app/templates/discussions/embed_discussion.html:985
+msgid "Suggest a statement"
+msgstr "建议一个陈述"
+
+#: app/templates/discussions/embed_discussion.html:987
+msgid "Your statement should be concise and debatable (10-500 characters)."
+msgstr "您的陈述应简洁且有争议性（10-500个字符）。"
+
+#: app/templates/discussions/embed_discussion.html:990
+msgid "Statement"
+msgstr "陈述"
+
+#: app/templates/discussions/embed_discussion.html:998
+msgid ""
+"e.g. Expanding low-emission zones is worth short-term disruption for "
+"long-term health."
+msgstr ""
+"例如：扩大低排放区值得为长期健康承受短期不便。"
+
+#: app/templates/discussions/embed_discussion.html:1002
+#: app/templates/discussions/embed_discussion.html:1136
+#, python-format
+msgid "%(cur)d / %(max)d"
+msgstr "%(cur)d / %(max)d"
+
+#: app/templates/discussions/embed_discussion.html:1004
+msgid "Submit statement"
+msgstr "提交陈述"
+
+#: app/templates/discussions/embed_discussion.html:1014
+#: app/templates/discussions/embed_discussion.html:1111
+msgid "View Full Analysis"
+msgstr "查看完整分析"
+
+#: app/templates/discussions/embed_discussion.html:1017
+msgid "Powered by"
+msgstr "技术支持"
+
+#: app/templates/discussions/embed_discussion.html:1018
+msgid "Content Policy"
+msgstr "内容政策"
+
+#: app/templates/discussions/embed_discussion.html:1032
+msgid "Reason for reporting"
+msgstr "举报原因"
+
+#: app/templates/discussions/embed_discussion.html:1035
+msgid "Spam or advertising"
+msgstr "垃圾信息或广告"
+
+#: app/templates/discussions/embed_discussion.html:1039
+msgid "Harassment or abuse"
+msgstr "骚扰或滥用"
+
+#: app/templates/discussions/embed_discussion.html:1043
+msgid "Misinformation"
+msgstr "错误信息"
+
+#: app/templates/discussions/embed_discussion.html:1047
+msgid "Off-topic or irrelevant"
+msgstr "偏题或不相关"
+
+#: app/templates/discussions/embed_discussion.html:1051
+msgid "Cancel"
+msgstr "取消"
+
+#: app/templates/discussions/embed_discussion.html:1052
+#: app/templates/discussions/embed_discussion.html:1127
+msgid "Submit Report"
+msgstr "提交举报"
+
+#: app/templates/discussions/embed_discussion.html:1108
+msgid "This discussion is closed."
+msgstr "此讨论已关闭。"
+
+#: app/templates/discussions/embed_discussion.html:1109
+msgid "View full record"
+msgstr "查看完整记录"
+
+#: app/templates/discussions/embed_discussion.html:1110
+msgid "Thanks for participating!"
+msgstr "感谢参与！"
+
+#: app/templates/discussions/embed_discussion.html:1112
+msgid "Analysis is not ready yet (%(count)d participants so far)."
+msgstr "分析尚未准备好（目前已有 %(count)d 名参与者）。"
+
+#: app/templates/discussions/embed_discussion.html:1113
+msgid "View the record"
+msgstr "查看记录"
+
+#: app/templates/discussions/embed_discussion.html:1116
+msgid "Vote on 1 more statement to unlock analysis"
+msgstr "再投1条陈述以解锁分析"
+
+#: app/templates/discussions/embed_discussion.html:1117
+#, python-format
+msgid "Vote on %(num)d more statements to unlock analysis"
+msgstr "再投 %(num)d 条陈述以解锁分析"
+
+#: app/templates/discussions/embed_discussion.html:1118
+msgid "Retry"
+msgstr "重试"
+
+#: app/templates/discussions/embed_discussion.html:1119
+msgid "Vote saved offline. Will sync when connected."
+msgstr "离线保存投票。连接后将同步。"
+
+#: app/templates/discussions/embed_discussion.html:1120
+msgid "Vote recorded!"
+msgstr "投票已记录！"
+
+#: app/templates/discussions/embed_discussion.html:1121
+msgid "You're voting too fast. Please wait a moment."
+msgstr "投票速度太快。请稍等片刻。"
+
+#: app/templates/discussions/embed_discussion.html:1122
+msgid "Couldn't save vote."
+msgstr "无法保存投票。"
+
+#: app/templates/discussions/embed_discussion.html:1123
+msgid "You have already reported this statement."
+msgstr "您已经举报了此陈述。"
+
+#: app/templates/discussions/embed_discussion.html:1124
+msgid "Submitting..."
+msgstr "提交中..."
+
+#: app/templates/discussions/embed_discussion.html:1125
+msgid "Thank you for your report. We will review it."
+msgstr "感谢您的举报，我们将进行审核。"
+
+#: app/templates/discussions/embed_discussion.html:1126
+msgid "Could not submit report. Please try again."
+msgstr "无法提交举报。请重试。"
+
+#: app/templates/discussions/embed_discussion.html:1128
+msgid "Reported"
+msgstr "已举报"
+
+#: app/templates/discussions/embed_discussion.html:1129
+msgid "Statement must be at least 10 characters."
+msgstr "陈述至少需要10个字符。"
+
+#: app/templates/discussions/embed_discussion.html:1130
+msgid "Statement must be 500 characters or fewer."
+msgstr "陈述不得超过500个字符。"
+
+#: app/templates/discussions/embed_discussion.html:1131
+msgid "That statement is already in this discussion."
+msgstr "该陈述已在此讨论中。"
+
+#: app/templates/discussions/embed_discussion.html:1132
+msgid "You're posting too quickly. Please wait a bit."
+msgstr "您发布得太快了。请稍等片刻。"
+
+#: app/templates/discussions/embed_discussion.html:1133
+msgid "Could not submit statement right now."
+msgstr "当前无法提交陈述。"
+
+#: app/templates/discussions/embed_discussion.html:1134
+msgid "Statement submitted. It will appear in the discussion shortly."
+msgstr "陈述已提交，将很快出现在讨论中。"
+
+#: app/templates/discussions/embed_discussion.html:1135
+msgid "Network error while submitting statement."
+msgstr "提交陈述时网络错误。"
+
+#: app/templates/discussions/embed_discussion.html:1137
+#, python-format
+msgid "%(n)s total votes"
+msgstr "共 %(n)s 票"
+
+#: app/templates/discussions/view_discussion.html:12
+#: app/templates/discussions/view_discussion.html:31
+#: app/templates/discussions/view_discussion.html:41
+#: app/templates/discussions/view_discussion.html:43
+msgid "Join the discussion on SocietySpeaks."
+msgstr "在 SocietySpeaks 加入讨论。"
+
+#: app/templates/discussions/view_discussion.html:16
+msgid "discussion, society, topics"
+msgstr "讨论、社会、话题"
+
+#: app/templates/discussions/view_native.html:26
+msgid "See all ↓"
+msgstr "查看全部 ↓"
+
+#: app/templates/discussions/view_native.html:40
+msgid "Vote on the statement above: agree, disagree, or unsure"
+msgstr "对以上陈述投票：同意、不同意或不确定"
+
+#: app/templates/discussions/view_native.html:72
+msgid "Skip for now"
+msgstr "暂时跳过"
+
+#: app/templates/discussions/view_native.html:91
+msgid "Theme complete!"
+msgstr "主题完成！"
+
+#: app/templates/discussions/view_native.html:124
+msgid "Add Statement"
+msgstr "添加陈述"
+
+#: app/templates/discussions/view_native.html:169
+msgid "Analysis"
+msgstr "分析"
+
+#: app/templates/discussions/view_native.html:182
+#: app/templates/discussions/view_native.html:188
+msgid "Search statements..."
+msgstr "搜索陈述..."
+
+#: app/templates/discussions/view_native.html:192
+msgid "Search"
+msgstr "搜索"
+
+#: app/templates/discussions/view_native.html:199
+msgid "Sort by:"
+msgstr "排序方式："
+
+#: app/templates/discussions/view_native.html:215
+msgid "Recommended journey order"
+msgstr "推荐旅程顺序"
+
+#: app/templates/discussions/view_native.html:215
+msgid "Progressive (Pol.is style)"
+msgstr "渐进式（Pol.is 风格）"
+
+#: app/templates/discussions/view_native.html:218
+msgid "Most agreed first"
+msgstr "最多赞同"
+
+#: app/templates/discussions/view_native.html:218
+msgid "Best (most agreed)"
+msgstr "最佳（最多同意）"
+
+#: app/templates/discussions/view_native.html:221
+msgid "Most debated"
+msgstr "最多争议"
+
+#: app/templates/discussions/view_native.html:221
+msgid "Controversial"
+msgstr "争议性"
+
+#: app/templates/discussions/view_native.html:224
+msgid "Newest statements"
+msgstr "最新陈述"
+
+#: app/templates/discussions/view_native.html:227
+msgid "Most votes"
+msgstr "最多投票"
+
+#: app/templates/discussions/view_native.html:325
+msgid "statements to vote on"
+msgstr "条陈述待投票"
+
+#: app/templates/discussions/view_native.html:488
+msgid "No Statements Yet"
+msgstr "还没有陈述"
+
+#: app/templates/discussions/view_native.html:490
+msgid "Be the first to contribute to this discussion!"
+msgstr "成为第一个为此讨论做出贡献的人！"
+
+#: app/templates/discussions/view_native.html:496
+msgid "Post the First Statement"
+msgstr "发布第一条陈述"
+
+#: app/templates/programmes/list.html:2 app/templates/programmes/list.html:10
+msgid "Public Programmes"
+msgstr "公开项目"
+
+#: app/templates/programmes/list.html:11
+msgid "Live public programmes with open discussions you can participate in."
+msgstr "提供开放讨论的实时公共项目，欢迎参与。"
+
+#: app/templates/programmes/list.html:17
+msgid "My workspace"
+msgstr "我的工作区"
+
+#: app/templates/programmes/list.html:24
+msgid "New programme"
+msgstr "新建项目"
+
+#: app/templates/programmes/list.html:56
+msgid "Guided Civic Journeys"
+msgstr "引导式公民旅程"
+
+#: app/templates/programmes/list.html:78
+msgid "Global"
+msgstr "全球"
+
+#: app/templates/programmes/list.html:95
+msgid "Start →"
+msgstr "开始 →"
+
+#: app/templates/programmes/list.html:108
+msgid "Other Programmes"
+msgstr "其他项目"
+
+#: app/templates/programmes/view.html:11
+msgid "Dashboard"
+msgstr "仪表盘"
+
+#: app/templates/programmes/view.html:13
+msgid "Workspace"
+msgstr "工作区"
+
+#: app/templates/programmes/view.html:145
+msgid "Read more"
+msgstr "阅读更多"
+
+#: app/templates/programmes/view.html:237
+msgid "themes completed"
+msgstr "个主题已完成"
+
+#: app/templates/programmes/view.html:241
+msgid "votes cast"
+msgstr "票已投出"
+
+#: app/templates/programmes/view.html:273
+msgid "View progress recap"
+msgstr "查看进度回顾"
+
+#: app/templates/programmes/view.html:388
+msgid "Turn on reminders"
+msgstr "开启提醒"
+
+#: app/templates/programmes/view.html:421
+msgid "Stop reminders"
+msgstr "停止提醒"
+
+#: app/templates/programmes/view.html:490
+msgid "Add discussion"
+msgstr "添加讨论"
+
+#~ msgid "Claim"
+#~ msgstr "主张"
+
+#~ msgid "Question"
+#~ msgstr "问题"
+
+#~ msgid "Journey complete"
+#~ msgstr "旅程完成"
+
+#~ msgid "View your full recap"
+#~ msgstr "查看完整回顾"
+
+#~ msgid "Content Policy"
+#~ msgstr "内容政策"
+
+#~ msgid "Your Profile"
+#~ msgstr "我的资料"
+
+#~ msgid "Create Profile"
+#~ msgstr "创建资料"
+
+#~ msgid "Notifications"
+#~ msgstr "通知"
+
+#~ msgid "My Briefings"
+#~ msgstr "我的简报"
+
+#~ msgid "Settings"
+#~ msgstr "设置"
+
+#~ msgid "Partner Portal"
+#~ msgstr "合作伙伴门户"
+
+#~ msgid "Admin"
+#~ msgstr "管理"
+
+#~ msgid "Sign out"
+#~ msgstr "退出"
+
+#~ msgid "Sign in"
+#~ msgstr "登录"
+
+#~ msgid "Get Started"
+#~ msgstr "开始"
+
+#~ msgid "Skip to main content"
+#~ msgstr "跳至主要内容"
+
+#~ msgid "Open user menu"
+#~ msgstr "打开用户菜单"
+
+#~ msgid "Privacy Policy"
+#~ msgstr "隐私政策"
+
+#~ msgid "Terms of Service"
+#~ msgstr "服务条款"
+
+#~ msgid "Contact"
+#~ msgstr "联系"
+
+#~ msgid "Connect"
+#~ msgstr "连接"
+
+#~ msgid "Guided journey"
+#~ msgstr "引导旅程"
+
+#~ msgid "Start your civic journey"
+#~ msgstr "开始您的公民之旅"
+
+#~ msgid "Pick up where you left off"
+#~ msgstr "从上次停止的地方继续"
+
+#~ msgid "Themes"
+#~ msgstr "主题"
+
+#~ msgid "Completed"
+#~ msgstr "已完成"
+
+#~ msgid "Archived"
+#~ msgstr "已归档"
+
+#~ msgid "Edit"
+#~ msgstr "编辑"
+
+#~ msgid "Export CSV"
+#~ msgstr "导出 CSV"
+
+#~ msgid "%(num)d statement"
+#~ msgid_plural "%(num)d statements"
+#~ msgstr[0] "%(num)d 条陈述"
+
+#~ msgid "%(num)d participant"
+#~ msgid_plural "%(num)d participants"
+#~ msgstr[0] "%(num)d 位参与者"
+
+#~ msgid "View full analysis"
+#~ msgstr "查看完整分析"
+

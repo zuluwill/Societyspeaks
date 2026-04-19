@@ -7,6 +7,7 @@ try:
 except ImportError:  # Optional in dev/test environments
     Talisman = None
 from flask_wtf.csrf import CSRFProtect
+from flask_babel import Babel
 from config import Config, config_dict
 from datetime import timedelta
 from werkzeug.exceptions import HTTPException
@@ -61,6 +62,7 @@ csp = {
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+babel = Babel()
 sess = Session()
 cache = Cache()
 csrf = CSRFProtect()
@@ -405,6 +407,28 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'  # type: ignore[assignment]
     login_manager.login_message_category = "info"
+
+    # Flask-Babel: i18n for UI strings. Locale resolution priority is defined
+    # in locale_utils.resolve_locale (user DB pref → ?lang= → cookie → Accept-Language).
+    from app.lib.locale_utils import resolve_locale, SUPPORTED_LANGUAGES
+    babel.init_app(app, locale_selector=resolve_locale)
+    app.config.setdefault('BABEL_DEFAULT_LOCALE', 'en')
+    app.config.setdefault('BABEL_DEFAULT_TIMEZONE', 'UTC')
+    # Respect explicit translation directory from Config (absolute path)
+    if getattr(Config, 'BABEL_TRANSLATION_DIRECTORIES', None):
+        app.config['BABEL_TRANSLATION_DIRECTORIES'] = Config.BABEL_TRANSLATION_DIRECTORIES
+    # Expose supported languages and current locale to every Jinja2 template
+    app.jinja_env.globals['supported_languages'] = SUPPORTED_LANGUAGES
+
+    @app.context_processor
+    def inject_i18n():
+        from app.lib.locale_utils import resolve_locale
+        try:
+            lang = resolve_locale()
+        except Exception:
+            lang = 'en'
+        return dict(current_lang=lang)
+
     app.jinja_env.globals.update(current_user=current_user)
 
     from app.lib.bot_protection import generate_form_token

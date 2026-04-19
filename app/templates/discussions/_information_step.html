@@ -1,8 +1,14 @@
 <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
   <div class="max-w-3xl mx-auto">
     {% set guided_journey_context = guided_journey_context | default(None) %}
-    {% if discussion.information_title %}
-    <h2 class="text-xl font-semibold text-blue-900 mb-3">{{ discussion.information_title }}</h2>
+    {% if information_title_display %}
+    <h2 class="text-xl font-semibold text-blue-900 mb-3">{{ information_title_display }}</h2>
+    {% endif %}
+
+    {% if current_lang is defined and current_lang != 'en' and (safe_information_html or information_title_display) %}
+    <p class="text-xs text-blue-900/85 mb-3 rounded-md border border-blue-200/80 bg-white/70 px-3 py-2 leading-relaxed" role="status">
+      {{ _('This background may be machine-translated. Quality may vary.') }}
+    </p>
     {% endif %}
 
     {% if guided_journey_context %}

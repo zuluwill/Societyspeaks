@@ -1,39 +1,41 @@
 {% extends 'layout.html' %}
 
-{% block title %}Consensus Analysis - {{ discussion.title }}{% endblock %}
+{% set disc_title = discussion_translation.title if discussion_translation else discussion.title %}
 
-{% block head %}
-<!-- oEmbed discovery link for auto-embedding -->
+{% block title %}{{ _('Consensus Analysis') }} — {{ disc_title }}{% endblock %}
+
+{% block extra_head %}
+<link rel="canonical" href="{{ url_for('consensus.view_results', discussion_id=discussion.id, _external=True) }}" />
 <link
   rel="alternate"
   type="application/json+oembed"
-  href="{{ url_for('partner_api.oembed', url=url_for('consensus.consensus_results', discussion_id=discussion.id, slug=discussion.slug, _external=True), _external=True) }}"
-  title="{{ discussion.title }}"
+  href="{{ url_for('partner_api.oembed', url=url_for('consensus.view_results', discussion_id=discussion.id, _external=True), _external=True) }}"
+  title="{{ disc_title }}"
 />
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="mb-6">
-    <h1 class="text-3xl font-bold mb-2">Consensus Analysis</h1>
-    <p class="text-gray-600">{{ discussion.title }}</p>
+    <h1 class="text-3xl font-bold mb-2">{{ _('Consensus Analysis') }}</h1>
+    <p class="text-gray-600">{{ disc_title }}</p>
   </div>
 
   <!-- Analysis Metadata -->
   <div class="bg-white rounded-lg shadow p-6 mb-6">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div>
-        <div class="text-gray-600 text-sm">Opinion Groups</div>
+        <div class="text-gray-600 text-sm">{{ _('Opinion Groups') }}</div>
         <div class="text-3xl font-bold text-primary-600">
           {{ analysis.num_clusters }}
         </div>
       </div>
       <div>
-        <div class="text-gray-600 text-sm">Participants</div>
+        <div class="text-gray-600 text-sm">{{ _('Participants') }}</div>
         <div class="text-3xl font-bold">{{ analysis.participants_count }}</div>
       </div>
       <div>
-        <div class="text-gray-600 text-sm">Statements</div>
+        <div class="text-gray-600 text-sm">{{ _('Statements') }}</div>
         <div class="text-3xl font-bold">{{ analysis.statements_count }}</div>
       </div>
       <div>
@@ -162,9 +164,9 @@
   <!-- Opinion Groups - What Each Group Believes -->
   {% if opinion_groups %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">What Each Group Believes</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('What Each Group Believes') }}</h2>
     <p class="text-gray-600 mb-6">
-      These are the statements each opinion group agrees on most strongly. This helps understand the core beliefs that define each group.
+      {{ _('These are the statements each opinion group agrees on most strongly. This helps understand the core beliefs that define each group.') }}
     </p>
     <div class="grid grid-cols-1 {% if opinion_groups|length > 1 %}lg:grid-cols-2{% endif %} gap-6">
       {% for group in opinion_groups %}
@@ -178,14 +180,14 @@
           </div>
         </div>
         <div class="p-4 bg-gray-50">
-          <p class="text-sm text-gray-600 mb-3 font-medium">Top beliefs:</p>
+          <p class="text-sm text-gray-600 mb-3 font-medium">{{ _('Top beliefs:') }}</p>
           <ul class="space-y-3">
             {% for stmt in group.statements %}
             <li class="bg-white rounded-lg p-3 border border-gray-200">
-              <div class="text-gray-900 text-sm mb-2">{{ stmt.content | e }}</div>
+              <div class="text-gray-900 text-sm mb-2">{{ (translation_map.get(stmt.statement_id) or stmt.content) | e }}</div>
               <div class="flex items-center text-xs text-gray-500">
                 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded font-medium">
-                  {{ "%.0f"|format(stmt.agreement_rate * 100) }}% agree
+                  {{ "%.0f"|format(stmt.agreement_rate * 100) }}{{ _('% agree') }}
                 </span>
                 <span class="ml-2">{{ stmt.vote_count }} votes in group</span>
               </div>
@@ -199,7 +201,7 @@
   </div>
   {% elif analysis.cluster_data.get('representative_statements') %}
   <div class="bg-gray-50 rounded-lg shadow p-6 mb-6 border border-gray-200">
-    <h2 class="text-xl font-semibold mb-4 text-gray-600">What Each Group Believes</h2>
+    <h2 class="text-xl font-semibold mb-4 text-gray-600">{{ _('What Each Group Believes') }}</h2>
     <p class="text-gray-500">
       Representative statements data is available but some statements may have been removed. 
       Re-run the analysis to refresh this section.
@@ -211,20 +213,20 @@
   {% if consensus_statements %}
   <div class="bg-green-50 rounded-lg shadow p-6 mb-6 border border-green-200">
     <h2 class="text-xl font-semibold text-green-900 mb-4">
-      🟢 Areas of Consensus ({{ consensus_statements|length }})
+      🟢 {{ _('Areas of Consensus') }} ({{ consensus_statements|length }})
     </h2>
     <p class="text-green-800 mb-4">
-      These statements have broad agreement across all opinion groups.
+      {{ _('These statements have broad agreement across all opinion groups.') }}
     </p>
     {% for statement in consensus_statements %}
     <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-green-500">
-      <div class="text-gray-900 mb-2">{{ statement.content }}</div>
+      <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
       <div class="text-sm text-gray-600">
-        {{ statement.vote_count_agree }} agree · {{
-        statement.vote_count_disagree }} disagree · {{
-        statement.vote_count_unsure }} unsure
+        {{ statement.vote_count_agree }} {{ _('agree') }} · {{
+        statement.vote_count_disagree }} {{ _('disagree') }} · {{
+        statement.vote_count_unsure }} {{ _('unsure') }}
         <span class="ml-3 text-green-700 font-semibold"
-          >{{ "%.0f"|format(statement.agreement_rate * 100) }}% agreement</span
+          >{{ "%.0f"|format(statement.agreement_rate * 100) }}% {{ _('agreement') }}</span
         >
       </div>
     </div>
@@ -236,18 +238,18 @@
   {% if bridge_statements %}
   <div class="bg-yellow-50 rounded-lg shadow p-6 mb-6 border border-yellow-200">
     <h2 class="text-xl font-semibold text-yellow-900 mb-4">
-      🟡 Bridge Statements ({{ bridge_statements|length }})
+      🟡 {{ _('Bridge Statements') }} ({{ bridge_statements|length }})
     </h2>
     <p class="text-yellow-800 mb-4">
-      These statements unite different opinion groups and offer common ground.
+      {{ _('These statements unite different opinion groups and offer common ground.') }}
     </p>
     {% for statement in bridge_statements %}
     <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-yellow-500">
-      <div class="text-gray-900 mb-2">{{ statement.content }}</div>
+      <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
       <div class="text-sm text-gray-600">
-        {{ statement.vote_count_agree }} agree · {{
-        statement.vote_count_disagree }} disagree · {{
-        statement.vote_count_unsure }} unsure
+        {{ statement.vote_count_agree }} {{ _('agree') }} · {{
+        statement.vote_count_disagree }} {{ _('disagree') }} · {{
+        statement.vote_count_unsure }} {{ _('unsure') }}
       </div>
     </div>
     {% endfor %}
@@ -258,21 +260,21 @@
   {% if divisive_statements %}
   <div class="bg-red-50 rounded-lg shadow p-6 mb-6 border border-red-200">
     <h2 class="text-xl font-semibold text-red-900 mb-4">
-      🔴 Points of Division ({{ divisive_statements|length }})
+      🔴 {{ _('Points of Division') }} ({{ divisive_statements|length }})
     </h2>
     <p class="text-red-800 mb-4">
-      These statements show significant disagreement between opinion groups.
+      {{ _('These statements show significant disagreement between opinion groups.') }}
     </p>
     {% for statement in divisive_statements %}
     <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-red-500">
-      <div class="text-gray-900 mb-2">{{ statement.content }}</div>
+      <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
       <div class="text-sm text-gray-600">
-        {{ statement.vote_count_agree }} agree · {{
-        statement.vote_count_disagree }} disagree · {{
-        statement.vote_count_unsure }} unsure
+        {{ statement.vote_count_agree }} {{ _('agree') }} · {{
+        statement.vote_count_disagree }} {{ _('disagree') }} · {{
+        statement.vote_count_unsure }} {{ _('unsure') }}
         <span class="ml-3 text-red-700 font-semibold"
           >{{ "%.0f"|format(statement.controversy_score * 100) }}%
-          controversy</span
+          {{ _('controversy') }}</span
         >
       </div>
     </div>
@@ -282,19 +284,19 @@
 
   <!-- Actions -->
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Export & Share</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('Export & Share') }}</h2>
     <div class="flex space-x-4">
       <a
         href="{{ url_for('consensus.export_analysis', discussion_id=discussion.id, format='json') }}"
         class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
       >
-        Download JSON
+        {{ _('Download JSON') }}
       </a>
       <a
         href="{{ url_for('consensus.generate_report', discussion_id=discussion.id) }}"
         class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
       >
-        Generate Report
+        {{ _('Generate Report') }}
       </a>
       {% if current_user.is_authenticated and current_user.id ==
       discussion.creator_id %}
@@ -308,7 +310,7 @@
           type="submit"
           class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
         >
-          Re-run Analysis
+          {{ _('Re-run Analysis') }}
         </button>
       </form>
       {% endif %}
@@ -317,7 +319,7 @@
 
   <!-- Methodology -->
   <div class="bg-gray-50 rounded-lg p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-3">📊 Methodology</h2>
+    <h2 class="text-xl font-semibold mb-3">📊 {{ _('Methodology') }}</h2>
     <div class="text-gray-700 space-y-2 text-sm">
       <p>
         <strong>Clustering Method:</strong> {{ analysis.method.title() }}
@@ -348,7 +350,7 @@
       href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
       class="text-primary-600 hover:underline"
     >
-      ← Back to Discussion
+      ← {{ _('Back to Discussion') }}
     </a>
   </div>
 </div>

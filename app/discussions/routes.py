@@ -1,4 +1,4 @@
-from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
+from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session, make_response
 from flask_login import login_required, current_user
 from app import db, limiter, talisman
 from app.discussions.forms import CreateDiscussionForm, EditDiscussionForm, DiscussionUpdateForm
@@ -27,6 +27,7 @@ from app.discussions.follower_notifications import notify_discussion_followers
 from app.discussions.thresholds import consensus_thresholds_dict
 from app.lib.db_utils import retry_on_db_disconnect
 from app.lib.url_utils import safe_next_url as _validate_next_url
+from app.lib.locale_utils import language_preference_cookie_params
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import and_, func, or_
 import json
@@ -706,6 +707,19 @@ def embed_discussion(discussion_id):
     except Exception as e:
         current_app.logger.debug(f"Embed tracking error: {e}")
 
+    # Resolve language and fetch translations (single batched API call if cache misses)
+    from app.lib.translation import (
+        resolve_language,
+        get_or_create_statement_translations,
+        get_or_create_discussion_translation,
+        SUPPORTED_LANGUAGES,
+    )
+    current_lang = resolve_language(request)
+    translation_map = get_or_create_statement_translations(
+        statements, current_lang, discussion_title=discussion.title
+    )
+    discussion_translation = get_or_create_discussion_translation(discussion, current_lang)
+
     # Render template (pass base_url for "Powered by" and content policy link)
     response = make_response(render_template(
         'discussions/embed_discussion.html',
@@ -720,8 +734,16 @@ def embed_discussion(discussion_id):
         font=font,
         is_closed=discussion.is_closed,
         statement_page=statement_page,
-        total_statement_count=total_statement_count
+        total_statement_count=total_statement_count,
+        current_lang=current_lang,
+        translation_map=translation_map,
+        discussion_translation=discussion_translation,
+        supported_languages=SUPPORTED_LANGUAGES,
     ))
+
+    # Persist language preference in a long-lived cookie (1 year)
+    if current_lang != 'en':
+        response.set_cookie('ss_lang', current_lang, **language_preference_cookie_params())
 
     # Set CSP frame-ancestors header for partner allowlist
     partner_origins = get_partner_allowed_origins(env=discussion.partner_env)
@@ -859,12 +881,6 @@ def view_discussion(discussion_id, slug):
     if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):
         cohort_slug = None
 
-    safe_information_html = None
-    safe_info_links = []
-    if discussion.information_title or discussion.information_body or discussion.information_links:
-        safe_information_html = render_safe_markdown(discussion.information_body)
-        safe_info_links = safe_information_links(discussion.information_links)
-
     discussion_updates = DiscussionUpdate.query.options(
         joinedload(DiscussionUpdate.author)
     ).filter_by(
@@ -891,8 +907,37 @@ def view_discussion(discussion_id, slug):
             discussion, journey_uid
         )
 
-    # Render the page
-    return render_template('discussions/view_discussion.html',
+    # Resolve language and fetch translations (discussion title/statement text + journey info panel)
+    from app.lib.translation import (
+        resolve_language,
+        get_or_create_statement_translations,
+        get_or_create_discussion_translation,
+        get_or_create_discussion_info_translation,
+    )
+    view_lang = resolve_language(request)
+    view_translation_map = get_or_create_statement_translations(
+        statements, view_lang, discussion_title=discussion.title
+    ) if statements and view_lang != 'en' else {}
+    view_discussion_translation = (
+        get_or_create_discussion_translation(discussion, view_lang)
+        if view_lang != 'en'
+        else None
+    )
+
+    safe_information_html = None
+    safe_info_links = []
+    information_title_display = discussion.information_title
+    if discussion.information_title or discussion.information_body or discussion.information_links:
+        body_for_render = discussion.information_body or ''
+        if view_lang != 'en' and (discussion.information_title or body_for_render):
+            tr_info = get_or_create_discussion_info_translation(discussion, view_lang)
+            information_title_display = tr_info['information_title'] or discussion.information_title
+            body_for_render = tr_info['information_body'] or body_for_render
+        if body_for_render:
+            safe_information_html = render_safe_markdown(body_for_render)
+        safe_info_links = safe_information_links(discussion.information_links)
+
+    view_response = make_response(render_template('discussions/view_discussion.html',
                          discussion=discussion,
                          statements=statements,
                          statements_pagination=statements_pagination,
@@ -906,12 +951,19 @@ def view_discussion(discussion_id, slug):
                          consensus_thresholds=consensus_thresholds_dict(),
                          safe_information_html=safe_information_html,
                          safe_information_links=safe_info_links,
+                         information_title_display=information_title_display,
                          cohort_slug=cohort_slug,
                          can_manage_updates=can_manage_updates,
                          discussion_updates=discussion_updates_rendered,
                          is_following=is_following,
                          statement_search_term=statement_search_term,
-                         guided_journey_context=guided_journey_context)
+                         guided_journey_context=guided_journey_context,
+                         current_lang=view_lang,
+                         translation_map=view_translation_map,
+                         discussion_translation=view_discussion_translation))
+    if view_lang != 'en':
+        view_response.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
+    return view_response
 
 
 @discussions_bp.route('/<int:discussion_id>/follow', methods=['POST'])

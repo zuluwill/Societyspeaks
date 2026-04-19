@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_lang|default('en') }}" dir="{{ supported_languages[current_lang|default('en')].dir|default('ltr') }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ discussion.title }} - Society Speaks</title>
+  <title>{{ discussion_translation.title if discussion_translation else discussion.title }} — {{ _('Society Speaks') }}</title>
   <meta name="robots" content="noindex">
 
   <!-- Performance hints -->
@@ -714,6 +714,66 @@
       background: var(--embed-disagree-hover);
     }
 
+    /* Language selector */
+    .embed-lang-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      color: var(--embed-text-light);
+    }
+
+    .embed-lang-select {
+      font-size: 0.8rem;
+      font-family: inherit;
+      color: var(--embed-text);
+      background: var(--embed-surface);
+      border: 1px solid var(--embed-border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+    }
+
+    .embed-lang-select:focus {
+      outline: 2px solid var(--embed-primary);
+      outline-offset: 1px;
+    }
+
+    /* Translation note on statements */
+    .translation-note {
+      font-size: 0.72rem;
+      color: var(--embed-text-light);
+      margin-top: -8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .translation-note__toggle {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 0.72rem;
+      color: var(--embed-primary);
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+
+    .translation-note__original {
+      display: none;
+      font-size: 0.875rem;
+      color: var(--embed-text-light);
+      font-style: italic;
+      border-left: 2px solid var(--embed-border);
+      padding-left: 8px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
     .flag-modal__btn--submit:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -723,24 +783,37 @@
 <body>
   <div class="embed-container" role="main">
     <!-- Skip link for accessibility -->
-    <a href="#statements-list" class="sr-only">Skip to statements</a>
+    <a href="#statements-list" class="sr-only">{{ _('Skip to statements') }}</a>
 
     <!-- Offline banner -->
     <div id="offlineBanner" class="offline-banner" role="alert">
-      You're offline. Votes will be saved when you reconnect.
+      {{ _("You're offline. Votes will be saved when you reconnect.") }}
     </div>
 
     {% if is_closed %}
     <div class="closed-banner" role="status">
-      This discussion is closed. You can still view the full record.
+      {{ _('This discussion is closed. You can still view the full record.') }}
+    </div>
+    {% endif %}
+
+    <!-- Language selector -->
+    {% if supported_languages %}
+    <div class="embed-lang-bar">
+      <label for="langSelect">🌐</label>
+      <select id="langSelect" class="embed-lang-select" aria-label="{{ _('Select language') }}">
+        {% for code, info in supported_languages.items() %}
+        <option value="{{ code }}" {% if code == current_lang %}selected{% endif %}>{{ info.native }}</option>
+        {% endfor %}
+      </select>
     </div>
     {% endif %}
 
     <!-- Header -->
     <header class="embed-header">
-      <h1 class="embed-title">{{ discussion.title }}</h1>
+      <h1 class="embed-title">{{ discussion_translation.title if discussion_translation else discussion.title }}</h1>
       <p class="embed-meta">
-        {{ total_statement_count|default(statements|length) }} statement{% if (total_statement_count|default(statements|length)) != 1 %}s{% endif %} to vote on
+        {% set _stmt_total = total_statement_count|default(statements|length) %}
+        {{ ngettext('%(num)d statement to vote on', '%(num)d statements to vote on', _stmt_total) % {'num': _stmt_total} }}
       </p>
     </header>
 
@@ -748,30 +821,38 @@
     {% if statements %}
     <div id="voteProgress" class="vote-progress" role="status" aria-live="polite">
       <div class="vote-progress__label">
-        <span>Your progress</span>
-        <span id="voteCount">0 / 5 votes</span>
+        <span>{{ _('Your progress') }}</span>
+        <span id="voteCount">{{ _('%(current)d / %(threshold)d votes') % {'current': 0, 'threshold': 5} }}</span>
       </div>
       <div class="vote-progress__bar">
         <div id="voteProgressFill" class="vote-progress__fill" style="width: 0%"></div>
       </div>
-      <p class="vote-progress__hint" id="voteHint">Vote on statements to help build consensus</p>
+      <p class="vote-progress__hint" id="voteHint">{{ _('Vote on statements to help build consensus') }}</p>
     </div>
     {% endif %}
 
     <!-- Statements -->
     {% if statements %}
-    <div id="statements-list" class="statements-list" role="list" aria-label="Statements to vote on">
+    <div id="statements-list" class="statements-list" role="list" aria-label="{{ _('Statements to vote on') }}">
       {% for statement in statements %}
       <article class="statement-card" role="listitem" data-statement-id="{{ statement.id }}">
         <span class="statement-type">{{ statement.statement_type }}</span>
-        <p class="statement-content">{{ statement.content }}</p>
+        {% set display_content = translation_map.get(statement.id) if translation_map is defined and translation_map else none %}
+        <p class="statement-content">{{ display_content if display_content else statement.content }}</p>
+        {% if display_content %}
+        <div class="translation-note">
+          <span>{{ _('AI translated') }}</span>
+          <button class="translation-note__toggle" type="button" aria-expanded="false" data-original="{{ statement.content|e }}" data-label-show="{{ _('Show original') }}" data-label-hide="{{ _('Hide original') }}">{{ _('Show original') }}</button>
+        </div>
+        <p class="translation-note__original" aria-hidden="true"></p>
+        {% endif %}
 
-        <div class="vote-grid" role="group" aria-label="Vote options for this statement">
+        <div class="vote-grid" role="group" aria-label="{{ _('Vote options for this statement') }}">
           <button
             type="button"
             class="vote-btn"
             data-vote="1"
-            aria-label="Agree with this statement"
+            aria-label="{{ _('Agree with this statement') }}"
             aria-pressed="false"
             {% if is_closed %}disabled{% endif %}
           >
@@ -782,7 +863,7 @@
               </svg>
             </span>
             <span class="vote-btn__content">
-              <span class="vote-btn__label">Agree</span>
+              <span class="vote-btn__label">{{ _('Agree') }}</span>
             </span>
           </button>
 
@@ -790,7 +871,7 @@
             type="button"
             class="vote-btn"
             data-vote="-1"
-            aria-label="Disagree with this statement"
+            aria-label="{{ _('Disagree with this statement') }}"
             aria-pressed="false"
             {% if is_closed %}disabled{% endif %}
           >
@@ -801,7 +882,7 @@
               </svg>
             </span>
             <span class="vote-btn__content">
-              <span class="vote-btn__label">Disagree</span>
+              <span class="vote-btn__label">{{ _('Disagree') }}</span>
             </span>
           </button>
 
@@ -809,7 +890,7 @@
             type="button"
             class="vote-btn"
             data-vote="0"
-            aria-label="Unsure about this statement"
+            aria-label="{{ _('Unsure about this statement') }}"
             aria-pressed="false"
             {% if is_closed %}disabled{% endif %}
           >
@@ -820,24 +901,24 @@
               </svg>
             </span>
             <span class="vote-btn__content">
-              <span class="vote-btn__label">Unsure</span>
+              <span class="vote-btn__label">{{ _('Unsure') }}</span>
             </span>
           </button>
         </div>
 
         <div class="vote-breakdown" aria-live="polite">
-          <p class="vote-breakdown__hint">Vote to see how others split on this claim.</p>
+          <p class="vote-breakdown__hint">{{ _('Vote to see how others split on this claim.') }}</p>
           <p class="vote-breakdown__counts">
-            <span data-count="agree">{{ statement.vote_count_agree }}</span> agree ·
-            <span data-count="disagree">{{ statement.vote_count_disagree }}</span> disagree ·
-            <span data-count="unsure">{{ statement.vote_count_unsure }}</span> unsure
+            <span data-count="agree">{{ statement.vote_count_agree }}</span> {{ _('agree') }} ·
+            <span data-count="disagree">{{ statement.vote_count_disagree }}</span> {{ _('disagree') }} ·
+            <span data-count="unsure">{{ statement.vote_count_unsure }}</span> {{ _('unsure') }}
           </p>
         </div>
 
         <div class="vote-stats" aria-live="polite">
-          <span class="total-votes">{{ statement.total_votes }}</span> total votes
+          <span class="total-votes">{{ statement.total_votes }}</span> {{ _('total votes') }}
           {% if statement.total_votes > 0 %}
-          &middot; <span class="agreement-rate">{{ "%.0f"|format(statement.agreement_rate * 100) }}%</span> agreement
+          &middot; <span class="agreement-rate">{{ "%.0f"|format(statement.agreement_rate * 100) }}%</span> {{ _('agreement') }}
           {% endif %}
         </div>
 
@@ -846,12 +927,12 @@
             type="button"
             class="flag-btn"
             data-statement-id="{{ statement.id }}"
-            aria-label="Report this statement"
+            aria-label="{{ _('Report this statement') }}"
           >
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
             </svg>
-            <span class="flag-btn__text">Report</span>
+            <span class="flag-btn__text">{{ _('Report') }}</span>
           </button>
         </div>
       </article>
@@ -863,17 +944,17 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
       </svg>
       {% if discussion.has_native_statements %}
-      <p>No statements yet. Check back soon!</p>
+      <p>{{ _('No statements yet. Check back soon!') }}</p>
       {% else %}
-      <p>This discussion is not currently available for embed voting.</p>
-      <p><a href="{{ consensus_url }}" target="_blank" rel="noopener">View the full discussion on Society Speaks</a></p>
+      <p>{{ _('This discussion is not currently available for embed voting.') }}</p>
+      <p><a href="{{ consensus_url }}" target="_blank" rel="noopener">{{ _('View the full discussion on Society Speaks') }}</a></p>
       {% endif %}
     </div>
     {% endif %}
 
     {% if statement_page and statement_page.pages > 1 %}
-    <nav class="mb-4 flex items-center justify-between" aria-label="Statement pages">
-      <span class="embed-meta">Page {{ statement_page.page }} of {{ statement_page.pages }}</span>
+    <nav class="mb-4 flex items-center justify-between" aria-label="{{ _('Statement pages') }}">
+      <span class="embed-meta">{{ _('Page %(page)d of %(pages)d') % {'page': statement_page.page, 'pages': statement_page.pages} }}</span>
       <div style="display:flex; gap:8px;">
         {% if statement_page.has_prev %}
         <a
@@ -882,7 +963,7 @@
           target="_self"
           rel="nofollow"
         >
-          Previous
+          {{ _('Previous') }}
         </a>
         {% endif %}
         {% if statement_page.has_next %}
@@ -892,7 +973,7 @@
           target="_self"
           rel="nofollow"
         >
-          Next
+          {{ _('Next') }}
         </a>
         {% endif %}
       </div>
@@ -901,12 +982,12 @@
 
     {% if discussion.embed_statement_submissions_enabled %}
     <section class="embed-submit" aria-labelledby="embedSubmitTitle">
-      <h2 id="embedSubmitTitle" class="embed-submit__title">Suggest a statement</h2>
+      <h2 id="embedSubmitTitle" class="embed-submit__title">{{ _('Suggest a statement') }}</h2>
       <p class="embed-submit__hint">
-        Your statement should be concise and debatable (10-500 characters).
+        {{ _('Your statement should be concise and debatable (10-500 characters).') }}
       </p>
       <form id="embedStatementForm">
-        <label for="embedStatementInput" class="sr-only">Statement</label>
+        <label for="embedStatementInput" class="sr-only">{{ _('Statement') }}</label>
         <textarea
           id="embedStatementInput"
           name="content"
@@ -914,13 +995,13 @@
           minlength="10"
           required
           class="embed-submit__textarea"
-          placeholder="e.g. Expanding low-emission zones is worth short-term disruption for long-term health."
+          placeholder="{{ _('e.g. Expanding low-emission zones is worth short-term disruption for long-term health.') }}"
           {% if is_closed %}disabled{% endif %}
         ></textarea>
         <div class="embed-submit__controls">
-          <span id="embedStatementMeta" class="embed-submit__meta">0 / 500</span>
+          <span id="embedStatementMeta" class="embed-submit__meta">{{ _('%(cur)d / %(max)d') % {'cur': 0, 'max': 500} }}</span>
           <button id="embedStatementSubmitBtn" type="submit" class="embed-submit__btn" {% if is_closed %}disabled{% endif %}>
-            Submit statement
+            {{ _('Submit statement') }}
           </button>
         </div>
       </form>
@@ -930,11 +1011,11 @@
     <!-- Footer with CTA -->
     <footer class="embed-footer">
       <a href="{{ consensus_url }}" class="embed-cta" target="_blank" rel="noopener" id="consensusLink">
-        View Full Analysis
+        {{ _('View Full Analysis') }}
       </a>
       <p class="embed-attribution">
-        Powered by <a href="{{ base_url or 'https://societyspeaks.io' }}" target="_blank" rel="noopener">Society Speaks</a>
-        <span class="embed-attribution-sep">·</span> <a href="{{ (base_url or 'https://societyspeaks.io') }}/content-policy" target="_blank" rel="noopener">Content Policy</a>
+        {{ _('Powered by') }} <a href="{{ base_url or 'https://societyspeaks.io' }}" target="_blank" rel="noopener">{{ _('Society Speaks') }}</a>
+        <span class="embed-attribution-sep">·</span> <a href="{{ (base_url or 'https://societyspeaks.io') }}/content-policy" target="_blank" rel="noopener">{{ _('Content Policy') }}</a>
       </p>
     </footer>
   </div>
@@ -945,36 +1026,74 @@
   <!-- Flag modal -->
   <div id="flagModal" class="flag-modal" role="dialog" aria-modal="true" aria-labelledby="flagModalTitle">
     <div class="flag-modal__content">
-      <h2 id="flagModalTitle" class="flag-modal__title">Report this statement</h2>
+      <h2 id="flagModalTitle" class="flag-modal__title">{{ _('Report this statement') }}</h2>
       <form id="flagForm">
         <input type="hidden" id="flagStatementId" name="statement_id" value="">
-        <div class="flag-modal__options" role="radiogroup" aria-label="Reason for reporting">
+        <div class="flag-modal__options" role="radiogroup" aria-label="{{ _('Reason for reporting') }}">
           <label class="flag-modal__option">
             <input type="radio" name="flag_reason" value="spam" required>
-            <span>Spam or advertising</span>
+            <span>{{ _('Spam or advertising') }}</span>
           </label>
           <label class="flag-modal__option">
             <input type="radio" name="flag_reason" value="harassment">
-            <span>Harassment or abuse</span>
+            <span>{{ _('Harassment or abuse') }}</span>
           </label>
           <label class="flag-modal__option">
             <input type="radio" name="flag_reason" value="misinformation">
-            <span>Misinformation</span>
+            <span>{{ _('Misinformation') }}</span>
           </label>
           <label class="flag-modal__option">
             <input type="radio" name="flag_reason" value="off_topic">
-            <span>Off-topic or irrelevant</span>
+            <span>{{ _('Off-topic or irrelevant') }}</span>
           </label>
         </div>
         <div class="flag-modal__buttons">
-          <button type="button" class="flag-modal__btn flag-modal__btn--cancel" id="flagCancelBtn">Cancel</button>
-          <button type="submit" class="flag-modal__btn flag-modal__btn--submit" id="flagSubmitBtn" disabled>Submit Report</button>
+          <button type="button" class="flag-modal__btn flag-modal__btn--cancel" id="flagCancelBtn">{{ _('Cancel') }}</button>
+          <button type="submit" class="flag-modal__btn flag-modal__btn--submit" id="flagSubmitBtn" disabled>{{ _('Submit Report') }}</button>
         </div>
       </form>
     </div>
   </div>
 
   <script nonce="{{ csp_nonce() }}">
+    // Language selector — reload page with ?lang= param and persist cookie
+    (function () {
+      const sel = document.getElementById('langSelect');
+      if (!sel) return;
+      sel.addEventListener('change', function () {
+        const lang = this.value;
+        var secure = window.location.protocol === 'https:' ? ';Secure' : '';
+        document.cookie = 'ss_lang=' + encodeURIComponent(lang) + ';path=/;max-age=31536000;SameSite=Lax' + secure;
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', lang);
+        window.location.href = url.toString();
+      });
+    }());
+
+    // "Show original" toggle for translated statements
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.translation-note__toggle');
+      if (!btn) return;
+      const note = btn.closest('.translation-note');
+      const original = note ? note.nextElementSibling : null;
+      if (!original || !original.classList.contains('translation-note__original')) return;
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      const showLabel = btn.dataset.labelShow || 'Show original';
+      const hideLabel = btn.dataset.labelHide || 'Hide original';
+      if (expanded) {
+        original.style.display = 'none';
+        original.setAttribute('aria-hidden', 'true');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = showLabel;
+      } else {
+        original.textContent = btn.dataset.original || '';
+        original.style.display = 'block';
+        original.setAttribute('aria-hidden', 'false');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.textContent = hideLabel;
+      }
+    });
+
     // Configuration
     const config = {
       discussionId: {{ discussion.id }},
@@ -984,8 +1103,56 @@
       consensusUrl: '{{ consensus_url }}',
       voteGateThreshold: 5,
       isClosed: {{ 'true' if is_closed else 'false' }},
-      embedStatementSubmissionsEnabled: {{ 'true' if discussion.embed_statement_submissions_enabled else 'false' }}
+      embedStatementSubmissionsEnabled: {{ 'true' if discussion.embed_statement_submissions_enabled else 'false' }},
+      i18n: {
+        discussionClosed: {{ _('This discussion is closed.')|tojson }},
+        viewFullRecord: {{ _('View full record')|tojson }},
+        thanksForParticipating: {{ _('Thanks for participating!')|tojson }},
+        viewFullAnalysis: {{ _('View Full Analysis')|tojson }},
+        analysisNotReadyWithCount: {{ _('Analysis is not ready yet (%(count)d participants so far).')|tojson }},
+        viewTheRecord: {{ _('View the record')|tojson }},
+        discussionClosedToast: {{ _('This discussion is closed. You can still view the full record.')|tojson }},
+        votesProgressFmt: {{ _('%(current)d / %(threshold)d votes')|tojson }},
+        voteUnlockOne: {{ _('Vote on 1 more statement to unlock analysis')|tojson }},
+        voteUnlockMany: {{ _('Vote on %(num)d more statements to unlock analysis')|tojson }},
+        retry: {{ _('Retry')|tojson }},
+        voteSavedOffline: {{ _('Vote saved offline. Will sync when connected.')|tojson }},
+        voteRecorded: {{ _('Vote recorded!')|tojson }},
+        votingTooFast: {{ _("You're voting too fast. Please wait a moment.")|tojson }},
+        couldntSaveVote: {{ _("Couldn't save vote.")|tojson }},
+        alreadyReported: {{ _('You have already reported this statement.')|tojson }},
+        submitting: {{ _('Submitting...')|tojson }},
+        thankYouReport: {{ _('Thank you for your report. We will review it.')|tojson }},
+        couldNotSubmitReport: {{ _('Could not submit report. Please try again.')|tojson }},
+        submitReport: {{ _('Submit Report')|tojson }},
+        reported: {{ _('Reported')|tojson }},
+        statementTooShort: {{ _('Statement must be at least 10 characters.')|tojson }},
+        statementTooLong: {{ _('Statement must be 500 characters or fewer.')|tojson }},
+        duplicateStatement: {{ _('That statement is already in this discussion.')|tojson }},
+        postingTooFast: {{ _("You're posting too quickly. Please wait a bit.")|tojson }},
+        couldNotSubmitStatement: {{ _('Could not submit statement right now.')|tojson }},
+        statementSubmitted: {{ _('Statement submitted. It will appear in the discussion shortly.')|tojson }},
+        networkErrorStatement: {{ _('Network error while submitting statement.')|tojson }},
+        charCountFmt: {{ _('%(cur)d / %(max)d')|tojson }},
+        totalVotesFmt: {{ _('%(n)s total votes')|tojson }},
+        agreementNoun: {{ _('agreement')|tojson }}
+      }
     };
+
+    function fmtVotesProgress(c, t) {
+      return config.i18n.votesProgressFmt
+        .replace('%(current)d', String(c))
+        .replace('%(threshold)d', String(t));
+    }
+    function fmtCharCount(n) {
+      return config.i18n.charCountFmt
+        .replace('%(cur)d', String(n))
+        .replace('%(max)d', String(500));
+    }
+    function voteUnlockHint(remaining) {
+      if (remaining === 1) return config.i18n.voteUnlockOne;
+      return config.i18n.voteUnlockMany.replace('%(num)d', String(remaining));
+    }
 
     // Storage key for this discussion's votes
     const STORAGE_KEY = `ss_votes_${config.discussionId}`;
@@ -1075,13 +1242,13 @@
 
       if (config.isClosed) {
         progressEl.classList.add('vote-progress--complete');
-        countEl.textContent = `${count} / ${threshold} votes`;
+        countEl.textContent = fmtVotesProgress(count, threshold);
         fillEl.style.width = `${Math.min((count / threshold) * 100, 100)}%`;
-        setHintWithLink(hintEl, 'This discussion is closed.', 'View full record', config.consensusUrl);
+        setHintWithLink(hintEl, config.i18n.discussionClosed, config.i18n.viewFullRecord, config.consensusUrl);
         return;
       }
 
-      countEl.textContent = `${count} / ${threshold} votes`;
+      countEl.textContent = fmtVotesProgress(count, threshold);
       fillEl.style.width = `${Math.min((count / threshold) * 100, 100)}%`;
 
       if (count >= threshold) {
@@ -1091,22 +1258,21 @@
       } else {
         progressEl.classList.remove('vote-progress--complete');
         const remaining = threshold - count;
-        hintEl.textContent = remaining === 1
-          ? 'Vote on 1 more statement to unlock analysis'
-          : `Vote on ${remaining} more statements to unlock analysis`;
+        hintEl.textContent = voteUnlockHint(remaining);
       }
     }
 
     function applyAnalysisHint(hintEl) {
       if (!analysisSnapshot) {
-        setHintWithLink(hintEl, 'Thanks for participating!', 'View full analysis', config.consensusUrl);
+        setHintWithLink(hintEl, config.i18n.thanksForParticipating, config.i18n.viewFullAnalysis, config.consensusUrl);
         return;
       }
       if (analysisSnapshot.has_analysis) {
-        setHintWithLink(hintEl, 'Thanks for participating!', 'View full analysis', config.consensusUrl);
+        setHintWithLink(hintEl, config.i18n.thanksForParticipating, config.i18n.viewFullAnalysis, config.consensusUrl);
       } else {
         const count = analysisSnapshot.participant_count || 0;
-        setHintWithLink(hintEl, `Analysis is not ready yet (${count} participants so far).`, 'View the record', config.consensusUrl);
+        const msg = config.i18n.analysisNotReadyWithCount.replace('%(count)d', String(count));
+        setHintWithLink(hintEl, msg, config.i18n.viewTheRecord, config.consensusUrl);
       }
     }
 
@@ -1174,7 +1340,7 @@
       if (showRetry && retryFn) {
         const retryBtn = document.createElement('button');
         retryBtn.className = 'toast__retry';
-        retryBtn.textContent = 'Retry';
+        retryBtn.textContent = config.i18n.retry;
         retryBtn.onclick = () => {
           toast.classList.remove('toast--visible');
           retryFn();
@@ -1276,7 +1442,7 @@
 
     async function vote(statementId, voteValue, button) {
       if (config.isClosed) {
-        showToast('This discussion is closed. You can view the full record.', 'warning');
+        showToast(config.i18n.discussionClosedToast, 'warning');
         return;
       }
       const card = button.closest('.statement-card');
@@ -1295,7 +1461,7 @@
 
       // If offline, queue the vote
       if (!isOnline) {
-        showToast('Vote saved offline. Will sync when connected.', 'warning');
+        showToast(config.i18n.voteSavedOffline, 'warning');
         button.classList.remove('vote-btn--loading');
         buttons.forEach(btn => btn.disabled = false);
 
@@ -1331,28 +1497,28 @@
             totalSpan.className = 'total-votes';
             totalSpan.textContent = total;
             statsEl.appendChild(totalSpan);
-            statsEl.appendChild(document.createTextNode(' total votes'));
+            statsEl.appendChild(document.createTextNode(' ' + config.i18n.totalVotesFmt.replace('%(n)s', String(total))));
             if (total > 0) {
               statsEl.appendChild(document.createTextNode(' \u00B7 '));
               const pctSpan = document.createElement('span');
               pctSpan.className = 'agreement-rate';
               pctSpan.textContent = agreePct + '%';
               statsEl.appendChild(pctSpan);
-              statsEl.appendChild(document.createTextNode(' agreement'));
+              statsEl.appendChild(document.createTextNode(' ' + config.i18n.agreementNoun));
             }
 
-            showToast('Vote recorded!', 'success');
+            showToast(config.i18n.voteRecorded, 'success');
           } else {
             throw new Error(data.error || 'Failed to record vote');
           }
         } catch (error) {
           // Handle specific error codes
           if (error.status === 429) {
-            showToast("You're voting too fast. Please wait a moment.", 'warning');
+            showToast(config.i18n.votingTooFast, 'warning');
             return;
           }
           if (error.data && error.data.error === 'discussion_closed') {
-            showToast('This discussion is closed. You can view the full record.', 'warning');
+            showToast(config.i18n.discussionClosedToast, 'warning');
             return;
           }
 
@@ -1363,7 +1529,7 @@
           }
 
           // Max retries reached
-          showToast("Couldn't save vote.", 'error', true, () => {
+          showToast(config.i18n.couldntSaveVote, 'error', true, () => {
             retries = 0;
             attemptVote();
           });
@@ -1439,7 +1605,7 @@
       // Check if already flagged
       const flags = getStoredFlags();
       if (flags[statementId]) {
-        showToast('You have already reported this statement.', 'info');
+        showToast(config.i18n.alreadyReported, 'info');
         return;
       }
 
@@ -1471,7 +1637,7 @@
       if (!reason) return;
 
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
+      submitBtn.textContent = config.i18n.submitting;
 
       try {
         const response = await fetch(`/api/embed/flag`, {
@@ -1495,15 +1661,15 @@
           storeFlag(statementId);
           markStatementAsFlagged(statementId);
           closeFlagModal();
-          showToast('Thank you for your report. We will review it.', 'success');
+          showToast(config.i18n.thankYouReport, 'success');
         } else {
           throw new Error('Failed to submit report');
         }
       } catch (error) {
-        showToast('Could not submit report. Please try again.', 'error');
+        showToast(config.i18n.couldNotSubmitReport, 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit Report';
+        submitBtn.textContent = config.i18n.submitReport;
       }
     }
 
@@ -1511,7 +1677,7 @@
       const flagBtn = document.querySelector(`.flag-btn[data-statement-id="${statementId}"]`);
       if (flagBtn) {
         flagBtn.classList.add('flag-btn--flagged');
-        flagBtn.querySelector('.flag-btn__text').textContent = 'Reported';
+        flagBtn.querySelector('.flag-btn__text').textContent = config.i18n.reported;
         flagBtn.disabled = true;
       }
     }
@@ -1533,17 +1699,17 @@
 
       const content = textarea.value.trim();
       if (content.length < 10) {
-        showToast('Statement must be at least 10 characters.', 'warning');
+        showToast(config.i18n.statementTooShort, 'warning');
         return;
       }
       if (content.length > 500) {
-        showToast('Statement must be 500 characters or fewer.', 'warning');
+        showToast(config.i18n.statementTooLong, 'warning');
         return;
       }
 
       submitBtn.disabled = true;
       const originalLabel = submitBtn.textContent;
-      submitBtn.textContent = 'Submitting...';
+      submitBtn.textContent = config.i18n.submitting;
 
       try {
         const response = await fetch(`/api/embed/discussions/${config.discussionId}/statements`, {
@@ -1565,23 +1731,23 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           if (response.status === 429) {
-            showToast(data.message || "You're posting too quickly. Please wait a bit.", 'warning');
+            showToast(data.message || config.i18n.postingTooFast, 'warning');
             return;
           }
           if (data.error === 'duplicate_statement') {
-            showToast('That statement is already in this discussion.', 'info');
+            showToast(config.i18n.duplicateStatement, 'info');
             return;
           }
-          showToast(data.message || 'Could not submit statement right now.', 'error');
+          showToast(data.message || config.i18n.couldNotSubmitStatement, 'error');
           return;
         }
 
         textarea.value = '';
         const meta = document.getElementById('embedStatementMeta');
-        if (meta) meta.textContent = '0 / 500';
-        showToast('Statement submitted. It will appear in the discussion shortly.', 'success');
+        if (meta) meta.textContent = fmtCharCount(0);
+        showToast(config.i18n.statementSubmitted, 'success');
       } catch (error) {
-        showToast('Network error while submitting statement.', 'error');
+        showToast(config.i18n.networkErrorStatement, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalLabel;
@@ -1624,7 +1790,7 @@
       }
       if (embedStatementInput && embedStatementMeta) {
         embedStatementInput.addEventListener('input', () => {
-          embedStatementMeta.textContent = `${embedStatementInput.value.length} / 500`;
+          embedStatementMeta.textContent = fmtCharCount(embedStatementInput.value.length);
         });
       }
 

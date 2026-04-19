@@ -23,7 +23,7 @@
       </div>
       <button type="button" id="journey-see-all-btn"
               class="text-xs text-primary-200 hover:text-white underline whitespace-nowrap flex-shrink-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">
-        See all ↓
+        {{ _('See all ↓') }}
       </button>
     </div>
 
@@ -37,30 +37,30 @@
     <!-- Vote buttons (same .vote-btn design system as discussion list / daily question) -->
     <div class="px-4 sm:px-8 pb-5 sm:pb-6">
       <fieldset class="border-0 p-0 m-0 min-w-0">
-        <legend class="sr-only">Vote on the statement above: agree, disagree, or unsure</legend>
+        <legend class="sr-only">{{ _('Vote on the statement above: agree, disagree, or unsure') }}</legend>
         <div class="vote-buttons-grid mb-3">
         <button type="button" id="journey-btn-agree" data-journey-vote="1" data-vote="1"
                 class="vote-btn vote-btn-agree journey-vote-btn"
-                aria-label="Agree with this statement" aria-pressed="false">
+                aria-label="{{ _('Agree with this statement') }}" aria-pressed="false">
           <span class="vote-content">
             <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span class="vote-label">Agree</span>
+            <span class="vote-label">{{ _('Agree') }}</span>
           </span>
         </button>
         <button type="button" id="journey-btn-disagree" data-journey-vote="-1" data-vote="-1"
                 class="vote-btn vote-btn-disagree journey-vote-btn"
-                aria-label="Disagree with this statement" aria-pressed="false">
+                aria-label="{{ _('Disagree with this statement') }}" aria-pressed="false">
           <span class="vote-content">
             <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-            <span class="vote-label">Disagree</span>
+            <span class="vote-label">{{ _('Disagree') }}</span>
           </span>
         </button>
         <button type="button" id="journey-btn-unsure" data-journey-vote="0" data-vote="0"
                 class="vote-btn vote-btn-unsure journey-vote-btn"
-                aria-label="Unsure about this statement" aria-pressed="false">
+                aria-label="{{ _('Unsure about this statement') }}" aria-pressed="false">
           <span class="vote-content">
             <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span class="vote-label">Unsure</span>
+            <span class="vote-label">{{ _('Unsure') }}</span>
           </span>
         </button>
         </div>
@@ -69,7 +69,7 @@
       <div class="flex items-center justify-between">
         <button type="button" id="journey-skip-btn"
                 class="text-xs text-gray-400 hover:text-gray-600 underline focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 rounded">
-          Skip for now
+          {{ _('Skip for now') }}
         </button>
         <span class="hidden sm:flex items-center gap-1.5 text-xs text-gray-300" aria-hidden="true">
           <kbd class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 font-mono text-[11px]">A</kbd>
@@ -88,7 +88,7 @@
         <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
       </svg>
     </div>
-    <h2 class="text-2xl font-bold mb-2">Theme complete!</h2>
+    <h2 class="text-2xl font-bold mb-2">{{ _('Theme complete!') }}</h2>
     <p class="text-emerald-100 text-sm mb-6 max-w-sm mx-auto" id="journey-complete-msg">
       You've voted on all {{ _gjc_ti.statement_total }} statements in this theme.
     </p>
@@ -121,7 +121,7 @@
             d="M12 4v16m8-8H4"
           ></path>
         </svg>
-        Add Statement
+        {{ _('Add Statement') }}
       </a>
 
       <!-- Consensus Analysis Link - with participation progress -->
@@ -150,7 +150,7 @@
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             ></path>
           </svg>
-          Consensus Analysis
+          {{ _('Consensus Analysis') }}
         </span>
         <span id="consensus-analysis-locked" class="flex items-center {% if is_unlocked %}hidden{% endif %}">
           <svg
@@ -166,7 +166,7 @@
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
             ></path>
           </svg>
-          Analysis
+          {{ _('Analysis') }}
           <span
             id="analysis-vote-progress"
             class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -179,24 +179,24 @@
       <form method="GET" action="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="flex items-center gap-2 w-full sm:w-auto">
         <input type="hidden" name="sort" value="{{ sort }}">
         {% if cohort_slug %}<input type="hidden" name="cohort" value="{{ cohort_slug }}">{% endif %}
-        <label for="statementSearch" class="sr-only">Search statements</label>
+        <label for="statementSearch" class="sr-only">{{ _('Search statements...') }}</label>
         <input
           id="statementSearch"
           type="search"
           name="q"
           value="{{ statement_search_term }}"
-          placeholder="Search statements..."
+          placeholder="{{ _('Search statements...') }}"
           class="w-full sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
         <button type="submit" class="px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50">
-          Search
+          {{ _('Search') }}
         </button>
       </form>
 
       <!-- Sorting Options -->
       <div class="flex items-center space-x-2 w-full sm:w-auto">
         <label class="text-sm text-gray-600 font-medium whitespace-nowrap"
-          >Sort by:</label
+          >{{ _('Sort by:') }}</label
         >
         <select
           id="sortSelect"
@@ -212,19 +212,19 @@
           data-search-term="{{ statement_search_term or '' }}"
         >
           <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>
-            {% if guided_journey_context %}Recommended journey order{% else %}Progressive (Pol.is style){% endif %}
+            {% if guided_journey_context %}{{ _('Recommended journey order') }}{% else %}{{ _('Progressive (Pol.is style)') }}{% endif %}
           </option>
           <option value="best" {% if sort == 'best' %}selected{% endif %}>
-            {% if guided_journey_context %}Most agreed first{% else %}Best (most agreed){% endif %}
+            {% if guided_journey_context %}{{ _('Most agreed first') }}{% else %}{{ _('Best (most agreed)') }}{% endif %}
           </option>
           <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>
-            {% if guided_journey_context %}Most debated{% else %}Controversial{% endif %}
+            {% if guided_journey_context %}{{ _('Most debated') }}{% else %}{{ _('Controversial') }}{% endif %}
           </option>
           <option value="recent" {% if sort == 'recent' %}selected{% endif %}>
-            Newest statements
+            {{ _('Newest statements') }}
           </option>
           <option value="most_voted" {% if sort == 'most_voted' %}selected{% endif %}>
-            Most votes
+            {{ _('Most votes') }}
           </option>
         </select>
       </div>
@@ -322,7 +322,7 @@
           🗳️ Join the conversation
         </div>
         <div class="text-sm text-primary-600">
-          {{ statement_metrics.statement_count|default(statements|length) }} statements to vote on •
+          {{ statement_metrics.statement_count|default(statements|length) }} {{ _('statements to vote on') }} •
           <span
             class="cursor-help"
             title="Your votes help identify where people agree, disagree, and find common ground. The more diverse perspectives we gather, the richer the consensus analysis becomes."
@@ -485,15 +485,15 @@
         d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
       ></path>
     </svg>
-    <h3 class="text-xl font-semibold text-gray-700 mb-2">No Statements Yet</h3>
+    <h3 class="text-xl font-semibold text-gray-700 mb-2">{{ _('No Statements Yet') }}</h3>
     <p class="text-gray-600 mb-4">
-      Be the first to contribute to this discussion!
+      {{ _('Be the first to contribute to this discussion!') }}
     </p>
     <a
       href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}"
       class="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 font-semibold"
     >
-      Post the First Statement
+      {{ _('Post the First Statement') }}
     </a>
     {% if not current_user.is_authenticated %}
     <p class="text-sm text-gray-500 mt-3">

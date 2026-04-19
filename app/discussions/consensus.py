@@ -4,7 +4,7 @@ Consensus & Clustering API Routes (Phase 3)
 
 Provides endpoints for running consensus analysis and viewing results
 """
-from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
+from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, make_response
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import Discussion, ConsensusAnalysis, ConsensusJob, Statement, StatementVote
@@ -379,6 +379,7 @@ def view_results(discussion_id):
                 stmt = rep_statements_map.get(stmt_data['statement_id'])
                 if stmt:
                     group_stmts.append({
+                        'statement_id': stmt.id,
                         'content': stmt.content,
                         'agreement_rate': stmt_data.get('agreement_rate', 0),
                         'vote_count': stmt_data.get('vote_count', 0),
@@ -430,13 +431,53 @@ def view_results(discussion_id):
         except Exception as e:
             current_app.logger.debug(f"Consensus tracking error: {e}")
 
-    return render_template('discussions/consensus_results.html',
-                         discussion=discussion,
-                         analysis=analysis,
-                         consensus_statements=consensus_statements,
-                         bridge_statements=bridge_statements,
-                         divisive_statements=divisive_statements,
-                         opinion_groups=opinion_groups)
+    from app.lib.locale_utils import language_preference_cookie_params
+    from app.lib.translation import (
+        get_or_create_discussion_translation,
+        get_or_create_statement_translations,
+        resolve_language,
+    )
+
+    view_lang = resolve_language(request)
+    _stmt_ids = {s.id for s in consensus_statements + bridge_statements + divisive_statements}
+    for _og in opinion_groups:
+        for _st in _og.get('statements') or []:
+            _sid = _st.get('statement_id')
+            if _sid is not None:
+                _stmt_ids.add(_sid)
+    _all_for_i18n = (
+        Statement.query.filter(Statement.id.in_(_stmt_ids)).all()
+        if _stmt_ids
+        else []
+    )
+    translation_map = (
+        get_or_create_statement_translations(
+            _all_for_i18n, view_lang, discussion_title=discussion.title
+        )
+        if view_lang != 'en' and _all_for_i18n
+        else {}
+    )
+    discussion_translation = (
+        get_or_create_discussion_translation(discussion, view_lang)
+        if view_lang != 'en'
+        else None
+    )
+
+    resp = make_response(render_template(
+        'discussions/consensus_results.html',
+        discussion=discussion,
+        analysis=analysis,
+        consensus_statements=consensus_statements,
+        bridge_statements=bridge_statements,
+        divisive_statements=divisive_statements,
+        opinion_groups=opinion_groups,
+        translation_map=translation_map,
+        discussion_translation=discussion_translation,
+        current_lang=view_lang,
+    ))
+    if view_lang != 'en':
+        resp.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
+    return resp
 
 
 @consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/data')

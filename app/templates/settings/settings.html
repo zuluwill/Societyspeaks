@@ -31,6 +31,25 @@
         {% endif %}
         {% endwith %}
 
+        {# Language Preference Section #}
+        <div class="mb-8 pb-8 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 mb-1">Language Preference</h3>
+            <p class="text-gray-600 text-sm mb-4">Choose your preferred language for the site. Your votes are always counted on the same canonical statements regardless of language.</p>
+            <form action="{{ url_for('settings.update_language') }}" method="POST" class="flex items-center gap-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="language" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    {% for code, info in supported_languages.items() %}
+                    <option value="{{ code }}" {% if current_user.language == code or (not current_user.language and code == 'en') %}selected{% endif %}>
+                        {{ info.native }} — {{ info.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700">
+                    Save Language
+                </button>
+            </form>
+        </div>
+
         {# Password Change Section #}
         <div class="mb-8">
             <h3 class="text-xl font-semibold text-gray-900 mb-4">Change Password</h3>

@@ -21,9 +21,9 @@
        data-user-vote="{{ seeded_vote if seeded_vote is not none else '' }}">
 
   {% for opt in [
-    {'value': '1',  'cls': 'vote-btn-agree',    'label': 'Agree',    'aria': 'Agree with this statement'},
-    {'value': '-1', 'cls': 'vote-btn-disagree', 'label': 'Disagree', 'aria': 'Disagree with this statement'},
-    {'value': '0',  'cls': 'vote-btn-unsure',   'label': 'Unsure',   'aria': 'Unsure about this statement'},
+    {'value': '1',  'cls': 'vote-btn-agree',    'label': _('Agree'),    'aria': _('Agree with this statement')},
+    {'value': '-1', 'cls': 'vote-btn-disagree', 'label': _('Disagree'), 'aria': _('Disagree with this statement')},
+    {'value': '0',  'cls': 'vote-btn-unsure',   'label': _('Unsure'),   'aria': _('Unsure about this statement')},
   ] %}
   {% set is_selected = seeded_vote is not none and seeded_vote|string == opt.value %}
   <button type="button"
@@ -62,9 +62,9 @@
   <legend class="sr-only">Vote options for this statement: agree, disagree, or unsure</legend>
   <div class="vote-buttons-grid vote-buttons-grid--form">
   {% for opt in [
-    {'value': '1',  'cls': 'vote-btn-agree',    'label': 'Agree',    'aria': 'Agree with this statement'},
-    {'value': '-1', 'cls': 'vote-btn-disagree', 'label': 'Disagree', 'aria': 'Disagree with this statement'},
-    {'value': '0',  'cls': 'vote-btn-unsure',   'label': 'Unsure',   'aria': 'Unsure about this statement'},
+    {'value': '1',  'cls': 'vote-btn-agree',    'label': _('Agree'),    'aria': _('Agree with this statement')},
+    {'value': '-1', 'cls': 'vote-btn-disagree', 'label': _('Disagree'), 'aria': _('Disagree with this statement')},
+    {'value': '0',  'cls': 'vote-btn-unsure',   'label': _('Unsure'),   'aria': _('Unsure about this statement')},
   ] %}
   {% set is_selected = seeded_vote is not none and seeded_vote|string == opt.value %}
   <form method="POST" action="{{ vote_post_url }}" class="vote-button-form">

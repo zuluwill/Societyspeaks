@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for, jsonify, send_file
+from flask import Blueprint, abort, current_app, flash, make_response, redirect, render_template, request, session, url_for, jsonify, send_file
 from flask_login import current_user, login_required
 try:
     import posthog as _posthog
@@ -37,6 +37,12 @@ from app.programmes.utils import (
     parse_cohorts_csv,
     parse_csv_list,
     validate_cohort_for_discussion,
+)
+from app.lib.locale_utils import language_preference_cookie_params
+from app.lib.translation import (
+    get_cached_programme_translations_map,
+    get_or_create_programme_translation,
+    resolve_language,
 )
 from app.programmes.journey import (
     build_journey_progress,
@@ -264,7 +270,19 @@ def list_programmes():
         Programme.status == 'active',
         Programme.visibility == 'public',
     ).order_by(Programme.created_at.desc()).paginate(page=page, per_page=12, error_out=False)
-    return render_template('programmes/list.html', programmes=programmes)
+    list_lang = resolve_language(request)
+    programme_translation_map = get_cached_programme_translations_map(programmes.items, list_lang)
+    resp = make_response(
+        render_template(
+            'programmes/list.html',
+            programmes=programmes,
+            programme_translation_map=programme_translation_map,
+            current_lang=list_lang,
+        )
+    )
+    if list_lang != 'en':
+        resp.set_cookie('ss_lang', list_lang, **language_preference_cookie_params())
+    return resp
 
 
 @programmes_bp.route('/workspace')
@@ -440,19 +458,30 @@ def view_programme(slug):
                 except Exception as _e:
                     current_app.logger.warning(f"PostHog journey_started error: {_e}")
 
-    return render_template(
-        'programmes/view.html',
-        programme=programme,
-        discussions=discussions,
-        selected_theme=theme,
-        selected_phase=phase,
-        can_edit=can_edit,
-        can_steward=can_steward,
-        summary=summary,
-        journey_mode=journey_mode,
-        journey_progress=journey_progress,
-        journey_reminder_subscription=journey_reminder_subscription,
+    view_lang = resolve_language(request)
+    programme_translation = (
+        get_or_create_programme_translation(programme, view_lang) if view_lang != 'en' else None
     )
+    resp = make_response(
+        render_template(
+            'programmes/view.html',
+            programme=programme,
+            discussions=discussions,
+            selected_theme=theme,
+            selected_phase=phase,
+            can_edit=can_edit,
+            can_steward=can_steward,
+            summary=summary,
+            journey_mode=journey_mode,
+            journey_progress=journey_progress,
+            journey_reminder_subscription=journey_reminder_subscription,
+            programme_translation=programme_translation,
+            current_lang=view_lang,
+        )
+    )
+    if view_lang != 'en':
+        resp.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
+    return resp
 
 
 @programmes_bp.route('/<slug>/recap')

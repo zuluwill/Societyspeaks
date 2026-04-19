@@ -1,41 +1,48 @@
-{% extends "layout.html" %} {% block head %}
-<title>{{ discussion.title }} — Society Speaks</title>
-<meta
-  name="description"
-  content="{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}"
-/>
-<meta
-  name="keywords"
-  content="{{ discussion.keywords | join(', ') if discussion.keywords else 'discussion, society, topics' }}"
-/>
-<link
-  rel="canonical"
-  href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
-/>
-<!-- oEmbed discovery link for auto-embedding -->
-<link
-  rel="alternate"
-  type="application/json+oembed"
-  href="{{ url_for('partner_api.oembed', url=url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True), _external=True) }}"
-  title="{{ discussion.title }}"
-/>
+{% extends "layout.html" %}
 
-<!-- Structured Data for SEO -->
+{# Canonical discussion URL + translated SEO fields (machine-translated when non-English) #}
+{% set _disc_canonical = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
+{% set seo_title = discussion_translation.title if discussion_translation else discussion.title %}
+{% set seo_desc = (discussion_translation.description if discussion_translation else '') or (discussion.description or '') %}
+{% set author_ld_name = discussion.creator.name if discussion.creator else _('Society Speaks') %}
+
+{% block title %}{{ seo_title }} — Society Speaks{% endblock %}
+
+{% block meta_description %}
+  {% if seo_desc %}{{ seo_desc }}{% else %}{{ _('Join the discussion on SocietySpeaks.') }}{% endif %}
+{% endblock %}
+
+{% block meta_keywords %}
+  {{ discussion.keywords | join(', ') if discussion.keywords else _('discussion, society, topics') }}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="canonical" href="{{ _disc_canonical }}" />
+{% for code in supported_languages %}
+<link rel="alternate" hreflang="{{ code }}" href="{{ _disc_canonical }}?lang={{ code }}" />
+{% endfor %}
+<link rel="alternate" hreflang="x-default" href="{{ _disc_canonical }}" />
+<link rel="alternate" type="application/json+oembed" href="{{ url_for('partner_api.oembed', url=_disc_canonical, _external=True) }}" title="{{ seo_title }}" />
 <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "DiscussionForumPosting",
-    "headline": "{{ discussion.title }}",
-    "description": "{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}",
-    "datePublished": "{{ discussion.created_at.isoformat() }}",
-    "author": {
-      "@type": "Person",
-      "name": "{{ discussion.creator.name }}"
-    },
-    "discussionUrl": "{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
-  }
+{{ {
+  "@context": "https://schema.org",
+  "@type": "DiscussionForumPosting",
+  "headline": seo_title,
+  "description": (seo_desc or _('Join the discussion on SocietySpeaks.')),
+  "datePublished": discussion.created_at.isoformat(),
+  "author": {"@type": "Person", "name": author_ld_name},
+  "discussionUrl": _disc_canonical,
+} | tojson }}
 </script>
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block og_url %}{{ _disc_canonical }}{% endblock %}
+{% block og_title %}{{ seo_title }} — Society Speaks{% endblock %}
+{% block og_description %}{% if seo_desc %}{{ seo_desc }}{% else %}{{ _('Join the discussion on SocietySpeaks.') }}{% endif %}{% endblock %}
+{% block twitter_title %}{{ seo_title }} — Society Speaks{% endblock %}
+{% block twitter_description %}{% if seo_desc %}{{ seo_desc }}{% else %}{{ _('Join the discussion on SocietySpeaks.') }}{% endif %}{% endblock %}
+
+{% block content %}
 <div class="{% if guided_journey_context %}max-w-4xl{% else %}max-w-7xl{% endif %} mx-auto py-8 px-4 sm:px-6 lg:px-8">
   {% include 'discussions/_guided_journey_rail.html' %}
   <!-- Back Button & Research Tools - Add this first -->
@@ -273,7 +280,7 @@
   <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-wrap items-start justify-between gap-4">
-        <h1 class="text-3xl font-bold text-gray-900">{{ discussion.title }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900">{{ discussion_translation.title if discussion_translation else discussion.title }}</h1>
 
         <!-- Share Button with Dropdown -->
         <div class="relative">

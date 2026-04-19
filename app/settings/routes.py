@@ -5,6 +5,7 @@ from app import db
 from app.models import User
 from .forms import ChangePasswordForm, NotificationPreferencesForm, DeleteAccountForm
 from app.billing.service import get_active_subscription
+from app.lib.locale_utils import language_preference_cookie_params
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -119,6 +120,23 @@ def change_password():
 
     flash('Please correct the errors in the form.', 'danger')
     return redirect(url_for('settings.view_settings'))
+
+
+@settings_bp.route('/settings/language', methods=['POST'])
+@login_required
+def update_language():
+    """Save authenticated user's language preference to DB."""
+    from app.lib.locale_utils import SUPPORTED_LANGUAGES
+    lang = request.form.get('language', '').strip().lower()[:10]
+    if lang not in SUPPORTED_LANGUAGES:
+        flash('Invalid language selection.', 'danger')
+        return redirect(url_for('settings.view_settings'))
+    current_user.language = lang if lang != 'en' else None
+    db.session.commit()
+    flash('Language preference saved.', 'success')
+    response = redirect(request.referrer or url_for('settings.view_settings'))
+    response.set_cookie('ss_lang', lang, **language_preference_cookie_params())
+    return response
 
 
 @settings_bp.route('/delete-account', methods=['POST'])

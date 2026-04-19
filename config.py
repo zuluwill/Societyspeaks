@@ -44,9 +44,15 @@ def _build_session_cache():
     mode = _env_optional_file_mode('SESSION_FILE_MODE')
     return FileSystemCache(cache_dir=session_dir, threshold=threshold, mode=mode)
 
+_CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+
+    # Flask-Babel: absolute path so catalogs resolve regardless of process CWD
+    BABEL_TRANSLATION_DIRECTORIES = os.path.join(_CONFIG_DIR, 'translations')
     
     # Application base URL (APP_BASE_URL takes priority, falls back to BASE_URL env var)
     APP_BASE_URL = os.getenv('APP_BASE_URL') or os.getenv('BASE_URL', 'https://societyspeaks.io')

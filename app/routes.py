@@ -20,6 +20,8 @@ except (ImportError, ModuleNotFoundError, AttributeError):
         pass
 from sqlalchemy.orm import joinedload
 from app.lib.time import utcnow_naive
+from app.lib.url_utils import safe_next_url
+from app.lib.locale_utils import language_preference_cookie_params
 import io
 import mimetypes
 import os
@@ -200,6 +202,23 @@ def platform():
     demo_discussion = db.session.get(Discussion, 25)
     featured_discussions = Discussion.get_featured(limit=3)
     return render_template('platform.html', demo_discussion=demo_discussion, featured_discussions=featured_discussions)
+
+
+@main_bp.route('/set-language', methods=['POST'])
+def set_language():
+    """Cookie-based language switch; also persists to User.language if authenticated."""
+    from app.lib.locale_utils import SUPPORTED_LANGUAGES
+    from flask_login import current_user
+    lang = request.form.get('language', '').strip().lower()[:10]
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = 'en'
+    next_url = safe_next_url(request.form.get('next')) or url_for('main.index')
+    if current_user.is_authenticated:
+        current_user.language = lang if lang != 'en' else None
+        db.session.commit()
+    response = make_response(redirect(next_url))
+    response.set_cookie('ss_lang', lang, **language_preference_cookie_params())
+    return response
 
 
 @main_bp.route('/donate')

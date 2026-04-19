@@ -1,0 +1,882 @@
+# Society Speaks UI translations
+# Language: hi
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-04-19 15:46+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hi\n"
+"Language-Team: hi <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/templates/layout.html:8
+msgid "Society Speaks.io - Join the Conversation"
+msgstr "Society Speaks.io - बातचीत में शामिल हों"
+
+#: app/templates/layout.html:49
+msgid "Latest Discussions"
+msgstr "नवीनतम चर्चाएं"
+
+#: app/templates/layout.html:438 app/templates/layout.html:1178
+msgid "Home"
+msgstr "होम"
+
+#: app/templates/layout.html:450
+msgid "Participate"
+msgstr "भाग लें"
+
+#: app/templates/layout.html:476 app/templates/programmes/list.html:82
+msgid "Big Questions Journey"
+msgstr "बड़े सवालों की यात्रा"
+
+#: app/templates/layout.html:477
+msgid "Featured"
+msgstr "विशेष"
+
+#: app/templates/layout.html:483
+msgid "Free"
+msgstr "मुफ़्त"
+
+#: app/templates/layout.html:489 app/templates/layout.html:1192
+msgid "Today's Question"
+msgstr "आज का प्रश्न"
+
+#: app/templates/layout.html:495 app/templates/layout.html:1199
+msgid "Daily Brief"
+msgstr "दैनिक संक्षेप"
+
+#: app/templates/layout.html:501 app/templates/layout.html:1185
+msgid "Discussions & Programmes"
+msgstr "चर्चाएं और कार्यक्रम"
+
+#: app/templates/layout.html:507
+msgid "Premium"
+msgstr "प्रीमियम"
+
+#: app/templates/layout.html:514 app/templates/layout.html:1206
+msgid "Personal Briefs"
+msgstr "व्यक्तिगत ब्रीफ़"
+
+#: app/templates/layout.html:517 app/templates/layout.html:528
+#: app/templates/layout.html:1207 app/templates/layout.html:1215
+msgid "Pro"
+msgstr "Pro"
+
+#: app/templates/layout.html:525 app/templates/layout.html:1214
+msgid "For Publishers"
+msgstr "प्रकाशकों के लिए"
+
+#: app/templates/layout.html:543
+msgid "Explore"
+msgstr "अन्वेषण"
+
+#: app/templates/layout.html:567
+msgid "News"
+msgstr "समाचार"
+
+#: app/templates/layout.html:573
+msgid "Discussions"
+msgstr "चर्चाएं"
+
+#: app/templates/layout.html:579
+msgid "Programmes"
+msgstr "कार्यक्रम"
+
+#: app/templates/layout.html:585
+msgid "Sources"
+msgstr "स्रोत"
+
+#: app/templates/layout.html:599
+msgid "About"
+msgstr "के बारे में"
+
+#: app/templates/layout.html:623 app/templates/layout.html:1229
+msgid "About Us"
+msgstr "हमारे बारे में"
+
+#: app/templates/layout.html:629
+msgid "Help"
+msgstr "सहायता"
+
+#: app/templates/layout.html:635 app/templates/layout.html:1236
+msgid "FAQ"
+msgstr "अक्सर पूछे जाने वाले प्रश्न"
+
+#: app/templates/discussions/embed_discussion.html:803
+#: app/templates/layout.html:646
+msgid "Select language"
+msgstr "भाषा चुनें"
+
+#: app/templates/layout.html:655
+msgid "Language options"
+msgstr "भाषा विकल्प"
+
+#: app/templates/layout.html:672 app/templates/layout.html:1222
+msgid "Donate"
+msgstr "दान करें"
+
+#: app/templates/layout.html:951
+msgid "Language"
+msgstr "भाषा"
+
+#: app/templates/layout.html:1127
+msgid "Please verify your email"
+msgstr "कृपया अपना ईमेल सत्यापित करें"
+
+#: app/templates/layout.html:1127
+msgid "Check your inbox for the verification link."
+msgstr "सत्यापन लिंक के लिए अपना इनबॉक्स देखें।"
+
+#: app/templates/layout.html:1133
+msgid "Resend verification email"
+msgstr "सत्यापन ईमेल पुनः भेजें"
+
+#: app/templates/layout.html:1167
+msgid "About Society Speaks"
+msgstr "Society Speaks के बारे में"
+
+#: app/templates/layout.html:1170
+msgid ""
+"A sense-making system that turns disagreement into understanding. We "
+"reveal where society agrees, where it divides, and which ideas can bridge"
+" the gap."
+msgstr ""
+"एक अर्थ-निर्माण प्रणाली जो मतभेद को समझ में बदल देती है। हम दिखाते हैं कि"
+" समाज कहाँ सहमत है, कहाँ बंटा है, और कौन से विचार सेतु बन सकते हैं।"
+
+#: app/templates/layout.html:1174
+msgid "Quick Links"
+msgstr "त्वरित लिंक"
+
+#: app/templates/components/vote_buttons.html:24
+#: app/templates/components/vote_buttons.html:65
+#: app/templates/discussions/embed_discussion.html:866
+#: app/templates/discussions/view_native.html:47
+msgid "Agree"
+msgstr "सहमत"
+
+#: app/templates/components/vote_buttons.html:24
+#: app/templates/components/vote_buttons.html:65
+#: app/templates/discussions/embed_discussion.html:855
+#: app/templates/discussions/view_native.html:44
+msgid "Agree with this statement"
+msgstr "इस कथन से सहमत"
+
+#: app/templates/components/vote_buttons.html:25
+#: app/templates/components/vote_buttons.html:66
+#: app/templates/discussions/embed_discussion.html:885
+#: app/templates/discussions/view_native.html:55
+msgid "Disagree"
+msgstr "असहमत"
+
+#: app/templates/components/vote_buttons.html:25
+#: app/templates/components/vote_buttons.html:66
+#: app/templates/discussions/embed_discussion.html:874
+#: app/templates/discussions/view_native.html:52
+msgid "Disagree with this statement"
+msgstr "इस कथन से असहमत"
+
+#: app/templates/components/vote_buttons.html:26
+#: app/templates/components/vote_buttons.html:67
+#: app/templates/discussions/embed_discussion.html:904
+#: app/templates/discussions/view_native.html:63
+msgid "Unsure"
+msgstr "अनिश्चित"
+
+#: app/templates/components/vote_buttons.html:26
+#: app/templates/components/vote_buttons.html:67
+#: app/templates/discussions/embed_discussion.html:893
+#: app/templates/discussions/view_native.html:60
+msgid "Unsure about this statement"
+msgstr "इस कथन के बारे में अनिश्चित"
+
+#: app/templates/discussions/_information_step.html:10
+msgid "This background may be machine-translated. Quality may vary."
+msgstr "यह पृष्ठभूमि मशीनी अनुवादित हो सकती है। गुणवत्ता भिन्न हो सकती है।"
+
+#: app/templates/discussions/_statement_card.html:20
+msgid "Posted by"
+msgstr "द्वारा पोस्ट"
+
+#: app/templates/discussions/_statement_card.html:20
+msgid "Anonymous"
+msgstr "अज्ञात"
+
+#: app/templates/discussions/_statement_card.html:29
+#: app/templates/discussions/embed_discussion.html:844
+msgid "AI translated"
+msgstr "AI द्वारा अनुवादित"
+
+#: app/templates/discussions/_statement_card.html:29
+#: app/templates/discussions/embed_discussion.html:845
+msgid "Show original"
+msgstr "मूल दिखाएं"
+
+#: app/templates/discussions/_statement_card.html:51
+msgid "View Discussion"
+msgstr "चर्चा देखें"
+
+#: app/templates/discussions/_statement_card.html:65
+msgid "Add Argument"
+msgstr "तर्क जोड़ें"
+
+#: app/templates/discussions/consensus_results.html:5
+#: app/templates/discussions/consensus_results.html:20
+#: app/templates/discussions/view_native.html:153
+msgid "Consensus Analysis"
+msgstr "सहमति विश्लेषण"
+
+#: app/templates/discussions/consensus_results.html:28
+msgid "Opinion Groups"
+msgstr "राय समूह"
+
+#: app/templates/discussions/consensus_results.html:34
+msgid "Participants"
+msgstr "प्रतिभागी"
+
+#: app/templates/discussions/consensus_results.html:38
+msgid "Statements"
+msgstr "कथन"
+
+#: app/templates/discussions/consensus_results.html:167
+#: app/templates/discussions/consensus_results.html:204
+msgid "What Each Group Believes"
+msgstr "प्रत्येक समूह क्या मानता है"
+
+#: app/templates/discussions/consensus_results.html:169
+msgid ""
+"These are the statements each opinion group agrees on most strongly. This"
+" helps understand the core beliefs that define each group."
+msgstr ""
+"ये वे कथन हैं जिन पर प्रत्येक राय समूह सबसे अधिक सहमत है। इससे प्रत्येक "
+"समूह को परिभाषित करने वाले मुख्य विश्वास समझने में मदद मिलती है।"
+
+#: app/templates/discussions/consensus_results.html:183
+msgid "Top beliefs:"
+msgstr "मुख्य विश्वास:"
+
+#: app/templates/discussions/consensus_results.html:190
+msgid "% agree"
+msgstr "% सहमत"
+
+#: app/templates/discussions/consensus_results.html:216
+msgid "Areas of Consensus"
+msgstr "सहमति के क्षेत्र"
+
+#: app/templates/discussions/consensus_results.html:219
+msgid "These statements have broad agreement across all opinion groups."
+msgstr "इन कथनों पर सभी राय समूहों में व्यापक सहमति है।"
+
+#: app/templates/discussions/consensus_results.html:225
+#: app/templates/discussions/consensus_results.html:250
+#: app/templates/discussions/consensus_results.html:272
+#: app/templates/discussions/embed_discussion.html:912
+msgid "agree"
+msgstr "सहमत"
+
+#: app/templates/discussions/consensus_results.html:226
+#: app/templates/discussions/consensus_results.html:251
+#: app/templates/discussions/consensus_results.html:273
+#: app/templates/discussions/embed_discussion.html:913
+msgid "disagree"
+msgstr "असहमत"
+
+#: app/templates/discussions/consensus_results.html:227
+#: app/templates/discussions/consensus_results.html:252
+#: app/templates/discussions/consensus_results.html:274
+#: app/templates/discussions/embed_discussion.html:914
+msgid "unsure"
+msgstr "अनिश्चित"
+
+#: app/templates/discussions/consensus_results.html:229
+#: app/templates/discussions/embed_discussion.html:921
+#: app/templates/discussions/embed_discussion.html:1138
+msgid "agreement"
+msgstr "सहमति"
+
+#: app/templates/discussions/consensus_results.html:241
+msgid "Bridge Statements"
+msgstr "सेतु कथन"
+
+#: app/templates/discussions/consensus_results.html:244
+msgid "These statements unite different opinion groups and offer common ground."
+msgstr "ये कथन विभिन्न राय समूहों को जोड़ते हैं और समान आधार देते हैं।"
+
+#: app/templates/discussions/consensus_results.html:263
+msgid "Points of Division"
+msgstr "विभाजन के बिंदु"
+
+#: app/templates/discussions/consensus_results.html:266
+msgid "These statements show significant disagreement between opinion groups."
+msgstr "ये कथन राय समूहों के बीच महत्वपूर्ण असहमति दिखाते हैं।"
+
+#: app/templates/discussions/consensus_results.html:277
+msgid "controversy"
+msgstr "विवाद"
+
+#: app/templates/discussions/consensus_results.html:287
+msgid "Export & Share"
+msgstr "निर्यात करें और साझा करें"
+
+#: app/templates/discussions/consensus_results.html:293
+msgid "Download JSON"
+msgstr "JSON डाउनलोड"
+
+#: app/templates/discussions/consensus_results.html:299
+msgid "Generate Report"
+msgstr "रिपोर्ट बनाएं"
+
+#: app/templates/discussions/consensus_results.html:313
+msgid "Re-run Analysis"
+msgstr "विश्लेषण दोहराएं"
+
+#: app/templates/discussions/consensus_results.html:322
+msgid "Methodology"
+msgstr "कार्यप्रणाली"
+
+#: app/templates/discussions/consensus_results.html:353
+msgid "Back to Discussion"
+msgstr "चर्चा पर वापस"
+
+#: app/templates/discussions/embed_discussion.html:6
+#: app/templates/discussions/embed_discussion.html:1017
+#: app/templates/discussions/view_discussion.html:7
+msgid "Society Speaks"
+msgstr "Society Speaks"
+
+#: app/templates/discussions/embed_discussion.html:786
+msgid "Skip to statements"
+msgstr "कथनों पर जाएं"
+
+#: app/templates/discussions/embed_discussion.html:790
+msgid "You're offline. Votes will be saved when you reconnect."
+msgstr "आप ऑफ़लाइन हैं। पुनः कनेक्ट होने पर वोट सहेजे जाएंगे।"
+
+#: app/templates/discussions/embed_discussion.html:795
+#: app/templates/discussions/embed_discussion.html:1114
+msgid "This discussion is closed. You can still view the full record."
+msgstr "यह चर्चा बंद है। आप अभी भी पूरा रिकॉर्ड देख सकते हैं।"
+
+#: app/templates/discussions/embed_discussion.html:816
+#, python-format
+msgid "%(num)d statement to vote on"
+msgid_plural "%(num)d statements to vote on"
+msgstr[0] "%(num)d कथन पर वोट करें"
+msgstr[1] "%(num)d कथनों पर वोट करें"
+
+#: app/templates/discussions/embed_discussion.html:824
+msgid "Your progress"
+msgstr "आपकी प्रगति"
+
+#: app/templates/discussions/embed_discussion.html:825
+#: app/templates/discussions/embed_discussion.html:1115
+#, python-format
+msgid "%(current)d / %(threshold)d votes"
+msgstr "%(current)d / %(threshold)d वोट"
+
+#: app/templates/discussions/embed_discussion.html:830
+msgid "Vote on statements to help build consensus"
+msgstr "सहमति बनाने में मदद के लिए कथनों पर वोट करें"
+
+#: app/templates/discussions/embed_discussion.html:836
+msgid "Statements to vote on"
+msgstr "वोट के लिए कथन"
+
+#: app/templates/discussions/embed_discussion.html:845
+msgid "Hide original"
+msgstr "मूल छुपाएं"
+
+#: app/templates/discussions/embed_discussion.html:850
+msgid "Vote options for this statement"
+msgstr "इस कथन के लिए वोट विकल्प"
+
+#: app/templates/discussions/embed_discussion.html:910
+msgid "Vote to see how others split on this claim."
+msgstr "देखें कि इस दावे पर अन्य लोग कैसे विभाजित हैं, वोट करें।"
+
+#: app/templates/discussions/embed_discussion.html:919
+msgid "total votes"
+msgstr "कुल वोट"
+
+#: app/templates/discussions/embed_discussion.html:930
+#: app/templates/discussions/embed_discussion.html:1029
+msgid "Report this statement"
+msgstr "इस कथन की रिपोर्ट करें"
+
+#: app/templates/discussions/embed_discussion.html:935
+msgid "Report"
+msgstr "रिपोर्ट करें"
+
+#: app/templates/discussions/embed_discussion.html:947
+msgid "No statements yet. Check back soon!"
+msgstr "अभी कोई कथन नहीं। जल्द वापस आएं!"
+
+#: app/templates/discussions/embed_discussion.html:949
+msgid "This discussion is not currently available for embed voting."
+msgstr "यह चर्चा अभी एम्बेड वोटिंग के लिए उपलब्ध नहीं है।"
+
+#: app/templates/discussions/embed_discussion.html:950
+msgid "View the full discussion on Society Speaks"
+msgstr "Society Speaks पर पूरी चर्चा देखें"
+
+#: app/templates/discussions/embed_discussion.html:956
+msgid "Statement pages"
+msgstr "कथन पृष्ठ"
+
+#: app/templates/discussions/embed_discussion.html:957
+#, python-format
+msgid "Page %(page)d of %(pages)d"
+msgstr "पृष्ठ %(page)d / %(pages)d"
+
+#: app/templates/discussions/embed_discussion.html:966
+msgid "Previous"
+msgstr "पिछला"
+
+#: app/templates/discussions/embed_discussion.html:976
+msgid "Next"
+msgstr "अगला"
+
+#: app/templates/discussions/embed_discussion.html:985
+msgid "Suggest a statement"
+msgstr "कथन सुझाएं"
+
+#: app/templates/discussions/embed_discussion.html:987
+msgid "Your statement should be concise and debatable (10-500 characters)."
+msgstr "आपका कथन संक्षिप्त और बहस योग्य होना चाहिए (10-500 अक्षर)."
+
+#: app/templates/discussions/embed_discussion.html:990
+msgid "Statement"
+msgstr "कथन"
+
+#: app/templates/discussions/embed_discussion.html:998
+msgid ""
+"e.g. Expanding low-emission zones is worth short-term disruption for "
+"long-term health."
+msgstr ""
+"उदा. निम्न उत्सर्जन क्षेत्रों का विस्तार दीर्घकालिक स्वास्थ्य के लिए "
+"अल्पकालिक व्यवधान के लायक है।"
+
+#: app/templates/discussions/embed_discussion.html:1002
+#: app/templates/discussions/embed_discussion.html:1136
+#, python-format
+msgid "%(cur)d / %(max)d"
+msgstr "%(cur)d / %(max)d"
+
+#: app/templates/discussions/embed_discussion.html:1004
+msgid "Submit statement"
+msgstr "कथन सबमिट करें"
+
+#: app/templates/discussions/embed_discussion.html:1014
+#: app/templates/discussions/embed_discussion.html:1111
+msgid "View Full Analysis"
+msgstr "पूर्ण विश्लेषण देखें"
+
+#: app/templates/discussions/embed_discussion.html:1017
+msgid "Powered by"
+msgstr "द्वारा संचालित"
+
+#: app/templates/discussions/embed_discussion.html:1018
+msgid "Content Policy"
+msgstr "सामग्री नीति"
+
+#: app/templates/discussions/embed_discussion.html:1032
+msgid "Reason for reporting"
+msgstr "रिपोर्ट का कारण"
+
+#: app/templates/discussions/embed_discussion.html:1035
+msgid "Spam or advertising"
+msgstr "स्पैम या विज्ञापन"
+
+#: app/templates/discussions/embed_discussion.html:1039
+msgid "Harassment or abuse"
+msgstr "उत्पीड़न या दुर्व्यवहार"
+
+#: app/templates/discussions/embed_discussion.html:1043
+msgid "Misinformation"
+msgstr "गलत सूचना"
+
+#: app/templates/discussions/embed_discussion.html:1047
+msgid "Off-topic or irrelevant"
+msgstr "विषय से बाहर"
+
+#: app/templates/discussions/embed_discussion.html:1051
+msgid "Cancel"
+msgstr "रद्द करें"
+
+#: app/templates/discussions/embed_discussion.html:1052
+#: app/templates/discussions/embed_discussion.html:1127
+msgid "Submit Report"
+msgstr "रिपोर्ट सबमिट करें"
+
+#: app/templates/discussions/embed_discussion.html:1108
+msgid "This discussion is closed."
+msgstr "यह चर्चा बंद है।"
+
+#: app/templates/discussions/embed_discussion.html:1109
+msgid "View full record"
+msgstr "पूरा रिकॉर्ड देखें"
+
+#: app/templates/discussions/embed_discussion.html:1110
+msgid "Thanks for participating!"
+msgstr "भाग लेने के लिए धन्यवाद!"
+
+#: app/templates/discussions/embed_discussion.html:1112
+msgid "Analysis is not ready yet (%(count)d participants so far)."
+msgstr "विश्लेषण अभी तैयार नहीं है (अब तक %(count)d प्रतिभागी)."
+
+#: app/templates/discussions/embed_discussion.html:1113
+msgid "View the record"
+msgstr "रिकॉर्ड देखें"
+
+#: app/templates/discussions/embed_discussion.html:1116
+msgid "Vote on 1 more statement to unlock analysis"
+msgstr "विश्लेषण अनलॉक करने के लिए 1 और कथन पर वोट करें"
+
+#: app/templates/discussions/embed_discussion.html:1117
+#, python-format
+msgid "Vote on %(num)d more statements to unlock analysis"
+msgstr "विश्लेषण अनलॉक करने के लिए %(num)d और कथनों पर वोट करें"
+
+#: app/templates/discussions/embed_discussion.html:1118
+msgid "Retry"
+msgstr "पुनः प्रयास करें"
+
+#: app/templates/discussions/embed_discussion.html:1119
+msgid "Vote saved offline. Will sync when connected."
+msgstr "वोट ऑफ़लाइन सहेजा गया। कनेक्ट होने पर सिंक होगा।"
+
+#: app/templates/discussions/embed_discussion.html:1120
+msgid "Vote recorded!"
+msgstr "वोट दर्ज हुआ!"
+
+#: app/templates/discussions/embed_discussion.html:1121
+msgid "You're voting too fast. Please wait a moment."
+msgstr "आप बहुत तेज़ वोट कर रहे हैं। कृपया एक क्षण प्रतीक्षा करें।"
+
+#: app/templates/discussions/embed_discussion.html:1122
+msgid "Couldn't save vote."
+msgstr "वोट सहेजा नहीं जा सका।"
+
+#: app/templates/discussions/embed_discussion.html:1123
+msgid "You have already reported this statement."
+msgstr "आप पहले से ही इस कथन की रिपोर्ट कर चुके हैं।"
+
+#: app/templates/discussions/embed_discussion.html:1124
+msgid "Submitting..."
+msgstr "सबमिट हो रहा है..."
+
+#: app/templates/discussions/embed_discussion.html:1125
+msgid "Thank you for your report. We will review it."
+msgstr "आपकी रिपोर्ट के लिए धन्यवाद। हम इसकी समीक्षा करेंगे।"
+
+#: app/templates/discussions/embed_discussion.html:1126
+msgid "Could not submit report. Please try again."
+msgstr "रिपोर्ट सबमिट नहीं हो सकी। कृपया पुनः प्रयास करें।"
+
+#: app/templates/discussions/embed_discussion.html:1128
+msgid "Reported"
+msgstr "रिपोर्ट किया गया"
+
+#: app/templates/discussions/embed_discussion.html:1129
+msgid "Statement must be at least 10 characters."
+msgstr "कथन में कम से कम 10 अक्षर होने चाहिए।"
+
+#: app/templates/discussions/embed_discussion.html:1130
+msgid "Statement must be 500 characters or fewer."
+msgstr "कथन 500 अक्षर या उससे कम होना चाहिए।"
+
+#: app/templates/discussions/embed_discussion.html:1131
+msgid "That statement is already in this discussion."
+msgstr "वह कथन पहले से इस चर्चा में है।"
+
+#: app/templates/discussions/embed_discussion.html:1132
+msgid "You're posting too quickly. Please wait a bit."
+msgstr "आप बहुत तेज़ी से पोस्ट कर रहे हैं। कृपया थोड़ा इंतजार करें।"
+
+#: app/templates/discussions/embed_discussion.html:1133
+msgid "Could not submit statement right now."
+msgstr "अभी कथन सबमिट नहीं हो सका।"
+
+#: app/templates/discussions/embed_discussion.html:1134
+msgid "Statement submitted. It will appear in the discussion shortly."
+msgstr "कथन सबमिट हो गया। यह जल्द ही चर्चा में दिखेगा।"
+
+#: app/templates/discussions/embed_discussion.html:1135
+msgid "Network error while submitting statement."
+msgstr "कथन सबमिट करते समय नेटवर्क त्रुटि।"
+
+#: app/templates/discussions/embed_discussion.html:1137
+#, python-format
+msgid "%(n)s total votes"
+msgstr "%(n)s वोट"
+
+#: app/templates/discussions/view_discussion.html:12
+#: app/templates/discussions/view_discussion.html:31
+#: app/templates/discussions/view_discussion.html:41
+#: app/templates/discussions/view_discussion.html:43
+msgid "Join the discussion on SocietySpeaks."
+msgstr "SocietySpeaks पर चर्चा में शामिल हों।"
+
+#: app/templates/discussions/view_discussion.html:16
+msgid "discussion, society, topics"
+msgstr "चर्चा, समाज, विषय"
+
+#: app/templates/discussions/view_native.html:26
+msgid "See all ↓"
+msgstr "सभी देखें ↓"
+
+#: app/templates/discussions/view_native.html:40
+msgid "Vote on the statement above: agree, disagree, or unsure"
+msgstr "ऊपर के कथन पर वोट करें: सहमत, असहमत, या अनिश्चित"
+
+#: app/templates/discussions/view_native.html:72
+msgid "Skip for now"
+msgstr "अभी छोड़ें"
+
+#: app/templates/discussions/view_native.html:91
+msgid "Theme complete!"
+msgstr "विषय पूर्ण!"
+
+#: app/templates/discussions/view_native.html:124
+msgid "Add Statement"
+msgstr "कथन जोड़ें"
+
+#: app/templates/discussions/view_native.html:169
+msgid "Analysis"
+msgstr "विश्लेषण"
+
+#: app/templates/discussions/view_native.html:182
+#: app/templates/discussions/view_native.html:188
+msgid "Search statements..."
+msgstr "कथन खोजें..."
+
+#: app/templates/discussions/view_native.html:192
+msgid "Search"
+msgstr "खोज"
+
+#: app/templates/discussions/view_native.html:199
+msgid "Sort by:"
+msgstr "इसके अनुसार क्रमित करें:"
+
+#: app/templates/discussions/view_native.html:215
+msgid "Recommended journey order"
+msgstr "अनुशंसित यात्रा क्रम"
+
+#: app/templates/discussions/view_native.html:215
+msgid "Progressive (Pol.is style)"
+msgstr "प्रगतिशील (Pol.is शैली)"
+
+#: app/templates/discussions/view_native.html:218
+msgid "Most agreed first"
+msgstr "सबसे अधिक सहमत"
+
+#: app/templates/discussions/view_native.html:218
+msgid "Best (most agreed)"
+msgstr "सर्वश्रेष्ठ (सबसे अधिक सहमत)"
+
+#: app/templates/discussions/view_native.html:221
+msgid "Most debated"
+msgstr "सबसे अधिक बहस"
+
+#: app/templates/discussions/view_native.html:221
+msgid "Controversial"
+msgstr "विवादास्पद"
+
+#: app/templates/discussions/view_native.html:224
+msgid "Newest statements"
+msgstr "नवीनतम कथन"
+
+#: app/templates/discussions/view_native.html:227
+msgid "Most votes"
+msgstr "सबसे अधिक मत"
+
+#: app/templates/discussions/view_native.html:325
+msgid "statements to vote on"
+msgstr "मतदान के लिए कथन"
+
+#: app/templates/discussions/view_native.html:488
+msgid "No Statements Yet"
+msgstr "अभी कोई कथन नहीं"
+
+#: app/templates/discussions/view_native.html:490
+msgid "Be the first to contribute to this discussion!"
+msgstr "इस चर्चा में पहले योगदान देने वाले बनें!"
+
+#: app/templates/discussions/view_native.html:496
+msgid "Post the First Statement"
+msgstr "पहला कथन पोस्ट करें"
+
+#: app/templates/programmes/list.html:2 app/templates/programmes/list.html:10
+msgid "Public Programmes"
+msgstr "सार्वजनिक कार्यक्रम"
+
+#: app/templates/programmes/list.html:11
+msgid "Live public programmes with open discussions you can participate in."
+msgstr "ऐसे सार्वजनिक कार्यक्रम जिनमें खुली चर्चाएं हैं और आप भाग ले सकते हैं।"
+
+#: app/templates/programmes/list.html:17
+msgid "My workspace"
+msgstr "मेरा कार्यक्षेत्र"
+
+#: app/templates/programmes/list.html:24
+msgid "New programme"
+msgstr "नया कार्यक्रम"
+
+#: app/templates/programmes/list.html:56
+msgid "Guided Civic Journeys"
+msgstr "निर्देशित नागरिक यात्राएं"
+
+#: app/templates/programmes/list.html:78
+msgid "Global"
+msgstr "वैश्विक"
+
+#: app/templates/programmes/list.html:95
+msgid "Start →"
+msgstr "शुरू करें →"
+
+#: app/templates/programmes/list.html:108
+msgid "Other Programmes"
+msgstr "अन्य कार्यक्रम"
+
+#: app/templates/programmes/view.html:11
+msgid "Dashboard"
+msgstr "डैशबोर्ड"
+
+#: app/templates/programmes/view.html:13
+msgid "Workspace"
+msgstr "कार्यक्षेत्र"
+
+#: app/templates/programmes/view.html:145
+msgid "Read more"
+msgstr "और पढ़ें"
+
+#: app/templates/programmes/view.html:237
+msgid "themes completed"
+msgstr "विषय पूर्ण"
+
+#: app/templates/programmes/view.html:241
+msgid "votes cast"
+msgstr "वोट डाले"
+
+#: app/templates/programmes/view.html:273
+msgid "View progress recap"
+msgstr "प्रगति सारांश देखें"
+
+#: app/templates/programmes/view.html:388
+msgid "Turn on reminders"
+msgstr "अनुस्मारक चालू करें"
+
+#: app/templates/programmes/view.html:421
+msgid "Stop reminders"
+msgstr "अनुस्मारक बंद करें"
+
+#: app/templates/programmes/view.html:490
+msgid "Add discussion"
+msgstr "चर्चा जोड़ें"
+
+#~ msgid "Claim"
+#~ msgstr "दावा"
+
+#~ msgid "Question"
+#~ msgstr "प्रश्न"
+
+#~ msgid "Journey complete"
+#~ msgstr "यात्रा पूर्ण"
+
+#~ msgid "View your full recap"
+#~ msgstr "अपना पूरा सारांश देखें"
+
+#~ msgid "Content Policy"
+#~ msgstr "सामग्री नीति"
+
+#~ msgid "Your Profile"
+#~ msgstr "आपकी प्रोफ़ाइल"
+
+#~ msgid "Create Profile"
+#~ msgstr "प्रोफ़ाइल बनाएं"
+
+#~ msgid "Notifications"
+#~ msgstr "सूचनाएं"
+
+#~ msgid "My Briefings"
+#~ msgstr "मेरे ब्रीफिंग"
+
+#~ msgid "Settings"
+#~ msgstr "सेटिंग्स"
+
+#~ msgid "Partner Portal"
+#~ msgstr "पार्टनर पोर्टल"
+
+#~ msgid "Admin"
+#~ msgstr "व्यवस्थापक"
+
+#~ msgid "Sign out"
+#~ msgstr "साइन आउट"
+
+#~ msgid "Sign in"
+#~ msgstr "साइन इन"
+
+#~ msgid "Get Started"
+#~ msgstr "शुरू करें"
+
+#~ msgid "Skip to main content"
+#~ msgstr "मुख्य सामग्री पर जाएं"
+
+#~ msgid "Open user menu"
+#~ msgstr "उपयोगकर्ता मेनू खोलें"
+
+#~ msgid "Privacy Policy"
+#~ msgstr "गोपनीयता नीति"
+
+#~ msgid "Terms of Service"
+#~ msgstr "सेवा की शर्तें"
+
+#~ msgid "Contact"
+#~ msgstr "संपर्क"
+
+#~ msgid "Connect"
+#~ msgstr "जुड़ें"
+
+#~ msgid "Guided journey"
+#~ msgstr "निर्देशित यात्रा"
+
+#~ msgid "Start your civic journey"
+#~ msgstr "अपनी नागरिक यात्रा शुरू करें"
+
+#~ msgid "Pick up where you left off"
+#~ msgstr "जहां छोड़ा था वहां से जारी रखें"
+
+#~ msgid "Themes"
+#~ msgstr "विषय"
+
+#~ msgid "Completed"
+#~ msgstr "पूर्ण"
+
+#~ msgid "Archived"
+#~ msgstr "संग्रहीत"
+
+#~ msgid "Edit"
+#~ msgstr "संपादित करें"
+
+#~ msgid "Export CSV"
+#~ msgstr "CSV निर्यात"
+
+#~ msgid "%(num)d statement"
+#~ msgid_plural "%(num)d statements"
+#~ msgstr[0] "%(num)d कथन"
+#~ msgstr[1] "%(num)d कथन"
+
+#~ msgid "%(num)d participant"
+#~ msgid_plural "%(num)d participants"
+#~ msgstr[0] "%(num)d प्रतिभागी"
+#~ msgstr[1] "%(num)d प्रतिभागी"
+
+#~ msgid "View full analysis"
+#~ msgstr "पूर्ण विश्लेषण देखें"
+

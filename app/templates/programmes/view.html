@@ -1,15 +1,18 @@
 {% extends "layout.html" %}
+{% set display_name = programme_translation.name if programme_translation else programme.name %}
+{% set display_desc = programme_translation.description if programme_translation else programme.description %}
+{% block title %}{{ display_name }} — Society Speaks{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-6 px-4">
 
   {# Breadcrumb #}
   {% if current_user.is_authenticated and (can_edit or can_steward) %}
   <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-5">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <a href="{{ url_for('programmes.workspace_programmes') }}" class="hover:text-gray-700">Workspace</a>
+    <a href="{{ url_for('programmes.workspace_programmes') }}" class="hover:text-gray-700">{{ _('Workspace') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">{{ programme.name }}</span>
+    <span class="text-gray-900 font-medium">{{ display_name }}</span>
   </nav>
   {% endif %}
 
@@ -80,7 +83,7 @@
         {# Programme logo — own logo_url > company profile logo > initial letter #}
         {% if logo_type in ('url', 'profile') %}
         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-4 border-white shadow-md flex-shrink-0 bg-white">
-          <img src="{{ logo_src }}" alt="{{ programme.name }}" class="w-full h-full object-contain">
+          <img src="{{ logo_src }}" alt="{{ display_name }}" class="w-full h-full object-contain">
         </div>
         {% else %}
         {% if journey_mode %}
@@ -106,7 +109,7 @@
         {% endif %}
       </div>
 
-      <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-2">{{ programme.name }}</h1>
+      <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-2">{{ display_name }}</h1>
 
       {# Metadata row #}
       <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-gray-500 mb-3">
@@ -133,13 +136,13 @@
       </div>
 
       {# Description with mobile read-more #}
-      {% if programme.description %}
+      {% if display_desc %}
       <div class="mb-3">
-        <p class="text-gray-700 text-sm sm:text-base leading-relaxed read-more-target--collapsed" id="programme-description">{{ programme.description }}</p>
+        <p class="text-gray-700 text-sm sm:text-base leading-relaxed read-more-target--collapsed" id="programme-description">{{ display_desc }}</p>
         <button data-read-more-btn aria-expanded="false" aria-controls="programme-description"
                 type="button"
                 class="read-more-toggle md:hidden text-primary-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded">
-          Read more
+          {{ _('Read more') }}
         </button>
       </div>
       {% endif %}
@@ -231,11 +234,11 @@
 
         {# Progress text + bar #}
         <p class="text-sm text-primary-100 mt-1 mb-2">
-          {{ jp.completed_themes }} of {{ jp.total_themes }} themes completed
+          {{ jp.completed_themes }} of {{ jp.total_themes }} {{ _('themes completed') }}
           {% if not current_user.is_authenticated %}
           — <a href="{{ url_for('auth.login') }}" class="underline font-medium text-white">sign in</a> to track your progress.
           {% elif jp.total_user_votes > 0 %}
-          · {{ jp.total_user_votes }} votes cast
+          · {{ jp.total_user_votes }} {{ _('votes cast') }}
           {% endif %}
         </p>
         {# At least 1% width when there is any vote activity but rounded % is 0 #}
@@ -267,7 +270,7 @@
         {% endif %}
         <a href="{{ url_for('programmes.programme_journey_recap', slug=programme.slug) }}"
            class="text-sm text-white/80 hover:text-white underline font-medium">
-          View progress recap
+          {{ _('View progress recap') }}
         </a>
       </div>
     </div>
@@ -382,7 +385,7 @@
 
           <button type="button" id="journey-reminder-submit"
                   class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed">
-            Turn on reminders
+            {{ _('Turn on reminders') }}
           </button>
           <p class="text-xs text-gray-400 leading-relaxed">We only use this to send journey nudges. You can stop anytime from the link in our emails.</p>
         </div>
@@ -415,7 +418,7 @@
           <span class="font-semibold text-gray-900">{{ _cadence_label }}, {{ _time_label }} your time</span>
         </p>
       </div>
-      <a href="{{ url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug) }}" class="text-xs text-gray-400 hover:text-gray-600 underline">Stop reminders</a>
+      <a href="{{ url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug) }}" class="text-xs text-gray-400 hover:text-gray-600 underline">{{ _('Stop reminders') }}</a>
     </div>
   </div>
   {% endif %}
@@ -484,7 +487,7 @@
       <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id, programme_theme=selected_theme, programme_phase=selected_phase) }}"
          class="inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium whitespace-nowrap transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Add discussion
+        {{ _('Add discussion') }}
       </a>
       {% endif %}
     </div>
