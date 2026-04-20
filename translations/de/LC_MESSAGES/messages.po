@@ -810,6 +810,66 @@ msgstr "Neu laden und prüfen"
 msgid "Translation pending"
 msgstr "Übersetzung ausstehend"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "Diskussionen erkunden"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "Nehmen Sie an Gesprächen teil, die Ihnen wichtig sind"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "Diskussion starten"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "Diskussionen suchen…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "Thema"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "Alle Themen"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "Land"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "Alle Länder"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "Sortieren nach"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "Am aktivsten"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "Neueste"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "Programm"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "Alle Programme"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "Filter anwenden"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "An Diskussion teilnehmen"
+
 #~ msgid "Claim"
 #~ msgstr "Aussage"
 

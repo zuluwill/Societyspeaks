@@ -807,6 +807,66 @@ msgstr "Recharger pour vérifier"
 msgid "Translation pending"
 msgstr "Traduction en attente"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "Explorer les débats"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "Rejoignez les conversations qui vous tiennent à cœur"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "Démarrer un débat"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "Rechercher des débats…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "Sujet"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "Tous les sujets"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "Pays"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "Tous les pays"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "Trier par"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "Les plus actifs"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "Les plus récents"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "Programme"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "Tous les programmes"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "Appliquer les filtres"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "Rejoindre le débat"
+
 #~ msgid "Claim"
 #~ msgstr "Affirmation"
 

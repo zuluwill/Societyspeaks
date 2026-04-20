@@ -175,6 +175,11 @@ def index():
     if not guided_journey_programme:
         guided_journey_programme = _global_journey or (all_journey_programmes[0] if all_journey_programmes else None)
 
+    from app.lib.translation import resolve_language, get_cached_discussion_translations_map
+    current_lang = resolve_language(request)
+    all_home_discussions = (featured_discussions or []) + (discussions or [])
+    discussion_translation_map = get_cached_discussion_translations_map(all_home_discussions, current_lang)
+
     return render_template('index.html',
                          featured_discussions=featured_discussions,
                          discussions=discussions,
@@ -189,7 +194,9 @@ def index():
                          guided_journey_programme=guided_journey_programme,
                          journey_personalisation=journey_personalisation,
                          all_journey_programmes=all_journey_programmes,
-                         total_discussion_count_display=total_discussion_count_display)
+                         total_discussion_count_display=total_discussion_count_display,
+                         discussion_translation_map=discussion_translation_map,
+                         current_lang=current_lang)
 
 
 @main_bp.route('/about')

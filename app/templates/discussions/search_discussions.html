@@ -28,15 +28,15 @@
     <!-- Search Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Explore Discussions</h1>
-            <p class="mt-2 text-gray-600">Join conversations that matter to you</p>
+            <h1 class="text-3xl font-bold text-gray-900">{{ _('Explore Discussions') }}</h1>
+            <p class="mt-2 text-gray-600">{{ _('Join conversations that matter to you') }}</p>
         </div>
         <a href="{{ url_for('discussions.create_discussion') }}"
            class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-semibold transition-colors min-h-11">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            Start a Discussion
+            {{ _('Start a Discussion') }}
         </a>
     </div>
 
@@ -50,11 +50,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
-                <input type="text" 
+                <input type="text"
                        id="discussion-search"
-                       name="q" 
+                       name="q"
                        value="{{ search_term }}"
-                       placeholder="Search discussions..." 
+                       placeholder="{{ _('Search discussions…') }}"
                        class="block w-full pl-10 pr-16 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                 <button id="discussion-search-clear"
                         type="button"
@@ -67,9 +67,9 @@
             <!-- Filters -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <label for="topic" class="block text-sm font-medium text-gray-700">Topic</label>
+                    <label for="topic" class="block text-sm font-medium text-gray-700">{{ _('Topic') }}</label>
                     <select name="topic" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                        <option value="">All Topics</option>
+                        <option value="">{{ _('All Topics') }}</option>
                         {% for topic in ['Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 'Politics', 'Society', 'Infrastructure', 'Geopolitics', 'Business', 'Culture'] %}
                             <option value="{{ topic }}" {% if request.args.get('topic') == topic %}selected{% endif %}>{{ topic }}</option>
                         {% endfor %}
@@ -77,9 +77,9 @@
                 </div>
 
                 <div>
-                    <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+                    <label for="country" class="block text-sm font-medium text-gray-700">{{ _('Country') }}</label>
                     <select name="country" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                        <option value="">All Countries</option>
+                        <option value="">{{ _('All Countries') }}</option>
                         {% for country in countries %}
                             <option value="{{ country }}" {% if request.args.get('country') == country %}selected{% endif %}>{{ country }}</option>
                         {% endfor %}
@@ -87,17 +87,17 @@
                 </div>
 
                 <div>
-                    <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
+                    <label for="sort" class="block text-sm font-medium text-gray-700">{{ _('Sort By') }}</label>
                     <select name="sort" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                        <option value="popular" {% if request.args.get('sort', 'popular') == 'popular' %}selected{% endif %}>Most Active</option>
-                        <option value="recent" {% if request.args.get('sort') == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="popular" {% if request.args.get('sort', 'popular') == 'popular' %}selected{% endif %}>{{ _('Most Active') }}</option>
+                        <option value="recent" {% if request.args.get('sort') == 'recent' %}selected{% endif %}>{{ _('Most Recent') }}</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="programme_id" class="block text-sm font-medium text-gray-700">Programme</label>
+                    <label for="programme_id" class="block text-sm font-medium text-gray-700">{{ _('Programme') }}</label>
                     <select name="programme_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                        <option value="">All Programmes</option>
+                        <option value="">{{ _('All Programmes') }}</option>
                         {% for programme in programmes %}
                             <option value="{{ programme.id }}" {% if request.args.get('programme_id') == (programme.id|string) %}selected{% endif %}>{{ programme.name }}</option>
                         {% endfor %}
@@ -110,7 +110,7 @@
 
             <div class="flex justify-end">
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 min-h-11 min-w-11">
-                    Apply Filters
+                    {{ _('Apply Filters') }}
                 </button>
             </div>
         </form>
@@ -121,8 +121,9 @@
     {% if discussions.items %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for discussion in discussions.items %}
+        {% set _tr = discussion_translation_map.get(discussion.id) if discussion_translation_map is defined else none %}
         <div>
-            {{ discussion_card(discussion) }}
+            {{ discussion_card(discussion, disc_title=_tr.title if _tr else none, disc_desc=_tr.description if _tr else none) }}
         </div>
         {% endfor %}
     </div>

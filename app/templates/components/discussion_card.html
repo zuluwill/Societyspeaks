@@ -1,4 +1,7 @@
-{% macro discussion_card(discussion, style='default', button_label='Join Discussion') %}
+{% macro discussion_card(discussion, style='default', button_label=none, disc_title=none, disc_desc=none) %}
+{%- set _title = disc_title if disc_title else discussion.title -%}
+{%- set _desc  = disc_desc  if disc_desc  else discussion.description -%}
+{%- set _btn   = button_label if button_label else _('Join Discussion') -%}
 {#
   Topic colour map — defined once here, used for border, badge, and button.
   All colour classes are safelisted in tailwind.config.js so JIT includes them.
@@ -46,7 +49,7 @@
                     <svg class="w-4 h-4 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
                     </svg>
-                    Featured
+                    {{ _('Featured') }}
                 </span>
                 {% endif %}
             </div>
@@ -71,13 +74,13 @@
         <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
             <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
                class="hover:text-primary-600 focus:outline-none focus:underline">
-                {{ discussion.title }}
+                {{ _title }}
             </a>
         </h3>
 
         <!-- Description -->
         <p class="text-base text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-            {{ discussion.description|strip_markdown }}
+            {{ _desc|strip_markdown }}
         </p>
 
         <!-- Location -->
@@ -104,7 +107,7 @@
     <div class="p-4 bg-gray-50 mt-auto border-t border-gray-100">
         <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
            class="block w-full rounded-md px-4 py-2 text-center text-sm font-semibold text-white shadow transition-all duration-300 bg-{{ ns.btn }} hover:bg-{{ ns.btn_hover }}">
-            {{ button_label }}
+            {{ _btn }}
         </a>
     </div>
 </article>

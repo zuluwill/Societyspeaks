@@ -789,6 +789,66 @@ msgstr "再読み込みして確認"
 msgid "Translation pending"
 msgstr "翻訳準備中"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "ディスカッションを探す"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "あなたに関係する会話に参加する"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "ディスカッションを始める"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "ディスカッションを検索…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "トピック"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "すべてのトピック"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "国"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "すべての国"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "並び替え"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "最もアクティブ"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "最新"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "プログラム"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "すべてのプログラム"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "フィルターを適用"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "ディスカッションに参加"
+
 #~ msgid "Claim"
 #~ msgstr "主張"
 

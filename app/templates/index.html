@@ -817,7 +817,8 @@
 
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {% for discussion in featured_discussions[:3] %}
-                {{ discussion_card(discussion) }}
+                {% set _tr = discussion_translation_map.get(discussion.id) if discussion_translation_map is defined else none %}
+                {{ discussion_card(discussion, disc_title=_tr.title if _tr else none, disc_desc=_tr.description if _tr else none) }}
             {% endfor %}
         </div>
 

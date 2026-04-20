@@ -207,6 +207,24 @@ def get_cached_programme_translation(programme, language_code: str) -> Optional[
     return None
 
 
+def get_cached_discussion_translations_map(discussions: list, language_code: str) -> dict[int, Optional[dict[str, str]]]:
+    """
+    Return {discussion_id: {'title': str, 'description': str}} from DB cache.
+    Used for listing pages. Missing rows return None — callers fall back to English originals.
+    """
+    if not discussions or language_code == 'en':
+        return {}
+
+    from app.models import DiscussionTranslation
+
+    ids = [d.id for d in discussions]
+    rows = DiscussionTranslation.query.filter(
+        DiscussionTranslation.discussion_id.in_(ids),
+        DiscussionTranslation.language_code == language_code,
+    ).all()
+    return {r.discussion_id: {'title': r.title, 'description': r.description or ''} for r in rows}
+
+
 def get_cached_programme_translations_map(programmes: list, language_code: str) -> dict[int, dict[str, str]]:
     """
     Return {programme_id: {'name': str, 'description': str}} from DB cache.

@@ -1339,13 +1339,19 @@ def search_discussions():
         sort=sort
     )
 
+    from app.lib.translation import resolve_language, get_cached_discussion_translations_map
+    current_lang = resolve_language(request)
+    discussion_translation_map = get_cached_discussion_translations_map(discussions.items, current_lang)
+
     return render_template(
         'discussions/search_discussions.html',
         discussions=discussions,
         search_term=search_term,
         countries=countries,
         cities_by_country=cities_by_country,
-        programmes=programmes
+        programmes=programmes,
+        discussion_translation_map=discussion_translation_map,
+        current_lang=current_lang,
     )
 
 

@@ -795,6 +795,66 @@ msgstr "जाँचने के लिए पुनः लोड करें"
 msgid "Translation pending"
 msgstr "अनुवाद लंबित है"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "चर्चाएँ खोजें"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "उन बातचीत में शामिल हों जो आपके लिए मायने रखती हैं"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "चर्चा शुरू करें"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "चर्चाएँ खोजें…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "विषय"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "सभी विषय"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "देश"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "सभी देश"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "के अनुसार क्रमबद्ध करें"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "सबसे सक्रिय"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "सबसे हाल के"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "कार्यक्रम"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "सभी कार्यक्रम"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "फ़िल्टर लागू करें"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "चर्चा में शामिल हों"
+
 #~ msgid "Claim"
 #~ msgstr "दावा"
 

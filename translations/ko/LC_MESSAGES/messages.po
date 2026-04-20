@@ -791,6 +791,66 @@ msgstr "새로 고침하여 확인"
 msgid "Translation pending"
 msgstr "번역 대기 중"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "토론 탐색"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "나에게 중요한 대화에 참여하세요"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "토론 시작하기"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "토론 검색…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "주제"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "모든 주제"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "국가"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "모든 국가"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "정렬 기준"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "가장 활발한"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "최신"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "프로그램"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "모든 프로그램"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "필터 적용"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "토론 참여"
+
 #~ msgid "Claim"
 #~ msgstr "주장"
 

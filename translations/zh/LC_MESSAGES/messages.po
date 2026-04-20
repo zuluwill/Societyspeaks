@@ -789,6 +789,66 @@ msgstr "刷新查看"
 msgid "Translation pending"
 msgstr "翻译待处理"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "探索讨论"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "加入对您重要的对话"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "开始讨论"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "搜索讨论…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "话题"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "所有话题"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "国家"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "所有国家"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "排序方式"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "最活跃"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "最新"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "项目"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "所有项目"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "应用筛选"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "参与讨论"
+
 #~ msgid "Claim"
 #~ msgstr "主张"
 

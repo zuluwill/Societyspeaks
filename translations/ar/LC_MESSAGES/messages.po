@@ -800,6 +800,66 @@ msgstr "أعد التحميل للتحقق"
 msgid "Translation pending"
 msgstr "الترجمة قيد الإعداد"
 
+#: app/templates/discussions/search_discussions.html
+msgid "Explore Discussions"
+msgstr "استكشاف النقاشات"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Join conversations that matter to you"
+msgstr "انضم إلى المحادثات التي تهمك"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Start a Discussion"
+msgstr "ابدأ نقاشاً"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Search discussions…"
+msgstr "البحث في النقاشات…"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Topic"
+msgstr "الموضوع"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Topics"
+msgstr "جميع الموضوعات"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Country"
+msgstr "البلد"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Countries"
+msgstr "جميع البلدان"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Sort By"
+msgstr "ترتيب حسب"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Active"
+msgstr "الأكثر نشاطاً"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Most Recent"
+msgstr "الأحدث"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Programme"
+msgstr "البرنامج"
+
+#: app/templates/discussions/search_discussions.html
+msgid "All Programmes"
+msgstr "جميع البرامج"
+
+#: app/templates/discussions/search_discussions.html
+msgid "Apply Filters"
+msgstr "تطبيق الفلاتر"
+
+#: app/templates/components/discussion_card.html
+msgid "Join Discussion"
+msgstr "انضم إلى النقاش"
+
 #~ msgid "Claim"
 #~ msgstr "ادعاء"
 
