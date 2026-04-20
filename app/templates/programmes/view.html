@@ -1,9 +1,13 @@
 {% extends "layout.html" %}
+{% from 'components/_translation_pending.html' import translation_pending_notice %}
 {% set display_name = programme_translation.name if programme_translation else programme.name %}
 {% set display_desc = programme_translation.description if programme_translation else programme.description %}
 {% block title %}{{ display_name }} — Society Speaks{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-6 px-4">
+  {% if current_lang != 'en' and not programme_translation %}
+    {{ translation_pending_notice() }}
+  {% endif %}
 
   {# Breadcrumb #}
   {% if current_user.is_authenticated and (can_edit or can_steward) %}

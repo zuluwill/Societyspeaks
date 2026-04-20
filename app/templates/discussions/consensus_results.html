@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% from 'components/_translation_pending.html' import translation_pending_notice %}
 
 {% set disc_title = discussion_translation.title if discussion_translation else discussion.title %}
 
@@ -16,6 +17,9 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
+  {% if current_lang != 'en' and not discussion_translation %}
+    {{ translation_pending_notice() }}
+  {% endif %}
   <div class="mb-6">
     <h1 class="text-3xl font-bold mb-2">{{ _('Consensus Analysis') }}</h1>
     <p class="text-gray-600">{{ disc_title }}</p>

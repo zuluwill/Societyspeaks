@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from 'components/_translation_pending.html' import translation_pending_notice %}
 
 {# Canonical discussion URL + translated SEO fields (machine-translated when non-English) #}
 {% set _disc_canonical = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
@@ -45,6 +46,9 @@
 {% block content %}
 <div class="{% if guided_journey_context %}max-w-4xl{% else %}max-w-7xl{% endif %} mx-auto py-8 px-4 sm:px-6 lg:px-8">
   {% include 'discussions/_guided_journey_rail.html' %}
+  {% if current_lang != 'en' and not discussion_translation %}
+    {{ translation_pending_notice() }}
+  {% endif %}
   <!-- Back Button & Research Tools - Add this first -->
   <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
     <div

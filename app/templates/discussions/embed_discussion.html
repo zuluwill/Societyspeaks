@@ -740,6 +740,29 @@
       outline-offset: 1px;
     }
 
+    /* Translation pending notice (shown when cache miss on language change) */
+    .translation-pending {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      color: var(--embed-text-light);
+      line-height: 1.4;
+    }
+
+    .translation-pending svg {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      margin-top: 1px;
+      color: var(--embed-primary);
+    }
+
     /* Translation note on statements */
     .translation-note {
       font-size: 0.72rem;
@@ -805,6 +828,13 @@
         <option value="{{ code }}" {% if code == current_lang %}selected{% endif %}>{{ info.native }}</option>
         {% endfor %}
       </select>
+    </div>
+    {% endif %}
+
+    {% if current_lang != 'en' and not discussion_translation %}
+    <div class="translation-pending" role="status" aria-live="polite">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>{{ _('Translation in progress — this content is showing in English while your language version is being prepared.') }}</span>
     </div>
     {% endif %}
 
