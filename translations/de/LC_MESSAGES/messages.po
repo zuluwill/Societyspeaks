@@ -795,6 +795,11 @@ msgstr "Erinnerungen deaktivieren"
 msgid "Add discussion"
 msgstr "Diskussion hinzufügen"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "Übersetzung läuft — dieser Inhalt wird auf Englisch angezeigt, während Ihre Sprachversion vorbereitet wird."
+
 #~ msgid "Claim"
 #~ msgstr "Aussage"
 

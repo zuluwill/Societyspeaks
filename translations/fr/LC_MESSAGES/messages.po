@@ -792,6 +792,11 @@ msgstr "Arrêter les rappels"
 msgid "Add discussion"
 msgstr "Ajouter une discussion"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "Traduction en cours — ce contenu s’affiche en anglais pendant que votre version dans votre langue est en préparation."
+
 #~ msgid "Claim"
 #~ msgstr "Affirmation"
 

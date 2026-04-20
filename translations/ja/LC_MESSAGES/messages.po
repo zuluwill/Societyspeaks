@@ -774,6 +774,11 @@ msgstr "リマインダーをオフにする"
 msgid "Add discussion"
 msgstr "ディスカッションを追加"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "翻訳中 — お使いの言語版を準備している間、このコンテンツは英語で表示されています。"
+
 #~ msgid "Claim"
 #~ msgstr "主張"
 

@@ -780,6 +780,11 @@ msgstr "अनुस्मारक बंद करें"
 msgid "Add discussion"
 msgstr "चर्चा जोड़ें"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "अनुवाद जारी है — आपकी भाषा का संस्करण तैयार होने तक यह सामग्री अंग्रेज़ी में दिखाई जा रही है।"
+
 #~ msgid "Claim"
 #~ msgstr "दावा"
 

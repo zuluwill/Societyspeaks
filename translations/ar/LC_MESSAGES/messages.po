@@ -785,6 +785,11 @@ msgstr "إيقاف التذكيرات"
 msgid "Add discussion"
 msgstr "إضافة نقاش"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "الترجمة جارية — يُعرض هذا المحتوى باللغة الإنجليزية أثناء إعداد نسختك بلغتك."
+
 #~ msgid "Claim"
 #~ msgstr "ادعاء"
 

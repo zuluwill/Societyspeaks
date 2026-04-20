@@ -787,6 +787,11 @@ msgstr "Parar lembretes"
 msgid "Add discussion"
 msgstr "Adicionar discussão"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "Tradução em andamento — este conteúdo está sendo exibido em inglês enquanto a versão no seu idioma está sendo preparada."
+
 #~ msgid "Claim"
 #~ msgstr "Afirmação"
 

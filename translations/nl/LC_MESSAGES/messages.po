@@ -789,6 +789,11 @@ msgstr "Herinneringen stoppen"
 msgid "Add discussion"
 msgstr "Discussie toevoegen"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "Vertaling in uitvoering — deze inhoud wordt in het Engels weergegeven terwijl uw taalversie wordt voorbereid."
+
 #~ msgid "Claim"
 #~ msgstr "Stelling"
 

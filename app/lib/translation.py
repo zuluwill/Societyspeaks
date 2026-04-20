@@ -142,14 +142,14 @@ def get_cached_statement_translations(
     return {r.statement_id: r.content for r in rows}
 
 
-def get_cached_discussion_translation(discussion, language_code: str) -> dict[str, str]:
+def get_cached_discussion_translation(discussion, language_code: str) -> Optional[dict[str, str]]:
     """
-    Return {'title': ..., 'description': ...} from DB cache.
-    Falls back to English originals when not yet translated.
+    Return {'title': ..., 'description': ...} from DB cache, or None on a miss.
+    None means the translation is not yet available; callers fall back to English originals.
+    The background worker will populate the cache within the next 5-minute run.
     """
-    fallback = {'title': discussion.title, 'description': discussion.description or ''}
     if language_code == 'en':
-        return fallback
+        return None
 
     from app.models import DiscussionTranslation
 
@@ -159,7 +159,7 @@ def get_cached_discussion_translation(discussion, language_code: str) -> dict[st
     ).first()
     if cached:
         return {'title': cached.title, 'description': cached.description or ''}
-    return fallback
+    return None
 
 
 def get_cached_discussion_info_translation(discussion, language_code: str) -> dict[str, str]:
@@ -188,15 +188,13 @@ def get_cached_discussion_info_translation(discussion, language_code: str) -> di
     return fallback
 
 
-def get_cached_programme_translation(programme, language_code: str) -> dict[str, str]:
+def get_cached_programme_translation(programme, language_code: str) -> Optional[dict[str, str]]:
     """
-    Return {'name': ..., 'description': ...} from DB cache.
-    Falls back to English originals when not yet translated.
+    Return {'name': ..., 'description': ...} from DB cache, or None on a miss.
+    None means the translation is not yet available; callers fall back to English originals.
     """
-    description = getattr(programme, 'description', '') or ''
-    fallback = {'name': programme.name, 'description': description}
     if language_code == 'en':
-        return fallback
+        return None
 
     from app.models import ProgrammeTranslation
 
@@ -206,7 +204,7 @@ def get_cached_programme_translation(programme, language_code: str) -> dict[str,
     ).first()
     if cached:
         return {'name': cached.name, 'description': cached.description or ''}
-    return fallback
+    return None
 
 
 def get_cached_programme_translations_map(programmes: list, language_code: str) -> dict[int, dict[str, str]]:

@@ -774,6 +774,11 @@ msgstr "停止提醒"
 msgid "Add discussion"
 msgstr "添加讨论"
 
+#: app/templates/components/_translation_pending.html:6
+#: app/templates/discussions/embed_discussion.html:837
+msgid "Translation in progress — this content is showing in English while your language version is being prepared."
+msgstr "翻译进行中 — 您的语言版本正在准备中，目前内容以英语显示。"
+
 #~ msgid "Claim"
 #~ msgstr "主张"
 
