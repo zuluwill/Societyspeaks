@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-19 15:46+0100\n"
+"POT-Creation-Date: 2026-04-20 14:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -35,6 +35,7 @@ msgstr "Mitmachen"
 msgid "Big Questions Journey"
 msgstr "Große-Fragen-Reise"
 
+#: app/templates/components/discussion_card.html:52
 #: app/templates/layout.html:477
 msgid "Featured"
 msgstr "Empfohlen"
@@ -47,7 +48,8 @@ msgstr "Kostenlos"
 msgid "Today's Question"
 msgstr "Frage des Tages"
 
-#: app/templates/layout.html:495 app/templates/layout.html:1199
+#: app/templates/auth/dashboard.html:394 app/templates/layout.html:495
+#: app/templates/layout.html:1199
 msgid "Daily Brief"
 msgstr "Tagesbriefing"
 
@@ -80,11 +82,11 @@ msgstr "Erkunden"
 msgid "News"
 msgstr "Nachrichten"
 
-#: app/templates/layout.html:573
+#: app/templates/auth/dashboard.html:51 app/templates/layout.html:573
 msgid "Discussions"
 msgstr "Diskussionen"
 
-#: app/templates/layout.html:579
+#: app/templates/auth/dashboard.html:38 app/templates/layout.html:579
 msgid "Programmes"
 msgstr "Programme"
 
@@ -108,7 +110,7 @@ msgstr "Hilfe"
 msgid "FAQ"
 msgstr "FAQ"
 
-#: app/templates/discussions/embed_discussion.html:803
+#: app/templates/discussions/embed_discussion.html:865
 #: app/templates/layout.html:646
 msgid "Select language"
 msgstr "Sprache auswählen"
@@ -120,6 +122,54 @@ msgstr "Sprachoptionen"
 #: app/templates/layout.html:672 app/templates/layout.html:1222
 msgid "Donate"
 msgstr "Spenden"
+
+#: app/templates/auth/dashboard.html:100 app/templates/layout.html:746
+#: app/templates/layout.html:753 app/templates/layout.html:1041
+#: app/templates/layout.html:1047
+msgid "Your Profile"
+msgstr "Ihr Profil"
+
+#: app/templates/layout.html:760 app/templates/layout.html:1053
+msgid "Create Profile"
+msgstr "Profil Erstellen"
+
+#: app/templates/layout.html:767 app/templates/layout.html:1059
+#: app/templates/programmes/view.html:15
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: app/templates/layout.html:774 app/templates/layout.html:1065
+msgid "Notifications"
+msgstr "Benachrichtigungen"
+
+#: app/templates/layout.html:785 app/templates/layout.html:1075
+msgid "My Briefings"
+msgstr "Meine Briefings"
+
+#: app/templates/auth/dashboard.html:185 app/templates/layout.html:791
+#: app/templates/layout.html:1080
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: app/templates/layout.html:799 app/templates/layout.html:1086
+msgid "Partner Portal"
+msgstr "Partnerportal"
+
+#: app/templates/layout.html:807 app/templates/layout.html:1093
+msgid "Admin"
+msgstr "Administration"
+
+#: app/templates/layout.html:814 app/templates/layout.html:1099
+msgid "Sign out"
+msgstr "Abmelden"
+
+#: app/templates/layout.html:824 app/templates/layout.html:1108
+msgid "Sign in"
+msgstr "Anmelden"
+
+#: app/templates/layout.html:829 app/templates/layout.html:1113
+msgid "Get Started"
+msgstr "Loslegen"
 
 #: app/templates/layout.html:951
 msgid "Language"
@@ -155,53 +205,414 @@ msgstr ""
 msgid "Quick Links"
 msgstr "Schnelllinks"
 
+#: app/templates/auth/dashboard.html:19
+#, python-format
+msgid "Welcome back, %(name)s!"
+msgstr "Willkommen zurück, %(name)s!"
+
+#: app/templates/auth/dashboard.html:20
+msgid "Here's an overview of your programmes and discussions."
+msgstr "Hier ist eine Übersicht Ihrer Programme und Diskussionen."
+
+#: app/templates/auth/dashboard.html:64
+msgid "Discussion Views"
+msgstr "Diskussionsaufrufe"
+
+#: app/templates/auth/dashboard.html:88
+msgid "Profile Views"
+msgstr "Profilaufrufe"
+
+#: app/templates/auth/dashboard.html:105
+msgid "Profile photo"
+msgstr "Profilfoto"
+
+#: app/templates/auth/dashboard.html:110
+msgid "Individual"
+msgstr "Einzelperson"
+
+#: app/templates/auth/dashboard.html:114
+msgid "Company logo"
+msgstr "Firmenlogo"
+
+#: app/templates/auth/dashboard.html:119
+msgid "Organisation"
+msgstr "Organisation"
+
+#: app/templates/auth/dashboard.html:126 app/templates/auth/dashboard.html:631
+msgid "View"
+msgstr "Ansehen"
+
+#: app/templates/auth/dashboard.html:130
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: app/templates/auth/dashboard.html:138
+msgid "Set up your profile so others can find you."
+msgstr "Richten Sie Ihr Profil ein, damit andere Sie finden können."
+
+#: app/templates/auth/dashboard.html:141
+msgid "Create profile"
+msgstr "Profil erstellen"
+
+#: app/templates/auth/dashboard.html:149
+msgid "Create"
+msgstr "Erstellen"
+
+#: app/templates/auth/dashboard.html:159
+msgid "New Programme"
+msgstr "Neues Programm"
+
+#: app/templates/auth/dashboard.html:160
+msgid "Group discussions into a campaign"
+msgstr "Diskussionen zu einer Kampagne gruppieren"
+
+#: app/templates/auth/dashboard.html:171
+msgid "New Discussion"
+msgstr "Neue Diskussion"
+
+#: app/templates/auth/dashboard.html:172
+msgid "Start a discussion on any topic"
+msgstr "Starten Sie eine Diskussion zu jedem Thema"
+
+#: app/templates/auth/dashboard.html:180 app/templates/programmes/view.html:17
+msgid "Workspace"
+msgstr "Arbeitsbereich"
+
+#: app/templates/auth/dashboard.html:191
+msgid "Public profile"
+msgstr "Öffentliches Profil"
+
+#: app/templates/auth/dashboard.html:204
+msgid "Continue Where You Left Off"
+msgstr "Dort Weitermachen, Wo Sie Aufgehört Haben"
+
+#: app/templates/auth/dashboard.html:213
+msgid "Continue"
+msgstr "Weiter"
+
+#: app/templates/auth/dashboard.html:224
+msgid "My Programmes"
+msgstr "Meine Programme"
+
+#: app/templates/auth/dashboard.html:225
+msgid "Programmes you own, steward, or participate in"
+msgstr "Programme, die Sie besitzen, verwalten oder an denen Sie teilnehmen"
+
+#: app/templates/auth/dashboard.html:234 app/templates/auth/dashboard.html:307
+#: app/templates/auth/dashboard.html:624
+msgid "New"
+msgstr "Neu"
+
+#: app/templates/auth/dashboard.html:268
+#, python-format
+msgid "Showing 6 of %(count)s —"
+msgstr "Zeige 6 von %(count)s —"
+
+#: app/templates/auth/dashboard.html:269
+msgid "view all in workspace"
+msgstr "alle im Arbeitsbereich anzeigen"
+
+#: app/templates/auth/dashboard.html:277
+msgid "No programmes yet"
+msgstr "Noch keine Programme"
+
+#: app/templates/auth/dashboard.html:278
+msgid "Programmes group discussions into structured engagement campaigns."
+msgstr "Programme gruppieren Diskussionen in strukturierte Engagement-Kampagnen."
+
+#: app/templates/auth/dashboard.html:281
+msgid "Create your first programme"
+msgstr "Erstellen Sie Ihr erstes Programm"
+
+#: app/templates/auth/dashboard.html:292
+msgid "Recent Updates"
+msgstr "Aktuelle Updates"
+
+#: app/templates/auth/dashboard.html:293
+msgid "Discussion activity and alerts"
+msgstr "Diskussionsaktivität und Benachrichtigungen"
+
+#: app/templates/auth/dashboard.html:317
+msgid "You have no notifications yet."
+msgstr "Sie haben noch keine Benachrichtigungen."
+
+#: app/templates/auth/dashboard.html:325
+msgid "Participating"
+msgstr "Teilnehmend"
+
+#: app/templates/auth/dashboard.html:326
+msgid "Discussions you have joined or contributed to"
+msgstr "Diskussionen, denen Sie beigetreten sind oder zu denen Sie beigetragen haben"
+
+#: app/templates/auth/dashboard.html:329
+msgid "View activity"
+msgstr "Aktivität anzeigen"
+
+#: app/templates/auth/dashboard.html:342
+msgid "Voted"
+msgstr "Abgestimmt"
+
+#: app/templates/auth/dashboard.html:343
+#: app/templates/discussions/embed_discussion.html:1068
+msgid "Statement"
+msgstr "Aussage"
+
+#: app/templates/auth/dashboard.html:344
+msgid "Response"
+msgstr "Antwort"
+
+#: app/templates/auth/dashboard.html:351
+msgid "Vote on statements or add an argument to build your activity history."
+msgstr "Stimmen Sie über Aussagen ab oder fügen Sie ein Argument hinzu, um Ihre Aktivitätshistorie aufzubauen."
+
+#: app/templates/auth/dashboard.html:359
+msgid "Saved Discussions"
+msgstr "Gespeicherte Diskussionen"
+
+#: app/templates/auth/dashboard.html:360
+msgid "Keep track of discussions you want to revisit"
+msgstr "Behalten Sie den Überblick über Diskussionen, die Sie erneut besuchen möchten"
+
+#: app/templates/auth/dashboard.html:363
+msgid "View saved"
+msgstr "Gespeicherte anzeigen"
+
+#: app/templates/auth/dashboard.html:378
+msgid "Save discussions from any discussion page to build your watchlist."
+msgstr "Speichern Sie Diskussionen von jeder Diskussionsseite, um Ihre Beobachtungsliste aufzubauen."
+
+#: app/templates/auth/dashboard.html:386
+msgid "Stay informed"
+msgstr "Bleiben Sie informiert"
+
+#: app/templates/auth/dashboard.html:387
+msgid "Subscribe using your account email —"
+msgstr "Abonnieren Sie mit Ihrer Konto-E-Mail —"
+
+#: app/templates/auth/dashboard.html:395
+msgid "A curated news briefing delivered to your inbox"
+msgstr "Ein kuratiertes Nachrichten-Briefing in Ihrem Posteingang"
+
+#: app/templates/auth/dashboard.html:400 app/templates/auth/dashboard.html:466
+#: app/templates/auth/dashboard.html:562
+msgid "Active"
+msgstr "Aktiv"
+
+#: app/templates/auth/dashboard.html:414 app/templates/auth/dashboard.html:491
+msgid "Manage preferences"
+msgstr "Einstellungen verwalten"
+
+#: app/templates/auth/dashboard.html:422 app/templates/auth/dashboard.html:498
+msgid "Frequency"
+msgstr "Häufigkeit"
+
+#: app/templates/auth/dashboard.html:424 app/templates/auth/dashboard.html:501
+msgid "Daily"
+msgstr "Täglich"
+
+#: app/templates/auth/dashboard.html:425
+msgid "Weekly"
+msgstr "Wöchentlich"
+
+#: app/templates/auth/dashboard.html:429
+msgid "Send time"
+msgstr "Versandzeit"
+
+#: app/templates/auth/dashboard.html:444
+msgid "Timezone"
+msgstr "Zeitzone"
+
+#: app/templates/auth/dashboard.html:450
+msgid "Subscribe to Daily Brief"
+msgstr "Täglichen Brief abonnieren"
+
+#: app/templates/auth/dashboard.html:460
+msgid "Daily Question"
+msgstr "Tägliche Frage"
+
+#: app/templates/auth/dashboard.html:461
+msgid "A civic question in your inbox — vote in one click"
+msgstr "Eine Bürgerfrage in Ihrem Posteingang — mit einem Klick abstimmen"
+
+#: app/templates/auth/dashboard.html:500
+msgid "Weekly digest"
+msgstr "Wöchentlicher Digest"
+
+#: app/templates/auth/dashboard.html:502
+msgid "Monthly"
+msgstr "Monatlich"
+
+#: app/templates/auth/dashboard.html:506
+msgid "Time zone"
+msgstr "Zeitzone"
+
+#: app/templates/auth/dashboard.html:512
+msgid "Digest day"
+msgstr "Digest-Tag"
+
+#: app/templates/auth/dashboard.html:520
+msgid "Time"
+msgstr "Zeit"
+
+#: app/templates/auth/dashboard.html:531
+msgid "Subscribe to Daily Question"
+msgstr "Tägliche Frage abonnieren"
+
+#: app/templates/auth/dashboard.html:556
+msgid "Paid Briefings"
+msgstr "Kostenpflichtige Briefings"
+
+#: app/templates/auth/dashboard.html:557
+msgid "Your personalised AI-curated briefings"
+msgstr "Ihre personalisierten KI-kuratierten Briefings"
+
+#: app/templates/auth/dashboard.html:585
+msgid "Go to my Briefings"
+msgstr "Zu meinen Briefings"
+
+#: app/templates/auth/dashboard.html:591
+msgid "Manage Billing"
+msgstr "Abrechnung verwalten"
+
+#: app/templates/auth/dashboard.html:597
+msgid ""
+"Get personalised AI-curated briefings delivered to your inbox. Set your "
+"topics, sources, and schedule."
+msgstr ""
+
+#: app/templates/auth/dashboard.html:602
+msgid "Start a free trial"
+msgstr "Kostenlose Testversion starten"
+
+#: app/templates/auth/dashboard.html:614
+msgid "Your Discussions"
+msgstr "Ihre Diskussionen"
+
+#: app/templates/auth/dashboard.html:615
+msgid "Discussions you have created"
+msgstr "Diskussionen, die Sie erstellt haben"
+
+#: app/templates/auth/dashboard.html:639
+msgid "No discussions yet"
+msgstr "Noch keine Diskussionen"
+
+#: app/templates/auth/dashboard.html:640
+msgid "Start a discussion to gather opinions and build consensus."
+msgstr "Starten Sie eine Diskussion, um Meinungen zu sammeln und einen Konsens aufzubauen."
+
+#: app/templates/auth/dashboard.html:643
+msgid "Start your first discussion"
+msgstr "Starten Sie Ihre erste Diskussion"
+
+#: app/templates/auth/login.html:8 app/templates/auth/login.html:36
+#: app/templates/auth/register.html:42
+msgid "Login"
+msgstr "Anmelden"
+
+#: app/templates/auth/login.html:26 app/templates/auth/register.html:28
+msgid "Email"
+msgstr "E-Mail"
+
+#: app/templates/auth/login.html:29 app/templates/auth/register.html:31
+msgid "Password"
+msgstr "Passwort"
+
+#: app/templates/auth/login.html:33
+msgid "Forgot Password?"
+msgstr "Passwort vergessen?"
+
+#: app/templates/auth/login.html:45
+msgid "Logging in…"
+msgstr "Anmelden…"
+
+#: app/templates/auth/login.html:51
+msgid "Don't have an account?"
+msgstr "Noch kein Konto?"
+
+#: app/templates/auth/login.html:51 app/templates/auth/register.html:6
+#: app/templates/auth/register.html:39
+msgid "Register"
+msgstr "Registrieren"
+
+#: app/templates/auth/register.html:25
+msgid "Username"
+msgstr "Benutzername"
+
+#: app/templates/auth/register.html:35
+#, python-format
+msgid "Verify you're human: What is %(num1)s + %(num2)s?"
+msgstr "Bestätigen Sie, dass Sie ein Mensch sind: Was ist %(num1)s + %(num2)s?"
+
+#: app/templates/auth/register.html:42
+msgid "Already have an account?"
+msgstr "Haben Sie bereits ein Konto?"
+
+#: app/templates/components/_translation_pending.html:7
+#: app/templates/discussions/embed_discussion.html:878
+msgid ""
+"Translation in progress — this content is showing in English while your "
+"language version is being prepared."
+msgstr ""
+"Übersetzung läuft — dieser Inhalt wird auf Englisch angezeigt, während "
+"Ihre Sprachversion vorbereitet wird."
+
+#: app/templates/components/_translation_pending.html:8
+#: app/templates/discussions/embed_discussion.html:879
+msgid "Reload to check"
+msgstr "Neu laden und prüfen"
+
+#: app/templates/components/discussion_card.html:4
+msgid "Join Discussion"
+msgstr "An Diskussion teilnehmen"
+
 #: app/templates/components/vote_buttons.html:24
 #: app/templates/components/vote_buttons.html:65
-#: app/templates/discussions/embed_discussion.html:866
-#: app/templates/discussions/view_native.html:47
+#: app/templates/discussions/embed_discussion.html:944
+#: app/templates/discussions/view_native.html:50
 msgid "Agree"
 msgstr "Zustimmen"
 
 #: app/templates/components/vote_buttons.html:24
 #: app/templates/components/vote_buttons.html:65
-#: app/templates/discussions/embed_discussion.html:855
-#: app/templates/discussions/view_native.html:44
+#: app/templates/discussions/embed_discussion.html:933
+#: app/templates/discussions/view_native.html:47
 msgid "Agree with this statement"
 msgstr "Dieser Aussage zustimmen"
 
 #: app/templates/components/vote_buttons.html:25
 #: app/templates/components/vote_buttons.html:66
-#: app/templates/discussions/embed_discussion.html:885
-#: app/templates/discussions/view_native.html:55
+#: app/templates/discussions/embed_discussion.html:963
+#: app/templates/discussions/view_native.html:58
 msgid "Disagree"
 msgstr "Ablehnen"
 
 #: app/templates/components/vote_buttons.html:25
 #: app/templates/components/vote_buttons.html:66
-#: app/templates/discussions/embed_discussion.html:874
-#: app/templates/discussions/view_native.html:52
+#: app/templates/discussions/embed_discussion.html:952
+#: app/templates/discussions/view_native.html:55
 msgid "Disagree with this statement"
 msgstr "Dieser Aussage widersprechen"
 
 #: app/templates/components/vote_buttons.html:26
 #: app/templates/components/vote_buttons.html:67
-#: app/templates/discussions/embed_discussion.html:904
-#: app/templates/discussions/view_native.html:63
+#: app/templates/discussions/embed_discussion.html:982
+#: app/templates/discussions/view_native.html:66
 msgid "Unsure"
 msgstr "Unsicher"
 
 #: app/templates/components/vote_buttons.html:26
 #: app/templates/components/vote_buttons.html:67
-#: app/templates/discussions/embed_discussion.html:893
-#: app/templates/discussions/view_native.html:60
+#: app/templates/discussions/embed_discussion.html:971
+#: app/templates/discussions/view_native.html:63
 msgid "Unsure about this statement"
 msgstr "Unsicher bei dieser Aussage"
 
 #: app/templates/discussions/_information_step.html:10
 msgid "This background may be machine-translated. Quality may vary."
-msgstr "Dieser Hintergrund kann maschinell übersetzt sein. Die Qualität kann variieren."
+msgstr "Dieser Inhalt kann maschinell übersetzt sein. Die Qualität kann variieren."
 "Dieser Hintergrund kann maschinell übersetzt sein. Die Qualität kann "
-"variieren."
+"variieren.Dieser Hintergrund kann maschinell übersetzt sein. Die Qualität"
+" kann variieren."
 
 #: app/templates/discussions/_statement_card.html:20
 msgid "Posted by"
@@ -212,47 +623,52 @@ msgid "Anonymous"
 msgstr "Anonym"
 
 #: app/templates/discussions/_statement_card.html:29
-#: app/templates/discussions/embed_discussion.html:844
+#: app/templates/discussions/embed_discussion.html:917
 msgid "AI translated"
 msgstr "KI-übersetzt"
 
 #: app/templates/discussions/_statement_card.html:29
-#: app/templates/discussions/embed_discussion.html:845
+#: app/templates/discussions/embed_discussion.html:918
 msgid "Show original"
 msgstr "Original anzeigen"
 
-#: app/templates/discussions/_statement_card.html:51
+#: app/templates/discussions/_statement_card.html:37
+#: app/templates/discussions/embed_discussion.html:924
+msgid "Translation pending"
+msgstr "Übersetzung ausstehend"
+
+#: app/templates/discussions/_statement_card.html:58
 msgid "View Discussion"
 msgstr "Diskussion ansehen"
 
-#: app/templates/discussions/_statement_card.html:65
+#: app/templates/discussions/_statement_card.html:72
 msgid "Add Argument"
 msgstr "Argument hinzufügen"
 
-#: app/templates/discussions/consensus_results.html:5
-#: app/templates/discussions/consensus_results.html:20
-#: app/templates/discussions/view_native.html:153
+#: app/templates/discussions/consensus_results.html:6
+#: app/templates/discussions/consensus_results.html:26
+#: app/templates/discussions/view_native.html:156
 msgid "Consensus Analysis"
 msgstr "Konsensanalyse"
 
-#: app/templates/discussions/consensus_results.html:28
+#: app/templates/discussions/consensus_results.html:34
 msgid "Opinion Groups"
 msgstr "Meinungsgruppen"
 
-#: app/templates/discussions/consensus_results.html:34
+#: app/templates/discussions/consensus_results.html:40
 msgid "Participants"
 msgstr "Teilnehmer"
 
-#: app/templates/discussions/consensus_results.html:38
+#: app/templates/discussions/consensus_results.html:44
 msgid "Statements"
 msgstr "Aussagen"
 
-#: app/templates/discussions/consensus_results.html:167
-#: app/templates/discussions/consensus_results.html:204
+#: app/templates/discussions/consensus_results.html:173
+#: app/templates/discussions/consensus_results.html:210
 msgid "What Each Group Believes"
 msgstr "Was jede Gruppe glaubt"
 
-#: app/templates/discussions/consensus_results.html:169
+#: app/templates/discussions/consensus_results.html:175
 msgid ""
 "These are the statements each opinion group agrees on most strongly. This"
 " helps understand the core beliefs that define each group."
@@ -260,212 +676,212 @@ msgstr ""
 "Das sind die Aussagen, mit denen jede Meinungsgruppe am stärksten "
 "übereinstimmt. So erkennen Sie die Kernüberzeugungen jeder Gruppe."
 
-#: app/templates/discussions/consensus_results.html:183
+#: app/templates/discussions/consensus_results.html:189
 msgid "Top beliefs:"
 msgstr "Hauptüberzeugungen:"
 
-#: app/templates/discussions/consensus_results.html:190
+#: app/templates/discussions/consensus_results.html:196
 msgid "% agree"
 msgstr "% Zustimmung"
 
-#: app/templates/discussions/consensus_results.html:216
+#: app/templates/discussions/consensus_results.html:222
 msgid "Areas of Consensus"
 msgstr "Konsensbereiche"
 
-#: app/templates/discussions/consensus_results.html:219
+#: app/templates/discussions/consensus_results.html:225
 msgid "These statements have broad agreement across all opinion groups."
 msgstr "Diese Aussagen finden in allen Meinungsgruppen breite Zustimmung."
 
-#: app/templates/discussions/consensus_results.html:225
-#: app/templates/discussions/consensus_results.html:250
-#: app/templates/discussions/consensus_results.html:272
-#: app/templates/discussions/embed_discussion.html:912
+#: app/templates/discussions/consensus_results.html:231
+#: app/templates/discussions/consensus_results.html:256
+#: app/templates/discussions/consensus_results.html:278
+#: app/templates/discussions/embed_discussion.html:990
 msgid "agree"
 msgstr "Zustimmung"
 
-#: app/templates/discussions/consensus_results.html:226
-#: app/templates/discussions/consensus_results.html:251
-#: app/templates/discussions/consensus_results.html:273
-#: app/templates/discussions/embed_discussion.html:913
+#: app/templates/discussions/consensus_results.html:232
+#: app/templates/discussions/consensus_results.html:257
+#: app/templates/discussions/consensus_results.html:279
+#: app/templates/discussions/embed_discussion.html:991
 msgid "disagree"
 msgstr "Ablehnung"
 
-#: app/templates/discussions/consensus_results.html:227
-#: app/templates/discussions/consensus_results.html:252
-#: app/templates/discussions/consensus_results.html:274
-#: app/templates/discussions/embed_discussion.html:914
+#: app/templates/discussions/consensus_results.html:233
+#: app/templates/discussions/consensus_results.html:258
+#: app/templates/discussions/consensus_results.html:280
+#: app/templates/discussions/embed_discussion.html:992
 msgid "unsure"
 msgstr "unsicher"
 
-#: app/templates/discussions/consensus_results.html:229
-#: app/templates/discussions/embed_discussion.html:921
-#: app/templates/discussions/embed_discussion.html:1138
+#: app/templates/discussions/consensus_results.html:235
+#: app/templates/discussions/embed_discussion.html:999
+#: app/templates/discussions/embed_discussion.html:1216
 msgid "agreement"
 msgstr "Übereinstimmung"
 
-#: app/templates/discussions/consensus_results.html:241
+#: app/templates/discussions/consensus_results.html:247
 msgid "Bridge Statements"
 msgstr "Brückenaussagen"
 
-#: app/templates/discussions/consensus_results.html:244
+#: app/templates/discussions/consensus_results.html:250
 msgid "These statements unite different opinion groups and offer common ground."
-msgstr "Diese Aussagen verbinden verschiedene Meinungsgruppen und schaffen gemeinsame Grundlage."
+msgstr "Diese Aussagen vereinen verschiedene Meinungsgruppen und bieten gemeinsamen Boden."
 "Diese Aussagen verbinden verschiedene Meinungsgruppen und schaffen "
-"gemeinsame Grundlage."
+"gemeinsame Grundlage.Diese Aussagen verbinden verschiedene "
+"Meinungsgruppen und schaffen gemeinsame Grundlage."
 
-#: app/templates/discussions/consensus_results.html:263
+#: app/templates/discussions/consensus_results.html:269
 msgid "Points of Division"
 msgstr "Streitpunkte"
 
-#: app/templates/discussions/consensus_results.html:266
+#: app/templates/discussions/consensus_results.html:272
 msgid "These statements show significant disagreement between opinion groups."
-msgstr "Diese Aussagen zeigen erhebliche Meinungsverschiedenheiten zwischen den Meinungsgruppen."
-"Diese Aussagen zeigen erhebliche Meinungsverschiedenheiten zwischen "
-"Gruppen."
+msgstr "Diese Aussagen zeigen erhebliche Meinungsverschiedenheiten zwischen Meinungsgruppen."
+"Diese Aussagen zeigen erhebliche Meinungsverschiedenheiten zwischen den "
+"Meinungsgruppen.Diese Aussagen zeigen erhebliche "
+"Meinungsverschiedenheiten zwischen Gruppen."
 
-#: app/templates/discussions/consensus_results.html:277
+#: app/templates/discussions/consensus_results.html:283
 msgid "controversy"
 msgstr "Kontroverse"
 
-#: app/templates/discussions/consensus_results.html:287
+#: app/templates/discussions/consensus_results.html:293
 msgid "Export & Share"
 msgstr "Exportieren und teilen"
 
-#: app/templates/discussions/consensus_results.html:293
+#: app/templates/discussions/consensus_results.html:299
 msgid "Download JSON"
 msgstr "JSON herunterladen"
 
-#: app/templates/discussions/consensus_results.html:299
+#: app/templates/discussions/consensus_results.html:305
 msgid "Generate Report"
 msgstr "Bericht erstellen"
 
-#: app/templates/discussions/consensus_results.html:313
+#: app/templates/discussions/consensus_results.html:319
 msgid "Re-run Analysis"
 msgstr "Analyse wiederholen"
 
-#: app/templates/discussions/consensus_results.html:322
+#: app/templates/discussions/consensus_results.html:328
 msgid "Methodology"
 msgstr "Methodik"
 
-#: app/templates/discussions/consensus_results.html:353
+#: app/templates/discussions/consensus_results.html:359
 msgid "Back to Discussion"
 msgstr "Zurück zur Diskussion"
 
 #: app/templates/discussions/embed_discussion.html:6
-#: app/templates/discussions/embed_discussion.html:1017
-#: app/templates/discussions/view_discussion.html:7
+#: app/templates/discussions/embed_discussion.html:1095
+#: app/templates/discussions/view_discussion.html:8
 msgid "Society Speaks"
 msgstr "Society Speaks"
 
-#: app/templates/discussions/embed_discussion.html:786
+#: app/templates/discussions/embed_discussion.html:848
 msgid "Skip to statements"
 msgstr "Zu den Aussagen"
 
-#: app/templates/discussions/embed_discussion.html:790
+#: app/templates/discussions/embed_discussion.html:852
 msgid "You're offline. Votes will be saved when you reconnect."
-msgstr "Sie sind offline. Stimmen werden gespeichert, wenn Sie wieder verbunden sind."
+msgstr ""
 "Sie sind offline. Stimmen werden gespeichert, wenn Sie wieder verbunden "
-"sind."
+"sind.Sie sind offline. Stimmen werden gespeichert, wenn Sie wieder "
+"verbunden sind."
 
-#: app/templates/discussions/embed_discussion.html:795
-#: app/templates/discussions/embed_discussion.html:1114
+#: app/templates/discussions/embed_discussion.html:857
+#: app/templates/discussions/embed_discussion.html:1192
 msgid "This discussion is closed. You can still view the full record."
-msgstr "Diese Diskussion ist geschlossen. Sie können den vollständigen Datensatz weiterhin einsehen."
-"Diese Diskussion ist geschlossen. Sie können sich trotzdem den "
-"vollständigen Datensatz ansehen."
+msgstr ""
+"Diese Diskussion ist geschlossen. Sie können den vollständigen Datensatz "
+"weiterhin einsehen.Diese Diskussion ist geschlossen. Sie können sich "
+"trotzdem den vollständigen Datensatz ansehen."
 
-#: app/templates/discussions/embed_discussion.html:816
+#: app/templates/discussions/embed_discussion.html:889
 #, python-format
 msgid "%(num)d statement to vote on"
 msgid_plural "%(num)d statements to vote on"
 msgstr[0] "%(num)d Aussage zum Abstimmen"
 msgstr[1] "%(num)d Aussagen zum Abstimmen"
 
-#: app/templates/discussions/embed_discussion.html:824
+#: app/templates/discussions/embed_discussion.html:897
 msgid "Your progress"
 msgstr "Ihr Fortschritt"
 
-#: app/templates/discussions/embed_discussion.html:825
-#: app/templates/discussions/embed_discussion.html:1115
+#: app/templates/discussions/embed_discussion.html:898
+#: app/templates/discussions/embed_discussion.html:1193
 #, python-format
 msgid "%(current)d / %(threshold)d votes"
 msgstr "%(current)d / %(threshold)d Stimmen"
 
-#: app/templates/discussions/embed_discussion.html:830
+#: app/templates/discussions/embed_discussion.html:903
 msgid "Vote on statements to help build consensus"
 msgstr "Stimmen Sie für Aussagen ab, um Konsens aufzubauen"
 
-#: app/templates/discussions/embed_discussion.html:836
+#: app/templates/discussions/embed_discussion.html:909
 msgid "Statements to vote on"
 msgstr "Aussagen zum Abstimmen"
 
-#: app/templates/discussions/embed_discussion.html:845
+#: app/templates/discussions/embed_discussion.html:918
 msgid "Hide original"
 msgstr "Original ausblenden"
 
-#: app/templates/discussions/embed_discussion.html:850
+#: app/templates/discussions/embed_discussion.html:928
 msgid "Vote options for this statement"
 msgstr "Abstimmungsoptionen für diese Aussage"
 
-#: app/templates/discussions/embed_discussion.html:910
+#: app/templates/discussions/embed_discussion.html:988
 msgid "Vote to see how others split on this claim."
 msgstr "Stimmen Sie ab, um zu sehen, wie andere bei dieser Aussage gespalten sind."
 
-#: app/templates/discussions/embed_discussion.html:919
+#: app/templates/discussions/embed_discussion.html:997
 msgid "total votes"
 msgstr "Stimmen insgesamt"
 
-#: app/templates/discussions/embed_discussion.html:930
-#: app/templates/discussions/embed_discussion.html:1029
+#: app/templates/discussions/embed_discussion.html:1008
+#: app/templates/discussions/embed_discussion.html:1107
 msgid "Report this statement"
 msgstr "Diese Aussage melden"
 
-#: app/templates/discussions/embed_discussion.html:935
+#: app/templates/discussions/embed_discussion.html:1013
 msgid "Report"
 msgstr "Melden"
 
-#: app/templates/discussions/embed_discussion.html:947
+#: app/templates/discussions/embed_discussion.html:1025
 msgid "No statements yet. Check back soon!"
 msgstr "Noch keine Aussagen. Schauen Sie bald wieder vorbei!"
 
-#: app/templates/discussions/embed_discussion.html:949
+#: app/templates/discussions/embed_discussion.html:1027
 msgid "This discussion is not currently available for embed voting."
 msgstr "Diese Diskussion ist derzeit nicht für eingebettete Abstimmung verfügbar."
 
-#: app/templates/discussions/embed_discussion.html:950
+#: app/templates/discussions/embed_discussion.html:1028
 msgid "View the full discussion on Society Speaks"
 msgstr "Die vollständige Diskussion auf Society Speaks ansehen"
 
-#: app/templates/discussions/embed_discussion.html:956
+#: app/templates/discussions/embed_discussion.html:1034
 msgid "Statement pages"
 msgstr "Aussagenseiten"
 
-#: app/templates/discussions/embed_discussion.html:957
+#: app/templates/discussions/embed_discussion.html:1035
 #, python-format
 msgid "Page %(page)d of %(pages)d"
 msgstr "Seite %(page)d von %(pages)d"
 
-#: app/templates/discussions/embed_discussion.html:966
+#: app/templates/discussions/embed_discussion.html:1044
 msgid "Previous"
 msgstr "Zurück"
 
-#: app/templates/discussions/embed_discussion.html:976
+#: app/templates/discussions/embed_discussion.html:1054
 msgid "Next"
 msgstr "Weiter"
 
-#: app/templates/discussions/embed_discussion.html:985
+#: app/templates/discussions/embed_discussion.html:1063
 msgid "Suggest a statement"
 msgstr "Aussage vorschlagen"
 
-#: app/templates/discussions/embed_discussion.html:987
+#: app/templates/discussions/embed_discussion.html:1065
 msgid "Your statement should be concise and debatable (10-500 characters)."
 msgstr "Ihre Aussage sollte prägnant und diskutierbar sein (10-500 Zeichen)."
 
-#: app/templates/discussions/embed_discussion.html:990
-msgid "Statement"
-msgstr "Aussage"
-
-#: app/templates/discussions/embed_discussion.html:998
+#: app/templates/discussions/embed_discussion.html:1076
 msgid ""
 "e.g. Expanding low-emission zones is worth short-term disruption for "
 "long-term health."
@@ -473,255 +889,312 @@ msgstr ""
 "z. B. Die Ausweitung von Zonen mit niedrigen Emissionen ist kurzfristige "
 "Einschränkungen für die langfristige Gesundheit wert."
 
-#: app/templates/discussions/embed_discussion.html:1002
-#: app/templates/discussions/embed_discussion.html:1136
+#: app/templates/discussions/embed_discussion.html:1080
+#: app/templates/discussions/embed_discussion.html:1214
 #, python-format
 msgid "%(cur)d / %(max)d"
 msgstr "%(cur)d / %(max)d"
 
-#: app/templates/discussions/embed_discussion.html:1004
+#: app/templates/discussions/embed_discussion.html:1082
 msgid "Submit statement"
 msgstr "Aussage einreichen"
 
-#: app/templates/discussions/embed_discussion.html:1014
-#: app/templates/discussions/embed_discussion.html:1111
+#: app/templates/discussions/embed_discussion.html:1092
+#: app/templates/discussions/embed_discussion.html:1189
 msgid "View Full Analysis"
 msgstr "Vollständige Analyse anzeigen"
 
-#: app/templates/discussions/embed_discussion.html:1017
+#: app/templates/discussions/embed_discussion.html:1095
 msgid "Powered by"
 msgstr "Powered by"
 
-#: app/templates/discussions/embed_discussion.html:1018
+#: app/templates/discussions/embed_discussion.html:1096
 msgid "Content Policy"
 msgstr "Inhaltsrichtlinie"
 
-#: app/templates/discussions/embed_discussion.html:1032
+#: app/templates/discussions/embed_discussion.html:1110
 msgid "Reason for reporting"
 msgstr "Grund für die Meldung"
 
-#: app/templates/discussions/embed_discussion.html:1035
+#: app/templates/discussions/embed_discussion.html:1113
 msgid "Spam or advertising"
 msgstr "Spam oder Werbung"
 
-#: app/templates/discussions/embed_discussion.html:1039
+#: app/templates/discussions/embed_discussion.html:1117
 msgid "Harassment or abuse"
 msgstr "Belästigung oder Missbrauch"
 
-#: app/templates/discussions/embed_discussion.html:1043
+#: app/templates/discussions/embed_discussion.html:1121
 msgid "Misinformation"
 msgstr "Fehlinformation"
 
-#: app/templates/discussions/embed_discussion.html:1047
+#: app/templates/discussions/embed_discussion.html:1125
 msgid "Off-topic or irrelevant"
 msgstr "Thema verfehlt"
 
-#: app/templates/discussions/embed_discussion.html:1051
+#: app/templates/discussions/embed_discussion.html:1129
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: app/templates/discussions/embed_discussion.html:1052
-#: app/templates/discussions/embed_discussion.html:1127
+#: app/templates/discussions/embed_discussion.html:1130
+#: app/templates/discussions/embed_discussion.html:1205
 msgid "Submit Report"
 msgstr "Meldung einreichen"
 
-#: app/templates/discussions/embed_discussion.html:1108
+#: app/templates/discussions/embed_discussion.html:1186
 msgid "This discussion is closed."
 msgstr "Diese Diskussion ist geschlossen."
 
-#: app/templates/discussions/embed_discussion.html:1109
+#: app/templates/discussions/embed_discussion.html:1187
 msgid "View full record"
 msgstr "Vollständigen Datensatz ansehen"
 
-#: app/templates/discussions/embed_discussion.html:1110
+#: app/templates/discussions/embed_discussion.html:1188
 msgid "Thanks for participating!"
 msgstr "Danke fürs Mitmachen!"
 
-#: app/templates/discussions/embed_discussion.html:1112
+#: app/templates/discussions/embed_discussion.html:1190
+#, python-format
 msgid "Analysis is not ready yet (%(count)d participants so far)."
 msgstr "Analyse ist noch nicht fertig (%(count)d Teilnehmer bisher)."
 
-#: app/templates/discussions/embed_discussion.html:1113
+#: app/templates/discussions/embed_discussion.html:1191
 msgid "View the record"
 msgstr "Datensatz ansehen"
 
-#: app/templates/discussions/embed_discussion.html:1116
+#: app/templates/discussions/embed_discussion.html:1194
 msgid "Vote on 1 more statement to unlock analysis"
 msgstr "Stimmen Sie für 1 weitere Aussage ab, um die Analyse freizuschalten"
 
-#: app/templates/discussions/embed_discussion.html:1117
+#: app/templates/discussions/embed_discussion.html:1195
 #, python-format
 msgid "Vote on %(num)d more statements to unlock analysis"
 msgstr "Stimmen Sie für %(num)d weitere Aussagen ab, um die Analyse freizuschalten"
 
-#: app/templates/discussions/embed_discussion.html:1118
+#: app/templates/discussions/embed_discussion.html:1196
 msgid "Retry"
 msgstr "Wiederholen"
 
-#: app/templates/discussions/embed_discussion.html:1119
+#: app/templates/discussions/embed_discussion.html:1197
 msgid "Vote saved offline. Will sync when connected."
-msgstr "Stimme offline gespeichert. Wird bei Verbindung synchronisiert."
-"Sie sind offline. Stimmen werden gespeichert, wenn Sie wieder verbunden "
-"sind."
+msgstr ""
+"Stimme offline gespeichert. Wird bei Verbindung synchronisiert.Sie sind "
+"offline. Stimmen werden gespeichert, wenn Sie wieder verbunden sind."
 
-#: app/templates/discussions/embed_discussion.html:1120
+#: app/templates/discussions/embed_discussion.html:1198
 msgid "Vote recorded!"
 msgstr "Stimme abgegeben!"
 
-#: app/templates/discussions/embed_discussion.html:1121
+#: app/templates/discussions/embed_discussion.html:1199
 msgid "You're voting too fast. Please wait a moment."
 msgstr "Sie stimmen zu schnell ab. Bitte warten Sie einen Moment."
 
-#: app/templates/discussions/embed_discussion.html:1122
+#: app/templates/discussions/embed_discussion.html:1200
 msgid "Couldn't save vote."
 msgstr "Stimme konnte nicht gespeichert werden."
 
-#: app/templates/discussions/embed_discussion.html:1123
+#: app/templates/discussions/embed_discussion.html:1201
 msgid "You have already reported this statement."
 msgstr "Sie haben diese Aussage bereits gemeldet."
 
-#: app/templates/discussions/embed_discussion.html:1124
+#: app/templates/discussions/embed_discussion.html:1202
 msgid "Submitting..."
 msgstr "Wird eingereicht..."
 
-#: app/templates/discussions/embed_discussion.html:1125
+#: app/templates/discussions/embed_discussion.html:1203
 msgid "Thank you for your report. We will review it."
 msgstr "Danke für Ihre Meldung. Wir werden sie prüfen."
 
-#: app/templates/discussions/embed_discussion.html:1126
+#: app/templates/discussions/embed_discussion.html:1204
 msgid "Could not submit report. Please try again."
 msgstr "Bericht konnte nicht eingereicht werden. Bitte erneut versuchen."
 
-#: app/templates/discussions/embed_discussion.html:1128
+#: app/templates/discussions/embed_discussion.html:1206
 msgid "Reported"
 msgstr "Gemeldet"
 
-#: app/templates/discussions/embed_discussion.html:1129
+#: app/templates/discussions/embed_discussion.html:1207
 msgid "Statement must be at least 10 characters."
 msgstr "Die Aussage muss mindestens 10 Zeichen umfassen."
 
-#: app/templates/discussions/embed_discussion.html:1130
+#: app/templates/discussions/embed_discussion.html:1208
 msgid "Statement must be 500 characters or fewer."
 msgstr "Die Aussage darf maximal 500 Zeichen umfassen."
 
-#: app/templates/discussions/embed_discussion.html:1131
+#: app/templates/discussions/embed_discussion.html:1209
 msgid "That statement is already in this discussion."
 msgstr "Diese Aussage ist bereits in dieser Diskussion."
 
-#: app/templates/discussions/embed_discussion.html:1132
+#: app/templates/discussions/embed_discussion.html:1210
 msgid "You're posting too quickly. Please wait a bit."
 msgstr "Sie posten zu schnell. Bitte warten Sie einen Moment."
 
-#: app/templates/discussions/embed_discussion.html:1133
+#: app/templates/discussions/embed_discussion.html:1211
 msgid "Could not submit statement right now."
 msgstr "Aussage konnte gerade nicht eingereicht werden."
 
-#: app/templates/discussions/embed_discussion.html:1134
+#: app/templates/discussions/embed_discussion.html:1212
 msgid "Statement submitted. It will appear in the discussion shortly."
 msgstr "Aussage eingereicht. Sie wird in Kürze in der Diskussion erscheinen."
 
-#: app/templates/discussions/embed_discussion.html:1135
+#: app/templates/discussions/embed_discussion.html:1213
 msgid "Network error while submitting statement."
 msgstr "Netzwerkfehler beim Einreichen der Aussage."
 
-#: app/templates/discussions/embed_discussion.html:1137
+#: app/templates/discussions/embed_discussion.html:1215
 #, python-format
 msgid "%(n)s total votes"
 msgstr "%(n)s Stimmen"
 
-#: app/templates/discussions/view_discussion.html:12
-#: app/templates/discussions/view_discussion.html:31
-#: app/templates/discussions/view_discussion.html:41
-#: app/templates/discussions/view_discussion.html:43
+#: app/templates/discussions/search_discussions.html:31
+msgid "Explore Discussions"
+msgstr "Diskussionen erkunden"
+
+#: app/templates/discussions/search_discussions.html:32
+msgid "Join conversations that matter to you"
+msgstr "Nehmen Sie an Gesprächen teil, die Ihnen wichtig sind"
+
+#: app/templates/discussions/search_discussions.html:39
+msgid "Start a Discussion"
+msgstr "Diskussion starten"
+
+#: app/templates/discussions/search_discussions.html:57
+msgid "Search discussions…"
+msgstr "Diskussionen suchen…"
+
+#: app/templates/discussions/search_discussions.html:70
+msgid "Topic"
+msgstr "Thema"
+
+#: app/templates/discussions/search_discussions.html:72
+msgid "All Topics"
+msgstr "Alle Themen"
+
+#: app/templates/discussions/search_discussions.html:80
+msgid "Country"
+msgstr "Land"
+
+#: app/templates/discussions/search_discussions.html:82
+msgid "All Countries"
+msgstr "Alle Länder"
+
+#: app/templates/discussions/search_discussions.html:90
+msgid "Sort By"
+msgstr "Sortieren nach"
+
+#: app/templates/discussions/search_discussions.html:92
+msgid "Most Active"
+msgstr "Am aktivsten"
+
+#: app/templates/discussions/search_discussions.html:93
+msgid "Most Recent"
+msgstr "Neueste"
+
+#: app/templates/discussions/search_discussions.html:98
+msgid "Programme"
+msgstr "Programm"
+
+#: app/templates/discussions/search_discussions.html:100
+msgid "All Programmes"
+msgstr "Alle Programme"
+
+#: app/templates/discussions/search_discussions.html:113
+msgid "Apply Filters"
+msgstr "Filter anwenden"
+
+#: app/templates/discussions/view_discussion.html:13
+#: app/templates/discussions/view_discussion.html:32
+#: app/templates/discussions/view_discussion.html:42
+#: app/templates/discussions/view_discussion.html:44
 msgid "Join the discussion on SocietySpeaks."
 msgstr "Nehmen Sie an der Diskussion auf SocietySpeaks teil."
 
-#: app/templates/discussions/view_discussion.html:16
+#: app/templates/discussions/view_discussion.html:17
 msgid "discussion, society, topics"
 msgstr "Diskussion, Gesellschaft, Themen"
 
-#: app/templates/discussions/view_native.html:26
+#: app/templates/discussions/view_native.html:29
 msgid "See all ↓"
 msgstr "Alle anzeigen ↓"
 
-#: app/templates/discussions/view_native.html:40
+#: app/templates/discussions/view_native.html:43
 msgid "Vote on the statement above: agree, disagree, or unsure"
 msgstr "Stimme zur obigen Aussage ab: zustimmen, ablehnen oder unsicher"
 
-#: app/templates/discussions/view_native.html:72
+#: app/templates/discussions/view_native.html:75
 msgid "Skip for now"
 msgstr "Überspringen"
 
-#: app/templates/discussions/view_native.html:91
+#: app/templates/discussions/view_native.html:94
 msgid "Theme complete!"
 msgstr "Thema abgeschlossen!"
 
-#: app/templates/discussions/view_native.html:124
+#: app/templates/discussions/view_native.html:128
 msgid "Add Statement"
 msgstr "Aussage hinzufügen"
 
-#: app/templates/discussions/view_native.html:169
+#: app/templates/discussions/view_native.html:172
 msgid "Analysis"
 msgstr "Analyse"
 
-#: app/templates/discussions/view_native.html:182
-#: app/templates/discussions/view_native.html:188
+#: app/templates/discussions/view_native.html:185
+#: app/templates/discussions/view_native.html:191
 msgid "Search statements..."
 msgstr "Aussagen suchen..."
 
-#: app/templates/discussions/view_native.html:192
+#: app/templates/discussions/view_native.html:195
 msgid "Search"
 msgstr "Suchen"
 
-#: app/templates/discussions/view_native.html:199
+#: app/templates/discussions/view_native.html:202
 msgid "Sort by:"
 msgstr "Sortieren nach:"
 
-#: app/templates/discussions/view_native.html:215
+#: app/templates/discussions/view_native.html:218
 msgid "Recommended journey order"
 msgstr "Empfohlene Reihenfolge"
 
-#: app/templates/discussions/view_native.html:215
+#: app/templates/discussions/view_native.html:218
 msgid "Progressive (Pol.is style)"
 msgstr "Progressiv (Pol.is Stil)"
 
-#: app/templates/discussions/view_native.html:218
+#: app/templates/discussions/view_native.html:221
 msgid "Most agreed first"
 msgstr "Meiste Zustimmung"
 
-#: app/templates/discussions/view_native.html:218
+#: app/templates/discussions/view_native.html:221
 msgid "Best (most agreed)"
 msgstr "Beste (meiste Zustimmung)"
 
-#: app/templates/discussions/view_native.html:221
+#: app/templates/discussions/view_native.html:224
 msgid "Most debated"
 msgstr "Am meisten debattiert"
 
-#: app/templates/discussions/view_native.html:221
+#: app/templates/discussions/view_native.html:224
 msgid "Controversial"
 msgstr "Kontrovers"
 
-#: app/templates/discussions/view_native.html:224
+#: app/templates/discussions/view_native.html:227
 msgid "Newest statements"
 msgstr "Neueste Aussagen"
 
-#: app/templates/discussions/view_native.html:227
+#: app/templates/discussions/view_native.html:230
 msgid "Most votes"
 msgstr "Meiste Stimmen"
 
-#: app/templates/discussions/view_native.html:325
+#: app/templates/discussions/view_native.html:328
 msgid "statements to vote on"
 msgstr "Aussagen zum Abstimmen"
 
-#: app/templates/discussions/view_native.html:488
+#: app/templates/discussions/view_native.html:491
 msgid "No Statements Yet"
 msgstr "Noch keine Aussagen"
 
-#: app/templates/discussions/view_native.html:490
+#: app/templates/discussions/view_native.html:493
 msgid "Be the first to contribute to this discussion!"
 msgstr "Seien Sie der Erste, der zu dieser Diskussion beiträgt!"
 
-#: app/templates/discussions/view_native.html:496
+#: app/templates/discussions/view_native.html:499
 msgid "Post the First Statement"
 msgstr "Die erste Aussage veröffentlichen"
 
@@ -732,8 +1205,9 @@ msgstr "Öffentliche Programme"
 #: app/templates/programmes/list.html:11
 msgid "Live public programmes with open discussions you can participate in."
 msgstr "Live-öffentliche Programme mit offenen Diskussionen, an denen Sie teilnehmen können."
-"Öffentliche Live-Programme mit offenen Diskussionen, an denen Sie "
-"teilnehmen können."
+"Live-öffentliche Programme mit offenen Diskussionen, an denen Sie "
+"teilnehmen können.Öffentliche Live-Programme mit offenen Diskussionen, an"
+" denen Sie teilnehmen können."
 
 #: app/templates/programmes/list.html:17
 msgid "My workspace"
@@ -759,116 +1233,33 @@ msgstr "Start →"
 msgid "Other Programmes"
 msgstr "Weitere Programme"
 
-#: app/templates/programmes/view.html:11
-msgid "Dashboard"
-msgstr "Dashboard"
-
-#: app/templates/programmes/view.html:13
-msgid "Workspace"
-msgstr "Arbeitsbereich"
-
-#: app/templates/programmes/view.html:145
+#: app/templates/programmes/view.html:149
 msgid "Read more"
 msgstr "Mehr lesen"
 
-#: app/templates/programmes/view.html:237
+#: app/templates/programmes/view.html:241
 msgid "themes completed"
 msgstr "Themen abgeschlossen"
 
-#: app/templates/programmes/view.html:241
+#: app/templates/programmes/view.html:245
 msgid "votes cast"
 msgstr "abgegebene Stimmen"
 
-#: app/templates/programmes/view.html:273
+#: app/templates/programmes/view.html:277
 msgid "View progress recap"
 msgstr "Fortschrittsübersicht anzeigen"
 
-#: app/templates/programmes/view.html:388
+#: app/templates/programmes/view.html:392
 msgid "Turn on reminders"
 msgstr "Erinnerungen aktivieren"
 
-#: app/templates/programmes/view.html:421
+#: app/templates/programmes/view.html:425
 msgid "Stop reminders"
 msgstr "Erinnerungen deaktivieren"
 
-#: app/templates/programmes/view.html:490
+#: app/templates/programmes/view.html:494
 msgid "Add discussion"
 msgstr "Diskussion hinzufügen"
-
-#: app/templates/components/_translation_pending.html:6
-#: app/templates/discussions/embed_discussion.html:837
-msgid "Translation in progress — this content is showing in English while your language version is being prepared."
-msgstr "Übersetzung läuft — dieser Inhalt wird auf Englisch angezeigt, während Ihre Sprachversion vorbereitet wird."
-
-#: app/templates/components/_translation_pending.html:9
-#: app/templates/discussions/embed_discussion.html:862
-msgid "Reload to check"
-msgstr "Neu laden und prüfen"
-
-#: app/templates/discussions/_statement_card.html:33
-#: app/templates/discussions/embed_discussion.html:900
-msgid "Translation pending"
-msgstr "Übersetzung ausstehend"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Explore Discussions"
-msgstr "Diskussionen erkunden"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Join conversations that matter to you"
-msgstr "Nehmen Sie an Gesprächen teil, die Ihnen wichtig sind"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Start a Discussion"
-msgstr "Diskussion starten"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Search discussions…"
-msgstr "Diskussionen suchen…"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Topic"
-msgstr "Thema"
-
-#: app/templates/discussions/search_discussions.html
-msgid "All Topics"
-msgstr "Alle Themen"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Country"
-msgstr "Land"
-
-#: app/templates/discussions/search_discussions.html
-msgid "All Countries"
-msgstr "Alle Länder"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Sort By"
-msgstr "Sortieren nach"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Most Active"
-msgstr "Am aktivsten"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Most Recent"
-msgstr "Neueste"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Programme"
-msgstr "Programm"
-
-#: app/templates/discussions/search_discussions.html
-msgid "All Programmes"
-msgstr "Alle Programme"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Apply Filters"
-msgstr "Filter anwenden"
-
-#: app/templates/components/discussion_card.html
-msgid "Join Discussion"
-msgstr "An Diskussion teilnehmen"
 
 #~ msgid "Claim"
 #~ msgstr "Aussage"

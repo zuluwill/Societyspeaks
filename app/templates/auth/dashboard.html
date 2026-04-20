@@ -16,8 +16,8 @@
 {# Hero #}
 <div class="bg-gradient-to-r from-purple-900 to-primary-600 pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <h1 class="text-3xl font-bold text-white">Welcome back, {{ display_name }}!</h1>
-        <p class="mt-1 text-primary-200 text-sm">Here's an overview of your programmes and discussions.</p>
+        <h1 class="text-3xl font-bold text-white">{{ _('Welcome back, %(name)s!', name=display_name) }}</h1>
+        <p class="mt-1 text-primary-200 text-sm">{{ _("Here's an overview of your programmes and discussions.") }}</p>
     </div>
 </div>
 
@@ -35,7 +35,7 @@
                 </svg>
             </div>
             <div class="ml-2 sm:ml-4 min-w-0">
-                <p class="text-gray-500 text-xs sm:text-sm truncate">Programmes</p>
+                <p class="text-gray-500 text-xs sm:text-sm truncate">{{ _('Programmes') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-gray-800">{{ total_programmes }}</p>
             </div>
         </a>
@@ -48,7 +48,7 @@
                 </svg>
             </div>
             <div class="ml-2 sm:ml-4 min-w-0">
-                <p class="text-gray-500 text-xs sm:text-sm truncate">Discussions</p>
+                <p class="text-gray-500 text-xs sm:text-sm truncate">{{ _('Discussions') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-gray-800">{{ total_discussions }}</p>
             </div>
         </a>
@@ -61,7 +61,7 @@
                 </svg>
             </div>
             <div class="ml-2 sm:ml-4 min-w-0">
-                <p class="text-gray-500 text-xs sm:text-sm leading-tight">Discussion Views</p>
+                <p class="text-gray-500 text-xs sm:text-sm leading-tight">{{ _('Discussion Views') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-gray-800">{{ discussion_views }}</p>
             </div>
         </div>
@@ -85,7 +85,7 @@
                 </svg>
             </div>
             <div class="ml-2 sm:ml-4 min-w-0">
-                <p class="text-gray-500 text-xs sm:text-sm truncate">Profile Views</p>
+                <p class="text-gray-500 text-xs sm:text-sm truncate">{{ _('Profile Views') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-gray-800">{{ profile_views }}</p>
             </div>
         {% if _profile_url %}</a>{% else %}</div>{% endif %}
@@ -97,37 +97,37 @@
 
         {# Profile card #}
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Your Profile</h3>
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">{{ _('Your Profile') }}</h3>
             {% if profile %}
                 <div class="flex items-center mb-5">
                     {% if current_user.profile_type == 'individual' %}
                         <img src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
-                             alt="Profile photo"
+                             alt="{{ _('Profile photo') }}"
                              class="w-14 h-14 rounded-full object-cover ring-2 ring-primary-100"
                              onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';">
                         <div class="ml-3">
                             <p class="font-semibold text-gray-900 leading-tight">{{ current_user.individual_profile.full_name }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Individual</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ _('Individual') }}</p>
                         </div>
                     {% elif current_user.profile_type == 'company' %}
                         <img src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
-                             alt="Company logo"
+                             alt="{{ _('Company logo') }}"
                              class="w-14 h-14 rounded-lg object-cover ring-2 ring-primary-100"
                              onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';">
                         <div class="ml-3">
                             <p class="font-semibold text-gray-900 leading-tight">{{ current_user.company_profile.company_name }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Organisation</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ _('Organisation') }}</p>
                         </div>
                     {% endif %}
                 </div>
                 <div class="flex gap-3">
                     <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
                        class="flex-1 text-center text-sm py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
-                        View
+                        {{ _('View') }}
                     </a>
                     <a href="{{ url_for('profiles.edit_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.edit_company_profile', company_name=profile.slug) }}"
                        class="flex-1 text-center text-sm py-1.5 rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-colors">
-                        Edit
+                        {{ _('Edit') }}
                     </a>
                 </div>
             {% else %}
@@ -135,10 +135,10 @@
                     <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
-                    <p class="text-sm text-gray-500 mb-4">Set up your profile so others can find you.</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ _('Set up your profile so others can find you.') }}</p>
                     <a href="{{ url_for('profiles.select_profile_type') }}"
                        class="inline-block bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors">
-                        Create profile
+                        {{ _('Create profile') }}
                     </a>
                 </div>
             {% endif %}
@@ -146,7 +146,7 @@
 
         {# Quick create tiles #}
         <div class="bg-white rounded-lg shadow p-6 md:col-span-2">
-            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Create</h3>
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">{{ _('Create') }}</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <a href="{{ url_for('programmes.create_programme') }}"
                    class="flex items-center gap-3 p-4 border border-primary-100 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors group">
@@ -156,8 +156,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="font-medium text-primary-700 text-sm">New Programme</p>
-                        <p class="text-xs text-primary-500 mt-0.5">Group discussions into a campaign</p>
+                        <p class="font-medium text-primary-700 text-sm">{{ _('New Programme') }}</p>
+                        <p class="text-xs text-primary-500 mt-0.5">{{ _('Group discussions into a campaign') }}</p>
                     </div>
                 </a>
                 <a href="{{ url_for('discussions.create_discussion') }}"
@@ -168,8 +168,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="font-medium text-primary-700 text-sm">New Discussion</p>
-                        <p class="text-xs text-primary-500 mt-0.5">Start a discussion on any topic</p>
+                        <p class="font-medium text-primary-700 text-sm">{{ _('New Discussion') }}</p>
+                        <p class="text-xs text-primary-500 mt-0.5">{{ _('Start a discussion on any topic') }}</p>
                     </div>
                 </a>
             </div>
@@ -177,18 +177,18 @@
                 <a href="{{ url_for('programmes.workspace_programmes') }}"
                    class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                    Workspace
+                    {{ _('Workspace') }}
                 </a>
                 <a href="{{ url_for('settings.view_settings') }}"
                    class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Settings
+                    {{ _('Settings') }}
                 </a>
                 {% if profile %}
                 <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
                    class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    Public profile
+                    {{ _('Public profile') }}
                 </a>
                 {% endif %}
             </div>
@@ -201,7 +201,7 @@
         <div class="rounded-xl bg-gradient-to-r from-blue-600 to-primary-600 p-6 text-white shadow">
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-100">Continue Where You Left Off</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-100">{{ _('Continue Where You Left Off') }}</p>
                     <h2 class="mt-2 text-xl font-semibold">{{ continue_label }}</h2>
                     <p class="mt-1 text-sm text-blue-100">{{ continue_discussion.title }}</p>
                     {% if continue_summary %}
@@ -210,7 +210,7 @@
                 </div>
                 <a href="{{ continue_url }}"
                    class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-blue-50 transition-colors">
-                    Continue
+                    {{ _('Continue') }}
                 </a>
             </div>
         </div>
@@ -221,8 +221,8 @@
     <div class="bg-white rounded-lg shadow p-6 mb-8">
         <div class="flex items-center justify-between mb-5">
             <div>
-                <h2 class="text-lg font-semibold text-gray-900">My Programmes</h2>
-                <p class="text-xs text-gray-400 mt-0.5">Programmes you own, steward, or participate in</p>
+                <h2 class="text-lg font-semibold text-gray-900">{{ _('My Programmes') }}</h2>
+                <p class="text-xs text-gray-400 mt-0.5">{{ _('Programmes you own, steward, or participate in') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 {% if total_programmes > 6 %}
@@ -231,7 +231,7 @@
                 {% endif %}
                 <a href="{{ url_for('programmes.create_programme') }}"
                    class="inline-flex items-center px-3 py-1.5 text-sm bg-primary-600 text-white rounded-md hover:bg-primary-700 font-medium">
-                    New
+                    {{ _('New') }}
                 </a>
             </div>
         </div>
@@ -265,8 +265,8 @@
             </div>
             {% if total_programmes > 6 %}
             <p class="mt-4 text-center text-sm text-gray-400">
-                Showing 6 of {{ total_programmes }} —
-                <a href="{{ url_for('programmes.workspace_programmes') }}" class="text-primary-600 hover:text-primary-700 font-medium">view all in workspace</a>
+                {{ _('Showing 6 of %(count)s —', count=total_programmes) }}
+                <a href="{{ url_for('programmes.workspace_programmes') }}" class="text-primary-600 hover:text-primary-700 font-medium">{{ _('view all in workspace') }}</a>
             </p>
             {% endif %}
         {% else %}
@@ -274,11 +274,11 @@
                 <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
-                <p class="text-sm font-medium text-gray-600 mb-1">No programmes yet</p>
-                <p class="text-xs text-gray-400 mb-4">Programmes group discussions into structured engagement campaigns.</p>
+                <p class="text-sm font-medium text-gray-600 mb-1">{{ _('No programmes yet') }}</p>
+                <p class="text-xs text-gray-400 mb-4">{{ _('Programmes group discussions into structured engagement campaigns.') }}</p>
                 <a href="{{ url_for('programmes.create_programme') }}"
                    class="inline-block bg-primary-600 text-white px-5 py-2 rounded-md hover:bg-primary-700 text-sm font-medium">
-                    Create your first programme
+                    {{ _('Create your first programme') }}
                 </a>
             </div>
         {% endif %}
@@ -289,8 +289,8 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Recent Updates</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Discussion activity and alerts</p>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ _('Recent Updates') }}</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ _('Discussion activity and alerts') }}</p>
                 </div>
                 <a href="{{ url_for('auth.notifications') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
                     View all{% if unread_notifications %} ({{ unread_notifications }} new){% endif %}
@@ -304,7 +304,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
                             {% if not notification.is_read %}
-                            <span class="inline-flex rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">New</span>
+                            <span class="inline-flex rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">{{ _('New') }}</span>
                             {% endif %}
                         </div>
                         <p class="mt-1 text-sm text-gray-600">{{ notification.message }}</p>
@@ -314,7 +314,7 @@
                 </div>
             {% else %}
                 <div class="text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg p-4">
-                    You have no notifications yet.
+                    {{ _('You have no notifications yet.') }}
                 </div>
             {% endif %}
         </div>
@@ -322,11 +322,11 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Participating</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Discussions you have joined or contributed to</p>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ _('Participating') }}</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ _('Discussions you have joined or contributed to') }}</p>
                 </div>
                 <a href="{{ url_for('auth.participation') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                    View activity
+                    {{ _('View activity') }}
                 </a>
             </div>
             {% if participating_discussions %}
@@ -339,16 +339,16 @@
                             Last active {{ item.last_activity.strftime('%d %b %Y') if item.last_activity else 'recently' }}
                         </p>
                         <div class="mt-2 flex flex-wrap gap-2">
-                            {% if 'voted' in item.activity_types %}<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-primary-700">Voted</span>{% endif %}
-                            {% if 'statement' in item.activity_types %}<span class="inline-flex rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">Statement</span>{% endif %}
-                            {% if 'response' in item.activity_types %}<span class="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">Response</span>{% endif %}
+                            {% if 'voted' in item.activity_types %}<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-primary-700">{{ _('Voted') }}</span>{% endif %}
+                            {% if 'statement' in item.activity_types %}<span class="inline-flex rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">{{ _('Statement') }}</span>{% endif %}
+                            {% if 'response' in item.activity_types %}<span class="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">{{ _('Response') }}</span>{% endif %}
                         </div>
                     </a>
                     {% endfor %}
                 </div>
             {% else %}
                 <div class="text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg p-4">
-                    Vote on statements or add an argument to build your activity history.
+                    {{ _('Vote on statements or add an argument to build your activity history.') }}
                 </div>
             {% endif %}
         </div>
@@ -356,11 +356,11 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Saved Discussions</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Keep track of discussions you want to revisit</p>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ _('Saved Discussions') }}</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ _('Keep track of discussions you want to revisit') }}</p>
                 </div>
                 <a href="{{ url_for('auth.saved_discussions') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                    View saved
+                    {{ _('View saved') }}
                 </a>
             </div>
             {% if saved_discussions %}
@@ -375,7 +375,7 @@
                 </div>
             {% else %}
                 <div class="text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg p-4">
-                    Save discussions from any discussion page to build your watchlist.
+                    {{ _('Save discussions from any discussion page to build your watchlist.') }}
                 </div>
             {% endif %}
         </div>
@@ -383,21 +383,21 @@
 
     {# Email Subscriptions #}
     <div id="email-subscriptions" class="mb-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-1">Stay informed</h2>
-        <p class="text-xs text-gray-400 mb-4">Subscribe using your account email — <span class="font-medium text-gray-600">{{ current_user.email }}</span></p>
+        <h2 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Stay informed') }}</h2>
+        <p class="text-xs text-gray-400 mb-4">{{ _('Subscribe using your account email —') }} <span class="font-medium text-gray-600">{{ current_user.email }}</span></p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {# Daily Brief card #}
             <div class="bg-white rounded-lg shadow p-5 border-l-4 {% if brief_sub and brief_sub.status == 'active' %}border-emerald-400{% else %}border-gray-200{% endif %}">
                 <div class="flex items-start justify-between mb-3">
                     <div>
-                        <h3 class="font-semibold text-gray-900 text-sm">Daily Brief</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">A curated news briefing delivered to your inbox</p>
+                        <h3 class="font-semibold text-gray-900 text-sm">{{ _('Daily Brief') }}</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ _('A curated news briefing delivered to your inbox') }}</p>
                     </div>
                     {% if brief_sub and brief_sub.status == 'active' %}
                     <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        Active
+                        {{ _('Active') }}
                     </span>
                     {% endif %}
                 </div>
@@ -411,7 +411,7 @@
                     <a href="{{ url_for('brief.manage_preferences', token=brief_sub.magic_token) }}"
                        class="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 font-medium py-1.5 px-3 rounded-md border border-primary-200 hover:bg-primary-50 transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        Manage preferences
+                        {{ _('Manage preferences') }}
                     </a>
                 {% else %}
                     <form action="{{ url_for('auth.dashboard_subscribe') }}" method="post">
@@ -419,14 +419,14 @@
                         <input type="hidden" name="subscription_type" value="brief">
                         <div class="grid grid-cols-2 gap-2 mb-2">
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Frequency</label>
+                                <label class="block text-xs text-gray-500 mb-1">{{ _('Frequency') }}</label>
                                 <select name="cadence" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400">
-                                    <option value="daily" selected>Daily</option>
-                                    <option value="weekly">Weekly</option>
+                                    <option value="daily" selected>{{ _('Daily') }}</option>
+                                    <option value="weekly">{{ _('Weekly') }}</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Send time</label>
+                                <label class="block text-xs text-gray-500 mb-1">{{ _('Send time') }}</label>
                                 <select name="preferred_hour" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400">
                                     <option value="6">6am</option>
                                     <option value="7">7am</option>
@@ -441,13 +441,13 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="block text-xs text-gray-500 mb-1">Timezone</label>
+                            <label class="block text-xs text-gray-500 mb-1">{{ _('Timezone') }}</label>
                             {{ timezone_select(name='timezone', selected='UTC', css_class='w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400') }}
                         </div>
                         <button type="submit"
                                 class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                            Subscribe to Daily Brief
+                            {{ _('Subscribe to Daily Brief') }}
                         </button>
                     </form>
                 {% endif %}
@@ -457,13 +457,13 @@
             <div class="bg-white rounded-lg shadow p-5 border-l-4 {% if dq_sub and dq_sub.is_active %}border-emerald-400{% else %}border-gray-200{% endif %}">
                 <div class="flex items-start justify-between mb-3">
                     <div>
-                        <h3 class="font-semibold text-gray-900 text-sm">Daily Question</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">A civic question in your inbox — vote in one click</p>
+                        <h3 class="font-semibold text-gray-900 text-sm">{{ _('Daily Question') }}</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ _('A civic question in your inbox — vote in one click') }}</p>
                     </div>
                     {% if dq_sub and dq_sub.is_active %}
                     <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        Active
+                        {{ _('Active') }}
                     </span>
                     {% endif %}
                 </div>
@@ -488,28 +488,28 @@
                     <a href="{{ url_for('daily.manage_preferences') }}"
                        class="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 font-medium py-1.5 px-3 rounded-md border border-primary-200 hover:bg-primary-50 transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        Manage preferences
+                        {{ _('Manage preferences') }}
                     </a>
                 {% else %}
                     <form action="{{ url_for('auth.dashboard_subscribe') }}" method="post" id="dq-dash-subscribe-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="subscription_type" value="daily_question">
                         <div class="mb-3">
-                            <label class="block text-xs text-gray-500 mb-1">Frequency</label>
+                            <label class="block text-xs text-gray-500 mb-1">{{ _('Frequency') }}</label>
                             <select name="email_frequency" id="dq-dash-frequency" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400">
-                                <option value="weekly" selected>Weekly digest</option>
-                                <option value="daily">Daily</option>
-                                <option value="monthly">Monthly</option>
+                                <option value="weekly" selected>{{ _('Weekly digest') }}</option>
+                                <option value="daily">{{ _('Daily') }}</option>
+                                <option value="monthly">{{ _('Monthly') }}</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="block text-xs text-gray-500 mb-1">Time zone</label>
+                            <label class="block text-xs text-gray-500 mb-1">{{ _('Time zone') }}</label>
                             {% from 'components/timezone_select.html' import timezone_select %}
                             {{ timezone_select(name='timezone', selected='Europe/London', css_class='w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400') }}
                         </div>
                         <div id="dq-dash-weekly-fields" class="grid grid-cols-2 gap-2 mb-3">
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Digest day</label>
+                                <label class="block text-xs text-gray-500 mb-1">{{ _('Digest day') }}</label>
                                 <select name="preferred_send_day" data-dq-dash-weekly class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400">
                                     {% for day_value, day_name in dq_send_days.items() %}
                                     <option value="{{ day_value }}" {% if day_value == 1 %}selected{% endif %}>{{ day_name[:3] }}</option>
@@ -517,7 +517,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Time</label>
+                                <label class="block text-xs text-gray-500 mb-1">{{ _('Time') }}</label>
                                 <select name="preferred_send_hour" data-dq-dash-weekly class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-400">
                                     {% for hour in range(24) %}
                                     <option value="{{ hour }}" {% if hour == 9 %}selected{% endif %}>{{ hour | dq_hour_12h }}</option>
@@ -528,7 +528,7 @@
                         <button type="submit"
                                 class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Subscribe to Daily Question
+                            {{ _('Subscribe to Daily Question') }}
                         </button>
                     </form>
                     <script nonce="{{ csp_nonce() }}">
@@ -553,13 +553,13 @@
             <div class="bg-white rounded-lg shadow p-5 border-l-4 {% if has_briefings_plan %}border-emerald-400{% else %}border-gray-200{% endif %}">
                 <div class="flex items-start justify-between mb-3">
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-900">Paid Briefings</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Your personalised AI-curated briefings</p>
+                        <h3 class="text-sm font-semibold text-gray-900">{{ _('Paid Briefings') }}</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ _('Your personalised AI-curated briefings') }}</p>
                     </div>
                     {% if has_briefings_plan %}
                     <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                        Active
+                        {{ _('Active') }}
                     </span>
                     {% endif %}
                 </div>
@@ -582,24 +582,24 @@
                     <a href="{{ url_for('briefing.list_briefings') }}"
                        class="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 font-medium py-1.5 px-3 rounded-md border border-primary-200 hover:bg-primary-50 transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6-4h3"/></svg>
-                        Go to my Briefings
+                        {{ _('Go to my Briefings') }}
                     </a>
                     {% if active_subscription and active_subscription.stripe_subscription_id %}
                     <a href="{{ url_for('billing.customer_portal') }}"
                        class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 font-medium py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        Manage Billing
+                        {{ _('Manage Billing') }}
                     </a>
                     {% endif %}
                 </div>
                 {% else %}
                 <div class="text-xs text-gray-500 mb-3">
-                    <p>Get personalised AI-curated briefings delivered to your inbox. Set your topics, sources, and schedule.</p>
+                    <p>{{ _('Get personalised AI-curated briefings delivered to your inbox. Set your topics, sources, and schedule.') }}</p>
                 </div>
                 <a href="{{ url_for('briefing.landing') }}"
                    class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    Start a free trial
+                    {{ _('Start a free trial') }}
                 </a>
                 {% endif %}
             </div>
@@ -611,8 +611,8 @@
     <div id="your-discussions" class="bg-white rounded-lg shadow p-6 mb-8">
         <div class="flex items-center justify-between mb-5">
             <div>
-                <h2 class="text-lg font-semibold text-gray-900">Your Discussions</h2>
-                <p class="text-xs text-gray-400 mt-0.5">Discussions you have created</p>
+                <h2 class="text-lg font-semibold text-gray-900">{{ _('Your Discussions') }}</h2>
+                <p class="text-xs text-gray-400 mt-0.5">{{ _('Discussions you have created') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ url_for('auth.my_discussions') }}"
@@ -621,14 +621,14 @@
                 </a>
                 <a href="{{ url_for('discussions.create_discussion') }}"
                    class="inline-flex items-center px-3 py-1.5 text-sm bg-primary-600 text-white rounded-md hover:bg-primary-700 font-medium">
-                    New
+                    {{ _('New') }}
                 </a>
             </div>
         </div>
         {% if discussions %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for discussion in discussions %}
-                    {{ discussion_card(discussion, button_label='View') }}
+                    {{ discussion_card(discussion, button_label=_('View')) }}
                 {% endfor %}
             </div>
         {% else %}
@@ -636,11 +636,11 @@
                 <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                 </svg>
-                <p class="text-sm font-medium text-gray-600 mb-1">No discussions yet</p>
-                <p class="text-xs text-gray-400 mb-4">Start a discussion to gather opinions and build consensus.</p>
+                <p class="text-sm font-medium text-gray-600 mb-1">{{ _('No discussions yet') }}</p>
+                <p class="text-xs text-gray-400 mb-4">{{ _('Start a discussion to gather opinions and build consensus.') }}</p>
                 <a href="{{ url_for('discussions.create_discussion') }}"
                    class="inline-block bg-primary-600 text-white px-5 py-2 rounded-md hover:bg-primary-700 text-sm font-medium">
-                    Start your first discussion
+                    {{ _('Start your first discussion') }}
                 </a>
             </div>
         {% endif %}

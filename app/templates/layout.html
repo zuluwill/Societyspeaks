@@ -743,35 +743,35 @@
                   href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Your Profile</a
+                  >{{ _('Your Profile') }}</a
                 >
                 {% else %}
                 <a
                   href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Your Profile</a
+                  >{{ _('Your Profile') }}</a
                 >
                 {% endif %} {% else %}
                 <a
                   href="{{ url_for('profiles.select_profile_type') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Create Profile</a
+                  >{{ _('Create Profile') }}</a
                 >
                 {% endif %}
                 <a
                   href="{{ url_for('auth.dashboard') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Dashboard</a
+                  >{{ _('Dashboard') }}</a
                 >
                 <a
                   href="{{ url_for('auth.notifications') }}"
                   class="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
-                  <span>Notifications</span>
+                  <span>{{ _('Notifications') }}</span>
                   {% if current_user.unread_notification_count %}
                   <span class="ml-3 inline-flex min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 py-0.5 text-xs font-semibold text-white">
                     {{ current_user.unread_notification_count }}
@@ -782,13 +782,13 @@
                   href="{{ url_for('briefing.list_briefings') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >My Briefings</a
+                  >{{ _('My Briefings') }}</a
                 >
                 <a
                   href="{{ url_for('settings.view_settings') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Settings</a
+                  >{{ _('Settings') }}</a
                 >
                 {% if session.get('partner_portal_id') %}
                 <div class="border-t border-gray-100 my-1"></div>
@@ -796,7 +796,7 @@
                   href="{{ url_for('partner.portal_dashboard') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Partner Portal</a
+                  >{{ _('Partner Portal') }}</a
                 >
                 {% endif %}
                 {% if current_user.is_admin %}
@@ -804,14 +804,14 @@
                   href="{{ url_for('admin.dashboard') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Admin</a
+                  >{{ _('Admin') }}</a
                 >
                 {% endif %}
                 <a
                   href="{{ url_for('auth.logout') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Sign out</a
+                  >{{ _('Sign out') }}</a
                 >
               </div>
             </div>
@@ -821,12 +821,12 @@
               <a
                 href="{{ url_for('auth.login') }}"
                 class="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-primary-600 hover:bg-blue-50 transition"
-                >Sign in</a
+                >{{ _('Sign in') }}</a
               >
               <a
                 href="{{ url_for('auth.register') }}"
                 class="inline-block bg-blue-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-blue-400 transition"
-                >Get Started</a
+                >{{ _('Get Started') }}</a
               >
             </div>
             {% endif %}
@@ -1038,31 +1038,31 @@
                 <a
                   href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Your Profile</a
+                  >{{ _('Your Profile') }}</a
                 >
                 {% else %}
                 <a
                   href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Your Profile</a
+                  >{{ _('Your Profile') }}</a
                 >
                 {% endif %} {% else %}
                 <a
                   href="{{ url_for('profiles.select_profile_type') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Create Profile</a
+                  >{{ _('Create Profile') }}</a
                 >
                 {% endif %}
                 <a
                   href="{{ url_for('auth.dashboard') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Dashboard</a
+                  >{{ _('Dashboard') }}</a
                 >
                 <a
                   href="{{ url_for('auth.notifications') }}"
                   class="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                 >
-                  <span>Notifications</span>
+                  <span>{{ _('Notifications') }}</span>
                   {% if current_user.unread_notification_count %}
                   <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-xs font-semibold text-primary-700">
                     {{ current_user.unread_notification_count }}
@@ -1072,31 +1072,31 @@
                 <a
                   href="{{ url_for('briefing.list_briefings') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >My Briefings</a
+                  >{{ _('My Briefings') }}</a
                 >
                 <a
                   href="{{ url_for('settings.view_settings') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Settings</a
+                  >{{ _('Settings') }}</a
                 >
                 {% if session.get('partner_portal_id') %}
                 <a
                   href="{{ url_for('partner.portal_dashboard') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Partner Portal</a
+                  >{{ _('Partner Portal') }}</a
                 >
                 {% endif %}
                 {% if current_user.is_admin %}
                 <a
                   href="{{ url_for('admin.dashboard') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Admin</a
+                  >{{ _('Admin') }}</a
                 >
                 {% endif %}
                 <a
                   href="{{ url_for('auth.logout') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                  >Sign out</a
+                  >{{ _('Sign out') }}</a
                 >
               </div>
             </div>
@@ -1105,12 +1105,12 @@
               <a
                 href="{{ url_for('auth.login') }}"
                 class="block w-full bg-white py-2 px-4 text-center rounded-md text-base font-medium text-primary-600 hover:bg-blue-50"
-                >Sign in</a
+                >{{ _('Sign in') }}</a
               >
               <a
                 href="{{ url_for('auth.register') }}"
                 class="block w-full bg-blue-500 py-2 px-4 text-center rounded-md text-base font-medium text-white hover:bg-blue-400"
-                >Get Started</a
+                >{{ _('Get Started') }}</a
               >
             </div>
             {% endif %}

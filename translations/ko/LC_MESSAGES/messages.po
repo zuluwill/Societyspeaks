@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-19 15:46+0100\n"
+"POT-Creation-Date: 2026-04-20 14:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -35,6 +35,7 @@ msgstr "참여"
 msgid "Big Questions Journey"
 msgstr "큰 질문 여정"
 
+#: app/templates/components/discussion_card.html:52
 #: app/templates/layout.html:477
 msgid "Featured"
 msgstr "추천"
@@ -47,7 +48,8 @@ msgstr "무료"
 msgid "Today's Question"
 msgstr "오늘의 질문"
 
-#: app/templates/layout.html:495 app/templates/layout.html:1199
+#: app/templates/auth/dashboard.html:394 app/templates/layout.html:495
+#: app/templates/layout.html:1199
 msgid "Daily Brief"
 msgstr "일일 브리핑"
 
@@ -80,11 +82,11 @@ msgstr "탐색"
 msgid "News"
 msgstr "뉴스"
 
-#: app/templates/layout.html:573
+#: app/templates/auth/dashboard.html:51 app/templates/layout.html:573
 msgid "Discussions"
 msgstr "토론"
 
-#: app/templates/layout.html:579
+#: app/templates/auth/dashboard.html:38 app/templates/layout.html:579
 msgid "Programmes"
 msgstr "프로그램"
 
@@ -108,7 +110,7 @@ msgstr "도움말"
 msgid "FAQ"
 msgstr "FAQ"
 
-#: app/templates/discussions/embed_discussion.html:803
+#: app/templates/discussions/embed_discussion.html:865
 #: app/templates/layout.html:646
 msgid "Select language"
 msgstr "언어 선택"
@@ -120,6 +122,54 @@ msgstr "언어 옵션"
 #: app/templates/layout.html:672 app/templates/layout.html:1222
 msgid "Donate"
 msgstr "기부"
+
+#: app/templates/auth/dashboard.html:100 app/templates/layout.html:746
+#: app/templates/layout.html:753 app/templates/layout.html:1041
+#: app/templates/layout.html:1047
+msgid "Your Profile"
+msgstr "내 프로필"
+
+#: app/templates/layout.html:760 app/templates/layout.html:1053
+msgid "Create Profile"
+msgstr "프로필 생성"
+
+#: app/templates/layout.html:767 app/templates/layout.html:1059
+#: app/templates/programmes/view.html:15
+msgid "Dashboard"
+msgstr "대시보드"
+
+#: app/templates/layout.html:774 app/templates/layout.html:1065
+msgid "Notifications"
+msgstr "알림"
+
+#: app/templates/layout.html:785 app/templates/layout.html:1075
+msgid "My Briefings"
+msgstr "내 브리핑"
+
+#: app/templates/auth/dashboard.html:185 app/templates/layout.html:791
+#: app/templates/layout.html:1080
+msgid "Settings"
+msgstr "설정"
+
+#: app/templates/layout.html:799 app/templates/layout.html:1086
+msgid "Partner Portal"
+msgstr "파트너 포털"
+
+#: app/templates/layout.html:807 app/templates/layout.html:1093
+msgid "Admin"
+msgstr "관리자"
+
+#: app/templates/layout.html:814 app/templates/layout.html:1099
+msgid "Sign out"
+msgstr "로그아웃"
+
+#: app/templates/layout.html:824 app/templates/layout.html:1108
+msgid "Sign in"
+msgstr "로그인"
+
+#: app/templates/layout.html:829 app/templates/layout.html:1113
+msgid "Get Started"
+msgstr "시작하기"
 
 #: app/templates/layout.html:951
 msgid "Language"
@@ -154,45 +204,403 @@ msgstr ""
 msgid "Quick Links"
 msgstr "빠른 링크"
 
+#: app/templates/auth/dashboard.html:19
+#, python-format
+msgid "Welcome back, %(name)s!"
+msgstr "다시 오신 것을 환영합니다, %(name)s!"
+
+#: app/templates/auth/dashboard.html:20
+msgid "Here's an overview of your programmes and discussions."
+msgstr "프로그램과 토론의 개요입니다."
+
+#: app/templates/auth/dashboard.html:64
+msgid "Discussion Views"
+msgstr "토론 조회수"
+
+#: app/templates/auth/dashboard.html:88
+msgid "Profile Views"
+msgstr "프로필 조회수"
+
+#: app/templates/auth/dashboard.html:105
+msgid "Profile photo"
+msgstr "프로필 사진"
+
+#: app/templates/auth/dashboard.html:110
+msgid "Individual"
+msgstr "개인"
+
+#: app/templates/auth/dashboard.html:114
+msgid "Company logo"
+msgstr "회사 로고"
+
+#: app/templates/auth/dashboard.html:119
+msgid "Organisation"
+msgstr "조직"
+
+#: app/templates/auth/dashboard.html:126 app/templates/auth/dashboard.html:631
+msgid "View"
+msgstr "보기"
+
+#: app/templates/auth/dashboard.html:130
+msgid "Edit"
+msgstr "편집"
+
+#: app/templates/auth/dashboard.html:138
+msgid "Set up your profile so others can find you."
+msgstr "다른 사람들이 찾을 수 있도록 프로필을 설정하세요."
+
+#: app/templates/auth/dashboard.html:141
+msgid "Create profile"
+msgstr "프로필 만들기"
+
+#: app/templates/auth/dashboard.html:149
+msgid "Create"
+msgstr "만들기"
+
+#: app/templates/auth/dashboard.html:159
+msgid "New Programme"
+msgstr "새 프로그램"
+
+#: app/templates/auth/dashboard.html:160
+msgid "Group discussions into a campaign"
+msgstr "토론을 캠페인으로 그룹화"
+
+#: app/templates/auth/dashboard.html:171
+msgid "New Discussion"
+msgstr "새 토론"
+
+#: app/templates/auth/dashboard.html:172
+msgid "Start a discussion on any topic"
+msgstr "어떤 주제든 토론 시작"
+
+#: app/templates/auth/dashboard.html:180 app/templates/programmes/view.html:17
+msgid "Workspace"
+msgstr "작업 공간"
+
+#: app/templates/auth/dashboard.html:191
+msgid "Public profile"
+msgstr "공개 프로필"
+
+#: app/templates/auth/dashboard.html:204
+msgid "Continue Where You Left Off"
+msgstr "중단한 곳에서 계속하기"
+
+#: app/templates/auth/dashboard.html:213
+msgid "Continue"
+msgstr "계속하기"
+
+#: app/templates/auth/dashboard.html:224
+msgid "My Programmes"
+msgstr "내 프로그램"
+
+#: app/templates/auth/dashboard.html:225
+msgid "Programmes you own, steward, or participate in"
+msgstr "소유하거나 관리하거나 참여하는 프로그램"
+
+#: app/templates/auth/dashboard.html:234 app/templates/auth/dashboard.html:307
+#: app/templates/auth/dashboard.html:624
+msgid "New"
+msgstr "새로 만들기"
+
+#: app/templates/auth/dashboard.html:268
+#, python-format
+msgid "Showing 6 of %(count)s —"
+msgstr "%(count)s 개 중 6개 표시 —"
+
+#: app/templates/auth/dashboard.html:269
+msgid "view all in workspace"
+msgstr "작업공간에서 모두 보기"
+
+#: app/templates/auth/dashboard.html:277
+msgid "No programmes yet"
+msgstr "아직 프로그램이 없습니다"
+
+#: app/templates/auth/dashboard.html:278
+msgid "Programmes group discussions into structured engagement campaigns."
+msgstr "프로그램은 토론을 구조화된 참여 캠페인으로 그룹화합니다."
+
+#: app/templates/auth/dashboard.html:281
+msgid "Create your first programme"
+msgstr "첫 번째 프로그램 만들기"
+
+#: app/templates/auth/dashboard.html:292
+msgid "Recent Updates"
+msgstr "최근 업데이트"
+
+#: app/templates/auth/dashboard.html:293
+msgid "Discussion activity and alerts"
+msgstr "토론 활동 및 알림"
+
+#: app/templates/auth/dashboard.html:317
+msgid "You have no notifications yet."
+msgstr "아직 알림이 없습니다."
+
+#: app/templates/auth/dashboard.html:325
+msgid "Participating"
+msgstr "참여 중"
+
+#: app/templates/auth/dashboard.html:326
+msgid "Discussions you have joined or contributed to"
+msgstr "참여하거나 기여한 토론"
+
+#: app/templates/auth/dashboard.html:329
+msgid "View activity"
+msgstr "활동 보기"
+
+#: app/templates/auth/dashboard.html:342
+msgid "Voted"
+msgstr "투표함"
+
+#: app/templates/auth/dashboard.html:343
+#: app/templates/discussions/embed_discussion.html:1068
+msgid "Statement"
+msgstr "진술"
+
+#: app/templates/auth/dashboard.html:344
+msgid "Response"
+msgstr "답변"
+
+#: app/templates/auth/dashboard.html:351
+msgid "Vote on statements or add an argument to build your activity history."
+msgstr "진술에 투표하거나 주장을 추가하여 활동 기록을 쌓으세요."
+
+#: app/templates/auth/dashboard.html:359
+msgid "Saved Discussions"
+msgstr "저장된 토론"
+
+#: app/templates/auth/dashboard.html:360
+msgid "Keep track of discussions you want to revisit"
+msgstr "다시 방문하고 싶은 토론을 추적하세요"
+
+#: app/templates/auth/dashboard.html:363
+msgid "View saved"
+msgstr "저장된 것 보기"
+
+#: app/templates/auth/dashboard.html:378
+msgid "Save discussions from any discussion page to build your watchlist."
+msgstr "모든 토론 페이지에서 토론을 저장하여 감시 목록을 만드세요."
+
+#: app/templates/auth/dashboard.html:386
+msgid "Stay informed"
+msgstr "최신 정보 받기"
+
+#: app/templates/auth/dashboard.html:387
+msgid "Subscribe using your account email —"
+msgstr "계정 이메일로 구독 —"
+
+#: app/templates/auth/dashboard.html:395
+msgid "A curated news briefing delivered to your inbox"
+msgstr "엄선된 뉴스 브리핑을 받은편지함으로"
+
+#: app/templates/auth/dashboard.html:400 app/templates/auth/dashboard.html:466
+#: app/templates/auth/dashboard.html:562
+msgid "Active"
+msgstr "활성"
+
+#: app/templates/auth/dashboard.html:414 app/templates/auth/dashboard.html:491
+msgid "Manage preferences"
+msgstr "기본 설정 관리"
+
+#: app/templates/auth/dashboard.html:422 app/templates/auth/dashboard.html:498
+msgid "Frequency"
+msgstr "빈도"
+
+#: app/templates/auth/dashboard.html:424 app/templates/auth/dashboard.html:501
+msgid "Daily"
+msgstr "매일"
+
+#: app/templates/auth/dashboard.html:425
+msgid "Weekly"
+msgstr "매주"
+
+#: app/templates/auth/dashboard.html:429
+msgid "Send time"
+msgstr "발송 시간"
+
+#: app/templates/auth/dashboard.html:444
+msgid "Timezone"
+msgstr "시간대"
+
+#: app/templates/auth/dashboard.html:450
+msgid "Subscribe to Daily Brief"
+msgstr "일일 브리핑 구독"
+
+#: app/templates/auth/dashboard.html:460
+msgid "Daily Question"
+msgstr "일일 질문"
+
+#: app/templates/auth/dashboard.html:461
+msgid "A civic question in your inbox — vote in one click"
+msgstr "받은편지함의 시민 질문 — 한 번의 클릭으로 투표"
+
+#: app/templates/auth/dashboard.html:500
+msgid "Weekly digest"
+msgstr "주간 요약"
+
+#: app/templates/auth/dashboard.html:502
+msgid "Monthly"
+msgstr "매월"
+
+#: app/templates/auth/dashboard.html:506
+msgid "Time zone"
+msgstr "시간대"
+
+#: app/templates/auth/dashboard.html:512
+msgid "Digest day"
+msgstr "요약 발송일"
+
+#: app/templates/auth/dashboard.html:520
+msgid "Time"
+msgstr "시간"
+
+#: app/templates/auth/dashboard.html:531
+msgid "Subscribe to Daily Question"
+msgstr "일일 질문 구독"
+
+#: app/templates/auth/dashboard.html:556
+msgid "Paid Briefings"
+msgstr "유료 브리핑"
+
+#: app/templates/auth/dashboard.html:557
+msgid "Your personalised AI-curated briefings"
+msgstr "맞춤형 AI 큐레이션 브리핑"
+
+#: app/templates/auth/dashboard.html:585
+msgid "Go to my Briefings"
+msgstr "내 브리핑으로 이동"
+
+#: app/templates/auth/dashboard.html:591
+msgid "Manage Billing"
+msgstr "결제 관리"
+
+#: app/templates/auth/dashboard.html:597
+msgid ""
+"Get personalised AI-curated briefings delivered to your inbox. Set your "
+"topics, sources, and schedule."
+msgstr ""
+
+#: app/templates/auth/dashboard.html:602
+msgid "Start a free trial"
+msgstr "무료 체험 시작"
+
+#: app/templates/auth/dashboard.html:614
+msgid "Your Discussions"
+msgstr "내 토론"
+
+#: app/templates/auth/dashboard.html:615
+msgid "Discussions you have created"
+msgstr "내가 만든 토론"
+
+#: app/templates/auth/dashboard.html:639
+msgid "No discussions yet"
+msgstr "아직 토론이 없습니다"
+
+#: app/templates/auth/dashboard.html:640
+msgid "Start a discussion to gather opinions and build consensus."
+msgstr "의견을 모으고 합의를 형성하기 위해 토론을 시작하세요."
+
+#: app/templates/auth/dashboard.html:643
+msgid "Start your first discussion"
+msgstr "첫 번째 토론 시작하기"
+
+#: app/templates/auth/login.html:8 app/templates/auth/login.html:36
+#: app/templates/auth/register.html:42
+msgid "Login"
+msgstr "로그인"
+
+#: app/templates/auth/login.html:26 app/templates/auth/register.html:28
+msgid "Email"
+msgstr "이메일"
+
+#: app/templates/auth/login.html:29 app/templates/auth/register.html:31
+msgid "Password"
+msgstr "비밀번호"
+
+#: app/templates/auth/login.html:33
+msgid "Forgot Password?"
+msgstr "비밀번호를 잊으셨나요?"
+
+#: app/templates/auth/login.html:45
+msgid "Logging in…"
+msgstr "로그인 중…"
+
+#: app/templates/auth/login.html:51
+msgid "Don't have an account?"
+msgstr "계정이 없으신가요?"
+
+#: app/templates/auth/login.html:51 app/templates/auth/register.html:6
+#: app/templates/auth/register.html:39
+msgid "Register"
+msgstr "회원가입"
+
+#: app/templates/auth/register.html:25
+msgid "Username"
+msgstr "사용자 이름"
+
+#: app/templates/auth/register.html:35
+#, python-format
+msgid "Verify you're human: What is %(num1)s + %(num2)s?"
+msgstr "사람임을 확인하세요: %(num1)s + %(num2)s 는?"
+
+#: app/templates/auth/register.html:42
+msgid "Already have an account?"
+msgstr "이미 계정이 있으신가요?"
+
+#: app/templates/components/_translation_pending.html:7
+#: app/templates/discussions/embed_discussion.html:878
+msgid ""
+"Translation in progress — this content is showing in English while your "
+"language version is being prepared."
+msgstr "번역 진행 중 — 귀하의 언어 버전을 준비하는 동안 이 콘텐츠가 영어로 표시됩니다."
+
+#: app/templates/components/_translation_pending.html:8
+#: app/templates/discussions/embed_discussion.html:879
+msgid "Reload to check"
+msgstr "새로 고침하여 확인"
+
+#: app/templates/components/discussion_card.html:4
+msgid "Join Discussion"
+msgstr "토론 참여"
+
 #: app/templates/components/vote_buttons.html:24
 #: app/templates/components/vote_buttons.html:65
-#: app/templates/discussions/embed_discussion.html:866
-#: app/templates/discussions/view_native.html:47
+#: app/templates/discussions/embed_discussion.html:944
+#: app/templates/discussions/view_native.html:50
 msgid "Agree"
 msgstr "동의"
 
 #: app/templates/components/vote_buttons.html:24
 #: app/templates/components/vote_buttons.html:65
-#: app/templates/discussions/embed_discussion.html:855
-#: app/templates/discussions/view_native.html:44
+#: app/templates/discussions/embed_discussion.html:933
+#: app/templates/discussions/view_native.html:47
 msgid "Agree with this statement"
 msgstr "이 진술에 동의"
 
 #: app/templates/components/vote_buttons.html:25
 #: app/templates/components/vote_buttons.html:66
-#: app/templates/discussions/embed_discussion.html:885
-#: app/templates/discussions/view_native.html:55
+#: app/templates/discussions/embed_discussion.html:963
+#: app/templates/discussions/view_native.html:58
 msgid "Disagree"
 msgstr "반대"
 
 #: app/templates/components/vote_buttons.html:25
 #: app/templates/components/vote_buttons.html:66
-#: app/templates/discussions/embed_discussion.html:874
-#: app/templates/discussions/view_native.html:52
+#: app/templates/discussions/embed_discussion.html:952
+#: app/templates/discussions/view_native.html:55
 msgid "Disagree with this statement"
 msgstr "이 진술에 반대"
 
 #: app/templates/components/vote_buttons.html:26
 #: app/templates/components/vote_buttons.html:67
-#: app/templates/discussions/embed_discussion.html:904
-#: app/templates/discussions/view_native.html:63
+#: app/templates/discussions/embed_discussion.html:982
+#: app/templates/discussions/view_native.html:66
 msgid "Unsure"
 msgstr "잘 모르겠음"
 
 #: app/templates/components/vote_buttons.html:26
 #: app/templates/components/vote_buttons.html:67
-#: app/templates/discussions/embed_discussion.html:893
-#: app/templates/discussions/view_native.html:60
+#: app/templates/discussions/embed_discussion.html:971
+#: app/templates/discussions/view_native.html:63
 msgid "Unsure about this statement"
 msgstr "이 진술에 대해 잘 모르겠음"
 
@@ -209,502 +617,559 @@ msgid "Anonymous"
 msgstr "익명"
 
 #: app/templates/discussions/_statement_card.html:29
-#: app/templates/discussions/embed_discussion.html:844
+#: app/templates/discussions/embed_discussion.html:917
 msgid "AI translated"
 msgstr "AI 번역"
 
 #: app/templates/discussions/_statement_card.html:29
-#: app/templates/discussions/embed_discussion.html:845
+#: app/templates/discussions/embed_discussion.html:918
 msgid "Show original"
 msgstr "원문 보기"
 
-#: app/templates/discussions/_statement_card.html:51
+#: app/templates/discussions/_statement_card.html:37
+#: app/templates/discussions/embed_discussion.html:924
+msgid "Translation pending"
+msgstr "번역 대기 중"
+
+#: app/templates/discussions/_statement_card.html:58
 msgid "View Discussion"
 msgstr "토론 보기"
 
-#: app/templates/discussions/_statement_card.html:65
+#: app/templates/discussions/_statement_card.html:72
 msgid "Add Argument"
 msgstr "주장 추가"
 
-#: app/templates/discussions/consensus_results.html:5
-#: app/templates/discussions/consensus_results.html:20
-#: app/templates/discussions/view_native.html:153
+#: app/templates/discussions/consensus_results.html:6
+#: app/templates/discussions/consensus_results.html:26
+#: app/templates/discussions/view_native.html:156
 msgid "Consensus Analysis"
 msgstr "합의 분석"
 
-#: app/templates/discussions/consensus_results.html:28
+#: app/templates/discussions/consensus_results.html:34
 msgid "Opinion Groups"
 msgstr "의견 그룹"
 
-#: app/templates/discussions/consensus_results.html:34
+#: app/templates/discussions/consensus_results.html:40
 msgid "Participants"
 msgstr "참여자"
 
-#: app/templates/discussions/consensus_results.html:38
+#: app/templates/discussions/consensus_results.html:44
 msgid "Statements"
 msgstr "진술"
 
-#: app/templates/discussions/consensus_results.html:167
-#: app/templates/discussions/consensus_results.html:204
+#: app/templates/discussions/consensus_results.html:173
+#: app/templates/discussions/consensus_results.html:210
 msgid "What Each Group Believes"
 msgstr "각 그룹의 믿음"
 
-#: app/templates/discussions/consensus_results.html:169
+#: app/templates/discussions/consensus_results.html:175
 msgid ""
 "These are the statements each opinion group agrees on most strongly. This"
 " helps understand the core beliefs that define each group."
 msgstr "각 의견 그룹이 가장 강하게 동의하는 진술입니다. 그룹을 규정하는 핵심 신념을 이해하는 데 도움이 됩니다."
 
-#: app/templates/discussions/consensus_results.html:183
+#: app/templates/discussions/consensus_results.html:189
 msgid "Top beliefs:"
 msgstr "주요 신념:"
 
-#: app/templates/discussions/consensus_results.html:190
+#: app/templates/discussions/consensus_results.html:196
 msgid "% agree"
 msgstr "% 동의"
 
-#: app/templates/discussions/consensus_results.html:216
+#: app/templates/discussions/consensus_results.html:222
 msgid "Areas of Consensus"
 msgstr "합의 영역"
 
-#: app/templates/discussions/consensus_results.html:219
+#: app/templates/discussions/consensus_results.html:225
 msgid "These statements have broad agreement across all opinion groups."
 msgstr "이 진술은 모든 의견 그룹에서 넓은 합의를 얻습니다."
 
-#: app/templates/discussions/consensus_results.html:225
-#: app/templates/discussions/consensus_results.html:250
-#: app/templates/discussions/consensus_results.html:272
-#: app/templates/discussions/embed_discussion.html:912
+#: app/templates/discussions/consensus_results.html:231
+#: app/templates/discussions/consensus_results.html:256
+#: app/templates/discussions/consensus_results.html:278
+#: app/templates/discussions/embed_discussion.html:990
 msgid "agree"
 msgstr "동의"
 
-#: app/templates/discussions/consensus_results.html:226
-#: app/templates/discussions/consensus_results.html:251
-#: app/templates/discussions/consensus_results.html:273
-#: app/templates/discussions/embed_discussion.html:913
+#: app/templates/discussions/consensus_results.html:232
+#: app/templates/discussions/consensus_results.html:257
+#: app/templates/discussions/consensus_results.html:279
+#: app/templates/discussions/embed_discussion.html:991
 msgid "disagree"
 msgstr "반대"
 
-#: app/templates/discussions/consensus_results.html:227
-#: app/templates/discussions/consensus_results.html:252
-#: app/templates/discussions/consensus_results.html:274
-#: app/templates/discussions/embed_discussion.html:914
+#: app/templates/discussions/consensus_results.html:233
+#: app/templates/discussions/consensus_results.html:258
+#: app/templates/discussions/consensus_results.html:280
+#: app/templates/discussions/embed_discussion.html:992
 msgid "unsure"
 msgstr "잘 모르겠음"
 
-#: app/templates/discussions/consensus_results.html:229
-#: app/templates/discussions/embed_discussion.html:921
-#: app/templates/discussions/embed_discussion.html:1138
+#: app/templates/discussions/consensus_results.html:235
+#: app/templates/discussions/embed_discussion.html:999
+#: app/templates/discussions/embed_discussion.html:1216
 msgid "agreement"
 msgstr "합의"
 
-#: app/templates/discussions/consensus_results.html:241
+#: app/templates/discussions/consensus_results.html:247
 msgid "Bridge Statements"
 msgstr "연결 진술"
 
-#: app/templates/discussions/consensus_results.html:244
+#: app/templates/discussions/consensus_results.html:250
 msgid "These statements unite different opinion groups and offer common ground."
 msgstr "이 진술은 서로 다른 의견 그룹을 잇고 공통점을 제시합니다."
 
-#: app/templates/discussions/consensus_results.html:263
+#: app/templates/discussions/consensus_results.html:269
 msgid "Points of Division"
 msgstr "분열 지점"
 
-#: app/templates/discussions/consensus_results.html:266
+#: app/templates/discussions/consensus_results.html:272
 msgid "These statements show significant disagreement between opinion groups."
 msgstr "이 진술은 의견 그룹 간 상당한 이견을 보여 줍니다."
 
-#: app/templates/discussions/consensus_results.html:277
+#: app/templates/discussions/consensus_results.html:283
 msgid "controversy"
 msgstr "논쟁"
 
-#: app/templates/discussions/consensus_results.html:287
+#: app/templates/discussions/consensus_results.html:293
 msgid "Export & Share"
 msgstr "내보내기 및 공유"
 
-#: app/templates/discussions/consensus_results.html:293
+#: app/templates/discussions/consensus_results.html:299
 msgid "Download JSON"
 msgstr "JSON 다운로드"
 
-#: app/templates/discussions/consensus_results.html:299
+#: app/templates/discussions/consensus_results.html:305
 msgid "Generate Report"
 msgstr "보고서 생성"
 
-#: app/templates/discussions/consensus_results.html:313
+#: app/templates/discussions/consensus_results.html:319
 msgid "Re-run Analysis"
 msgstr "분석 재실행"
 
-#: app/templates/discussions/consensus_results.html:322
+#: app/templates/discussions/consensus_results.html:328
 msgid "Methodology"
 msgstr "방법론"
 
-#: app/templates/discussions/consensus_results.html:353
+#: app/templates/discussions/consensus_results.html:359
 msgid "Back to Discussion"
 msgstr "토론으로 돌아가기"
 
 #: app/templates/discussions/embed_discussion.html:6
-#: app/templates/discussions/embed_discussion.html:1017
-#: app/templates/discussions/view_discussion.html:7
+#: app/templates/discussions/embed_discussion.html:1095
+#: app/templates/discussions/view_discussion.html:8
 msgid "Society Speaks"
 msgstr "Society Speaks"
 
-#: app/templates/discussions/embed_discussion.html:786
+#: app/templates/discussions/embed_discussion.html:848
 msgid "Skip to statements"
 msgstr "진술로 이동"
 
-#: app/templates/discussions/embed_discussion.html:790
+#: app/templates/discussions/embed_discussion.html:852
 msgid "You're offline. Votes will be saved when you reconnect."
 msgstr "오프라인입니다. 다시 연결되면 투표가 저장됩니다."
 
-#: app/templates/discussions/embed_discussion.html:795
-#: app/templates/discussions/embed_discussion.html:1114
+#: app/templates/discussions/embed_discussion.html:857
+#: app/templates/discussions/embed_discussion.html:1192
 msgid "This discussion is closed. You can still view the full record."
 msgstr "이 토론은 종료되었습니다. 전체 기록은 여전히 볼 수 있습니다."
 
-#: app/templates/discussions/embed_discussion.html:816
+#: app/templates/discussions/embed_discussion.html:889
 #, python-format
 msgid "%(num)d statement to vote on"
 msgid_plural "%(num)d statements to vote on"
 msgstr[0] "%(num)d 개의 진술에 투표"
 
-#: app/templates/discussions/embed_discussion.html:824
+#: app/templates/discussions/embed_discussion.html:897
 msgid "Your progress"
 msgstr "내 진행 상황"
 
-#: app/templates/discussions/embed_discussion.html:825
-#: app/templates/discussions/embed_discussion.html:1115
+#: app/templates/discussions/embed_discussion.html:898
+#: app/templates/discussions/embed_discussion.html:1193
 #, python-format
 msgid "%(current)d / %(threshold)d votes"
 msgstr "%(current)d / %(threshold)d 표"
 
-#: app/templates/discussions/embed_discussion.html:830
+#: app/templates/discussions/embed_discussion.html:903
 msgid "Vote on statements to help build consensus"
 msgstr "합의 형성을 위해 진술에 투표하세요"
 
-#: app/templates/discussions/embed_discussion.html:836
+#: app/templates/discussions/embed_discussion.html:909
 msgid "Statements to vote on"
 msgstr "투표할 진술"
 
-#: app/templates/discussions/embed_discussion.html:845
+#: app/templates/discussions/embed_discussion.html:918
 msgid "Hide original"
 msgstr "원문 숨기기"
 
-#: app/templates/discussions/embed_discussion.html:850
+#: app/templates/discussions/embed_discussion.html:928
 msgid "Vote options for this statement"
 msgstr "이 진술에 대한 투표 옵션"
 
-#: app/templates/discussions/embed_discussion.html:910
+#: app/templates/discussions/embed_discussion.html:988
 msgid "Vote to see how others split on this claim."
 msgstr "이 주장에 대해 다른 사람들이 어떻게 나뉘는지 보려면 투표하세요."
 
-#: app/templates/discussions/embed_discussion.html:919
+#: app/templates/discussions/embed_discussion.html:997
 msgid "total votes"
 msgstr "총 투표수"
 
-#: app/templates/discussions/embed_discussion.html:930
-#: app/templates/discussions/embed_discussion.html:1029
+#: app/templates/discussions/embed_discussion.html:1008
+#: app/templates/discussions/embed_discussion.html:1107
 msgid "Report this statement"
 msgstr "이 진술 신고"
 
-#: app/templates/discussions/embed_discussion.html:935
+#: app/templates/discussions/embed_discussion.html:1013
 msgid "Report"
 msgstr "신고"
 
-#: app/templates/discussions/embed_discussion.html:947
+#: app/templates/discussions/embed_discussion.html:1025
 msgid "No statements yet. Check back soon!"
 msgstr "아직 진술이 없습니다. 곧 다시 확인해 주세요!"
 
-#: app/templates/discussions/embed_discussion.html:949
+#: app/templates/discussions/embed_discussion.html:1027
 msgid "This discussion is not currently available for embed voting."
 msgstr "이 토론은 현재 임베드 투표에 사용할 수 없습니다."
 
-#: app/templates/discussions/embed_discussion.html:950
+#: app/templates/discussions/embed_discussion.html:1028
 msgid "View the full discussion on Society Speaks"
 msgstr "Society Speaks에서 전체 토론 보기"
 
-#: app/templates/discussions/embed_discussion.html:956
+#: app/templates/discussions/embed_discussion.html:1034
 msgid "Statement pages"
 msgstr "진술 페이지"
 
-#: app/templates/discussions/embed_discussion.html:957
+#: app/templates/discussions/embed_discussion.html:1035
 #, python-format
 msgid "Page %(page)d of %(pages)d"
 msgstr "%(page)d / %(pages)d 페이지"
 
-#: app/templates/discussions/embed_discussion.html:966
+#: app/templates/discussions/embed_discussion.html:1044
 msgid "Previous"
 msgstr "이전"
 
-#: app/templates/discussions/embed_discussion.html:976
+#: app/templates/discussions/embed_discussion.html:1054
 msgid "Next"
 msgstr "다음"
 
-#: app/templates/discussions/embed_discussion.html:985
+#: app/templates/discussions/embed_discussion.html:1063
 msgid "Suggest a statement"
 msgstr "진술 제안"
 
-#: app/templates/discussions/embed_discussion.html:987
+#: app/templates/discussions/embed_discussion.html:1065
 msgid "Your statement should be concise and debatable (10-500 characters)."
 msgstr "진술은 간결하고 토론 가능해야 합니다 (10-500자)."
 
-#: app/templates/discussions/embed_discussion.html:990
-msgid "Statement"
-msgstr "진술"
-
-#: app/templates/discussions/embed_discussion.html:998
+#: app/templates/discussions/embed_discussion.html:1076
 msgid ""
 "e.g. Expanding low-emission zones is worth short-term disruption for "
 "long-term health."
-msgstr ""
-"예: 저배출 구역 확대는 장기 건강을 위해 단기적 불편을 감수할 가치가 있습니다."
+msgstr "예: 저배출 구역 확대는 장기 건강을 위해 단기적 불편을 감수할 가치가 있습니다."
 
-#: app/templates/discussions/embed_discussion.html:1002
-#: app/templates/discussions/embed_discussion.html:1136
+#: app/templates/discussions/embed_discussion.html:1080
+#: app/templates/discussions/embed_discussion.html:1214
 #, python-format
 msgid "%(cur)d / %(max)d"
 msgstr "%(cur)d / %(max)d"
 
-#: app/templates/discussions/embed_discussion.html:1004
+#: app/templates/discussions/embed_discussion.html:1082
 msgid "Submit statement"
 msgstr "진술 제출"
 
-#: app/templates/discussions/embed_discussion.html:1014
-#: app/templates/discussions/embed_discussion.html:1111
+#: app/templates/discussions/embed_discussion.html:1092
+#: app/templates/discussions/embed_discussion.html:1189
 msgid "View Full Analysis"
 msgstr "전체 분석 보기"
 
-#: app/templates/discussions/embed_discussion.html:1017
+#: app/templates/discussions/embed_discussion.html:1095
 msgid "Powered by"
 msgstr "제공"
 
-#: app/templates/discussions/embed_discussion.html:1018
+#: app/templates/discussions/embed_discussion.html:1096
 msgid "Content Policy"
 msgstr "콘텐츠 정책"
 
-#: app/templates/discussions/embed_discussion.html:1032
+#: app/templates/discussions/embed_discussion.html:1110
 msgid "Reason for reporting"
 msgstr "신고 이유"
 
-#: app/templates/discussions/embed_discussion.html:1035
+#: app/templates/discussions/embed_discussion.html:1113
 msgid "Spam or advertising"
 msgstr "스팸 또는 광고"
 
-#: app/templates/discussions/embed_discussion.html:1039
+#: app/templates/discussions/embed_discussion.html:1117
 msgid "Harassment or abuse"
 msgstr "괴롭힘 또는 남용"
 
-#: app/templates/discussions/embed_discussion.html:1043
+#: app/templates/discussions/embed_discussion.html:1121
 msgid "Misinformation"
 msgstr "잘못된 정보"
 
-#: app/templates/discussions/embed_discussion.html:1047
+#: app/templates/discussions/embed_discussion.html:1125
 msgid "Off-topic or irrelevant"
 msgstr "주제와 무관"
 
-#: app/templates/discussions/embed_discussion.html:1051
+#: app/templates/discussions/embed_discussion.html:1129
 msgid "Cancel"
 msgstr "취소"
 
-#: app/templates/discussions/embed_discussion.html:1052
-#: app/templates/discussions/embed_discussion.html:1127
+#: app/templates/discussions/embed_discussion.html:1130
+#: app/templates/discussions/embed_discussion.html:1205
 msgid "Submit Report"
 msgstr "신고 제출"
 
-#: app/templates/discussions/embed_discussion.html:1108
+#: app/templates/discussions/embed_discussion.html:1186
 msgid "This discussion is closed."
 msgstr "이 토론은 종료되었습니다."
 
-#: app/templates/discussions/embed_discussion.html:1109
+#: app/templates/discussions/embed_discussion.html:1187
 msgid "View full record"
 msgstr "전체 기록 보기"
 
-#: app/templates/discussions/embed_discussion.html:1110
+#: app/templates/discussions/embed_discussion.html:1188
 msgid "Thanks for participating!"
 msgstr "참여해 주셔서 감사합니다!"
 
-#: app/templates/discussions/embed_discussion.html:1112
+#: app/templates/discussions/embed_discussion.html:1190
+#, python-format
 msgid "Analysis is not ready yet (%(count)d participants so far)."
 msgstr "분석이 아직 준비되지 않았습니다 (지금까지 %(count)d 명의 참가자)."
 
-#: app/templates/discussions/embed_discussion.html:1113
+#: app/templates/discussions/embed_discussion.html:1191
 msgid "View the record"
 msgstr "기록 보기"
 
-#: app/templates/discussions/embed_discussion.html:1116
+#: app/templates/discussions/embed_discussion.html:1194
 msgid "Vote on 1 more statement to unlock analysis"
 msgstr "분석을 잠금 해제하려면 1개 더 투표하세요"
 
-#: app/templates/discussions/embed_discussion.html:1117
+#: app/templates/discussions/embed_discussion.html:1195
 #, python-format
 msgid "Vote on %(num)d more statements to unlock analysis"
 msgstr "분석을 잠금 해제하려면 %(num)d개 더 투표하세요"
 
-#: app/templates/discussions/embed_discussion.html:1118
+#: app/templates/discussions/embed_discussion.html:1196
 msgid "Retry"
 msgstr "다시 시도"
 
-#: app/templates/discussions/embed_discussion.html:1119
+#: app/templates/discussions/embed_discussion.html:1197
 msgid "Vote saved offline. Will sync when connected."
 msgstr "오프라인으로 투표가 저장되었습니다. 연결 시 동기화됩니다."
 
-#: app/templates/discussions/embed_discussion.html:1120
+#: app/templates/discussions/embed_discussion.html:1198
 msgid "Vote recorded!"
 msgstr "투표가 기록되었습니다!"
 
-#: app/templates/discussions/embed_discussion.html:1121
+#: app/templates/discussions/embed_discussion.html:1199
 msgid "You're voting too fast. Please wait a moment."
 msgstr "너무 빨리 투표하고 있습니다. 잠시 기다려 주세요."
 
-#: app/templates/discussions/embed_discussion.html:1122
+#: app/templates/discussions/embed_discussion.html:1200
 msgid "Couldn't save vote."
 msgstr "투표를 저장할 수 없습니다."
 
-#: app/templates/discussions/embed_discussion.html:1123
+#: app/templates/discussions/embed_discussion.html:1201
 msgid "You have already reported this statement."
 msgstr "이미 이 진술을 신고하셨습니다."
 
-#: app/templates/discussions/embed_discussion.html:1124
+#: app/templates/discussions/embed_discussion.html:1202
 msgid "Submitting..."
 msgstr "제출 중..."
 
-#: app/templates/discussions/embed_discussion.html:1125
+#: app/templates/discussions/embed_discussion.html:1203
 msgid "Thank you for your report. We will review it."
 msgstr "신고해 주셔서 감사합니다. 검토하겠습니다."
 
-#: app/templates/discussions/embed_discussion.html:1126
+#: app/templates/discussions/embed_discussion.html:1204
 msgid "Could not submit report. Please try again."
 msgstr "보고서를 제출할 수 없습니다. 다시 시도해 주세요."
 
-#: app/templates/discussions/embed_discussion.html:1128
+#: app/templates/discussions/embed_discussion.html:1206
 msgid "Reported"
 msgstr "신고됨"
 
-#: app/templates/discussions/embed_discussion.html:1129
+#: app/templates/discussions/embed_discussion.html:1207
 msgid "Statement must be at least 10 characters."
 msgstr "진술은 최소 10자 이상이어야 합니다."
 
-#: app/templates/discussions/embed_discussion.html:1130
+#: app/templates/discussions/embed_discussion.html:1208
 msgid "Statement must be 500 characters or fewer."
 msgstr "진술은 500자 이하여야 합니다."
 
-#: app/templates/discussions/embed_discussion.html:1131
+#: app/templates/discussions/embed_discussion.html:1209
 msgid "That statement is already in this discussion."
 msgstr "해당 진술은 이미 이 토론에 있습니다."
 
-#: app/templates/discussions/embed_discussion.html:1132
+#: app/templates/discussions/embed_discussion.html:1210
 msgid "You're posting too quickly. Please wait a bit."
 msgstr "너무 빨리 게시하고 있습니다. 잠시 기다려 주세요."
 
-#: app/templates/discussions/embed_discussion.html:1133
+#: app/templates/discussions/embed_discussion.html:1211
 msgid "Could not submit statement right now."
 msgstr "지금은 진술을 제출할 수 없습니다."
 
-#: app/templates/discussions/embed_discussion.html:1134
+#: app/templates/discussions/embed_discussion.html:1212
 msgid "Statement submitted. It will appear in the discussion shortly."
 msgstr "진술이 제출되었습니다. 곧 토론에 표시될 것입니다."
 
-#: app/templates/discussions/embed_discussion.html:1135
+#: app/templates/discussions/embed_discussion.html:1213
 msgid "Network error while submitting statement."
 msgstr "진술 제출 중 네트워크 오류가 발생했습니다."
 
-#: app/templates/discussions/embed_discussion.html:1137
+#: app/templates/discussions/embed_discussion.html:1215
 #, python-format
 msgid "%(n)s total votes"
 msgstr "총 %(n)s표"
 
-#: app/templates/discussions/view_discussion.html:12
-#: app/templates/discussions/view_discussion.html:31
-#: app/templates/discussions/view_discussion.html:41
-#: app/templates/discussions/view_discussion.html:43
+#: app/templates/discussions/search_discussions.html:31
+msgid "Explore Discussions"
+msgstr "토론 탐색"
+
+#: app/templates/discussions/search_discussions.html:32
+msgid "Join conversations that matter to you"
+msgstr "나에게 중요한 대화에 참여하세요"
+
+#: app/templates/discussions/search_discussions.html:39
+msgid "Start a Discussion"
+msgstr "토론 시작하기"
+
+#: app/templates/discussions/search_discussions.html:57
+msgid "Search discussions…"
+msgstr "토론 검색…"
+
+#: app/templates/discussions/search_discussions.html:70
+msgid "Topic"
+msgstr "주제"
+
+#: app/templates/discussions/search_discussions.html:72
+msgid "All Topics"
+msgstr "모든 주제"
+
+#: app/templates/discussions/search_discussions.html:80
+msgid "Country"
+msgstr "국가"
+
+#: app/templates/discussions/search_discussions.html:82
+msgid "All Countries"
+msgstr "모든 국가"
+
+#: app/templates/discussions/search_discussions.html:90
+msgid "Sort By"
+msgstr "정렬 기준"
+
+#: app/templates/discussions/search_discussions.html:92
+msgid "Most Active"
+msgstr "가장 활발한"
+
+#: app/templates/discussions/search_discussions.html:93
+msgid "Most Recent"
+msgstr "최신"
+
+#: app/templates/discussions/search_discussions.html:98
+msgid "Programme"
+msgstr "프로그램"
+
+#: app/templates/discussions/search_discussions.html:100
+msgid "All Programmes"
+msgstr "모든 프로그램"
+
+#: app/templates/discussions/search_discussions.html:113
+msgid "Apply Filters"
+msgstr "필터 적용"
+
+#: app/templates/discussions/view_discussion.html:13
+#: app/templates/discussions/view_discussion.html:32
+#: app/templates/discussions/view_discussion.html:42
+#: app/templates/discussions/view_discussion.html:44
 msgid "Join the discussion on SocietySpeaks."
 msgstr "SocietySpeaks에서 토론에 참여하세요."
 
-#: app/templates/discussions/view_discussion.html:16
+#: app/templates/discussions/view_discussion.html:17
 msgid "discussion, society, topics"
 msgstr "토론, 사회, 주제"
 
-#: app/templates/discussions/view_native.html:26
+#: app/templates/discussions/view_native.html:29
 msgid "See all ↓"
 msgstr "모두 보기 ↓"
 
-#: app/templates/discussions/view_native.html:40
+#: app/templates/discussions/view_native.html:43
 msgid "Vote on the statement above: agree, disagree, or unsure"
 msgstr "위 진술에 투표: 동의, 반대, 잘 모르겠음"
 
-#: app/templates/discussions/view_native.html:72
+#: app/templates/discussions/view_native.html:75
 msgid "Skip for now"
 msgstr "지금은 건너뛰기"
 
-#: app/templates/discussions/view_native.html:91
+#: app/templates/discussions/view_native.html:94
 msgid "Theme complete!"
 msgstr "테마 완료!"
 
-#: app/templates/discussions/view_native.html:124
+#: app/templates/discussions/view_native.html:128
 msgid "Add Statement"
 msgstr "진술 추가"
 
-#: app/templates/discussions/view_native.html:169
+#: app/templates/discussions/view_native.html:172
 msgid "Analysis"
 msgstr "분석"
 
-#: app/templates/discussions/view_native.html:182
-#: app/templates/discussions/view_native.html:188
+#: app/templates/discussions/view_native.html:185
+#: app/templates/discussions/view_native.html:191
 msgid "Search statements..."
 msgstr "진술 검색..."
 
-#: app/templates/discussions/view_native.html:192
+#: app/templates/discussions/view_native.html:195
 msgid "Search"
 msgstr "검색"
 
-#: app/templates/discussions/view_native.html:199
+#: app/templates/discussions/view_native.html:202
 msgid "Sort by:"
 msgstr "정렬 기준:"
 
-#: app/templates/discussions/view_native.html:215
+#: app/templates/discussions/view_native.html:218
 msgid "Recommended journey order"
 msgstr "권장 여정 순서"
 
-#: app/templates/discussions/view_native.html:215
+#: app/templates/discussions/view_native.html:218
 msgid "Progressive (Pol.is style)"
 msgstr "점진적 (Pol.is 스타일)"
 
-#: app/templates/discussions/view_native.html:218
+#: app/templates/discussions/view_native.html:221
 msgid "Most agreed first"
 msgstr "동의 많은 순"
 
-#: app/templates/discussions/view_native.html:218
+#: app/templates/discussions/view_native.html:221
 msgid "Best (most agreed)"
 msgstr "최선 (가장 동의)"
 
-#: app/templates/discussions/view_native.html:221
+#: app/templates/discussions/view_native.html:224
 msgid "Most debated"
 msgstr "논쟁 많은 순"
 
-#: app/templates/discussions/view_native.html:221
+#: app/templates/discussions/view_native.html:224
 msgid "Controversial"
 msgstr "논쟁적"
 
-#: app/templates/discussions/view_native.html:224
+#: app/templates/discussions/view_native.html:227
 msgid "Newest statements"
 msgstr "최신 진술"
 
-#: app/templates/discussions/view_native.html:227
+#: app/templates/discussions/view_native.html:230
 msgid "Most votes"
 msgstr "투표 많은 순"
 
-#: app/templates/discussions/view_native.html:325
+#: app/templates/discussions/view_native.html:328
 msgid "statements to vote on"
 msgstr "투표할 진술"
 
-#: app/templates/discussions/view_native.html:488
+#: app/templates/discussions/view_native.html:491
 msgid "No Statements Yet"
 msgstr "아직 진술이 없습니다"
 
-#: app/templates/discussions/view_native.html:490
+#: app/templates/discussions/view_native.html:493
 msgid "Be the first to contribute to this discussion!"
 msgstr "이 토론에 처음으로 기여해 보세요!"
 
-#: app/templates/discussions/view_native.html:496
+#: app/templates/discussions/view_native.html:499
 msgid "Post the First Statement"
 msgstr "첫 번째 진술 게시"
 
@@ -740,116 +1205,33 @@ msgstr "시작 →"
 msgid "Other Programmes"
 msgstr "기타 프로그램"
 
-#: app/templates/programmes/view.html:11
-msgid "Dashboard"
-msgstr "대시보드"
-
-#: app/templates/programmes/view.html:13
-msgid "Workspace"
-msgstr "작업 공간"
-
-#: app/templates/programmes/view.html:145
+#: app/templates/programmes/view.html:149
 msgid "Read more"
 msgstr "더 읽기"
 
-#: app/templates/programmes/view.html:237
+#: app/templates/programmes/view.html:241
 msgid "themes completed"
 msgstr "테마 완료"
 
-#: app/templates/programmes/view.html:241
+#: app/templates/programmes/view.html:245
 msgid "votes cast"
 msgstr "투표 완료"
 
-#: app/templates/programmes/view.html:273
+#: app/templates/programmes/view.html:277
 msgid "View progress recap"
 msgstr "진행 요약 보기"
 
-#: app/templates/programmes/view.html:388
+#: app/templates/programmes/view.html:392
 msgid "Turn on reminders"
 msgstr "알림 켜기"
 
-#: app/templates/programmes/view.html:421
+#: app/templates/programmes/view.html:425
 msgid "Stop reminders"
 msgstr "알림 끄기"
 
-#: app/templates/programmes/view.html:490
+#: app/templates/programmes/view.html:494
 msgid "Add discussion"
 msgstr "토론 추가"
-
-#: app/templates/components/_translation_pending.html:6
-#: app/templates/discussions/embed_discussion.html:837
-msgid "Translation in progress — this content is showing in English while your language version is being prepared."
-msgstr "번역 진행 중 — 귀하의 언어 버전을 준비하는 동안 이 콘텐츠가 영어로 표시됩니다."
-
-#: app/templates/components/_translation_pending.html:9
-#: app/templates/discussions/embed_discussion.html:862
-msgid "Reload to check"
-msgstr "새로 고침하여 확인"
-
-#: app/templates/discussions/_statement_card.html:33
-#: app/templates/discussions/embed_discussion.html:900
-msgid "Translation pending"
-msgstr "번역 대기 중"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Explore Discussions"
-msgstr "토론 탐색"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Join conversations that matter to you"
-msgstr "나에게 중요한 대화에 참여하세요"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Start a Discussion"
-msgstr "토론 시작하기"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Search discussions…"
-msgstr "토론 검색…"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Topic"
-msgstr "주제"
-
-#: app/templates/discussions/search_discussions.html
-msgid "All Topics"
-msgstr "모든 주제"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Country"
-msgstr "국가"
-
-#: app/templates/discussions/search_discussions.html
-msgid "All Countries"
-msgstr "모든 국가"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Sort By"
-msgstr "정렬 기준"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Most Active"
-msgstr "가장 활발한"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Most Recent"
-msgstr "최신"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Programme"
-msgstr "프로그램"
-
-#: app/templates/discussions/search_discussions.html
-msgid "All Programmes"
-msgstr "모든 프로그램"
-
-#: app/templates/discussions/search_discussions.html
-msgid "Apply Filters"
-msgstr "필터 적용"
-
-#: app/templates/components/discussion_card.html
-msgid "Join Discussion"
-msgstr "토론 참여"
 
 #~ msgid "Claim"
 #~ msgstr "주장"
