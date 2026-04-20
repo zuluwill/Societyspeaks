@@ -56,7 +56,7 @@ def _statement_queries_for_discussion(discussion):
     )
     query = Statement.query.options(
         joinedload(Statement.user),
-        joinedload(Statement.responses).joinedload(Response.user)
+        selectinload(Statement.responses).joinedload(Response.user)
     ).filter_by(
         discussion_id=discussion.id,
         is_deleted=False
@@ -707,18 +707,15 @@ def embed_discussion(discussion_id):
     except Exception as e:
         current_app.logger.debug(f"Embed tracking error: {e}")
 
-    # Resolve language and fetch translations (single batched API call if cache misses)
     from app.lib.translation import (
         resolve_language,
-        get_or_create_statement_translations,
-        get_or_create_discussion_translation,
+        get_cached_statement_translations,
+        get_cached_discussion_translation,
         SUPPORTED_LANGUAGES,
     )
     current_lang = resolve_language(request)
-    translation_map = get_or_create_statement_translations(
-        statements, current_lang, discussion_title=discussion.title
-    )
-    discussion_translation = get_or_create_discussion_translation(discussion, current_lang)
+    translation_map = get_cached_statement_translations(statements, current_lang)
+    discussion_translation = get_cached_discussion_translation(discussion, current_lang)
 
     # Render template (pass base_url for "Powered by" and content policy link)
     response = make_response(render_template(
@@ -907,22 +904,15 @@ def view_discussion(discussion_id, slug):
             discussion, journey_uid
         )
 
-    # Resolve language and fetch translations (discussion title/statement text + journey info panel)
     from app.lib.translation import (
         resolve_language,
-        get_or_create_statement_translations,
-        get_or_create_discussion_translation,
-        get_or_create_discussion_info_translation,
+        get_cached_statement_translations,
+        get_cached_discussion_translation,
+        get_cached_discussion_info_translation,
     )
     view_lang = resolve_language(request)
-    view_translation_map = get_or_create_statement_translations(
-        statements, view_lang, discussion_title=discussion.title
-    ) if statements and view_lang != 'en' else {}
-    view_discussion_translation = (
-        get_or_create_discussion_translation(discussion, view_lang)
-        if view_lang != 'en'
-        else None
-    )
+    view_translation_map = get_cached_statement_translations(statements, view_lang) if statements and view_lang != 'en' else {}
+    view_discussion_translation = get_cached_discussion_translation(discussion, view_lang) if view_lang != 'en' else None
 
     safe_information_html = None
     safe_info_links = []
@@ -930,7 +920,7 @@ def view_discussion(discussion_id, slug):
     if discussion.information_title or discussion.information_body or discussion.information_links:
         body_for_render = discussion.information_body or ''
         if view_lang != 'en' and (discussion.information_title or body_for_render):
-            tr_info = get_or_create_discussion_info_translation(discussion, view_lang)
+            tr_info = get_cached_discussion_info_translation(discussion, view_lang)
             information_title_display = tr_info['information_title'] or discussion.information_title
             body_for_render = tr_info['information_body'] or body_for_render
         if body_for_render:

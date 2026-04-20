@@ -406,6 +406,24 @@ def init_scheduler(app):
                 logger.warning(f"Marked {stale_count} programme export jobs as stale")
 
 
+    @scheduler.scheduled_job('interval', minutes=5, id='translate_pending_content', max_instances=1, coalesce=True)
+    def translate_pending_content_job():
+        """Pre-translate new discussions, statements, and programmes into all supported languages."""
+        with app.app_context():
+            try:
+                from app.lib.translation_worker import run_translation_worker
+                result = run_translation_worker()
+                if result['statements'] or result['discussions'] or result['programmes']:
+                    logger.info(
+                        'Translation worker: %d statements, %d discussions, %d programmes translated',
+                        result['statements'], result['discussions'], result['programmes'],
+                    )
+                if result['errors']:
+                    logger.warning('Translation worker errors for languages: %s', result['errors'])
+            except Exception:
+                logger.exception('Unexpected error in translate_pending_content_job')
+
+
     @scheduler.scheduled_job('interval', minutes=15, id='rollup_analytics_daily', max_instances=1, coalesce=True)
     def rollup_analytics_daily_job():
         """Refresh curated analytics aggregates from immutable raw event stream."""

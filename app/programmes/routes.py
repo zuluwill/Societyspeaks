@@ -41,7 +41,7 @@ from app.programmes.utils import (
 from app.lib.locale_utils import language_preference_cookie_params
 from app.lib.translation import (
     get_cached_programme_translations_map,
-    get_or_create_programme_translation,
+    get_cached_programme_translation,
     resolve_language,
 )
 from app.programmes.journey import (
@@ -460,7 +460,7 @@ def view_programme(slug):
 
     view_lang = resolve_language(request)
     programme_translation = (
-        get_or_create_programme_translation(programme, view_lang) if view_lang != 'en' else None
+        get_cached_programme_translation(programme, view_lang) if view_lang != 'en' else None
     )
     resp = make_response(
         render_template(

@@ -437,8 +437,8 @@ def view_results(discussion_id):
 
     from app.lib.locale_utils import language_preference_cookie_params
     from app.lib.translation import (
-        get_or_create_discussion_translation,
-        get_or_create_statement_translations,
+        get_cached_discussion_translation,
+        get_cached_statement_translations,
         resolve_language,
     )
 
@@ -455,14 +455,12 @@ def view_results(discussion_id):
         else []
     )
     translation_map = (
-        get_or_create_statement_translations(
-            _all_for_i18n, view_lang, discussion_title=discussion.title
-        )
+        get_cached_statement_translations(_all_for_i18n, view_lang)
         if view_lang != 'en' and _all_for_i18n
         else {}
     )
     discussion_translation = (
-        get_or_create_discussion_translation(discussion, view_lang)
+        get_cached_discussion_translation(discussion, view_lang)
         if view_lang != 'en'
         else None
     )
