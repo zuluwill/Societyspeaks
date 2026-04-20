@@ -779,6 +779,16 @@ msgstr "添加讨论"
 msgid "Translation in progress — this content is showing in English while your language version is being prepared."
 msgstr "翻译进行中 — 您的语言版本正在准备中，目前内容以英语显示。"
 
+#: app/templates/components/_translation_pending.html:9
+#: app/templates/discussions/embed_discussion.html:862
+msgid "Reload to check"
+msgstr "刷新查看"
+
+#: app/templates/discussions/_statement_card.html:33
+#: app/templates/discussions/embed_discussion.html:900
+msgid "Translation pending"
+msgstr "翻译待处理"
+
 #~ msgid "Claim"
 #~ msgstr "主张"
 

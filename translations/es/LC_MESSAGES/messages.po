@@ -797,6 +797,16 @@ msgstr "Añadir debate"
 msgid "Translation in progress — this content is showing in English while your language version is being prepared."
 msgstr "Traducción en proceso — este contenido se muestra en inglés mientras se prepara la versión en su idioma."
 
+#: app/templates/components/_translation_pending.html:9
+#: app/templates/discussions/embed_discussion.html:862
+msgid "Reload to check"
+msgstr "Recargar para verificar"
+
+#: app/templates/discussions/_statement_card.html:33
+#: app/templates/discussions/embed_discussion.html:900
+msgid "Translation pending"
+msgstr "Traducción pendiente"
+
 #~ msgid "Claim"
 #~ msgstr "Afirmación"
 

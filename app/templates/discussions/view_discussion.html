@@ -46,7 +46,8 @@
 {% block content %}
 <div class="{% if guided_journey_context %}max-w-4xl{% else %}max-w-7xl{% endif %} mx-auto py-8 px-4 sm:px-6 lg:px-8">
   {% include 'discussions/_guided_journey_rail.html' %}
-  {% if current_lang != 'en' and not discussion_translation %}
+  {% set _any_untranslated = statements and (translation_map|length < statements|length) %}
+  {% if current_lang != 'en' and (not discussion_translation or _any_untranslated) %}
     {{ translation_pending_notice() }}
   {% endif %}
   <!-- Back Button & Research Tools - Add this first -->

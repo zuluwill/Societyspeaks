@@ -785,6 +785,16 @@ msgstr "चर्चा जोड़ें"
 msgid "Translation in progress — this content is showing in English while your language version is being prepared."
 msgstr "अनुवाद जारी है — आपकी भाषा का संस्करण तैयार होने तक यह सामग्री अंग्रेज़ी में दिखाई जा रही है।"
 
+#: app/templates/components/_translation_pending.html:9
+#: app/templates/discussions/embed_discussion.html:862
+msgid "Reload to check"
+msgstr "जाँचने के लिए पुनः लोड करें"
+
+#: app/templates/discussions/_statement_card.html:33
+#: app/templates/discussions/embed_discussion.html:900
+msgid "Translation pending"
+msgstr "अनुवाद लंबित है"
+
 #~ msgid "Claim"
 #~ msgstr "दावा"
 

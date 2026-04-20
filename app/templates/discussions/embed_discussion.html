@@ -763,6 +763,45 @@
       color: var(--embed-primary);
     }
 
+    .translation-pending__body {
+      flex: 1;
+    }
+
+    .translation-pending__reload {
+      display: inline;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-left: 4px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      color: var(--embed-primary);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .translation-pending__reload:hover {
+      text-decoration: none;
+    }
+
+    /* Per-statement pending indicator */
+    .statement-lang-pending {
+      font-size: 0.7rem;
+      color: var(--embed-text-light);
+      opacity: 0.75;
+      margin-top: -4px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .statement-lang-pending svg {
+      width: 10px;
+      height: 10px;
+      flex-shrink: 0;
+    }
+
     /* Translation note on statements */
     .translation-note {
       font-size: 0.72rem;
@@ -831,10 +870,14 @@
     </div>
     {% endif %}
 
-    {% if current_lang != 'en' and not discussion_translation %}
+    {% set _embed_any_untranslated = statements and (translation_map|length < statements|length) %}
+    {% if current_lang != 'en' and (not discussion_translation or _embed_any_untranslated) %}
     <div class="translation-pending" role="status" aria-live="polite">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>{{ _('Translation in progress — this content is showing in English while your language version is being prepared.') }}</span>
+      <div class="translation-pending__body">
+        <span>{{ _('Translation in progress — this content is showing in English while your language version is being prepared.') }}</span>
+        <button type="button" class="translation-pending__reload" onclick="window.location.reload()">{{ _('Reload to check') }}</button>
+      </div>
     </div>
     {% endif %}
 
@@ -875,6 +918,11 @@
           <button class="translation-note__toggle" type="button" aria-expanded="false" data-original="{{ statement.content|e }}" data-label-show="{{ _('Show original') }}" data-label-hide="{{ _('Hide original') }}">{{ _('Show original') }}</button>
         </div>
         <p class="translation-note__original" aria-hidden="true"></p>
+        {% elif current_lang != 'en' %}
+        <p class="statement-lang-pending">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
+          {{ _('Translation pending') }}
+        </p>
         {% endif %}
 
         <div class="vote-grid" role="group" aria-label="{{ _('Vote options for this statement') }}">

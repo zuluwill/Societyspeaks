@@ -17,7 +17,7 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-  {% if current_lang != 'en' and not discussion_translation %}
+  {% if current_lang != 'en' and (not discussion_translation or not translation_map) %}
     {{ translation_pending_notice() }}
   {% endif %}
   <div class="mb-6">

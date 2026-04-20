@@ -800,6 +800,16 @@ msgstr "Diskussion hinzufügen"
 msgid "Translation in progress — this content is showing in English while your language version is being prepared."
 msgstr "Übersetzung läuft — dieser Inhalt wird auf Englisch angezeigt, während Ihre Sprachversion vorbereitet wird."
 
+#: app/templates/components/_translation_pending.html:9
+#: app/templates/discussions/embed_discussion.html:862
+msgid "Reload to check"
+msgstr "Neu laden und prüfen"
+
+#: app/templates/discussions/_statement_card.html:33
+#: app/templates/discussions/embed_discussion.html:900
+msgid "Translation pending"
+msgstr "Übersetzung ausstehend"
+
 #~ msgid "Claim"
 #~ msgstr "Aussage"
 

@@ -790,6 +790,16 @@ msgstr "إضافة نقاش"
 msgid "Translation in progress — this content is showing in English while your language version is being prepared."
 msgstr "الترجمة جارية — يُعرض هذا المحتوى باللغة الإنجليزية أثناء إعداد نسختك بلغتك."
 
+#: app/templates/components/_translation_pending.html:9
+#: app/templates/discussions/embed_discussion.html:862
+msgid "Reload to check"
+msgstr "أعد التحميل للتحقق"
+
+#: app/templates/discussions/_statement_card.html:33
+#: app/templates/discussions/embed_discussion.html:900
+msgid "Translation pending"
+msgstr "الترجمة قيد الإعداد"
+
 #~ msgid "Claim"
 #~ msgstr "ادعاء"
 

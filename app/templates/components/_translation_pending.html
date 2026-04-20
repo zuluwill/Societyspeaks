@@ -3,6 +3,9 @@
   <svg class="w-4 h-4 mt-0.5 shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
     <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
-  <span>{{ _('Translation in progress — this content is showing in English while your language version is being prepared.') }}</span>
+  <div class="flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+    <span>{{ _('Translation in progress — this content is showing in English while your language version is being prepared.') }}</span>
+    <button type="button" onclick="window.location.reload()" class="underline hover:no-underline font-medium whitespace-nowrap text-blue-700 cursor-pointer">{{ _('Reload to check') }}</button>
+  </div>
 </div>
 {% endmacro %}

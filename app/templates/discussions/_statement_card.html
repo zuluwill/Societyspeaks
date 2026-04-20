@@ -29,6 +29,13 @@
         <summary class="cursor-pointer list-none underline hover:text-gray-600">{{ _('AI translated') }} · {{ _('Show original') }}</summary>
         <p class="mt-1 italic text-gray-500 text-sm">{{ statement.content }}</p>
       </details>
+      {% elif current_lang is defined and current_lang != 'en' %}
+      <p class="flex items-center gap-1 text-xs text-gray-400 mb-2">
+        <svg class="w-3 h-3 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+        </svg>
+        {{ _('Translation pending') }}
+      </p>
       {% endif %}
     </div>
   </div>
