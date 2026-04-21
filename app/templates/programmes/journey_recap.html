@@ -188,8 +188,13 @@
           {% if row.has_analysis %}
           <div class="flex flex-wrap gap-2 mt-3 text-xs">
             {% if row.is_small_sample or row.is_low_stability %}
+            {% if row.is_small_sample %}
+              {% set _stab_tip = _('This analysis is based on fewer than 15 participants — treat its patterns as indicative.') %}
+            {% else %}
+              {% set _stab_tip = _('Cluster structure was not fully reproducible across re-seeded runs (ARI %(v)s).', v="%.2f"|format(row.stability_ari or 0)) %}
+            {% endif %}
             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-800 font-medium border border-yellow-200"
-                  title="{% if row.is_small_sample %}{{ _('This analysis is based on fewer than 15 participants — treat its patterns as indicative.') }}{% else %}{{ _('Cluster structure was not fully reproducible across re-seeded runs (ARI %(v).2f).', v=row.stability_ari or 0) }}{% endif %}">
+                  title="{{ _stab_tip }}">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
               {% if row.is_small_sample %}{{ _('Small sample') }}{% else %}{{ _('Low stability') }}{% endif %}
             </span>

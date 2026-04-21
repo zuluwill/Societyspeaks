@@ -72,7 +72,7 @@
         <div class="text-xs text-gray-500 break-words">
           {{ _sil_label }}
           {% if _stab_ari is not none %}
-            · {{ _('Stability ARI %(v).2f', v=_stab_ari) }}
+            · {{ _('Stability ARI %(v)s', v="%.2f"|format(_stab_ari)) }}
           {% endif %}
         </div>
       </div>
@@ -320,7 +320,7 @@
         {% endif %}
         {% if stmt.lift and stmt.lift > 1.1 %}
           <span class="text-purple-700" title="{{ _('How much more this group takes this position than everyone else (in-group rate ÷ out-group rate).') }}">
-            {{ _('%(x).1fx vs others', x=stmt.lift) }}
+            {{ _('%(x)sx vs others', x="%.1f"|format(stmt.lift)) }}
           </span>
         {% endif %}
         {% if stmt.significant %}
@@ -477,7 +477,7 @@
       <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
         <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
         {% if bdata.mean_agreement is not none %}
-        <span class="text-gray-500">{{ _('Mean cross-group: %(v).0f%%', v=bdata.mean_agreement * 100) }}</span>
+        <span class="text-gray-500">{{ _('Mean cross-group: %(v)s%%', v="%.0f"|format(bdata.mean_agreement * 100)) }}</span>
         {% endif %}
         {% if bdata.wilson_low is not none and bdata.wilson_high is not none %}
         <span class="text-gray-500" title="{{ _('Wilson 95%% score interval on the dominant polarity.') }}">
@@ -507,7 +507,7 @@
         <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
         {% if ddata.group_gap is not none %}
         <span class="text-red-700 font-semibold" title="{{ _('Agreement-rate gap between the most- and least-agreeing opinion groups on this statement.') }}">
-          {{ _('Group gap %(v).0f%%', v=ddata.group_gap * 100) }}
+          {{ _('Group gap %(v)s%%', v="%.0f"|format(ddata.group_gap * 100)) }}
         </span>
         {% endif %}
         {% set _gap_lo = ddata.gap_ci_low if ddata.gap_ci_low is not none else ddata.wilson_low %}
@@ -602,7 +602,9 @@
       <p>
         <strong>{{ _('Reproducibility.') }}</strong>
         {% if analysis_meta.get('stability_runs') %}
-          {{ _('This analysis was re-run %(runs)d times with different random seeds. Mean Adjusted Rand Index between runs: %(ari).2f (1.0 = identical, 0.0 = random). Representative-statement Jaccard overlap: %(jac).2f.', runs=analysis_meta.get('stability_runs'), ari=analysis_meta.get('stability_mean_ari', 1.0), jac=analysis_meta.get('stability_consensus_jaccard_mean', 1.0)) }}
+          {% set _ari_fmt = "%.2f"|format(analysis_meta.get('stability_mean_ari', 1.0)) %}
+          {% set _jac_fmt = "%.2f"|format(analysis_meta.get('stability_consensus_jaccard_mean', 1.0)) %}
+          {{ _('This analysis was re-run %(runs)d times with different random seeds. Mean Adjusted Rand Index between runs: %(ari)s (1.0 = identical, 0.0 = random). Representative-statement Jaccard overlap: %(jac)s.', runs=analysis_meta.get('stability_runs'), ari=_ari_fmt, jac=_jac_fmt) }}
         {% else %}
           {{ _('Stability metrics were not computed for this analysis. Re-running will attach them.') }}
         {% endif %}
