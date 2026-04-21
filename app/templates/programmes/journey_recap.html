@@ -126,15 +126,21 @@
         {% endif %}
       </div>
 
-      <div class="px-4 sm:px-6 py-4 space-y-5">
+      <div class="divide-y divide-gray-100">
 
-        {# ── Crowd vote distribution bar ─────────────────────────────── #}
-        {% if total_votes > 0 %}
-        <div>
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            {{ _('How %(total)d people voted', total=row.participant_count) }}
-          </p>
-          <div class="vote-bar-container flex rounded-full overflow-hidden h-4 w-full mb-1.5" aria-hidden="true">
+        {# ── SECTION 1: Crowd vote distribution ───────────────────── #}
+        <div class="px-4 sm:px-6 py-4">
+          {# Section label #}
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">{{ _("Everyone's votes") }}</span>
+            {% if row.participant_count > 0 %}
+            <span class="text-xs text-gray-400 font-normal normal-case">— {{ ngettext('%(num)d person', '%(num)d people', row.participant_count, num=row.participant_count) }}</span>
+            {% endif %}
+          </div>
+
+          {% if total_votes > 0 %}
+          <div class="vote-bar-container flex rounded-full overflow-hidden h-3.5 w-full mb-2" aria-hidden="true">
             {% if row.agree_pct > 0 %}
             <div class="bg-emerald-400 h-full"
                  style="width:0;transition:width 0.7s cubic-bezier(0.4,0,0.2,1)"
@@ -155,115 +161,138 @@
             {% endif %}
           </div>
           <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-            <span class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block"></span>
-              {{ _('Agree %(pct)s%%', pct=row.agree_pct) }}
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block flex-shrink-0"></span>
+              <span class="font-medium text-emerald-700">{{ _('Agree') }}</span>
+              {{ row.agree_pct }}%
               <span class="text-gray-400">({{ row.vote_distribution.agree }})</span>
             </span>
-            <span class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-sm bg-rose-400 inline-block"></span>
-              {{ _('Disagree %(pct)s%%', pct=row.disagree_pct) }}
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-rose-400 inline-block flex-shrink-0"></span>
+              <span class="font-medium text-rose-700">{{ _('Disagree') }}</span>
+              {{ row.disagree_pct }}%
               <span class="text-gray-400">({{ row.vote_distribution.disagree }})</span>
             </span>
-            <span class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-sm bg-gray-200 inline-block"></span>
-              {{ _('Unsure %(pct)s%%', pct=row.unsure_pct) }}
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-gray-200 inline-block flex-shrink-0"></span>
+              <span class="font-medium text-gray-500">{{ _('Unsure') }}</span>
+              {{ row.unsure_pct }}%
               <span class="text-gray-400">({{ row.vote_distribution.unsure }})</span>
             </span>
           </div>
-        </div>
-        {% else %}
-        <p class="text-sm text-gray-400 italic">{{ _('No votes yet on this theme.') }}</p>
-        {% endif %}
-
-        {# ── Consensus analysis summary ────────────────────────────── #}
-        {% if row.has_analysis %}
-        <div class="flex flex-wrap gap-3 text-xs">
-          {% if row.consensus_n %}
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-medium border border-emerald-200">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
-            {{ ngettext('%(num)d consensus point', '%(num)d consensus points', row.consensus_n, num=row.consensus_n) }}
-          </span>
-          {% endif %}
-          {% if row.bridge_n %}
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-primary-800 font-medium border border-blue-200">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-            {{ ngettext('%(num)d bridge idea', '%(num)d bridge ideas', row.bridge_n, num=row.bridge_n) }}
-          </span>
-          {% endif %}
-          {% if row.divisive_n %}
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-medium border border-amber-200">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
-            {{ ngettext('%(num)d divisive point', '%(num)d divisive points', row.divisive_n, num=row.divisive_n) }}
-          </span>
-          {% endif %}
-        </div>
-        {% endif %}
-
-        {# ── Action buttons — context-aware ─────────────────────────── #}
-        <div class="flex flex-wrap gap-2">
-          {% if row.is_theme_complete %}
-          <a href="{{ url_for('consensus.view_results', discussion_id=d.id) }}"
-             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            {{ _('View consensus map') }}
-          </a>
-          <a href="{{ url_for('discussions.view_discussion', discussion_id=d.id, slug=d.slug) }}"
-             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            {{ _('Revisit discussion') }}
-          </a>
           {% else %}
-          <a href="{{ url_for('discussions.view_discussion', discussion_id=d.id, slug=d.slug) }}"
-             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>
-            {% if row.user_vote_count > 0 %}{{ _('Continue voting') }}{% else %}{{ _('Start voting') }}{% endif %}
-          </a>
+          <p class="text-sm text-gray-400 italic">{{ _('No votes yet on this theme.') }}</p>
+          {% endif %}
+
+          {# Consensus analysis tags #}
           {% if row.has_analysis %}
-          <a href="{{ url_for('consensus.view_results', discussion_id=d.id) }}"
-             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            {{ _('Consensus analysis') }}
-          </a>
+          <div class="flex flex-wrap gap-2 mt-3 text-xs">
+            {% if row.consensus_n %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-medium border border-emerald-200">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+              {{ ngettext('%(num)d consensus point', '%(num)d consensus points', row.consensus_n, num=row.consensus_n) }}
+            </span>
+            {% endif %}
+            {% if row.bridge_n %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-primary-800 font-medium border border-blue-200">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              {{ ngettext('%(num)d bridge idea', '%(num)d bridge ideas', row.bridge_n, num=row.bridge_n) }}
+            </span>
+            {% endif %}
+            {% if row.divisive_n %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-medium border border-amber-200">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
+              {{ ngettext('%(num)d divisive point', '%(num)d divisive points', row.divisive_n, num=row.divisive_n) }}
+            </span>
+            {% endif %}
+          </div>
           {% endif %}
-          {% endif %}
+
+          {# Action buttons #}
+          <div class="flex flex-wrap gap-2 mt-4">
+            {% if row.is_theme_complete %}
+            <a href="{{ url_for('consensus.view_results', discussion_id=d.id) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              {{ _('View consensus map') }}
+            </a>
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=d.id, slug=d.slug) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              {{ _('Revisit discussion') }}
+            </a>
+            {% else %}
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=d.id, slug=d.slug) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>
+              {% if row.user_vote_count > 0 %}{{ _('Continue voting') }}{% else %}{{ _('Start voting') }}{% endif %}
+            </a>
+            {% if row.has_analysis %}
+            <a href="{{ url_for('consensus.view_results', discussion_id=d.id) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              {{ _('Consensus analysis') }}
+            </a>
+            {% endif %}
+            {% endif %}
+          </div>
         </div>
 
-        {# ── Your votes on each statement (signed-in only) ──────────── #}
+        {# ── SECTION 2: Your personal votes (signed-in only) ──────── #}
         {% if current_user.is_authenticated and personal_by_discussion.get(d.id) %}
         {% set _pv = personal_by_discussion.get(d.id, []) %}
         {% set _ua = _pv | selectattr('vote_label', 'equalto', 'agree') | list | length %}
         {% set _ud = _pv | selectattr('vote_label', 'equalto', 'disagree') | list | length %}
         {% set _uu = _pv | selectattr('vote_label', 'equalto', 'unsure') | list | length %}
-        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-3 px-1">
-          <span class="font-medium text-emerald-700">{{ _('✓ Agreed: %(num)d', num=_ua) }}</span>
-          <span class="font-medium text-rose-700">{{ _('✗ Disagreed: %(num)d', num=_ud) }}</span>
-          {% if _uu > 0 %}<span class="text-gray-500">{{ _('? Unsure: %(num)d', num=_uu) }}</span>{% endif %}
-          {% if total_votes > 0 and _pv | length > 0 %}
-          <span class="text-gray-400">·</span>
-          <span class="text-gray-500">{{ _('%(voted)s of %(total)d statements voted', voted=(_pv | length), total=row.statement_count) }}</span>
-          {% endif %}
-        </div>
-        <details class="group border border-gray-200 rounded-xl overflow-hidden" {% if row.is_theme_complete %}open{% endif %}>
-          <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-between list-none select-none">
-            <span class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-              {{ _('Your votes on each statement') }}
-            </span>
-            <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </summary>
-          <div class="border-t border-gray-100 divide-y divide-gray-100 max-h-72 overflow-y-auto">
-            {% for pv in personal_by_discussion[d.id] %}
-            <div class="flex items-start gap-3 px-4 py-2.5">
-              <span class="mt-0.5 flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full
-                {% if pv.vote_label == 'agree' %}bg-emerald-100 text-emerald-800
-                {% elif pv.vote_label == 'disagree' %}bg-rose-100 text-rose-800
-                {% else %}bg-gray-100 text-gray-600{% endif %}">
-                {% if pv.vote_label == 'agree' %}{{ _('Agree') }}{% elif pv.vote_label == 'disagree' %}{{ _('Disagree') }}{% else %}{{ _('Unsure') }}{% endif %}
-              </span>
-              <p class="text-sm text-gray-700 leading-snug">{{ pv.content }}</p>
-            </div>
-            {% endfor %}
+
+        <div class="bg-indigo-50 px-4 sm:px-6 py-4">
+          {# Section label #}
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span class="text-xs font-bold text-indigo-700 uppercase tracking-wide">{{ _('Your votes') }}</span>
+            <span class="text-xs text-indigo-400 font-normal normal-case">— {{ _('%(voted)d of %(total)d statements', voted=(_pv | length), total=row.statement_count) }}</span>
           </div>
-        </details>
+
+          {# Summary tallies #}
+          <div class="flex flex-wrap gap-2 mb-3">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-200">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              {{ _('Agreed: %(num)d', num=_ua) }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-semibold border border-rose-200">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+              {{ _('Disagreed: %(num)d', num=_ud) }}
+            </span>
+            {% if _uu > 0 %}
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold border border-gray-200">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ _('Unsure: %(num)d', num=_uu) }}
+            </span>
+            {% endif %}
+          </div>
+
+          {# Collapsible detail list #}
+          <details class="group border border-indigo-200 rounded-xl overflow-hidden bg-white" {% if row.is_theme_complete %}open{% endif %}>
+            <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-indigo-700 hover:bg-indigo-50 flex items-center justify-between list-none select-none">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                {{ _('See how you voted on each statement') }}
+              </span>
+              <svg class="w-4 h-4 text-indigo-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <div class="border-t border-indigo-100 divide-y divide-gray-100 max-h-72 overflow-y-auto">
+              {% for pv in personal_by_discussion[d.id] %}
+              <div class="flex items-start gap-3 px-4 py-2.5">
+                <span class="mt-0.5 flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full
+                  {% if pv.vote_label == 'agree' %}bg-emerald-100 text-emerald-800
+                  {% elif pv.vote_label == 'disagree' %}bg-rose-100 text-rose-800
+                  {% else %}bg-gray-100 text-gray-600{% endif %}">
+                  {% if pv.vote_label == 'agree' %}{{ _('Agree') }}{% elif pv.vote_label == 'disagree' %}{{ _('Disagree') }}{% else %}{{ _('Unsure') }}{% endif %}
+                </span>
+                <p class="text-sm text-gray-700 leading-snug">{{ pv.content }}</p>
+              </div>
+              {% endfor %}
+            </div>
+          </details>
+        </div>
         {% endif %}
 
       </div>
