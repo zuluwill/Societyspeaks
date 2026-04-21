@@ -44,6 +44,33 @@ _IN_MEMORY_JOBS: Dict[str, Dict[str, Any]] = {}
 _IN_MEMORY_JOBS_LOCK = threading.Lock()
 
 
+def _purge_expired_in_memory_jobs() -> None:
+    """Remove stale entries from _IN_MEMORY_JOBS to prevent unbounded growth.
+
+    Called opportunistically on each save so the dict stays bounded even
+    when get() is never called for a particular job (e.g. fire-and-forget
+    generation requests that the client stops polling).
+    """
+    cutoff = utcnow_naive()
+    expired_keys = []
+    with _IN_MEMORY_JOBS_LOCK:
+        for job_id, data in list(_IN_MEMORY_JOBS.items()):
+            updated_at_raw = data.get('updated_at')
+            if not updated_at_raw:
+                expired_keys.append(job_id)
+                continue
+            try:
+                updated_at = datetime.fromisoformat(updated_at_raw)
+                if (cutoff - updated_at).total_seconds() > JOB_EXPIRY:
+                    expired_keys.append(job_id)
+            except Exception:
+                expired_keys.append(job_id)
+        for key in expired_keys:
+            _IN_MEMORY_JOBS.pop(key, None)
+    if expired_keys:
+        logger.debug(f"Purged {len(expired_keys)} expired in-memory brief jobs")
+
+
 def get_redis_client():
     """Get Redis client connection."""
     if not REDIS_URL:
@@ -182,6 +209,9 @@ class GenerationJob:
             try:
                 with _IN_MEMORY_JOBS_LOCK:
                     _IN_MEMORY_JOBS[self.job_id] = self.to_dict()
+                # Opportunistically sweep expired entries to prevent unbounded growth
+                if len(_IN_MEMORY_JOBS) > 50:
+                    _purge_expired_in_memory_jobs()
                 return True
             except Exception as e:
                 logger.error(f"Failed to save in-memory job {self.job_id}: {e}")
