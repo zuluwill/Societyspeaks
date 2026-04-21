@@ -95,6 +95,13 @@ Rules — follow exactly:
    approximately; avoid over-expansion or padding.
 7. Return the translations as a JSON array of strings in the same order as the
    input. No prose, no explanation, no markdown. Only the JSON array.
+8. CRITICAL — JSON safety: The output must be valid JSON. NEVER use ASCII double
+   quotes (") inside a translated string to quote words or UI labels. Instead use:
+   - Chinese/Japanese/Korean: use 「 」 or 『 』 brackets, or fullwidth ＂＂
+   - Arabic/Hebrew: use « » or ‹ › guillemets
+   - Other languages: use typographic \u201c \u201d curly quotes, NOT straight "
+   Straight ASCII double-quote characters inside a JSON string value WILL break
+   the response. If you must represent a literal quote character, write it as \\".
 
 Example:
   Input:  ["Vote", "Welcome %(name)s!", "Read our <a href=\\"/terms\\">terms</a>"]
@@ -106,6 +113,46 @@ def build_request_payload(lang_name: str, msgids: List[str]) -> Tuple[str, str]:
     system = SYSTEM_PROMPT.format(lang_name=lang_name)
     user = json.dumps(msgids, ensure_ascii=False)
     return system, user
+
+
+def _repair_json_quotes(text: str) -> str:
+    """
+    Best-effort repair of JSON arrays where translated strings contain bare ASCII
+    double-quote characters that weren't escaped by the model.  We walk the raw
+    text character-by-character, tracking structural vs content positions, and
+    escape any " that is clearly inside a string value.
+    """
+    out = []
+    i = 0
+    in_string = False
+    escape_next = False
+    while i < len(text):
+        ch = text[i]
+        if escape_next:
+            out.append(ch)
+            escape_next = False
+        elif ch == '\\':
+            out.append(ch)
+            escape_next = True
+        elif ch == '"':
+            if not in_string:
+                in_string = True
+                out.append(ch)
+            else:
+                # Peek: is the next non-whitespace char a structural JSON token?
+                j = i + 1
+                while j < len(text) and text[j] in ' \t\r\n':
+                    j += 1
+                next_ch = text[j] if j < len(text) else ''
+                if next_ch in (',', ']', '}', ''):
+                    in_string = False
+                    out.append(ch)
+                else:
+                    out.append('\\"')
+        else:
+            out.append(ch)
+        i += 1
+    return ''.join(out)
 
 
 def call_haiku(client, model: str, system: str, user: str) -> List[str]:
@@ -122,8 +169,12 @@ def call_haiku(client, model: str, system: str, user: str) -> List[str]:
         text = re.sub(r"\n```\s*$", "", text)
     try:
         arr = json.loads(text)
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Haiku returned non-JSON: {e}\n{text[:500]}")
+    except json.JSONDecodeError:
+        # Attempt to repair unescaped quotes inside string values
+        try:
+            arr = json.loads(_repair_json_quotes(text))
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Haiku returned non-JSON: {e}\n{text[:500]}")
     if not isinstance(arr, list):
         raise RuntimeError(f"Haiku returned non-list: {type(arr).__name__}")
     return [str(x) for x in arr]

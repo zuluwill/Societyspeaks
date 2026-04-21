@@ -86,7 +86,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python3 scripts/translate_po_with_haiku.py --batch-size 5"
+args = "python3 scripts/translate_po_with_haiku.py --locales zh --batch-size 5"
 
 [agent]
 expertMode = true

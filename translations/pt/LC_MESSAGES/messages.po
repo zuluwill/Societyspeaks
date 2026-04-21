@@ -17558,93 +17558,97 @@ msgstr ""
 msgid ""
 "• <strong>Claim or Question:</strong> State a position or ask for input"
 msgstr ""
+"• <strong>Afirmação ou Pergunta:</strong> Apresente uma posição ou solicite "
+"uma opinião"
 
 #: app/templates/discussions/create_statement.html:73
 msgid "<strong>Claim:</strong> \"We should invest more in renewable energy\""
 msgstr ""
+"<strong>Afirmação:</strong> \"Devemos investir mais em energia renovável\""
 
 #: app/templates/discussions/create_statement.html:74
 msgid "<strong>Question:</strong> \"What's the most effective climate policy?\""
-msgstr ""
+msgstr "<strong>Pergunta:</strong> \"Qual é a política climática mais eficaz?\""
 
 #: app/templates/discussions/create_statement.html:83
-#, fuzzy
 msgid "Enter your statement (10-500 characters)..."
-msgstr "Sua afirmação deve ser concisa e debatível (10-500 caracteres)."
+msgstr "Digite sua declaração (10-500 caracteres)..."
 
 #: app/templates/discussions/create_statement.html:91
 #: app/templates/discussions/edit_statement.html:51
 msgid "Min: 10 characters | Max: 500 characters"
-msgstr ""
+msgstr "Mín: 10 caracteres | Máx: 500 caracteres"
 
 #: app/templates/discussions/create_statement.html:114
-#, fuzzy
 msgid "Preview:"
-msgstr "Ver"
+msgstr "Pré-visualização:"
 
 #: app/templates/discussions/create_statement.html:120
 #: app/templates/discussions/create_statement.html:154
 msgid "Your statement will appear here as you type..."
-msgstr ""
+msgstr "Sua declaração aparecerá aqui conforme você digita..."
 
 #: app/templates/discussions/discussion_update_form.html:14
 msgid "Use updates to explain outcomes, progress, or what happens next."
 msgstr ""
+"Use atualizações para explicar resultados, progresso ou o que acontece a "
+"seguir."
 
 #: app/templates/discussions/discussion_update_form.html:29
 msgid "What changed?"
-msgstr ""
+msgstr "O que mudou?"
 
 #: app/templates/discussions/discussion_update_form.html:37
 msgid "Summarise the outcome, decision, or next step using Markdown."
-msgstr ""
+msgstr "Resuma o resultado, decisão ou próximo passo usando Markdown."
 
 #: app/templates/discussions/discussion_update_form.html:38
 msgid "Markdown is supported. Raw HTML is not allowed."
-msgstr ""
+msgstr "Markdown é suportado. HTML bruto não é permitido."
 
 #: app/templates/discussions/discussion_update_form.html:46
 msgid "Minutes|https://example.com/minutes"
-msgstr ""
+msgstr "Minutes|https://example.com/minutes"
 
 #: app/templates/discussions/discussion_update_form.html:47
 msgid "One per line in format <code>Label|https://url</code>."
-msgstr ""
+msgstr "Um por linha no formato <code>Label|https://url</code>."
 
 #: app/templates/discussions/edit_discussion.html:33
-#, fuzzy
 msgid "Edit discussion"
-msgstr "Nova Discussão"
+msgstr "Editar discussão"
 
 #: app/templates/discussions/edit_discussion.html:70
 msgid "e.g. climate, energy, policy"
-msgstr ""
+msgstr "ex: clima, energia, política"
 
 #: app/templates/discussions/edit_discussion.html:115
 msgid ""
 "Link this discussion to a Programme to group it with related discussions for"
 " combined analysis and reporting."
 msgstr ""
+"Vincule esta discussão a um Programa para agrupá-la com discussões "
+"relacionadas para análise e relatório combinados."
 
 #: app/templates/discussions/edit_discussion.html:117
-#, fuzzy
 msgid "You don't have any active programmes."
-msgstr "Outros programas"
+msgstr "Você não tem nenhum programa ativo."
 
 #: app/templates/discussions/edit_discussion.html:119
 msgid "(opens in a new tab)"
-msgstr ""
+msgstr "(abre em uma nova aba)"
 
 #: app/templates/discussions/edit_discussion.html:152
-#, fuzzy
 msgid "Information Before Participation"
-msgstr "Participando"
+msgstr "Informações Antes da Participação"
 
 #: app/templates/discussions/edit_discussion.html:154
 msgid ""
 "Context shown to participants before they start voting. Supports Markdown in"
 " the body."
 msgstr ""
+"Contexto mostrado aos participantes antes de começarem a votar. Suporta "
+"Markdown no corpo."
 
 #: app/templates/discussions/edit_response.html:1
 #: app/templates/discussions/edit_response.html:6
@@ -27277,69 +27281,67 @@ msgid "(optional — helps frame the statement for readers)"
 msgstr "(opcional — ajuda a enquadrar a declaração para os leitores)"
 
 #: app/templates/partner/portal/discussion_detail.html:314
-#, fuzzy
 msgid "Add statement"
-msgstr "Adicionar afirmação"
+msgstr "Adicionar declaração"
 
 #: app/templates/partner/portal/discussion_detail.html:329
-#, fuzzy
 msgid "Adding…"
-msgstr "Administrador"
+msgstr "Adicionando…"
 
 #: app/templates/partner/portal/discussions.html:3
-#, fuzzy
 msgid "Discussions - Partner Portal"
-msgstr "Discussões e Programas"
+msgstr "Discussões - Portal de Parceiros"
 
 #: app/templates/partner/portal/discussions.html:13
-#, fuzzy
 msgid "All discussions created for your integration."
-msgstr "Discussões que você criou"
+msgstr "Todas as discussões criadas para sua integração."
 
 #: app/templates/partner/portal/discussions.html:18
-#, fuzzy
 msgid "+ New discussion"
-msgstr "Nova Discussão"
+msgstr "+ Nova discussão"
 
 #: app/templates/partner/portal/discussions.html:25
 msgid "Admin preview mode (read-only) — create actions are disabled."
 msgstr ""
+"Modo de visualização do administrador (somente leitura) — ações de criação "
+"estão desabilitadas."
 
 #: app/templates/partner/portal/discussions.html:43
-#, fuzzy
 msgid "Create a discussion"
-msgstr "Discussões recentes"
+msgstr "Criar uma discussão"
 
 #: app/templates/partner/portal/discussions.html:44
 msgid ""
 "Start a discussion from the portal without needing to call the API. Provide "
 "an article URL <em>or</em> an external ID — or both."
 msgstr ""
+"Inicie uma discussão no portal sem precisar chamar a API. Forneça uma URL de"
+" artigo <em>ou</em> um ID externo — ou ambos."
 
 #: app/templates/partner/portal/discussions.html:49
-#, fuzzy
 msgid "Discussion title"
-msgstr "Visualizações de Discussões"
+msgstr "Título da discussão"
 
 #: app/templates/partner/portal/discussions.html:50
 msgid "e.g. Should the UK rejoin the EU single market?"
 msgstr ""
+"p. ex. O Reino Unido deveria se juntar novamente ao mercado único da UE?"
 
 #: app/templates/partner/portal/discussions.html:57
 msgid "Used to link the discussion to a specific article."
-msgstr ""
+msgstr "Usado para vincular a discussão a um artigo específico."
 
 #: app/templates/partner/portal/discussions.html:60
 msgid "External / CMS ID"
-msgstr ""
+msgstr "ID externo / CMS"
 
 #: app/templates/partner/portal/discussions.html:61
 msgid "e.g. observer-cms-12345"
-msgstr ""
+msgstr "p.ex. observer-cms-12345"
 
 #: app/templates/partner/portal/discussions.html:63
 msgid "Your own stable reference. Useful when there is no article URL."
-msgstr ""
+msgstr "Sua própria referência estável. Útil quando não há URL do artigo."
 
 #: app/templates/partner/portal/discussions.html:66
 #: app/templates/partner/portal/discussions.html:72
@@ -27348,84 +27350,86 @@ msgstr ""
 #: app/templates/programmes/_form.html:141
 #: app/templates/programmes/_form.html:148
 msgid "(optional)"
-msgstr ""
+msgstr "(opcional)"
 
 #: app/templates/partner/portal/discussions.html:68
 msgid ""
 "A sentence or two providing context for readers — what is being debated and "
 "why it matters."
 msgstr ""
+"Uma ou duas frases fornecendo contexto para os leitores — o que está sendo "
+"debatido e por que importa."
 
 #: app/templates/partner/portal/discussions.html:74
 msgid "— No topic —"
-msgstr ""
+msgstr "— Nenhum tópico —"
 
 #: app/templates/partner/portal/discussions.html:81
-#, fuzzy
 msgid "Article excerpt"
-msgstr "Participar"
+msgstr "Trecho do artigo"
 
 #: app/templates/partner/portal/discussions.html:81
 msgid "(optional — used to generate opening statements)"
-msgstr ""
+msgstr "(opcional — usado para gerar declarações de abertura)"
 
 #: app/templates/partner/portal/discussions.html:83
 msgid ""
 "Paste a short excerpt from the article to help generate balanced opening "
 "statements for readers…"
 msgstr ""
+"Cole um breve trecho do artigo para ajudar a gerar declarações de abertura "
+"equilibradas para os leitores…"
 
 #: app/templates/partner/portal/discussions.html:90
 msgid "Allow reader statement submissions directly in the embed"
-msgstr ""
+msgstr "Permitir envio de declarações do leitor diretamente no embed"
 
 #: app/templates/partner/portal/discussions.html:91
 msgid ""
 "Off by default for moderation safety. You can change this per discussion "
 "later."
 msgstr ""
+"Desativado por padrão por segurança de moderação. Você pode alterar isso por"
+" discussão depois."
 
 #: app/templates/partner/portal/discussions.html:96
 #: app/templates/partner/portal/discussions.html:163
 msgid "Environment"
-msgstr ""
+msgstr "Ambiente"
 
 #: app/templates/partner/portal/discussions.html:108
 #: app/templates/partner/portal/discussions.html:117
 msgid "Article URL or external ID is required."
-msgstr ""
+msgstr "URL do artigo ou ID externo é obrigatório."
 
 #: app/templates/partner/portal/discussions.html:118
 msgid "Please enter an article URL or an external ID before submitting."
-msgstr ""
+msgstr "Por favor, insira uma URL do artigo ou um ID externo antes de enviar."
 
 #: app/templates/partner/portal/discussions.html:119
-#, fuzzy
 msgid "Creating…"
-msgstr "Criar"
+msgstr "Criando…"
 
 #: app/templates/partner/portal/discussions.html:150
 msgid "Quota:"
-msgstr ""
+msgstr "Cota:"
 
 #: app/templates/partner/portal/discussions.html:153
 #, python-format
 msgid "/ %(limit)s (%(tier)s plan)"
-msgstr ""
+msgstr "/ %(limit)s (plano %(tier)s)"
 
 #: app/templates/partner/portal/discussions.html:155
 msgid "(Enterprise — no monthly cap)"
-msgstr ""
+msgstr "(Enterprise — sem limite mensal)"
 
 #: app/templates/partner/portal/discussions.html:166
-#, fuzzy
 msgid "All envs"
-msgstr "Todos os temas"
+msgstr "Todos os ambientes"
 
 #: app/templates/partner/portal/discussions.html:175
-#, fuzzy
 msgid "All statuses"
-msgstr "Fontes"
+msgstr "Todos os status"
 
 #: app/templates/partner/portal/discussions.html:183
 msgid ""
@@ -27433,41 +27437,41 @@ msgid ""
 "<em>Close</em> to pause new participation, and <em>Created via key</em> plus"
 " <em>External ID</em> to reconcile discussions back to your CMS."
 msgstr ""
+"<strong>Dica:</strong> Use <em>Visualizar</em> para análises por declaração,"
+" <em>Fechar</em> para pausar novas participações e <em>Criado via chave</em>"
+" mais <em>ID Externo</em> para reconciliar discussões com seu CMS."
 
 #: app/templates/partner/portal/discussions.html:192
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: app/templates/partner/portal/discussions.html:194
 msgid "Env"
-msgstr ""
+msgstr "Amb"
 
 #: app/templates/partner/portal/discussions.html:195
-#, fuzzy
 msgid "Votes"
-msgstr "Votado"
+msgstr "Votos"
 
 #: app/templates/partner/portal/discussions.html:198
 msgid "External ID"
-msgstr ""
+msgstr "ID Externo"
 
 #: app/templates/partner/portal/discussions.html:200
-#, fuzzy
 msgid "Links"
-msgstr "Links rápidos"
+msgstr "Links"
 
 #: app/templates/partner/portal/discussions.html:223
 msgid "Integrity"
-msgstr ""
+msgstr "Integridade"
 
 #: app/templates/partner/portal/discussions.html:225
-#, fuzzy
 msgid "Embed submit on"
-msgstr "Enviar afirmação"
+msgstr "Ativar envio incorporado"
 
 #: app/templates/partner/portal/discussions.html:225
 msgid "Embed submit off"
-msgstr ""
+msgstr "Desativar envio incorporado"
 
 #: app/templates/partner/portal/discussions.html:231
 #, python-format
