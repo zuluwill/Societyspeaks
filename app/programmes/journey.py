@@ -386,16 +386,41 @@ def build_programme_recap_payload(
         else:
             agree_pct = disagree_pct = unsure_pct = 0
 
-        # Dominant crowd stance for personalised copy
+        # Dominant crowd stance for personalised copy. Return None on near-ties
+        # (top two stances within 5pp OR 2 votes, whichever is larger) so the
+        # template doesn't confidently claim a lean that isn't really there.
         if total_votes:
-            crowd_stance = max(
-                ("agree", dist["agree"]),
-                ("disagree", dist["disagree"]),
-                ("unsure", dist["unsure"]),
+            ranked = sorted(
+                [("agree", dist["agree"]), ("disagree", dist["disagree"]), ("unsure", dist["unsure"])],
                 key=lambda x: x[1],
-            )[0]
+                reverse=True,
+            )
+            top_n = ranked[0][1]
+            second_n = ranked[1][1]
+            tie_margin = max(2, int(round(0.05 * total_votes)))
+            crowd_stance = None if (top_n - second_n) < tie_margin else ranked[0][0]
         else:
             crowd_stance = None
+
+        # Per-theme analysis quality signals — propagate to the recap so
+        # badges can be honest about small samples / unstable clusters.
+        analysis_meta = (cluster_data or {}).get("metadata", {}) or {}
+        analysis_participants = int(analysis.participants_count or 0) if analysis else 0
+        stability_ari = analysis_meta.get("stability_mean_ari")
+        try:
+            stability_ari_val = float(stability_ari) if stability_ari is not None else None
+        except (TypeError, ValueError):
+            stability_ari_val = None
+        is_small_sample = analysis is not None and 0 < analysis_participants < 15
+        # Use the same publishability floor the engine / gate already use so
+        # the recap's "Low stability" badge lights up exactly when the full
+        # results view would have either withheld or flagged the analysis.
+        low_stability_threshold = float(
+            current_app.config.get('CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI', 0.20)
+        )
+        is_low_stability = (
+            stability_ari_val is not None and stability_ari_val < low_stability_threshold
+        )
 
         themes_out.append(
             {
@@ -404,7 +429,7 @@ def build_programme_recap_payload(
                 "user_vote_count": int(user_votes),
                 "is_theme_complete": stmt_total > 0 and user_votes >= stmt_total,
                 "participant_count": participant_count,
-                "participant_count_analysis": int(analysis.participants_count or 0) if analysis else 0,
+                "participant_count_analysis": analysis_participants,
                 "consensus_n": len(cluster_data.get("consensus_statements") or []),
                 "bridge_n": len(cluster_data.get("bridge_statements") or []),
                 "divisive_n": len(cluster_data.get("divisive_statements") or []),
@@ -415,6 +440,9 @@ def build_programme_recap_payload(
                 "total_votes": total_votes,
                 "crowd_stance": crowd_stance,
                 "has_analysis": analysis is not None,
+                "is_small_sample": is_small_sample,
+                "is_low_stability": is_low_stability,
+                "stability_ari": stability_ari_val,
             }
         )
 

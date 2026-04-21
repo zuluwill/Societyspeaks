@@ -10,6 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import validates
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.dialects.postgresql import JSONB
 from typing import Optional
 
@@ -1543,8 +1544,11 @@ class ConsensusAnalysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     
-    # Clustering results stored as JSON
-    cluster_data = db.Column(db.JSON, nullable=False)
+    # Clustering results stored as JSON. Wrapped in MutableDict so in-place
+    # mutations (e.g. `analysis.cluster_data['ai_summary'] = ...`) are
+    # flagged dirty and persisted on commit — otherwise SQLAlchemy sees
+    # the same Python object reference and skips the UPDATE.
+    cluster_data = db.Column(MutableDict.as_mutable(db.JSON), nullable=False)
     num_clusters = db.Column(db.Integer)
     silhouette_score = db.Column(db.Float)
     

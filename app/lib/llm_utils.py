@@ -317,86 +317,133 @@ def generate_cluster_labels(
     statements: List[Dict],
     user_id: int,
     db
-) -> Optional[Dict[int, str]]:
+) -> Optional[Dict[int, Dict]]:
     """
-    Generate human-readable labels for user clusters
-    
-    Returns: Dictionary mapping cluster_id -> label
+    Generate human-readable labels for opinion groups, grounded in the
+    group's representative statements.
+
+    Returns a dict mapping cluster_id → {
+        'label': str,                       # short human-readable label
+        'supporting_statement_ids': [int],  # statements the LLM cited
+    }
+
+    The route-level grounding check in app/discussions/consensus.py
+    verifies that the cited statement IDs actually belong to that
+    cluster's representative list, and withholds labels that cannot be
+    traced back to the underlying data (e.g. hallucinated themes).
     """
+    import json
+    import re
     from app.models import UserAPIKey
-    
-    # Get user's API key
+
     user_key = UserAPIKey.query.filter_by(
         user_id=user_id,
         is_active=True
     ).first()
-    
     if not user_key:
         return None
-    
+
     api_key = decrypt_api_key(user_key.encrypted_api_key)
-    
-    # Get cluster assignments
+
+    # Prefer the engine-provided representative statements over the local
+    # heuristic — they are already filtered / significance-ranked and carry
+    # the statement IDs we need for grounding.
+    rep_by_cluster = cluster_data.get('representative_statements', {}) or {}
+    statements_by_id = {int(s['id']): s for s in statements if 'id' in s}
     cluster_assignments = cluster_data.get('cluster_assignments', {})
-    
-    # Group users by cluster
-    clusters = {}
-    for user_id, cluster_id in cluster_assignments.items():
-        if cluster_id not in clusters:
-            clusters[cluster_id] = []
-        clusters[cluster_id].append(user_id)
-    
-    # Generate labels for each cluster
-    labels = {}
-    
-    for cluster_id, user_ids in clusters.items():
-        # Get representative statements for this cluster
-        # (statements that this cluster strongly agrees with)
-        representative_stmts = _get_cluster_representative_statements(
-            cluster_id, user_ids, statements
-        )
-        
-        if not representative_stmts:
-            labels[cluster_id] = f"Group {cluster_id + 1}"
+
+    clusters: Dict = {}
+    for _, cid in cluster_assignments.items():
+        clusters.setdefault(cid, None)
+
+    labels: Dict[int, Dict] = {}
+
+    for cluster_id in clusters.keys():
+        key_variants = (cluster_id, str(cluster_id))
+        rep_entries = []
+        for k in key_variants:
+            if k in rep_by_cluster:
+                rep_entries = rep_by_cluster[k]
+                break
+        # Attach content so the LLM sees the actual statements, not IDs.
+        rep_with_content = []
+        for e in rep_entries:
+            sid = int(e.get('statement_id'))
+            stmt = statements_by_id.get(sid)
+            if stmt and stmt.get('content'):
+                rep_with_content.append({'id': sid, 'content': stmt['content']})
+
+        try:
+            cid_int = int(cluster_id)
+        except (TypeError, ValueError):
+            cid_int = cluster_id  # leave non-int keys intact
+
+        if not rep_with_content:
+            # Nothing to ground a label on — return a generic fallback with
+            # empty citations so the grounding check can mark it unverified.
+            labels[cid_int] = {
+                'label': f"Group {int(cluster_id) + 1}" if isinstance(cluster_id, (int, str)) and str(cluster_id).lstrip('-').isdigit() else str(cluster_id),
+                'supporting_statement_ids': [],
+            }
             continue
-        
-        # Generate label using LLM
-        prompt = f"""
-Based on these statements that a group strongly agrees with, generate a short (2-4 word) label for the group:
 
-{_format_statements_for_llm(representative_stmts)}
+        numbered = "\n".join(f"[{r['id']}] {r['content']}" for r in rep_with_content)
+        prompt = f"""You are labelling one opinion group in a civic discussion.
 
-Examples: "Climate Action Supporters", "Economic Pragmatists", "Social Conservatives"
+The group MOST STRONGLY AGREES WITH these statements (id in brackets):
+{numbered}
 
-Label:"""
-        
+Produce a short (2–4 word) descriptive label plus the IDs of statements that
+best justify the label. Return ONLY valid JSON of this shape, no prose:
+
+{{"label": "<2-4 words>", "supporting_statement_ids": [<int>, <int>]}}
+
+Rules:
+- supporting_statement_ids MUST be drawn from the bracketed IDs above.
+- If you cannot ground the label in at least one statement, return
+  {{"label": "Group", "supporting_statement_ids": []}}.
+"""
+
         try:
             if user_key.provider == 'openai':
-                label = _generate_with_openai(api_key, prompt, model="gpt-4o-mini")
+                raw = _generate_with_openai(api_key, prompt, model="gpt-4o-mini")
             elif user_key.provider == 'anthropic':
-                label = _generate_with_anthropic(api_key, prompt, model="claude-3-haiku-20240307")
+                raw = _generate_with_anthropic(api_key, prompt, model="claude-3-haiku-20240307")
             else:
-                label = f"Group {cluster_id + 1}"
-            
-            labels[cluster_id] = label.strip()
-        
+                labels[cid_int] = {'label': f"Group {cid_int + 1}", 'supporting_statement_ids': []}
+                continue
+
+            parsed = _parse_label_json(raw)
+            # Defence in depth: drop any supporting IDs not actually present
+            # in the representative set.
+            rep_ids = {r['id'] for r in rep_with_content}
+            cited = [int(i) for i in (parsed.get('supporting_statement_ids') or []) if int(i) in rep_ids]
+            label = (parsed.get('label') or '').strip() or f"Group {cid_int + 1}"
+            labels[cid_int] = {'label': label, 'supporting_statement_ids': cited}
+
         except Exception as e:
             logger.error(f"Error generating label for cluster {cluster_id}: {e}")
-            labels[cluster_id] = f"Group {cluster_id + 1}"
-    
+            labels[cid_int] = {'label': f"Group {cid_int + 1}", 'supporting_statement_ids': []}
+
     return labels
 
 
-def _get_cluster_representative_statements(
-    cluster_id: int,
-    user_ids: List[int],
-    statements: List[Dict],
-    limit: int = 3
-) -> List[Dict]:
-    """
-    Get statements that best represent a cluster
-    """
-    # This is a simplified version - in production, would query votes
-    # For now, just return a subset
-    return statements[:limit]
+def _parse_label_json(raw: str) -> Dict:
+    """Extract the first JSON object from an LLM response, tolerating
+    trailing whitespace, code fences, or preamble text."""
+    import json
+    import re
+    if not raw:
+        return {}
+    text = raw.strip()
+    # Strip ```json fences if present.
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE)
+    match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    if not match:
+        return {}
+    try:
+        return json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return {}
+
 

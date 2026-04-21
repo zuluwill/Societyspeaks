@@ -24,7 +24,27 @@ logger = logging.getLogger(__name__)
 # Minimum votes required to unlock consensus analysis
 PARTICIPATION_THRESHOLD = CONSENSUS_VIEW_RESULTS_MIN_VOTES
 
-DEMO_DISCUSSION_IDS = {25}
+
+def _demo_discussion_ids():
+    """
+    Parse the CONSENSUS_DEMO_DISCUSSION_IDS config (comma-separated ints)
+    into a set for participation-gate bypasses. Empty by default; kept
+    behind config so promotion across environments does not require code
+    changes.
+    """
+    raw = str(current_app.config.get('CONSENSUS_DEMO_DISCUSSION_IDS', '') or '').strip()
+    if not raw:
+        return set()
+    ids = set()
+    for chunk in raw.split(','):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        try:
+            ids.add(int(chunk))
+        except ValueError:
+            logger.warning("Ignoring non-int discussion id in CONSENSUS_DEMO_DISCUSSION_IDS: %r", chunk)
+    return ids
 
 
 def _oversize_publishability_thresholds():
@@ -35,39 +55,65 @@ def _oversize_publishability_thresholds():
     }
 
 
+def _full_matrix_publishability_thresholds():
+    """Centralized publication thresholds for full-matrix analyses."""
+    return {
+        'min_stability_mean_ari': float(current_app.config.get('CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI', 0.20)),
+    }
+
+
 def _assess_analysis_publishability(analysis):
     """
-    Determine whether analysis should be published to end users.
+    Gate every analysis — full-matrix AND oversize — on its stability.
 
-    In oversize mode, require minimum stability to avoid publishing
-    potentially unstable cluster structures.
+    Oversize keeps its stricter original thresholds (minimum-runs +
+    mean-ARI). Full-matrix applies a looser mean-ARI floor because the
+    inputs are less sampled. Either way, a published result comes with a
+    reproducibility guarantee rather than whatever a single random seed
+    happened to produce.
     """
     metadata = (analysis.cluster_data or {}).get('metadata', {})
-    if not metadata.get('oversize_mode'):
-        return True, None
-
-    thresholds = _oversize_publishability_thresholds()
-    runs = int(metadata.get('stability_runs', 0) or 0)
     mean_ari_raw = metadata.get('stability_mean_ari')
     try:
-        mean_ari = float(mean_ari_raw)
+        mean_ari = float(mean_ari_raw) if mean_ari_raw is not None else 1.0
     except (TypeError, ValueError):
         mean_ari = 0.0
+    runs = int(metadata.get('stability_runs', 0) or 0)
 
-    if runs < thresholds['min_stability_runs']:
-        return (
-            False,
-            (
-                "Large-scale analysis is temporarily withheld: insufficient stability runs "
-                f"(have {runs}, need {thresholds['min_stability_runs']})."
-            ),
-        )
+    if metadata.get('oversize_mode'):
+        thresholds = _oversize_publishability_thresholds()
+        if runs < thresholds['min_stability_runs']:
+            return (
+                False,
+                (
+                    "Large-scale analysis is temporarily withheld: insufficient stability runs "
+                    f"(have {runs}, need {thresholds['min_stability_runs']})."
+                ),
+            )
+        if mean_ari < thresholds['min_stability_mean_ari']:
+            return (
+                False,
+                (
+                    "Large-scale analysis is temporarily withheld: stability is below publication threshold "
+                    f"(mean ARI {mean_ari:.3f}, need >= {thresholds['min_stability_mean_ari']:.3f})."
+                ),
+            )
+        return True, None
+
+    # Full-matrix path: only gate if we actually measured stability.
+    # Older stored analyses (before the full-matrix stability roll-out)
+    # will not carry stability_mean_ari; treat them as publishable so we
+    # do not retroactively withhold historical results.
+    if mean_ari_raw is None:
+        return True, None
+    thresholds = _full_matrix_publishability_thresholds()
     if mean_ari < thresholds['min_stability_mean_ari']:
         return (
             False,
             (
-                "Large-scale analysis is temporarily withheld: stability is below publication threshold "
-                f"(mean ARI {mean_ari:.3f}, need >= {thresholds['min_stability_mean_ari']:.3f})."
+                "Analysis is temporarily withheld: cluster structure is not reproducible across re-seeded runs "
+                f"(mean ARI {mean_ari:.3f}, need >= {thresholds['min_stability_mean_ari']:.3f}). "
+                "Re-running analysis after more votes arrive will usually fix this."
             ),
         )
     return True, None
@@ -303,7 +349,7 @@ def view_results(discussion_id):
     # Check participation gate (unless user is creator, admin, or demo discussion)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
-    is_demo = discussion_id in DEMO_DISCUSSION_IDS
+    is_demo = discussion_id in _demo_discussion_ids()
     
     if not is_creator and not is_admin and not is_demo:
         vote_count, identifier_type = get_user_vote_count(discussion_id)
@@ -406,33 +452,44 @@ def view_results(discussion_id):
             )
 
         # ── Build enriched statement list ────────────────────────────────────
-        # Pass all fields from the engine through, including the new
-        # agree_count / disagree_count / direction added in this session.
+        # New (post-rigour-pass) fields: wilson_low/high, lift, p_value,
+        # significant, out_agreement_rate, tested_direction. All have safe
+        # fallbacks for analyses written by older versions of the engine.
         group_stmts = []
         for stmt_data in _rep_data.get(target_cluster, []):
             stmt = rep_statements_map.get(stmt_data['statement_id'])
-            if stmt:
-                agree_count = stmt_data.get('agree_count', 0)
-                vote_count = stmt_data.get('vote_count', 0)
-                agreement_rate = stmt_data.get('agreement_rate', 0)
-                group_stmts.append({
-                    'statement_id': stmt.id,
-                    'content': stmt.content,
-                    'agreement_rate': agreement_rate,
-                    'vote_count': vote_count,
-                    'agree_count': agree_count,
-                    # disagree_count may not exist in analyses run before this fix
-                    'disagree_count': stmt_data.get('disagree_count', vote_count - agree_count),
-                    # direction may not exist in older analyses — fall back by agreement_rate
-                    'direction': stmt_data.get('direction', 'agree' if agreement_rate >= 0.5 else 'reject'),
-                    'strength': stmt_data.get('strength', 0),
-                })
+            if not stmt:
+                continue
+            agree_count = stmt_data.get('agree_count', 0)
+            vote_count = stmt_data.get('vote_count', 0)
+            agreement_rate = stmt_data.get('agreement_rate', 0)
+            # Older analyses pre-dating the dead-zone classifier use a 0.5
+            # cutoff. Keep that fallback so historical views don't flip.
+            fallback_direction = 'agree' if agreement_rate >= 0.5 else 'reject'
+            group_stmts.append({
+                'statement_id': stmt.id,
+                'content': stmt.content,
+                'agreement_rate': agreement_rate,
+                'wilson_low': stmt_data.get('wilson_low'),
+                'wilson_high': stmt_data.get('wilson_high'),
+                'vote_count': vote_count,
+                'agree_count': agree_count,
+                'disagree_count': stmt_data.get('disagree_count', vote_count - agree_count),
+                'out_agreement_rate': stmt_data.get('out_agreement_rate'),
+                'lift': stmt_data.get('lift'),
+                'p_value': stmt_data.get('p_value'),
+                'significant': stmt_data.get('significant'),
+                'direction': stmt_data.get('direction', fallback_direction),
+                'tested_direction': stmt_data.get('tested_direction', fallback_direction),
+                'strength': stmt_data.get('strength', 0),
+            })
 
-        # Split into agreement vs rejection sub-lists for template rendering.
-        # Older stored analyses will have all statements in agree_statements
-        # (their strength was computed as agreement_rate × participation).
+        # Split into agreement / rejection / mixed buckets. Mixed (dead-zone)
+        # statements are surfaced separately because a 49%–60% agreement
+        # rate is not a defining belief of the group.
         agree_statements = [s for s in group_stmts if s['direction'] == 'agree']
         reject_statements = [s for s in group_stmts if s['direction'] == 'reject']
+        mixed_statements = [s for s in group_stmts if s['direction'] == 'mixed']
 
         opinion_groups.append({
             'id': target_cluster,
@@ -441,6 +498,7 @@ def view_results(discussion_id):
             'statements': group_stmts,
             'agree_statements': agree_statements,
             'reject_statements': reject_statements,
+            'mixed_statements': mixed_statements,
             # True when no representative statements could be surfaced.
             # Common for small groups or groups whose members voted on
             # different subsets of statements.  Re-running analysis after
@@ -448,7 +506,72 @@ def view_results(discussion_id):
             'too_few_votes': len(group_stmts) == 0,
             # Flag for low statistical reliability — shown as a caution badge.
             'small_sample': participant_count < 5,
+            # True if at least one representative statement is FDR-significant.
+            'has_significant_signal': any(s.get('significant') for s in group_stmts),
         })
+
+    # ── Stale-analysis detection ──────────────────────────────────────────
+    # If votes arrived after the analysis was stored, let the viewer know
+    # a re-run would refresh the picture. Thresholds chosen to avoid
+    # nagging when the drift is small.
+    from sqlalchemy import func
+    current_stmt_count = Statement.query.filter_by(
+        discussion_id=discussion.id, is_deleted=False
+    ).count()
+    current_vote_total = db.session.query(
+        func.coalesce(
+            func.sum(Statement.vote_count_agree) + func.sum(Statement.vote_count_disagree) + func.sum(Statement.vote_count_unsure),
+            0,
+        )
+    ).filter(Statement.discussion_id == discussion.id, Statement.is_deleted.is_(False)).scalar() or 0
+    analysed_stmt_count = int(analysis.statements_count or 0)
+    analysed_participants = int(analysis.participants_count or 0)
+    stmt_drift = current_stmt_count - analysed_stmt_count
+    # 10% participant drift or any new statement triggers the notice.
+    is_stale_analysis = (
+        stmt_drift > 0
+        or (analysed_participants > 0 and current_vote_total > 0
+            and current_vote_total >= int(analysed_participants * 1.1))
+    )
+
+    # ── PCA axis labels from top loadings ─────────────────────────────────
+    # The engine stores top-loading statement IDs per axis. Resolve the
+    # statement content so the chart can display "← Agrees: 'X' │ 'Y' →"
+    # instead of a bare "Principal Component 1". Re-use already-fetched
+    # Statement objects and only issue a DB query for the residual.
+    axis_loadings = analysis.cluster_data.get('pca_axis_loadings', {}) or {}
+    axis_loading_stmts_map = {
+        s.id: s
+        for s in (
+            list(rep_statements_map.values())
+            + list(consensus_statements)
+            + list(bridge_statements)
+            + list(divisive_statements)
+        )
+    }
+    needed_ids = set()
+    for axis in axis_loadings.values():
+        for key in ('positive_statement_ids', 'negative_statement_ids'):
+            needed_ids.update(axis.get(key, []) or [])
+    missing_ids = needed_ids - axis_loading_stmts_map.keys()
+    if missing_ids:
+        for stmt in Statement.query.filter(Statement.id.in_(missing_ids)).all():
+            axis_loading_stmts_map[stmt.id] = stmt
+
+    # ── "You are here": key that the scatter-plot JS uses to highlight
+    # the viewing participant's own dot. Matches build_vote_matrix's
+    # identifier convention (u_{id} for auth, a_{fp16} for anon).
+    viewer_participant_key = None
+    if current_user.is_authenticated:
+        viewer_participant_key = f"u_{current_user.id}"
+    else:
+        try:
+            from app.discussions.statements import get_statement_vote_fingerprint
+            fp = get_statement_vote_fingerprint()
+            if fp:
+                viewer_participant_key = f"a_{fp[:16]}"
+        except Exception:
+            pass
 
     # Track consensus view from partner context
     ref = request.args.get('ref')
@@ -493,6 +616,33 @@ def view_results(discussion_id):
         else None
     )
 
+    # Build a simple id → statement-ish dict for axis labels (template
+    # needs both the statement object and the raw content for truncation).
+    axis_loading_map = {
+        sid: {
+            'statement_id': sid,
+            'content': stmt.content,
+            'short': (stmt.content[:80] + '…') if len(stmt.content) > 80 else stmt.content,
+        }
+        for sid, stmt in axis_loading_stmts_map.items()
+    }
+
+    # Build lookups so the template can render CI + lift + out-group rate
+    # on consensus / bridge / divisive statement cards (previously only
+    # carried raw vote counts).
+    consensus_data_by_id = {
+        int(s['statement_id']): s
+        for s in (analysis.cluster_data.get('consensus_statements') or [])
+    }
+    bridge_data_by_id = {
+        int(s['statement_id']): s
+        for s in (analysis.cluster_data.get('bridge_statements') or [])
+    }
+    divisive_data_by_id = {
+        int(s['statement_id']): s
+        for s in (analysis.cluster_data.get('divisive_statements') or [])
+    }
+
     resp = make_response(render_template(
         'discussions/consensus_results.html',
         discussion=discussion,
@@ -500,10 +650,19 @@ def view_results(discussion_id):
         consensus_statements=consensus_statements,
         bridge_statements=bridge_statements,
         divisive_statements=divisive_statements,
+        consensus_data_by_id=consensus_data_by_id,
+        bridge_data_by_id=bridge_data_by_id,
+        divisive_data_by_id=divisive_data_by_id,
         opinion_groups=opinion_groups,
         translation_map=translation_map,
         discussion_translation=discussion_translation,
         current_lang=view_lang,
+        axis_loadings=axis_loadings,
+        axis_loading_map=axis_loading_map,
+        viewer_participant_key=viewer_participant_key,
+        is_stale_analysis=is_stale_analysis,
+        current_stmt_count=current_stmt_count,
+        analysed_stmt_count=analysed_stmt_count,
     ))
     if view_lang != 'en':
         resp.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
@@ -654,7 +813,7 @@ def generate_report(discussion_id):
     # Check participation gate (same as view_results)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
-    is_demo = discussion_id in DEMO_DISCUSSION_IDS
+    is_demo = discussion_id in _demo_discussion_ids()
     
     if not is_creator and not is_admin and not is_demo:
         vote_count, identifier_type = get_user_vote_count(discussion_id)
@@ -759,10 +918,20 @@ def export_analysis(discussion_id):
                         or ''
                     )
                     classification_map[sid] = {
-                        'classification': label,
-                        'agreement_rate': agreement_rate,
-                        'strength':       entry.get('strength', ''),
-                        'vote_count':     entry.get('vote_count', ''),
+                        'classification':   label,
+                        'agreement_rate':   agreement_rate,
+                        'wilson_low':       entry.get('wilson_low', ''),
+                        'wilson_high':      entry.get('wilson_high', ''),
+                        'gap_ci_low':       entry.get('gap_ci_low', entry.get('wilson_low', '')),
+                        'gap_ci_high':      entry.get('gap_ci_high', entry.get('wilson_high', '')),
+                        'p_value':          entry.get('p_value', ''),
+                        'p_value_gap':      entry.get('p_value_gap', ''),
+                        'chi2':             entry.get('chi2', ''),
+                        'significant':      entry.get('significant', ''),
+                        'group_gap':        entry.get('group_gap', ''),
+                        'polarity':         entry.get('polarity', ''),
+                        'strength':         entry.get('strength', ''),
+                        'vote_count':       entry.get('vote_count', ''),
                     }
 
         # Collect all statement IDs mentioned in the analysis
@@ -785,10 +954,20 @@ def export_analysis(discussion_id):
             'statement_id',
             'content',
             'classification',
+            'polarity',
             'agree_count',
             'disagree_count',
             'total_votes',
             'agreement_rate',
+            'wilson_low',
+            'wilson_high',
+            'gap_ci_low_newcombe',
+            'gap_ci_high_newcombe',
+            'p_value_omnibus_permutation',
+            'p_value_gap_fisher',
+            'chi2_observed',
+            'fdr_significant',
+            'group_gap',
             'strength',
         ])
 
@@ -802,10 +981,20 @@ def export_analysis(discussion_id):
                 sid,
                 stmt.content if stmt else '',
                 meta.get('classification', 'unclassified'),
+                meta.get('polarity', ''),
                 agree,
                 disagree,
                 total,
                 meta.get('agreement_rate', ''),
+                meta.get('wilson_low', ''),
+                meta.get('wilson_high', ''),
+                meta.get('gap_ci_low', ''),
+                meta.get('gap_ci_high', ''),
+                meta.get('p_value', ''),
+                meta.get('p_value_gap', ''),
+                meta.get('chi2', ''),
+                meta.get('significant', ''),
+                meta.get('group_gap', ''),
                 meta.get('strength', ''),
             ])
 
@@ -992,15 +1181,47 @@ def generate_cluster_labels_route(discussion_id):
             user_id=current_user.id,
             db=db
         )
-        
+
         if labels:
-            # Store labels in cluster_data
-            analysis.cluster_data['cluster_labels'] = labels
+            # Grounding check: an LLM cluster label should cite at least
+            # one statement id that actually appears in that cluster's
+            # representative list. Unlabelled clusters are preferable to
+            # confidently-wrong labels (e.g. an "Environmentalists" badge
+            # on a group that clustered around housing).
+            rep_by_cluster = analysis.cluster_data.get('representative_statements', {}) or {}
+            def _rep_ids(cid_key):
+                entries = rep_by_cluster.get(cid_key) or rep_by_cluster.get(str(cid_key)) or []
+                return {int(e['statement_id']) for e in entries}
+
+            grounded_labels = {}
+            dropped = 0
+            for cid_key, payload in (labels or {}).items():
+                cited = set()
+                if isinstance(payload, dict):
+                    cited = {int(sid) for sid in (payload.get('supporting_statement_ids') or [])}
+                rep_ids = _rep_ids(cid_key)
+                if cited and cited & rep_ids:
+                    grounded_labels[cid_key] = payload
+                elif not cited:
+                    # If the helper didn't produce citations, keep the
+                    # label but mark it as unverified so the template can
+                    # style it differently.
+                    if isinstance(payload, dict):
+                        payload = {**payload, 'unverified': True}
+                    grounded_labels[cid_key] = payload
+                else:
+                    dropped += 1
+
+            analysis.cluster_data['cluster_labels'] = grounded_labels
             analysis.cluster_data['labels_generated_at'] = utcnow_naive().isoformat()
+            analysis.cluster_data['labels_dropped_for_grounding'] = dropped
             db.session.commit()
             _invalidate_snapshot_cache(discussion_id)
-            
-            flash(_("Cluster labels generated successfully!"), "success")
+
+            if dropped:
+                flash(_("Cluster labels generated. %(n)d label(s) were withheld because the model could not cite supporting statements.", n=dropped), "info")
+            else:
+                flash(_("Cluster labels generated successfully!"), "success")
         else:
             flash(_("Failed to generate labels. Check your API key status."), "danger")
     

@@ -180,7 +180,7 @@
         <div class="bg-gray-50 p-4 rounded-lg">
           <h3 class="font-semibold text-red-600 mb-2">{{ _('🔥 Controversial') }}</h3>
           <p class="text-sm text-gray-700">
-            {{ _('Most divisive statements (close to 50/50 split)') }}
+            {{ _('Statements where the overall vote is split — surfaces disagreement in the statement feed. The formal "Points of Division" panel on the analysis page uses a stronger, cluster-aware test.') }}
           </p>
         </div>
         <div class="bg-gray-50 p-4 rounded-lg">
@@ -218,10 +218,10 @@
             {{ _('✅ Detect Consensus Statements') }}
           </h3>
           <p class="text-gray-700 mb-2">
-            {{ _('Statements with <strong>≥70%% overall agreement</strong> and <strong>≥60%% in each group</strong> are marked as consensus.')|safe }}
+            {{ _('A statement qualifies as consensus only when the <strong>Wilson 95%% score interval</strong> on overall agreement clears 70%%, AND every opinion group’s own Wilson lower bound clears 60%%. Raw percentages alone are never enough — 7/10 agreement is not "70%% consensus" when its confidence interval starts at 40%%.')|safe }}
           </p>
           <p class="text-sm text-gray-600">
-            {{ _('These represent common ground across different perspectives.') }}
+            {{ _('These represent common ground that stands up to small-sample scrutiny.') }}
           </p>
         </div>
 
@@ -230,7 +230,7 @@
             {{ _('🌉 Find Bridge Statements') }}
           </h3>
           <p class="text-gray-700 mb-2">
-            {{ _('Statements with <strong>high agreement across all groups</strong> (≥65%% mean, low variance) that unite different perspectives.')|safe }}
+            {{ _('Statements where every group lands on the same side — either all agreeing (≥65%% mean) OR all rejecting (≤35%% mean) — with low variance between groups. Shared rejection counts as common ground too.')|safe }}
           </p>
           <p class="text-sm text-gray-600">
             {{ _('These are especially valuable for finding solutions that work for everyone.') }}
@@ -242,11 +242,24 @@
             {{ _('⚡ Highlight Divisive Statements') }}
           </h3>
           <p class="text-gray-700 mb-2">
-            {{ _('Statements with <strong>close to 50/50</strong> splits (controversy score ≥0.7) that reveal deep disagreements.')|safe }}
+            {{ _('Statements where different groups vote differently — measured by the gap in agreement between the most- and least-agreeing groups. Significance comes from a <strong>pre-specified permutation χ² test across ALL clusters</strong>, not post-selection of extreme pairs. The gap CI uses <strong>Newcombe’s MOVER-Wilson Method 10</strong>.')|safe }}
           </p>
           <p class="text-sm text-gray-600">
-            {{ _('These help identify where dialogue and understanding are most needed.') }}
+            {{ _('These reveal where dialogue is most needed. FDR-corrected results are marked ✓; uncorrected results are shown as "suggestive only".') }}
           </p>
+        </div>
+
+        <div class="bg-indigo-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-indigo-900 mb-2">
+            {{ _('🔬 Statistical rigour') }}
+          </h3>
+          <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+            <li>{{ _('<strong>Wilson 95%% score intervals</strong> on every reported percentage — no more "100%% agreement" from 2 of 2 votes.')|safe }}</li>
+            <li>{{ _('<strong>One-sided Fisher’s exact test</strong> for representativeness (which statements distinguish a group from everyone else).') }}</li>
+            <li>{{ _('<strong>Benjamini–Hochberg FDR correction at q=0.05</strong> across all cluster×statement tests (or Benjamini–Yekutieli for strict peer review under dependence — configurable).')|safe }}</li>
+            <li>{{ _('<strong>Stability metrics</strong> (Adjusted Rand Index, Jaccard overlap) computed over re-seeded clustering runs; analyses whose clusters are not reproducible are withheld.')|safe }}</li>
+            <li>{{ _('<strong>Limitations</strong> are called out in the methodology panel of each results page: clustering is fit on the same votes used for group summaries, so all inferential quantities are exploratory rather than confirmatory.')|safe }}</li>
+          </ul>
         </div>
 
         <div class="bg-purple-50 p-4 rounded-lg">

@@ -105,6 +105,31 @@ def _validate_consensus_oversize_config(app):
         'CONSENSUS_OVERSIZE_STABILITY_RUNS': 5,
         'CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS': 3,
         'CONSENSUS_OVERSIZE_MIN_STABILITY_ARI': 0.30,
+        # Full-matrix (non-oversize) stability controls. Kept separate so
+        # tuning one path does not move the other.
+        'CONSENSUS_FULL_MATRIX_STABILITY_RUNS': 3,
+        'CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI': 0.20,
+        # Discussion IDs whitelisted to bypass the participation gate (e.g.
+        # public demos). Previously hardcoded as {25} in consensus.py; the
+        # default preserves that behaviour so deployments don't silently
+        # lose the public demo's open-access mode.
+        'CONSENSUS_DEMO_DISCUSSION_IDS': '25',
+        # FDR procedure used when screening representativeness / divisive
+        # p-values. 'bh' (Benjamini-Hochberg, default) is appropriate under
+        # independence or positive regression dependency. 'by' (Benjamini-
+        # Yekutieli) is strictly more conservative and valid under
+        # arbitrary dependence — appropriate for strict peer review.
+        'CONSENSUS_FDR_METHOD': 'bh',
+        # Cluster-count (k) selection procedure. 'silhouette' (default,
+        # fast) picks k maximising silhouette score. 'stability' runs
+        # bootstrap subsample ARI per k (Monti-inspired — not the full
+        # consensus-matrix / AUC-of-CDF machine) and picks k maximising
+        # silhouette × mean-ARI so the chosen k is itself reproducible.
+        'CONSENSUS_K_SELECTION_METHOD': 'silhouette',
+        'CONSENSUS_K_STABILITY_BOOTSTRAPS': 20,
+        # Monte-Carlo budget for the divisive omnibus permutation χ².
+        # 1000 is fine for screening; bump to 10000 for peer-review grade.
+        'CONSENSUS_PERMUTATION_BUDGET': 1000,
     }
 
     normalized = {}
@@ -135,6 +160,8 @@ def _validate_consensus_oversize_config(app):
     stability_runs = _parse_int('CONSENSUS_OVERSIZE_STABILITY_RUNS')
     min_stability_runs = _parse_int('CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS')
     min_stability_ari = _parse_float('CONSENSUS_OVERSIZE_MIN_STABILITY_ARI')
+    full_matrix_stability_runs = _parse_int('CONSENSUS_FULL_MATRIX_STABILITY_RUNS')
+    full_matrix_min_stability_ari = _parse_float('CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI')
 
     if sampled_statements < 50:
         errors.append("MAX_CONSENSUS_OVERSIZE_SAMPLE_STATEMENTS must be >= 50")
@@ -151,6 +178,29 @@ def _validate_consensus_oversize_config(app):
         )
     if not (0.0 <= min_stability_ari <= 1.0):
         errors.append("CONSENSUS_OVERSIZE_MIN_STABILITY_ARI must be between 0.0 and 1.0")
+    if full_matrix_stability_runs < 1:
+        errors.append("CONSENSUS_FULL_MATRIX_STABILITY_RUNS must be >= 1")
+    if not (0.0 <= full_matrix_min_stability_ari <= 1.0):
+        errors.append("CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI must be between 0.0 and 1.0")
+    fdr_method = str(app.config.get('CONSENSUS_FDR_METHOD', defaults['CONSENSUS_FDR_METHOD']) or 'bh').lower()
+    if fdr_method not in ('bh', 'by'):
+        errors.append("CONSENSUS_FDR_METHOD must be 'bh' or 'by'")
+    normalized['CONSENSUS_FDR_METHOD'] = fdr_method
+
+    k_selection_method = str(
+        app.config.get('CONSENSUS_K_SELECTION_METHOD', defaults['CONSENSUS_K_SELECTION_METHOD']) or 'silhouette'
+    ).lower()
+    if k_selection_method not in ('silhouette', 'stability'):
+        errors.append("CONSENSUS_K_SELECTION_METHOD must be 'silhouette' or 'stability'")
+    normalized['CONSENSUS_K_SELECTION_METHOD'] = k_selection_method
+
+    k_boot = _parse_int('CONSENSUS_K_STABILITY_BOOTSTRAPS')
+    if k_boot < 5:
+        errors.append("CONSENSUS_K_STABILITY_BOOTSTRAPS must be >= 5")
+
+    permutation_budget = _parse_int('CONSENSUS_PERMUTATION_BUDGET')
+    if permutation_budget < 200:
+        errors.append("CONSENSUS_PERMUTATION_BUDGET must be >= 200")
 
     # Always write normalized values so runtime behavior is explicit.
     app.config.update(normalized)

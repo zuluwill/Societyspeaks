@@ -2,22 +2,29 @@
 """
 Consensus Clustering Engine (Phase 3)
 
-Vote-based user clustering inspired by pol.is
-Uses PCA + Agglomerative Clustering to find opinion groups
-Identifies consensus, bridge, and divisive statements
+Vote-based user clustering inspired by pol.is, with additions for academic
+rigour: Wilson score intervals on every reported proportion, Fisher's exact
+test for statement representativeness, Benjamini–Hochberg FDR correction
+across the full (cluster × statement) test surface, and stability metrics
+computed for every analysis (not just oversize).
 
-Based on pol.is clustering patterns (AGPL-3.0)
+Based on pol.is clustering patterns (AGPL-3.0).
 
-RECENT IMPROVEMENTS (2026-01-05):
-- Changed missing vote fill strategy from 0 (neutral) to statement mean
-  This preserves vote distribution and improves clustering accuracy
-- Removed StandardScaler before PCA to preserve meaningful variance signals
-  Variance = consensus vs division, which is exactly what PCA should focus on
-
-RECENT IMPROVEMENTS (2026-01-06):
-- Added SparsityAwareScaler after PCA (pol.is innovation)
-  Prevents sparse voters from bunching at center, enables 4-5+ opinion groups
-  Code adapted from pol.is red-dwarf library: https://github.com/polis-community/red-dwarf
+Method references:
+  - Small, C. T., Bjorkegren, M., Erkkilä, T., Shaw, L., & Megill, C. (2021).
+    Polis: Scaling deliberation by mapping high dimensional opinion spaces.
+    RECERCA. Revista de Pensament i Anàlisi. https://polis.shopify.com/papers
+  - Wilson, E. B. (1927). Probable inference, the law of succession, and
+    statistical inference. JASA 22(158), 209-212. (Score interval)
+  - Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery
+    rate: a practical and powerful approach to multiple testing. JRSS-B 57(1),
+    289-300.
+  - Monti, S., Tamayo, P., Mesirov, J., & Golub, T. (2003). Consensus
+    clustering: a resampling-based method for class discovery and
+    visualization of gene expression microarray data. Machine Learning 52,
+    91-118. (Stability-based cluster evaluation)
+  - pol.is red-dwarf clustering library (AGPL-3.0):
+    https://github.com/polis-community/red-dwarf  (sparsity-aware scaling)
 """
 import numpy as np
 import pandas as pd
@@ -115,6 +122,309 @@ def apply_sparsity_scaling(pca_coordinates, vote_matrix_sparse):
     logger.info(f"Applied sparsity scaling. Factor range: [{scaling_factors.min():.2f}, {scaling_factors.max():.2f}]")
 
     return scaled_coordinates
+
+
+# ==============================================================================
+# STATISTICAL PRIMITIVES (numpy-only; no scipy dependency)
+# ==============================================================================
+# Every proportion we surface to users is accompanied by a Wilson score
+# interval. Representativeness uses Fisher + FDR (BH by default, optional BY).
+# Divisiveness uses a permutation χ² omnibus test + FDR, with pairwise
+# Fisher as a secondary gap check; see module docstring for references.
+# ==============================================================================
+
+# 95% CI by default; change via WILSON_Z if a different level is required.
+WILSON_Z = 1.959963984540054  # norm.ppf(0.975)
+FDR_ALPHA = 0.05
+
+
+def wilson_interval(successes, n, z=WILSON_Z):
+    """
+    Wilson score confidence interval for a binomial proportion.
+
+    More accurate than the normal approximation at small n and at extreme
+    proportions, and never produces impossible bounds (e.g. negative or
+    >1 probabilities). See Wilson (1927).
+
+    Args:
+        successes: number of "yes" outcomes
+        n: total trials (must be >= 0)
+        z: z-score for the desired confidence level (default 1.96 → 95%)
+
+    Returns:
+        (point_estimate, lower_bound, upper_bound) as floats in [0, 1].
+        For n=0 returns (0.0, 0.0, 1.0) — the maximally-uncertain prior.
+    """
+    n = int(n)
+    if n <= 0:
+        return 0.0, 0.0, 1.0
+    k = int(successes)
+    p = k / n
+    z2 = z * z
+    denom = 1.0 + z2 / n
+    centre = (p + z2 / (2.0 * n)) / denom
+    margin = z * np.sqrt((p * (1.0 - p) + z2 / (4.0 * n)) / n) / denom
+    return float(p), float(max(0.0, centre - margin)), float(min(1.0, centre + margin))
+
+
+def _log_factorial_table(nmax):
+    """Precomputed log-factorials 0..nmax via cumulative sum."""
+    if nmax < 1:
+        return np.array([0.0])
+    return np.concatenate(([0.0], np.cumsum(np.log(np.arange(1, nmax + 1, dtype=np.float64)))))
+
+
+def _log_hypergeom_pmf(k, K, n, N, logfact):
+    """log P(X = k) where X ~ Hypergeometric(N, K, n)."""
+    if k < 0 or k > K or (n - k) < 0 or (n - k) > (N - K):
+        return -np.inf
+    return (
+        logfact[K] - logfact[k] - logfact[K - k]
+        + logfact[N - K] - logfact[n - k] - logfact[N - K - (n - k)]
+        - (logfact[N] - logfact[n] - logfact[N - n])
+    )
+
+
+def fisher_exact_greater(a, b, c, d):
+    """
+    One-sided Fisher's exact test for a 2x2 contingency table:
+
+                        agree    disagree
+        in-group          a         b
+        out-of-group      c         d
+
+    Tests H1: p(agree | in-group) > p(agree | out-of-group).
+
+    Uses the hypergeometric distribution under the null of equal proportions.
+    Returns the p-value as a float in [0, 1]. Numpy-only, no scipy.
+    """
+    a, b, c, d = int(a), int(b), int(c), int(d)
+    if min(a, b, c, d) < 0:
+        return 1.0
+    N = a + b + c + d
+    if N == 0:
+        return 1.0
+    K = a + b  # total in-group size
+    n = a + c  # total "agree" column
+    if K == 0 or n == 0:
+        return 1.0
+    logfact = _log_factorial_table(N)
+    # Sum P(X = j) for j in [a, min(K, n)] in log-space with a max-trick.
+    jmax = min(K, n)
+    log_terms = np.array(
+        [_log_hypergeom_pmf(j, K, n, N, logfact) for j in range(a, jmax + 1)],
+        dtype=np.float64,
+    )
+    finite = log_terms[np.isfinite(log_terms)]
+    if finite.size == 0:
+        return 1.0
+    m = finite.max()
+    p = float(np.exp(m) * np.sum(np.exp(finite - m)))
+    return float(min(1.0, max(0.0, p)))
+
+
+def benjamini_hochberg(pvalues, alpha=FDR_ALPHA):
+    """
+    Benjamini–Hochberg FDR procedure. Returns a boolean mask of rejected
+    hypotheses (True = significant at the given FDR level). See BH (1995).
+
+    Equivalent to returning the largest prefix of BH-sorted p-values that
+    all satisfy p(i) <= alpha * i / m.
+
+    BH is valid under independence and under positive regression
+    dependency (Benjamini & Yekutieli 2001). For arbitrary dependence use
+    :func:`benjamini_yekutieli`, which is strictly more conservative.
+    """
+    p = np.asarray(pvalues, dtype=np.float64)
+    m = p.size
+    if m == 0:
+        return np.zeros(0, dtype=bool)
+    order = np.argsort(p)
+    ranked = p[order]
+    thresholds = alpha * np.arange(1, m + 1) / m
+    passed = ranked <= thresholds
+    if not np.any(passed):
+        return np.zeros(m, dtype=bool)
+    cutoff = int(np.max(np.where(passed)))
+    rejected = np.zeros(m, dtype=bool)
+    rejected[order[: cutoff + 1]] = True
+    return rejected
+
+
+def benjamini_yekutieli(pvalues, alpha=FDR_ALPHA):
+    """
+    Benjamini–Yekutieli (2001) FDR procedure — valid under *arbitrary*
+    dependence between tests. Equivalent to BH with threshold divided by
+    the m-th harmonic number c(m) = Σ_{k=1..m} 1/k.
+
+    Strictly more conservative than BH. Preferred when correlated tests
+    are expected — e.g. cluster-then-test settings where a single fitted
+    clustering produces all the hypotheses we're screening.
+    """
+    p = np.asarray(pvalues, dtype=np.float64)
+    m = p.size
+    if m == 0:
+        return np.zeros(0, dtype=bool)
+    c_m = float(np.sum(1.0 / np.arange(1, m + 1)))
+    return benjamini_hochberg(p, alpha / c_m)
+
+
+def fdr_mask(pvalues, alpha=FDR_ALPHA, method='bh'):
+    """Dispatch BH vs BY so call sites don't grow duplicated if/else."""
+    m = (method or 'bh').lower()
+    if m == 'by':
+        return benjamini_yekutieli(pvalues, alpha)
+    if m != 'bh':
+        logger.warning("Unknown FDR method %r; falling back to BH", method)
+    return benjamini_hochberg(pvalues, alpha)
+
+
+# ── Newcombe (1998) Method 10: MOVER-Wilson interval for p1 - p2 ──────────
+
+def newcombe_diff_interval(a1, n1, a2, n2, z=WILSON_Z):
+    """
+    Confidence interval for the difference of two independent binomial
+    proportions (p1 - p2) using Newcombe's Method 10 — the "MOVER-Wilson"
+    hybrid score interval. More accurate than naive bound-subtraction at
+    small n or extreme proportions, and never produces bounds outside
+    [-1, 1]. Reference: Newcombe (1998) Statistics in Medicine 17(8):
+    873-890, Method 10.
+
+    Returns (point_estimate, lower, upper). For n1=0 or n2=0 the point
+    estimate is undefined; we return (0.0, -1.0, 1.0) — maximally
+    uncertain.
+    """
+    n1 = int(n1)
+    n2 = int(n2)
+    if n1 <= 0 or n2 <= 0:
+        return 0.0, -1.0, 1.0
+    p1, l1, u1 = wilson_interval(a1, n1, z=z)
+    p2, l2, u2 = wilson_interval(a2, n2, z=z)
+    diff = p1 - p2
+    lower = diff - np.sqrt((p1 - l1) ** 2 + (u2 - p2) ** 2)
+    upper = diff + np.sqrt((u1 - p1) ** 2 + (p2 - l2) ** 2)
+    return float(diff), float(max(-1.0, lower)), float(min(1.0, upper))
+
+
+# ── Chi-square + permutation: multi-cluster divisive test (no post-selection)
+
+def _chi_square_statistic_from_counts(counts_2xK):
+    """
+    Pearson chi-square statistic for a 2×K contingency table. Zero-
+    expectation cells contribute zero (safe for small or sparse tables).
+    """
+    counts = np.asarray(counts_2xK, dtype=np.float64)
+    if counts.ndim != 2 or counts.shape[0] != 2 or counts.shape[1] < 2:
+        return 0.0
+    row_totals = counts.sum(axis=1, keepdims=True)
+    col_totals = counts.sum(axis=0, keepdims=True)
+    grand_total = float(counts.sum())
+    if grand_total <= 0:
+        return 0.0
+    expected = row_totals @ col_totals / grand_total
+    with np.errstate(divide='ignore', invalid='ignore'):
+        diff2 = (counts - expected) ** 2
+        contribs = np.where(expected > 0, diff2 / expected, 0.0)
+    return float(contribs.sum())
+
+
+def permutation_p_value_multi_cluster(
+    cluster_labels,
+    statement_votes,
+    n_permutations=1000,
+    rng=None,
+):
+    """
+    Permutation p-value for "agreement rate differs across clusters" on a
+    single statement.
+
+    Builds a 2×K table (agree vs non-agree × cluster) using the same
+    non-missing denominator as :func:`_per_cluster_agree_counts`:
+
+        agreement_rate = (# agree) / (# non-missing votes)
+
+    so "non-agree" counts disagree (−1) AND neutral/unsure (0) among voters.
+    This alignment matters: if we tested only ±1 votes, the FDR-screened
+    omnibus would be a *different* hypothesis than the ``group_gap`` and
+    Newcombe CI shown next to it.
+
+    Under the null (independence of agree-status and cluster), shuffling
+    labels among voters leaves the marginals fixed and the joint
+    distribution of agree-counts-per-cluster is multivariate hypergeometric.
+    We therefore draw ``n_permutations`` samples from that distribution
+    directly — equivalent to explicit label shuffling but O(B·K) instead
+    of O(B·K·N), so oversize analyses and stability loops stay cheap.
+    Uses add-one smoothing on the p-value to avoid 0/B pathologies.
+
+    Args:
+        cluster_labels: numpy array aligned with vote-matrix rows
+        statement_votes: pandas Series of votes for one statement
+        n_permutations: Monte Carlo budget (default 1000)
+        rng: optional numpy Generator for determinism
+
+    Returns:
+        (p_value, chi2_observed, K_voting_clusters)
+    """
+    votes = np.asarray(statement_votes.values if hasattr(statement_votes, 'values') else statement_votes)
+    labels = np.asarray(cluster_labels)
+    voted_mask = ~np.isnan(votes.astype(float))
+    if not voted_mask.any():
+        return 1.0, 0.0, 0
+    voted_votes = votes[voted_mask]
+    voted_labels = labels[voted_mask]
+    unique_clusters, label_idx = np.unique(voted_labels, return_inverse=True)
+    K = int(unique_clusters.size)
+    if K < 2:
+        return 1.0, 0.0, K
+
+    is_agree = (voted_votes == 1)
+    cluster_sizes = np.bincount(label_idx, minlength=K).astype(np.int64)
+    agree_per_cluster_obs = np.bincount(label_idx[is_agree], minlength=K).astype(np.int64)
+
+    N_total = int(cluster_sizes.sum())
+    agree_total = int(is_agree.sum())
+    non_agree_total = N_total - agree_total
+    if agree_total == 0 or non_agree_total == 0 or N_total == 0:
+        # Degenerate: no between-cluster variation is possible on this row.
+        return 1.0, 0.0, K
+
+    # Pre-compute fixed marginals / expected cells. Under the null, both row
+    # and column totals are preserved by the permutation, so the expected
+    # cell counts are the same for every permutation.
+    row_totals = np.array([agree_total, non_agree_total], dtype=np.float64)
+    col_totals = cluster_sizes.astype(np.float64)
+    expected = np.outer(row_totals, col_totals) / float(N_total)  # (2, K)
+    exp_agree = expected[0]
+    exp_non = expected[1]
+
+    observed_2xK = np.vstack([
+        agree_per_cluster_obs,
+        cluster_sizes - agree_per_cluster_obs,
+    ]).astype(np.float64)
+    chi2_obs = _chi_square_statistic_from_counts(observed_2xK)
+    if chi2_obs <= 0.0:
+        return 1.0, 0.0, K
+
+    if rng is None:
+        rng = np.random.default_rng(seed=42)
+    B = int(n_permutations)
+    if B < 1:
+        return 1.0, float(chi2_obs), K
+
+    # Vectorised Monte Carlo: draw B × K matrices of agree-counts under the
+    # multivariate hypergeometric implied by shuffling labels with fixed
+    # agree_total and cluster_sizes.
+    agree_perm = rng.multivariate_hypergeometric(cluster_sizes, agree_total, size=B)
+    non_agree_perm = cluster_sizes[np.newaxis, :] - agree_perm  # (B, K)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        term_a = np.where(exp_agree > 0, (agree_perm - exp_agree) ** 2 / exp_agree, 0.0)
+        term_n = np.where(exp_non > 0, (non_agree_perm - exp_non) ** 2 / exp_non, 0.0)
+    chi2_perms = (term_a + term_n).sum(axis=1)  # (B,)
+
+    at_or_above = int(np.sum(chi2_perms >= chi2_obs))
+    p = (at_or_above + 1) / (B + 1)
+    return float(p), float(chi2_obs), K
 
 
 def build_vote_matrix(discussion_id, db):
@@ -548,7 +858,7 @@ def build_oversize_consensus_results(discussion_id, db, plan):
         return None
 
     stability_runs = int(current_app.config.get('CONSENSUS_OVERSIZE_STABILITY_RUNS', 5))
-    stability_metrics = _compute_oversize_stability_metrics(
+    stability_metrics = _compute_stability_metrics(
         vote_matrix_filled=vote_matrix_filled,
         vote_matrix_real=vote_matrix_real,
         baseline_labels=user_labels,
@@ -708,311 +1018,722 @@ def _numpy_agglomerative(data, n_clusters):
     return final_labels
 
 
-def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative', random_state=42):
+def _cluster_at_k(data, k, method='agglomerative', random_state=42):
     """
-    Cluster users based on PCA-reduced vote matrix
+    Single-shot clustering at a fixed k, returning (labels, silhouette).
 
-    Pol.is uses agglomerative clustering with automatic k selection
-    We'll use silhouette score to find optimal k
+    Centralises the sklearn-with-numpy-fallback boilerplate so every caller
+    (initial fit, stability re-seeds, k selection bootstraps) goes through
+    the same path — guarantees identical behaviour whether sklearn is
+    available or not.
     """
-    _use_sklearn = SKLEARN_AVAILABLE
-
-    if n_clusters is None:
-        # Find optimal number of clusters (2 to min(10, n_users/2))
-        max_clusters = min(10, len(vote_matrix_pca) // 2)
-
-        if max_clusters < 2:
-            logger.warning("Not enough users for clustering")
-            return np.zeros(len(vote_matrix_pca)), 0
-
-        best_score = -1
-        best_k = 2
-
-        for k in range(2, max_clusters + 1):
-            if _use_sklearn:
-                try:
-                    if method == 'agglomerative':
-                        clusterer = AgglomerativeClustering(
-                            n_clusters=k,
-                            linkage='average',
-                            metric='cosine'
-                        )
-                    else:
-                        clusterer = KMeans(n_clusters=k, random_state=random_state)
-                    labels = clusterer.fit_predict(vote_matrix_pca)
-                    score = silhouette_score(vote_matrix_pca, labels, metric='cosine')
-                except (OSError, ImportError) as e:
-                    logger.error(
-                        f"sklearn clustering runtime failed ({e}), switching to numpy fallback"
-                    )
-                    _use_sklearn = False
-                    labels = _numpy_agglomerative(np.array(vote_matrix_pca), k)
-                    score = _numpy_silhouette(np.array(vote_matrix_pca), labels)
-            else:
-                labels = _numpy_agglomerative(np.array(vote_matrix_pca), k)
-                score = _numpy_silhouette(np.array(vote_matrix_pca), labels)
-
-            logger.info(f"k={k}: silhouette={score:.3f}")
-
-            if score > best_score:
-                best_score = score
-                best_k = k
-
-        n_clusters = best_k
-        logger.info(f"Selected {n_clusters} clusters (silhouette={best_score:.3f})")
-
-    # Final clustering with optimal k
-    if _use_sklearn:
+    data = np.asarray(data)
+    use_sklearn = SKLEARN_AVAILABLE
+    if use_sklearn:
         try:
             if method == 'agglomerative':
                 clusterer = AgglomerativeClustering(
-                    n_clusters=n_clusters,
-                    linkage='average',
-                    metric='cosine'
+                    n_clusters=k, linkage='average', metric='cosine'
                 )
             else:
-                clusterer = KMeans(n_clusters=n_clusters, random_state=random_state)
-            labels = clusterer.fit_predict(vote_matrix_pca)
-            silhouette = silhouette_score(vote_matrix_pca, labels, metric='cosine')
+                clusterer = KMeans(n_clusters=k, random_state=random_state)
+            labels = clusterer.fit_predict(data)
+            score = silhouette_score(data, labels, metric='cosine')
+            return labels, float(score)
         except (OSError, ImportError) as e:
             logger.error(
-                f"sklearn final clustering runtime failed ({e}), using numpy fallback"
+                "sklearn clustering runtime failed (%s); using numpy fallback", e
             )
-            labels = _numpy_agglomerative(np.array(vote_matrix_pca), n_clusters)
-            silhouette = _numpy_silhouette(np.array(vote_matrix_pca), labels)
-    else:
-        labels = _numpy_agglomerative(np.array(vote_matrix_pca), n_clusters)
-        silhouette = _numpy_silhouette(np.array(vote_matrix_pca), labels)
+    labels = _numpy_agglomerative(data, k)
+    score = _numpy_silhouette(data, labels)
+    return labels, float(score)
 
+
+def select_k_by_stability(
+    vote_matrix_pca,
+    k_min=2,
+    k_max=10,
+    method='agglomerative',
+    n_bootstraps=20,
+    subsample_frac=0.8,
+    random_state=42,
+    rng=None,
+):
+    """
+    Bootstrap-stability k selection (Monti-inspired; not the full
+    consensus-matrix / CDF-AUC machine).
+
+    For each candidate k, draw `n_bootstraps` participant subsamples
+    (without replacement, size = subsample_frac × N), re-cluster each
+    subsample at that k, and measure the Adjusted Rand Index between the
+    subsample's labels and the baseline labels restricted to the same
+    rows. Higher mean ARI = more reproducible k.
+
+    We pick k maximising ``silhouette(k) × mean_ARI(k)`` — requires both
+    good separation AND reproducibility. Silhouette alone over-rewards
+    k=2; mean-ARI alone over-rewards trivial solutions. The product is a
+    pragmatic stability-aware composite (related in spirit to Monti et
+    al. 2003 consensus clustering and Tibshirani & Walther 2005 stability
+    selection, without materialising a full N×N consensus matrix —
+    attractive as a future upgrade when the bootstrap budget is larger).
+
+    Returns:
+        (best_k, per_k_metrics) where per_k_metrics is a list of dicts
+        with keys k, silhouette, mean_ari, composite, n_bootstraps.
+    """
+    n = len(vote_matrix_pca)
+    max_k = min(k_max, n // 2)
+    if max_k < k_min:
+        return k_min, []
+    if rng is None:
+        rng = np.random.default_rng(seed=random_state)
+
+    sub_n = max(k_max + 1, int(round(subsample_frac * n)))
+    per_k = []
+    for k in range(k_min, max_k + 1):
+        baseline_labels, silhouette = _cluster_at_k(
+            vote_matrix_pca, k, method, random_state
+        )
+        aris = []
+        for b in range(int(n_bootstraps)):
+            if sub_n >= n:
+                # Full-sample "bootstrap" — only useful for kmeans (reseed).
+                idx = np.arange(n)
+            else:
+                idx = rng.choice(n, size=sub_n, replace=False)
+                idx.sort()
+            seed_b = int(random_state + b + 1)
+            sub_labels, _ = _cluster_at_k(vote_matrix_pca[idx], k, method, seed_b)
+            ari = _adjusted_rand_index(baseline_labels[idx], sub_labels)
+            aris.append(ari)
+        mean_ari = float(np.mean(aris)) if aris else 1.0
+        # Composite: silhouette can be negative for bad clusterings; clip to
+        # [0, 1] so the product doesn't flip sign and reward pathologies.
+        composite = max(0.0, silhouette) * max(0.0, mean_ari)
+        per_k.append({
+            'k': int(k),
+            'silhouette': float(silhouette),
+            'mean_ari': mean_ari,
+            'composite': float(composite),
+            'n_bootstraps': int(n_bootstraps),
+        })
+        logger.info(
+            "k=%d: silhouette=%.3f mean_ARI=%.3f composite=%.3f",
+            k, silhouette, mean_ari, composite,
+        )
+
+    best = max(per_k, key=lambda m: (m['composite'], m['silhouette']))
+    logger.info(
+        "Stability-selected k=%d (silhouette=%.3f, mean_ARI=%.3f)",
+        best['k'], best['silhouette'], best['mean_ari'],
+    )
+    return best['k'], per_k
+
+
+def cluster_users(
+    vote_matrix_pca,
+    n_clusters=None,
+    method='agglomerative',
+    random_state=42,
+    selection_method='silhouette',
+    stability_bootstraps=20,
+    rng=None,
+):
+    """
+    Cluster users based on PCA-reduced vote matrix.
+
+    When ``n_clusters`` is None we pick k automatically. Two selection
+    methods are supported:
+
+    - ``silhouette`` (default, fast): maximise silhouette over k ∈ [2, 10].
+      Back-compat behaviour.
+    - ``stability``: maximise silhouette × mean-ARI under bootstrap
+      subsampling (Monti-inspired bootstrap stability; see
+      :func:`select_k_by_stability` for the exact composite). More
+      expensive, but makes the *chosen k* itself reproducible, not just
+      the partition at the chosen k. Suitable for strict peer-review
+      mode. Not the full consensus-matrix / AUC-of-CDF procedure.
+
+    Returns (labels, silhouette). If ``selection_method='stability'`` the
+    per-k diagnostic metrics are attached to ``cluster_users.last_metrics``
+    (read by _build_analysis_payload to persist them in analysis metadata).
+    """
+    n = len(vote_matrix_pca)
+    cluster_users.last_metrics = []
+
+    if n_clusters is None:
+        max_clusters = min(10, n // 2)
+        if max_clusters < 2:
+            logger.warning("Not enough users for clustering")
+            return np.zeros(n), 0.0
+
+        if selection_method == 'stability':
+            n_clusters, per_k = select_k_by_stability(
+                vote_matrix_pca,
+                k_min=2,
+                k_max=max_clusters,
+                method=method,
+                n_bootstraps=stability_bootstraps,
+                random_state=random_state,
+                rng=rng,
+            )
+            cluster_users.last_metrics = per_k
+        else:
+            best_score = -np.inf
+            best_k = 2
+            per_k = []
+            for k in range(2, max_clusters + 1):
+                _, score = _cluster_at_k(vote_matrix_pca, k, method, random_state)
+                logger.info(f"k={k}: silhouette={score:.3f}")
+                per_k.append({'k': int(k), 'silhouette': float(score)})
+                if score > best_score:
+                    best_score = score
+                    best_k = k
+            n_clusters = best_k
+            cluster_users.last_metrics = per_k
+            logger.info(f"Selected {n_clusters} clusters (silhouette={best_score:.3f})")
+
+    labels, silhouette = _cluster_at_k(vote_matrix_pca, n_clusters, method, random_state)
     return labels, silhouette
+
+
+# Ensure attribute is always defined so _build_analysis_payload can read it
+# without a hasattr dance on the first call.
+cluster_users.last_metrics = []
+
+
+def _per_cluster_agree_counts(statement_votes, vote_matrix_index, user_labels):
+    """
+    Yield one dict per cluster with voting counts on a single statement.
+
+    Shared by consensus / bridge / divisive identification so the vote-
+    tabulation logic lives in exactly one place. Clusters that produced
+    zero real votes on this statement are returned with n=0; callers
+    filter them as needed.
+
+    Yields dicts with:
+      cluster_id (int)
+      agree (int)            — votes of +1
+      disagree (int)         — non-agree (i.e. n - agree, includes neutral).
+                               Kept under this name for back-compat with
+                               the Fisher extreme-pair test, which wants an
+                               agree-vs-non-agree 2×2.
+      disagree_strict (int)  — votes of -1 (pure disagreement, excludes neutral)
+      neutral (int)          — votes of 0 (unsure/neutral)
+      n (int)                — total non-missing votes
+      agreement_rate (float) — agree / n
+      disagree_rate (float)  — disagree_strict / n (for "shared rejection"
+                               decisions; avoids misclassifying indifference
+                               as rejection)
+    """
+    for cluster_id in np.unique(user_labels):
+        cluster_mask = user_labels == cluster_id
+        cluster_votes = statement_votes[vote_matrix_index[cluster_mask]]
+        n = int(cluster_votes.notna().sum())
+        a = int((cluster_votes == 1).sum())
+        d = int((cluster_votes == -1).sum())
+        yield {
+            'cluster_id': int(cluster_id),
+            'agree': a,
+            'disagree': n - a,
+            'disagree_strict': d,
+            'neutral': n - a - d,
+            'n': n,
+            'agreement_rate': (a / n) if n > 0 else 0.0,
+            'disagree_rate': (d / n) if n > 0 else 0.0,
+        }
 
 
 def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=0.7, cluster_threshold=0.6):
     """
-    Identify statements with broad consensus
+    Identify statements with broad consensus across all opinion groups.
 
-    Pol.is criteria:
-    - ≥70% overall agreement
-    - ≥60% agreement in EACH cluster
+    Criteria (pol.is convention, tightened with Wilson small-sample guard):
+      - Overall agreement Wilson lower bound ≥ consensus_threshold, **not**
+        the raw rate. 7/10 agreement should not qualify as "70% consensus"
+        when its 95% CI lower bound is only 40%.
+      - Every cluster has voted on the statement AND its own agreement
+        Wilson lower bound ≥ cluster_threshold.
 
-    Note: Uses real votes only (NaN = no vote), not imputed values
-
-    Returns:
-        List of (statement_id, agreement_rate) tuples
+    Returns a list ranked by overall Wilson lower bound (safest-signal first).
+    Each entry carries: statement_id, agreement_rate, wilson_low, wilson_high,
+    agree_count, disagree_count, vote_count, cluster_agreements.
     """
     consensus_statements = []
+    n_clusters = len(np.unique(user_labels))
 
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
-
-        # Calculate overall agreement (agree votes / total REAL votes)
-        # Only count actual votes, not NaN (missing votes)
+        agree_votes = int((statement_votes == 1).sum())
         real_votes = statement_votes.notna()
-        agree_votes = (statement_votes == 1).sum()
-        total_votes = real_votes.sum()
-
+        total_votes = int(real_votes.sum())
         if total_votes == 0:
             continue
 
-        overall_agreement = agree_votes / total_votes
-
-        if overall_agreement < consensus_threshold:
+        overall_rate, overall_low, overall_high = wilson_interval(agree_votes, total_votes)
+        if overall_low < consensus_threshold:
             continue
 
-        # Check agreement in each cluster (Pol.is: every cluster must have voted and meet threshold)
-        n_clusters = len(np.unique(user_labels))
         cluster_agreements = []
-        for cluster_id in np.unique(user_labels):
-            cluster_mask = user_labels == cluster_id
-            cluster_votes = statement_votes[vote_matrix.index[cluster_mask]]
+        passes_per_cluster = True
+        for row in _per_cluster_agree_counts(statement_votes, vote_matrix.index, user_labels):
+            if row['n'] == 0:
+                passes_per_cluster = False
+                break
+            _, c_low, _ = wilson_interval(row['agree'], row['n'])
+            if c_low < cluster_threshold:
+                passes_per_cluster = False
+                break
+            cluster_agreements.append(row['agreement_rate'])
 
-            cluster_real = cluster_votes.notna()
-            cluster_agree = (cluster_votes == 1).sum()
-            cluster_total = cluster_real.sum()
+        if not passes_per_cluster or len(cluster_agreements) != n_clusters:
+            continue
 
-            if cluster_total > 0:
-                cluster_agreement = cluster_agree / cluster_total
-                cluster_agreements.append(cluster_agreement)
+        consensus_statements.append({
+            'statement_id': int(statement_id),
+            'agreement_rate': float(overall_rate),
+            'wilson_low': float(overall_low),
+            'wilson_high': float(overall_high),
+            'agree_count': agree_votes,
+            'disagree_count': total_votes - agree_votes,
+            'vote_count': total_votes,
+            'cluster_agreements': cluster_agreements,
+        })
 
-        # All clusters must have at least one vote AND meet threshold (no "consensus" if a group didn't vote)
-        if len(cluster_agreements) == n_clusters and all(ca >= cluster_threshold for ca in cluster_agreements):
-            consensus_statements.append({
-                'statement_id': statement_id,
-                'agreement_rate': overall_agreement,
-                'cluster_agreements': cluster_agreements
-            })
-
-    logger.info(f"Found {len(consensus_statements)} consensus statements")
+    consensus_statements.sort(key=lambda s: s['wilson_low'], reverse=True)
+    logger.info(f"Found {len(consensus_statements)} consensus statements (Wilson-gated)")
     return consensus_statements
 
 
 def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max_variance=0.15):
     """
-    Identify bridge statements that unite different clusters
+    Identify bridge statements — those every opinion group agrees on (or
+    every opinion group rejects). Symmetric bridges matter because a
+    shared rejection is just as much common ground as a shared agreement.
 
-    Pol.is criteria:
-    - High mean agreement across clusters (≥65%)
-    - Low variance across clusters (<0.15)
+    Criteria:
+      - Every cluster has voted.
+      - Variance between cluster rates ≤ max_variance (the groups agree
+        with *each other* about this statement).
+      - Either mean agreement across clusters ≥ min_agreement (shared
+        agreement), OR mean *strict disagreement* (vote == -1 only) across
+        clusters ≥ min_agreement (shared rejection).
 
-    Note: Uses real votes only (NaN = no vote), not imputed values
+    IMPORTANT: shared rejection is evaluated on the strict disagree rate
+    (disagree_strict / n), not on 1 - agreement_rate. A statement on which
+    every cluster is 100% neutral would otherwise be classified as a
+    shared-rejection bridge — that's indifference, not common ground.
 
-    Returns:
-        List of (statement_id, mean_agreement, variance) tuples
+    Returns a list of dicts with: statement_id, mean_agreement,
+    mean_disagreement, variance, cluster_agreements, polarity
+    ('agree'|'reject'), agree_count, disagree_count, vote_count,
+    wilson_low, wilson_high.
     """
     bridge_statements = []
+    n_clusters = len(np.unique(user_labels))
+    min_disagreement = min_agreement
 
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
 
-        # Calculate agreement in each cluster (using real votes only; all clusters must have voted)
-        n_clusters = len(np.unique(user_labels))
-        cluster_agreements = []
-        for cluster_id in np.unique(user_labels):
-            cluster_mask = user_labels == cluster_id
-            cluster_votes = statement_votes[vote_matrix.index[cluster_mask]]
-
-            cluster_real = cluster_votes.notna()
-            cluster_agree = (cluster_votes == 1).sum()
-            cluster_total = cluster_real.sum()
-
-            if cluster_total > 0:
-                cluster_agreement = cluster_agree / cluster_total
-                cluster_agreements.append(cluster_agreement)
-
-        if len(cluster_agreements) < 2 or len(cluster_agreements) != n_clusters:
+        rows = [
+            row
+            for row in _per_cluster_agree_counts(statement_votes, vote_matrix.index, user_labels)
+            if row['n'] > 0
+        ]
+        if len(rows) < 2 or len(rows) != n_clusters:
             continue
 
-        mean_agreement = np.mean(cluster_agreements)
-        variance = np.var(cluster_agreements)
+        cluster_agreements = [r['agreement_rate'] for r in rows]
+        cluster_disagreements = [r['disagree_rate'] for r in rows]
 
-        if mean_agreement >= min_agreement and variance <= max_variance:
-            bridge_statements.append({
-                'statement_id': statement_id,
-                'mean_agreement': mean_agreement,
-                'variance': variance,
-                'cluster_agreements': cluster_agreements
-            })
+        mean_agreement = float(np.mean(cluster_agreements))
+        mean_disagreement = float(np.mean(cluster_disagreements))
+        variance_agree = float(np.var(cluster_agreements))
+        variance_disagree = float(np.var(cluster_disagreements))
 
-    logger.info(f"Found {len(bridge_statements)} bridge statements")
+        agree_votes = int((statement_votes == 1).sum())
+        disagree_strict_total = int((statement_votes == -1).sum())
+        total_votes = int(statement_votes.notna().sum())
+        non_agree_votes = total_votes - agree_votes
+
+        if mean_agreement >= min_agreement and variance_agree <= max_variance:
+            polarity = 'agree'
+            variance_for_polarity = variance_agree
+            _, w_low, w_high = wilson_interval(agree_votes, total_votes)
+        elif mean_disagreement >= min_disagreement and variance_disagree <= max_variance:
+            polarity = 'reject'
+            variance_for_polarity = variance_disagree
+            _, w_low, w_high = wilson_interval(disagree_strict_total, total_votes)
+        else:
+            continue
+
+        bridge_statements.append({
+            'statement_id': int(statement_id),
+            'mean_agreement': mean_agreement,
+            'mean_disagreement': mean_disagreement,
+            'variance': variance_for_polarity,
+            'cluster_agreements': cluster_agreements,
+            'cluster_disagreements': cluster_disagreements,
+            'polarity': polarity,
+            'agree_count': agree_votes,
+            # 'disagree_count' kept as non-agree (n - a) so existing CSV
+            # exports / JSON readers don't shift meaning; 'disagree_strict_count'
+            # exposes the -1-only figure for anyone who wants it.
+            'disagree_count': non_agree_votes,
+            'disagree_strict_count': disagree_strict_total,
+            'vote_count': total_votes,
+            'wilson_low': float(w_low),
+            'wilson_high': float(w_high),
+        })
+
+    bridge_statements.sort(key=lambda s: (s['wilson_low'], -s['variance']), reverse=True)
+    logger.info(
+        "Found %d bridge statements (agree=%d, reject=%d)",
+        len(bridge_statements),
+        sum(1 for b in bridge_statements if b['polarity'] == 'agree'),
+        sum(1 for b in bridge_statements if b['polarity'] == 'reject'),
+    )
     return bridge_statements
 
 
-def identify_divisive_statements(vote_matrix, user_labels, min_controversy=0.7):
+def identify_divisive_statements(
+    vote_matrix,
+    user_labels,
+    min_group_gap=0.30,
+    min_cluster_votes=3,
+    fdr_method='bh',
+    n_permutations=1000,
+    rng=None,
+):
     """
-    Identify divisive statements with strong disagreement
+    Identify statements that divide the opinion groups.
 
-    High controversy score (close to 50/50 split)
+    A statement is divisive when *different groups vote differently*, not
+    merely when the overall population splits 50/50 (which can be pure
+    noise). For each statement we:
 
-    Note: Uses real votes only (NaN = no vote), not imputed values
-    Only counts agree/disagree votes (not unsure)
+      1. Compute agreement rate per cluster among those who voted.
+      2. Require at least two clusters to have ≥ min_cluster_votes real
+         votes on the statement.
+      3. Measure inter-cluster variance and the max-vs-min agreement gap.
+      4. Run a **permutation-based omnibus test** — shuffle cluster labels
+         among voters, recompute Pearson χ² for the 2×K table, and take
+         the fraction of permutations at least as extreme as observed.
+         This is the pre-specified, all-cluster test that FDR is applied
+         to; it does not depend on post-selecting extreme clusters.
+      5. Also run one-sided Fisher on the max-vs-min pair as a small-
+         sample secondary check that the *displayed gap* is not a fluke.
+      6. CI on the gap uses Newcombe (1998) MOVER-Wilson Method 10.
+
+    FDR correction (BH by default; BY when ``fdr_method='by'`` for
+    arbitrary-dependence guarantees) is applied to the omnibus p-values.
+
+    Statistical caveats (for interpretation):
+      - Clustering is fit on the same votes — inference is exploratory.
+      - The pairwise Fisher p is a post-hoc check on the displayed gap,
+        not a simultaneous test. It is surfaced as ``p_value_gap``.
+      - The ``p_value`` field drives the FDR decision and is the omnibus
+        permutation statistic, which is pre-specified per statement.
 
     Returns:
-        List of (statement_id, controversy_score) tuples
+        List of dicts with keys:
+        statement_id, agree_rate, controversy_score, variance, group_gap,
+        gap_ci_low, gap_ci_high, wilson_low, wilson_high (aliases of the
+        gap CI for backward compat), max_agreement, min_agreement,
+        max_cluster_id, min_cluster_id, cluster_agreements, p_value
+        (omnibus), p_value_gap (pairwise Fisher), chi2, significant,
+        fdr_method.
     """
-    divisive_statements = []
+    candidates = []
+    pvals = []
+    user_labels_arr = np.asarray(user_labels)
+    if rng is None:
+        rng = np.random.default_rng(seed=42)
 
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
 
-        # Only count explicit agree/disagree (NaN won't match, so excluded automatically)
-        agree_votes = (statement_votes == 1).sum()
-        disagree_votes = (statement_votes == -1).sum()
-        total_votes = agree_votes + disagree_votes
+        # Per-cluster agreement with minimum-vote threshold.
+        per_cluster = [
+            row
+            for row in _per_cluster_agree_counts(statement_votes, vote_matrix.index, user_labels)
+            if row['n'] >= min_cluster_votes
+        ]
 
-        if total_votes < 5:  # Need enough votes
+        if len(per_cluster) < 2:
             continue
 
-        agree_rate = agree_votes / total_votes if total_votes > 0 else 0
+        rates = [c['agreement_rate'] for c in per_cluster]
+        max_c = max(per_cluster, key=lambda c: c['agreement_rate'])
+        min_c = min(per_cluster, key=lambda c: c['agreement_rate'])
+        gap = max_c['agreement_rate'] - min_c['agreement_rate']
+        if gap < min_group_gap:
+            continue
 
-        # Controversy score: 1 - |agree_rate - 0.5| * 2
-        # Peaks at 1.0 when agree_rate = 0.5 (50/50 split)
-        controversy = 1 - abs(agree_rate - 0.5) * 2
+        variance = float(np.var(rates))
+        # Legacy "controversy" (overall 50/50 split) retained for backward
+        # compatibility with existing CSV exports and old callers.
+        agree_votes = int((statement_votes == 1).sum())
+        disagree_votes = int((statement_votes == -1).sum())
+        total_votes = agree_votes + disagree_votes
+        agree_rate = (agree_votes / total_votes) if total_votes > 0 else 0.0
+        controversy = 1.0 - abs(agree_rate - 0.5) * 2.0
 
-        if controversy >= min_controversy:
-            divisive_statements.append({
-                'statement_id': statement_id,
-                'controversy_score': controversy,
-                'agree_rate': agree_rate
-            })
+        # Omnibus permutation p-value — the FDR-controlled test.
+        p_omnibus, chi2_obs, _k_obs = permutation_p_value_multi_cluster(
+            cluster_labels=user_labels_arr,
+            statement_votes=statement_votes,
+            n_permutations=n_permutations,
+            rng=rng,
+        )
+        # Pairwise Fisher on the extreme pair — a post-hoc check on the
+        # displayed gap, surfaced as a secondary signal.
+        p_pairwise = fisher_exact_greater(
+            max_c['agree'], max_c['disagree'],
+            min_c['agree'], min_c['disagree'],
+        )
 
-    logger.info(f"Found {len(divisive_statements)} divisive statements")
-    return divisive_statements
+        # Newcombe MOVER-Wilson CI for the gap (proper difference CI).
+        _, gap_lo, gap_hi = newcombe_diff_interval(
+            max_c['agree'], max_c['n'], min_c['agree'], min_c['n']
+        )
+        # Legacy fields (wilson_low/high) retained for existing template
+        # + CSV consumers; they now hold the Newcombe bounds so the
+        # numbers improve without anyone having to migrate field names.
+        wilson_low = float(max(0.0, gap_lo))
+        wilson_high = float(min(1.0, gap_hi))
+
+        candidates.append({
+            'statement_id': int(statement_id),
+            'agree_rate': float(agree_rate),
+            'controversy_score': float(controversy),
+            'variance': variance,
+            'group_gap': float(gap),
+            'gap_ci_low': wilson_low,
+            'gap_ci_high': wilson_high,
+            # Back-compat aliases for older template / CSV consumers.
+            'wilson_low': wilson_low,
+            'wilson_high': wilson_high,
+            'max_agreement': float(max_c['agreement_rate']),
+            'min_agreement': float(min_c['agreement_rate']),
+            'max_cluster_id': max_c['cluster_id'],
+            'min_cluster_id': min_c['cluster_id'],
+            'cluster_agreements': [c['agreement_rate'] for c in per_cluster],
+            'p_value': float(p_omnibus),
+            'p_value_gap': float(p_pairwise),
+            'chi2': float(chi2_obs),
+            'fdr_method': fdr_method,
+        })
+        pvals.append(p_omnibus)
+
+    # Apply FDR (BH or BY) across all candidates on the omnibus p-values.
+    if candidates:
+        sig_mask = fdr_mask(np.array(pvals), alpha=FDR_ALPHA, method=fdr_method)
+        for c, s in zip(candidates, sig_mask):
+            c['significant'] = bool(s)
+        # Rank significant divisive statements above non-significant,
+        # within each tier by gap lower bound (Newcombe) then omnibus p.
+        candidates.sort(
+            key=lambda c: (c['significant'], c['gap_ci_low'], -c['p_value']),
+            reverse=True,
+        )
+
+    logger.info(
+        "Divisive: %d candidate statements (%d FDR-significant at q=%.2f)",
+        len(candidates),
+        sum(1 for c in candidates if c.get('significant')),
+        FDR_ALPHA,
+    )
+    return candidates
 
 
-def identify_representative_statements(vote_matrix, user_labels, top_n=5):
+REPRESENTATIVE_DIRECTION_AGREE_THRESHOLD = 0.60
+REPRESENTATIVE_DIRECTION_REJECT_THRESHOLD = 0.40
+
+
+def _classify_direction(agreement_rate, disagree_rate=None):
     """
-    Identify the most representative statements for each opinion group.
+    Dead-zone ternary classification for representativeness.
 
-    Representative statements are those with high agreement within each group.
-    This makes opinion groups interpretable: "Group 1 believes [X, Y, Z]"
+    Near-even splits (40–60%) get 'mixed' rather than being forced into
+    'agree' or 'reject' — a 51/49 statement tells a reader nothing about
+    the group's defining beliefs.
 
-    This is inspired by pol.is's approach to characterizing opinion groups
-    and makes clustering results actionable for users.
+    When ``disagree_rate`` (strict: vote == -1) is provided, "reject" is
+    gated on actual strict disagreement rather than just "below the agree
+    threshold". A 100%-neutral statement has agreement_rate=0 but
+    disagree_rate=0 — that's *indifference*, not rejection, and should
+    render as 'mixed'.
+    """
+    if agreement_rate >= REPRESENTATIVE_DIRECTION_AGREE_THRESHOLD:
+        return 'agree'
+    if disagree_rate is not None:
+        if disagree_rate >= REPRESENTATIVE_DIRECTION_AGREE_THRESHOLD:
+            return 'reject'
+        return 'mixed'
+    # Back-compat fallback for callers that don't supply disagree_rate.
+    if agreement_rate <= REPRESENTATIVE_DIRECTION_REJECT_THRESHOLD:
+        return 'reject'
+    return 'mixed'
+
+
+def identify_representative_statements(vote_matrix, user_labels, top_n=5, fdr_method='bh'):
+    """
+    Identify representative statements for each opinion group.
+
+    A *representative* statement is one a group holds more firmly than the
+    rest of the participants — not merely one they hold strongly on its own.
+    We therefore score each (cluster, statement) pair by:
+
+      1. **Lift** (pol.is "repness"): P(agree | in-group) / P(agree | out-group)
+         — both for agreement and for rejection (symmetric). Lift > 1 means
+         the in-group's stance distinguishes them from everyone else.
+      2. **One-sided Fisher's exact test** on the 2×2 contingency table:
+         tests whether the in/out-group difference is larger than chance
+         given small cell counts. No normal-approximation assumption.
+      3. **FDR correction** (Benjamini–Hochberg by default, Benjamini–Yekutieli
+         when ``fdr_method='by'``) applied across ALL (cluster × statement)
+         tests in the analysis. Statements flagged `significant=True` survive
+         correction at q = 0.05.
+      4. **Wilson 95% CI** reported on the in-group agreement rate so the
+         template can render "67% (95% CI 41–86%)" rather than a bare
+         percentage.
+
+    The final ranking multiplies lift by the Wilson lower bound so noisy
+    small-sample extremes don't out-rank well-evidenced moderate signals.
 
     Args:
         vote_matrix: DataFrame with real votes (NaN for missing)
-        user_labels: Cluster assignments for each participant
-        top_n: Number of top statements to return per group (default 5)
+        user_labels: cluster assignments for each participant
+        top_n: number of statements to return per group
 
     Returns:
-        Dict mapping cluster_id -> list of representative statements
-        Each statement includes: statement_id, agreement_rate, vote_count, strength
+        Dict[int, List[dict]] — cluster_id → ranked list. Each dict carries
+        statement_id, agreement_rate, wilson_low, wilson_high, agree_count,
+        disagree_count, vote_count, out_agreement_rate, lift, p_value,
+        significant, direction ('agree'|'reject'|'mixed'), strength.
     """
     representatives = {}
+    pending = []  # collected per (cluster, statement) for global FDR
 
-    for cluster_id in np.unique(user_labels):
+    unique_clusters = np.unique(user_labels)
+    for cluster_id in unique_clusters:
         cluster_mask = user_labels == cluster_id
         cluster_indices = np.where(cluster_mask)[0]
+        out_indices = np.where(~cluster_mask)[0]
         cluster_votes = vote_matrix.iloc[cluster_indices]
+        out_votes = vote_matrix.iloc[out_indices] if out_indices.size > 0 else None
 
-        # Calculate agreement for each statement within this cluster.
-        # Minimum votes needed scales with group size: at least half the group
-        # must have voted on a statement, but never requiring more than 3.
-        # This ensures small groups (2-3 people) are not silently excluded.
         group_size = len(cluster_indices)
         min_votes_needed = max(1, min(3, (group_size + 1) // 2))
 
-        statement_scores = []
         for statement_id in cluster_votes.columns:
-            votes = cluster_votes[statement_id]
-            real_votes = votes.notna()
-            vote_count = real_votes.sum()
-
+            in_col = cluster_votes[statement_id]
+            in_real = in_col.notna()
+            vote_count = int(in_real.sum())
             if vote_count < min_votes_needed:
                 continue
 
-            # Calculate agreement rate (% who agree among those who voted)
-            agree_count = (votes == 1).sum()
+            agree_count = int((in_col == 1).sum())
+            disagree_count = vote_count - agree_count  # non-agree (includes neutral)
+            disagree_strict = int((in_col == -1).sum())
             agreement_rate = agree_count / vote_count
-            disagree_count = vote_count - agree_count
+            disagree_rate_strict = disagree_strict / vote_count
 
-            # Strength = how decisively opinionated this group is on this statement.
-            # Using |agreement_rate - 0.5| × 2 rather than plain agreement_rate means
-            # unanimous rejections rank as strongly as unanimous agreements — both tell
-            # us something important about what defines this group.
-            # Participation weight (capped at 1.0) down-weights statements where only
-            # a small fraction of the group voted, even if they agreed.
-            participation_weight = min(vote_count / len(cluster_votes), 1.0)
-            strength = abs(agreement_rate - 0.5) * 2.0 * participation_weight
+            # Out-of-group counts (may be empty for k=1 degenerate case).
+            if out_votes is not None:
+                out_col = out_votes[statement_id]
+                out_agree = int((out_col == 1).sum())
+                out_total = int(out_col.notna().sum())
+            else:
+                out_agree = 0
+                out_total = 0
+            out_rate = (out_agree / out_total) if out_total > 0 else 0.0
 
-            statement_scores.append({
+            # Symmetric lift: whichever direction is stronger for this group
+            # determines the test. +0.5 pseudo-count (Haldane) guards against
+            # zero-division while barely moving non-degenerate estimates.
+            eps = 0.5
+            lift_agree = ((agree_count + eps) / (vote_count + 2 * eps)) / (
+                (out_agree + eps) / (out_total + 2 * eps) if out_total > 0 else 0.5
+            )
+            lift_reject = ((disagree_count + eps) / (vote_count + 2 * eps)) / (
+                ((out_total - out_agree) + eps) / (out_total + 2 * eps) if out_total > 0 else 0.5
+            )
+
+            if lift_reject > lift_agree:
+                # Test: in-group disagrees more than out-group.
+                p_value = fisher_exact_greater(
+                    disagree_count, agree_count,
+                    out_total - out_agree, out_agree,
+                )
+                lift = float(lift_reject)
+                tested_direction = 'reject'
+            else:
+                p_value = fisher_exact_greater(
+                    agree_count, disagree_count,
+                    out_agree, out_total - out_agree,
+                )
+                lift = float(lift_agree)
+                tested_direction = 'agree'
+
+            _, wilson_low, wilson_high = wilson_interval(agree_count, vote_count)
+
+            # Rank by lift × Wilson lower bound of the *tested* direction so
+            # that well-evidenced differences outrank noisy small-sample ones.
+            if tested_direction == 'reject':
+                _, reject_low, _ = wilson_interval(disagree_count, vote_count)
+                ranking_evidence = reject_low
+            else:
+                ranking_evidence = wilson_low
+            strength = float(lift * ranking_evidence)
+
+            entry = {
                 'statement_id': int(statement_id),
                 'agreement_rate': float(agreement_rate),
-                'vote_count': int(vote_count),
-                'agree_count': int(agree_count),
-                'disagree_count': int(disagree_count),
-                'direction': 'agree' if agreement_rate >= 0.5 else 'reject',
-                'strength': float(strength),
-            })
+                'disagree_rate': float(disagree_rate_strict),
+                'wilson_low': float(wilson_low),
+                'wilson_high': float(wilson_high),
+                'vote_count': vote_count,
+                'agree_count': agree_count,
+                'disagree_count': disagree_count,  # non-agree (backwards compat)
+                'disagree_strict_count': disagree_strict,
+                'out_agreement_rate': float(out_rate),
+                'out_vote_count': out_total,
+                'lift': lift,
+                'p_value': float(p_value),
+                'direction': _classify_direction(agreement_rate, disagree_rate_strict),
+                'tested_direction': tested_direction,
+                'strength': strength,
+            }
+            pending.append((int(cluster_id), entry))
 
-        # Sort by strength (agreement weighted by participation)
-        statement_scores.sort(key=lambda x: x['strength'], reverse=True)
+    # Global FDR correction across the whole (cluster × statement) surface.
+    if pending:
+        pvals = np.array([e['p_value'] for _, e in pending], dtype=np.float64)
+        sig_mask = fdr_mask(pvals, alpha=FDR_ALPHA, method=fdr_method)
+        for (cid, entry), is_sig in zip(pending, sig_mask):
+            entry['significant'] = bool(is_sig)
+            representatives.setdefault(cid, []).append(entry)
 
-        # Take top N
-        representatives[int(cluster_id)] = statement_scores[:top_n]
+    for cid in list(representatives.keys()):
+        representatives[cid].sort(
+            key=lambda x: (x['significant'], x['strength']),
+            reverse=True,
+        )
+        representatives[cid] = representatives[cid][:top_n]
 
-    logger.info(f"Identified {sum(len(v) for v in representatives.values())} representative statements across {len(representatives)} groups")
+    # Fill empty clusters so downstream code can still iterate all of them.
+    for cluster_id in unique_clusters:
+        representatives.setdefault(int(cluster_id), [])
 
+    total = sum(len(v) for v in representatives.values())
+    sig_total = sum(1 for v in representatives.values() for e in v if e.get('significant'))
+    logger.info(
+        "Representativeness: %d statements across %d groups (%d FDR-significant at q=%.2f)",
+        total, len(representatives), sig_total, FDR_ALPHA,
+    )
     return representatives
 
 
@@ -1068,6 +1789,77 @@ def _adjusted_rand_index(labels_a, labels_b):
     return float((sum_nij - expected) / denom)
 
 
+def _pca_axis_loadings(pca, statement_ids, top_n=3):
+    """
+    Identify the statements that most strongly define PC1 and PC2.
+
+    For each component, return the top_n statements with the largest
+    positive loading and the top_n with the largest negative loading, so
+    the UI can annotate axes with "← Agrees: 'X' │ Agrees: 'Y' →" rather
+    than a bare "Principal Component 1".
+    """
+    components = getattr(pca, 'components_', None)
+    if components is None or len(statement_ids) == 0:
+        return {}
+    out = {}
+    for axis_idx, axis_name in enumerate(('pc1', 'pc2')):
+        if axis_idx >= components.shape[0]:
+            break
+        loadings = components[axis_idx]
+        order = np.argsort(loadings)
+        positive_ids = [int(statement_ids[i]) for i in order[::-1][:top_n]]
+        negative_ids = [int(statement_ids[i]) for i in order[:top_n]]
+        out[axis_name] = {
+            'positive_statement_ids': positive_ids,
+            'negative_statement_ids': negative_ids,
+            'positive_loadings': [float(loadings[i]) for i in order[::-1][:top_n]],
+            'negative_loadings': [float(loadings[i]) for i in order[:top_n]],
+        }
+    return out
+
+
+def _resolve_fdr_method():
+    """Read `CONSENSUS_FDR_METHOD` from Flask config if an app context is
+    available; fall back to 'bh'. Kept in one place so the engine and the
+    methodology UI never drift on which FDR procedure was actually used."""
+    try:
+        from flask import current_app
+        return str(current_app.config.get('CONSENSUS_FDR_METHOD', 'bh') or 'bh').lower()
+    except Exception:
+        return 'bh'
+
+
+def _resolve_k_selection_method():
+    """
+    Read `CONSENSUS_K_SELECTION_METHOD` from Flask config. 'silhouette'
+    (default, fast) or 'stability' (Monti-style). Kept with the other
+    resolvers so the engine and methodology UI can't drift.
+    """
+    try:
+        from flask import current_app
+        return str(current_app.config.get('CONSENSUS_K_SELECTION_METHOD', 'silhouette') or 'silhouette').lower()
+    except Exception:
+        return 'silhouette'
+
+
+def _resolve_permutation_budget():
+    """Permutation budget for the divisive omnibus χ² (default 1000)."""
+    try:
+        from flask import current_app
+        return int(current_app.config.get('CONSENSUS_PERMUTATION_BUDGET', 1000) or 1000)
+    except Exception:
+        return 1000
+
+
+def _resolve_stability_bootstraps():
+    """Bootstrap count used by stability-based k selection (default 20)."""
+    try:
+        from flask import current_app
+        return int(current_app.config.get('CONSENSUS_K_STABILITY_BOOTSTRAPS', 20) or 20)
+    except Exception:
+        return 20
+
+
 def _build_analysis_payload(user_ids, statement_ids, vote_matrix_filled, vote_matrix_real, method='agglomerative', random_state=42):
     """
     Shared analysis pipeline used by full-matrix and oversize modes.
@@ -1075,9 +1867,23 @@ def _build_analysis_payload(user_ids, statement_ids, vote_matrix_filled, vote_ma
     if vote_matrix_filled is None or len(user_ids) == 0:
         return None, None, None, None
 
+    fdr_method = _resolve_fdr_method()
+    k_selection_method = _resolve_k_selection_method()
+    permutation_budget = _resolve_permutation_budget()
+    stability_bootstraps = _resolve_stability_bootstraps()
+
     vote_matrix_pca, pca = perform_pca(vote_matrix_filled)
     vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
-    user_labels, silhouette = cluster_users(vote_matrix_pca_scaled, method=method, random_state=random_state)
+    user_labels, silhouette = cluster_users(
+        vote_matrix_pca_scaled,
+        method=method,
+        random_state=random_state,
+        selection_method=k_selection_method,
+        stability_bootstraps=stability_bootstraps,
+    )
+    # Capture the per-k diagnostic metrics cluster_users stashed on itself
+    # so we can expose them (transparency: reviewers can see why this k).
+    k_selection_metrics = list(cluster_users.last_metrics or [])
 
     cluster_assignments = {
         user_id: int(label)
@@ -1090,8 +1896,16 @@ def _build_analysis_payload(user_ids, statement_ids, vote_matrix_filled, vote_ma
 
     consensus_stmts = identify_consensus_statements(vote_matrix_real, user_labels)
     bridge_stmts = identify_bridge_statements(vote_matrix_real, user_labels)
-    divisive_stmts = identify_divisive_statements(vote_matrix_real, user_labels)
-    representative_stmts = identify_representative_statements(vote_matrix_real, user_labels)
+    divisive_stmts = identify_divisive_statements(
+        vote_matrix_real,
+        user_labels,
+        fdr_method=fdr_method,
+        n_permutations=permutation_budget,
+    )
+    representative_stmts = identify_representative_statements(
+        vote_matrix_real, user_labels, fdr_method=fdr_method
+    )
+    axis_loadings = _pca_axis_loadings(pca, statement_ids)
 
     results = {
         'cluster_assignments': cluster_assignments,
@@ -1100,6 +1914,11 @@ def _build_analysis_payload(user_ids, statement_ids, vote_matrix_filled, vote_ma
         'bridge_statements': bridge_stmts,
         'divisive_statements': divisive_stmts,
         'representative_statements': representative_stmts,
+        'pca_axis_loadings': axis_loadings,
+        'k_selection': {
+            'method': k_selection_method,
+            'per_k_metrics': k_selection_metrics,
+        },
         'metadata': {
             'num_clusters': int(len(np.unique(user_labels))),
             'silhouette_score': float(silhouette),
@@ -1108,12 +1927,22 @@ def _build_analysis_payload(user_ids, statement_ids, vote_matrix_filled, vote_ma
             'statements_count': len(statement_ids),
             'analyzed_at': utcnow_naive().isoformat(),
             'explained_variance': pca.explained_variance_ratio_.tolist(),
+            # Statistical methodology surfaced alongside results so that
+            # downstream audits and academic reviewers can see exactly how
+            # we produced the reported numbers.
+            'wilson_z': WILSON_Z,
+            'fdr_alpha': FDR_ALPHA,
+            'fdr_method': fdr_method,
+            'k_selection_method': k_selection_method,
+            'permutation_budget': permutation_budget,
+            'direction_agree_threshold': REPRESENTATIVE_DIRECTION_AGREE_THRESHOLD,
+            'direction_reject_threshold': REPRESENTATIVE_DIRECTION_REJECT_THRESHOLD,
         },
     }
     return results, vote_matrix_pca_scaled, pca, user_labels
 
 
-def _compute_oversize_stability_metrics(
+def _compute_stability_metrics(
     vote_matrix_filled,
     vote_matrix_real,
     baseline_labels,
@@ -1126,6 +1955,10 @@ def _compute_oversize_stability_metrics(
 ):
     """
     Compute cluster and statement stability across repeated seeded runs.
+
+    Used for BOTH full-matrix and oversize analyses so every published
+    result carries a reproducibility signal. See Monti et al. (2003) for
+    the consensus-clustering motivation.
     """
     runs = max(1, int(run_count))
     if runs <= 1:
@@ -1152,11 +1985,14 @@ def _compute_oversize_stability_metrics(
     bridge_jaccards = []
     divisive_jaccards = []
 
+    # PCA + sparsity scaling are deterministic on the same inputs — compute
+    # once per stability call, not once per re-seeded clustering run.
+    vote_matrix_pca, _ = perform_pca(vote_matrix_filled)
+    vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
+
     fixed_k = int(len(np.unique(baseline_labels)))
     for run_idx in range(1, runs):
         seed = int(base_seed + run_idx)
-        vote_matrix_pca, _ = perform_pca(vote_matrix_filled)
-        vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
         labels, _ = cluster_users(
             vote_matrix_pca_scaled,
             n_clusters=fixed_k,
@@ -1191,19 +2027,15 @@ def _compute_oversize_stability_metrics(
 
 def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     """
-    Main function to run complete consensus analysis on a discussion
+    Main function to run complete consensus analysis on a discussion.
 
-    Returns:
-        Dictionary with:
-        - cluster_assignments: user_id -> cluster_id mapping
-        - pca_coordinates: user_id -> (x, y) coordinates
-        - consensus_statements: list of consensus statement details
-        - bridge_statements: list of bridge statement details
-        - divisive_statements: list of divisive statement details
-        - representative_statements: dict of cluster_id -> top statements that group agrees on
-        - metadata: clustering metadata (n_clusters, silhouette_score, etc.)
+    Always attaches stability metrics (ARI + per-category Jaccard) computed
+    over re-seeded repeated runs. The publishability gate in the view
+    layer consults these to decide whether a noisy cluster structure
+    should be withheld from end users.
     """
-    # Check if ready and select execution plan.
+    from flask import current_app
+
     plan = get_consensus_execution_plan(discussion_id, db)
     if not plan['is_ready']:
         logger.warning(f"Cannot cluster discussion {discussion_id}: {plan['message']}")
@@ -1213,7 +2045,7 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
             f"Running oversize consensus fallback for discussion {discussion_id}: {plan['message']}"
         )
         return build_oversize_consensus_results(discussion_id, db, plan)
-    
+
     vote_matrix_filled, vote_matrix_real, user_ids, statement_ids = build_vote_matrix(discussion_id, db)
     results, _, _, user_labels = _build_analysis_payload(
         user_ids=user_ids,
@@ -1225,7 +2057,26 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     )
     if results is None:
         return None
-    
+
+    stability_runs = int(
+        current_app.config.get('CONSENSUS_FULL_MATRIX_STABILITY_RUNS', 3)
+    )
+    stability_metrics = _compute_stability_metrics(
+        vote_matrix_filled=vote_matrix_filled,
+        vote_matrix_real=vote_matrix_real,
+        baseline_labels=user_labels,
+        baseline_consensus=results['consensus_statements'],
+        baseline_bridge=results['bridge_statements'],
+        baseline_divisive=results['divisive_statements'],
+        method=method,
+        base_seed=int(discussion_id),
+        run_count=stability_runs,
+    )
+    results['metadata'].update(stability_metrics)
+    results['metadata']['publication_min_stability_mean_ari'] = float(
+        current_app.config.get('CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI', 0.20)
+    )
+
     logger.info(f"Consensus analysis complete for discussion {discussion_id}")
     logger.info(f"  - {len(user_ids)} users in {len(np.unique(user_labels))} clusters")
     logger.info(
@@ -1237,6 +2088,11 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     logger.info(
         "  - %s representative statements identified",
         sum(len(v) for v in results['representative_statements'].values()),
+    )
+    logger.info(
+        "  - stability mean ARI=%.3f across %d runs",
+        stability_metrics.get('stability_mean_ari', 1.0),
+        stability_metrics.get('stability_runs', 1),
     )
 
     return results

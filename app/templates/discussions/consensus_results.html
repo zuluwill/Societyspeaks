@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 max-w-7xl">
   {% set _cs_total = (consensus_statements|length if consensus_statements else 0) + (bridge_statements|length if bridge_statements else 0) + (divisive_statements|length if divisive_statements else 0) %}
   {% set _any_untranslated = _cs_total > 0 and translation_map|length < _cs_total %}
   {% if current_lang != 'en' and (not discussion_translation or _any_untranslated) %}
@@ -27,52 +27,82 @@
     <p class="text-gray-600">{{ disc_title }}</p>
   </div>
 
+  {% set analysis_meta = analysis.cluster_data.get('metadata', {}) %}
+  {% set _sil = analysis.silhouette_score or 0 %}
+  {% if _sil >= 0.5 %}
+    {% set _sil_label = _('Strong separation') %}
+    {% set _sil_class = 'text-green-600' %}
+  {% elif _sil >= 0.3 %}
+    {% set _sil_label = _('Moderate separation') %}
+    {% set _sil_class = 'text-yellow-600' %}
+  {% else %}
+    {% set _sil_label = _('Weak separation — opinions overlap heavily') %}
+    {% set _sil_class = 'text-red-600' %}
+  {% endif %}
+  {% set _stab_ari = analysis_meta.get('stability_mean_ari') %}
+
   <!-- Analysis Metadata -->
-  <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div>
-        <div class="text-gray-600 text-sm">{{ _('Opinion Groups') }}</div>
-        <div class="text-3xl font-bold text-primary-600">
+        <div class="text-gray-600 text-xs sm:text-sm">{{ _('Opinion Groups') }}</div>
+        <div class="text-2xl sm:text-3xl font-bold text-primary-600 tabular-nums">
           {{ analysis.num_clusters }}
         </div>
       </div>
       <div>
-        <div class="text-gray-600 text-sm">{{ _('Participants') }}</div>
-        <div class="text-3xl font-bold">{{ analysis.participants_count }}</div>
+        <div class="text-gray-600 text-xs sm:text-sm">{{ _('Participants') }}</div>
+        <div class="text-2xl sm:text-3xl font-bold tabular-nums">{{ analysis.participants_count }}</div>
       </div>
       <div>
-        <div class="text-gray-600 text-sm">{{ _('Statements') }}</div>
-        <div class="text-3xl font-bold">{{ analysis.statements_count }}</div>
+        <div class="text-gray-600 text-xs sm:text-sm">{{ _('Statements') }}</div>
+        <div class="text-2xl sm:text-3xl font-bold tabular-nums">{{ analysis.statements_count }}</div>
       </div>
       <div>
-        {% set analysis_meta = analysis.cluster_data.get('metadata', {}) %}
-        <div class="text-gray-600 text-sm">
+        <div class="text-gray-600 text-xs sm:text-sm">
           {% if analysis_meta.get('oversize_mode') %}
-          Sampled Cluster Quality
+            {{ _('Cluster Quality (sampled)') }}
           {% else %}
-          Cluster Quality
+            {{ _('Cluster Quality') }}
           {% endif %}
         </div>
-        <div
-          class="text-3xl font-bold {% if analysis.silhouette_score > 0.5 %}text-green-600{% elif analysis.silhouette_score > 0.3 %}text-yellow-600{% else %}text-red-600{% endif %}"
-        >
-          {{ "%.2f"|format(analysis.silhouette_score) }}
+        <div class="text-2xl sm:text-3xl font-bold tabular-nums {{ _sil_class }}">
+          {{ "%.2f"|format(_sil) }}
         </div>
-        <div class="text-xs text-gray-500">
-          {% if analysis_meta.get('oversize_mode') %}
-          Silhouette (sampled participants)
-          {% else %}
-          Silhouette Score
+        <div class="text-xs text-gray-500 break-words">
+          {{ _sil_label }}
+          {% if _stab_ari is not none %}
+            · {{ _('Stability ARI %(v).2f', v=_stab_ari) }}
           {% endif %}
         </div>
       </div>
     </div>
-    <div class="mt-4 text-sm text-gray-500">
-      Analyzed: {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+    <div class="mt-4 text-xs sm:text-sm text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
+      <span>{{ _('Analysed:') }} {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+      {% if analysis_meta.get('stability_runs') %}
+        <span title="{{ _('Re-seeded clustering runs used to measure reproducibility (Monti et al. 2003).') }}">
+          {{ _('Reproducibility runs:') }} {{ analysis_meta.get('stability_runs') }}
+        </span>
+      {% endif %}
+      {% set _k_method = analysis_meta.get('k_selection_method') %}
+      {% if _k_method == 'stability' %}
+        <span title="{{ _('Cluster count chosen by bootstrap stability (silhouette × mean-ARI), not silhouette alone.') }}">
+          {{ _('k selection: stability') }}
+        </span>
+      {% endif %}
+      <span title="{{ _('All reported percentages use Wilson 95%% score intervals; representativeness is FDR-controlled at q=0.05.') }}">
+        {{ _('95%% CIs · FDR q=0.05 (%(m)s)', m=analysis_meta.get('fdr_method', 'bh')|upper) }}
+      </span>
     </div>
   </div>
 
-  {% set analysis_meta = analysis.cluster_data.get('metadata', {}) %}
+  {% if is_stale_analysis %}
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm text-blue-900">
+    <strong class="font-semibold">{{ _('Newer votes are in.') }}</strong>
+    {{ _('This analysis covered %(analysed)d statements; %(current)d are live now. Ask the discussion owner to re-run to refresh the picture.', analysed=analysed_stmt_count, current=current_stmt_count) }}
+  </div>
+  {% endif %}
+
   {% if analysis_meta.get('oversize_mode') %}
   <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
     <h3 class="text-sm font-semibold text-amber-900 mb-1">Approximate Large-Scale Analysis</h3>
@@ -151,30 +181,170 @@
   {% endif %} {% endif %}
 
   <!-- Cluster Visualization -->
-  <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Opinion Groups Visualization</h2>
-    <div class="bg-gray-50 rounded-lg p-4">
-      <canvas id="clusterChart" width="800" height="500"></canvas>
+  <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">{{ _('Opinion Groups Visualization') }}</h2>
+
+    {# PCA axis annotations — top-loading statements define what each axis
+       actually represents. Far more interpretable than "PC1 / PC2". #}
+    {% if axis_loadings %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600 mb-4">
+      {% for axis_key, axis_name in [('pc1', _('Horizontal axis')), ('pc2', _('Vertical axis'))] %}
+        {% set axis = axis_loadings.get(axis_key) %}
+        {% if axis %}
+        <div class="bg-gray-50 rounded p-3 border border-gray-200">
+          <div class="font-semibold text-gray-700 mb-1">{{ axis_name }}</div>
+          {% set neg_ids = axis.negative_statement_ids or [] %}
+          {% set pos_ids = axis.positive_statement_ids or [] %}
+          {% if neg_ids %}
+          <div>← {{ _('Agrees strongly with:') }}
+            {% for sid in neg_ids[:2] %}{% set entry = axis_loading_map.get(sid) %}{% if entry %}
+              <em>"{{ entry.short }}"</em>{% if not loop.last %}; {% endif %}
+            {% endif %}{% endfor %}
+          </div>
+          {% endif %}
+          {% if pos_ids %}
+          <div>→ {{ _('Agrees strongly with:') }}
+            {% for sid in pos_ids[:2] %}{% set entry = axis_loading_map.get(sid) %}{% if entry %}
+              <em>"{{ entry.short }}"</em>{% if not loop.last %}; {% endif %}
+            {% endif %}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
     </div>
+    {% endif %}
+
+    {# Responsive canvas: width/height attributes control the intrinsic
+       aspect ratio; CSS scales the rendered size to the container. Chart.js
+       with maintainAspectRatio:true preserves the 8:5 ratio across
+       viewports, so the chart is readable on 320px phones through 4k.
+    #}
+    <div class="bg-gray-50 rounded-lg p-2 sm:p-4">
+      <div class="relative w-full" style="aspect-ratio: 8 / 5;">
+        <canvas id="clusterChart"
+                width="800" height="500"
+                class="!w-full !h-full"
+                role="img"
+                aria-label="{{ _('Scatter plot of %(n)d participants coloured by %(k)d opinion groups. An accessible table follows below.', n=analysis.participants_count, k=analysis.num_clusters) }}"></canvas>
+      </div>
+    </div>
+
     <div class="mt-4 text-sm text-gray-600">
-      <p class="mb-2"><strong>How to read this chart:</strong></p>
+      <p class="mb-2"><strong>{{ _('How to read this chart:') }}</strong></p>
       <ul class="list-disc list-inside space-y-1">
-        <li>Each dot represents a participant</li>
-        <li>Colors show different opinion groups</li>
-        <li>Closer dots = more similar voting patterns</li>
-        <li>Hover over dots to see participant details</li>
+        <li>{{ _('Each dot represents a participant.') }}</li>
+        <li>{{ _('Colours show different opinion groups.') }}</li>
+        <li>{{ _('Closer dots = more similar voting patterns.') }}</li>
+        {% if viewer_participant_key %}
+        <li>{{ _('The larger ringed dot is you.') }}</li>
+        {% endif %}
       </ul>
     </div>
+
+    {# Accessibility fallback — same information the scatter plot carries,
+       in table form so screen readers and keyboard users can read it.
+       Wrapped in overflow-x-auto so it scrolls gracefully on narrow
+       viewports instead of forcing horizontal page scroll. #}
+    <details class="mt-4 text-sm">
+      <summary class="cursor-pointer text-gray-600 hover:text-primary-600">{{ _('View as accessible table') }}</summary>
+      <div class="overflow-x-auto mt-2 -mx-2 sm:mx-0">
+        <table class="min-w-[640px] sm:min-w-full text-xs border-collapse">
+          <thead>
+            <tr class="bg-gray-100 text-left">
+              <th scope="col" class="px-2 py-1 border">{{ _('Group') }}</th>
+              <th scope="col" class="px-2 py-1 border">{{ _('Participants') }}</th>
+              <th scope="col" class="px-2 py-1 border">{{ _('Representative agreement') }}</th>
+              <th scope="col" class="px-2 py-1 border">{{ _('Representative rejection') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for group in opinion_groups %}
+            <tr>
+              <th scope="row" class="px-2 py-1 border font-medium text-left">{{ group.name }}</th>
+              <td class="px-2 py-1 border">{{ group.participant_count }}</td>
+              <td class="px-2 py-1 border">
+                {% for s in group.agree_statements[:2] %}
+                  {{ (translation_map.get(s.statement_id) or s.content)|truncate(70) }}
+                  ({{ "%.0f"|format(s.agreement_rate * 100) }}%){% if not loop.last %}; {% endif %}
+                {% else %}—{% endfor %}
+              </td>
+              <td class="px-2 py-1 border">
+                {% for s in group.reject_statements[:2] %}
+                  {{ (translation_map.get(s.statement_id) or s.content)|truncate(70) }}
+                  ({{ "%.0f"|format((1-s.agreement_rate) * 100) }}%){% if not loop.last %}; {% endif %}
+                {% else %}—{% endfor %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
   </div>
+
+  {#-
+      Reusable macro: render a representative-statement card with Wilson CI,
+      lift vs out-group, and an FDR-significance badge. `tone` controls the
+      colour palette — 'agree' (green), 'reject' (red), 'mixed' (amber).
+  -#}
+  {% macro rep_stmt_card(stmt, tone) -%}
+    {% if tone == 'agree' %}
+      {% set border = 'border-green-200' %}{% set badge = 'bg-green-100 text-green-800' %}
+      {% set pct = (stmt.agreement_rate or 0) * 100 %}
+    {% elif tone == 'reject' %}
+      {% set border = 'border-red-200' %}{% set badge = 'bg-red-100 text-red-800' %}
+      {% set pct = (1 - (stmt.agreement_rate or 0)) * 100 %}
+    {% else %}
+      {% set border = 'border-amber-200' %}{% set badge = 'bg-amber-100 text-amber-800' %}
+      {% set pct = (stmt.agreement_rate or 0) * 100 %}
+    {% endif %}
+    <li class="bg-white rounded-lg p-3 border {{ border }}">
+      <div class="text-gray-900 text-sm mb-2">{{ (translation_map.get(stmt.statement_id) or stmt.content) | e }}</div>
+      <div class="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
+        <span class="{{ badge }} px-2 py-0.5 rounded font-medium">
+          {{ "%.0f"|format(pct) }}%
+          {% if tone == 'reject' %}{{ _('disagree') }}{% else %}{{ _('agree') }}{% endif %}
+        </span>
+        {% if stmt.wilson_low is not none and stmt.wilson_high is not none %}
+          {% if tone == 'reject' %}
+            {% set lo = (1 - stmt.wilson_high) * 100 %}
+            {% set hi = (1 - stmt.wilson_low) * 100 %}
+          {% else %}
+            {% set lo = stmt.wilson_low * 100 %}
+            {% set hi = stmt.wilson_high * 100 %}
+          {% endif %}
+          <span class="text-gray-500" title="{{ _('Wilson 95%% score interval on the in-group agreement rate.') }}">
+            95% CI {{ "%.0f"|format(lo) }}–{{ "%.0f"|format(hi) }}%
+          </span>
+        {% endif %}
+        {% if stmt.lift and stmt.lift > 1.1 %}
+          <span class="text-purple-700" title="{{ _('How much more this group takes this position than everyone else (in-group rate ÷ out-group rate).') }}">
+            {{ _('%(x).1fx vs others', x=stmt.lift) }}
+          </span>
+        {% endif %}
+        {% if stmt.significant %}
+          <span class="inline-flex items-center gap-1 text-emerald-700 font-medium" title="{{ _('Survives Benjamini–Hochberg FDR correction at q=0.05 across all cluster×statement tests.') }}">
+            ✓ {{ _('FDR-significant') }}
+          </span>
+        {% elif stmt.p_value is not none %}
+          <span class="text-gray-400" title="{{ _('Below FDR threshold — treat as suggestive, not confirmed.') }}">
+            p={{ "%.3f"|format(stmt.p_value) }}
+          </span>
+        {% endif %}
+        <span class="text-gray-400">· {{ stmt.agree_count }}/{{ stmt.vote_count }} {{ _('voted in group') }}</span>
+      </div>
+    </li>
+  {%- endmacro %}
 
   <!-- Opinion Groups - What Each Group Believes -->
   {% if opinion_groups %}
-  <div class="bg-white rounded-lg shadow p-6 mb-6">
+  <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
     <h2 class="text-xl font-semibold mb-4">{{ _('What Each Group Believes') }}</h2>
-    <p class="text-gray-600 mb-4">
-      {{ _('The statements that most clearly define each opinion group — both what they strongly support and what they strongly oppose. Re-running analysis as more people vote will refine these results.') }}
+    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+      {{ _('Statements that distinguish each group from the rest — ranked by lift (in-group agreement ÷ out-group agreement) and confirmed with a Fisher’s exact test, FDR-controlled at q=0.05. Re-running as more people vote sharpens these results.') }}
     </p>
-    <div class="grid grid-cols-1 {% if opinion_groups|length > 1 %}lg:grid-cols-2{% endif %} gap-6">
+    <div class="grid grid-cols-1 {% if opinion_groups|length > 1 %}lg:grid-cols-2{% endif %} gap-4 sm:gap-6">
       {% for group in opinion_groups %}
       <div class="border rounded-lg overflow-hidden">
 
@@ -186,6 +356,11 @@
               {% if group.small_sample %}
               <span class="bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded text-xs font-medium" title="{{ _('Small sample — treat percentages as indicative, not statistically conclusive') }}">
                 ⚠ {{ _('Small sample') }}
+              </span>
+              {% endif %}
+              {% if not group.too_few_votes and not group.has_significant_signal %}
+              <span class="bg-white/20 text-white px-2 py-0.5 rounded text-xs font-medium" title="{{ _('No representative statements survived FDR correction yet — more votes will help.') }}">
+                {{ _('Suggestive only') }}
               </span>
               {% endif %}
               <span class="{% if group.too_few_votes %}bg-gray-500{% else %}bg-blue-500{% endif %} px-2 py-1 rounded text-sm">
@@ -214,48 +389,31 @@
         {% else %}
         <div class="p-4 bg-gray-50 space-y-4">
 
-          {# Statements this group agrees with #}
           {% if group.agree_statements %}
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-green-700 mb-2">✓ {{ _('This group agrees with') }}</p>
             <ul class="space-y-2">
-              {% for stmt in group.agree_statements %}
-              <li class="bg-white rounded-lg p-3 border border-green-200">
-                <div class="text-gray-900 text-sm mb-2">{{ (translation_map.get(stmt.statement_id) or stmt.content) | e }}</div>
-                <div class="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-                  <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded font-medium">
-                    {{ "%.0f"|format(stmt.agreement_rate * 100) }}{{ _('%% agree') }}
-                  </span>
-                  <span class="text-green-700">{{ stmt.agree_count }} {{ _('agree') }}</span>
-                  {% if stmt.disagree_count %}
-                  <span class="text-red-500">{{ stmt.disagree_count }} {{ _('disagree') }}</span>
-                  {% endif %}
-                </div>
-              </li>
-              {% endfor %}
+              {% for stmt in group.agree_statements %}{{ rep_stmt_card(stmt, 'agree') }}{% endfor %}
             </ul>
           </div>
           {% endif %}
 
-          {# Statements this group rejects #}
           {% if group.reject_statements %}
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-red-600 mb-2">✗ {{ _('This group rejects') }}</p>
             <ul class="space-y-2">
-              {% for stmt in group.reject_statements %}
-              <li class="bg-white rounded-lg p-3 border border-red-200">
-                <div class="text-gray-900 text-sm mb-2">{{ (translation_map.get(stmt.statement_id) or stmt.content) | e }}</div>
-                <div class="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-                  <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded font-medium">
-                    {{ "%.0f"|format((1 - stmt.agreement_rate) * 100) }}{{ _('%% disagree') }}
-                  </span>
-                  <span class="text-red-600">{{ stmt.disagree_count }} {{ _('disagree') }}</span>
-                  {% if stmt.agree_count %}
-                  <span class="text-green-600">{{ stmt.agree_count }} {{ _('agree') }}</span>
-                  {% endif %}
-                </div>
-              </li>
-              {% endfor %}
+              {% for stmt in group.reject_statements %}{{ rep_stmt_card(stmt, 'reject') }}{% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          {% if group.mixed_statements %}
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-2" title="{{ _('Near-even splits (40–60%%). Surfaced so you can see where the group is genuinely conflicted.') }}">
+              ~ {{ _('Group is split on') }}
+            </p>
+            <ul class="space-y-2">
+              {% for stmt in group.mixed_statements %}{{ rep_stmt_card(stmt, 'mixed') }}{% endfor %}
             </ul>
           </div>
           {% endif %}
@@ -270,23 +428,27 @@
 
   <!-- Consensus Statements -->
   {% if consensus_statements %}
-  <div class="bg-green-50 rounded-lg shadow p-6 mb-6 border border-green-200">
+  <div class="bg-green-50 rounded-lg shadow p-4 sm:p-6 mb-6 border border-green-200">
     <h2 class="text-xl font-semibold text-green-900 mb-4">
       🟢 {{ _('Areas of Consensus') }} ({{ consensus_statements|length }})
     </h2>
     <p class="text-green-800 mb-4">
-      {{ _('These statements have broad agreement across all opinion groups.') }}
+      {{ _('Statements where the Wilson lower bound on overall agreement clears 70%%, AND every opinion group’s own lower bound clears 60%%. Small-sample noise cannot qualify.') }}
     </p>
     {% for statement in consensus_statements %}
+      {% set cdata = consensus_data_by_id.get(statement.id, {}) %}
     <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-green-500">
       <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
-      <div class="text-sm text-gray-600">
-        {{ statement.vote_count_agree }} {{ _('agree') }} · {{
-        statement.vote_count_disagree }} {{ _('disagree') }} · {{
-        statement.vote_count_unsure }} {{ _('unsure') }}
-        <span class="ml-3 text-green-700 font-semibold"
-          >{{ "%.0f"|format(statement.agreement_rate * 100) }}% {{ _('agreement') }}</span
-        >
+      <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
+        <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
+        {% if cdata.agreement_rate %}
+        <span class="text-green-700 font-semibold">{{ "%.0f"|format(cdata.agreement_rate * 100) }}% {{ _('agreement') }}</span>
+        {% endif %}
+        {% if cdata.wilson_low is not none and cdata.wilson_high is not none %}
+        <span class="text-gray-500" title="{{ _('Wilson 95%% score interval.') }}">
+          95% CI {{ "%.0f"|format(cdata.wilson_low * 100) }}–{{ "%.0f"|format(cdata.wilson_high * 100) }}%
+        </span>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
@@ -295,20 +457,33 @@
 
   <!-- Bridge Statements -->
   {% if bridge_statements %}
-  <div class="bg-yellow-50 rounded-lg shadow p-6 mb-6 border border-yellow-200">
+  <div class="bg-yellow-50 rounded-lg shadow p-4 sm:p-6 mb-6 border border-yellow-200">
     <h2 class="text-xl font-semibold text-yellow-900 mb-4">
       🟡 {{ _('Bridge Statements') }} ({{ bridge_statements|length }})
     </h2>
     <p class="text-yellow-800 mb-4">
-      {{ _('These statements unite different opinion groups and offer common ground.') }}
+      {{ _('Statements where every group lands on the same side (either all agree or all disagree) with low between-group variance. Shared rejection counts as common ground too.') }}
     </p>
     {% for statement in bridge_statements %}
-    <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-yellow-500">
-      <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
-      <div class="text-sm text-gray-600">
-        {{ statement.vote_count_agree }} {{ _('agree') }} · {{
-        statement.vote_count_disagree }} {{ _('disagree') }} · {{
-        statement.vote_count_unsure }} {{ _('unsure') }}
+      {% set bdata = bridge_data_by_id.get(statement.id, {}) %}
+      {% set polarity = bdata.polarity or 'agree' %}
+    <div class="bg-white rounded-lg p-4 mb-3 border-l-4 {% if polarity == 'reject' %}border-red-400{% else %}border-yellow-500{% endif %}">
+      <div class="flex items-start gap-2 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wide {% if polarity == 'reject' %}text-red-700{% else %}text-yellow-700{% endif %} mt-0.5 flex-shrink-0">
+          {% if polarity == 'reject' %}{{ _('Shared rejection') }}{% else %}{{ _('Shared agreement') }}{% endif %}
+        </span>
+        <div class="text-gray-900">{{ translation_map.get(statement.id) or statement.content }}</div>
+      </div>
+      <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
+        <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
+        {% if bdata.mean_agreement is not none %}
+        <span class="text-gray-500">{{ _('Mean cross-group: %(v).0f%%', v=bdata.mean_agreement * 100) }}</span>
+        {% endif %}
+        {% if bdata.wilson_low is not none and bdata.wilson_high is not none %}
+        <span class="text-gray-500" title="{{ _('Wilson 95%% score interval on the dominant polarity.') }}">
+          95% CI {{ "%.0f"|format(bdata.wilson_low * 100) }}–{{ "%.0f"|format(bdata.wilson_high * 100) }}%
+        </span>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
@@ -317,24 +492,43 @@
 
   <!-- Divisive Statements -->
   {% if divisive_statements %}
-  <div class="bg-red-50 rounded-lg shadow p-6 mb-6 border border-red-200">
+  <div class="bg-red-50 rounded-lg shadow p-4 sm:p-6 mb-6 border border-red-200">
     <h2 class="text-xl font-semibold text-red-900 mb-4">
       🔴 {{ _('Points of Division') }} ({{ divisive_statements|length }})
     </h2>
     <p class="text-red-800 mb-4">
-      {{ _('These statements show significant disagreement between opinion groups.') }}
+      {{ _('Statements where opinion groups disagree with each other. Significance is the FDR-corrected permutation χ² test across all clusters (a pre-specified omnibus test); the gap CI uses Newcombe’s MOVER-Wilson Method 10.') }}
     </p>
     {% for statement in divisive_statements %}
+      {% set ddata = divisive_data_by_id.get(statement.id, {}) %}
     <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-red-500">
       <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
-      <div class="text-sm text-gray-600">
-        {{ statement.vote_count_agree }} {{ _('agree') }} · {{
-        statement.vote_count_disagree }} {{ _('disagree') }} · {{
-        statement.vote_count_unsure }} {{ _('unsure') }}
-        <span class="ml-3 text-red-700 font-semibold"
-          >{{ "%.0f"|format(statement.controversy_score * 100) }}%
-          {{ _('controversy') }}</span
-        >
+      <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
+        <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
+        {% if ddata.group_gap is not none %}
+        <span class="text-red-700 font-semibold" title="{{ _('Agreement-rate gap between the most- and least-agreeing opinion groups on this statement.') }}">
+          {{ _('Group gap %(v).0f%%', v=ddata.group_gap * 100) }}
+        </span>
+        {% endif %}
+        {% set _gap_lo = ddata.gap_ci_low if ddata.gap_ci_low is not none else ddata.wilson_low %}
+        {% set _gap_hi = ddata.gap_ci_high if ddata.gap_ci_high is not none else ddata.wilson_high %}
+        {% if _gap_lo is not none and _gap_hi is not none %}
+        <span class="text-gray-500" title="{{ _('Newcombe 95%% CI for the proportion difference (MOVER-Wilson, Method 10).') }}">
+          95% CI {{ "%.0f"|format(_gap_lo * 100) }}–{{ "%.0f"|format(_gap_hi * 100) }}%
+        </span>
+        {% endif %}
+        {% if ddata.significant %}
+        <span class="text-emerald-700 font-medium" title="{{ _('Omnibus permutation χ² across all clusters survives FDR correction.') }}">
+          ✓ {{ _('FDR-significant') }}
+        </span>
+        {% elif ddata.p_value is not none %}
+        <span class="text-gray-400" title="{{ _('Omnibus permutation χ² p-value (the FDR-screened test).') }}">p={{ "%.3f"|format(ddata.p_value) }}</span>
+        {% endif %}
+        {% if ddata.p_value_gap is not none %}
+        <span class="text-gray-400" title="{{ _('Secondary one-sided Fisher check on the extreme pair — a post-hoc guard on the displayed gap, not a simultaneous test.') }}">
+          p<sub>gap</sub>={{ "%.3f"|format(ddata.p_value_gap) }}
+        </span>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
@@ -342,32 +536,37 @@
   {% endif %}
 
   <!-- Actions -->
-  <div class="bg-white rounded-lg shadow p-6 mb-6">
+  <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
     <h2 class="text-xl font-semibold mb-4">{{ _('Export & Share') }}</h2>
-    <div class="flex space-x-4">
+    <div class="flex flex-wrap gap-2 sm:gap-3">
       <a
         href="{{ url_for('consensus.export_analysis', discussion_id=discussion.id, format='json') }}"
-        class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
+        class="inline-flex items-center bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 text-sm"
       >
         {{ _('Download JSON') }}
       </a>
       <a
+        href="{{ url_for('consensus.export_analysis', discussion_id=discussion.id, format='csv') }}"
+        class="inline-flex items-center bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 text-sm"
+      >
+        {{ _('Download CSV') }}
+      </a>
+      <a
         href="{{ url_for('consensus.generate_report', discussion_id=discussion.id) }}"
-        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        class="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
       >
         {{ _('Generate Report') }}
       </a>
-      {% if current_user.is_authenticated and current_user.id ==
-      discussion.creator_id %}
+      {% if current_user.is_authenticated and current_user.id == discussion.creator_id %}
       <form
         method="POST"
         action="{{ url_for('consensus.trigger_analysis', discussion_id=discussion.id) }}"
-        class="inline"
+        class="inline-flex"
       >
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button
           type="submit"
-          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          class="inline-flex items-center bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 text-sm"
         >
           {{ _('Re-run Analysis') }}
         </button>
@@ -377,31 +576,47 @@
   </div>
 
   <!-- Methodology -->
-  <div class="bg-gray-50 rounded-lg p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-3">📊 {{ _('Methodology') }}</h2>
-    <div class="text-gray-700 space-y-2 text-sm">
+  <details class="bg-gray-50 rounded-lg p-4 sm:p-6 mb-6 group" open>
+    <summary class="cursor-pointer list-none flex items-center justify-between">
+      <h2 class="text-xl font-semibold">📊 {{ _('Methodology') }}</h2>
+      <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </summary>
+    <div class="text-gray-700 space-y-3 text-sm mt-4 leading-relaxed">
       <p>
-        <strong>Clustering Method:</strong> {{ analysis.method.title() }}
-        clustering with PCA dimensionality reduction
+        <strong>{{ _('Clustering pipeline.') }}</strong>
+        {{ _('Build a participant × statement vote matrix (values in {-1, 0, +1}). Missing votes are imputed with the statement mean so that sparse voters do not skew the principal components. PCA (2 components) followed by sparsity-aware scaling — participants who voted less are stretched away from the centroid by √(N_total/N_voted) — then %(method)s clustering with cosine distance. k is chosen by silhouette score over k ∈ [2, 10].', method=analysis.method.title()) }}
       </p>
       <p>
-        <strong>Consensus Criteria:</strong> ≥70% overall agreement AND ≥60%
-        agreement in each opinion group
+        <strong>{{ _('Consensus.') }}</strong>
+        {{ _('A statement is surfaced only if the Wilson 95%% score interval on overall agreement clears 70%%, AND every opinion group’s own Wilson lower bound clears 60%%. Raw percentages alone are never sufficient — 7/10 agreement is not "70%% consensus" when its confidence interval starts at 40%%.') }}
       </p>
       <p>
-        <strong>Bridge Criteria:</strong> High mean agreement (≥65%) with low
-        variance (<0.15) across groups
+        <strong>{{ _('Representativeness (what each group believes).') }}</strong>
+        {% set _fdr = analysis_meta.get('fdr_method', 'bh')|upper %}
+        {{ _('For every (group, statement) pair we compute the lift — P(agree | in-group) / P(agree | out-of-group) — run a one-sided Fisher’s exact test on the 2×2 contingency table, and apply %(fdr)s FDR correction across all tests at q=0.05. Only FDR-significant statements receive the ✓ badge; everything else is marked "suggestive only".', fdr=_fdr) }}
       </p>
       <p>
-        <strong>Divisive Criteria:</strong> Controversy score ≥0.7 (close to
-        50/50 split)
+        <strong>{{ _('Bridges and divisions.') }}</strong>
+        {{ _('Bridges require mean cross-group agreement ≥65%% (or shared rejection ≤35%%) with inter-group variance ≤0.15. Divisive statements use a pre-specified omnibus test: permutation χ² across ALL clusters on each statement, with the fraction of shuffled assignments as extreme as observed reported as the p-value. FDR is applied to those omnibus p-values. Gap CIs use Newcombe’s MOVER-Wilson (1998) Method 10. The pairwise Fisher p on the extreme pair is surfaced as a small-sample guard on the displayed gap, not a simultaneous test.') }}
       </p>
       <p>
-        <strong>Silhouette Score:</strong> Measures cluster quality (>0.5 =
-        good, 0.3-0.5 = fair, <0.3 = weak)
+        <strong>{{ _('Reproducibility.') }}</strong>
+        {% if analysis_meta.get('stability_runs') %}
+          {{ _('This analysis was re-run %(runs)d times with different random seeds. Mean Adjusted Rand Index between runs: %(ari).2f (1.0 = identical, 0.0 = random). Representative-statement Jaccard overlap: %(jac).2f.', runs=analysis_meta.get('stability_runs'), ari=analysis_meta.get('stability_mean_ari', 1.0), jac=analysis_meta.get('stability_consensus_jaccard_mean', 1.0)) }}
+        {% else %}
+          {{ _('Stability metrics were not computed for this analysis. Re-running will attach them.') }}
+        {% endif %}
+      </p>
+      <p>
+        <strong>{{ _('Limitations.') }}</strong>
+        {{ _('Clustering is fit on the same votes used for group summaries, so inferential quantities are exploratory, not confirmatory. Benjamini–Hochberg FDR is appropriate under independence or mild dependence; many tests on the same clustering are correlated, so treat q=0.05 as a practical screen, not a tight bound. Divisive statements compare the two clusters with the highest and lowest agreement on that statement — the Fisher p-value guards the gap in small samples but is not a test of all pairwise cluster differences. The interval on the agreement gap uses Wilson bounds heuristically; a Newcombe interval would be tighter for a difference of proportions.') }}
+      </p>
+      <p class="text-xs text-gray-500 pt-2 border-t border-gray-200">
+        <strong>{{ _('References.') }}</strong>
+        Small et&nbsp;al. (2021) <em>Polis: Scaling deliberation by mapping high dimensional opinion spaces</em>; Wilson (1927) <em>Probable inference, the law of succession, and statistical inference</em>; Newcombe (1998) <em>Interval estimation for the difference between independent proportions</em>, Stat. Med. 17: 873-890, Method 10; Benjamini &amp; Hochberg (1995) <em>Controlling the false discovery rate</em>; Benjamini &amp; Yekutieli (2001) <em>The control of the false discovery rate in multiple testing under dependency</em>; Monti et&nbsp;al. (2003) <em>Consensus clustering</em>; pol.is red-dwarf library (AGPL-3.0).
       </p>
     </div>
-  </div>
+  </details>
 
   <!-- Back to Discussion -->
   <div class="mt-8">
@@ -418,18 +633,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <!-- Cluster Visualization Script -->
+<script nonce="{{ csp_nonce() }}" id="cluster-chart-config" type="application/json">
+{
+  "viewerKey": {{ (viewer_participant_key or '')|tojson }},
+  "pc1Label": {{ (_('Horizontal axis (PC1)'))|tojson }},
+  "pc2Label": {{ (_('Vertical axis (PC2)'))|tojson }},
+  "titleTemplate": {{ (_('{k} opinion groups across {n} participants'))|tojson }},
+  "youLabel": {{ (_('You'))|tojson }},
+  "groupLabel": {{ (_('Group'))|tojson }},
+  "positionLabel": {{ (_('Position'))|tojson }}
+}
+</script>
 <script nonce="{{ csp_nonce() }}">
   document.addEventListener("DOMContentLoaded", async function () {
     const canvas = document.getElementById("clusterChart");
     if (!canvas) return;
+    const configEl = document.getElementById("cluster-chart-config");
+    const CFG = configEl ? JSON.parse(configEl.textContent) : {};
 
     try {
-      // Fetch cluster data from API
       const response = await fetch(
         '{{ url_for("consensus.get_cluster_data", discussion_id=discussion.id) }}'
       );
       const data = await response.json();
-
       if (data.error) {
         console.error("Error loading cluster data:", data.error);
         return;
@@ -438,42 +664,41 @@
       const clusterAssignments = data.cluster_assignments;
       const pcaCoordinates = data.pca_coordinates;
       const metadata = data.metadata;
+      const viewerKey = CFG.viewerKey || null;
 
-      // Prepare data for Chart.js
       const colors = [
-        "rgba(59, 130, 246, 0.8)", // Blue
-        "rgba(239, 68, 68, 0.8)", // Red
-        "rgba(34, 197, 94, 0.8)", // Green
-        "rgba(251, 146, 60, 0.8)", // Orange
-        "rgba(168, 85, 247, 0.8)", // Purple
-        "rgba(236, 72, 153, 0.8)", // Pink
-        "rgba(14, 165, 233, 0.8)", // Cyan
-        "rgba(234, 179, 8, 0.8)", // Yellow
+        "rgba(59, 130, 246, 0.8)",
+        "rgba(239, 68, 68, 0.8)",
+        "rgba(34, 197, 94, 0.8)",
+        "rgba(251, 146, 60, 0.8)",
+        "rgba(168, 85, 247, 0.8)",
+        "rgba(236, 72, 153, 0.8)",
+        "rgba(14, 165, 233, 0.8)",
+        "rgba(234, 179, 8, 0.8)",
       ];
 
-      // Group users by cluster
       const clusters = {};
+      let viewerPoint = null;
+      let viewerClusterId = null;
       for (const [userId, clusterId] of Object.entries(clusterAssignments)) {
-        if (!clusters[clusterId]) {
-          clusters[clusterId] = [];
-        }
+        if (!clusters[clusterId]) clusters[clusterId] = [];
         const coords = pcaCoordinates[userId];
-        if (coords) {
-          clusters[clusterId].push({
-            x: coords[0],
-            y: coords[1],
-            userId: userId,
-          });
+        if (!coords) continue;
+        const pt = { x: coords[0], y: coords[1], userId };
+        if (viewerKey && userId === viewerKey) {
+          viewerPoint = { ...pt, isViewer: true };
+          viewerClusterId = clusterId;
+        } else {
+          clusters[clusterId].push(pt);
         }
       }
 
-      // Create datasets for each cluster
       const datasets = Object.keys(clusters)
         .sort()
-        .map((clusterId, index) => {
-          const clusterNum = parseInt(clusterId);
+        .map((clusterId) => {
+          const clusterNum = parseInt(clusterId, 10);
           return {
-            label: `Group ${clusterNum + 1}`,
+            label: `${CFG.groupLabel} ${clusterNum + 1}`,
             data: clusters[clusterId],
             backgroundColor: colors[clusterNum % colors.length],
             borderColor: colors[clusterNum % colors.length].replace("0.8", "1"),
@@ -483,86 +708,67 @@
           };
         });
 
-      // Create chart
+      // "You are here" — render the viewer as a distinct, ringed point on
+      // top of everything else so they can locate themselves at a glance.
+      if (viewerPoint !== null) {
+        const clusterNum = parseInt(viewerClusterId, 10);
+        const baseColor = colors[clusterNum % colors.length];
+        datasets.push({
+          label: `⭐ ${CFG.youLabel} · ${CFG.groupLabel} ${clusterNum + 1}`,
+          data: [viewerPoint],
+          backgroundColor: baseColor.replace("0.8", "1"),
+          borderColor: "#111827",
+          borderWidth: 3,
+          pointRadius: 10,
+          pointHoverRadius: 12,
+          pointStyle: "rectRot",
+        });
+      }
+
       new Chart(canvas, {
         type: "scatter",
-        data: {
-          datasets: datasets,
-        },
+        data: { datasets },
         options: {
           responsive: true,
           maintainAspectRatio: true,
           plugins: {
             title: {
               display: true,
-              text: `${metadata.num_clusters} Opinion Groups (${metadata.participants_count} participants)`,
-              font: {
-                size: 16,
-                weight: "bold",
-              },
+              text: CFG.titleTemplate
+                .replace("{k}", metadata.num_clusters)
+                .replace("{n}", metadata.participants_count),
+              font: { size: 16, weight: "bold" },
             },
             legend: {
               display: true,
               position: "top",
-              labels: {
-                font: {
-                  size: 12,
-                },
-                padding: 15,
-                usePointStyle: true,
-              },
+              labels: { font: { size: 12 }, padding: 15, usePointStyle: true },
             },
             tooltip: {
               callbacks: {
                 label: function (context) {
-                  return [
-                    `Group ${context.datasetIndex + 1}`,
-                    `User ID: ${context.raw.userId}`,
-                    `Position: (${context.raw.x.toFixed(
-                      2
-                    )}, ${context.raw.y.toFixed(2)})`,
-                  ];
+                  const raw = context.raw || {};
+                  const out = [];
+                  if (raw.isViewer) out.push(`⭐ ${CFG.youLabel}`);
+                  out.push(`${CFG.groupLabel} ${context.datasetIndex + 1}`);
+                  out.push(`${CFG.positionLabel}: (${raw.x.toFixed(2)}, ${raw.y.toFixed(2)})`);
+                  return out;
                 },
               },
             },
           },
           scales: {
-            x: {
-              title: {
-                display: true,
-                text: "Principal Component 1",
-                font: {
-                  size: 14,
-                },
-              },
-              grid: {
-                color: "rgba(0, 0, 0, 0.05)",
-              },
-            },
-            y: {
-              title: {
-                display: true,
-                text: "Principal Component 2",
-                font: {
-                  size: 14,
-                },
-              },
-              grid: {
-                color: "rgba(0, 0, 0, 0.05)",
-              },
-            },
+            x: { title: { display: true, text: CFG.pc1Label, font: { size: 14 } }, grid: { color: "rgba(0,0,0,0.05)" } },
+            y: { title: { display: true, text: CFG.pc2Label, font: { size: 14 } }, grid: { color: "rgba(0,0,0,0.05)" } },
           },
-          interaction: {
-            mode: "point",
-            intersect: true,
-          },
+          interaction: { mode: "point", intersect: true },
         },
       });
     } catch (error) {
       console.error("Error rendering cluster visualization:", error);
       canvas.parentElement.innerHTML = `
             <div class="text-center py-8">
-                <p class="text-red-600">Error loading visualization</p>
+                <p class="text-red-600">{{ _('Error loading visualization') }}</p>
                 <p class="text-sm text-gray-500 mt-2">${error.message}</p>
             </div>
         `;
