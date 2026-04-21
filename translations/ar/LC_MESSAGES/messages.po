@@ -2845,24 +2845,29 @@ msgid ""
 "understanding. Learn how we use machine learning to reveal opinion clusters,"
 " bridge statements, and genuine consensus from public participation."
 msgstr ""
+"Society Speaks هو نظام لفهم الواقع يحول الاختلاف إلى تفاهم. تعرّف على كيفية "
+"استخدامنا للتعلم الآلي للكشف عن تجمعات الآراء والعبارات الجسور والإجماع "
+"الحقيقي من المشاركة العامة."
 
 #: app/templates/about.html:5
 msgid "About Society Speaks - Making Disagreement Useful Again"
-msgstr ""
+msgstr "حول Society Speaks - جعل الاختلاف مفيداً مجدداً"
 
 #: app/templates/about.html:6
 msgid ""
 "Society Speaks helps people disagree agreeably and surfaces the insight "
 "needed to move from noise to shared understanding and better decisions."
 msgstr ""
+"يساعد Society Speaks الناس على الاختلاف بأدب ويُظهر الرؤى اللازمة للانتقال "
+"من الضوضاء إلى التفاهم المشترك والقرارات الأفضل."
 
 #: app/templates/about.html:13
 msgid "A Sense-Making System for Society"
-msgstr ""
+msgstr "نظام فهم الواقع للمجتمع"
 
 #: app/templates/about.html:15 app/templates/index.html:130
 msgid "Making Disagreement Useful Again"
-msgstr ""
+msgstr "جعل الاختلاف مفيداً مجدداً"
 
 #: app/templates/about.html:18
 msgid ""
@@ -2870,6 +2875,8 @@ msgid ""
 "understanding, consensus, or solutions. Society Speaks is designed to do the"
 " opposite."
 msgstr ""
+"نعيش في عصر من النقاش المستمر، لكن القليل منه ينتج عنه تفاهم أو إجماع أو "
+"حلول. Society Speaks مصمم ليفعل العكس."
 
 #: app/templates/about.html:28
 msgid ""
@@ -2879,36 +2886,42 @@ msgid ""
 "insight needed to move from noise towards shared understanding and, "
 "ultimately, better decisions."
 msgstr ""
+"منصات التواصل الاجتماعي تكافئ الاستياء والتأكيد والسرعة، مما يجعل المجتمع "
+"يبدو أكثر انقساماً مما هو عليه فعلاً. يعيد Society Speaks الدقة إلى النقاش "
+"العام، ويمكّن الناس من الاختلاف بأدب، ويُظهر الرؤى اللازمة للانتقال من "
+"الضوضاء نحو التفاهم المشترك وفي النهاية قرارات أفضل."
 
 #: app/templates/about.html:33
-#, fuzzy
 msgid "How Society Speaks Works"
-msgstr "عن Society Speaks"
+msgstr "كيف يعمل Society Speaks"
 
 #: app/templates/about.html:35
 msgid ""
 "We do not group people by who they say they are. We group them by how they "
 "actually respond."
 msgstr ""
+"نحن لا نجمع الناس بناءً على من يقولون أنهم. نجمعهم بناءً على كيفية استجابتهم"
+" الفعلية."
 
 #: app/templates/about.html:38
 msgid ""
 "Instead of likes, comments, or demographics, Society Speaks is built around "
 "structured participation:"
 msgstr ""
+"بدلاً من الإعجابات والتعليقات أو المعلومات الديموغرافية، يقوم Society Speaks"
+" على المشاركة المنظمة:"
 
 #: app/templates/about.html:43
 msgid "Clear statements on real issues"
-msgstr ""
+msgstr "عبارات واضحة حول قضايا حقيقية"
 
 #: app/templates/about.html:47
-#, fuzzy
 msgid "Simple voting (agree / disagree / unsure)"
-msgstr "صوّت على التصريح أعلاه: موافق، غير موافق، أو غير متأكد"
+msgstr "التصويت البسيط (موافق / غير موافق / غير متأكد)"
 
 #: app/templates/about.html:51
 msgid "Optional short explanations for your reasoning"
-msgstr ""
+msgstr "شروحات قصيرة اختيارية لأسبابك"
 
 #: app/templates/about.html:56
 #, python-format
@@ -2918,27 +2931,32 @@ msgid ""
 "or demographic bias. This reveals how views actually form and overlap, "
 "something polls and comment sections consistently fail to capture."
 msgstr ""
+"باستخدام التعلم الآلي المستوحى من %(polis)s، نحلل أنماط التصويت لتحديد "
+"تجمعات الآراء الطبيعية، بدون تسميات أو افتراضات أيديولوجية أو انحياز "
+"ديموغرافي. هذا يكشف عن كيفية تكوّن الآراء والتقائها فعلاً، وهو شيء تفشل فيه "
+"الاستطلاعات والتعليقات باستمرار."
 
 #: app/templates/about.html:61
 msgid "What the System Reveals"
-msgstr ""
+msgstr "ما يكشفه النظام"
 
 #: app/templates/about.html:63
 msgid ""
 "Society Speaks does not just show what people think. It produces three "
 "distinct types of insight:"
 msgstr ""
+"لا يُظهر Society Speaks فقط ما يفكر فيه الناس. إنه ينتج ثلاثة أنواع مختلفة "
+"من الرؤى:"
 
 #: app/templates/about.html:73 app/templates/help/managing_discussions.html:93
-#, fuzzy
 msgid "Consensus Statements"
-msgstr "الأحدث"
+msgstr "عبارات الإجماع"
 
 #: app/templates/about.html:74
 msgid ""
 "Ideas with broad agreement across participants, showing where society "
 "already aligns."
-msgstr ""
+msgstr "أفكار يتفق عليها الجميع تقريباً، تُظهر حيث يتوافق المجتمع بالفعل."
 
 #: app/templates/about.html:83
 #: app/templates/discussions/consensus_report.html:76
@@ -2951,53 +2969,54 @@ msgid ""
 "Ideas that resonate across different opinion clusters, even when people "
 "disagree elsewhere. These are the most actionable insights for progress."
 msgstr ""
+"أفكار تلقى استجابة عبر تجمعات آراء مختلفة، حتى عندما يختلف الناس في مكان "
+"آخر. هذه هي أكثر الرؤى قابلية للتطبيق من أجل التقدم."
 
 #: app/templates/about.html:93
-#, fuzzy
 msgid "Divisive Statements"
-msgstr "إضافة تصريح"
+msgstr "عبارات مثيرة للانقسام"
 
 #: app/templates/about.html:94
 msgid ""
 "Genuine fault lines where opinions are split. Surfacing these honestly shows"
 " where deeper work is needed."
 msgstr ""
+"خطوط انقسام حقيقية حيث تنقسم الآراء. يكشف هذا بصراحة عن أين يكون العمل "
+"الأعمق مطلوباً."
 
 #: app/templates/about.html:99
 msgid ""
 "Together, these outputs create a far more accurate picture of public opinion"
 " than binary polls or adversarial debate."
 msgstr ""
+"معاً، تُنتج هذه النتائج صورة أكثر دقة بكثير للرأي العام من استطلاعات ثنائية "
+"أو نقاش عدائي."
 
 #: app/templates/about.html:104
 msgid "What We Offer"
-msgstr ""
+msgstr "ما نقدمه"
 
 #: app/templates/about.html:105
 msgid ""
 "Society Speaks serves four distinct audiences through four distinct "
 "products."
-msgstr ""
+msgstr "يخدم Society Speaks أربع جماهير مختلفة من خلال أربع منتجات مختلفة."
 
 #: app/templates/about.html:114
-#, fuzzy
 msgid "Public Deliberation"
-msgstr "نقاشاتك"
+msgstr "التشاور العام"
 
 #: app/templates/about.html:116
-#, fuzzy
 msgid "Citizens"
-msgstr "تعديل"
+msgstr "المواطنون"
 
 #: app/templates/about.html:117
-#, fuzzy
 msgid "General public"
-msgstr "الملف الشخصي العام"
+msgstr "الجمهور العام"
 
 #: app/templates/about.html:118
-#, fuzzy
 msgid "Researchers"
-msgstr "بحث"
+msgstr "الباحثون"
 
 #: app/templates/about.html:120
 msgid ""
@@ -3006,34 +3025,33 @@ msgid ""
 "bridges, and genuinely divides — but only after you have thought for "
 "yourself."
 msgstr ""
+"انضم إلى الأسئلة اليومية والمناقشات المستمرة حول القضايا التي تهمك. صوّت على"
+" العبارات، شارك أسبابك، واكتشف حيث يتوافق المجتمع والجسور والانقسامات "
+"الحقيقية — لكن فقط بعد أن تفكر بنفسك."
 
 #: app/templates/about.html:122
-#, fuzzy
 msgid "Join today's discussion"
-msgstr "انضم إلى النقاش"
+msgstr "انضم إلى مناقشة اليوم"
 
 #: app/templates/about.html:133
-#, fuzzy
 msgid "Deliberation Programmes"
-msgstr "برامج أخرى"
+msgstr "برامج التشاور"
 
 #: app/templates/about.html:135
-#, fuzzy
 msgid "Government"
-msgstr "اتفاق"
+msgstr "الحكومة"
 
 #: app/templates/about.html:136
 msgid "NGOs"
-msgstr ""
+msgstr "المنظمات غير الحكومية"
 
 #: app/templates/about.html:137
-#, fuzzy
 msgid "Civic organisations"
-msgstr "مؤسسة"
+msgstr "المنظمات المدنية"
 
 #: app/templates/about.html:138
 msgid "Universities"
-msgstr ""
+msgstr "الجامعات"
 
 #: app/templates/about.html:140
 msgid ""
@@ -3042,34 +3060,33 @@ msgid ""
 "single initiative, manage stewards, track participation, and export "
 "analysis-ready data."
 msgstr ""
+"قم بتشغيل حملات تشاور منظمة بأي حجم — من الاستشارات المجتمعية إلى البرامج "
+"الوطنية. جمّع مناقشات متعددة تحت مبادرة واحدة، أدِر المشرفين، تتبع المشاركة،"
+" وصدّر البيانات جاهزة للتحليل."
 
 #: app/templates/about.html:142
-#, fuzzy
 msgid "Learn about Programmes"
-msgstr "أنشئ برنامجك الأول"
+msgstr "تعرّف على البرامج"
 
 #: app/templates/about.html:153
-#, fuzzy
 msgid "Intelligence Briefings"
-msgstr "الملخصات المدفوعة"
+msgstr "الإحاطات الاستخبارية"
 
 #: app/templates/about.html:155
 msgid "Policy teams"
-msgstr ""
+msgstr "فرق السياسة"
 
 #: app/templates/about.html:156
 msgid "Think tanks"
-msgstr ""
+msgstr "مركز الفكر"
 
 #: app/templates/about.html:157
-#, fuzzy
 msgid "Newsrooms"
-msgstr "أخبار"
+msgstr "غرف الأخبار"
 
 #: app/templates/about.html:158
-#, fuzzy
 msgid "Organisations"
-msgstr "مؤسسة"
+msgstr "المنظمات"
 
 #: app/templates/about.html:160
 msgid ""
@@ -3077,29 +3094,29 @@ msgid ""
 "schedule. Stay on top of the issues that matter to your team — daily or "
 "weekly, with full editorial control and Slack integration."
 msgstr ""
+"نشرات إخبارية منتقاة بواسطة الذكاء الاصطناعي من مصادرك المختارة، تُسلّم حسب "
+"جدولك الزمني. ابقَ على اطلاع بالقضايا المهمة لفريقك — يومياً أو أسبوعياً، مع"
+" تحكم تحريري كامل وتكامل Slack."
 
 #: app/templates/about.html:162
-#, fuzzy
 msgid "Explore Briefings"
-msgstr "الملخصات المدفوعة"
+msgstr "استكشف النشرات الإخبارية"
 
 #: app/templates/about.html:173
-#, fuzzy
 msgid "Publisher Embeds"
-msgstr "للناشرين"
+msgstr "تضمينات الناشرين"
 
 #: app/templates/about.html:175
-#, fuzzy
 msgid "News publishers"
-msgstr "للناشرين"
+msgstr "دور النشر الإخبارية"
 
 #: app/templates/about.html:176
 msgid "Digital media"
-msgstr ""
+msgstr "وسائط رقمية"
 
 #: app/templates/about.html:177
 msgid "Independent journalists"
-msgstr ""
+msgstr "الصحفيون المستقلون"
 
 #: app/templates/about.html:179
 msgid ""
@@ -3107,47 +3124,50 @@ msgid ""
 "snippet or API. Give your readers a voice beyond the comment section and "
 "gain genuine, structured insight from your audience — article by article."
 msgstr ""
+"ضمّن النقاشات المنظمة مباشرة في مقالاتك عبر مقطع بسيط أو API. أعطِ قرّاءك "
+"صوتاً يتجاوز قسم التعليقات واحصل على رؤى حقيقية ومنظمة من جمهورك — مقالة تلو"
+" الأخرى."
 
 #: app/templates/about.html:181 app/templates/platform.html:1110
-#, fuzzy
 msgid "For publishers"
 msgstr "للناشرين"
 
 #: app/templates/about.html:189
 msgid "From News to Deliberation"
-msgstr ""
+msgstr "من الأخبار إلى النقاش"
 
 #: app/templates/about.html:191
 msgid ""
 "Society Speaks does not treat news as content to be consumed, but as input "
 "into deliberation."
-msgstr ""
+msgstr "لا تعامل Society Speaks الأخبار كمحتوى للاستهلاك، بل كمدخل للنقاش."
 
 #: app/templates/about.html:194
 msgid "Real journalism is:"
-msgstr ""
+msgstr "الصحافة الحقيقية هي:"
 
 #: app/templates/about.html:197
 msgid "Curated for civic relevance, not virality"
-msgstr ""
+msgstr "منتقاة من أجل الصلة المدنية، وليس الانتشار الفيروسي"
 
 #: app/templates/about.html:198
 msgid "Filtered to avoid sensational framing"
-msgstr ""
+msgstr "مفلترة لتجنب الإطار الحسّاس"
 
 #: app/templates/about.html:199
 msgid "Transformed into balanced prompts and seed statements"
-msgstr ""
+msgstr "تُحوّل إلى أسئلة ومقترحات متوازنة"
 
 #: app/templates/about.html:202
 msgid ""
 "This turns passive news consumption into thoughtful participation and shifts"
 " the focus from headlines to the underlying issues they point to."
 msgstr ""
+"هذا يحوّل الاستهلاك السلبي للأخبار إلى مشاركة مدروسة ويحوّل التركيز من "
+"العناوين إلى القضايا الأساسية التي تشير إليها."
 
 #: app/templates/about.html:207 app/templates/faq.html:226
 #: app/templates/index.html:507
-#, fuzzy
 msgid "The Daily Question"
 msgstr "السؤال اليومي"
 
@@ -3161,19 +3181,19 @@ msgstr "السؤال اليومي"
 #: app/templates/about.html:210
 #, python-format
 msgid "The %(daily_link)s is the entry point."
-msgstr ""
+msgstr "%(daily_link)s هو نقطة الدخول."
 
 #: app/templates/about.html:218
 msgid "One carefully chosen question each day"
-msgstr ""
+msgstr "سؤال واحد مختار بعناية كل يوم"
 
 #: app/templates/about.html:224
 msgid "Two minutes to respond"
-msgstr ""
+msgstr "دقيقتان للإجابة"
 
 #: app/templates/about.html:230
 msgid "Insight revealed only after you have thought for yourself"
-msgstr ""
+msgstr "تُكشف الرؤى فقط بعد أن تفكّر بنفسك"
 
 #: app/templates/about.html:235
 msgid ""
@@ -3182,72 +3202,76 @@ msgid ""
 " converge, or diverge over time. It is a small daily habit with cumulative "
 "civic value."
 msgstr ""
+"بمرور الوقت، هذا ينشئ شيئاً نادراً: رؤية طويلة الأمد ومتناغمة للرأي العام، "
+"تُظهر ليس فقط أين تقف المجتمع، بل كيف تتطور الآراء أو تتقارب أو تتباعد بمرور"
+" الوقت. إنها عادة يومية صغيرة ذات قيمة مدنية تراكمية."
 
 #: app/templates/about.html:240 app/templates/brief/landing.html:116
 #: app/templates/brief/subscribe.html:161
 #: app/templates/briefing/_email_preview_styles.html:73
-#, fuzzy
 msgid "Why This Matters"
-msgstr "سؤال اليوم"
+msgstr "لماذا هذا مهم"
 
 #: app/templates/about.html:242
 msgid ""
 "The biggest problem in modern democracy is not disagreement. It is distorted"
 " disagreement."
 msgstr ""
+"أكبر مشكلة في الديمقراطية الحديثة ليست الاختلاف. إنها الاختلاف المشوّه."
 
 #: app/templates/about.html:245
-#, fuzzy
 msgid "Society Speaks helps correct that by:"
-msgstr "Society Speaks"
+msgstr "تساعد Society Speaks في تصحيح ذلك عن طريق:"
 
 #: app/templates/about.html:248
 msgid "Reducing knee-jerk reactions"
-msgstr ""
+msgstr "تقليل ردود الفعل الآنية"
 
 #: app/templates/about.html:249
 msgid "Making disagreement less hostile"
-msgstr ""
+msgstr "جعل الاختلاف أقل عدائية"
 
 #: app/templates/about.html:250
 msgid "Revealing common ground without erasing difference"
-msgstr ""
+msgstr "الكشف عن القاسم المشترك دون محو الفروقات"
 
 #: app/templates/about.html:251
 msgid "Showing where compromise is possible and where it is not"
-msgstr ""
+msgstr "إظهار أين يكون التوافق ممكناً وأين لا يكون"
 
 #: app/templates/about.html:254
 msgid ""
 "This kind of understanding is a prerequisite for solving real-world "
 "problems."
-msgstr ""
+msgstr "هذا النوع من الفهم شرط أساسي لحل المشاكل في العالم الحقيقي."
 
 #: app/templates/about.html:259
 msgid "For Policymakers and Civic Leaders"
-msgstr ""
+msgstr "لصانعي السياسات والقادة المدنيين"
 
 #: app/templates/about.html:261
 msgid ""
 "Society Speaks does not claim to produce policy by itself. What it produces "
 "is something more fundamental:"
 msgstr ""
+"لا تدّعي Society Speaks أنها تنتج السياسة بنفسها. ما تنتجه هو شيء أكثر "
+"أهمية:"
 
 #: app/templates/about.html:268
 msgid "Evidence-based understanding of public opinion"
-msgstr ""
+msgstr "فهم قائم على الأدلة للرأي العام"
 
 #: app/templates/about.html:274
 msgid "Clarity on where consensus exists"
-msgstr ""
+msgstr "وضوح حول أين يوجد إجماع"
 
 #: app/templates/about.html:280
 msgid "Visibility into bridge ideas that can unite groups"
-msgstr ""
+msgstr "رؤية الأفكار الجسرية التي يمكن أن توحّد المجموعات"
 
 #: app/templates/about.html:286
 msgid "Honesty about genuine divisions that require deeper work"
-msgstr ""
+msgstr "الصراحة حول الانقسامات الحقيقية التي تتطلب عملاً أعمق"
 
 #: app/templates/about.html:290
 msgid ""
@@ -3256,59 +3280,68 @@ msgid ""
 "Better policy starts with better understanding. Society Speaks focuses on "
 "that first step."
 msgstr ""
+"يمكن لتلك الرؤية أن تُوجّه صانعي السياسات والصحفيين والمنظمات المدنية وأي "
+"شخص يحاول تصميم حلول طموحة وشرعية في نفس الوقت. تبدأ السياسة الأفضل برؤية "
+"أفضل. تركّز Society Speaks على هذه الخطوة الأولى."
 
 #: app/templates/about.html:299
 msgid "Built in the Open"
-msgstr ""
+msgstr "مبني بشكل مفتوح"
 
 #: app/templates/about.html:301
 msgid ""
 "Society Speaks is proudly open source. Our entire codebase is available on "
 "GitHub for anyone to explore, audit, or contribute to."
 msgstr ""
+"Society Speaks مفتوحة المصدر بفخر. قاعدة الكود بأكملها متاحة على GitHub لأي "
+"شخص يستكشفها أو يدققها أو يساهم فيها."
 
 #: app/templates/about.html:304
 msgid ""
 "Transparency is not a feature — it is how we earn trust as civic "
 "infrastructure."
 msgstr ""
+"الشفافية ليست ميزة — بل هي الطريقة التي نكتسب بها الثقة كبنية تحتية مدنية."
 
 #: app/templates/about.html:308
 msgid "View Society Speaks source code on GitHub (opens in new tab)"
-msgstr ""
+msgstr "عرض كود Society Speaks على GitHub (يفتح في علامة تبويب جديدة)"
 
 #: app/templates/about.html:313 app/templates/brief/subscribe.html:300
 msgid "View on GitHub"
-msgstr ""
+msgstr "عرض على GitHub"
 
 #: app/templates/about.html:318
-#, fuzzy
 msgid "Support the Mission"
-msgstr "نقاش جديد"
+msgstr "دعم الرسالة"
 
 #: app/templates/about.html:320
 msgid ""
 "Society Speaks runs without advertising and without selling your data. It is"
 " funded by people who believe in what it does."
 msgstr ""
+"يعمل Society Speaks بدون إعلانات وبدون بيع بيانات المستخدمين. يتم تمويله من "
+"قبل أشخاص يؤمنون برسالته."
 
 #: app/templates/about.html:323
 msgid ""
 "Your donation — however small — keeps it independent, ad-free, and "
 "continuously improving."
 msgstr ""
+"تبرعك — مهما كان صغيراً — يحافظ عليه مستقلاً وخالياً من الإعلانات ويواصل "
+"التحسن المستمر."
 
 #: app/templates/about.html:327
 msgid "Make a donation"
-msgstr ""
+msgstr "تبرع الآن"
 
 #: app/templates/about.html:335
 msgid "Ready to Make Your Voice Heard?"
-msgstr ""
+msgstr "هل أنت مستعد لإسماع صوتك؟"
 
 #: app/templates/about.html:336
 msgid "Start with today's question or explore ongoing discussions."
-msgstr ""
+msgstr "ابدأ بسؤال اليوم أو استكشف النقاشات الجارية."
 
 #: app/templates/about.html:340 app/templates/daily/no_question.html:30
 #: app/templates/daily/results.html:700 app/templates/layout.html:489
@@ -3324,15 +3357,16 @@ msgid "Explore Discussions"
 msgstr "استكشاف النقاشات"
 
 #: app/templates/content-policy.html:3
-#, fuzzy
 msgid "Content Policy - Society Speaks"
-msgstr "عن Society Speaks"
+msgstr "سياسة المحتوى - Society Speaks"
 
 #: app/templates/content-policy.html:5
 msgid ""
 "Society Speaks content policy: what we allow and remove in discussions and "
 "embedded widgets. For partners and participants."
 msgstr ""
+"سياسة محتوى Society Speaks: ما نسمح به وما نزيله في النقاشات والأدوات "
+"المضمنة. للشركاء والمشاركين."
 
 #: app/templates/content-policy.html:9
 #: app/templates/discussions/embed_discussion.html:1096
@@ -3345,87 +3379,103 @@ msgid ""
 "in discussions and in widgets embedded on partner sites. It is intended for "
 "publishers and participants."
 msgstr ""
+"تصف هذه السياسة ما نسمح به وما نزيله على Society Speaks، بما في ذلك في "
+"النقاشات وفي الأدوات المضمنة على مواقع الشركاء. وهي موجهة للناشرين "
+"والمشاركين."
 
 #: app/templates/content-policy.html:15
 msgid "What We Allow"
-msgstr ""
+msgstr "ما نسمح به"
 
 #: app/templates/content-policy.html:17
 msgid ""
 "Statements and votes that represent genuine views on the topic, including "
 "strong disagreement"
 msgstr ""
+"البيانات والأصوات التي تمثل آراء حقيقية حول الموضوع، بما في ذلك عدم الاتفاق "
+"الشديد"
 
 #: app/templates/content-policy.html:18
 msgid "Debate and criticism of ideas, without targeting individuals"
-msgstr ""
+msgstr "النقاش والنقد للأفكار، دون استهداف الأفراد"
 
 #: app/templates/content-policy.html:19
 msgid "Factual claims and opinions, clearly presented"
-msgstr ""
+msgstr "الادعاءات الواقعية والآراء، مقدمة بوضوح"
 
 #: app/templates/content-policy.html:22
 msgid "What We Remove"
-msgstr ""
+msgstr "ما نزيله"
 
 #: app/templates/content-policy.html:23
 msgid "We will remove or reject content that:"
-msgstr ""
+msgstr "سنزيل أو نرفض المحتوى الذي:"
 
 #: app/templates/content-policy.html:25
 msgid ""
 "<strong>Spam or advertising</strong> — promotional content unrelated to the "
 "discussion"
 msgstr ""
+"<strong>البريد العشوائي أو الإعلانات</strong> — محتوى ترويجي غير ذي صلة "
+"بالنقاش"
 
 #: app/templates/content-policy.html:26
 msgid ""
 "<strong>Harassment or abuse</strong> — threats, doxxing, or targeted attacks"
 " on individuals"
 msgstr ""
+"<strong>المضايقة أو الإساءة</strong> — تهديدات أو كشف البيانات الشخصية أو "
+"هجمات موجهة على أفراد"
 
 #: app/templates/content-policy.html:27
 msgid ""
 "<strong>Misinformation</strong> — demonstrably false claims presented as "
 "fact where the intent is to mislead"
 msgstr ""
+"<strong>المعلومات المضللة</strong> — ادعاءات خاطئة بشكل واضح يتم تقديمها "
+"كحقائق بقصد التضليل"
 
 #: app/templates/content-policy.html:28
 msgid ""
 "<strong>Off-topic or irrelevant</strong> — content that does not address the"
 " discussion prompt"
 msgstr ""
+"<strong>خارج الموضوع أو غير ذي صلة</strong> — محتوى لا يتناول فكرة النقاش"
 
 #: app/templates/content-policy.html:29
 msgid ""
 "<strong>Illegal content</strong> — material that violates applicable law"
-msgstr ""
+msgstr "<strong>محتوى غير قانوني</strong> — مواد تنتهك القانون المعمول به"
 
 #: app/templates/content-policy.html:32
 msgid "How We Enforce"
-msgstr ""
+msgstr "كيفية التطبيق"
 
 #: app/templates/content-policy.html:34
 msgid ""
 "Participants can <strong>report</strong> statements via the \"Report\" "
 "button in the embed or on the full site."
 msgstr ""
+"يمكن للمشاركين <strong>الإبلاغ</strong> عن البيانات عبر زر \"إبلاغ\" في "
+"الأداة المضمنة أو على الموقع الكامل."
 
 #: app/templates/content-policy.html:35
 msgid ""
 "We review reported content and take action (remove, warn, or dismiss) within"
 " a best-effort window (typically 24–48 hours for serious reports)."
 msgstr ""
+"نراجع المحتوى المُبلغ عنه واتخاذ إجراء (إزالة أو تحذير أو رفض) ضمن نافذة "
+"أفضل جهد (عادة 24-48 ساعة للتقارير الخطيرة)."
 
 #: app/templates/content-policy.html:36
 msgid ""
 "Repeated violations may result in votes or contributions being disregarded "
 "or blocked."
-msgstr ""
+msgstr "قد تؤدي الانتهاكات المتكررة إلى تجاهل أو حظر الأصوات أو المساهمات."
 
 #: app/templates/content-policy.html:39
 msgid "Embed-Specific"
-msgstr ""
+msgstr "خاص بالأداة المضمنة"
 
 #: app/templates/content-policy.html:41
 msgid ""
@@ -3434,10 +3484,14 @@ msgid ""
 "discussion. Seed statements are generated by our system (or provided by "
 "partners via the API)."
 msgstr ""
+"الأداة المضمنة <strong>للأصوات والإبلاغ فقط بشكل افتراضي</strong>. يمكن "
+"لمالكي أو مسؤولي الشركاء اختيارياً تفعيل إرسال البيانات المضمنة لكل نقاش. "
+"يتم توليد البيانات الأساسية من قبل نظامنا (أو يتم توفيرها من قبل الشركاء عبر"
+" API)."
 
 #: app/templates/content-policy.html:44 app/templates/privacy-policy.html:7
 msgid "Privacy Policy"
-msgstr ""
+msgstr "سياسة الخصوصية"
 
 #: app/templates/content-policy.html:46
 #, python-format
@@ -3445,106 +3499,106 @@ msgid ""
 "For data we collect in the embed context (e.g. session fingerprint, partner "
 "ref), see our %(privacy_link)s, section 1.3."
 msgstr ""
+"بالنسبة للبيانات التي نجمعها في سياق الأداة المضمنة (مثل بصمة الجلسة، مرجع "
+"الشريك)، راجع %(privacy_link)s، القسم 1.3."
 
 #: app/templates/content-policy.html:50
 #: app/templates/partner/api_docs.html:1226
 #: app/templates/partner/rules.html:239
-#, fuzzy
 msgid "Questions?"
-msgstr "السؤال اليومي"
+msgstr "أسئلة؟"
 
 #: app/templates/donate.html:2
-#, fuzzy
 msgid "Donate | Society Speaks"
-msgstr "عن Society Speaks"
+msgstr "تبرع | Society Speaks"
 
 #: app/templates/donate.html:3
 msgid ""
 "Support Society Speaks with a one-time donation. Your support funds open "
 "civic infrastructure and independent public-interest work."
 msgstr ""
+"ادعم Society Speaks بتبرع لمرة واحدة. يمول دعمك البنية التحتية المدنية "
+"المفتوحة والعمل المستقل ذا المصلحة العامة."
 
 #: app/templates/donate.html:8
-#, fuzzy
 msgid "Support Society Speaks"
-msgstr "Society Speaks"
+msgstr "ادعم Society Speaks"
 
 #: app/templates/donate.html:10
 msgid ""
 "Your donation helps keep Society Speaks independent, open source, and "
 "focused on civic value."
 msgstr ""
+"يساعد تبرعك في الحفاظ على Society Speaks مستقلاً ومفتوح المصدر وركز على "
+"القيمة المدنية."
 
 #: app/templates/donate.html:17
-#, fuzzy
 msgid "Choose an amount"
-msgstr "لديك حساب بالفعل؟"
+msgstr "اختر مبلغاً"
 
 #: app/templates/donate.html:36
 msgid "Or enter a custom amount in GBP:"
-msgstr ""
+msgstr "أو أدخل مبلغاً مخصصاً بالجنيه الإسترليني:"
 
 #: app/templates/donate.html:42
 msgid "e.g. 12.50"
-msgstr ""
+msgstr "مثال: 12.50"
 
 #: app/templates/donate.html:49
 msgid "Name (optional)"
-msgstr ""
+msgstr "الاسم (اختياري)"
 
 #: app/templates/donate.html:59
 msgid "Email (optional)"
-msgstr ""
+msgstr "البريد الإلكتروني (اختياري)"
 
 #: app/templates/donate.html:71
 msgid "Message (optional)"
-msgstr ""
+msgstr "الرسالة (اختيارية)"
 
 #: app/templates/donate.html:83
 msgid "Make this donation anonymous"
-msgstr ""
+msgstr "اجعل هذه التبرع مجهول الهوية"
 
 #: app/templates/donate.html:90
 msgid "Donate securely with Stripe"
-msgstr ""
+msgstr "تبرع بأمان عبر Stripe"
 
 #: app/templates/donate.html:95
 msgid "Donations are processed securely by Stripe. Minimum donation is £1."
-msgstr ""
+msgstr "يتم معالجة التبرعات بأمان بواسطة Stripe. الحد الأدنى للتبرع هو £1."
 
 #: app/templates/donate_success.html:2
-#, fuzzy
 msgid "Thank You | Society Speaks"
-msgstr "عن Society Speaks"
+msgstr "شكراً لك | Society Speaks"
 
 #: app/templates/donate_success.html:3
-#, fuzzy
 msgid "Thank you for supporting Society Speaks."
-msgstr "عن Society Speaks"
+msgstr "شكراً لك على دعمك Society Speaks."
 
 #: app/templates/donate_success.html:8
-#, fuzzy
 msgid "Thank you for your support"
-msgstr "شكراً على إبلاغك. سنراجع الأمر."
+msgstr "شكراً لك على دعمك"
 
 #: app/templates/donate_success.html:10
 msgid ""
 "Your donation helps fund open civic infrastructure and independent public-"
 "interest work at Society Speaks."
 msgstr ""
+"يساهم تبرعك في تمويل البنية التحتية المدنية المفتوحة والعمل المستقل ذي "
+"الفائدة العامة في Society Speaks."
 
 #: app/templates/donate_success.html:17
 msgid "Return to home"
-msgstr ""
+msgstr "العودة إلى الصفحة الرئيسية"
 
 #: app/templates/donate_success.html:23
 msgid "Make another donation"
-msgstr ""
+msgstr "إرسال تبرع آخر"
 
 #: app/templates/faq.html:4 app/templates/faq.html:6
-#, fuzzy
 msgid "Frequently Asked Questions — Society Speaks"
-msgstr "انضم إلى النقاش على SocietySpeaks."
+msgstr "الأسئلة الشائعة — Society Speaks"
 
 #: app/templates/faq.html:5
 msgid ""
@@ -3552,23 +3606,26 @@ msgid ""
 "Journey, Daily Brief, Daily Question, Personal Briefs, how our machine "
 "learning works, privacy, and pricing."
 msgstr ""
+"كل ما تحتاج معرفته عن Society Speaks — رحلة الأسئلة الكبرى، الملخص اليومي، "
+"السؤال اليومي، الملخصات الشخصية، وكيف يعمل التعلم الآلي لدينا والخصوصية "
+"والتسعير."
 
 #: app/templates/faq.html:7
 msgid ""
 "How does Society Speaks work? What is a bridge idea? Is it free? Find "
 "answers to all your questions about our civic platform."
 msgstr ""
+"كيف يعمل Society Speaks؟ ما هي فكرة الجسر؟ هل هو مجاني؟ ابحث عن إجابات لجميع"
+" أسئلتك حول منصتنا المدنية."
 
 #: app/templates/faq.html:14
-#, fuzzy
 msgid "Society Speaks — Frequently Asked Questions"
-msgstr "Society Speaks"
+msgstr "Society Speaks — الأسئلة الشائعة"
 
 #: app/templates/faq.html:18 app/templates/faq.html:172
 #: app/templates/help/getting_started.html:50 app/templates/index.html:23
-#, fuzzy
 msgid "What is Society Speaks?"
-msgstr "عن Society Speaks"
+msgstr "ما هو Society Speaks؟"
 
 #: app/templates/faq.html:19
 msgid ""
@@ -3578,11 +3635,15 @@ msgid ""
 " agreement), bridge ideas (ideas that unite opposing groups), and genuine "
 "divisions worth addressing. It is open source, ad-free, and free to use."
 msgstr ""
+"Society Speaks هي منصة تكنولوجيا مدنية تستخدم التعلم الآلي لتحويل المشاركة "
+"العامة إلى رؤى منظمة. نقوم بتجميع المشاركين حسب طريقة التصويت — وليس حسب من "
+"هم — لكشف بيانات الإجماع (الاتفاق الواسع) وأفكار الجسر (الأفكار التي توحد "
+"المجموعات المعارضة) والانقسامات الحقيقية التي تستحق المعالجة. إنها مفتوحة "
+"المصدر وخالية من الإعلانات ومجانية الاستخدام."
 
 #: app/templates/faq.html:23 app/templates/faq.html:176
-#, fuzzy
 msgid "Is Society Speaks free?"
-msgstr "Society Speaks"
+msgstr "هل Society Speaks مجاني؟"
 
 #: app/templates/faq.html:24
 msgid ""
@@ -3592,11 +3653,14 @@ msgid ""
 "for those who want a custom daily digest from their own sources — and it "
 "funds the free civic platform."
 msgstr ""
+"نعم. جميع الميزات الأساسية مجانية: النقاشات ورحلة الأسئلة الكبرى والسؤال "
+"اليومي والملخص اليومي لوحة معلومات شفافية الأخبار والتصويت. اشتراك شخصي "
+"مدفوع (من £4.99/الشهر) متاح لمن يريد ملخصاً يومياً مخصصاً من مصادره الخاصة —"
+" وهو يمول المنصة المدنية المجانية."
 
 #: app/templates/faq.html:28
-#, fuzzy
 msgid "Do I need an account to use Society Speaks?"
-msgstr "عن Society Speaks"
+msgstr "هل أحتاج إلى حساب لاستخدام Society Speaks؟"
 
 #: app/templates/faq.html:29
 msgid ""
@@ -3605,12 +3669,15 @@ msgid ""
 " statements in discussions (so your progress is saved), create discussions "
 "or programmes, or subscribe to the Daily Question by email."
 msgstr ""
+"لا. يمكنك تصفح النقاشات وقراءة الملخص اليومي واستكشاف لوحة معلومات شفافية "
+"الأخبار بدون حساب. تحتاج إلى حساب للتصويت على البيانات في النقاشات (حتى يتم "
+"حفظ تقدمك) وإنشاء نقاشات أو برامج أو الاشتراك في السؤال اليومي عبر البريد "
+"الإلكتروني."
 
 #: app/templates/faq.html:33 app/templates/faq.html:199
 #: app/templates/help/help.html:34 app/templates/index.html:39
-#, fuzzy
 msgid "What is the Big Questions Journey?"
-msgstr "رحلة الأسئلة الكبرى"
+msgstr "ما هي رحلة الأسئلة الكبرى؟"
 
 #: app/templates/faq.html:34
 msgid ""
@@ -3625,11 +3692,19 @@ msgid ""
 "for the UK, US, Germany, France, Netherlands, Ireland, Canada, Singapore, "
 "Japan, and China."
 msgstr ""
+"رحلة الأسئلة الكبرى هي تجربة مدنية موجهة تغطي القضايا التي تحدد عصرنا. كل "
+"رحلة لها 8 مواضيع — المناخ والكوكب والذكاء الاصطناعي والتكنولوجيا والاقتصاد "
+"والعمل والصحة والرعاية والحرب والسلام والأمن والديمقراطية والمؤسسات والمجتمع"
+" والتماسك والتعليم ومهارات المستقبل — تبدأ كل منها بما لا يقل عن 7 بيانات "
+"سياسية منتقاة من الخبراء. يصوت المشاركون على كل بيان ويمكنهم إضافة بيانات "
+"خاصة بهم. بعد التصويت تترى أين تقف بالمقارنة مع الآخرين وأين تتفق المجتمعات "
+"وتنقسم وتجد أرضاً مشتركة. إصدارات خاصة بالبلدان متاحة للمملكة المتحدة "
+"والولايات المتحدة وألمانيا وفرنسا وهولندا وأيرلندا وكندا وسنغافورة واليابان "
+"والصين."
 
 #: app/templates/faq.html:38
-#, fuzzy
 msgid "How many statements are in the Big Questions Journey?"
-msgstr "رحلة الأسئلة الكبرى"
+msgstr "كم عدد البيانات في رحلة الأسئلة الكبرى؟"
 
 #: app/templates/faq.html:39
 msgid ""
@@ -3638,11 +3713,14 @@ msgid ""
 "grows as the community contributes. Country editions reflect that country's "
 "specific policy context and current debates."
 msgstr ""
+"يبدأ كل إصدار بما لا يقل عن 56 بيان أساسي — 7 لكل موضوع عبر 8 مواضيع. يمكن "
+"للمشاركين أيضاً إرسال بيانات خاصة بهم، لذا يزداد العدد الكلي مع مساهمة "
+"المجتمع. تعكس إصدارات البلد السياق السياسي المحدد لذلك البلد والنقاشات "
+"الجارية."
 
 #: app/templates/faq.html:43 app/templates/faq.html:230
-#, fuzzy
 msgid "What is the Daily Question?"
-msgstr "السؤال اليومي"
+msgstr "ما هو السؤال اليومي؟"
 
 #: app/templates/faq.html:44
 msgid ""
@@ -3653,11 +3731,15 @@ msgid ""
 "by email — weekly by default — and you can change the frequency to daily or "
 "monthly in your preferences."
 msgstr ""
+"السؤال اليومي هو سؤال مدني واحد تم اختياره بعناية ويُنشر كل يوم. أنت توافق "
+"أو تختلف أو غير متأكد وتشرح سبب موقفك بشكل اختياري ثم ترى كيف رد الآخرون. "
+"بمرور الوقت ينشئ هذا سجلاً طولياً لكيفية تطور الرأي العام حول القضايا "
+"الرئيسية. يتم إرسال الأسئلة عبر البريد الإلكتروني — أسبوعياً بشكل افتراضي — "
+"ويمكنك تغيير التكرار إلى يومي أو شهري في تفضيلاتك."
 
 #: app/templates/faq.html:48 app/templates/faq.html:257
-#, fuzzy
 msgid "What is the Daily Brief?"
-msgstr "موجز يومي"
+msgstr "ما هو الملخص اليومي؟"
 
 #: app/templates/faq.html:49
 msgid ""
@@ -3667,10 +3749,15 @@ msgid ""
 "breakdown, 'Why This Matters' context for every story, and under-reported "
 "stories others miss. It is published daily and available by email."
 msgstr ""
+"الملخص اليومي هو ملخص أخبار يومي مجاني وخالي من الإعلانات يغطي 3-5 قصص تم "
+"التحقق منها من حيث التأثير المدني. يستمد من 140+ مصدر عبر الطيف السياسي — "
+"يساري وعام ويميني — ويتضمن انقسام توازن سياسي و\"لماذا هذا مهم\" السياق لكل "
+"قصة والقصص المقللة من شأنها التي يفتقدها الآخرون. يتم نشره يومياً وهو متاح "
+"عبر البريد الإلكتروني."
 
 #: app/templates/faq.html:53
 msgid "How do you choose sources for the Daily Brief?"
-msgstr ""
+msgstr "كيف تختار المصادر للملخص اليومي؟"
 
 #: app/templates/faq.html:54
 msgid ""
@@ -3680,11 +3767,14 @@ msgid ""
 " Political bias ratings are drawn from AllSides. You can explore all sources"
 " on the News Transparency Dashboard."
 msgstr ""
+"يستمد الملخص اليومي من 140+ مصدر منتقى بعناية بما فيها منافذ الأخبار "
+"والمنشورات التحليلية وأجنحة الفكر والبودكاستات عبر الطيف السياسي. يتم اختيار"
+" المصادر للجودة الصحفية والصلة المدنية. يتم استخلاص تقييمات الانحياز السياسي"
+" من AllSides. يمكنك استكشاف جميع المصادر على لوحة معلومات شفافية الأخبار."
 
 #: app/templates/faq.html:58
-#, fuzzy
 msgid "What is a discussion on Society Speaks?"
-msgstr "انضم إلى النقاش على SocietySpeaks."
+msgstr "ما هي النقاشات على Society Speaks؟"
 
 #: app/templates/faq.html:59
 msgid ""
@@ -3696,10 +3786,16 @@ msgid ""
 "participants and reveals consensus statements, bridge ideas, and divisive "
 "statements."
 msgstr ""
+"النقاش هو مساحة تداول منظمة حيث يصوت المشاركون موافق أو غير موافق أو غير "
+"متأكد على مجموعة من البيانات حول موضوع معين. يمكن لأي شخص إنشاء نقاش — "
+"مجموعات مجتمعية وباحثون وصحفيون ومنظمات أو أفراد. قد تكون النقاشات عامة أو "
+"غير مدرجة أو بناءً على الدعوة فقط. بعد جمع عدد كافٍ من الأصوات يكشف التعلم "
+"الآلي عن مجموعات المشاركين وينتج عنه بيانات الإجماع وأفكار الجسر والبيانات "
+"المقسمة."
 
 #: app/templates/faq.html:63 app/templates/help/programmes.html:17
 msgid "What is a Programme on Society Speaks?"
-msgstr ""
+msgstr "ما هو البرنامج على Society Speaks؟"
 
 #: app/templates/faq.html:64
 msgid ""
@@ -3709,11 +3805,14 @@ msgid ""
 "or deliberation over time. They support multiple stewards, visibility "
 "controls (public, unlisted, invite-only, or private), and data export."
 msgstr ""
+"البرنامج هو مجموعة منظمة من النقاشات ذات الصلة مرتبة بالمواضيع والمراحل. تم "
+"تصميم البرامج للمنظمات والباحثين والحكومات ومنافذ الإعلام التي تدير "
+"الاستشارات أو الحوارات المنظمة بمرور الوقت. تدعم مسؤولين متعددين وعناصر تحكم"
+" في الرؤية (عام وغير مدرج وبناءً على الدعوة أو خاص) وتصدير البيانات."
 
 #: app/templates/faq.html:68 app/templates/faq.html:323
-#, fuzzy
 msgid "What is a consensus statement?"
-msgstr "الأحدث"
+msgstr "ما هي بيانات الإجماع؟"
 
 #: app/templates/faq.html:69
 msgid ""
@@ -3722,11 +3821,13 @@ msgid ""
 "Consensus statements show where society already aligns, even when people "
 "believe they are divided."
 msgstr ""
+"بيان الإجماع هو بيان يحصل على اتفاق واسع عبر جميع مجموعات الرأي — بما فيها "
+"المجموعات التي تختلف حول أسئلة أخرى. تظهر بيانات الإجماع أين تتوافق "
+"المجتمعات بالفعل حتى عندما يعتقد الناس أنهم منقسمون."
 
 #: app/templates/faq.html:73 app/templates/faq.html:327
-#, fuzzy
 msgid "What is a bridge idea?"
-msgstr "عن Society Speaks"
+msgstr "ما هي فكرة الجسر؟"
 
 #: app/templates/faq.html:74
 msgid ""
@@ -3735,11 +3836,13 @@ msgid ""
 "ideas represent rare common ground and are often the most actionable "
 "insights for policy, journalism, or community dialogue."
 msgstr ""
+"فكرة الجسر هي بيان يرن بقوة عبر مجموعات الرأي المختلفة — مجموعات تختلف خلاف "
+"ذلك حول معظم المسائل. تمثل أفكار الجسر أرضاً مشتركة نادرة وغالباً ما تكون "
+"أكثر الرؤى قابلية للتنفيذ للسياسة أو الصحافة أو الحوار المجتمعي."
 
 #: app/templates/faq.html:78
-#, fuzzy
 msgid "How does the machine learning work?"
-msgstr "عن Society Speaks"
+msgstr "كيف يعمل التعلم الآلي؟"
 
 #: app/templates/faq.html:79
 msgid ""
@@ -3752,10 +3855,17 @@ msgid ""
 "clusters). The methodology is inspired by Pol.is, developed by the "
 "Computational Democracy Project."
 msgstr ""
+"تستخدم Society Speaks تقليل الأبعاد (PCA) والتجميع التراكمي لتجميع المشاركين"
+" حسب أنماط التصويت لديهم، وليس حسب خصائصهم الديموغرافية أو هويتهم المُعلنة. "
+"يكشف هذا عن مجموعات رأي طبيعية — مجموعات من الأشخاص الذين يميلون للتصويت "
+"بطريقة متشابهة. يتم بعد ذلك تصنيف البيانات كإجماع (اتفاق عبر جميع "
+"المجموعات)، أو جسر (اتفاق بين مجموعات تختلف خلاف ذلك)، أو انقسامية (اختلاف "
+"قوي بين المجموعات). الأسلوب مستوحى من Pol.is، الذي طورته مشروع الديمقراطية "
+"الحسابية."
 
 #: app/templates/faq.html:83
 msgid "How many votes are needed before analysis runs?"
-msgstr ""
+msgstr "كم عدد الأصوات المطلوبة قبل تشغيل التحليل؟"
 
 #: app/templates/faq.html:84
 msgid ""
@@ -3765,11 +3875,14 @@ msgid ""
 "who have voted on a meaningful proportion of statements before clustering "
 "can run reliably."
 msgstr ""
+"يتطلب تحليل الإجماع حد أدنى من المشاركين لإنتاج مجموعات ذات دلالة إحصائية. "
+"يعتمد الحد الدقيق على عدد البيانات، لكن عادة ما تحتاج المناقشة إلى 7-15 "
+"مشارك على الأقل ممن صوتوا على نسبة معقولة من البيانات قبل أن يتمكن التجميع "
+"من العمل بشكل موثوق."
 
 #: app/templates/faq.html:88
-#, fuzzy
 msgid "Is voting anonymous?"
-msgstr "مجهول"
+msgstr "هل التصويت مجهول؟"
 
 #: app/templates/faq.html:89
 msgid ""
@@ -3779,11 +3892,14 @@ msgid ""
 " Society Speaks does not sell personal data and does not use advertising. "
 "The platform is open source."
 msgstr ""
+"المستخدمون المسجلون يربطون أصواتهم بحسابهم حتى يتمكنوا من تتبع تقدمهم "
+"وتاريخهم. يتاح التصويت المجهول في بعض المناقشات عبر بصمة جلسة لا تعرّف هويتك"
+" شخصياً. لا تبيع Society Speaks البيانات الشخصية ولا تستخدم الإعلانات. "
+"المنصة مفتوحة المصدر."
 
 #: app/templates/faq.html:93
-#, fuzzy
 msgid "Can I add my own statement to a discussion?"
-msgstr "إضافة تصريح"
+msgstr "هل يمكنني إضافة بيانتي الخاصة إلى مناقشة؟"
 
 #: app/templates/faq.html:94
 msgid ""
@@ -3792,11 +3908,13 @@ msgid ""
 "others. In the Big Questions Journey, community-submitted statements grow "
 "the pool beyond the initial seed statements."
 msgstr ""
+"نعم. يمكن للمشاركين تقديم بياناتهم الخاصة لأي مناقشة مفتوحة. تمر البيانات "
+"المقدمة عبر قائمة انتظار التعديل قبل الظهور للآخرين. في رحلة الأسئلة الكبرى،"
+" تنمو البيانات المقدمة من المجتمع فوق البيانات الأولية."
 
 #: app/templates/faq.html:98 app/templates/faq.html:346
-#, fuzzy
 msgid "What is a Personal Brief?"
-msgstr "برنامج جديد"
+msgstr "ما هي النشرة الشخصية؟"
 
 #: app/templates/faq.html:99
 msgid ""
@@ -3806,10 +3924,15 @@ msgid ""
 "Personal Brief subscriptions fund the free civic platform. Plans start from "
 "£4.99/month with a 30-day free trial and no credit card required."
 msgstr ""
+"النشرة الشخصية منتج مدفوع يتيح لك إنشاء ملخص يومي مخصص من المصادر التي "
+"تختارها — موجزات RSS وSubstacks وملفات PDF وغيرها. يجمع التوليف بواسطة "
+"الذكاء الاصطناعي التغطية من عدة مصادر حسب جدولك الزمني. تمول اشتراكات النشرة"
+" الشخصية المنصة المدنية المجانية. تبدأ الخطط من £4.99 شهرياً مع نسخة تجريبية"
+" مدتها 30 يوماً بدون الحاجة إلى بطاقة ائتمان."
 
 #: app/templates/faq.html:103
 msgid "How is the Personal Brief different from the Daily Brief?"
-msgstr ""
+msgstr "ما الفرق بين النشرة الشخصية والنشرة اليومية؟"
 
 #: app/templates/faq.html:104
 msgid ""
@@ -3819,11 +3942,15 @@ msgid ""
 "and your own schedule. A Personal Brief subscription funds the free Daily "
 "Brief and other civic features."
 msgstr ""
+"النشرة اليومية ملخص مجاني محرر بعناية يضم 3-5 قصص مدنية من مكتبة Society "
+"Speaks التي تضم 140+ مصدر. النشرة الشخصية ملخص مدفوع قابل للتخصيص بالكامل "
+"مبني من مصادرك المختارة، مع توليف بواسطة الذكاء الاصطناعي وجدولك الزمني "
+"الخاص. يمول اشتراك النشرة الشخصية النشرة اليومية المجانية والميزات المدنية "
+"الأخرى."
 
 #: app/templates/faq.html:108 app/templates/faq.html:373
-#, fuzzy
 msgid "Can organisations use Society Speaks?"
-msgstr "انضم إلى النقاش على SocietySpeaks."
+msgstr "هل يمكن للمنظمات استخدام Society Speaks؟"
 
 #: app/templates/faq.html:109
 msgid ""
@@ -3833,10 +3960,15 @@ msgid ""
 "citizen consultation, and access structured data exports for analysis and "
 "reporting. Contact us via the For Organisations page."
 msgstr ""
+"نعم. تعمل Society Speaks مع ناشرين وهيئات غير حكومية وحكومات وباحثين ومنافذ "
+"إعلامية حول العالم. يمكن للمنظمات دمج المناقشات مباشرة على مواقعها الخاصة "
+"عبر واجهة برمجة التطبيقات للشركاء، وتكليف برامج مخصصة للتشاور مع المواطنين، "
+"والوصول إلى تصدير البيانات المنظمة للتحليل والإبلاغ. تواصل معنا عبر صفحة "
+"للمنظمات."
 
 #: app/templates/faq.html:113
 msgid "What is the News Transparency Dashboard?"
-msgstr ""
+msgstr "ما هي لوحة معلومات شفافية الأخبار؟"
 
 #: app/templates/faq.html:114
 msgid ""
@@ -3845,26 +3977,31 @@ msgid ""
 "includes AI-generated sensationalism scores, coverage balance percentages, "
 "and links to source bias ratings from AllSides. No sign-up required."
 msgstr ""
+"لوحة معلومات شفافية الأخبار أداة مجانية تعرض أخبار اليوم من 140+ مصدر مرتبة "
+"حسب الاتجاه السياسي — يساري وومركزي ويميني. تتضمن درجات استثارة عاطفية "
+"يولدها الذكاء الاصطناعي، ونسب التوازن التغطوي، وروابط لتقييمات انحياز المصدر"
+" من AllSides. لا تتطلب تسجيل."
 
 #: app/templates/faq.html:125
 msgid "Help & support"
-msgstr ""
+msgstr "المساعدة والدعم"
 
 #: app/templates/brief/landing.html:529 app/templates/brief/no_brief.html:253
 #: app/templates/faq.html:126 app/templates/help/polis_algorithms.html:262
 msgid "Frequently Asked Questions"
-msgstr ""
+msgstr "الأسئلة الشائعة"
 
 #: app/templates/faq.html:128
 msgid ""
 "Everything you need to know about Society Speaks — how it works, what it "
 "costs, and how to get the most from it."
 msgstr ""
+"كل ما تحتاج إلى معرفته عن Society Speaks — كيفية عملها وتكاليفها وكيفية "
+"الاستفادة القصوى منها."
 
 #: app/templates/faq.html:168
-#, fuzzy
 msgid "Getting Started"
-msgstr "ابدأ الآن"
+msgstr "البدء"
 
 #: app/templates/faq.html:173
 msgid ""
@@ -3874,6 +4011,10 @@ msgid ""
 "agrees, where it divides, and which ideas bridge the gap. It is open source,"
 " ad-free, and free to use."
 msgstr ""
+"Society Speaks منصة تكنولوجيا مدنية تستخدم التعلم الآلي لتحويل المشاركة "
+"العامة إلى رؤى منظمة. نجمع المشاركين حسب طريقة تصويتهم — وليس حسب من يكونون "
+"— للكشف عن حيث تتفق المجتمع حقاً، وحيث ينقسم، وأي الأفكار تعمل كجسر. إنها "
+"مفتوحة المصدر وخالية من الإعلانات ومجانية للاستخدام."
 
 #: app/templates/faq.html:177
 msgid ""
@@ -3883,11 +4024,14 @@ msgid ""
 "want a custom daily digest from their own sources — and it funds the free "
 "civic platform."
 msgstr ""
+"نعم. جميع الميزات الأساسية مجانية: رحلة الأسئلة الكبرى والسؤال اليومي "
+"والنشرة اليومية ولوحة معلومات شفافية الأخبار والمناقشات والتصويت. اشتراك "
+"النشرات الشخصية المدفوع (من £4.99 شهرياً) متاح لمن يرغب في ملخص يومي مخصص من"
+" مصادره الخاصة — وهذا يمول المنصة المدنية المجانية."
 
 #: app/templates/faq.html:180
-#, fuzzy
 msgid "Do I need an account?"
-msgstr "ليس لديك حساب؟"
+msgstr "هل أحتاج إلى حساب؟"
 
 #: app/templates/faq.html:181
 msgid ""
@@ -3896,11 +4040,13 @@ msgid ""
 "voting progress, create discussions or programmes, or subscribe to the Daily"
 " Question by email."
 msgstr ""
+"لا. يمكنك استعراض المناقشات وقراءة النشرة اليومية واستكشاف لوحة معلومات "
+"شفافية الأخبار بدون حساب. تحتاج إلى حساب لحفظ تقدم التصويت الخاص بك أو إنشاء"
+" مناقشات أو برامج أو الاشتراك في السؤال اليومي عبر البريد الإلكتروني."
 
 #: app/templates/faq.html:184 app/templates/index.html:63
-#, fuzzy
 msgid "Who is Society Speaks for?"
-msgstr "Society Speaks"
+msgstr "من هي Society Speaks موجهة إليه؟"
 
 #: app/templates/faq.html:185
 msgid ""
@@ -3910,11 +4056,15 @@ msgid ""
 "insight, publishers and media outlets wanting to embed structured "
 "discussion, and researchers studying public opinion."
 msgstr ""
+"Society Speaks موجهة لأي شخص يريد فهم الرأي العام بصدق أكثر — أفراد فضولى "
+"حول موقفهم، مجموعات المجتمع والهيئات غير الحكومية التي تدير التشاورات، "
+"الحكومات وصناع السياسات الذين يسعون للحصول على رؤية مدنية، الناشرون والمنافذ"
+" الإعلامية الذين يريدون تضمين مناقشة منظمة، والباحثون الذين يدرسون الرأي "
+"العام."
 
 #: app/templates/faq.html:188
-#, fuzzy
 msgid "Is Society Speaks open source?"
-msgstr "Society Speaks"
+msgstr "هل Society Speaks مفتوحة المصدر؟"
 
 #: app/templates/faq.html:189
 msgid ""
@@ -3922,9 +4072,11 @@ msgid ""
 "our GitHub repository. We believe civic infrastructure should be transparent"
 " and auditable."
 msgstr ""
+"نعم. منصة Society Speaks مفتوحة المصدر. يمكنك العثور على الكود في مستودع "
+"GitHub الخاص بنا. نعتقد أن البنية التحتية المدنية يجب أن تكون شفافة وقابلة "
+"للتدقيق."
 
 #: app/templates/faq.html:195
-#, fuzzy
 msgid "The Big Questions Journey"
 msgstr "رحلة الأسئلة الكبرى"
 
@@ -3937,11 +4089,15 @@ msgid ""
 "skills. Each theme starts with expert-curated policy statements. After "
 "voting, you see where you stand compared to others globally."
 msgstr ""
+"رحلة الأسئلة الكبرى تجربة مدنية موجهة تغطي القضايا التي تحدد عصرنا. لديها 8 "
+"مواضيع — المناخ والكوكب والذكاء الاصطناعي والتكنولوجيا والاقتصاد والعمل "
+"والصحة والرعاية والحرب والسلام والأمن والديمقراطية والمؤسسات والمجتمع "
+"والتماسك والتعليم ومهارات المستقبل. يبدأ كل موضوع ببيانات سياسة محررة "
+"بعناية. بعد التصويت، ترى أين تقف بالمقارنة مع آخرين عالمياً."
 
 #: app/templates/faq.html:203
-#, fuzzy
 msgid "How many statements are there?"
-msgstr "لا توجد تصريحات بعد"
+msgstr "كم عدد البيانات الموجودة؟"
 
 #: app/templates/faq.html:204
 msgid ""
@@ -3950,10 +4106,13 @@ msgid ""
 "any theme, so the total grows as the community contributes. The number "
 "varies slightly between country editions."
 msgstr ""
+"يبدأ كل إصدار بـ 56 بيان بذر على الأقل — بحد أدنى من 7 لكل موضوع عبر 8 "
+"مواضيع. يمكن للمشاركين أيضاً تقديم بياناتهم الخاصة لأي موضوع، لذا ينمو "
+"الإجمالي مع مساهمة المجتمع. يختلف العدد قليلاً بين إصدارات الدول."
 
 #: app/templates/faq.html:207
 msgid "Are there editions for different countries?"
-msgstr ""
+msgstr "هل توجد إصدارات لدول مختلفة؟"
 
 #: app/templates/faq.html:208
 msgid ""
@@ -3964,10 +4123,15 @@ msgid ""
 "available. The platform personalises your recommended edition based on your "
 "browser language or profile."
 msgstr ""
+"نعم. الإصدارات الخاصة بكل دولة متاحة للمملكة المتحدة والولايات المتحدة "
+"وألمانيا وفرنسا وهولندا وأيرلندا وكندا وسنغافورة واليابان والصين. يرسّخ كل "
+"إصدار البيانات في السياق السياسي المحدد لتلك الدول والمؤسسات والنقاشات "
+"الحالية. يتاح أيضاً إصدار عالمي. تخصص المنصة الإصدار الموصى به بناءً على لغة"
+" المتصفح أو الملف الشخصي الخاص بك."
 
 #: app/templates/faq.html:211
 msgid "Can I add my own statement to a Journey discussion?"
-msgstr ""
+msgstr "هل يمكنني إضافة بيانتي الخاصة إلى مناقشة الرحلة؟"
 
 #: app/templates/faq.html:212
 msgid ""
@@ -3976,10 +4140,13 @@ msgid ""
 "other participants. This is how the pool of statements grows beyond the "
 "initial seed set."
 msgstr ""
+"نعم. بعد التصويت على البيانات الموجودة في أي موضوع، يمكنك تقديم بيانتك "
+"الخاصة. يتم مراجعة البيانات المقدمة قبل الظهور للمشاركين الآخرين. هذه هي "
+"الطريقة التي ينمو بها مجموعة البيانات فوق مجموعة البذور الأولية."
 
 #: app/templates/faq.html:215
 msgid "What happens after I complete the Journey?"
-msgstr ""
+msgstr "ماذا يحدث بعد إكمالي للرحلة؟"
 
 #: app/templates/faq.html:216
 msgid ""
@@ -3988,10 +4155,13 @@ msgid ""
 "which statements reached consensus, and where genuine divisions lie. "
 "Complete all 8 themes to see your full picture."
 msgstr ""
+"بمجرد التصويت على بيانات الموضوع، تفتح الملخص لذلك الموضوع — يظهر كيفية "
+"مقارنة آرائك بمجموعات الرأي المختلفة، والبيانات التي حققت إجماع، وحيث توجد "
+"الانقسامات الحقيقية. أكمل جميع المواضيع الـ 8 لترى الصورة الكاملة."
 
 #: app/templates/faq.html:219
 msgid "Can I save my progress and come back later?"
-msgstr ""
+msgstr "هل يمكنني حفظ تقدمي والعودة لاحقاً؟"
 
 #: app/templates/faq.html:220
 msgid ""
@@ -4000,6 +4170,9 @@ msgid ""
 "fingerprint — if you clear your browser data, your anonymous progress may be"
 " lost."
 msgstr ""
+"نعم، إذا كنت مسجل الدخول. يتم حفظ أصواتك في حسابك حتى تتمكن من العودة "
+"والمتابعة من حيث تركت. يستخدم التصويت المجهول بصمة جلسة — إذا مسحت بيانات "
+"المتصفح، قد يكون تقدمك المجهول مفقوداً."
 
 #: app/templates/faq.html:231
 msgid ""
@@ -4008,10 +4181,13 @@ msgid ""
 "in a sentence or two, and then see how others responded. Over time, this "
 "builds a longitudinal record of how public opinion evolves."
 msgstr ""
+"السؤال اليومي هو سؤال مدني واحد يتم نشره بعناية كل يوم. تصوت موافق أو معارض "
+"أو غير متأكد، وشرح اختياراً بجملة أو اثنتين إن أردت، ثم ترى كيف رد الآخرون. "
+"بمرور الوقت، هذا يبني سجلاً طولياً لكيفية تطور الرأي العام."
 
 #: app/templates/faq.html:234
 msgid "How often is a new question published?"
-msgstr ""
+msgstr "كم مرة يتم نشر سؤال جديد؟"
 
 #: app/templates/faq.html:235
 msgid ""
@@ -4019,11 +4195,13 @@ msgid ""
 " 5 questions per week. You can change your delivery frequency to daily or "
 "monthly in your email preferences."
 msgstr ""
+"يتم نشر سؤال جديد كل يوم. بشكل افتراضي، يوفر الملخص البريدي 5 أسئلة في "
+"الأسبوع. يمكنك تغيير تكرار التسليم إلى يومي أو شهري في تفضيلات بريدك "
+"الإلكتروني."
 
 #: app/templates/faq.html:238
-#, fuzzy
 msgid "How do I get the Daily Question by email?"
-msgstr "انضم إلى النقاش على SocietySpeaks."
+msgstr "كيف أحصل على السؤال اليومي عبر البريد الإلكتروني؟"
 
 #: app/templates/faq.html:239
 msgid ""
@@ -4032,10 +4210,13 @@ msgid ""
 " including frequency, send day, and time — via a link in any email we send "
 "you."
 msgstr ""
+"قم بزيارة صفحة الاشتراك في السؤال اليومي وأدخل عنوان بريدك الإلكتروني. لا "
+"يلزم حساب للاشتراك عبر البريد الإلكتروني. يمكنك إدارة تفضيلاتك — بما في ذلك "
+"التكرار ويوم الإرسال والوقت — عبر رابط في أي بريد إلكتروني نرسله لك."
 
 #: app/templates/faq.html:242
 msgid "Can I change how often I get the email?"
-msgstr ""
+msgstr "هل يمكنني تغيير عدد مرات تلقي البريد الإلكتروني؟"
 
 #: app/templates/faq.html:243
 msgid ""
@@ -4044,11 +4225,13 @@ msgid ""
 " digests arrive. Update your preferences via the link in any Daily Question "
 "email."
 msgstr ""
+"نعم. يمكنك الاختيار بين أسبوعي (الافتراضي، 5 أسئلة لكل ملخص)، أو يومي (سؤال "
+"واحد يومياً)، أو شهري. يمكنك أيضاً اختيار اليوم والوقت الذي تصل فيه الملخصات"
+" الأسبوعية. حدّث تفضيلاتك عبر الرابط في أي بريد إلكتروني للسؤال اليومي."
 
 #: app/templates/faq.html:246
-#, fuzzy
 msgid "How are Daily Questions chosen?"
-msgstr "السؤال اليومي"
+msgstr "كيف يتم اختيار الأسئلة اليومية؟"
 
 #: app/templates/faq.html:247
 msgid ""
@@ -4056,15 +4239,17 @@ msgid ""
 "surface genuine agreement or division. They are drawn from active "
 "discussions on the platform and from current news topics."
 msgstr ""
+"يتم اختيار الأسئلة لأهميتها المدنية والجدوى والقدرة على الكشف عن التوافق "
+"الحقيقي أو الخلاف. يتم اختيارها من النقاشات النشطة على المنصة ومن مواضيع "
+"الأخبار الحالية."
 
 #: app/templates/brief/landing.html:83 app/templates/brief/subscribe.html:130
 #: app/templates/brief/view.html:18 app/templates/briefing/landing.html:1202
 #: app/templates/emails/daily_brief.html:212 app/templates/faq.html:253
 #: app/templates/help/news_feed.html:236 app/templates/help/news_feed.html:237
 #: app/templates/index.html:576
-#, fuzzy
 msgid "The Daily Brief"
-msgstr "موجز يومي"
+msgstr "الملخص اليومي"
 
 #: app/templates/faq.html:258
 msgid ""
@@ -4074,10 +4259,14 @@ msgid ""
 "This Matters' context, and under-reported stories others miss. No sign-up "
 "required to read."
 msgstr ""
+"الملخص اليومي هو ملخص أخبار يومي مجاني وخالٍ من الإعلانات يغطي 3-5 قصص تم "
+"التحقق منها لتأثيرها المدني. يستمد من أكثر من 140 مصدر عبر الطيف السياسي "
+"ويتضمن تصنيفاً يساراً/وسطاً/يميناً لكل قصة، سياق 'لماذا يهمك هذا'، والقصص "
+"غير المُبلّغ عنها التي يفوتها الآخرون. لا يلزم التسجيل للقراءة."
 
 #: app/templates/faq.html:261
 msgid "How do you choose which stories to cover?"
-msgstr ""
+msgstr "كيف تختارون القصص التي ستغطونها؟"
 
 #: app/templates/faq.html:262
 msgid ""
@@ -4086,10 +4275,14 @@ msgid ""
 "potential. An AI scoring system filters for quality and civic impact. Our "
 "editorial team curates the final selection."
 msgstr ""
+"يتم اختيار القصص لأهميتها المدنية — كيف تؤثر على الحياة الديمقراطية أو "
+"السياسة أو الفهم العام — بدلاً من الفيروسية أو إمكانية إثارة الغضب. نظام "
+"تسجيل ذكي يصفي الجودة والتأثير المدني. يقوم فريقنا التحريري بالاختيار "
+"النهائي."
 
 #: app/templates/faq.html:265
 msgid "What does the left/centre/right breakdown mean?"
-msgstr ""
+msgstr "ماذا يعني تصنيف يسار/وسط/يمين؟"
 
 #: app/templates/faq.html:266
 msgid ""
@@ -4099,10 +4292,14 @@ msgid ""
 "from AllSides. This lets you see the same story from multiple angles rather "
 "than a single editorial perspective."
 msgstr ""
+"لكل قصة، نعرض كيفية تغطية المصادر عبر الطيف السياسي لها — ما تركز عليه "
+"المنافذ اليسارية والوسطية واليمينية، والأماكن التي يختلف فيها الإطار. تُستمد"
+" تقييمات الانحياز السياسي من AllSides. هذا يسمح لك برؤية القصة نفسها من "
+"زوايا متعددة بدلاً من منظور تحريري واحد."
 
 #: app/templates/faq.html:269
 msgid "How many sources do you use?"
-msgstr ""
+msgstr "كم عدد المصادر التي تستخدمونها؟"
 
 #: app/templates/faq.html:270
 msgid ""
@@ -4110,20 +4307,25 @@ msgid ""
 "analysis publications, think tanks, and podcasts. You can explore all "
 "sources, organised by political leaning, on the News Transparency Dashboard."
 msgstr ""
+"يستمد الملخص اليومي من أكثر من 140 مصدراً منتقى بعناية بما في ذلك منافذ "
+"الأخبار ومنشورات التحليل ومعاهد الأبحاث والبودكاست. يمكنك استكشاف جميع "
+"المصادر، المنظمة حسب الميول السياسية، على لوحة معلومات شفافية الأخبار."
 
 #: app/templates/faq.html:273
 msgid "Is the Daily Brief available by email?"
-msgstr ""
+msgstr "هل الملخص اليومي متاح عبر البريد الإلكتروني؟"
 
 #: app/templates/faq.html:274
 msgid ""
 "Yes. Subscribe on the Daily Brief page. Email is optional — the Brief is "
 "always free to read on the website."
 msgstr ""
+"نعم. اشترك على صفحة الملخص اليومي. البريد الإلكتروني اختياري — الملخص متاح "
+"دائماً للقراءة على الموقع مجاناً."
 
 #: app/templates/faq.html:277
 msgid "What is the 'Under the Radar' section?"
-msgstr ""
+msgstr "ما هو قسم 'تحت الرادار'؟"
 
 #: app/templates/faq.html:278
 msgid ""
@@ -4132,6 +4334,10 @@ msgid ""
 "identify as having high civic relevance but low media attention — the kind "
 "of stories that matter but rarely make headlines."
 msgstr ""
+"يسلط 'تحت الرادار' الضوء على القصص المهمة التي لم تتلقَّ تغطية رئيسية. هذه "
+"قصص يحددها محررونا ونظام التسجيل الذكي على أنها ذات أهمية مدنية عالية لكن "
+"اهتماماً إعلامياً منخفضاً — نوع القصص التي تهم لكن نادراً ما تصل إلى "
+"العناوين."
 
 #: app/templates/faq.html:284 app/templates/layout.html:501
 #: app/templates/layout.html:1185
@@ -4139,9 +4345,8 @@ msgid "Discussions & Programmes"
 msgstr "النقاشات والبرامج"
 
 #: app/templates/faq.html:288
-#, fuzzy
 msgid "What is a discussion?"
-msgstr "ابدأ نقاشاً"
+msgstr "ما هو النقاش؟"
 
 #: app/templates/faq.html:289
 msgid ""
@@ -4150,10 +4355,14 @@ msgid ""
 " one. Once enough people have voted, machine learning reveals consensus "
 "statements, bridge ideas, and genuine divisions."
 msgstr ""
+"النقاش هو مساحة تداول منظمة يصوت فيها المشاركون على مجموعة من الأطروحات حول "
+"موضوع محدد. يمكن لأي شخص لديه حساب إنشاء واحد. بمجرد أن يصوت عدد كافٍ من "
+"الأشخاص، يكشف التعلم الآلي عن الأطروحات المتفق عليها والأفكار الجسرية "
+"والانقسامات الحقيقية."
 
 #: app/templates/faq.html:292 app/templates/help/help.html:26
 msgid "How do I create a discussion?"
-msgstr ""
+msgstr "كيف أنشئ نقاشاً؟"
 
 #: app/templates/faq.html:293
 msgid ""
@@ -4162,11 +4371,13 @@ msgid ""
 "and publish. You can invite others via link or leave it open for anyone to "
 "join."
 msgstr ""
+"سجل الدخول، انتقل إلى 'بدء نقاش'، اعطِه عنواناً ووصفاً، أضف أطروحاتك "
+"الأساسية (3 على الأقل للبدء)، اختر إعداد الرؤية، ونشر. يمكنك دعوة الآخرين "
+"عبر رابط أو تركه مفتوحاً لأي شخص للانضمام."
 
 #: app/templates/faq.html:296
-#, fuzzy
 msgid "What are seed statements?"
-msgstr "إضافة تصريح"
+msgstr "ما هي الأطروحات الأساسية؟"
 
 #: app/templates/faq.html:297
 msgid ""
@@ -4175,11 +4386,14 @@ msgid ""
 " in claim, and span a range of perspectives on the topic. Participants can "
 "also add their own statements once the discussion is running."
 msgstr ""
+"الأطروحات الأساسية هي مجموعة الافتراضات الأولية التي يصوت عليها المشاركون. "
+"وهي تحدد مساحة النقاش. الأطروحات الأساسية الجيدة واضحة ولها مطالبة واحدة "
+"وتغطي مجموعة من وجهات النظر حول الموضوع. يمكن للمشاركين أيضاً إضافة "
+"أطروحاتهم الخاصة بمجرد بدء النقاش."
 
 #: app/templates/faq.html:300 app/templates/help/help.html:42
-#, fuzzy
 msgid "What is a programme?"
-msgstr "برنامج جديد"
+msgstr "ما هي البرامج؟"
 
 #: app/templates/faq.html:301
 msgid ""
@@ -4189,10 +4403,14 @@ msgid ""
 "deliberation. They support multiple stewards, progress tracking, and data "
 "export."
 msgstr ""
+"البرنامج هو مجموعة من النقاشات ذات الصلة المنظمة في مواضيع ومراحل. تم تصميم "
+"البرامج للاستشارة المنظمة عبر الوقت — التجمعات المدنية والبحث السياسي "
+"والمشاركة المجتمعية أو المناقشة الموجهة من الإعلام. وهي تدعم مشرفين متعددين "
+"وتتبع التقدم وتصدير البيانات."
 
 #: app/templates/faq.html:304
 msgid "What visibility options are available?"
-msgstr ""
+msgstr "ما هي خيارات الرؤية المتاحة؟"
 
 #: app/templates/faq.html:305
 msgid ""
@@ -4200,10 +4418,13 @@ msgid ""
 "listed in search. Invite-only: participants must be approved or invited. "
 "Private: visible only to programme stewards."
 msgstr ""
+"عام: يمكن لأي شخص العثور عليه والانضمام. غير مدرج: قابل للانضمام عبر الرابط "
+"فقط، غير مدرج في البحث. دعوة فقط: يجب الموافقة على المشاركين أو دعوتهم. خاص:"
+" مرئي فقط لمشرفي البرنامج."
 
 #: app/templates/faq.html:308
 msgid "How many votes are needed before the analysis runs?"
-msgstr ""
+msgstr "كم عدد الأصوات المطلوبة قبل تشغيل التحليل؟"
 
 #: app/templates/faq.html:309
 msgid ""
@@ -4212,15 +4433,17 @@ msgid ""
 "voted on a meaningful proportion of statements. The exact threshold depends "
 "on the number of statements in the discussion."
 msgstr ""
+"يحتاج تحليل التوافق إلى الحد الأدنى من المشاركين لإنتاج تجميعات ذات دلالة "
+"إحصائية — عادة 7-15 مشارك صوتوا على نسبة ذات معنى من الأطروحات. يعتمد الحد "
+"الأدنى الدقيق على عدد الأطروحات في النقاش."
 
 #: app/templates/faq.html:315
 msgid "How the Machine Learning Works"
-msgstr ""
+msgstr "كيف يعمل التعلم الآلي"
 
 #: app/templates/faq.html:319
-#, fuzzy
 msgid "How does Society Speaks analyse votes?"
-msgstr "عن Society Speaks"
+msgstr "كيف تحلل Society Speaks الأصوات؟"
 
 #: app/templates/faq.html:320
 msgid ""
@@ -4230,6 +4453,10 @@ msgid ""
 "natural opinion clusters: groups of people who tend to vote similarly across"
 " a discussion."
 msgstr ""
+"نستخدم تقليل الأبعاد (تحليل المكونات الرئيسية) والتجميع التجميعي لتجميع "
+"المشاركين حسب أنماط أصواتهم — ليس حسب الديموغرافيا أو الهوية المذكورة أو "
+"المعتقدات السابقة. هذا يكشف عن تجمعات الآراء الطبيعية: مجموعات من الأشخاص "
+"الذين يميلون إلى التصويت بشكل مشابه عبر نقاش."
 
 #: app/templates/faq.html:324
 msgid ""
@@ -4237,6 +4464,9 @@ msgid ""
 " including groups that disagree on other questions. It shows where society "
 "already aligns, even when people believe they are divided."
 msgstr ""
+"تتلقى الأطروحة المتفق عليها قبولاً واسع النطاق عبر جميع تجمعات الآراء — بما "
+"في ذلك المجموعات التي تختلف حول أسئلة أخرى. وهي تظهر حيث تتوافق المجتمع "
+"بالفعل، حتى عندما يعتقد الناس أنهم منقسمون."
 
 #: app/templates/faq.html:328
 msgid ""
@@ -4245,11 +4475,13 @@ msgid ""
 "the most actionable insights for policymakers, journalists, and community "
 "leaders."
 msgstr ""
+"تتردد فكرة جسرية بقوة عبر تجمعات آراء مختلفة تختلف بخلاف ذلك. تمثل الأفكار "
+"الجسرية أرضاً مشتركة نادرة وغالباً ما تكون الرؤى الأكثر قابلية للتنفيذ "
+"لواضعي السياسات والصحفيين وقادة المجتمع."
 
 #: app/templates/faq.html:331
-#, fuzzy
 msgid "What is a divisive statement?"
-msgstr "خيارات التصويت لهذا التصريح"
+msgstr "ما هي الأطروحة المقسمة؟"
 
 #: app/templates/faq.html:332
 msgid ""
@@ -4257,10 +4489,13 @@ msgid ""
 "clusters. Divisive statements are not failures — they show where genuine "
 "democratic deliberation is needed, rather than simply counting votes."
 msgstr ""
+"تنتج الأطروحة المقسمة انقسام قوي وواضح بين تجمعات الآراء. الأطروحات المقسمة "
+"ليست فشل — فهي تظهر حيث يكون الحوار الديمقراطي الحقيقي ضروري، بدلاً من عد "
+"الأصوات ببساطة."
 
 #: app/templates/faq.html:335
 msgid "Is the methodology peer reviewed?"
-msgstr ""
+msgstr "هل تمت مراجعة المنهجية من قبل الأقران؟"
 
 #: app/templates/faq.html:336
 msgid ""
@@ -4269,11 +4504,14 @@ msgid ""
 " (vTaiwan), the EU, and elsewhere. Society Speaks builds on this foundation "
 "with its own native implementation. Our code is open source and auditable."
 msgstr ""
+"المنهجية مستوحاة من Pol.is، الذي طورته Computational Democracy Project، وقد "
+"استُخدم في المداولات الحكومية في تايوان (vTaiwan) والاتحاد الأوروبي وأماكن "
+"أخرى. Society Speaks يبني على هذا الأساس بتطبيقه الأصلي الخاص به. رمزنا "
+"مفتوح المصدر وقابل للتدقيق."
 
 #: app/templates/faq.html:342
-#, fuzzy
 msgid "Personal Briefs (Premium)"
-msgstr "موجزات شخصية"
+msgstr "الملخصات الشخصية (Premium)"
 
 #: app/templates/faq.html:347
 msgid ""
@@ -4283,10 +4521,14 @@ msgid ""
 "and delivers it on your schedule. It is distinct from the free Daily Brief, "
 "which is editorially curated by Society Speaks."
 msgstr ""
+"الملخص الشخصي منتج مدفوع يتيح لك إنشاء ملخص يومي مخصص من مصادرك المختارة — "
+"خلاصات RSS وSubstacks وملفات PDF والرسائل الإخبارية والمزيد. يجمع التوليف "
+"بالذكاء الاصطناعي التغطية من عدة مصادر وينقلها حسب جدولك الزمني. إنه مختلف "
+"عن الملخص اليومي المجاني، الذي تقوّمه Society Speaks بشكل تحريري."
 
 #: app/templates/faq.html:350
 msgid "How much does a Personal Brief cost?"
-msgstr ""
+msgstr "كم تكلفة الملخص الشخصي؟"
 
 #: app/templates/faq.html:351
 msgid ""
@@ -4296,10 +4538,14 @@ msgid ""
 "collaboration. All plans include a 30-day free trial and no credit card is "
 "required to start."
 msgstr ""
+"تبدأ الخطط من £4.99/شهر للخطة الشخصية. تتوفر أيضًا خطط احترافية (£25/شهر) "
+"وخطط فريق (£300/شهر)، مع ميزات إضافية تشمل ملخصات متعددة والمراجعة قبل "
+"الإرسال والتعاون الجماعي. تتضمن جميع الخطط نسخة تجريبية مجانية لمدة 30 يومًا"
+" ولا يلزم بطاقة ائتمان للبدء."
 
 #: app/templates/faq.html:354
 msgid "How does my subscription help the platform?"
-msgstr ""
+msgstr "كيف يساعد اشتراكي المنصة؟"
 
 #: app/templates/faq.html:355
 msgid ""
@@ -4308,10 +4554,14 @@ msgid ""
 "discussions, and the News Transparency Dashboard. We are not ad-funded, so "
 "subscriber support is what keeps everything else free."
 msgstr ""
+"اشتراكات الملخص الشخصي تمول مباشرة الميزات المدنية المجانية في Society "
+"Speaks — الملخص اليومي والسؤال اليومي ورحلة الأسئلة الكبرى والمناقشات ولوحة "
+"مراقبة شفافية الأخبار. نحن غير ممولين من الإعلانات، لذا فإن دعم المشتركين هو"
+" ما يبقي كل شيء آخر مجانيًا."
 
 #: app/templates/faq.html:358
 msgid "What sources can I use in a Personal Brief?"
-msgstr ""
+msgstr "ما المصادر التي يمكنني استخدامها في ملخص شخصي؟"
 
 #: app/templates/faq.html:359
 msgid ""
@@ -4319,22 +4569,26 @@ msgid ""
 "synthesises content from all your chosen sources and delivers a coherent "
 "digest. Team plans also allow review and editing before the brief is sent."
 msgstr ""
+"يمكنك إضافة أي خلاصة RSS أو Substack أو ملف PDF تم تحميله أو صفحة ويب. يقوم "
+"الذكاء الاصطناعي بتوليف المحتوى من جميع مصادرك المختارة وينقل ملخصًا "
+"متناسقًا. تسمح خطط الفريق أيضًا بالمراجعة والتحرير قبل إرسال الملخص."
 
 #: app/templates/faq.html:362
 msgid "Can I cancel at any time?"
-msgstr ""
+msgstr "هل يمكنني الإلغاء في أي وقت؟"
 
 #: app/templates/faq.html:363
 msgid ""
 "Yes. Cancel anytime from your account settings. There are no lock-in "
 "periods. If you cancel during a trial, you will not be charged."
 msgstr ""
+"نعم. ألغِ في أي وقت من إعدادات حسابك. لا توجد فترات قفل. إذا ألغيت أثناء "
+"النسخة التجريبية، فلن يتم تحصيل رسوم منك."
 
 #: app/templates/briefing/marketplace.html:44
 #: app/templates/briefing/preview_template.html:42 app/templates/faq.html:369
-#, fuzzy
 msgid "For Organisations"
-msgstr "مؤسسة"
+msgstr "للمنظمات"
 
 #: app/templates/faq.html:374
 msgid ""
@@ -4343,10 +4597,14 @@ msgid ""
 " websites via the Partner API, commission structured programmes for citizen "
 "consultation, and access data exports for analysis and reporting."
 msgstr ""
+"نعم. تعمل Society Speaks مع الناشرين والمنظمات غير الحكومية والحكومات "
+"والباحثين ووسائل الإعلام عالميًا. يمكن للمنظمات دمج المناقشات على مواقعها "
+"الخاصة عبر Partner API، وتكليف برامج منظمة لاستشارة المواطنين، والوصول إلى "
+"تصدير البيانات للتحليل والإبلاغ."
 
 #: app/templates/faq.html:377
 msgid "What is the publisher embed?"
-msgstr ""
+msgstr "ما هو الدمج للناشرين؟"
 
 #: app/templates/faq.html:378
 msgid ""
@@ -4356,10 +4614,14 @@ msgid ""
 "opinion data alongside their content. Visit the For Organisations page for "
 "details."
 msgstr ""
+"يمكن للناشرين دمج مناقشات Society Speaks المباشرة مباشرة في مقالاتهم "
+"وصفحاتهم عبر علامة نصية بسيطة. يصوت القراء على العبارات دون مغادرة المنشور، "
+"ويحصل الناشر على بيانات رأي عام منظمة إلى جانب محتواه. قم بزيارة صفحة For "
+"Organisations للمزيد من التفاصيل."
 
 #: app/templates/faq.html:381
 msgid "Can I run a citizen consultation or deliberation programme?"
-msgstr ""
+msgstr "هل يمكنني تشغيل برنامج استشارة أو مداولة للمواطنين؟"
 
 #: app/templates/faq.html:382
 msgid ""
@@ -4368,11 +4630,13 @@ msgid ""
 "control visibility, appoint stewards, and export results. Contact us if you "
 "need help setting up a large-scale programme."
 msgstr ""
+"نعم. تم تصميم البرامج بالضبط للمداولات المنظمة المتعددة المراحل. يمكنك إنشاء"
+" مناقشات موضوعية ودعوة المشاركين والتحكم في الرؤية وتعيين الحراس وتصدير "
+"النتائج. اتصل بنا إذا كنت تحتاج إلى مساعدة في إعداد برنامج واسع النطاق."
 
 #: app/templates/faq.html:385
-#, fuzzy
 msgid "What data can organisations access?"
-msgstr "مؤسسة"
+msgstr "ما البيانات التي يمكن للمنظمات الوصول إليها؟"
 
 #: app/templates/faq.html:386
 msgid ""
@@ -4380,14 +4644,17 @@ msgid ""
 "participant counts, consensus analysis results, and CSV exports of "
 "anonymised voting data. Raw personal data is never shared."
 msgstr ""
+"يمكن لمنشئي المناقشات والحراس توفير الوصول إلى توزيع الأصوات وعدد المشاركين "
+"ونتائج تحليل الإجماع وتصدير ملفات CSV لبيانات التصويت المجهولة الهوية. لا "
+"تُشارك بيانات شخصية خام أبدًا."
 
 #: app/templates/faq.html:392
 msgid "Privacy & Data"
-msgstr ""
+msgstr "الخصوصية والبيانات"
 
 #: app/templates/faq.html:396
 msgid "Is my voting anonymous?"
-msgstr ""
+msgstr "هل تصويتي مجهول الهوية؟"
 
 #: app/templates/faq.html:397
 msgid ""
@@ -4397,11 +4664,14 @@ msgid ""
 " personally identify you. The site does not use advertising or sell personal"
 " data."
 msgstr ""
+"يرتبط تصويت المستخدمين المسجلين بحسابهم حتى يتمكنوا من تتبع تقدمهم الخاص. لا"
+" يُنسب التصويت علنًا للمستخدمين الأفراد بالاسم. التصويت المجهول متاح عبر "
+"بصمة جلسة لا تحددك شخصيًا. الموقع لا يستخدم الإعلانات أو يبيع البيانات "
+"الشخصية."
 
 #: app/templates/faq.html:400
-#, fuzzy
 msgid "Do you use advertising?"
-msgstr "رسائل مزعجة أو إعلانات"
+msgstr "هل تستخدمون الإعلانات؟"
 
 #: app/templates/faq.html:401
 msgid ""
@@ -4409,20 +4679,25 @@ msgid ""
 "retargeting, or sell your data to third parties. Revenue comes from Personal"
 " Brief subscriptions and organisation partnerships."
 msgstr ""
+"لا. Society Speaks غير ممول من الإعلانات. لا نعرض إعلانات أو نستخدم إعادة "
+"الاستهداف أو نبيع بيانات المستخدمين لأطراف ثالثة. يأتي الإيراد من اشتراكات "
+"Personal Brief والشراكات المؤسسية."
 
 #: app/templates/faq.html:404
 msgid "Is the platform open source?"
-msgstr ""
+msgstr "هل المنصة مفتوحة المصدر؟"
 
 #: app/templates/faq.html:405
 msgid ""
 "Yes. The Society Speaks codebase is open source and available on GitHub. We "
 "believe civic infrastructure should be transparent and auditable by anyone."
 msgstr ""
+"نعم. كود Society Speaks مفتوح المصدر وموجود على GitHub. نعتقد أن البنية "
+"التحتية المدنية يجب أن تكون شفافة وقابلة للتدقيق من قبل أي شخص."
 
 #: app/templates/faq.html:408
 msgid "How do I delete my account?"
-msgstr ""
+msgstr "كيف أحذف حسابي؟"
 
 #: app/templates/faq.html:409
 msgid ""
@@ -4430,30 +4705,29 @@ msgid ""
 "your personal data from our systems in accordance with GDPR and UK data "
 "protection law."
 msgstr ""
+"يمكنك طلب حذف الحساب من إعدادات حسابك. يؤدي هذا إلى إزالة بيانات شخصيتك من "
+"أنظمتنا وفقًا لـ GDPR وقانون حماية البيانات في المملكة المتحدة."
 
 #: app/templates/faq.html:416
-#, fuzzy
 msgid "Still have a question?"
-msgstr "السؤال اليومي"
+msgstr "هل لديك سؤال آخر؟"
 
 #: app/templates/faq.html:417
 msgid "We are happy to help. Send us a message and we will get back to you."
-msgstr ""
+msgstr "نحن سعداء بمساعدتك. أرسل لنا رسالة وسنرد عليك."
 
 #: app/templates/faq.html:424 app/templates/platform.html:1080
-#, fuzzy
 msgid "Email us"
-msgstr "البريد الإلكتروني"
+msgstr "راسلنا عبر البريد الإلكتروني"
 
 #: app/templates/faq.html:428
-#, fuzzy
 msgid "Visit the Help Centre"
-msgstr "Society Speaks"
+msgstr "زر مركز المساعدة"
 
 #: app/templates/index.html:5 app/templates/index.html:9
 #: app/templates/index.html:12
 msgid "Making Disagreement Useful Again — Society Speaks"
-msgstr ""
+msgstr "جعل الاختلاف مفيدًا مرة أخرى — Society Speaks"
 
 #: app/templates/index.html:7
 msgid ""
@@ -4462,6 +4736,10 @@ msgid ""
 "groups, and surface real divisions worth addressing. Vote on the big "
 "questions. See what society actually thinks."
 msgstr ""
+"Society Speaks هي منصة تكنولوجيا مدنية تستخدم التعلم الآلي للعثور على حيث "
+"يتفق الناس بصراحة، والكشف عن أفكار جسرية توحد المجموعات المتعارضة، وتسليط "
+"الضوء على الانقسامات الحقيقية التي تستحق المعالجة. صوت على الأسئلة الكبرى. "
+"انظر ماذا تعتقد المجتمع فعلاً."
 
 #: app/templates/index.html:10
 msgid ""
@@ -4469,12 +4747,17 @@ msgid ""
 " to reveal consensus, bridge ideas, and genuine divisions across thousands "
 "of participants — globally."
 msgstr ""
+"صوت على الأسئلة التي تحدد عصرنا. يستخدم Society Speaks التعلم الآلي للكشف عن"
+" الإجماع والأفكار الجسرية والانقسامات الحقيقية عبر آلاف المشاركين — عالميًا."
 
 #: app/templates/index.html:13
 msgid ""
 "Vote on the big questions. See where society agrees, where it divides, and "
 "what ideas can bridge the gap. Free, open source, ad-free civic technology."
 msgstr ""
+"صوت على الأسئلة الكبرى. انظر أين يتفق المجتمع، وأين ينقسم، وما الأفكار التي "
+"يمكن أن تسد الفجوة. تكنولوجيا مدنية مجانية ومفتوحة المصدر وخالية من "
+"الإعلانات."
 
 #: app/templates/index.html:26
 msgid ""
@@ -4484,11 +4767,14 @@ msgid ""
 "bridge ideas that unite opposing groups, and genuine divisions worth "
 "addressing."
 msgstr ""
+"Society Speaks هي منصة تكنولوجيا مدنية تستخدم التعلم الآلي لتحويل المشاركة "
+"العامة إلى رؤى منظمة. تجمع المشاركين حسب طريقة تصويتهم — وليس حسب من هم — "
+"للكشف عن العبارات الإجماعية والأفكار الجسرية التي توحد المجموعات المتعارضة "
+"والانقسامات الحقيقية التي تستحق المعالجة."
 
 #: app/templates/index.html:31
-#, fuzzy
 msgid "What is a bridge idea on Society Speaks?"
-msgstr "عن Society Speaks"
+msgstr "ما الفكرة الجسرية على Society Speaks؟"
 
 #: app/templates/index.html:34
 msgid ""
@@ -4497,6 +4783,9 @@ msgid ""
 "rare common ground between opposing viewpoints and are identified through "
 "machine learning analysis of voting patterns."
 msgstr ""
+"الفكرة الجسرية عبارة تحظى بقبول قوي عبر مجموعات رأي مختلفة — مجموعات لا تتفق"
+" بخلاف ذلك. تمثل الأفكار الجسرية أرضًا مشتركة نادرة بين وجهات نظر معارضة "
+"ويتم تحديدها من خلال تحليل التعلم الآلي لأنماط التصويت."
 
 #: app/templates/index.html:42
 msgid ""
@@ -4509,11 +4798,17 @@ msgid ""
 "editions are available for the UK, US, Germany, France, Netherlands, "
 "Ireland, Canada, Singapore, Japan, and China."
 msgstr ""
+"رحلة الأسئلة الكبرى هي تجربة مدنية موجهة تتضمن ما لا يقل عن 56 بيان سياسي "
+"عبر 8 مواضيع — المناخ والكوكب والذكاء الاصطناعي والتكنولوجيا والاقتصاد "
+"والعمل والصحة والرعاية والحرب والسلام والأمن والديمقراطية والمؤسسات والمجتمع"
+" والتماسك والتعليم ومهارات المستقبل. يبدأ كل موضوع بـ 7 بيانات أساسية منسقة "
+"من قبل الخبراء؛ يمكن للمشاركين أيضًا تقديم بياناتهم الخاصة، لذا ينمو "
+"الإجمالي مع المجتمع. تتوفر طبعات خاصة بالدول للمملكة المتحدة والولايات "
+"المتحدة وألمانيا وفرنسا وهولندا وأيرلندا وكندا وسنغافورة واليابان والصين."
 
 #: app/templates/index.html:47 app/templates/platform.html:1019
-#, fuzzy
 msgid "Is Society Speaks free to use?"
-msgstr "Society Speaks"
+msgstr "هل Society Speaks مجاني الاستخدام؟"
 
 #: app/templates/index.html:50
 msgid ""
@@ -4522,11 +4817,13 @@ msgid ""
 " and the News Transparency Dashboard. A paid Personal Briefs subscription is"
 " available and funds the open source platform."
 msgstr ""
+"نعم. جميع الميزات الأساسية في Society Speaks مجانية — بما فيها التصويت على "
+"النقاشات، رحلة الأسئلة الكبرى، السؤال اليومي، الملخص اليومي، ولوحة شفافية "
+"الأخبار. يتوفر اشتراك مدفوع في Briefs الشخصية ويمول منصة المصدر المفتوح."
 
 #: app/templates/index.html:55
-#, fuzzy
 msgid "How does Society Speaks work?"
-msgstr "عن Society Speaks"
+msgstr "كيف يعمل Society Speaks؟"
 
 #: app/templates/index.html:58
 msgid ""
@@ -4536,6 +4833,11 @@ msgid ""
 "patterns to identify consensus statements, bridge ideas, and genuine "
 "divisions — producing insight that goes beyond simple vote counting."
 msgstr ""
+"ينضم المشاركون إلى نقاش أو رحلة الأسئلة الكبرى، ويصوتون موافق أو معارض أو "
+"غير متأكد على بيانات منظمة، ويشرحون منطقهم بشكل اختياري. ثم تجمع خوارزميات "
+"التعلم الآلي المشاركين حسب أنماط تصويتهم لتحديد البيانات الموافق عليها "
+"والأفكار الجسرية والانقسامات الحقيقية — مما ينتج رؤية تتجاوز عد الأصوات "
+"البسيط."
 
 #: app/templates/index.html:66
 msgid ""
@@ -4545,11 +4847,15 @@ msgid ""
 "outlets that want to embed structured discussion, and researchers studying "
 "public opinion."
 msgstr ""
+"Society Speaks موجه للأفراد الذين يريدون فهم الرأي العام، والمنظمات "
+"والمنظمات غير الحكومية التي تريد استشارة مجتمعاتها، والحكومات وصانعو "
+"السياسات الذين يسعون للحصول على رؤى مدنية قائمة على الأدلة، والناشرين "
+"والمنافذ الإعلامية التي تريد دمج النقاش المنظم، والباحثين الذين يدرسون الرأي"
+" العام."
 
 #: app/templates/index.html:71
-#, fuzzy
 msgid "What is the Daily Question on Society Speaks?"
-msgstr "انضم إلى النقاش على SocietySpeaks."
+msgstr "ما هو السؤال اليومي على Society Speaks؟"
 
 #: app/templates/index.html:74
 msgid ""
@@ -4558,10 +4864,14 @@ msgid ""
 "others responded. Over time this creates a longitudinal view of how public "
 "opinion evolves. Questions are available by email — weekly by default."
 msgstr ""
+"السؤال اليومي هو سؤال مدني واحد مختار بعناية يُنشر كل يوم. يصوت المشاركون "
+"ويشاركون منطقهم بشكل اختياري، ثم يرون كيف رد الآخرون. بمرور الوقت، يخلق هذا "
+"رؤية طولية لكيفية تطور الرأي العام. تتوفر الأسئلة عبر البريد الإلكتروني — "
+"أسبوعياً بشكل افتراضي."
 
 #: app/templates/index.html:79
 msgid "What is the Society Speaks Daily Brief?"
-msgstr ""
+msgstr "ما هو ملخص Society Speaks اليومي؟"
 
 #: app/templates/index.html:82
 msgid ""
@@ -4571,22 +4881,24 @@ msgid ""
 "political breakdown, context for why each story matters, and under-reported "
 "stories others miss."
 msgstr ""
+"الملخص اليومي هو ملخص أخبار يومي مجاني وخالٍ من الإعلانات يغطي 3–5 قصص تم "
+"فحصها للتأثير المدني. يستمد من 140+ مصدر عبر الطيف السياسي — يساراً ووسطاً "
+"ويميناً — ويتضمن تفصيل سياسي يساري/وسطي/يميني، سياق لسبب أهمية كل قصة، "
+"والقصص غير المُبلغ عنها التي يفتقدها الآخرون."
 
 #: app/templates/index.html:92
-#, fuzzy
 msgid "How to participate in Society Speaks"
-msgstr "عن Society Speaks"
+msgstr "كيفية المشاركة في Society Speaks"
 
 #: app/templates/index.html:93
 msgid ""
 "Participate in structured civic deliberation and see what society actually "
 "thinks."
-msgstr ""
+msgstr "شارك في النقاش المدني المنظم واكتشف ما يعتقده المجتمع فعلاً."
 
 #: app/templates/index.html:98 app/templates/index.html:465
-#, fuzzy
 msgid "Join a discussion or journey"
-msgstr "انضم إلى النقاش"
+msgstr "انضم إلى نقاش أو رحلة"
 
 #: app/templates/index.html:99 app/templates/index.html:466
 msgid ""
@@ -4594,21 +4906,24 @@ msgid ""
 "least 56 statements across 8 themes, growing as participants contribute "
 "their own."
 msgstr ""
+"تصفح النقاشات حول مواضيع إخبارية، أو خذ رحلة الأسئلة الكبرى — ما لا يقل عن "
+"56 بياناً عبر 8 مواضيع، تتزايد كلما ساهم المشاركون بمساهماتهم الخاصة."
 
 #: app/templates/index.html:104 app/templates/index.html:471
-#, fuzzy
 msgid "Vote on statements"
-msgstr "الانتقال إلى التصريحات"
+msgstr "صوت على البيانات"
 
 #: app/templates/index.html:105
 msgid ""
 "Vote Agree, Disagree, or Unsure on each statement. Add your reasoning if you"
 " wish. Participation is respectful by design and anonymous if you prefer."
 msgstr ""
+"صوت موافق أو معارض أو غير متأكد على كل بيان. أضف منطقك إذا أردت. المشاركة "
+"محترمة بالتصميم وحميدة اختيارياً."
 
 #: app/templates/index.html:110
 msgid "Discover insights and share them"
-msgstr ""
+msgstr "اكتشف الرؤى وشاركها"
 
 #: app/templates/index.html:111
 msgid ""
@@ -4616,6 +4931,9 @@ msgid ""
 "genuine divisions. Share the results with communities, organisations, or "
 "policymakers who need to hear them."
 msgstr ""
+"شاهد البيانات الموافق عليها، والأفكار الجسرية التي تعبر الخطوط السياسية، "
+"والانقسامات الحقيقية. شارك النتائج مع المجتمعات أو المنظمات أو صانعي "
+"السياسات الذين يحتاجون إلى سماعها."
 
 #: app/templates/index.html:133
 msgid ""
@@ -4623,30 +4941,29 @@ msgid ""
 "defining our era — then see where people genuinely agree, where they divide,"
 " and which ideas can bridge the gap and inform better decisions."
 msgstr ""
+"تعمل الديمقراطية بشكل أفضل عندما نفهم بعضنا البعض. صوت على الأسئلة التي تحدد"
+" عصرنا — ثم شاهد أين يتفق الناس فعلاً، وأين ينقسمون، وأي الأفكار يمكنها أن "
+"تجسر الفجوة وتوجه قرارات أفضل."
 
 #: app/templates/index.html:139
 msgid "Take the Big Questions Journey — opens your recommended edition"
-msgstr ""
+msgstr "خذ رحلة الأسئلة الكبرى — يفتح إصدارك الموصى به"
 
 #: app/templates/index.html:144
-#, fuzzy
 msgid "Take the Big Questions Journey"
-msgstr "رحلة الأسئلة الكبرى"
+msgstr "خذ رحلة الأسئلة الكبرى"
 
 #: app/templates/brief/landing.html:51
 #: app/templates/brief/methodology.html:301 app/templates/index.html:152
 #: app/templates/index.html:641 app/templates/news/landing.html:38
-#, fuzzy
 msgid "Read Today's Brief"
-msgstr "الاشتراك في الملخص اليومي"
+msgstr "اقرأ ملخص اليوم"
 
 #: app/templates/index.html:155
-#, fuzzy
 msgid "Sign up free"
-msgstr "تسجيل الخروج"
+msgstr "اشترك مجاناً"
 
 #: app/templates/index.html:156
-#, fuzzy
 msgid "sign in"
 msgstr "تسجيل الدخول"
 
@@ -4656,50 +4973,49 @@ msgid ""
 "Browse freely without an account. %(signup)s or %(login)s to save your Big "
 "Questions progress, votes, and personalised recap."
 msgstr ""
+"تصفح بحرية بدون حساب. %(signup)s أو %(login)s لحفظ تقدمك في الأسئلة الكبرى "
+"والأصوات والملخص الشخصي."
 
 #: app/templates/index.html:159
 msgid "· Trusted by individuals, organisations and governments globally"
-msgstr ""
+msgstr "· موثوقة من قبل الأفراد والمنظمات والحكومات عالمياً"
 
 #: app/templates/index.html:167
-#, fuzzy
 msgid "Discussion visualisation showing opinion clusters and consensus"
-msgstr "ابدأ نقاشاً لجمع الآراء وبناء الإجماع."
+msgstr "تصور النقاش يوضح مجموعات الآراء والإجماع"
 
 #: app/templates/index.html:184
 msgid ""
 "<strong class=\"font-semibold text-gray-900\">140+</strong> news sources "
 "curated"
 msgstr ""
+"<strong class=\"font-semibold text-gray-900\">140+</strong> مصدر أخبار منسقة"
 
 #: app/templates/index.html:188
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<strong class=\"font-semibold text-gray-900\">%(count)s</strong> discussions"
-msgstr ""
+msgstr "<strong class=\"font-semibold text-gray-900\">%(count)s</strong> نقاشات"
 
 #: app/templates/index.html:192
 msgid "Global community"
-msgstr ""
+msgstr "مجتمع عالمي"
 
 #: app/templates/index.html:196
 msgid "No ads · No tracking"
-msgstr ""
+msgstr "بدون إعلانات · بدون تتبع"
 
 #: app/templates/index.html:200
-#, fuzzy
 msgid "Open source"
-msgstr "مصادر"
+msgstr "مصدر مفتوح"
 
 #: app/templates/index.html:224
-#, fuzzy
 msgid "Guided civic journey"
-msgstr "رحلات مدنية موجهة"
+msgstr "رحلة مدنية موجهة"
 
 #: app/templates/index.html:227
-#, fuzzy
 msgid "What do you actually believe?"
-msgstr "ما تؤمن به كل مجموعة"
+msgstr "ماذا تعتقد فعلاً؟"
 
 #: app/templates/index.html:230
 msgid ""
@@ -4707,16 +5023,18 @@ msgid ""
 "participants contribute. Vote on the issues that define our era, then see "
 "where humanity agrees, where it divides, and what might bridge the gap."
 msgstr ""
+"8 مواضيع. ما لا يقل عن 56 بياناً سياسياً للبدء — يتم إضافة المزيد كلما ساهم "
+"المشاركون. صوت على القضايا التي تحدد عصرنا، ثم شاهد أين تتفق الإنسانية، وأين"
+" تنقسم، وما الذي قد يجسر الفجوة."
 
 #: app/templates/index.html:230
 #, python-format
 msgid "Questions anchored in <strong class=\"text-white\">%(country)s</strong>."
-msgstr ""
+msgstr "أسئلة مرتكزة على <strong class=\"text-white\">%(country)s</strong>."
 
 #: app/templates/index.html:238
-#, fuzzy
 msgid "Big themes"
-msgstr "التصريحات الجسرية"
+msgstr "المواضيع الكبرى"
 
 #: app/templates/discussions/consensus_report.html:37
 #: app/templates/discussions/consensus_results.html:44
@@ -4726,44 +5044,39 @@ msgid "Statements"
 msgstr "التصريحات"
 
 #: app/templates/index.html:246
-#, fuzzy
 msgid "Editions"
-msgstr "تعديل"
+msgstr "الإصدارات"
 
 #: app/templates/index.html:254
 #, python-format
 msgid "Start the %(country)s Big Questions journey edition"
-msgstr ""
+msgstr "ابدأ إصدار رحلة الأسئلة الكبرى في %(country)s"
 
 #: app/templates/index.html:254 app/templates/index.html:298
-#, fuzzy
 msgid "global"
 msgstr "عالمي"
 
 #: app/templates/index.html:261
-#, fuzzy
 msgid "Recommended for you"
-msgstr "ترتيب الرحلة الموصى به"
+msgstr "موصى به لك"
 
 #: app/templates/index.html:263
-#, fuzzy
 msgid "Your pick"
-msgstr "ملفك الشخصي"
+msgstr "اختيارك"
 
 #: app/templates/index.html:265
 #, python-format
 msgid "Edition for %(country)s"
-msgstr ""
+msgstr "الإصدار الخاص بـ %(country)s"
 
 #: app/templates/index.html:267
-#, fuzzy
 msgid "Global edition"
-msgstr "عالمي"
+msgstr "الإصدار العالمي"
 
 #: app/templates/index.html:270
 #, python-format
 msgid "%(country)s — Start the journey"
-msgstr ""
+msgstr "%(country)s — ابدأ الرحلة"
 
 #: app/templates/components/discussion_card.html:101
 #: app/templates/daily/question.html:48 app/templates/daily/results.html:44
@@ -4775,113 +5088,113 @@ msgstr "عالمي"
 
 #: app/templates/index.html:282
 msgid "Not the right edition? Choose yours below."
-msgstr ""
+msgstr "ليس الإصدار الصحيح؟ اختر إصدارك أدناه."
 
 #: app/templates/index.html:291
 msgid "Or choose an edition"
-msgstr ""
+msgstr "أو اختر إصدارًا"
 
 #: app/templates/index.html:298
 #, python-format
 msgid "Open the %(country)s Big Questions journey edition"
-msgstr ""
+msgstr "افتح رحلة الأسئلة الكبرى في %(country)s"
 
 #: app/templates/index.html:312
 msgid "Journey themes"
-msgstr ""
+msgstr "مواضيع الرحلة"
 
 #: app/templates/index.html:314
 msgid "Climate & planet"
-msgstr ""
+msgstr "المناخ والكوكب"
 
 #: app/templates/index.html:314
 msgid "AI & technology"
-msgstr ""
+msgstr "الذكاء الاصطناعي والتكنولوجيا"
 
 #: app/templates/index.html:315
 msgid "Economy & work"
-msgstr ""
+msgstr "الاقتصاد والعمل"
 
 #: app/templates/index.html:315
 msgid "Health & care"
-msgstr ""
+msgstr "الصحة والرعاية"
 
 #: app/templates/index.html:316
 msgid "War & security"
-msgstr ""
+msgstr "الحرب والأمن"
 
 #: app/templates/index.html:316
 msgid "Democracy"
-msgstr ""
+msgstr "الديمقراطية"
 
 #: app/templates/index.html:317
-#, fuzzy
 msgid "Society"
-msgstr "Society Speaks"
+msgstr "المجتمع"
 
 #: app/templates/index.html:317
 msgid "Education"
-msgstr ""
+msgstr "التعليم"
 
 #: app/templates/index.html:340
 msgid "What voting reveals"
-msgstr ""
+msgstr "ما تكشفه الأصوات"
 
 #: app/templates/index.html:343
 msgid "We group people by how they vote, not who they are"
-msgstr ""
+msgstr "نحن نجمّع الناس بناءً على كيفية تصويتهم، وليس من هم"
 
 #: app/templates/index.html:346
 msgid ""
 "Our machine learning finds patterns across thousands of votes — surfacing "
 "three kinds of insight you won't find anywhere else."
 msgstr ""
+"تكنولوجيا التعلم الآلي لدينا تكتشف أنماطًا عبر آلاف الأصوات — وتبرز ثلاثة "
+"أنواع من الرؤى لن تجدها في أي مكان آخر."
 
 #: app/templates/help/polis_algorithms.html:202 app/templates/index.html:361
 #: app/templates/partner/portal/discussions.html:254
 #: app/templates/platform.html:283
-#, fuzzy
 msgid "Consensus"
-msgstr "تحليل التوافق"
+msgstr "إجماع"
 
 #: app/templates/index.html:362
 msgid "Where society broadly agrees"
-msgstr ""
+msgstr "حيث تتفق المجتمعات على نطاق واسع"
 
 #: app/templates/index.html:366
 msgid ""
 "\"Access to reliable, unbiased news is essential for a functioning "
 "democracy.\""
-msgstr ""
+msgstr "\"الوصول إلى أخبار موثوقة وغير متحيزة ضروري لازدهار الديمقراطية.\""
 
 #: app/templates/index.html:370
 msgid "Agreement across all groups"
-msgstr ""
+msgstr "اتفاق عبر جميع المجموعات"
 
 #: app/templates/index.html:377
-#, fuzzy
 msgid ""
 "This statement was agreed by participants across all political clusters."
-msgstr "هذه التصريحات تحظى باتساع التوافق بين جميع مجموعات الرأي."
+msgstr "وافق المشاركون عبر جميع التجمعات السياسية على هذا البيان."
 
 #: app/templates/index.html:389
 msgid "Bridge Idea"
-msgstr ""
+msgstr "فكرة جسر"
 
 #: app/templates/index.html:390 app/templates/platform.html:303
-#, fuzzy
 msgid "Unites opposing groups"
-msgstr "مجموعات الرأي"
+msgstr "توحد المجموعات المتعارضة"
 
 #: app/templates/index.html:394
 msgid ""
 "\"Politicians of all parties have failed to honestly explain the trade-offs "
 "of their policies to voters.\""
 msgstr ""
+"\"ساسة جميع الأحزاب فشلوا في شرح المقايضات الحقيقية لسياساتهم للناخبين "
+"بصراحة.\""
 
 #: app/templates/index.html:398
 msgid "Left cluster"
-msgstr ""
+msgstr "التجمع اليساري"
 
 #: app/templates/discussions/consensus_results.html:231
 #: app/templates/discussions/consensus_results.html:256
@@ -4893,93 +5206,101 @@ msgstr "موافق"
 
 #: app/templates/index.html:406
 msgid "Right cluster"
-msgstr ""
+msgstr "التجمع اليميني"
 
 #: app/templates/index.html:411
 msgid ""
 "Bridge ideas resonate strongly across groups that otherwise disagree — rare "
 "common ground."
 msgstr ""
+"الأفكار الجسرية تحظى بتجاوب قوي عبر المجموعات التي تختلف بخلاف ذلك — أرضية "
+"مشتركة نادرة."
 
 #: app/templates/index.html:423
-#, fuzzy
 msgid "Genuine Division"
-msgstr "نقاط الانقسام"
+msgstr "انقسام حقيقي"
 
 #: app/templates/index.html:424
 msgid "A real fault line worth addressing"
-msgstr ""
+msgstr "خط انقسام حقيقي يستحق المعالجة"
 
 #: app/templates/index.html:428
 msgid ""
 "\"The state should guarantee a minimum income for every citizen, regardless "
 "of employment status.\""
 msgstr ""
+"\"يجب على الدولة أن تضمن حدًا أدنى من الدخل لكل مواطن، بغض النظر عن حالة "
+"التوظيف.\""
 
 #: app/templates/index.html:435
-#, fuzzy, python-format
+#, python-format
 msgid "62%% agree"
-msgstr "% موافقون"
+msgstr "62%% توافق"
 
 #: app/templates/index.html:436
-#, fuzzy, python-format
+#, python-format
 msgid "38%% disagree"
-msgstr "غير موافق"
+msgstr "38%% معارضة"
 
 #: app/templates/index.html:438
 msgid ""
 "Genuine divisions show where deeper democratic deliberation is needed — not "
 "just counting votes."
 msgstr ""
+"الانقسامات الحقيقية توضح أين تكون هناك حاجة إلى نقاش ديمقراطي أعمق — وليس "
+"فقط عد الأصوات."
 
 #: app/templates/index.html:443
 msgid ""
 "Examples from real discussions on this platform. Your vote changes what "
 "society sees."
-msgstr ""
+msgstr "أمثلة من نقاشات حقيقية على هذه المنصة. صوتك يغير ما تراه المجتمعات."
 
 #: app/templates/index.html:444
-#, fuzzy
 msgid "Explore all discussions →"
-msgstr "استكشاف النقاشات"
+msgstr "استكشف جميع النقاشات →"
 
 #: app/templates/briefing/add_rss_source.html:26 app/templates/index.html:455
 #: app/templates/partner/hub.html:233
 msgid "How it works"
-msgstr ""
+msgstr "كيف يعمل"
 
 #: app/templates/index.html:456
 msgid "Three steps. Takes under five minutes to start."
-msgstr ""
+msgstr "ثلاث خطوات. يستغرق أقل من خمس دقائق للبدء."
 
 #: app/templates/index.html:472
 msgid ""
 "Agree, Disagree, or Unsure on each statement. Add your reasoning if you "
 "want. Respectful by design — and anonymous if you prefer."
 msgstr ""
+"وافق أو اختلف أو كن غير متأكد بشأن كل بيان. أضف تبريرك إذا أردت. احترام "
+"بالتصميم — وسري إذا فضلت."
 
 #: app/templates/index.html:477
 msgid "Discover insights — and share them"
-msgstr ""
+msgstr "اكتشف الرؤى — وشاركها"
 
 #: app/templates/index.html:478
 msgid ""
 "See consensus, bridge ideas and genuine divisions. Then share the results "
 "with the communities, organisations, or policymakers who need to hear them."
 msgstr ""
+"انظر إلى الإجماع، وجسّر الأفكار والانقسامات الحقيقية. ثم شارك النتائج مع "
+"المجتمعات أو المنظمات أو صانعي السياسات الذين يحتاجون إلى سماعها."
 
 #: app/templates/index.html:491
 msgid "Two ways to stay informed daily"
-msgstr ""
+msgstr "طريقتان للبقاء على اطلاع يومي"
 
 #: app/templates/index.html:492
 msgid ""
 "One for your opinions on the world. One for the world explained to you."
-msgstr ""
+msgstr "واحدة لآرائك حول العالم. واحدة للعالم الذي يُشرح لك."
 
 #: app/templates/index.html:506
 msgid "2 minutes a day"
-msgstr ""
+msgstr "دقيقتان في اليوم"
 
 #: app/templates/index.html:511
 msgid ""
@@ -4987,9 +5308,10 @@ msgid ""
 "see how others responded. Over time, this creates a longitudinal view of how"
 " public opinion evolves."
 msgstr ""
+"سؤال واحد مختار بعناية كل يوم. صوّت، شارك تبريرك، ثم شاهد كيف استجاب "
+"الآخرون. بمرور الوقت، يخلق هذا رؤية طولية لكيفية تطور الرأي العام."
 
 #: app/templates/index.html:515
-#, fuzzy
 msgid "Today's question"
 msgstr "سؤال اليوم"
 
@@ -5060,25 +5382,24 @@ msgstr "غير متأكد"
 
 #: app/templates/index.html:534
 msgid "How you vote"
-msgstr ""
+msgstr "كيف تصوت"
 
 #: app/templates/emails/daily_question_welcome.html:52
 #: app/templates/index.html:554
-#, fuzzy
 msgid "Answer Today's Question"
-msgstr "سؤال اليوم"
+msgstr "أجب على سؤال اليوم"
 
 #: app/templates/index.html:560 app/templates/index.html:647
 msgid "Get by Email"
-msgstr ""
+msgstr "تلقّ عبر البريد الإلكتروني"
 
 #: app/templates/index.html:563
 msgid "5 questions weekly by default · Adjust frequency anytime"
-msgstr ""
+msgstr "5 أسئلة أسبوعياً افتراضياً · غيّر التكرار في أي وقت"
 
 #: app/templates/index.html:575
 msgid "The news you need. Zero noise."
-msgstr ""
+msgstr "الأخبار التي تحتاجها. بلا ضجيج."
 
 #: app/templates/index.html:580
 msgid ""
@@ -5086,15 +5407,16 @@ msgid ""
 "explained in plain language. Multi-source coverage with left/centre/right "
 "breakdown. No ads. No outrage."
 msgstr ""
+"3–5 قصص يومياً، مدققة للتأثير المدني، محللة لميل حزبي، وموضحة بلغة بسيطة. "
+"تغطية متعددة المصادر مع تفصيل يسار/وسط/يمين. بلا إعلانات. بلا استثارة."
 
 #: app/templates/index.html:585
-#, fuzzy
 msgid "Today's brief"
-msgstr "موجز يومي"
+msgstr "ملخص اليوم"
 
 #: app/templates/index.html:596
 msgid "Under the radar"
-msgstr ""
+msgstr "تحت الرادار"
 
 #: app/templates/brief/_item_content.html:49
 #: app/templates/brief/landing.html:94 app/templates/brief/landing.html:124
@@ -5107,48 +5429,48 @@ msgstr ""
 #: app/templates/emails/daily_brief.html:2042
 #: app/templates/emails/daily_brief.html:2208
 #: app/templates/emails/daily_brief.html:2375 app/templates/index.html:604
-#, fuzzy, python-format
+#, python-format
 msgid "%(count)d sources"
-msgstr "مصادر"
+msgstr "%(count)d مصادر"
 
 #: app/templates/briefing/landing.html:259 app/templates/index.html:614
 #: app/templates/platform.html:329
 msgid "Why this matters"
-msgstr ""
+msgstr "لماذا هذا مهم"
 
 #: app/templates/index.html:622
-#, fuzzy
 msgid "Read full brief"
-msgstr "موجز يومي"
+msgstr "اقرأ الملخص الكامل"
 
 #: app/templates/index.html:629
 msgid "What you get every day"
-msgstr ""
+msgstr "ما تحصل عليه كل يوم"
 
 #: app/templates/index.html:635
 msgid "3–5 stories · left/centre/right breakdown · Why it matters"
-msgstr ""
+msgstr "3–5 قصص · تفصيل يسار/وسط/يمين · لماذا يهم"
 
 #: app/templates/index.html:651
 msgid "Free to read ·"
-msgstr ""
+msgstr "مجاني للقراءة ·"
 
 #: app/templates/index.html:652
 msgid "140+ sources across the spectrum →"
-msgstr ""
+msgstr "140+ مصادر عبر الطيف →"
 
 #: app/templates/brief/landing.html:177 app/templates/index.html:661
 msgid "We draw from 140+ trusted sources across the spectrum"
-msgstr ""
+msgstr "نستمد من 140+ مصدراً موثوقاً عبر الطيف"
 
 #: app/templates/brief/landing.html:178 app/templates/index.html:664
 msgid ""
 "News, analysis, think tanks, and podcasts—curated for quality journalism"
 msgstr ""
+"أخبار وتحليل ودراسات فكرية وبودكاست — منتقاة من أجل الصحافة ذات الجودة"
 
 #: app/templates/brief/landing.html:185 app/templates/index.html:671
 msgid "Left & Centre-Left"
-msgstr ""
+msgstr "يسار ويسار-وسط"
 
 #: app/templates/brief/landing.html:203
 #: app/templates/brief/methodology.html:55
@@ -5157,38 +5479,36 @@ msgstr ""
 #: app/templates/index.html:688 app/templates/sources/index.html:151
 #: app/templates/sources/index.html:313
 #: app/templates/sources/view_source.html:111
-#, fuzzy
 msgid "Centre"
-msgstr "البلد"
+msgstr "وسط"
 
 #: app/templates/brief/landing.html:224 app/templates/index.html:708
 msgid "Centre-Right & Right"
-msgstr ""
+msgstr "يمين-وسط ويمين"
 
 #: app/templates/brief/landing.html:243 app/templates/index.html:725
-#, fuzzy
 msgid "News/Analysis"
-msgstr "التحليل"
+msgstr "أخبار/تحليل"
 
 #: app/templates/brief/landing.html:244 app/templates/index.html:727
 #: app/templates/news/dashboard.html:342 app/templates/news/dashboard.html:421
 #: app/templates/news/dashboard.html:500 app/templates/sources/index.html:250
 #: app/templates/sources/view_source.html:74
 msgid "Podcast"
-msgstr ""
+msgstr "بودكاست"
 
 #: app/templates/index.html:731
 #, python-format
 msgid "Bias ratings from %(allsides)s"
-msgstr ""
+msgstr "تقييمات الانحياز من %(allsides)s"
 
 #: app/templates/brief/landing.html:241 app/templates/index.html:733
 msgid "See all 140+ sources"
-msgstr ""
+msgstr "شاهد جميع 140+ مصادر"
 
 #: app/templates/index.html:746
 msgid "Voices that inspired this"
-msgstr ""
+msgstr "الأصوات التي ألهمت هذا"
 
 #: app/templates/index.html:758
 msgid ""
@@ -5196,57 +5516,59 @@ msgid ""
 "robbing the human race — those who dissent from the opinion, still more than"
 " those who hold it.\""
 msgstr ""
+"«الشر الغريب لإسكات التعبير عن رأي هو أنه يسرق الجنس البشري — أولئك الذين "
+"يختلفون عن الرأي، أكثر من أولئك الذين يتمسكون به.»"
 
 #: app/templates/index.html:762
 msgid "Portrait of John Stuart Mill, philosopher and author of On Liberty"
-msgstr ""
+msgstr "صورة جون ستيوارت ميل، الفيلسوف ومؤلف عن الحرية"
 
 #: app/templates/index.html:766
 msgid "Philosopher, On Liberty, 1859"
-msgstr ""
+msgstr "الفيلسوف، عن الحرية، 1859"
 
 #: app/templates/index.html:779
 msgid ""
 "\"Never doubt that a small group of thoughtful, committed citizens can "
 "change the world; indeed, it's the only thing that ever has.\""
 msgstr ""
+"«لا تشكك أبداً في أن مجموعة صغيرة من المواطنين المتفكرين والملتزمين يمكنها "
+"تغيير العالم؛ بل هذا هو الشيء الوحيد الذي حقق ذلك دائماً.»"
 
 #: app/templates/index.html:783
 msgid "Portrait of Margaret Mead, cultural anthropologist"
-msgstr ""
+msgstr "صورة مارجريت ميد، عالمة الأنثروبولوجيا الثقافية"
 
 #: app/templates/index.html:787
 msgid "Cultural Anthropologist"
-msgstr ""
+msgstr "عالمة أنثروبولوجيا ثقافية"
 
 #: app/templates/index.html:802
-#, fuzzy
 msgid "Join the conversation"
-msgstr "Society Speaks.io - انضم إلى الحوار"
+msgstr "انضم إلى الحوار"
 
 #: app/templates/index.html:803
 msgid "Real discussions happening right now."
-msgstr ""
+msgstr "نقاشات حقيقية تجري الآن."
 
 #: app/templates/index.html:808
-#, fuzzy
 msgid "News discussions"
-msgstr "نقاش جديد"
+msgstr "نقاشات إخبارية"
 
 #: app/templates/index.html:811 app/templates/platform.html:585
-#, fuzzy
 msgid "See all discussions"
-msgstr "البحث في النقاشات…"
+msgstr "اطّلع على جميع النقاشات"
 
 #: app/templates/index.html:826
 msgid "Have a question society should answer?"
-msgstr ""
+msgstr "هل لديك سؤال يجب على المجتمع الإجابة عنه؟"
 
 #: app/templates/index.html:827
 msgid ""
 "Start a discussion and see where people actually stand — or run a structured"
 " programme for your community."
 msgstr ""
+"ابدأ نقاشاً واكتشف موقف الناس الحقيقي — أو أدِر برنامجاً منظماً لمجتمعك."
 
 #: app/templates/discussions/search_discussions.html:39
 #: app/templates/index.html:832
@@ -5255,54 +5577,52 @@ msgstr "ابدأ نقاشاً"
 
 #: app/templates/index.html:836 app/templates/platform.html:49
 #: app/templates/platform.html:628
-#, fuzzy
 msgid "Browse Programmes"
-msgstr "برامج أخرى"
+msgstr "استعرض البرامج"
 
 #: app/templates/index.html:851
-#, fuzzy
 msgid "Fund the mission"
-msgstr "نقاش جديد"
+msgstr "دعّم المهمة"
 
 #: app/templates/index.html:853
 msgid "Everything is free. It stays that way because of our subscribers."
-msgstr ""
+msgstr "كل شيء مجاني. يبقى كذلك بفضل المشتركين لدينا."
 
 #: app/templates/index.html:856
 msgid ""
 "A Personal Brief subscription funds our open source civic platform — and "
 "gives you a custom daily digest from your own sources in return."
 msgstr ""
+"اشتراك Personal Brief يمول منصتنا المفتوحة المصدر للمشاركة المدنية — ويعطيك "
+"ملخصاً يومياً مخصصاً من مصادرك الخاصة في المقابل."
 
 #: app/templates/index.html:864
 msgid "Choose your own sources — RSS, Substack, PDFs"
-msgstr ""
+msgstr "اختر مصادرك الخاصة — RSS و Substack و PDFs"
 
 #: app/templates/index.html:868
 msgid "AI synthesis from multiple sources, on your schedule"
-msgstr ""
+msgstr "تجميع ذكي من مصادر متعددة، وفقاً لجدولك الزمني"
 
 #: app/templates/index.html:872
 msgid "Your subscription directly funds free civic participation for all"
-msgstr ""
+msgstr "اشتراكك يمول مباشرة المشاركة المدنية المجانية للجميع"
 
 #: app/templates/index.html:877
-#, fuzzy
 msgid "Start 30-Day Free Trial"
-msgstr "ابدأ تجربة مجانية"
+msgstr "ابدأ تجربة مجانية لمدة 30 يوماً"
 
 #: app/templates/index.html:880
 msgid "From £4.99/month · No credit card required to trial"
-msgstr ""
+msgstr "من £4.99/شهر · لا تحتاج إلى بطاقة ائتمان لتجربة الخدمة"
 
 #: app/templates/briefing/landing.html:865 app/templates/index.html:894
-#, fuzzy
 msgid "For organisations"
-msgstr "مؤسسة"
+msgstr "للمنظمات"
 
 #: app/templates/index.html:895
 msgid "Publisher, NGO, government, or researcher?"
-msgstr ""
+msgstr "ناشر أو منظمة غير حكومية أو حكومة أو باحث؟"
 
 #: app/templates/index.html:896
 msgid ""
@@ -5311,10 +5631,13 @@ msgid ""
 "commission programmes, and connect your audience to what they actually "
 "believe."
 msgstr ""
+"Society Speaks يمكّن النقاش المنظم والاستشارة المدنية والصحافة المدنية "
+"للمنظمات في جميع أنحاء العالم. ضمّن النقاشات وشغّل البرامج وربط جمهورك بما "
+"يؤمنون به فعلاً."
 
 #: app/templates/index.html:900
 msgid "See how it works"
-msgstr ""
+msgstr "اطّلع على كيفية عمله"
 
 #: app/templates/layout.html:8
 msgid "Society Speaks.io - Join the Conversation"
@@ -5327,6 +5650,9 @@ msgid ""
 "clusters, bridge statements, and genuine consensus from structured public "
 "participation."
 msgstr ""
+"Society Speaks هو نظام لفهم المعنى يحول الاختلاف إلى تفاهم. باستخدام التعلم "
+"الآلي المستوحى من Pol.is، نكشف عن مجموعات الآراء والبيانات الجسرية والتوافق "
+"الحقيقي من المشاركة العامة المنظمة."
 
 #: app/templates/layout.html:18
 msgid ""
@@ -5335,6 +5661,9 @@ msgid ""
 "dialogue, policy insights, nuanced debate, sense-making, public discourse, "
 "civic engagement"
 msgstr ""
+"بناء التوافق، تحليل الرأي العام، البيانات الجسرية، تجميع الآراء، التكنولوجيا"
+" المدنية، Pol.is، النقاش الديمقراطي، الحوار المنظم، رؤى السياسة، النقاش "
+"الدقيق، فهم المعنى، الخطاب العام، المشاركة المدنية"
 
 #: app/templates/layout.html:49
 msgid "Latest Discussions"
@@ -5342,16 +5671,15 @@ msgstr "أحدث النقاشات"
 
 #: app/templates/layout.html:58 app/templates/layout.html:76
 msgid "Society Speaks - Making Disagreement Useful Again"
-msgstr ""
+msgstr "Society Speaks - جعل الاختلاف مفيداً مجدداً"
 
 #: app/templates/layout.html:62
-#, fuzzy
 msgid ""
 "A sense-making system that turns disagreement into understanding. Discover "
 "where society agrees, where it divides, and which ideas can bridge the gap."
 msgstr ""
-"نظام لصناعة المعنى يحول الخلاف إلى فهم. نكشف أين يتفق المجتمع وأين ينقسم وأي"
-" أفكار يمكن أن تبني جسوراً."
+"نظام لفهم المعنى يحول الاختلاف إلى تفاهم. اكتشف أين يتفق المجتمع وأين ينقسم،"
+" وأي الأفكار يمكنها أن تسدّ الفجوة."
 
 #: app/templates/layout.html:80
 msgid ""
@@ -5359,11 +5687,12 @@ msgid ""
 "consensus, find bridge ideas, and understand public opinion with nuance "
 "intact."
 msgstr ""
+"نظام يساعد الناس على الاختلاف بأدب. اكتشف التوافق والأفكار الجسرية وافهم "
+"الرأي العام مع الحفاظ على الدقة."
 
 #: app/templates/layout.html:409
-#, fuzzy
 msgid "Top"
-msgstr "الموضوع"
+msgstr "أعلى الصفحة"
 
 #: app/templates/discussions/search_statements.html:7
 #: app/templates/layout.html:438 app/templates/layout.html:1178
@@ -5638,12 +5967,11 @@ msgstr "روابط سريعة"
 
 #: app/templates/layout.html:1315
 msgid "Sponsor zuluwill"
-msgstr ""
+msgstr "رعاية zuluwill"
 
 #: app/templates/platform.html:5 app/templates/platform.html:7
-#, fuzzy
 msgid "The Platform — Society Speaks"
-msgstr "عن Society Speaks"
+msgstr "المنصة — Society Speaks"
 
 #: app/templates/platform.html:6
 msgid ""
@@ -5652,6 +5980,9 @@ msgid ""
 "structured deliberation at any scale — from a single conversation to a "
 "national consultation."
 msgstr ""
+"نقاش دقيق مدعوم بتحليل صارم. تعطي النقاشات والبرامج من Society Speaks كل فرد"
+" صوتاً والمنظمات الأدوات لإجراء نقاش منظم بأي حجم — من محادثة واحدة إلى "
+"استشارة وطنية."
 
 #: app/templates/platform.html:8
 msgid ""
@@ -5659,6 +5990,9 @@ msgid ""
 "didn't. Society Speaks reveals how opinion actually clusters — not just "
 "percentages, but the real structure of public views."
 msgstr ""
+"صوّت على البيانات. اكتشف أين تتفق مع أشخاص ظننت أنك تختلف معهم. تكشف Society"
+" Speaks عن الطريقة التي تتجمع بها الآراء فعلاً — ليس فقط النسب المئوية، بل "
+"البنية الحقيقية للآراء العامة."
 
 #: app/templates/discussions/consensus_gate.html:7
 #: app/templates/discussions/consensus_not_ready.html:1
@@ -5672,7 +6006,7 @@ msgstr "تحليل التوافق"
 
 #: app/templates/platform.html:33
 msgid "Nuanced debate.<br>Rigorous analysis."
-msgstr ""
+msgstr "نقاش دقيق.<br>تحليل صارم."
 
 #: app/templates/platform.html:36
 msgid ""
@@ -5680,20 +6014,20 @@ msgid ""
 "didn't. See what the data actually reveals — not percentages, but clusters "
 "of real opinion."
 msgstr ""
+"صوّت على البيانات. اكتشف أين تتفق مع أشخاص ظننت أنك تختلف معهم. اطّلع على ما"
+" يكشفه البيان فعلاً — ليس النسب المئوية، بل مجموعات من الآراء الحقيقية."
 
 #: app/templates/platform.html:54 app/templates/platform.html:1142
-#, fuzzy
 msgid "Get started — it's free"
-msgstr "ابدأ الآن"
+msgstr "ابدأ الآن — مجاني"
 
 #: app/templates/platform.html:65
 msgid "Try a Live Demo"
-msgstr ""
+msgstr "جرّب عرضاً مباشراً"
 
 #: app/templates/platform.html:83
-#, fuzzy
 msgid "What does it actually look like?"
-msgstr "ما تؤمن به كل مجموعة"
+msgstr "كيف يبدو بالفعل؟"
 
 #: app/templates/platform.html:84
 msgid ""
@@ -5701,54 +6035,56 @@ msgid ""
 "into the wider picture — not as a raw percentage, but as part of a real "
 "opinion cluster."
 msgstr ""
+"تبدأ ببيان ما، تدلي بصوتك، وتكتشف كيف ينطبق رأيك على الصورة الأكبر — ليس "
+"كنسبة مئوية خام، بل كجزء من مجموعة آراء حقيقية."
 
 #: app/templates/platform.html:91
-#, fuzzy
 msgid "A discussion statement"
-msgstr "النقاشات"
+msgstr "بيان نقاش"
 
 #: app/templates/platform.html:97
 msgid "🌱 Environment"
-msgstr ""
+msgstr "🌱 البيئة"
 
 #: app/templates/platform.html:100
 msgid "The UK's approach to net zero"
-msgstr ""
+msgstr "نهج المملكة المتحدة لتحقيق الحياد الكربوني"
 
 #: app/templates/platform.html:106
 msgid ""
 "\"The UK should bring forward its net zero target from 2050 to 2040 to "
 "maintain climate leadership.\""
 msgstr ""
+"\"يجب على المملكة المتحدة تعجيل هدفها للوصول لحياد الكربون من 2050 إلى 2040 "
+"للحفاظ على الريادة المناخية.\""
 
 #: app/templates/platform.html:108
-#, fuzzy
 msgid "Statement 3 of 8"
-msgstr "تصريح"
+msgstr "البيان 3 من 8"
 
 #: app/templates/platform.html:157
 msgid "Based on 1,247 votes"
-msgstr ""
+msgstr "بناءً على 1,247 صوتاً"
 
 #: app/templates/platform.html:165
 msgid "How it works in 3 steps"
-msgstr ""
+msgstr "كيفية العمل في 3 خطوات"
 
 #: app/templates/platform.html:170
-#, fuzzy
 msgid "Read a statement"
-msgstr "إضافة تصريح"
+msgstr "اقرأ بيان الرأي"
 
 #: app/templates/platform.html:171
 msgid ""
 "Each discussion presents clear, balanced statements on a real issue — "
 "written to be fair to all sides. No leading questions, no loaded language."
 msgstr ""
+"كل نقاش يقدم بيانات واضحة ومتوازنة حول قضية حقيقية — مكتوبة بعدالة تجاه جميع"
+" الأطراف. بلا أسئلة موجهة، بلا لغة متحيزة."
 
 #: app/templates/platform.html:177
-#, fuzzy
 msgid "Vote agree, disagree, or unsure"
-msgstr "صوّت على التصريح أعلاه: موافق، غير موافق، أو غير متأكد"
+msgstr "صوت بموافقتك أو معارضتك أو عدم تأكدك"
 
 #: app/templates/platform.html:178
 msgid ""
@@ -5756,10 +6092,12 @@ msgid ""
 "add reasoning or evidence, but it's optional. Vote on 5 statements to unlock"
 " your cluster."
 msgstr ""
+"نقرة واحدة. بلا مقالات، بلا نقاط. فقط موقفك الحقيقي. يمكنك إضافة تبرير أو "
+"أدلة، لكنها اختيارية. صوت على 5 بيانات لفتح مجموعتك."
 
 #: app/templates/platform.html:184
 msgid "See how opinion actually clusters"
-msgstr ""
+msgstr "اكتشف كيف تتجمع الآراء فعلياً"
 
 #: app/templates/platform.html:185
 msgid ""
@@ -5767,87 +6105,88 @@ msgid ""
 " actual voting patterns. You'll see which group you're in, what your group "
 "agrees on, and where surprising common ground exists."
 msgstr ""
+"بمجرد أن يصوت عدد كافٍ من الأشخاص، تجميع التعلم الآلي المشاركين وفقاً لأنماط"
+" التصويت الفعلية. ستشاهد مجموعتك، ما تتفق عليه مجموعتك، وحيث توجد نقاط اتفاق"
+" مفاجئة."
 
 #: app/templates/platform.html:191
 msgid "Try it yourself — takes 2 minutes"
-msgstr ""
+msgstr "جربها بنفسك — تستغرق دقيقتين"
 
 #: app/templates/platform.html:192
 msgid ""
 "Vote on our live demo discussion, then see what the consensus analysis "
 "reveals about how opinion clusters."
 msgstr ""
+"صوت على نقاشنا المباشر، ثم اكتشف ما يكشفه تحليل الإجماع عن كيفية تجمع "
+"الآراء."
 
 #: app/templates/platform.html:196
-#, fuzzy
 msgid "Vote on the demo"
-msgstr "الانتقال إلى التصريحات"
+msgstr "صوت على النسخة التجريبية"
 
 #: app/templates/platform.html:200
-#, fuzzy
 msgid "See the analysis"
-msgstr "عرض التحليل الكامل"
+msgstr "اطلع على التحليل"
 
 #: app/templates/platform.html:214
-#, fuzzy
 msgid "What consensus analysis reveals"
-msgstr "تحليل التوافق"
+msgstr "ما يكشفه تحليل الإجماع"
 
 #: app/templates/platform.html:215
 msgid ""
 "We show you the shape of opinion, not just the count — which groups emerge, "
 "what they share across divides, and where genuine fault lines lie."
 msgstr ""
+"نحن نظهر لك شكل الرأي، ليس فقط العدد — أي المجموعات تظهر، ما الذي تشاركونه "
+"عبر الانقسامات، وأين توجد خطوط الصدع الحقيقية."
 
 #: app/templates/partner/portal/discussion_detail.html:129
 #: app/templates/platform.html:222
-#, fuzzy
 msgid "Opinion clusters"
-msgstr "مجموعات الرأي"
+msgstr "تجمعات الآراء"
 
 #: app/templates/platform.html:225
 msgid "Consensus Analysis — UK Net Zero Discussion"
-msgstr ""
+msgstr "تحليل الإجماع — نقاش صافي الكربون في المملكة المتحدة"
 
 #: app/templates/platform.html:226
-#, fuzzy
 msgid "1,247 participants"
-msgstr "المشاركون"
+msgstr "١٬٢٤٧ مشارك"
 
 #: app/templates/help/polis_algorithms.html:133
 #: app/templates/platform.html:239
 msgid "Group A"
-msgstr ""
+msgstr "المجموعة أ"
 
 #: app/templates/platform.html:240
 msgid "612 people"
-msgstr ""
+msgstr "٦١٢ شخص"
 
 #: app/templates/help/polis_algorithms.html:134
 #: app/templates/platform.html:252
 msgid "Group B"
-msgstr ""
+msgstr "المجموعة ب"
 
 #: app/templates/platform.html:253
 msgid "412 people"
-msgstr ""
+msgstr "٤١٢ شخص"
 
 #: app/templates/platform.html:265
 msgid "Group C"
-msgstr ""
+msgstr "المجموعة ج"
 
 #: app/templates/platform.html:272
 msgid "ML clustering by voting pattern"
-msgstr ""
+msgstr "تجميع التعلم الآلي حسب نمط التصويت"
 
 #: app/templates/platform.html:284
-#, fuzzy
 msgid "All groups agree"
-msgstr "جميع البرامج"
+msgstr "جميع المجموعات تتفق"
 
 #: app/templates/platform.html:286
 msgid "\"Investment in renewable energy creates more jobs than it destroys.\""
-msgstr ""
+msgstr "\"الاستثمار في الطاقة المتجددة ينشئ وظائف أكثر مما يزيلها.\""
 
 #: app/templates/platform.html:291
 #, fuzzy, python-format
@@ -5855,29 +6194,27 @@ msgid "84%% agree"
 msgstr "% موافقون"
 
 #: app/templates/platform.html:302
-#, fuzzy
 msgid "Bridge"
-msgstr "موجز يومي"
+msgstr "جسر"
 
 #: app/templates/platform.html:305
 msgid "\"Energy security and climate action can and should be pursued together.\""
-msgstr ""
+msgstr "\"أمن الطاقة والعمل المناخي يمكن وينبغي متابعتهما معاً.\""
 
 #: app/templates/platform.html:315
-#, fuzzy
 msgid "Division"
-msgstr "نقاط الانقسام"
+msgstr "انقسام"
 
 #: app/templates/platform.html:316
-#, fuzzy
 msgid "Real fault line"
-msgstr "موجز يومي"
+msgstr "خط صدع حقيقي"
 
 #: app/templates/platform.html:318
 msgid ""
 "\"The cost of the transition should fall primarily on high-income "
 "households.\""
 msgstr ""
+"\"يجب أن تقع تكاليف الانتقال في المقام الأول على الأسر ذات الدخل المرتفع.\""
 
 #: app/templates/platform.html:330
 msgid ""
@@ -5886,48 +6223,54 @@ msgid ""
 " structure beneath the numbers: which groups agree, which diverge, and where"
 " opposing groups find unexpected common ground."
 msgstr ""
+"استطلاعات الرأي التقليدية تكشف عدد الأشخاص الذين يوافقون على شيء ما — لكن "
+"ليس من، أو لماذا، أو ما الآخر الذي يشاركونه. بيانات الآراء المجمعة تكشف "
+"البنية الحقيقية تحت الأرقام: أي المجموعات تتفق، أيها تختلف، وحيث تجد "
+"المجموعات المتعارضة أرضية مشتركة غير متوقعة."
 
 #: app/templates/platform.html:339
-#, fuzzy
 msgid "Consensus statements"
-msgstr "الأحدث"
+msgstr "بيانات الإجماع"
 
 #: app/templates/platform.html:340
 msgid ""
 "Ideas with broad agreement across all groups — the genuine common ground "
 "that polls often miss."
 msgstr ""
+"الأفكار التي تحظى بقبول واسع عبر جميع المجموعات — الأرضية المشتركة الحقيقية "
+"التي غالباً ما تفتقدها الاستطلاعات."
 
 #: app/templates/platform.html:348
-#, fuzzy
 msgid "Bridge statements"
-msgstr "التصريحات الجسرية"
+msgstr "بيانات الجسر"
 
 #: app/templates/platform.html:349
 msgid ""
 "Ideas that unite people who otherwise disagree — the foundation for "
 "productive conversation across divides."
 msgstr ""
+"الأفكار التي توحد الأشخاص الذين يختلفون بخلاف ذلك — أساس المحادثة الإنتاجية "
+"عبر الانقسامات."
 
 #: app/templates/platform.html:357
-#, fuzzy
 msgid "Genuine divisions"
-msgstr "نقاط الانقسام"
+msgstr "الانقسامات الحقيقية"
 
 #: app/templates/platform.html:358
 msgid ""
 "Real fault lines — the places where groups genuinely differ. Understanding "
 "these is the start of honest public debate."
 msgstr ""
+"خطوط الصدع الحقيقية — الأماكن حيث تختلف المجموعات فعلاً. فهم هذه هو بداية "
+"النقاش العام الصادق."
 
 #: app/templates/platform.html:374
-#, fuzzy
 msgid "Why this matters now"
-msgstr "سؤال اليوم"
+msgstr "لماذا هذا مهم الآن"
 
 #: app/templates/platform.html:376
 msgid "We are living through a crisis of public discourse."
-msgstr ""
+msgstr "نحن نعيش أزمة في الخطاب العام."
 
 #: app/templates/platform.html:379
 msgid ""
@@ -5936,10 +6279,14 @@ msgid ""
 "governments run \"consultations\" that nobody reads. We built Society Speaks"
 " because the infrastructure for genuine public deliberation is broken."
 msgstr ""
+"وسائل التواصل الاجتماعي تكافئ الغضب على حساب الدقة. استطلاعات الرأي تسطح "
+"التعقيد إلى نسب مئوية. أقسام التعليقات تضخم الأصوات الأعلى. والحكومات تجري "
+"\"استشارات\" لا يقرأها أحد. بنينا Society Speaks لأن البنية الأساسية للنقاش "
+"العام الحقيقي مكسورة."
 
 #: app/templates/platform.html:391
 msgid "The problem with polls"
-msgstr ""
+msgstr "المشكلة مع الاستطلاعات"
 
 #: app/templates/platform.html:392
 #, python-format
@@ -5949,10 +6296,13 @@ msgid ""
 " in common, or whether that 62%% is actually six different groups who agree "
 "for completely different reasons."
 msgstr ""
+"الاستطلاع يخبرك أن 62%% من الناس يتفقون على شيء ما. لكنه لا يخبرك "
+"<em>أي</em> 62%%، مدى قوة شعورهم، ما إذا كان لديهم شيء آخر مشترك، أو ما إذا "
+"كان هذا 62%% في الواقع ست مجموعات مختلفة تتفق لأسباب مختلفة تماماً."
 
 #: app/templates/platform.html:400
 msgid "The problem with comment sections"
-msgstr ""
+msgstr "المشكلة مع أقسام التعليقات"
 
 #: app/templates/platform.html:401
 msgid ""
@@ -5961,10 +6311,13 @@ msgid ""
 "suppressing it. The quiet majority rarely speaks — and when it does, it's "
 "drowned out."
 msgstr ""
+"تسيطر على أقسام التعليقات الأصوات الأكثر تحفيزاً والأكثر تطرفاً والأكثر "
+"توفراً. إنها تخلق وهم النقاش بينما تقمعه بنشاط. الأغلبية الصامتة نادراً ما "
+"تتحدث — وعندما تفعل، يتم إخفاء صوتها."
 
 #: app/templates/platform.html:409
 msgid "The problem with consultations"
-msgstr ""
+msgstr "المشكلة مع المشاورات"
 
 #: app/templates/platform.html:410
 msgid ""
@@ -5973,16 +6326,18 @@ msgid ""
 "campaigns, and almost never result in a usable picture of where genuine "
 "public agreement lies."
 msgstr ""
+"تولد المشاورات الحكومية والشركاتية آلاف الطلبات غير المنظمة. من المكلف "
+"تحليلها، وسهل التلاعب بها من خلال الحملات المنظمة، وتكاد لا تؤدي أبداً إلى "
+"صورة قابلة للاستخدام حول مكان الاتفاق العام الحقيقي."
 
 #: app/templates/brief/reader.html:443
 #: app/templates/emails/daily_brief.html:2584 app/templates/platform.html:417
-#, fuzzy
 msgid "Our methodology"
-msgstr "المنهجية"
+msgstr "منهجيتنا"
 
 #: app/templates/platform.html:418
 msgid "Built on opinion clustering — not polling"
-msgstr ""
+msgstr "مبنية على تجميع الآراء — وليس على الاستطلاعات"
 
 #: app/templates/platform.html:419
 msgid ""
@@ -5992,6 +6347,10 @@ msgid ""
 "actually vote on statements. This reveals the genuine structure of public "
 "opinion."
 msgstr ""
+"تستخدم Society Speaks تقنية التعلم الآلي تسمى <strong>تجميع الآراء</strong> "
+"(بناءً على تحليل المكونات الرئيسية لأنماط التصويت) لتجميع المشاركين ليس "
+"بناءً على من هم، بل بناءً على كيفية تصويتهم بالفعل على البيانات. يكشف هذا عن"
+" الهيكل الحقيقي للرأي العام."
 
 #: app/templates/platform.html:420
 msgid ""
@@ -5999,24 +6358,32 @@ msgid ""
 "natural clusters — groups of people who vote similarly. It then classifies "
 "each statement as:"
 msgstr ""
+"بمجرد أن يصوت المشاركون على عدد كافٍ من البيانات، تحدد الخوارزمية مجموعات "
+"طبيعية — مجموعات من الناس يصوتون بطريقة مماثلة. ثم تصنف كل بيان على أنه:"
 
 #: app/templates/platform.html:424
 msgid ""
 "<strong>Consensus</strong> — agreed on across all groups, regardless of "
 "other differences"
 msgstr ""
+"<strong>إجماع</strong> — متفق عليه عبر جميع المجموعات، بغض النظر عن "
+"الاختلافات الأخرى"
 
 #: app/templates/platform.html:428
 msgid ""
 "<strong>Bridge statements</strong> — where otherwise opposing groups "
 "converge, revealing unexpected common ground"
 msgstr ""
+"<strong>بيانات جسور</strong> — حيث تتقارب المجموعات المتعارضة بخلاف ذلك، "
+"كاشفة عن أرضية مشتركة غير متوقعة"
 
 #: app/templates/platform.html:432
 msgid ""
 "<strong>Genuine divisions</strong> — where groups strongly diverge, "
 "identifying real fault lines worth understanding"
 msgstr ""
+"<strong>انقسامات حقيقية</strong> — حيث تختلف المجموعات بشدة، مما يحدد خطوط "
+"الصراع الحقيقية التي تستحق الفهم"
 
 #: app/templates/platform.html:435
 msgid ""
@@ -6025,14 +6392,17 @@ msgid ""
 "It also surfaces the quiet majority: participants who never comment but "
 "whose votes carry equal weight."
 msgstr ""
+"هذا النهج مقاوم للتلاعب المنظم — تظهر الحملات المنسقة كمجموعة مميزة بدلاً من"
+" تشويه الصورة الكلية. كما أنه يكشف عن الأغلبية الصامتة: المشاركون الذين لا "
+"يعلقون أبداً لكن أصواتهم لها وزن متساوٍ."
 
 #: app/templates/platform.html:439
 msgid "Built on Pol.is — and beyond"
-msgstr ""
+msgstr "مبنية على Pol.is — وما بعده"
 
 #: app/templates/platform.html:440
 msgid "We stand on the shoulders of pioneers"
-msgstr ""
+msgstr "نقف على أكتاف الرواد"
 
 #: app/templates/platform.html:442
 #, python-format
@@ -6042,113 +6412,121 @@ msgid ""
 "digital deliberation in history. We are inspired by that work and the open-"
 "source research behind it."
 msgstr ""
+"%(polis)s رائد هذا النهج واستخدمه لعملية vTaiwan الديمقراطية التشاركية في "
+"تايوان — وهي واحدة من أنجح أمثلة المداولات الرقمية في التاريخ. نستلهم من هذا"
+" العمل والبحث مفتوح المصدر وراءه."
 
 #: app/templates/platform.html:443
 msgid ""
 "Society Speaks builds on the core clustering insight and takes it further "
 "for structured, institutional use:"
 msgstr ""
+"تبني Society Speaks الفكرة الأساسية للتجميع وتأخذها أبعد من ذلك للاستخدام "
+"الهيكلي والمؤسسي:"
 
 #: app/templates/platform.html:448
-#, fuzzy
 msgid "Native statement curation"
-msgstr "لا توجد تصريحات بعد"
+msgstr "تنسيق البيانات الأصلي"
 
 #: app/templates/platform.html:449
 msgid ""
 "Statements are reviewed, balanced, and AI-assisted — ensuring quality and "
 "fairness rather than surfacing the most popular submitted statements"
 msgstr ""
+"يتم مراجعة البيانات وموازنتها والاستعانة بالذكاء الاصطناعي — مما يضمن الجودة"
+" والعدل بدلاً من ظهور البيانات الأكثر شهرة المقدمة"
 
 #: app/templates/platform.html:455
 msgid "Programmes — structured multi-discussion campaigns"
-msgstr ""
+msgstr "البرامج — حملات مناقشة متعددة منظمة"
 
 #: app/templates/platform.html:456
 msgid ""
 "Group many discussions into phases, themes, and cohorts — enabling full "
 "consultation campaigns, not just one-off conversations"
 msgstr ""
+"تجميع العديد من النقاشات في مراحل وموضوعات ومجموعات — تمكين حملات المشاورات "
+"الكاملة، وليس فقط محادثات لمرة واحدة"
 
 #: app/templates/platform.html:462 app/templates/platform.html:518
 msgid "Evidence-linked reasoning"
-msgstr ""
+msgstr "المنطق المرتبط بالأدلة"
 
 #: app/templates/platform.html:463
 msgid ""
 "Participants can attach evidence and reasoning to their votes — moving "
 "beyond a binary to a richer record of why people think what they think"
 msgstr ""
+"يمكن للمشاركين إرفاق الأدلة والمنطق بتصويتهم — الانتقال بعيداً عن الخيار "
+"الثنائي إلى سجل أغنى لسبب تفكير الناس"
 
 #: app/templates/platform.html:469
 msgid "Publisher and partner integration"
-msgstr ""
+msgstr "دمج الناشر والشريك"
 
 #: app/templates/platform.html:470
 msgid ""
 "Embed discussions directly in news articles, policy documents, and websites "
 "— meeting participants where they already are"
 msgstr ""
+"قم بدمج النقاشات مباشرة في مقالات الأخبار والمستندات السياسية والمواقع "
+"الإلكترونية — الاجتماع مع المشاركين حيث هم بالفعل"
 
 #: app/templates/platform.html:479
 msgid "How we compare"
-msgstr ""
+msgstr "كيف نقارن"
 
 #: app/templates/help/native_system.html:406 app/templates/platform.html:484
-#, fuzzy
 msgid "Feature"
-msgstr "مميز"
+msgstr "الميزة"
 
 #: app/templates/platform.html:487
 msgid "YouGov / Polling"
-msgstr ""
+msgstr "YouGov / الاستطلاعات"
 
 #: app/templates/platform.html:488
 msgid "Citizens' Assemblies"
-msgstr ""
+msgstr "الجمعيات المدنية"
 
 #: app/templates/platform.html:489
 msgid "Standard Consultation"
-msgstr ""
+msgstr "المشاورة القياسية"
 
 #: app/templates/platform.html:494
 msgid "Opinion clustering (ML)"
-msgstr ""
+msgstr "تجميع الآراء (التعلم الآلي)"
 
 #: app/templates/platform.html:502
 msgid "Structured programmes / phases"
-msgstr ""
+msgstr "البرامج المنظمة / المراحل"
 
 #: app/templates/platform.html:510
 msgid "Embeddable in websites"
-msgstr ""
+msgstr "قابل للتضمين في المواقع الإلكترونية"
 
 #: app/templates/platform.html:526
-#, fuzzy
 msgid "Open to public participation"
-msgstr "المشاركة"
+msgstr "مفتوح للمشاركة العامة"
 
 #: app/templates/platform.html:529
 msgid "Panel only"
-msgstr ""
+msgstr "لوحة فقط"
 
 #: app/templates/platform.html:530
-#, fuzzy
 msgid "Selected only"
-msgstr "اختر اللغة"
+msgstr "مختار فقط"
 
 #: app/templates/platform.html:534
 msgid "Free to use"
-msgstr ""
+msgstr "مجاني للاستخدام"
 
 #: app/templates/platform.html:542
-#, fuzzy
 msgid "Curated, balanced statements"
-msgstr "إضافة تصريح"
+msgstr "بيانات متوازنة ومنسقة"
 
 #: app/templates/platform.html:550
 msgid "Full data export (CSV/JSON)"
-msgstr ""
+msgstr "تصدير بيانات كاملة (CSV/JSON)"
 
 #: app/templates/platform.html:553
 msgid "Paid only"
