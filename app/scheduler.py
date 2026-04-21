@@ -45,6 +45,25 @@ def _job_error_listener(event):
             # Log other errors normally
             logger.error(f"Job {event.job_id} raised an exception: {event.exception}", 
                         exc_info=event.traceback)
+
+
+class _ShutdownNoiseFilter(logging.Filter):
+    """
+    Suppress harmless APScheduler errors that fire during Gunicorn worker
+    shutdown when the ThreadPoolExecutor is torn down before the scheduler
+    has a chance to stop submitting jobs.
+    """
+    _SUPPRESSED = (
+        "cannot schedule new futures after shutdown",
+        "interpreter is shutting down",
+        "Error submitting job",
+    )
+
+    def filter(self, record):
+        msg = record.getMessage()
+        return not any(phrase in msg for phrase in self._SUPPRESSED)
+
+
 scheduler = None
 _app = None  # Flask app reference stored by init_scheduler for use by start_scheduler helpers
 _shutdown_registered = False
@@ -234,6 +253,17 @@ def init_scheduler(app):
     if scheduler is not None:
         logger.warning("Scheduler already initialized")
         return scheduler
+
+    # Suppress APScheduler's noisy "cannot schedule new futures after shutdown"
+    # errors which are harmless and fire during every Gunicorn worker restart.
+    _shutdown_filter = _ShutdownNoiseFilter()
+    for _aps_logger_name in (
+        "apscheduler.schedulers.base",
+        "apscheduler.schedulers.background",
+        "apscheduler.executors.pool",
+        "apscheduler.executors.base",
+    ):
+        logging.getLogger(_aps_logger_name).addFilter(_shutdown_filter)
     
     # Configure scheduler with generous misfire handling
     # This allows jobs to run even if app restarts around scheduled time

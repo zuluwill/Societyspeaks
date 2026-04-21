@@ -790,7 +790,7 @@ def seed_default_sources():
         },
         {
             'name': 'WHO',
-            'feed_url': 'https://www.who.int/news-room/rss',
+            'feed_url': 'https://www.who.int/rss-feeds/news-english.xml',
             'source_type': 'rss',
             'reputation_score': 0.95,
             'country': 'International',
@@ -1046,7 +1046,7 @@ def seed_default_sources():
         },
         {
             'name': 'El País English',
-            'feed_url': 'https://english.elpais.com/rss/',
+            'feed_url': 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'Spain',
@@ -1070,7 +1070,7 @@ def seed_default_sources():
         },
         {
             'name': 'Sixth Tone',
-            'feed_url': 'https://www.sixthtone.com/feed',
+            'feed_url': 'https://www.sixthtone.com/rss',
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'China',
@@ -1094,7 +1094,7 @@ def seed_default_sources():
         },
         {
             'name': 'Haaretz',
-            'feed_url': 'https://www.haaretz.com/rss',
+            'feed_url': 'https://www.haaretz.com/cmlink/1.628765',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'Israel',
@@ -1102,7 +1102,7 @@ def seed_default_sources():
         },
         {
             'name': 'The National',
-            'feed_url': 'https://www.thenationalnews.com/feed',
+            'feed_url': 'https://www.thenationalnews.com/arc/outboundfeeds/rss/?outputType=xml',
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United Arab Emirates',
@@ -1182,7 +1182,7 @@ def seed_default_sources():
         },
         {
             'name': 'Institute for Government',
-            'feed_url': 'https://www.instituteforgovernment.org.uk/feed',
+            'feed_url': 'https://www.instituteforgovernment.org.uk/rss',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United Kingdom',
@@ -1230,7 +1230,7 @@ def seed_default_sources():
         },
         {
             'name': 'CSIS',
-            'feed_url': 'https://www.csis.org/feed',
+            'feed_url': 'https://www.csis.org/rss.xml',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
@@ -1478,7 +1478,7 @@ def seed_default_sources():
         },
         {
             'name': 'Christianity Today',
-            'feed_url': 'https://www.christianitytoday.com/ct/rss.xml',
+            'feed_url': 'https://www.christianitytoday.com/rss/',
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United States',
@@ -1591,7 +1591,7 @@ def seed_default_sources():
         },
         {
             'name': 'City Journal',
-            'feed_url': 'https://www.city-journal.org/feed',
+            'feed_url': 'https://www.city-journal.org/rss',
             'source_type': 'rss',
             'reputation_score': 0.80,
             'country': 'United States',
@@ -1787,11 +1787,12 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.95,
             'country': 'United Kingdom',
-            'political_leaning': 0
+            'political_leaning': 0,
+            'is_active': False
         },
         {
             'name': 'Associated Press',
-            'feed_url': 'https://rsshub.app/apnews/topics/apf-topnews',
+            'feed_url': 'https://apnews.com/hub/ap-top-news?format=rss',
             'source_type': 'rss',
             'reputation_score': 0.95,
             'country': 'United States',
