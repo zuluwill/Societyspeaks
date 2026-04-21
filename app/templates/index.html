@@ -152,8 +152,8 @@
                             {{ _("Read Today's Brief") }}
                         </a>
                     </div>
-                    {% set _signup_link = '<a href="' ~ url_for('auth.register') ~ '" class="' ~ link_primary() ~ '">' ~ _('Sign up free') ~ '</a>' %}
-                    {% set _login_link = '<a href="' ~ url_for('auth.login') ~ '" class="' ~ link_primary() ~ '">' ~ _('sign in') ~ '</a>' %}
+                    {% set _signup_link %}<a href="{{ url_for('auth.register') }}" class="{{ link_primary() }}">{{ _('Sign up free') }}</a>{% endset %}
+                    {% set _login_link %}<a href="{{ url_for('auth.login') }}" class="{{ link_primary() }}">{{ _('sign in') }}</a>{% endset %}
                     <p class="text-sm text-gray-500 max-w-lg">
                         {{ _('Browse freely without an account. %(signup)s or %(login)s to save your Big Questions progress, votes, and personalised recap.', signup=_signup_link, login=_login_link)|safe }}
                         <span class="text-gray-400"> {{ _('· Trusted by individuals, organisations and governments globally') }}</span>
@@ -726,7 +726,7 @@
                 <span class="hidden sm:inline text-gray-300 mx-1" aria-hidden="true">·</span>
                 <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 shrink-0" aria-hidden="true"></span> {{ _('Podcast') }}</span>
                 <span class="hidden sm:inline text-gray-300 mx-2" aria-hidden="true">|</span>
-                {% set _allsides_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" rel="noopener noreferrer" class="' ~ link_primary() ~ '">AllSides</a>' %}
+                {% set _allsides_link %}<a href="https://www.allsides.com/media-bias/ratings" target="_blank" rel="noopener noreferrer" class="{{ link_primary() }}">AllSides</a>{% endset %}
                 <span class="basis-full sm:basis-auto text-center sm:text-left">
                     {{ _('Bias ratings from %(allsides)s', allsides=_allsides_link)|safe }}
                     <span class="text-gray-300 mx-1">|</span>

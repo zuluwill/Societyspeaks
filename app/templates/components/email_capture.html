@@ -39,7 +39,7 @@
             <p class="text-xs text-gray-500 mt-3">
                 {{ _('Free forever. Unsubscribe anytime. We respect your inbox.') }}
             </p>
-            {% set _tz_link = '<a href="' ~ url_for('brief.subscribe') ~ '" class="' ~ link_primary() ~ '">' ~ _('Choose time zone and delivery time') ~ '</a>' %}
+            {% set _tz_link %}<a href="{{ url_for('brief.subscribe') }}" class="{{ link_primary() }}">{{ _('Choose time zone and delivery time') }}</a>{% endset %}
             <p class="text-xs text-gray-500 mt-2">
                 {{ _('%(link)s on the full sign-up page (this quick box uses sensible defaults).', link=_tz_link)|safe }}
             </p>
