@@ -444,9 +444,9 @@
         {% if cdata.agreement_rate %}
         <span class="text-green-700 font-semibold">{{ "%.0f"|format(cdata.agreement_rate * 100) }}% {{ _('agreement') }}</span>
         {% endif %}
-        {% if cdata.wilson_low is not none and cdata.wilson_high is not none %}
+        {% if cdata.get('wilson_low') is not none and cdata.get('wilson_high') is not none %}
         <span class="text-gray-500" title="{{ _('Wilson 95%% score interval.') }}">
-          95% CI {{ "%.0f"|format(cdata.wilson_low * 100) }}–{{ "%.0f"|format(cdata.wilson_high * 100) }}%
+          95% CI {{ "%.0f"|format(cdata.get('wilson_low') * 100) }}–{{ "%.0f"|format(cdata.get('wilson_high') * 100) }}%
         </span>
         {% endif %}
       </div>
@@ -476,12 +476,12 @@
       </div>
       <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
         <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
-        {% if bdata.mean_agreement is not none %}
-        <span class="text-gray-500">{{ _('Mean cross-group: %(v)s%%', v="%.0f"|format(bdata.mean_agreement * 100)) }}</span>
+        {% if bdata.get('mean_agreement') is not none %}
+        <span class="text-gray-500">{{ _('Mean cross-group: %(v)s%%', v="%.0f"|format(bdata.get('mean_agreement') * 100)) }}</span>
         {% endif %}
-        {% if bdata.wilson_low is not none and bdata.wilson_high is not none %}
+        {% if bdata.get('wilson_low') is not none and bdata.get('wilson_high') is not none %}
         <span class="text-gray-500" title="{{ _('Wilson 95%% score interval on the dominant polarity.') }}">
-          95% CI {{ "%.0f"|format(bdata.wilson_low * 100) }}–{{ "%.0f"|format(bdata.wilson_high * 100) }}%
+          95% CI {{ "%.0f"|format(bdata.get('wilson_low') * 100) }}–{{ "%.0f"|format(bdata.get('wilson_high') * 100) }}%
         </span>
         {% endif %}
       </div>
@@ -505,28 +505,28 @@
       <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
       <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
         <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
-        {% if ddata.group_gap is not none %}
+        {% if ddata.get('group_gap') is not none %}
         <span class="text-red-700 font-semibold" title="{{ _('Agreement-rate gap between the most- and least-agreeing opinion groups on this statement.') }}">
-          {{ _('Group gap %(v)s%%', v="%.0f"|format(ddata.group_gap * 100)) }}
+          {{ _('Group gap %(v)s%%', v="%.0f"|format(ddata.get('group_gap') * 100)) }}
         </span>
         {% endif %}
-        {% set _gap_lo = ddata.gap_ci_low if ddata.gap_ci_low is not none else ddata.wilson_low %}
-        {% set _gap_hi = ddata.gap_ci_high if ddata.gap_ci_high is not none else ddata.wilson_high %}
+        {% set _gap_lo = ddata.get('gap_ci_low') if ddata.get('gap_ci_low') is not none else ddata.get('wilson_low') %}
+        {% set _gap_hi = ddata.get('gap_ci_high') if ddata.get('gap_ci_high') is not none else ddata.get('wilson_high') %}
         {% if _gap_lo is not none and _gap_hi is not none %}
         <span class="text-gray-500" title="{{ _('Newcombe 95%% CI for the proportion difference (MOVER-Wilson, Method 10).') }}">
           95% CI {{ "%.0f"|format(_gap_lo * 100) }}–{{ "%.0f"|format(_gap_hi * 100) }}%
         </span>
         {% endif %}
-        {% if ddata.significant %}
+        {% if ddata.get('significant') %}
         <span class="text-emerald-700 font-medium" title="{{ _('Omnibus permutation χ² across all clusters survives FDR correction.') }}">
           ✓ {{ _('FDR-significant') }}
         </span>
-        {% elif ddata.p_value is not none %}
-        <span class="text-gray-400" title="{{ _('Omnibus permutation χ² p-value (the FDR-screened test).') }}">p={{ "%.3f"|format(ddata.p_value) }}</span>
+        {% elif ddata.get('p_value') is not none %}
+        <span class="text-gray-400" title="{{ _('Omnibus permutation χ² p-value (the FDR-screened test).') }}">p={{ "%.3f"|format(ddata.get('p_value')) }}</span>
         {% endif %}
-        {% if ddata.p_value_gap is not none %}
+        {% if ddata.get('p_value_gap') is not none %}
         <span class="text-gray-400" title="{{ _('Secondary one-sided Fisher check on the extreme pair — a post-hoc guard on the displayed gap, not a simultaneous test.') }}">
-          p<sub>gap</sub>={{ "%.3f"|format(ddata.p_value_gap) }}
+          p<sub>gap</sub>={{ "%.3f"|format(ddata.get('p_value_gap')) }}
         </span>
         {% endif %}
       </div>
