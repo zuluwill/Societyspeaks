@@ -358,78 +358,96 @@ def view_results(discussion_id):
     cluster_assignments = analysis.cluster_data.get('cluster_assignments', {})
     representative_data = analysis.cluster_data.get('representative_statements', {})
 
-    # Collect all cluster IDs from both sources so nothing is missed
-    all_cluster_ids: set = set()
-    for cid in representative_data.keys():
+    # ── Normalise representative_data keys to int/str once ────────────────────
+    # JSON round-trips may produce string keys for numeric cluster IDs.
+    # Doing this once here lets us use a simple dict.get() throughout.
+    def _norm_cid(k):
         try:
-            all_cluster_ids.add(int(cid))
+            return int(k)
         except (ValueError, TypeError):
-            all_cluster_ids.add(str(cid))
-    for c in cluster_assignments.values():
-        try:
-            all_cluster_ids.add(int(c))
-        except (ValueError, TypeError):
-            all_cluster_ids.add(str(c))
+            return str(k)
 
-    # Batch-fetch all statement objects referenced in representative_data
-    all_rep_stmt_ids = []
-    for stmts in representative_data.values():
-        all_rep_stmt_ids.extend(s['statement_id'] for s in stmts)
-    rep_statements_map = {}
+    _rep_data: dict = {_norm_cid(k): v for k, v in representative_data.items()}
+
+    # ── Collect ALL cluster IDs (representative_data + cluster_assignments) ───
+    all_cluster_ids: set = set(_rep_data.keys())
+    for c in cluster_assignments.values():
+        all_cluster_ids.add(_norm_cid(c))
+
+    # ── Batch-fetch representative Statement objects (single DB round-trip) ───
+    all_rep_stmt_ids = [s['statement_id'] for stmts in _rep_data.values() for s in stmts]
+    rep_statements_map: dict = {}
     if all_rep_stmt_ids:
         rep_stmts = Statement.query.filter(Statement.id.in_(all_rep_stmt_ids)).all()
         rep_statements_map = {s.id: s for s in rep_stmts}
 
-    def safe_cluster_sort_key(x):
+    def _sort_cid(x):
         try:
             return (0, int(x))
         except (ValueError, TypeError):
             return (1, str(x))
 
     opinion_groups = []
-    for cluster_id in sorted(all_cluster_ids, key=safe_cluster_sort_key):
-        # Normalise cluster ID and produce a human-readable group name
-        try:
-            target_cluster = int(cluster_id)
+    for cluster_id in sorted(all_cluster_ids, key=_sort_cid):
+        target_cluster = _norm_cid(cluster_id)
+
+        # Human-readable name: integer cluster IDs are 0-indexed internally
+        if isinstance(target_cluster, int):
             group_name = f"Group {target_cluster + 1}"
-        except (ValueError, TypeError):
-            target_cluster = str(cluster_id)
-            group_name = str(cluster_id).title()
+            participant_count = sum(
+                1 for c in cluster_assignments.values()
+                if _norm_cid(c) == target_cluster
+            )
+        else:
+            group_name = target_cluster.title()
+            participant_count = sum(
+                1 for c in cluster_assignments.values()
+                if str(c) == target_cluster
+            )
 
-        # Safe cross-type comparison (JSON may round-trip ints as strings)
-        def matches_cluster(c, _t=target_cluster):
-            try:
-                return int(c) == _t if isinstance(_t, int) else str(c) == _t
-            except (ValueError, TypeError):
-                return str(c) == str(_t)
-
-        participant_count = sum(1 for c in cluster_assignments.values() if matches_cluster(c))
-
-        # Build the enriched statement list for this group
-        stmts_data = representative_data.get(
-            str(cluster_id),
-            representative_data.get(cluster_id, [])
-        )
+        # ── Build enriched statement list ────────────────────────────────────
+        # Pass all fields from the engine through, including the new
+        # agree_count / disagree_count / direction added in this session.
         group_stmts = []
-        for stmt_data in stmts_data:
+        for stmt_data in _rep_data.get(target_cluster, []):
             stmt = rep_statements_map.get(stmt_data['statement_id'])
             if stmt:
+                agree_count = stmt_data.get('agree_count', 0)
+                vote_count = stmt_data.get('vote_count', 0)
+                agreement_rate = stmt_data.get('agreement_rate', 0)
                 group_stmts.append({
                     'statement_id': stmt.id,
                     'content': stmt.content,
-                    'agreement_rate': stmt_data.get('agreement_rate', 0),
-                    'vote_count': stmt_data.get('vote_count', 0),
+                    'agreement_rate': agreement_rate,
+                    'vote_count': vote_count,
+                    'agree_count': agree_count,
+                    # disagree_count may not exist in analyses run before this fix
+                    'disagree_count': stmt_data.get('disagree_count', vote_count - agree_count),
+                    # direction may not exist in older analyses — fall back by agreement_rate
+                    'direction': stmt_data.get('direction', 'agree' if agreement_rate >= 0.5 else 'reject'),
                     'strength': stmt_data.get('strength', 0),
                 })
+
+        # Split into agreement vs rejection sub-lists for template rendering.
+        # Older stored analyses will have all statements in agree_statements
+        # (their strength was computed as agreement_rate × participation).
+        agree_statements = [s for s in group_stmts if s['direction'] == 'agree']
+        reject_statements = [s for s in group_stmts if s['direction'] == 'reject']
 
         opinion_groups.append({
             'id': target_cluster,
             'name': group_name,
             'participant_count': participant_count,
             'statements': group_stmts,
-            # True when the group is too small/sparse to surface representative statements.
-            # Re-running analysis after more votes arrive will fill this in.
+            'agree_statements': agree_statements,
+            'reject_statements': reject_statements,
+            # True when no representative statements could be surfaced.
+            # Common for small groups or groups whose members voted on
+            # different subsets of statements.  Re-running analysis after
+            # more votes arrive will fill this in.
             'too_few_votes': len(group_stmts) == 0,
+            # Flag for low statistical reliability — shown as a caution badge.
+            'small_sample': participant_count < 5,
         })
 
     # Track consensus view from partner context
@@ -455,16 +473,14 @@ def view_results(discussion_id):
     )
 
     view_lang = resolve_language(request)
-    _stmt_ids = {s.id for s in consensus_statements + bridge_statements + divisive_statements}
-    for _og in opinion_groups:
-        for _st in _og.get('statements') or []:
-            _sid = _st.get('statement_id')
-            if _sid is not None:
-                _stmt_ids.add(_sid)
+    # Reuse already-fetched Statement objects — no extra DB round-trip needed.
+    # consensus/bridge/divisive are lists of ORM objects; rep_statements_map
+    # holds the objects for representative statements.
     _all_for_i18n = (
-        Statement.query.filter(Statement.id.in_(_stmt_ids)).all()
-        if _stmt_ids
-        else []
+        list(consensus_statements)
+        + list(bridge_statements)
+        + list(divisive_statements)
+        + list(rep_statements_map.values())
     )
     translation_map = (
         get_cached_statement_translations(_all_for_i18n, view_lang)

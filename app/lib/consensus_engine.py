@@ -984,19 +984,25 @@ def identify_representative_statements(vote_matrix, user_labels, top_n=5):
             # Calculate agreement rate (% who agree among those who voted)
             agree_count = (votes == 1).sum()
             agreement_rate = agree_count / vote_count
+            disagree_count = vote_count - agree_count
 
-            # Calculate "strength" - high agreement weighted by participation
-            # This ensures we pick statements that are both agreed upon AND voted on
-            # Participation weight caps at 1.0 (if everyone in cluster voted)
+            # Strength = how decisively opinionated this group is on this statement.
+            # Using |agreement_rate - 0.5| × 2 rather than plain agreement_rate means
+            # unanimous rejections rank as strongly as unanimous agreements — both tell
+            # us something important about what defines this group.
+            # Participation weight (capped at 1.0) down-weights statements where only
+            # a small fraction of the group voted, even if they agreed.
             participation_weight = min(vote_count / len(cluster_votes), 1.0)
-            strength = agreement_rate * participation_weight
+            strength = abs(agreement_rate - 0.5) * 2.0 * participation_weight
 
             statement_scores.append({
                 'statement_id': int(statement_id),
                 'agreement_rate': float(agreement_rate),
                 'vote_count': int(vote_count),
                 'agree_count': int(agree_count),
-                'strength': float(strength)
+                'disagree_count': int(disagree_count),
+                'direction': 'agree' if agreement_rate >= 0.5 else 'reject',
+                'strength': float(strength),
             })
 
         # Sort by strength (agreement weighted by participation)
