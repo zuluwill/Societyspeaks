@@ -217,6 +217,37 @@ def _batch_user_vote_counts(user_id: int, discussion_ids: List[int]) -> dict[int
     return {int(did): int(cnt) for did, cnt in rows}
 
 
+def _batch_unique_participant_counts(discussion_ids: List[int]) -> dict[int, int]:
+    """Count distinct voters (by user_id or session_fingerprint) per discussion."""
+    if not discussion_ids:
+        return {}
+    auth_rows = (
+        db.session.query(StatementVote.discussion_id, func.count(func.distinct(StatementVote.user_id)))
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            StatementVote.user_id.isnot(None),
+        )
+        .group_by(StatementVote.discussion_id)
+        .all()
+    )
+    anon_rows = (
+        db.session.query(StatementVote.discussion_id, func.count(func.distinct(StatementVote.session_fingerprint)))
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.isnot(None),
+        )
+        .group_by(StatementVote.discussion_id)
+        .all()
+    )
+    result: dict[int, int] = {did: 0 for did in discussion_ids}
+    for did, cnt in auth_rows:
+        result[int(did)] += int(cnt or 0)
+    for did, cnt in anon_rows:
+        result[int(did)] += int(cnt or 0)
+    return result
+
+
 def _batch_vote_distributions(discussion_ids: List[int]) -> dict[int, dict[str, int]]:
     if not discussion_ids:
         return {}
@@ -365,6 +396,7 @@ def build_programme_recap_payload(
     vote_dists = _batch_vote_distributions(ids)
     stmt_counts = _batch_statement_counts(ids)
     user_vote_counts = _batch_user_vote_counts(user_id or 0, ids) if user_id else {}
+    unique_participant_counts = _batch_unique_participant_counts(ids)
 
     themes_out: List[dict[str, Any]] = []
     for d in discussions:
@@ -374,6 +406,7 @@ def build_programme_recap_payload(
         stmt_total = stmt_counts.get(d.id, 0)
         user_votes = user_vote_counts.get(d.id, 0)
         total_votes = dist["agree"] + dist["disagree"] + dist["unsure"]
+        participant_count = unique_participant_counts.get(d.id, 0)
 
         # Proportional percentages for the visual bar (integer, sum ≤ 100)
         if total_votes:
@@ -400,6 +433,7 @@ def build_programme_recap_payload(
                 "statement_count": int(stmt_total),
                 "user_vote_count": int(user_votes),
                 "is_theme_complete": stmt_total > 0 and user_votes >= stmt_total,
+                "participant_count": participant_count,
                 "participant_count_analysis": int(analysis.participants_count or 0) if analysis else 0,
                 "consensus_n": len(cluster_data.get("consensus_statements") or []),
                 "bridge_n": len(cluster_data.get("bridge_statements") or []),
