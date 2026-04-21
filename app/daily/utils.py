@@ -326,24 +326,8 @@ def get_discussion_stats_for_question(question):
             current_app.logger.warning(f"Error accessing source_discussion for question {question.id}: {e}")
         return default_response
 
-    # Count participants (authenticated users who voted)
-    participant_count = db.session.query(
-        db.func.count(db.distinct(StatementVote.user_id))
-    ).filter(
-        StatementVote.discussion_id == discussion.id,
-        StatementVote.user_id.isnot(None)
-    ).scalar() or 0
-
-    # Add anonymous participants
-    anon_count = db.session.query(
-        db.func.count(db.distinct(StatementVote.session_fingerprint))
-    ).filter(
-        StatementVote.discussion_id == discussion.id,
-        StatementVote.user_id.is_(None),
-        StatementVote.session_fingerprint.isnot(None)
-    ).scalar() or 0
-
-    participant_count += anon_count
+    from app.api.utils import get_discussion_participant_count
+    participant_count = get_discussion_participant_count(discussion)
 
     # Count responses (statements added to discussion)
     response_count = Statement.query.filter_by(

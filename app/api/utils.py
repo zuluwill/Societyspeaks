@@ -268,6 +268,54 @@ def get_discussion_participant_count(
     return user_count + anon_count
 
 
+def batch_discussion_participant_counts(discussion_ids: list) -> dict:
+    """
+    Get unique participant counts for multiple discussions in two queries (no N+1).
+
+    Uses the same logic as get_discussion_participant_count but batched:
+    counts distinct user_ids (authenticated) + distinct session_fingerprints
+    (anonymous) per discussion.
+
+    Args:
+        discussion_ids: List of discussion IDs to count for.
+
+    Returns:
+        dict: {discussion_id (int): participant_count (int)}
+    """
+    if not discussion_ids:
+        return {}
+
+    from sqlalchemy import func, distinct
+    from app import db
+    from app.models import StatementVote
+
+    result = {int(did): 0 for did in discussion_ids}
+
+    auth_rows = db.session.query(
+        StatementVote.discussion_id,
+        func.count(distinct(StatementVote.user_id)),
+    ).filter(
+        StatementVote.discussion_id.in_(discussion_ids),
+        StatementVote.user_id.isnot(None),
+    ).group_by(StatementVote.discussion_id).all()
+
+    anon_rows = db.session.query(
+        StatementVote.discussion_id,
+        func.count(distinct(StatementVote.session_fingerprint)),
+    ).filter(
+        StatementVote.discussion_id.in_(discussion_ids),
+        StatementVote.user_id.is_(None),
+        StatementVote.session_fingerprint.isnot(None),
+    ).group_by(StatementVote.discussion_id).all()
+
+    for did, cnt in auth_rows:
+        result[int(did)] += int(cnt or 0)
+    for did, cnt in anon_rows:
+        result[int(did)] += int(cnt or 0)
+
+    return result
+
+
 def get_discussion_statement_count(discussion):
     """
     Get the number of active (non-deleted) statements in a discussion.

@@ -12,6 +12,7 @@ from flask import current_app
 from sqlalchemy import func
 from app import db
 from app.models import ConsensusAnalysis, Discussion, Programme, Statement, StatementVote
+from app.api.utils import batch_discussion_participant_counts
 from app.programmes.journey_variants import VARIANT_METADATA
 
 
@@ -217,37 +218,6 @@ def _batch_user_vote_counts(user_id: int, discussion_ids: List[int]) -> dict[int
     return {int(did): int(cnt) for did, cnt in rows}
 
 
-def _batch_unique_participant_counts(discussion_ids: List[int]) -> dict[int, int]:
-    """Count distinct voters (by user_id or session_fingerprint) per discussion."""
-    if not discussion_ids:
-        return {}
-    auth_rows = (
-        db.session.query(StatementVote.discussion_id, func.count(func.distinct(StatementVote.user_id)))
-        .filter(
-            StatementVote.discussion_id.in_(discussion_ids),
-            StatementVote.user_id.isnot(None),
-        )
-        .group_by(StatementVote.discussion_id)
-        .all()
-    )
-    anon_rows = (
-        db.session.query(StatementVote.discussion_id, func.count(func.distinct(StatementVote.session_fingerprint)))
-        .filter(
-            StatementVote.discussion_id.in_(discussion_ids),
-            StatementVote.user_id.is_(None),
-            StatementVote.session_fingerprint.isnot(None),
-        )
-        .group_by(StatementVote.discussion_id)
-        .all()
-    )
-    result: dict[int, int] = {did: 0 for did in discussion_ids}
-    for did, cnt in auth_rows:
-        result[int(did)] += int(cnt or 0)
-    for did, cnt in anon_rows:
-        result[int(did)] += int(cnt or 0)
-    return result
-
-
 def _batch_vote_distributions(discussion_ids: List[int]) -> dict[int, dict[str, int]]:
     if not discussion_ids:
         return {}
@@ -396,7 +366,7 @@ def build_programme_recap_payload(
     vote_dists = _batch_vote_distributions(ids)
     stmt_counts = _batch_statement_counts(ids)
     user_vote_counts = _batch_user_vote_counts(user_id or 0, ids) if user_id else {}
-    unique_participant_counts = _batch_unique_participant_counts(ids)
+    unique_participant_counts = batch_discussion_participant_counts(ids)
 
     themes_out: List[dict[str, Any]] = []
     for d in discussions:
