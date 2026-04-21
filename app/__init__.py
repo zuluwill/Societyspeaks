@@ -417,6 +417,38 @@ def create_app():
     # Respect explicit translation directory from Config (absolute path)
     if getattr(Config, 'BABEL_TRANSLATION_DIRECTORIES', None):
         app.config['BABEL_TRANSLATION_DIRECTORIES'] = Config.BABEL_TRANSLATION_DIRECTORIES
+
+    # ── Pre-warm Flask-Babel translation cache ────────────────────────────────
+    # Flask-Babel lazily loads each locale's .po file on the first request that
+    # uses that locale, storing the result in Domain.cache (a shared dict).
+    # Under gunicorn with preload_app=True, the app is created in the master
+    # process before workers are forked.  If the cache is still empty at fork
+    # time, every worker's first concurrent request for the same locale races
+    # to read the .po file from disk, causing a KeyError (and chained I/O
+    # error) when two greenlets collide on the unprotected dict write.
+    #
+    # Fix: force-load every supported locale here, in the master, before any
+    # fork.  Workers inherit the pre-populated cache and never race on it.
+    from flask_babel import get_translations as _babel_get_translations
+    _prewarm_failed = []
+    for _lang in SUPPORTED_LANGUAGES:
+        try:
+            with app.test_request_context(f'/?lang={_lang}'):
+                _babel_get_translations()
+        except Exception as _e:
+            _prewarm_failed.append((_lang, str(_e)))
+    if _prewarm_failed:
+        app.logger.warning(
+            "Babel cache pre-warm: failed for locales %s",
+            [l for l, _ in _prewarm_failed],
+        )
+    else:
+        app.logger.info(
+            "Babel cache pre-warmed for %d locale(s): %s",
+            len(SUPPORTED_LANGUAGES),
+            list(SUPPORTED_LANGUAGES.keys()),
+        )
+
     # Expose supported languages and current locale to every Jinja2 template
     app.jinja_env.globals['supported_languages'] = SUPPORTED_LANGUAGES
     # For strings passed to JSON/JS: Jinja's _() always does ``msg % kwargs`` (empty dict
