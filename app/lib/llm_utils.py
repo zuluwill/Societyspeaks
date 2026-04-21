@@ -82,7 +82,7 @@ def validate_api_key(provider: str, api_key: str) -> Tuple[bool, str]:
             try:
                 # This is a very small request just to validate the key
                 client.messages.create(
-                    model="claude-3-haiku-20240307",
+                    model="claude-3-5-haiku-20241022",
                     max_tokens=10,
                     messages=[{"role": "user", "content": "Hi"}]
                 )
@@ -203,7 +203,7 @@ def _generate_with_openai(api_key: str, prompt: str, model: str = "gpt-4o-mini")
     return response.choices[0].message.content
 
 
-def _generate_with_anthropic(api_key: str, prompt: str, model: str = "claude-3-haiku-20240307") -> str:
+def _generate_with_anthropic(api_key: str, prompt: str, model: str = "claude-3-5-haiku-20241022") -> str:
     """
     Generate text using Anthropic Claude API
     Uses Haiku for cost-effectiveness
@@ -408,7 +408,7 @@ Rules:
             if user_key.provider == 'openai':
                 raw = _generate_with_openai(api_key, prompt, model="gpt-4o-mini")
             elif user_key.provider == 'anthropic':
-                raw = _generate_with_anthropic(api_key, prompt, model="claude-3-haiku-20240307")
+                raw = _generate_with_anthropic(api_key, prompt, model="claude-3-5-haiku-20241022")
             else:
                 labels[cid_int] = {'label': f"Group {cid_int + 1}", 'supporting_statement_ids': []}
                 continue

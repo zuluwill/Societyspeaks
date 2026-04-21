@@ -293,7 +293,7 @@ def _call_anthropic(prompt: str, api_key: str) -> str:
 
     try:
         message = client.messages.create(
-            model="claude-3-haiku-20240307",
+            model="claude-3-5-haiku-20241022",
             max_tokens=600,
             temperature=0.3,
             system="You are a news editor creating calm, neutral briefings. Respond only in valid JSON.",

@@ -124,7 +124,7 @@ class BriefingGenerator:
         for attempt in range(max_retries):
             try:
                 response = client.messages.create(
-                    model="claude-3-haiku-20240307",
+                    model="claude-3-5-haiku-20241022",
                     max_tokens=max_tokens,
                     system=system_prompt,
                     messages=[{"role": "user", "content": prompt}]
