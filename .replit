@@ -81,12 +81,12 @@ args = "Consensus Worker Pool (x3)"
 name = "Fill Translations"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python3 scripts/translate_po_with_haiku.py"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 scripts/translate_po_with_haiku.py --batch-size 5"
 
 [agent]
 expertMode = true

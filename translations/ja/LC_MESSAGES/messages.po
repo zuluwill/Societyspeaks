@@ -2379,7 +2379,7 @@ msgstr "ライブキーはアクティブなサブスクリプションが必要
 #: app/partner/routes.py:2045
 #, python-format
 msgid "Maximum of 10 active %(env)s keys reached. Revoke unused keys first."
-msgstr ""
+msgstr "%(env)s キーの最大 10 個のアクティブ制限に達しました。まず未使用のキーを取り消してください。"
 
 #: app/partner/routes.py:2054
 msgid "An error occurred creating the API key. Please try again."
@@ -5752,7 +5752,7 @@ msgstr "ステートメント 3 / 8"
 
 #: app/templates/platform.html:157
 msgid "Based on 1,247 votes"
-msgstr ""
+msgstr "1,247 票に基づく"
 
 #: app/templates/platform.html:165
 msgid "How it works in 3 steps"
@@ -7381,49 +7381,47 @@ msgstr "有害で、不快感を与える、または不適切なコンテンツ
 
 #: app/templates/terms-and-conditions.html:41
 msgid "Attempt to manipulate or game the discussion system"
-msgstr ""
+msgstr "議論システムを操作またはゲーム化しようとする行為"
 
 #: app/templates/terms-and-conditions.html:42
 msgid "Use automated means to submit comments or votes"
-msgstr ""
+msgstr "自動化された手段を使用してコメントまたは投票を送信する"
 
 #: app/templates/terms-and-conditions.html:43
 msgid "Harass or intimidate other participants"
-msgstr ""
+msgstr "他の参加者に嫌がらせまたは脅迫する"
 
 #: app/templates/terms-and-conditions.html:44
-#, fuzzy
 msgid "Share misleading or false information"
-msgstr "誤情報"
+msgstr "誤解を招くまたは虚偽の情報を共有する"
 
 #: app/templates/terms-and-conditions.html:47
-#, fuzzy
 msgid "3. Registration and Account"
-msgstr "すでにアカウントをお持ちですか？"
+msgstr "3. 登録とアカウント"
 
 #: app/templates/terms-and-conditions.html:49
 msgid ""
 "3.1 Eligibility: You must be at least 16 years old to register for an "
 "account."
-msgstr ""
+msgstr "3.1 適格要件：アカウントを登録するには、16歳以上である必要があります。"
 
 #: app/templates/terms-and-conditions.html:51
 msgid ""
 "3.2 Account Information: You agree to provide accurate and complete "
 "information when creating an account and to keep this information up-to-"
 "date."
-msgstr ""
+msgstr "3.2 アカウント情報：アカウント作成時に正確で完全な情報を提供し、その情報を最新の状態に保つことに同意します。"
 
 #: app/templates/terms-and-conditions.html:53
 msgid ""
 "3.3 Security: You are responsible for maintaining the confidentiality of "
 "your account credentials and for all activities that occur under your "
 "account."
-msgstr ""
+msgstr "3.3 セキュリティ：アカウント認証情報の機密性を保持し、アカウントで発生するすべての活動に対して責任を持ちます。"
 
 #: app/templates/terms-and-conditions.html:55
 msgid "4. Intellectual Property"
-msgstr ""
+msgstr "4. 知的財産"
 
 #: app/templates/terms-and-conditions.html:57
 msgid ""
@@ -7431,6 +7429,8 @@ msgid ""
 "designs, text, and graphics, is owned by William Roberts Coaching and "
 "Advisory Ltd or our licensors."
 msgstr ""
+"4.1 当社の知的財産：プラットフォーム、ソフトウェア、デザイン、テキスト、グラフィックスを含むすべての要素は、William Roberts "
+"Coaching and Advisory Ltd またはそのライセンス提供者が所有しています。"
 
 #: app/templates/terms-and-conditions.html:59
 msgid ""
@@ -7439,10 +7439,12 @@ msgid ""
 "view, analyze, and interact with that content as part of the collective "
 "discussion process."
 msgstr ""
+"4.2 "
+"あなたのコンテンツ：あなたが作成したコンテンツの所有権は保持しますが、ディスカッションにコンテンツを投稿することにより、当社およびその他のユーザーに、集合的な議論プロセスの一部として、そのコンテンツを閲覧、分析、および相互作用する権利を付与します。"
 
 #: app/templates/terms-and-conditions.html:61
 msgid "5. Donations and Payments"
-msgstr ""
+msgstr "5. 寄付と支払い"
 
 #: app/templates/terms-and-conditions.html:63
 msgid ""
@@ -7450,101 +7452,103 @@ msgid ""
 "community. Your contributions help us maintain and improve the platform for "
 "everyone."
 msgstr ""
+"5.1 プラットフォームサポート：SocietySpeaks.io "
+"はコミュニティからの寄付によってサポートされています。あなたの貢献は、すべてのユーザーのためにプラットフォームを維持および改善するのに役立ちます。"
 
 #: app/templates/terms-and-conditions.html:65
 msgid "5.2 Supporting the Platform: You can support us in two ways:"
-msgstr ""
+msgstr "5.2 プラットフォームへのサポート: 以下の2つの方法でサポートいただけます:"
 
 #: app/templates/terms-and-conditions.html:67
 msgid "One-time donations to help cover platform costs"
-msgstr ""
+msgstr "プラットフォームの運営費をサポートするための一度限りの寄付"
 
 #: app/templates/terms-and-conditions.html:68
-#, fuzzy
 msgid "Monthly or annual subscriptions"
-msgstr "言語オプション"
+msgstr "月次または年次のサブスクリプション"
 
 #: app/templates/terms-and-conditions.html:71
 msgid "5.3 Payment Processing:"
-msgstr ""
+msgstr "5.3 支払い処理:"
 
 #: app/templates/terms-and-conditions.html:73
 msgid "All financial transactions are processed securely through Stripe"
-msgstr ""
+msgstr "すべての金融取引は Stripe を通じて安全に処理されます"
 
 #: app/templates/terms-and-conditions.html:74
 msgid "Payments are processed in Great British Pounds (GBP)"
-msgstr ""
+msgstr "支払いは英国ポンド（GBP）で処理されます"
 
 #: app/templates/terms-and-conditions.html:75
 msgid "Subscriptions automatically renew unless cancelled"
-msgstr ""
+msgstr "キャンセルされない限り、サブスクリプションは自動的に更新されます"
 
 #: app/templates/terms-and-conditions.html:78
 msgid "5.4 Subscription Terms:"
-msgstr ""
+msgstr "5.4 サブスクリプション利用規約："
 
 #: app/templates/terms-and-conditions.html:80
 msgid ""
 "You can cancel your subscription at any time through your account settings"
-msgstr ""
+msgstr "アカウント設定からいつでもサブスクリプションをキャンセルできます"
 
 #: app/templates/terms-and-conditions.html:81
 msgid ""
 "Cancellation will take effect at the end of your current billing period"
-msgstr ""
+msgstr "キャンセルは現在の請求期間の終了時に有効になります"
 
 #: app/templates/terms-and-conditions.html:84
 msgid ""
 "5.5 Taxes and Fees: All displayed amounts exclude VAT and any applicable "
 "taxes. You are responsible for any applicable taxes or fees."
 msgstr ""
+"5.5 税金と手数料：表示されているすべての金額は VAT およびその他の適用税を除いています。適用可能な税金または手数料は、あなたの責任です。"
 
 #: app/templates/terms-and-conditions.html:86
 msgid "6. Data Processing"
-msgstr ""
+msgstr "6. データ処理"
 
 #: app/templates/terms-and-conditions.html:88
 msgid ""
 "6.1 Platform Infrastructure: Our service operates on the following "
 "infrastructure:"
-msgstr ""
+msgstr "6.1 プラットフォームインフラストラクチャ：当社のサービスは以下のインフラストラクチャで運営されています："
 
 #: app/templates/terms-and-conditions.html:90
 msgid "Pol.is - Powers our discussion and collective intelligence features"
-msgstr ""
+msgstr "Pol.is - ディスカッション機能と集合知機能を提供しています"
 
 #: app/templates/terms-and-conditions.html:91
 msgid "Replit - Provides platform hosting"
-msgstr ""
+msgstr "Replit - プラットフォームホスティングを提供しています"
 
 #: app/templates/terms-and-conditions.html:92
 msgid "Google Cloud - Provides underlying infrastructure"
-msgstr ""
+msgstr "Google Cloud - 基盤となるインフラストラクチャを提供"
 
 #: app/templates/terms-and-conditions.html:93
 msgid "Stripe - Processes payments"
-msgstr ""
+msgstr "Stripe - 支払い処理を行う"
 
 #: app/templates/terms-and-conditions.html:94
 msgid "Resend - Handles email communications"
-msgstr ""
+msgstr "Resend - メール通信を処理"
 
 #: app/templates/terms-and-conditions.html:97
 msgid ""
 "6.2 Data Storage: Your data is primarily stored and processed in the United "
 "States through our service providers."
-msgstr ""
+msgstr "6.2 データストレージ: お客様のデータは、当社のサービスプロバイダーを通じて主に米国で保存および処理されます。"
 
 #: app/templates/terms-and-conditions.html:99
 msgid "7. Termination"
-msgstr ""
+msgstr "7. 終了"
 
 #: app/templates/terms-and-conditions.html:101
 msgid ""
 "7.1 By You: You may terminate your account at any time through your account "
 "settings."
-msgstr ""
+msgstr "7.1 ご本人によるもの：アカウント設定からいつでもアカウントを削除することができます。"
 
 #: app/templates/terms-and-conditions.html:103
 msgid ""
@@ -7552,29 +7556,28 @@ msgid ""
 "Service immediately, without prior notice or liability, for any reason, "
 "including:"
 msgstr ""
+"7.2 "
+"当社によるもの：当社は、以下を含むあらゆる理由により、事前通知または責任を負うことなく、いつでもアカウントおよびサービスへのアクセスを終了または停止することができます。"
 
 #: app/templates/terms-and-conditions.html:105
 msgid "Violation of these Terms"
-msgstr ""
+msgstr "これらの利用規約違反"
 
 #: app/templates/terms-and-conditions.html:106
-#, fuzzy
 msgid "Abusive behavior in discussions"
-msgstr "あなたのディスカッション"
+msgstr "ディスカッション内での虐待的行為"
 
 #: app/templates/terms-and-conditions.html:107
-#, fuzzy
 msgid "Failure to pay subscription fees"
-msgstr "言語オプション"
+msgstr "サブスクリプション料金の未払い"
 
 #: app/templates/terms-and-conditions.html:108
-#, fuzzy
 msgid "Fraudulent activity"
-msgstr "ディスカッションのアクティビティとアラート"
+msgstr "不正行為"
 
 #: app/templates/terms-and-conditions.html:111
 msgid "7.3 Effect of Termination: Upon termination:"
-msgstr ""
+msgstr "7.3 終了の効果：終了時："
 
 #: app/templates/terms-and-conditions.html:113
 msgid "Your access to paid features will end"

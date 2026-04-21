@@ -12254,195 +12254,202 @@ msgstr "Analytik anzeigen"
 msgid ""
 "Are you sure you want to delete this briefing? This action cannot be undone."
 msgstr ""
+"Möchten Sie diese Zusammenfassung wirklich löschen? Diese Aktion kann nicht "
+"rückgängig gemacht werden."
 
 #: app/templates/briefing/detail.html:511
-#, fuzzy
 msgid "Delete Briefing"
-msgstr "Kostenpflichtige Briefings"
+msgstr "Zusammenfassung löschen"
 
 #: app/templates/briefing/detail.html:538
-#, fuzzy
 msgid "Starting..."
-msgstr "Wird eingereicht..."
+msgstr "Wird gestartet..."
 
 #: app/templates/briefing/detail.html:555
 #: app/templates/briefing/generation_progress.html:10
 #: app/templates/daily/results.html:1040
 msgid "Generating..."
-msgstr ""
+msgstr "Wird generiert..."
 
 #: app/templates/briefing/detail.html:560
 #: app/templates/briefing/detail.html:593
 msgid "Brief generated! Redirecting..."
-msgstr ""
+msgstr "Zusammenfassung erstellt! Leitung wird weitergeleitet..."
 
 #: app/templates/briefing/detail.html:569
-#, fuzzy
 msgid "Failed to start generation. Please try again."
-msgstr "Bericht konnte nicht eingereicht werden. Bitte erneut versuchen."
+msgstr ""
+"Generierung konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
 
 #: app/templates/briefing/detail.html:581
 #: app/templates/briefing/generation_progress.html:85
-#, fuzzy
 msgid "Generation timed out. Please try again."
-msgstr "Bericht konnte nicht eingereicht werden. Bitte erneut versuchen."
+msgstr ""
+"Generierung hat das Zeitlimit überschritten. Bitte versuchen Sie es erneut."
 
 #: app/templates/briefing/detail.html:596
-#, fuzzy
 msgid "Generation failed. Please try again."
-msgstr "Bericht konnte nicht eingereicht werden. Bitte erneut versuchen."
+msgstr "Generierung fehlgeschlagen. Bitte versuchen Sie es erneut."
 
 #: app/templates/briefing/detail.html:624
 #: app/templates/news/dashboard.html:227 app/templates/sources/index.html:80
-#, fuzzy
 msgid "Search sources..."
-msgstr "Aussagen suchen..."
+msgstr "Quellen durchsuchen..."
 
 #: app/templates/briefing/edit.html:16
-#, fuzzy
 msgid "Edit Briefing"
-msgstr "Kostenpflichtige Briefings"
+msgstr "Zusammenfassung bearbeiten"
 
 #: app/templates/briefing/edit.html:17
 msgid "Update your briefing configuration"
-msgstr ""
+msgstr "Aktualisieren Sie Ihre Zusammenfassungskonfiguration"
 
 #: app/templates/briefing/edit.html:82
 msgid ""
 "Choose the time (hour and minute) when briefs should be sent in your "
 "selected timezone"
 msgstr ""
+"Wählen Sie die Uhrzeit (Stunde und Minute) aus, zu der Zusammenfassungen in "
+"Ihrer ausgewählten Zeitzone gesendet werden sollen"
 
 #: app/templates/briefing/edit.html:90
 msgid "Require approval"
-msgstr ""
+msgstr "Genehmigung erforderlich"
 
 #: app/templates/briefing/edit.html:99
 #: app/templates/briefing/use_template.html:129
 #: app/templates/daily/_reason_input.html:95
 #: app/templates/daily/confirm_vote.html:164
 #: app/templates/help/programmes.html:143
-#, fuzzy
 msgid "Private"
-msgstr "Mitmachen"
+msgstr "Privat"
 
 #: app/templates/briefing/edit.html:101
 #: app/templates/briefing/use_template.html:137
 #: app/templates/help/programmes.html:109
-#, fuzzy
 msgid "Public"
-msgstr "Öffentliches Profil"
+msgstr "Öffentlich"
 
 #: app/templates/briefing/edit.html:111
-#, fuzzy
 msgid "Paused"
-msgstr "Passwort"
+msgstr "Pausiert"
 
 #: app/templates/briefing/edit.html:117
-#, fuzzy
 msgid "Content Preferences"
-msgstr "Einstellungen verwalten"
+msgstr "Inhaltseinstellungen"
 
 #: app/templates/briefing/edit.html:118
 msgid "Customise which topics and content you want to see more or less of."
 msgstr ""
+"Passen Sie an, welche Themen und Inhalte Sie mehr oder weniger sehen "
+"möchten."
 
 #: app/templates/briefing/edit.html:123
-#, fuzzy
 msgid "Topic Priorities"
-msgstr "Öffentliche Programme"
+msgstr "Themenprioritäten"
 
 #: app/templates/briefing/edit.html:124
 msgid ""
 "Add topics you want to prioritise. Higher priority topics will appear more "
 "often."
 msgstr ""
+"Fügen Sie Themen hinzu, die Sie priorisieren möchten. Themen mit höherer "
+"Priorität werden häufiger angezeigt."
 
 #: app/templates/briefing/edit.html:131 app/templates/briefing/edit.html:517
 msgid "e.g., Football, Technology, Politics"
-msgstr ""
+msgstr "z.B. Fußball, Technologie, Politik"
 
 #: app/templates/briefing/edit.html:146
 msgid "+ Add topic priority"
-msgstr ""
+msgstr "+ Themenschwerpunkt hinzufügen"
 
 #: app/templates/briefing/edit.html:152
 msgid "Include Keywords"
-msgstr ""
+msgstr "Schlüsselwörter einbeziehen"
 
 #: app/templates/briefing/edit.html:157
 msgid "e.g., Premier League, Champions League, World Cup"
-msgstr ""
+msgstr "z.B. Premier League, Champions League, Weltmeisterschaft"
 
 #: app/templates/briefing/edit.html:158
 msgid ""
 "Comma-separated keywords. Stories containing these will be prioritised."
 msgstr ""
+"Durch Kommas getrennte Schlüsselwörter. Geschichten, die diese enthalten, "
+"werden bevorzugt."
 
 #: app/templates/briefing/edit.html:163
 msgid "Exclude Keywords"
-msgstr ""
+msgstr "Schlüsselwörter ausschließen"
 
 #: app/templates/briefing/edit.html:167
 msgid "e.g., betting, gambling, sponsored"
-msgstr ""
+msgstr "z.B. Wetten, Glücksspiel, gesponsert"
 
 #: app/templates/briefing/edit.html:168
 msgid "Comma-separated keywords. Stories containing these will be excluded."
 msgstr ""
+"Durch Kommas getrennte Schlüsselwörter. Geschichten, die diese enthalten, "
+"werden ausgeschlossen."
 
 #: app/templates/briefing/edit.html:176
 msgid "Customise how your brief content is generated."
-msgstr ""
+msgstr "Passen Sie an, wie Ihr Briefinginhalt generiert wird."
 
 #: app/templates/briefing/edit.html:184
 msgid "Calm & Neutral"
-msgstr ""
+msgstr "Ruhig & Neutral"
 
 #: app/templates/briefing/edit.html:186
 msgid "Conversational & Friendly"
-msgstr ""
+msgstr "Gesprächig & Freundlich"
 
 #: app/templates/briefing/edit.html:188
 msgid "The writing style for your generated briefs"
-msgstr ""
+msgstr "Der Schreibstil für Ihre generierten Briefe"
 
 #: app/templates/briefing/edit.html:193
 msgid "Maximum Stories"
-msgstr ""
+msgstr "Maximale Geschichten"
 
 #: app/templates/briefing/edit.html:197
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d stories"
-msgstr "Quellen"
+msgstr "%(num)d Geschichten"
 
 #: app/templates/briefing/edit.html:200
 msgid "Maximum number of stories to include per brief"
-msgstr ""
+msgstr "Maximale Anzahl von Geschichten pro Brief"
 
 #: app/templates/briefing/edit.html:205
 msgid "Custom AI Instructions"
-msgstr ""
+msgstr "Benutzerdefinierte KI-Anweisungen"
 
 #: app/templates/briefing/edit.html:206
 msgid ""
 "Add custom instructions for the AI, e.g., 'Focus on transfer news and match "
 "analysis' or 'Highlight underdog stories and upsets'"
 msgstr ""
+"Fügen Sie benutzerdefinierte Anweisungen für die KI hinzu, z.B. "
+"\"Konzentrieren Sie sich auf Transfernachrichten und Spielanalysen\" oder "
+"\"Heben Sie Außenseiter und Überraschungen hervor\""
 
 #: app/templates/briefing/edit.html:210
 msgid ""
 "Tell the AI how to write and what to focus on. This shapes the tone and "
 "content of your briefs."
 msgstr ""
+"Teilen Sie der KI mit, wie sie schreiben und worauf sie sich konzentrieren "
+"soll. Dies prägt den Ton und Inhalt Ihrer Briefe."
 
 #: app/templates/briefing/edit.html:217
 msgid "Visual Branding"
-msgstr ""
+msgstr "Visuelles Branding"
 
 #: app/templates/briefing/edit.html:218
 msgid "Customise the look and feel of your briefs."
-msgstr ""
+msgstr "Passen Sie das Aussehen und Verhalten Ihrer Briefe an."
 
 #: app/templates/briefing/edit.html:223
 msgid "Logo URL"
@@ -17736,67 +17743,74 @@ msgstr "Veröffentlicht von Anonym"
 
 #: app/templates/discussions/create_response.html:48
 msgid "💬 Response Guidelines"
-msgstr ""
+msgstr "💬 Antwortrichtlinien"
 
 #: app/templates/discussions/create_response.html:51
 msgid ""
 "• <strong>Choose your position:</strong> Pro (supporting), Con (opposing), "
 "or Neutral"
 msgstr ""
+"• <strong>Wählen Sie Ihre Position:</strong> Dafür (unterstützend), Dagegen "
+"(ablehnend) oder Neutral"
 
 #: app/templates/discussions/create_response.html:54
 msgid ""
 "• <strong>Provide reasoning:</strong> Explain why you hold this position"
 msgstr ""
+"• <strong>Begründung angeben:</strong> Erklären Sie, warum Sie diese "
+"Position vertreten"
 
 #: app/templates/discussions/create_response.html:57
 msgid ""
 "• <strong>Add evidence:</strong> Support your argument with facts, sources, "
 "or examples"
 msgstr ""
+"• <strong>Belege hinzufügen:</strong> Unterstützen Sie Ihr Argument mit "
+"Fakten, Quellen oder Beispielen"
 
 #: app/templates/discussions/create_response.html:59
 msgid "• <strong>Be respectful:</strong> Disagree with ideas, not people"
 msgstr ""
+"• <strong>Respektvoll bleiben:</strong> Widersprechen Sie Ideen, nicht "
+"Personen"
 
 #: app/templates/discussions/create_response.html:61
 msgid ""
 "• <strong>Stay on topic:</strong> Keep your response relevant to the "
 "statement"
 msgstr ""
+"• <strong>Beim Thema bleiben:</strong> Halten Sie Ihre Antwort relevant zur "
+"Aussage"
 
 #: app/templates/discussions/create_response.html:68
 #: app/templates/discussions/view_statement.html:100
-#, fuzzy
 msgid "Add Your Response"
-msgstr "Quellen"
+msgstr "Ihre Antwort hinzufügen"
 
 #: app/templates/discussions/create_response.html:88
-#, fuzzy
 msgid "✅ Pro"
-msgstr "Pro"
+msgstr "✅ Dafür"
 
 #: app/templates/discussions/create_response.html:89
 msgid "❌ Con"
-msgstr ""
+msgstr "❌ Dagegen"
 
 #: app/templates/discussions/create_response.html:89
 msgid "⚖️ Neutral"
-msgstr ""
+msgstr "⚖️ Neutral"
 
 #: app/templates/discussions/create_response.html:108
 msgid "Write your response here... (50-2000 characters)"
-msgstr ""
+msgstr "Ihre Antwort hier eingeben... (50–2000 Zeichen)"
 
 #: app/templates/discussions/create_response.html:110
 msgid "Min 50 characters, Max 2000"
-msgstr ""
+msgstr "Mind. 50 Zeichen, Max. 2000"
 
 #: app/templates/discussions/create_response.html:129
 #: app/templates/discussions/view_statement.html:150
-#, fuzzy
 msgid "Post Response"
-msgstr "Antwort"
+msgstr "Antwort veröffentlichen"
 
 #: app/templates/discussions/create_statement.html:1
 #: app/templates/discussions/create_statement.html:19
@@ -17805,132 +17819,143 @@ msgid "Add Statement"
 msgstr "Aussage hinzufügen"
 
 #: app/templates/discussions/create_statement.html:25
-#, fuzzy
 msgid "Add a Statement"
 msgstr "Aussage hinzufügen"
 
 #: app/templates/discussions/create_statement.html:27
-#, fuzzy, python-format
+#, python-format
 msgid "Contribute to the discussion: %(title)s"
-msgstr "Seien Sie der Erste, der zu dieser Diskussion beiträgt!"
+msgstr "Beteiligen Sie sich an der Diskussion: %(title)s"
 
 #: app/templates/discussions/create_statement.html:33
-#, fuzzy
 msgid "✍️ Statement Guidelines"
-msgstr "Noch keine Aussagen"
+msgstr "✍️ Richtlinien für Aussagen"
 
 #: app/templates/discussions/create_statement.html:35
-#, fuzzy
 msgid "• <strong>Be clear and concise:</strong> 10-500 characters"
-msgstr "Ihre Aussage sollte prägnant und diskutierbar sein (10-500 Zeichen)."
+msgstr "• <strong>Seien Sie klar und prägnant:</strong> 10–500 Zeichen"
 
 #: app/templates/discussions/create_statement.html:37
 msgid ""
 "• <strong>Make one point:</strong> Each statement should focus on a single "
 "idea"
 msgstr ""
+"• <strong>Ein Punkt pro Aussage:</strong> Jede Aussage sollte sich auf eine "
+"einzelne Idee konzentrieren"
 
 #: app/templates/discussions/create_statement.html:39
 msgid "• <strong>Be specific:</strong> Avoid vague or ambiguous wording"
 msgstr ""
+"• <strong>Seien Sie konkret:</strong> Vermeiden Sie vage oder mehrdeutige "
+"Formulierungen"
 
 #: app/templates/discussions/create_statement.html:41
 msgid ""
 "• <strong>Be respectful:</strong> No personal attacks or inflammatory "
 "language"
 msgstr ""
+"• <strong>Respektvoll bleiben:</strong> Keine persönlichen Angriffe oder "
+"aufwiegelnde Sprache"
 
 #: app/templates/discussions/create_statement.html:44
 msgid ""
 "• <strong>Claim or Question:</strong> State a position or ask for input"
 msgstr ""
+"• <strong>Aussage oder Frage:</strong> Vertreten Sie einen Standpunkt oder "
+"fordern Sie Input an"
 
 #: app/templates/discussions/create_statement.html:73
 msgid "<strong>Claim:</strong> \"We should invest more in renewable energy\""
 msgstr ""
+"<strong>Aussage:</strong> \"Wir sollten mehr in erneuerbare Energien "
+"investieren\""
 
 #: app/templates/discussions/create_statement.html:74
 msgid "<strong>Question:</strong> \"What's the most effective climate policy?\""
-msgstr ""
+msgstr "<strong>Frage:</strong> \"Welche Klimapolitik ist am wirksamsten?\""
 
 #: app/templates/discussions/create_statement.html:83
-#, fuzzy
 msgid "Enter your statement (10-500 characters)..."
-msgstr "Ihre Aussage sollte prägnant und diskutierbar sein (10-500 Zeichen)."
+msgstr "Geben Sie Ihre Aussage ein (10–500 Zeichen)..."
 
 #: app/templates/discussions/create_statement.html:91
 #: app/templates/discussions/edit_statement.html:51
 msgid "Min: 10 characters | Max: 500 characters"
-msgstr ""
+msgstr "Min: 10 Zeichen | Max: 500 Zeichen"
 
 #: app/templates/discussions/create_statement.html:114
-#, fuzzy
 msgid "Preview:"
-msgstr "Ansehen"
+msgstr "Vorschau:"
 
 #: app/templates/discussions/create_statement.html:120
 #: app/templates/discussions/create_statement.html:154
 msgid "Your statement will appear here as you type..."
-msgstr ""
+msgstr "Ihre Aussage wird hier angezeigt, während Sie eingeben..."
 
 #: app/templates/discussions/discussion_update_form.html:14
 msgid "Use updates to explain outcomes, progress, or what happens next."
 msgstr ""
+"Nutzen Sie Updates, um Ergebnisse, Fortschritte oder nächste Schritte zu "
+"erklären."
 
 #: app/templates/discussions/discussion_update_form.html:29
 msgid "What changed?"
-msgstr ""
+msgstr "Was hat sich geändert?"
 
 #: app/templates/discussions/discussion_update_form.html:37
 msgid "Summarise the outcome, decision, or next step using Markdown."
 msgstr ""
+"Fassen Sie das Ergebnis, die Entscheidung oder den nächsten Schritt mit "
+"Markdown zusammen."
 
 #: app/templates/discussions/discussion_update_form.html:38
 msgid "Markdown is supported. Raw HTML is not allowed."
-msgstr ""
+msgstr "Markdown wird unterstützt. Rohes HTML ist nicht erlaubt."
 
 #: app/templates/discussions/discussion_update_form.html:46
 msgid "Minutes|https://example.com/minutes"
-msgstr ""
+msgstr "Protokoll|https://example.com/minutes"
 
 #: app/templates/discussions/discussion_update_form.html:47
 msgid "One per line in format <code>Label|https://url</code>."
-msgstr ""
+msgstr "Eine pro Zeile im Format <code>Label|https://url</code>."
 
 #: app/templates/discussions/edit_discussion.html:33
-#, fuzzy
 msgid "Edit discussion"
-msgstr "Neue Diskussion"
+msgstr "Diskussion bearbeiten"
 
 #: app/templates/discussions/edit_discussion.html:70
 msgid "e.g. climate, energy, policy"
-msgstr ""
+msgstr "z. B. Klima, Energie, Politik"
 
 #: app/templates/discussions/edit_discussion.html:115
 msgid ""
 "Link this discussion to a Programme to group it with related discussions for"
 " combined analysis and reporting."
 msgstr ""
+"Verknüpfen Sie diese Diskussion mit einem Programm, um sie mit verwandten "
+"Diskussionen zu gruppieren und kombinierte Analysen und Berichte zu "
+"erstellen."
 
 #: app/templates/discussions/edit_discussion.html:117
-#, fuzzy
 msgid "You don't have any active programmes."
-msgstr "Weitere Programme"
+msgstr "Sie haben keine aktiven Programme."
 
 #: app/templates/discussions/edit_discussion.html:119
 msgid "(opens in a new tab)"
-msgstr ""
+msgstr "(wird in einem neuen Tab geöffnet)"
 
 #: app/templates/discussions/edit_discussion.html:152
-#, fuzzy
 msgid "Information Before Participation"
-msgstr "Teilnehmend"
+msgstr "Informationen vor der Teilnahme"
 
 #: app/templates/discussions/edit_discussion.html:154
 msgid ""
 "Context shown to participants before they start voting. Supports Markdown in"
 " the body."
 msgstr ""
+"Kontext, der den Teilnehmern vor dem Abstimmen angezeigt wird. Unterstützt "
+"Markdown im Text."
 
 #: app/templates/discussions/edit_response.html:1
 #: app/templates/discussions/edit_response.html:6
@@ -24895,9 +24920,8 @@ msgstr ""
 "offenbart Timing-Informationen."
 
 #: app/templates/partner/api_docs.html:1117
-#, fuzzy
 msgid "Secret management"
-msgstr "Sprache auswählen"
+msgstr "Geheimnisverwaltung"
 
 #: app/templates/partner/api_docs.html:1119
 #, python-brace-format
@@ -24909,24 +24933,34 @@ msgid ""
 "secret; briefly accept both the old and new signatures during the rollover "
 "period before decommissioning the old one."
 msgstr ""
+"Das Signing-Geheimnis wird einmalig bei der Erstellung eines Endpunkts "
+"zurückgegeben — speichern Sie es sicher in einer Umgebungsvariablen oder "
+"einem Secrets Manager, niemals im Quellcode. Es wird im Portal nie wieder "
+"angezeigt. Verwenden Sie <code>POST "
+"/api/partner/webhooks/{endpoint_id}/rotate-secret</code>, um ein neues "
+"Geheimnis auszustellen; akzeptieren Sie während der Übergabefrist kurzzeitig"
+" sowohl die alte als auch die neue Signatur, bevor Sie die alte außer "
+"Betrieb nehmen."
 
 #: app/templates/partner/api_docs.html:1125
 msgid "Analytics export (Authenticated)"
-msgstr ""
+msgstr "Analytics-Export (Authentifiziert)"
 
 #: app/templates/partner/api_docs.html:1126
 msgid "Export usage events in JSON or CSV for BI pipelines."
-msgstr ""
+msgstr "Exportieren Sie Nutzungsereignisse in JSON oder CSV für BI-Pipelines."
 
 #: app/templates/partner/api_docs.html:1132
 msgid ""
 "Use <code>format=csv</code> for direct file ingestion, or paginated "
 "<code>format=json</code> for API consumers."
 msgstr ""
+"Verwenden Sie <code>format=csv</code> für direkten Dateiimport oder "
+"paginierten <code>format=json</code> für API-Consumer."
 
 #: app/templates/partner/api_docs.html:1137
 msgid "Cost and Abuse Protection"
-msgstr ""
+msgstr "Kosten- und Missbrauchsschutz"
 
 #: app/templates/partner/api_docs.html:1140
 msgid ""
@@ -24936,6 +24970,12 @@ msgid ""
 "the only endpoint that can trigger AI-generated seed statements "
 "(OpenAI/Anthropic); it uses <em>our</em> API keys, not yours."
 msgstr ""
+"<strong>Wer bezahlt was:</strong> Lookup, Snapshot, oEmbed und die Embed-"
+"Seite verwenden unser LLM nicht. Sie sind pro IP (und optional "
+"<code>ref</code>) begrenzt, um Missbrauch zu verhindern. <strong>Diskussion "
+"erstellen</strong> ist der einzige Endpunkt, der KI-generierte Seed-"
+"Statements auslösen kann (OpenAI/Anthropic); er verwendet <em>unsere</em> "
+"API-Schlüssel, nicht Ihre."
 
 #: app/templates/partner/api_docs.html:1143
 msgid ""
@@ -24944,6 +24984,11 @@ msgid ""
 "not use partner-provided LLM keys for the create flow. If a key is abused, "
 "we revoke it."
 msgstr ""
+"<strong>Partner verwenden von uns ausgegebene Schlüssel.</strong> Nur "
+"Anfragen mit einem gültigen <code>X-API-Key</code> (aus unserer "
+"Zulassungsliste) können Diskussionen erstellen. Wir verwenden von Partnern "
+"bereitgestellte LLM-Schlüssel nicht für den Create-Flow. Wenn ein Schlüssel "
+"missbraucht wird, widerrufen wir ihn."
 
 #: app/templates/partner/api_docs.html:1146
 msgid ""
@@ -24951,88 +24996,91 @@ msgid ""
 "hour per API key</strong>. Combined with key control, this caps LLM and "
 "database cost from the create endpoint."
 msgstr ""
+"<strong>Diskussion erstellen</strong> ist auf <strong>30 Anfragen pro Stunde"
+" pro API-Schlüssel</strong> begrenzt. In Kombination mit der "
+"Schlüsselkontrolle begrenzt dies die LLM- und Datenbankkosten vom Create-"
+"Endpunkt."
 
 #: app/templates/partner/api_docs.html:1159
-#, fuzzy
 msgid "Endpoint"
-msgstr "Bearbeiten"
+msgstr "Endpunkt"
 
 #: app/templates/partner/api_docs.html:1160
 msgid "Limit"
-msgstr ""
+msgstr "Limit"
 
 #: app/templates/partner/api_docs.html:1165
 msgid "Lookup by article URL"
-msgstr ""
+msgstr "Nach Artikel-URL suchen"
 
 #: app/templates/partner/api_docs.html:1166
 msgid "60 req / min / IP"
-msgstr ""
+msgstr "60 Anfragen / Minute / IP"
 
 #: app/templates/partner/api_docs.html:1169
 msgid "Get snapshot"
-msgstr ""
+msgstr "Snapshot abrufen"
 
 #: app/templates/partner/api_docs.html:1170
 msgid "120 req / min / IP"
-msgstr ""
+msgstr "120 Anfragen / Minute / IP"
 
 #: app/templates/partner/api_docs.html:1173
 msgid "Vote submission (default)"
-msgstr ""
+msgstr "Abstimmungsübermittlung (Standard)"
 
 #: app/templates/partner/api_docs.html:1174
 msgid "30 req / min / IP"
-msgstr ""
+msgstr "30 Anfragen / Minute / IP"
 
 #: app/templates/partner/api_docs.html:1177
 msgid "Vote submission (integrity mode)"
-msgstr ""
+msgstr "Abstimmungsübermittlung (Integritätsmodus)"
 
 #: app/templates/partner/api_docs.html:1178
-#, fuzzy
 msgid "10 req / min / discussion"
-msgstr "An Diskussion teilnehmen"
+msgstr "10 Anfragen / Minute / Diskussion"
 
 #: app/templates/partner/api_docs.html:1181
 msgid "Statement creation (authenticated)"
-msgstr ""
+msgstr "Statement-Erstellung (authentifiziert)"
 
 #: app/templates/partner/api_docs.html:1182
 msgid "10 per hour"
-msgstr ""
+msgstr "10 pro Stunde"
 
 #: app/templates/partner/api_docs.html:1185
 msgid "Statement creation (anonymous)"
-msgstr ""
+msgstr "Stellungnahme erstellen (anonym)"
 
 #: app/templates/partner/api_docs.html:1186
 msgid "5 per hour"
-msgstr ""
+msgstr "5 pro Stunde"
 
 #: app/templates/partner/api_docs.html:1189
 msgid "Flag statement (from embed)"
-msgstr ""
+msgstr "Stellungnahme kennzeichnen (aus Einbettung)"
 
 #: app/templates/partner/api_docs.html:1190
 msgid "10 req / min / IP"
-msgstr ""
+msgstr "10 Anfragen / Minute / IP"
 
 #: app/templates/partner/api_docs.html:1193
 #: app/templates/partner/portal/discussions.html:106
-#, fuzzy
 msgid "Create discussion"
-msgstr "An Diskussion teilnehmen"
+msgstr "Diskussion erstellen"
 
 #: app/templates/partner/api_docs.html:1194
 msgid "30 req / hr / key"
-msgstr ""
+msgstr "30 req / hr / key"
 
 #: app/templates/partner/api_docs.html:1200
 msgid ""
 "Responses include a <code>429 Too Many Requests</code> with a <code>Retry-"
 "After</code> header indicating seconds until the next request is allowed."
 msgstr ""
+"Responses include a <code>429 Too Many Requests</code> with a <code>Retry-"
+"After</code> header indicating seconds until the next request is allowed."
 
 #: app/templates/partner/api_docs.html:1203
 msgid ""
@@ -25040,10 +25088,13 @@ msgid ""
 "limits enabled for integrity protection. The embed handles this "
 "transparently &mdash; users see a &ldquo;please slow down&rdquo; message."
 msgstr ""
+"<strong>Integrity mode:</strong> Some discussions have stricter vote rate "
+"limits enabled for integrity protection. The embed handles this "
+"transparently &mdash; users see a &ldquo;please slow down&rdquo; message."
 
 #: app/templates/partner/api_docs.html:1211
 msgid "All errors return JSON with a consistent format."
-msgstr ""
+msgstr "All errors return JSON with a consistent format."
 
 #: app/templates/partner/api_docs.html:1226
 #: app/templates/partner/hub.html:1004
@@ -25052,29 +25103,25 @@ msgstr ""
 #: app/templates/partner/portal/getting_started.html:270
 #: app/templates/partner/portal/success.html:43
 #: app/templates/partner/portal/success.html:86
-#, fuzzy
 msgid "Contact us"
-msgstr "Aussagen"
+msgstr "Kontaktieren Sie uns"
 
 #: app/templates/partner/api_docs.html:1227
 #, python-format
 msgid "or visit the %(link)s."
-msgstr ""
+msgstr "oder besuchen Sie %(link)s."
 
 #: app/templates/partner/api_docs.html:1227
-#, fuzzy
 msgid "Partner Dashboard"
-msgstr "Dashboard"
+msgstr "Partner-Dashboard"
 
 #: app/templates/partner/api_docs.html:1227
-#, fuzzy
 msgid "Partner Hub"
-msgstr "Partnerportal"
+msgstr "Partner Hub"
 
 #: app/templates/partner/api_playground.html:2
-#, fuzzy
 msgid "API Playground - Society Speaks"
-msgstr "Über Society Speaks"
+msgstr "API Playground - Society Speaks"
 
 #: app/templates/partner/api_playground.html:3
 msgid ""
@@ -25082,22 +25129,28 @@ msgid ""
 "for lookup, snapshot, and oEmbed with clear steps for developers and "
 "publishers."
 msgstr ""
+"Testen Sie die Society Speaks Partner API direkt in Ihrem Browser. "
+"Interaktive Anfragen für Lookup, Snapshot und oEmbed mit klaren Schritten "
+"für Entwickler und Verlage."
 
 #: app/templates/partner/api_playground.html:21
 #: app/templates/partner/api_playground.html:25
 msgid "API Playground"
-msgstr ""
+msgstr "API Playground"
 
 #: app/templates/partner/api_playground.html:27
 msgid ""
 "Try browser-safe Partner API endpoints from your browser. Requests are sent "
 "to this site. Write/management endpoints are server-to-server only."
 msgstr ""
+"Testen Sie browser-sichere Partner-API-Endpunkte direkt in Ihrem Browser. "
+"Anfragen werden an diese Website gesendet. Write/Management-Endpunkte "
+"funktionieren nur von Server zu Server."
 
 #: app/templates/partner/api_playground.html:28
 #, python-format
 msgid "Get test keys in the %(portal_link)s."
-msgstr ""
+msgstr "Holen Sie sich Testschlüssel im %(portal_link)s."
 
 #: app/templates/partner/api_playground.html:31
 #, python-brace-format
@@ -25110,6 +25163,13 @@ msgid ""
 "<code>/api/partner/analytics/usage-export</code>, and "
 "<code>/api/partner/webhooks</code>."
 msgstr ""
+"Browser-sicher in diesem Playground: <code>GET /api/discussions/by-article-"
+"url</code>, <code>GET /api/discussions/{id}/snapshot</code> und <code>GET "
+"/api/oembed</code>. Verwenden Sie Backend-Tools (curl/Postman/Server-Code) "
+"für authentifizierte Endpunkte wie <code>/api/partner/discussions</code>, "
+"<code>/api/partner/discussions/by-external-id</code>, "
+"<code>/api/partner/analytics/usage-export</code> und "
+"<code>/api/partner/webhooks</code>."
 
 #: app/templates/partner/api_playground.html:35
 msgid "Read API Docs"
@@ -27650,69 +27710,71 @@ msgid "(optional — helps frame the statement for readers)"
 msgstr "(optional — hilft, die Aussage für Leser zu rahmen)"
 
 #: app/templates/partner/portal/discussion_detail.html:314
-#, fuzzy
 msgid "Add statement"
 msgstr "Aussage hinzufügen"
 
 #: app/templates/partner/portal/discussion_detail.html:329
-#, fuzzy
 msgid "Adding…"
-msgstr "Administration"
+msgstr "Wird hinzugefügt…"
 
 #: app/templates/partner/portal/discussions.html:3
-#, fuzzy
 msgid "Discussions - Partner Portal"
-msgstr "Diskussionen und Programme"
+msgstr "Diskussionen - Partner-Portal"
 
 #: app/templates/partner/portal/discussions.html:13
-#, fuzzy
 msgid "All discussions created for your integration."
-msgstr "Diskussionen, die Sie erstellt haben"
+msgstr "Alle Diskussionen, die für Ihre Integration erstellt wurden."
 
 #: app/templates/partner/portal/discussions.html:18
-#, fuzzy
 msgid "+ New discussion"
-msgstr "Neue Diskussion"
+msgstr "+ Neue Diskussion"
 
 #: app/templates/partner/portal/discussions.html:25
 msgid "Admin preview mode (read-only) — create actions are disabled."
 msgstr ""
+"Admin-Vorschaumodus (schreibgeschützt) — Erstellungsaktionen sind "
+"deaktiviert."
 
 #: app/templates/partner/portal/discussions.html:43
-#, fuzzy
 msgid "Create a discussion"
-msgstr "Neueste Diskussionen"
+msgstr "Diskussion erstellen"
 
 #: app/templates/partner/portal/discussions.html:44
 msgid ""
 "Start a discussion from the portal without needing to call the API. Provide "
 "an article URL <em>or</em> an external ID — or both."
 msgstr ""
+"Starten Sie eine Diskussion über das Portal, ohne die API aufrufen zu "
+"müssen. Geben Sie eine Artikel-URL <em>oder</em> eine externe ID an – oder "
+"beides."
 
 #: app/templates/partner/portal/discussions.html:49
-#, fuzzy
 msgid "Discussion title"
-msgstr "Diskussionsaufrufe"
+msgstr "Diskussionstitel"
 
 #: app/templates/partner/portal/discussions.html:50
 msgid "e.g. Should the UK rejoin the EU single market?"
 msgstr ""
+"z. B. Sollte das Vereinigte Königreich dem EU-Binnenmarkt wieder beitreten?"
 
 #: app/templates/partner/portal/discussions.html:57
 msgid "Used to link the discussion to a specific article."
 msgstr ""
+"Wird verwendet, um die Diskussion mit einem bestimmten Artikel zu "
+"verknüpfen."
 
 #: app/templates/partner/portal/discussions.html:60
 msgid "External / CMS ID"
-msgstr ""
+msgstr "Externe / CMS-ID"
 
 #: app/templates/partner/portal/discussions.html:61
 msgid "e.g. observer-cms-12345"
-msgstr ""
+msgstr "z. B. observer-cms-12345"
 
 #: app/templates/partner/portal/discussions.html:63
 msgid "Your own stable reference. Useful when there is no article URL."
 msgstr ""
+"Ihre eigene stabile Referenz. Nützlich, wenn es keine Artikel-URL gibt."
 
 #: app/templates/partner/portal/discussions.html:66
 #: app/templates/partner/portal/discussions.html:72
@@ -27721,84 +27783,88 @@ msgstr ""
 #: app/templates/programmes/_form.html:141
 #: app/templates/programmes/_form.html:148
 msgid "(optional)"
-msgstr ""
+msgstr "(optional)"
 
 #: app/templates/partner/portal/discussions.html:68
 msgid ""
 "A sentence or two providing context for readers — what is being debated and "
 "why it matters."
 msgstr ""
+"Ein oder zwei Sätze, die den Lesern Kontext bieten – worüber wird debattiert"
+" und warum ist es wichtig."
 
 #: app/templates/partner/portal/discussions.html:74
 msgid "— No topic —"
-msgstr ""
+msgstr "— Kein Thema —"
 
 #: app/templates/partner/portal/discussions.html:81
-#, fuzzy
 msgid "Article excerpt"
-msgstr "Mitmachen"
+msgstr "Artikel-Auszug"
 
 #: app/templates/partner/portal/discussions.html:81
 msgid "(optional — used to generate opening statements)"
-msgstr ""
+msgstr "(optional – wird verwendet, um Eröffnungsaussagen zu generieren)"
 
 #: app/templates/partner/portal/discussions.html:83
 msgid ""
 "Paste a short excerpt from the article to help generate balanced opening "
 "statements for readers…"
 msgstr ""
+"Fügen Sie einen kurzen Auszug aus dem Artikel ein, um ausgewogene "
+"Eröffnungsaussagen für Leser zu generieren…"
 
 #: app/templates/partner/portal/discussions.html:90
 msgid "Allow reader statement submissions directly in the embed"
-msgstr ""
+msgstr "Erlaube Reader-Beiträge direkt im Embed"
 
 #: app/templates/partner/portal/discussions.html:91
 msgid ""
 "Off by default for moderation safety. You can change this per discussion "
 "later."
 msgstr ""
+"Standardmäßig deaktiviert aus Moderationsgründen. Du kannst dies später pro "
+"Diskussion ändern."
 
 #: app/templates/partner/portal/discussions.html:96
 #: app/templates/partner/portal/discussions.html:163
 msgid "Environment"
-msgstr ""
+msgstr "Umgebung"
 
 #: app/templates/partner/portal/discussions.html:108
 #: app/templates/partner/portal/discussions.html:117
 msgid "Article URL or external ID is required."
-msgstr ""
+msgstr "Artikel-URL oder externe ID erforderlich."
 
 #: app/templates/partner/portal/discussions.html:118
 msgid "Please enter an article URL or an external ID before submitting."
 msgstr ""
+"Bitte geben Sie eine Artikel-URL oder eine externe ID ein, bevor Sie "
+"absenden."
 
 #: app/templates/partner/portal/discussions.html:119
-#, fuzzy
 msgid "Creating…"
-msgstr "Erstellen"
+msgstr "Wird erstellt…"
 
 #: app/templates/partner/portal/discussions.html:150
 msgid "Quota:"
-msgstr ""
+msgstr "Kontingent:"
 
 #: app/templates/partner/portal/discussions.html:153
 #, python-format
 msgid "/ %(limit)s (%(tier)s plan)"
-msgstr ""
+msgstr "/ %(limit)s (%(tier)s Plan)"
 
 #: app/templates/partner/portal/discussions.html:155
 msgid "(Enterprise — no monthly cap)"
-msgstr ""
+msgstr "(Enterprise – ohne monatliches Limit)"
 
 #: app/templates/partner/portal/discussions.html:166
-#, fuzzy
 msgid "All envs"
-msgstr "Alle Themen"
+msgstr "Alle Umgebungen"
 
 #: app/templates/partner/portal/discussions.html:175
-#, fuzzy
 msgid "All statuses"
-msgstr "Quellen"
+msgstr "Alle Status"
 
 #: app/templates/partner/portal/discussions.html:183
 msgid ""
@@ -27806,41 +27872,42 @@ msgid ""
 "<em>Close</em> to pause new participation, and <em>Created via key</em> plus"
 " <em>External ID</em> to reconcile discussions back to your CMS."
 msgstr ""
+"<strong>Tipp:</strong> Nutze <em>Ansicht</em> für Pro-Beitrag-Analysen, "
+"<em>Schließen</em> um neue Teilnahmen zu pausieren, und <em>Erstellt via "
+"Schlüssel</em> plus <em>Externe ID</em> um Diskussionen mit deinem CMS "
+"abzugleichen."
 
 #: app/templates/partner/portal/discussions.html:192
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: app/templates/partner/portal/discussions.html:194
 msgid "Env"
-msgstr ""
+msgstr "Umgebung"
 
 #: app/templates/partner/portal/discussions.html:195
-#, fuzzy
 msgid "Votes"
-msgstr "Abgestimmt"
+msgstr "Abstimmungen"
 
 #: app/templates/partner/portal/discussions.html:198
 msgid "External ID"
-msgstr ""
+msgstr "Externe ID"
 
 #: app/templates/partner/portal/discussions.html:200
-#, fuzzy
 msgid "Links"
-msgstr "Schnelllinks"
+msgstr "Links"
 
 #: app/templates/partner/portal/discussions.html:223
 msgid "Integrity"
-msgstr ""
+msgstr "Integrität"
 
 #: app/templates/partner/portal/discussions.html:225
-#, fuzzy
 msgid "Embed submit on"
-msgstr "Aussage einreichen"
+msgstr "Embed-Submit an"
 
 #: app/templates/partner/portal/discussions.html:225
 msgid "Embed submit off"
-msgstr ""
+msgstr "Embed-Submit aus"
 
 #: app/templates/partner/portal/discussions.html:231
 #, python-format

@@ -17443,67 +17443,73 @@ msgstr "Postado por Anônimo"
 
 #: app/templates/discussions/create_response.html:48
 msgid "💬 Response Guidelines"
-msgstr ""
+msgstr "💬 Diretrizes de Resposta"
 
 #: app/templates/discussions/create_response.html:51
 msgid ""
 "• <strong>Choose your position:</strong> Pro (supporting), Con (opposing), "
 "or Neutral"
 msgstr ""
+"• <strong>Escolha sua posição:</strong> A Favor (apoiando), Contra (opondo-"
+"se) ou Neutro"
 
 #: app/templates/discussions/create_response.html:54
 msgid ""
 "• <strong>Provide reasoning:</strong> Explain why you hold this position"
 msgstr ""
+"• <strong>Forneça justificativa:</strong> Explique por que você sustenta "
+"essa posição"
 
 #: app/templates/discussions/create_response.html:57
 msgid ""
 "• <strong>Add evidence:</strong> Support your argument with facts, sources, "
 "or examples"
 msgstr ""
+"• <strong>Adicione evidências:</strong> Apoie seu argumento com fatos, "
+"fontes ou exemplos"
 
 #: app/templates/discussions/create_response.html:59
 msgid "• <strong>Be respectful:</strong> Disagree with ideas, not people"
 msgstr ""
+"• <strong>Seja respeitoso:</strong> Discorde das ideias, não das pessoas"
 
 #: app/templates/discussions/create_response.html:61
 msgid ""
 "• <strong>Stay on topic:</strong> Keep your response relevant to the "
 "statement"
 msgstr ""
+"• <strong>Mantenha-se no tema:</strong> Mantenha sua resposta relevante para"
+" a declaração"
 
 #: app/templates/discussions/create_response.html:68
 #: app/templates/discussions/view_statement.html:100
-#, fuzzy
 msgid "Add Your Response"
-msgstr "Fontes"
+msgstr "Adicione Sua Resposta"
 
 #: app/templates/discussions/create_response.html:88
-#, fuzzy
 msgid "✅ Pro"
-msgstr "Pro"
+msgstr "✅ A Favor"
 
 #: app/templates/discussions/create_response.html:89
 msgid "❌ Con"
-msgstr ""
+msgstr "❌ Contra"
 
 #: app/templates/discussions/create_response.html:89
 msgid "⚖️ Neutral"
-msgstr ""
+msgstr "⚖️ Neutro"
 
 #: app/templates/discussions/create_response.html:108
 msgid "Write your response here... (50-2000 characters)"
-msgstr ""
+msgstr "Escreva sua resposta aqui... (50-2000 caracteres)"
 
 #: app/templates/discussions/create_response.html:110
 msgid "Min 50 characters, Max 2000"
-msgstr ""
+msgstr "Mín. 50 caracteres, Máx. 2000"
 
 #: app/templates/discussions/create_response.html:129
 #: app/templates/discussions/view_statement.html:150
-#, fuzzy
 msgid "Post Response"
-msgstr "Resposta"
+msgstr "Publicar Resposta"
 
 #: app/templates/discussions/create_statement.html:1
 #: app/templates/discussions/create_statement.html:19
@@ -17512,40 +17518,41 @@ msgid "Add Statement"
 msgstr "Adicionar afirmação"
 
 #: app/templates/discussions/create_statement.html:25
-#, fuzzy
 msgid "Add a Statement"
-msgstr "Adicionar afirmação"
+msgstr "Adicionar uma Declaração"
 
 #: app/templates/discussions/create_statement.html:27
-#, fuzzy, python-format
+#, python-format
 msgid "Contribute to the discussion: %(title)s"
-msgstr "Seja o primeiro a contribuir para esta discussão!"
+msgstr "Contribua para a discussão: %(title)s"
 
 #: app/templates/discussions/create_statement.html:33
-#, fuzzy
 msgid "✍️ Statement Guidelines"
-msgstr "Sem afirmações ainda"
+msgstr "✍️ Diretrizes para Declarações"
 
 #: app/templates/discussions/create_statement.html:35
-#, fuzzy
 msgid "• <strong>Be clear and concise:</strong> 10-500 characters"
-msgstr "Sua afirmação deve ser concisa e debatível (10-500 caracteres)."
+msgstr "• <strong>Seja claro e conciso:</strong> 10-500 caracteres"
 
 #: app/templates/discussions/create_statement.html:37
 msgid ""
 "• <strong>Make one point:</strong> Each statement should focus on a single "
 "idea"
 msgstr ""
+"• <strong>Faça um ponto:</strong> Cada declaração deve focar em uma única "
+"ideia"
 
 #: app/templates/discussions/create_statement.html:39
 msgid "• <strong>Be specific:</strong> Avoid vague or ambiguous wording"
-msgstr ""
+msgstr "• <strong>Seja específico:</strong> Evite linguagem vaga ou ambígua"
 
 #: app/templates/discussions/create_statement.html:41
 msgid ""
 "• <strong>Be respectful:</strong> No personal attacks or inflammatory "
 "language"
 msgstr ""
+"• <strong>Seja respeitoso:</strong> Sem ataques pessoais ou linguagem "
+"inflamatória"
 
 #: app/templates/discussions/create_statement.html:44
 msgid ""
