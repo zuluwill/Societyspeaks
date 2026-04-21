@@ -26854,194 +26854,187 @@ msgstr ""
 
 #: app/templates/partner/portal/dashboard.html:170
 msgid "Run integration health check"
-msgstr ""
+msgstr "Ejecutar verificación de estado de integración"
 
 #: app/templates/partner/portal/dashboard.html:174
 #, python-format
 msgid "Last checked: %(time)s UTC"
-msgstr ""
+msgstr "Última verificación: %(time)s UTC"
 
 #: app/templates/partner/portal/dashboard.html:180
 msgid "Integration health"
-msgstr ""
+msgstr "Estado de la integración"
 
 #: app/templates/partner/portal/dashboard.html:185
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: app/templates/partner/portal/dashboard.html:185
-#, fuzzy
 msgid "Needs action"
-msgstr "Editar"
+msgstr "Requiere acción"
 
 #: app/templates/partner/portal/dashboard.html:198
-#, fuzzy
 msgid "Top discussions by engagement"
-msgstr "Aún no hay debates"
+msgstr "Debates principales por participación"
 
 #: app/templates/partner/portal/dashboard.html:199
-#, fuzzy
 msgid "View all →"
-msgstr "Ver todo ↓"
+msgstr "Ver todo →"
 
 #: app/templates/partner/portal/dashboard.html:210
 msgid "closed"
-msgstr ""
+msgstr "cerrado"
 
 #: app/templates/partner/portal/dashboard.html:210
 msgid "open"
-msgstr ""
+msgstr "abierto"
 
 #: app/templates/partner/portal/dashboard.html:215
-#, fuzzy
 msgid "votes"
-msgstr "Votado"
+msgstr "votos"
 
 #: app/templates/partner/portal/dashboard.html:225
 msgid "Quickstart (test)"
-msgstr ""
+msgstr "Inicio rápido (prueba)"
 
 #: app/templates/partner/portal/dashboard.html:226
 msgid ""
 "Lookup by URL, create if missing, then embed. Run these commands from your "
 "backend (not browser JavaScript)."
 msgstr ""
+"Busca por URL, crea si no existe y luego integra. Ejecuta estos comandos "
+"desde tu backend (no desde JavaScript en el navegador)."
 
 #: app/templates/partner/portal/dashboard.html:227
 msgid "Prefer Python or Node.js?"
-msgstr ""
+msgstr "¿Prefieres Python o Node.js?"
 
 #: app/templates/partner/portal/dashboard.html:227
 #: app/templates/partner/portal/getting_started.html:180
-#, fuzzy
 msgid "Download our SDKs →"
-msgstr "Descargar JSON"
+msgstr "Descargar nuestros SDKs →"
 
 #: app/templates/partner/portal/dashboard.html:241
 msgid ""
 "For security, existing keys are masked in the portal. Create or rotate a "
 "test key to copy a full key value."
 msgstr ""
+"Por seguridad, las claves existentes están enmascaradas en el portal. Crea o"
+" rota una clave de prueba para copiar el valor completo."
 
 #: app/templates/partner/portal/dashboard.html:246
 msgid "Create test key now"
-msgstr ""
+msgstr "Crear clave de prueba ahora"
 
 #: app/templates/partner/portal/dashboard.html:276
 msgid "Usage (last 30 days)"
-msgstr ""
+msgstr "Uso (últimos 30 días)"
 
 #: app/templates/partner/portal/dashboard.html:278
-#, fuzzy
 msgid "Download CSV"
-msgstr "Descargar JSON"
+msgstr "Descargar CSV"
 
 #: app/templates/partner/portal/dashboard.html:282
-#, fuzzy
 msgid "Creates"
-msgstr "Crear"
+msgstr "Creaciones"
 
 #: app/templates/partner/portal/dashboard.html:283
 msgid "Lookups"
-msgstr ""
+msgstr "Búsquedas"
 
 #: app/templates/partner/portal/dashboard.html:284
 msgid "Snapshots"
-msgstr ""
+msgstr "Snapshots"
 
 #: app/templates/partner/portal/dashboard.html:285
-#, fuzzy
 msgid "Management API"
-msgstr "acuerdo"
+msgstr "API de Gestión"
 
 #: app/templates/partner/portal/dashboard.html:285
-#, fuzzy
 msgid "List, patch, statements, flags"
-msgstr "Más recientes"
+msgstr "Listar, actualizar, sentencias, marcas"
 
 #: app/templates/partner/portal/dashboard.html:288
 msgid "Daily API calls — last 14 days"
-msgstr ""
+msgstr "Llamadas diarias a la API — últimos 14 días"
 
 #: app/templates/partner/portal/dashboard.html:297
 msgid ""
 "Add your staging and production hostnames exactly (for example, "
 "<code>www.example.com</code>). Embeds load only on verified active domains."
 msgstr ""
+"Añade tus nombres de host de staging y producción exactamente (por ejemplo, "
+"<code>www.example.com</code>). Los embeds se cargan solo en dominios activos"
+" verificados."
 
 #: app/templates/partner/portal/dashboard.html:302
 #: app/templates/partner/portal/discussions.html:98
 #: app/templates/partner/portal/discussions.html:168
 #: app/templates/partner/portal/getting_started.html:98
-#, fuzzy
 msgid "Test"
-msgstr "Afirmaciones"
+msgstr "Prueba"
 
 #: app/templates/partner/portal/dashboard.html:302
 #: app/templates/partner/portal/discussions.html:99
 #: app/templates/partner/portal/discussions.html:167
 #: app/templates/partner/portal/getting_started.html:99
-#, fuzzy
 msgid "Live"
-msgstr "Activo"
+msgstr "En vivo"
 
 #: app/templates/partner/portal/dashboard.html:303
 #: app/templates/partner/portal/getting_started.html:102
-#, fuzzy
 msgid "Add domain"
-msgstr "Administrador"
+msgstr "Añadir dominio"
 
 #: app/templates/partner/portal/dashboard.html:306
 msgid "Domain management is restricted for your account role."
-msgstr ""
+msgstr "La gestión de dominios está restringida para tu rol de cuenta."
 
 #: app/templates/partner/portal/dashboard.html:314
-#, fuzzy
 msgid "ACTIVE"
-msgstr "Activo"
+msgstr "ACTIVO"
 
 #: app/templates/partner/portal/dashboard.html:314
-#, fuzzy
 msgid "INACTIVE"
-msgstr "Activo"
+msgstr "INACTIVO"
 
 #: app/templates/partner/portal/dashboard.html:317
-#, fuzzy
 msgid "Not verified"
-msgstr "Ver"
+msgstr "No verificado"
 
 #: app/templates/partner/portal/dashboard.html:325
 msgid "Turn off"
-msgstr ""
+msgstr "Desactivar"
 
 #: app/templates/partner/portal/dashboard.html:325
 msgid "Turn on"
-msgstr ""
+msgstr "Activar"
 
 #: app/templates/partner/portal/dashboard.html:326
 msgid "Remove this domain?"
-msgstr ""
+msgstr "¿Eliminar este dominio?"
 
 #: app/templates/partner/portal/dashboard.html:331
 #: app/templates/partner/portal/getting_started.html:124
 msgid "Add this TXT record to your DNS:"
-msgstr ""
+msgstr "Añade este registro TXT a tu DNS:"
 
 #: app/templates/partner/portal/dashboard.html:336
 msgid ""
 "After updating DNS, click Verify. Changes can take a few minutes to "
 "propagate."
 msgstr ""
+"Después de actualizar DNS, haz clic en Verificar. Los cambios pueden tardar "
+"unos minutos en propagarse."
 
 #: app/templates/partner/portal/dashboard.html:341
 #: app/templates/partner/portal/getting_started.html:133
-#, fuzzy
 msgid "No domains yet."
-msgstr "Aún no hay debates"
+msgstr "Sin dominios aún."
 
 #: app/templates/partner/portal/dashboard.html:347
 msgid "API keys"
-msgstr ""
+msgstr "Claves API"
 
 #: app/templates/partner/portal/dashboard.html:348
 msgid ""
@@ -27049,289 +27042,294 @@ msgid ""
 "<code>sspk_live_...</code> keys in production. Never expose keys in frontend"
 " code."
 msgstr ""
+"Usa claves <code>sspk_test_...</code> en staging y claves "
+"<code>sspk_live_...</code> en producción. Nunca expongas claves en código "
+"frontend."
 
 #: app/templates/partner/portal/dashboard.html:351
 #: app/templates/partner/portal/getting_started.html:150
 msgid "New test key"
-msgstr ""
+msgstr "Nueva clave de prueba"
 
 #: app/templates/partner/portal/dashboard.html:353
 #: app/templates/partner/portal/getting_started.html:156
 msgid "New live key"
-msgstr ""
+msgstr "Nueva clave en vivo"
 
 #: app/templates/partner/portal/dashboard.html:357
 msgid "Key management is restricted to owners and admins."
 msgstr ""
+"La gestión de claves está restringida a propietarios y administradores."
 
 #: app/templates/partner/portal/dashboard.html:365
 msgid "Rotate this key? The current key will stop working immediately."
 msgstr ""
+"¿Rotar esta clave? La clave actual dejará de funcionar inmediatamente."
 
 #: app/templates/partner/portal/dashboard.html:365
-#, fuzzy
 msgid "Rotate"
-msgstr "Donar"
+msgstr "Rotar"
 
 #: app/templates/partner/portal/dashboard.html:366
 msgid ""
 "Revoke this key? It will stop working immediately and cannot be recovered."
 msgstr ""
+"¿Revocar esta clave? Dejará de funcionar inmediatamente y no se puede "
+"recuperar."
 
 #: app/templates/partner/portal/dashboard.html:366
 #: app/templates/programmes/settings.html:132
-#, fuzzy
 msgid "Revoke"
-msgstr "Gratis"
+msgstr "Revocar"
 
 #: app/templates/partner/portal/dashboard.html:371
 #: app/templates/partner/portal/getting_started.html:167
-#, fuzzy
 msgid "No API keys yet."
-msgstr "Sin afirmaciones todavía"
+msgstr "Sin claves API aún."
 
 #: app/templates/partner/portal/dashboard.html:374
 msgid ""
 "Rotate keys when teammates change or if a key may have been exposed. Revoked"
 " keys stop working immediately."
 msgstr ""
+"Rota las claves cuando cambien compañeros de equipo o si una clave puede "
+"haber sido expuesta. Las claves revocadas dejan de funcionar inmediatamente."
 
 #: app/templates/partner/portal/dashboard.html:380
 msgid "Webhook callbacks"
-msgstr ""
+msgstr "Devoluciones de llamada de webhook"
 
 #: app/templates/partner/portal/dashboard.html:381
 msgid "Signed with HMAC-SHA256"
-msgstr ""
+msgstr "Firmado con HMAC-SHA256"
 
 #: app/templates/partner/portal/dashboard.html:383
 msgid ""
 "Receive lifecycle events without polling. Use HTTPS and verify the signature"
 " and event ID for idempotency."
 msgstr ""
+"Recibe eventos del ciclo de vida sin sondeo. Usa HTTPS y verifica la firma y"
+" el ID de evento para idempotencia."
 
 #: app/templates/partner/portal/dashboard.html:396
 msgid "Add webhook endpoint"
-msgstr ""
+msgstr "Agregar punto final de webhook"
 
 #: app/templates/partner/portal/dashboard.html:399
 msgid "Webhook management is restricted for your account role."
-msgstr ""
+msgstr "La gestión de webhooks está restringida para tu rol de cuenta."
 
 #: app/templates/partner/portal/dashboard.html:408
-#, fuzzy
 msgid "Secret:"
-msgstr "Fuentes"
+msgstr "Secreto:"
 
 #: app/templates/partner/portal/dashboard.html:409
 msgid "Events:"
-msgstr ""
+msgstr "Eventos:"
 
 #: app/templates/partner/portal/dashboard.html:413
-#, fuzzy
 msgid "Send test"
-msgstr "Hora de envío"
+msgstr "Enviar prueba"
 
 #: app/templates/partner/portal/dashboard.html:414
 msgid ""
 "Rotate the signing secret for this endpoint? Update your receiver before "
 "rotating."
 msgstr ""
+"¿Rotar el secreto de firma para este punto final? Actualiza tu receptor "
+"antes de rotar."
 
 #: app/templates/partner/portal/dashboard.html:414
 msgid "Rotate secret"
-msgstr ""
+msgstr "Rotar secreto"
 
 #: app/templates/partner/portal/dashboard.html:415
 msgid "Delete this webhook endpoint? All deliveries will stop immediately."
 msgstr ""
+"¿Eliminar este punto final de webhook? Todas las entregas se detendrán "
+"inmediatamente."
 
 #: app/templates/partner/portal/dashboard.html:421
 msgid "No webhook endpoints configured."
-msgstr ""
+msgstr "Sin puntos finales de webhook configurados."
 
 #: app/templates/partner/portal/dashboard.html:425
-#, fuzzy
 msgid "Recent deliveries:"
-msgstr "Actualizaciones Recientes"
+msgstr "Entregas recientes:"
 
 #: app/templates/partner/portal/dashboard.html:429
-#, fuzzy, python-format
+#, python-format
 msgid "attempts %(count)d"
-msgstr "Fuentes"
+msgstr "intentos %(count)d"
 
 #: app/templates/partner/portal/dashboard.html:429
 #, python-format
 msgid "HTTP %(code)s"
-msgstr ""
+msgstr "HTTP %(code)s"
 
 #: app/templates/partner/portal/dashboard.html:438
 msgid "Team access"
-msgstr ""
+msgstr "Acceso al equipo"
 
 #: app/templates/partner/portal/dashboard.html:440
 #, python-format
 msgid "Signed in as %(email)s (%(role)s)"
-msgstr ""
+msgstr "Sesión iniciada como %(email)s (%(role)s)"
 
 #: app/templates/partner/portal/dashboard.html:446
 msgid "Full name (optional)"
-msgstr ""
+msgstr "Nombre completo (opcional)"
 
 #: app/templates/partner/portal/dashboard.html:448
 #: app/templates/partner/portal/dashboard.html:458
 msgid "Member"
-msgstr ""
+msgstr "Miembro"
 
 #: app/templates/partner/portal/dashboard.html:449
 msgid "Invite teammate"
-msgstr ""
+msgstr "Invitar compañero de equipo"
 
 #: app/templates/partner/portal/dashboard.html:459
 #: app/templates/settings/api_keys.html:75
 #: app/templates/trending/sources.html:80
-#, fuzzy
 msgid "Disable"
-msgstr "en desacuerdo"
+msgstr "Deshabilitar"
 
 #: app/templates/partner/portal/dashboard.html:459
 #: app/templates/settings/api_keys.html:75
 #: app/templates/trending/sources.html:80
 msgid "Enable"
-msgstr ""
+msgstr "Habilitar"
 
 #: app/templates/partner/portal/dashboard.html:470
-#, fuzzy
 msgid "Save permissions"
-msgstr "Debates Guardados"
+msgstr "Guardar permisos"
 
 #: app/templates/partner/portal/dashboard.html:475
 msgid "Only the owner has access right now."
-msgstr ""
+msgstr "Solo el propietario tiene acceso en este momento."
 
 #: app/templates/partner/portal/discussion_detail.html:3
-#, fuzzy, python-format
+#, python-format
 msgid "Discussion #%(id)s — Partner Portal"
-msgstr "Debates y programas"
+msgstr "Discusión #%(id)s — Portal de Socios"
 
 #: app/templates/partner/portal/discussion_detail.html:39
 #: app/templates/partner/portal/discussions.html:177
 #: app/templates/partner/portal/discussions.html:219
 msgid "Closed"
-msgstr ""
+msgstr "Cerrado"
 
 #: app/templates/partner/portal/discussion_detail.html:44
 msgid "Integrity mode"
-msgstr ""
+msgstr "Modo de integridad"
 
 #: app/templates/partner/portal/discussion_detail.html:49
 msgid "External ID:"
-msgstr ""
+msgstr "ID externo:"
 
 #: app/templates/partner/portal/discussion_detail.html:59
-#, fuzzy
 msgid "View embed ↗"
-msgstr "Ver guardados"
+msgstr "Ver inserción ↗"
 
 #: app/templates/partner/portal/discussion_detail.html:63
-#, fuzzy
 msgid "Consensus ↗"
-msgstr "Análisis de consenso"
+msgstr "Consenso ↗"
 
 #: app/templates/partner/portal/discussion_detail.html:68
-#, fuzzy
 msgid "Reopen this discussion?"
-msgstr "Iniciar un debate"
+msgstr "¿Reabrir esta discusión?"
 
 #: app/templates/partner/portal/discussion_detail.html:68
-#, fuzzy
 msgid "Close this discussion?"
-msgstr "Iniciar un debate"
+msgstr "¿Cerrar este debate?"
 
 #: app/templates/partner/portal/discussion_detail.html:74
 #: app/templates/partner/portal/discussions.html:236
-#, fuzzy
 msgid "Reopen"
-msgstr "Gratis"
+msgstr "Reabrir"
 
 #: app/templates/partner/portal/discussion_detail.html:84
-#, fuzzy
 msgid "Created"
-msgstr "Crear"
+msgstr "Creado"
 
 #: app/templates/partner/portal/discussion_detail.html:88
-#, fuzzy
 msgid "Total votes"
-msgstr "votos en total"
+msgstr "Votos totales"
 
 #: app/templates/partner/portal/discussion_detail.html:96
 #: app/templates/partner/portal/discussions.html:197
-#, fuzzy
 msgid "Created via key"
-msgstr "Crear perfil"
+msgstr "Creado vía clave"
 
 #: app/templates/partner/portal/discussion_detail.html:102
 msgid "Legacy / unknown"
-msgstr ""
+msgstr "Heredado / desconocido"
 
 #: app/templates/partner/portal/discussion_detail.html:115
-#, fuzzy
 msgid "View full consensus ↗"
-msgstr "Análisis de consenso"
+msgstr "Ver consenso completo ↗"
 
 #: app/templates/partner/portal/discussion_detail.html:125
-#, fuzzy
 msgid "Statements analysed"
-msgstr "Sin afirmaciones todavía"
+msgstr "Declaraciones analizadas"
 
 #: app/templates/partner/portal/discussion_detail.html:133
 msgid "Last run"
-msgstr ""
+msgstr "Última ejecución"
 
 #: app/templates/partner/portal/discussion_detail.html:138
 msgid ""
 "Opinion clusters show how readers divided on the topic — 1 cluster means "
 "broad agreement, multiple clusters indicate distinct viewpoints."
 msgstr ""
+"Los clusters de opinión muestran cómo se dividen los lectores sobre el tema "
+"— 1 cluster significa amplio acuerdo, múltiples clusters indican puntos de "
+"vista distintos."
 
 #: app/templates/partner/portal/discussion_detail.html:140
 msgid ""
 "No consensus analysis yet — analysis runs automatically after enough votes "
 "are cast."
 msgstr ""
+"Sin análisis de consenso aún — el análisis se ejecuta automáticamente "
+"después de suficientes votos."
 
 #: app/templates/partner/portal/discussion_detail.html:142
 msgid ""
 "Closing a discussion pauses new votes and submissions, but historical "
 "analytics remain available."
 msgstr ""
+"Cerrar un debate pausa nuevos votos y envíos, pero los análisis históricos "
+"permanecen disponibles."
 
 #: app/templates/partner/portal/discussion_detail.html:147
 msgid "Embed submission policy"
-msgstr ""
+msgstr "Política de envío de incrustación"
 
 #: app/templates/partner/portal/discussion_detail.html:149
 msgid ""
 "Control whether readers can submit new statements directly from the embed on"
 " your site."
 msgstr ""
+"Controla si los lectores pueden enviar nuevas declaraciones directamente "
+"desde la incrustación en tu sitio."
 
 #: app/templates/partner/portal/discussion_detail.html:154
 msgid "Quick presets:"
-msgstr ""
+msgstr "Preajustes rápidos:"
 
 #: app/templates/partner/portal/discussion_detail.html:155
-#, fuzzy
 msgid "Recommended (vote/report only)"
-msgstr "Orden de viaje recomendado"
+msgstr "Recomendado (solo voto/reporte)"
 
 #: app/templates/partner/portal/discussion_detail.html:156
 msgid "High-engagement (allow inline submit)"
-msgstr ""
+msgstr "Alto compromiso (permitir envío inline)"
 
 #: app/templates/partner/portal/discussion_detail.html:168
 msgid "Allow inline statement submissions in embed"
-msgstr ""
+msgstr "Permitir envíos de declaraciones inline en la incrustación"
 
 #: app/templates/partner/portal/discussion_detail.html:169
 msgid ""
@@ -27339,80 +27337,79 @@ msgid ""
 "engagement workflows (live blogs, campaign hubs) when moderation coverage is"
 " in place."
 msgstr ""
+"Recomendación predeterminada: mantén desactivado para la mayoría de páginas "
+"de artículos. Actívalo para flujos de alto compromiso (blogs en vivo, "
+"centros de campaña) cuando haya cobertura de moderación."
 
 #: app/templates/partner/portal/discussion_detail.html:170
 msgid ""
 "When enabled, readers can propose statements from the embed (same 10-500 "
 "character rules and anti-abuse limits)."
 msgstr ""
+"Cuando está habilitado, los lectores pueden proponer declaraciones desde la "
+"incrustación (mismas reglas de 10-500 caracteres y límites anti-abuso)."
 
 #: app/templates/partner/portal/discussion_detail.html:174
 msgid ""
 "This discussion is closed. Reopen it before changing embed submission "
 "behavior."
 msgstr ""
+"Este debate está cerrado. Reabrelo antes de cambiar el comportamiento de "
+"envío de incrustación."
 
 #: app/templates/partner/portal/discussion_detail.html:178
 msgid "Save embed policy"
-msgstr ""
+msgstr "Guardar política de incrustación"
 
 #: app/templates/partner/portal/discussion_detail.html:203
-#, fuzzy
 msgid "Statement analytics"
-msgstr "Páginas de afirmaciones"
+msgstr "Análisis de declaraciones"
 
 #: app/templates/partner/portal/discussion_detail.html:204
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d total vote"
 msgid_plural "%(num)d total votes"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d voto total"
+msgstr[1] "%(num)d votos totales"
 
 #: app/templates/partner/portal/discussion_detail.html:220
-#, fuzzy
 msgid "Reader submitted"
-msgstr "Afirmaciones"
+msgstr "Enviado por lector"
 
 #: app/templates/partner/portal/discussion_detail.html:222
-#, fuzzy
 msgid "AI generated"
-msgstr "Traducido por IA"
+msgstr "Generado por IA"
 
 #: app/templates/partner/portal/discussion_detail.html:224
-#, fuzzy
 msgid "Partner added"
-msgstr "Portal de Socios"
+msgstr "Agregado por socio"
 
 #: app/templates/partner/portal/discussion_detail.html:226
-#, fuzzy
 msgid "seed"
-msgstr "Seleccionar idioma"
+msgstr "semilla"
 
 #: app/templates/partner/portal/discussion_detail.html:239
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d vote"
 msgid_plural "%(num)d votes"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d voto"
+msgstr[1] "%(num)d votos"
 
 #: app/templates/partner/portal/discussion_detail.html:261
 msgid "No statements yet — add the first one below."
-msgstr ""
+msgstr "Sin declaraciones aún — añade la primera a continuación."
 
 #: app/templates/partner/portal/discussion_detail.html:263
-#, fuzzy
 msgid "No statements yet."
-msgstr "Sin afirmaciones todavía"
+msgstr "Sin declaraciones aún."
 
 #: app/templates/partner/portal/discussion_detail.html:272
-#, fuzzy
 msgid "Add a statement"
-msgstr "Añadir afirmación"
+msgstr "Añadir una declaración"
 
 #: app/templates/partner/portal/discussion_detail.html:275
-#, fuzzy
 msgid "This discussion is closed. Reopen it to add new statements."
-msgstr "Esta discusión está cerrada."
+msgstr "Este debate está cerrado. Reabrelo para añadir nuevas declaraciones."
 
 #: app/templates/partner/portal/discussion_detail.html:279
 msgid ""
@@ -27421,23 +27418,28 @@ msgid ""
 "like the seed statements regular users see — they are pre-approved and "
 "framed with a stance."
 msgstr ""
+"Las declaraciones son inmediatamente visibles para los lectores mientras "
+"votan. Mantenlas concisas (10–500 caracteres), específicas y debatibles. Se "
+"comportan exactamente como las declaraciones semilla que ven los usuarios "
+"regulares — están preaprobadas y encuadradas con una postura."
 
 #: app/templates/partner/portal/discussion_detail.html:286
 msgid "(10–500 characters)"
-msgstr ""
+msgstr "(10–500 caracteres)"
 
 #: app/templates/partner/portal/discussion_detail.html:289
 msgid "e.g. Stricter emissions targets would cost more jobs than they create."
 msgstr ""
+"p. ej. Objetivos de emisiones más estrictos costarían más empleos de los que"
+" crearían."
 
 #: app/templates/partner/portal/discussion_detail.html:295
-#, fuzzy
 msgid "Stance"
-msgstr "Cancelar"
+msgstr "Postura"
 
 #: app/templates/partner/portal/discussion_detail.html:295
 msgid "(optional — helps frame the statement for readers)"
-msgstr ""
+msgstr "(opcional — ayuda a enmarcar la declaración para los lectores)"
 
 #: app/templates/partner/portal/discussion_detail.html:314
 #, fuzzy
@@ -27633,28 +27635,26 @@ msgid "Embed submit off"
 msgstr ""
 
 #: app/templates/partner/portal/discussions.html:231
-#, fuzzy, python-format
+#, python-format
 msgid "Reopen discussion #%(id)s?"
-msgstr "Unirse al debate"
+msgstr "¿Reabrir discusión #%(id)s?"
 
 #: app/templates/partner/portal/discussions.html:231
-#, fuzzy, python-format
+#, python-format
 msgid "Close discussion #%(id)s?"
-msgstr "Últimos debates"
+msgstr "¿Cerrar discusión #%(id)s?"
 
 #: app/templates/partner/portal/discussions.html:243
 msgid "legacy/unknown"
-msgstr ""
+msgstr "legacy/unknown"
 
 #: app/templates/partner/portal/discussions.html:260
-#, fuzzy
 msgid "No discussions found."
-msgstr "Debates"
+msgstr "No se encontraron discusiones."
 
 #: app/templates/partner/portal/discussions.html:262
-#, fuzzy
 msgid "Create your first discussion ↑"
-msgstr "Inicia tu primer debate"
+msgstr "Crea tu primera discusión ↑"
 
 #: app/templates/partner/portal/discussions.html:264
 msgid ""
@@ -27662,55 +27662,58 @@ msgid ""
 "/api/partner/discussions</code> from your backend, or ask an admin to create"
 " one here."
 msgstr ""
+"Usa <code class=\"bg-gray-100 px-1 rounded\">POST "
+"/api/partner/discussions</code> desde tu backend, o pídele a un "
+"administrador que cree una aquí."
 
 #: app/templates/partner/portal/discussions.html:277
-#, fuzzy, python-format
+#, python-format
 msgid "page %(page)d of %(pages)d"
-msgstr "Página %(page)d de %(pages)d"
+msgstr "página %(page)d de %(pages)d"
 
 #: app/templates/partner/portal/forgot_password.html:3
-#, fuzzy
 msgid "Forgot Password - Society Speaks Partner Portal"
-msgstr "Acerca de Society Speaks"
+msgstr "Recuperar contraseña - Portal de socios de Society Speaks"
 
 #: app/templates/partner/portal/forgot_password.html:9
-#, fuzzy
 msgid "Reset your password"
-msgstr "¿Olvidaste tu contraseña?"
+msgstr "Restablece tu contraseña"
 
 #: app/templates/partner/portal/forgot_password.html:10
 msgid ""
 "Enter the email address you signed up with and we'll send you a reset link."
 msgstr ""
+"Introduce la dirección de correo con la que te registraste y te enviaremos "
+"un enlace para restablecerla."
 
 #: app/templates/partner/portal/forgot_password.html:23
 msgid "Send reset link"
-msgstr ""
+msgstr "Enviar enlace de restablecimiento"
 
 #: app/templates/partner/portal/forgot_password.html:29
 #: app/templates/partner/portal/reset_password.html:28
-#, fuzzy
 msgid "Back to sign in"
-msgstr "Volver a la discusión"
+msgstr "Volver a iniciar sesión"
 
 #: app/templates/partner/portal/getting_started.html:3
-#, fuzzy
 msgid "Partner Guided Setup - Society Speaks"
-msgstr "Acerca de Society Speaks"
+msgstr "Configuración guiada para socios - Society Speaks"
 
 #: app/templates/partner/portal/getting_started.html:11
 msgid "Follow the steps below to launch on your site."
-msgstr ""
+msgstr "Sigue los pasos a continuación para lanzar en tu sitio."
 
 #: app/templates/partner/portal/getting_started.html:15
 msgid ""
 "Admin preview mode (read-only) — this is the partner guided setup "
 "experience."
 msgstr ""
+"Modo de vista previa para administradores (solo lectura) — esta es la "
+"experiencia de configuración guiada para socios."
 
 #: app/templates/partner/portal/getting_started.html:31
 msgid "Important setup note"
-msgstr ""
+msgstr "Nota importante de configuración"
 
 #: app/templates/partner/portal/getting_started.html:33
 msgid ""
@@ -27718,6 +27721,9 @@ msgid ""
 "from your backend only. Browser requests with an <code>Origin</code> header "
 "are rejected."
 msgstr ""
+"Los endpoints de escritura (<code>POST/PATCH /api/partner/...</code>) deben "
+"llamarse solo desde tu backend. Las solicitudes del navegador con encabezado"
+" <code>Origin</code> se rechazan."
 
 #: app/templates/partner/portal/getting_started.html:39
 msgid ""
@@ -27725,6 +27731,9 @@ msgid ""
 "mapping, webhook callbacks for downstream sync, and team roles in the portal"
 " for controlled access."
 msgstr ""
+"<strong>Flujo de sala de prensa:</strong> usa <code>external_id</code> para "
+"mapeo de CMS, devoluciones de llamada de webhooks para sincronización "
+"descendente, y roles de equipo en el portal para acceso controlado."
 
 #: app/templates/partner/portal/getting_started.html:42
 msgid ""
@@ -27732,102 +27741,107 @@ msgid ""
 "inline statement submissions per discussion only when you want higher "
 "participation and have moderation capacity."
 msgstr ""
+"<strong>Envíos incrustados:</strong> el predeterminado es solo "
+"votación/reporte. Habilita envíos de declaraciones en línea por discusión "
+"solo cuando desees mayor participación y tengas capacidad de moderación."
 
 #: app/templates/partner/portal/getting_started.html:50
 msgid "1) Domain verified"
-msgstr ""
+msgstr "1) Dominio verificado"
 
 #: app/templates/partner/portal/getting_started.html:53
-#, fuzzy
 msgid "2) Test key active"
-msgstr "Más activos"
+msgstr "2) Clave de prueba activa"
 
 #: app/templates/partner/portal/getting_started.html:56
 msgid "3) Live key active"
-msgstr ""
+msgstr "3) Clave activa en vivo"
 
 #: app/templates/partner/portal/getting_started.html:62
 msgid "Next action: verify a test domain."
-msgstr ""
+msgstr "Próxima acción: verificar un dominio de prueba."
 
 #: app/templates/partner/portal/getting_started.html:64
 msgid "Next action: create a test API key."
-msgstr ""
+msgstr "Próxima acción: crear una clave de API de prueba."
 
 #: app/templates/partner/portal/getting_started.html:66
 msgid "Next action: complete test integration, then activate live keys."
 msgstr ""
+"Próxima acción: completar la integración de prueba, luego activar claves "
+"activas."
 
 #: app/templates/partner/portal/getting_started.html:68
 msgid ""
 "Setup complete: keep production domains verified and monitor usage from the "
 "dashboard."
 msgstr ""
+"Configuración completada: mantén los dominios de producción verificados y "
+"supervisa el uso desde el panel."
 
 #: app/templates/partner/portal/getting_started.html:73
 msgid "Docs"
-msgstr ""
+msgstr "Documentación"
 
 #: app/templates/partner/portal/getting_started.html:74
 msgid "Everything you need to build quickly."
-msgstr ""
+msgstr "Todo lo que necesitas para desarrollar rápidamente."
 
 #: app/templates/partner/portal/getting_started.html:76
-#, fuzzy
 msgid "API reference"
-msgstr "Gestionar preferencias"
+msgstr "Referencia de API"
 
 #: app/templates/partner/portal/getting_started.html:77
 msgid "SDKs"
-msgstr ""
+msgstr "SDKs"
 
 #: app/templates/partner/portal/getting_started.html:78
-#, fuzzy
 msgid "Embed generator"
-msgstr "Empezar"
+msgstr "Generador de incrustaciones"
 
 #: app/templates/partner/portal/getting_started.html:82
-#, fuzzy
 msgid "Support"
-msgstr "Denunciar"
+msgstr "Soporte"
 
 #: app/templates/partner/portal/getting_started.html:83
 msgid "Need help? We can assist with rollout."
-msgstr ""
+msgstr "¿Necesitas ayuda? Podemos asistirte con el lanzamiento."
 
 #: app/templates/partner/portal/getting_started.html:92
 msgid "Step 1: Add and verify a test domain"
-msgstr ""
+msgstr "Paso 1: Añade y verifica un dominio de prueba"
 
 #: app/templates/partner/portal/getting_started.html:93
 msgid "Embeds only load on verified domains."
-msgstr ""
+msgstr "Los incrustables solo se cargan en dominios verificados."
 
 #: app/templates/partner/portal/getting_started.html:118
-#, fuzzy
 msgid "Verify now"
-msgstr "Por favor verifica tu correo electrónico"
+msgstr "Verificar ahora"
 
 #: app/templates/partner/portal/getting_started.html:139
 msgid "Step 2: Create a test API key"
-msgstr ""
+msgstr "Paso 2: Crea una clave de API de prueba"
 
 #: app/templates/partner/portal/getting_started.html:140
 msgid "Use test keys on staging before going live."
-msgstr ""
+msgstr "Usa claves de prueba en staging antes de pasar a producción."
 
 #: app/templates/partner/portal/getting_started.html:143
 msgid "Only owners and admins can create, rotate, or revoke API keys."
 msgstr ""
+"Solo los propietarios y administradores pueden crear, rotar o revocar claves"
+" de API."
 
 #: app/templates/partner/portal/getting_started.html:170
 msgid "For security, full keys are only shown once when created."
 msgstr ""
+"Por seguridad, las claves completas solo se muestran una vez cuando se "
+"crean."
 
 #: app/templates/partner/portal/getting_started.html:176
-#, fuzzy
 msgid "Step 3: Create or lookup a discussion"
-msgstr "Tus Debates"
+msgstr "Paso 3: Crear o buscar una discusión"
 
 #: app/templates/partner/portal/getting_started.html:177
 msgid ""
@@ -27837,70 +27851,77 @@ msgid ""
 "<code>external_id</code> (for non-article contexts such as campaign hubs or "
 "live blogs)."
 msgstr ""
+"Guarda el ID de la discusión en tu CMS para embeds consistentes. Usa una "
+"<code>Idempotency-Key</code> al crear para reintentar de forma segura las "
+"solicitudes fallidas. Puedes crear discusiones con <code>article_url</code> "
+"o <code>external_id</code> (para contextos no-artículos como hubs de campaña"
+" o blogs en directo)."
 
 #: app/templates/partner/portal/getting_started.html:179
 msgid "Prefer Python or Node.js over raw HTTP?"
-msgstr ""
+msgstr "¿Prefieres Python o Node.js en lugar de HTTP puro?"
 
 #: app/templates/partner/portal/getting_started.html:201
 msgid "Example lookup response"
-msgstr ""
+msgstr "Ejemplo de respuesta de búsqueda"
 
 #: app/templates/partner/portal/getting_started.html:217
 msgid "Example create response (201)"
-msgstr ""
+msgstr "Ejemplo de respuesta de creación (201)"
 
 #: app/templates/partner/portal/getting_started.html:236
 msgid "Step 4: Embed on your page"
-msgstr ""
+msgstr "Paso 4: Incrustar en tu página"
 
 #: app/templates/partner/portal/getting_started.html:237
 msgid ""
 "Use the returned <code>embed_url</code> from lookup/create. This ensures you"
 " use the correct discussion and environment."
 msgstr ""
+"Usa la <code>embed_url</code> devuelta de la búsqueda/creación. Esto asegura"
+" que uses la discusión y el entorno correctos."
 
 #: app/templates/partner/portal/getting_started.html:243
 msgid "I embedded it successfully →"
-msgstr ""
+msgstr "Lo incrusté exitosamente →"
 
 #: app/templates/partner/portal/getting_started.html:249
 msgid "Step 5: Go live"
-msgstr ""
+msgstr "Paso 5: Lanzar en producción"
 
 #: app/templates/partner/portal/getting_started.html:250
 msgid ""
 "Choose a plan to create live keys, then verify production domains before "
 "launching embeds publicly."
 msgstr ""
+"Elige un plan para crear claves en vivo, luego verifica los dominios de "
+"producción antes de lanzar embeds públicamente."
 
 #: app/templates/partner/portal/getting_started.html:257
 #: app/templates/partner/portal/success.html:73
 msgid "Starter &mdash; &pound;49/mo"
-msgstr ""
+msgstr "Starter &mdash; £49/mes"
 
 #: app/templates/partner/portal/getting_started.html:258
-#, fuzzy
 msgid "Up to 100 live discussions per month"
-msgstr "Ver discusión"
+msgstr "Hasta 100 discusiones en vivo por mes"
 
 #: app/templates/partner/portal/getting_started.html:265
 #: app/templates/partner/portal/success.html:81
 msgid "Professional &mdash; &pound;249/mo"
-msgstr ""
+msgstr "Professional &mdash; £249/mes"
 
 #: app/templates/partner/portal/getting_started.html:266
-#, fuzzy
 msgid "Up to 500 live discussions per month"
-msgstr "Ver discusión"
+msgstr "Hasta 500 discusiones en vivo por mes"
 
 #: app/templates/partner/portal/getting_started.html:270
 msgid "for Enterprise pricing."
-msgstr ""
+msgstr "para precios Enterprise."
 
 #: app/templates/partner/portal/getting_started.html:282
 msgid "Step 6: Configure webhooks and analytics export"
-msgstr ""
+msgstr "Paso 6: Configurar webhooks y exportación de análisis"
 
 #: app/templates/partner/portal/getting_started.html:284
 msgid ""
@@ -27908,310 +27929,314 @@ msgid ""
 " systems in sync. Verify <code>X-SocietySpeaks-Signature</code> on your "
 "receiver and treat <code>X-SocietySpeaks-Event-Id</code> as idempotent."
 msgstr ""
+"Configura callbacks de webhook en el dashboard para evitar sondeos y "
+"mantener los sistemas Observer sincronizados. Verifica "
+"<code>X-SocietySpeaks-Signature</code> en tu receptor y trata "
+"<code>X-SocietySpeaks-Event-Id</code> como idempotente."
 
 #: app/templates/partner/portal/getting_started.html:292
 msgid "Manage webhooks on dashboard →"
-msgstr ""
+msgstr "Gestionar webhooks en dashboard →"
 
 #: app/templates/partner/portal/getting_started.html:293
 msgid "Webhook signing docs →"
-msgstr ""
+msgstr "Documentación de firma de webhook →"
 
 #: app/templates/partner/portal/getting_started.html:298
 msgid "Step 7: Set embed submission policy per discussion"
-msgstr ""
+msgstr "Paso 7: Establecer política de envío de embeds por discusión"
 
 #: app/templates/partner/portal/getting_started.html:300
 msgid ""
 "Start with vote/report-only (default). For selected discussions, "
 "owners/admins can enable inline reader statement submissions."
 msgstr ""
+"Comienza con voto/solo-reportar (predeterminado). Para discusiones "
+"seleccionadas, los propietarios/administradores pueden habilitar envíos de "
+"declaraciones de lectores en línea."
 
 #: app/templates/partner/portal/getting_started.html:303
 msgid ""
 "Go to Dashboard -> Discussions -> open a discussion -> <strong>Embed "
 "submission policy</strong>."
 msgstr ""
+"Ve a Dashboard -> Discusiones -> abre una discusión -> <strong>Política de "
+"envío de embed</strong>."
 
 #: app/templates/partner/portal/getting_started.html:304
 msgid ""
 "Keep disabled for most article pages; enable for campaign/live-blog "
 "workflows."
 msgstr ""
+"Mantén deshabilitado para la mayoría de páginas de artículos; habilita para "
+"flujos de campaña/blog en directo."
 
 #: app/templates/partner/portal/getting_started.html:305
 msgid ""
 "When enabled, readers can submit 10-500 character statements directly in "
 "embed."
 msgstr ""
+"Cuando está habilitado, los lectores pueden enviar declaraciones de 10-500 "
+"caracteres directamente en el embed."
 
 #: app/templates/partner/portal/getting_started.html:307
-#, fuzzy
 msgid "Manage discussion policies →"
-msgstr "Unirse al debate"
+msgstr "Gestionar políticas de discusión →"
 
 #: app/templates/partner/portal/getting_started.html:312
 msgid "Step 8: Invite your team"
-msgstr ""
+msgstr "Paso 8: Invitar a tu equipo"
 
 #: app/templates/partner/portal/getting_started.html:313
 msgid "Add engineers or editors so onboarding is not blocked on one account."
 msgstr ""
+"Agrega ingenieros o editores para que la incorporación no dependa de una "
+"sola cuenta."
 
 #: app/templates/partner/portal/getting_started.html:314
-#, fuzzy
 msgid "Manage team access on dashboard →"
-msgstr "Panel"
+msgstr "Gestionar acceso del equipo en dashboard →"
 
 #: app/templates/partner/portal/login.html:3
-#, fuzzy
 msgid "Partner Portal Login - Society Speaks"
-msgstr "Acerca de Society Speaks"
+msgstr "Portal de Socios Inicio de sesión - Society Speaks"
 
 #: app/templates/partner/portal/login.html:10
 msgid "Sign in to manage discussions, team access, API keys, and more."
 msgstr ""
+"Inicia sesión para gestionar discusiones, acceso de equipo, claves API y "
+"más."
 
 #: app/templates/partner/portal/login.html:26
-#, fuzzy
 msgid "Forgot password?"
 msgstr "¿Olvidaste tu contraseña?"
 
 #: app/templates/partner/portal/login.html:33
-#, fuzzy
 msgid "Signing in…"
-msgstr "Iniciar sesión"
+msgstr "Iniciando sesión…"
 
 #: app/templates/partner/portal/login.html:41
-#, fuzzy
 msgid "Create one free"
-msgstr "Crear perfil"
+msgstr "Crear uno gratis"
 
 #: app/templates/partner/portal/reset_password.html:3
-#, fuzzy
 msgid "Set New Password - Society Speaks Partner Portal"
-msgstr "Acerca de Society Speaks"
+msgstr "Establecer nueva contraseña - Portal de Socios Society Speaks"
 
 #: app/templates/partner/portal/reset_password.html:9
-#, fuzzy
 msgid "Set a new password"
-msgstr "¿Olvidaste tu contraseña?"
+msgstr "Establece una nueva contraseña"
 
 #: app/templates/partner/portal/reset_password.html:10
 msgid "Choose a strong password for your Partner Portal account."
-msgstr ""
+msgstr "Elige una contraseña fuerte para tu cuenta del Portal de Socios."
 
 #: app/templates/partner/portal/reset_password.html:16
-#, fuzzy
 msgid "New password"
-msgstr "Contraseña"
+msgstr "Nueva contraseña"
 
 #: app/templates/partner/portal/reset_password.html:22
-#, fuzzy
 msgid "Set new password"
-msgstr "¿Olvidaste tu contraseña?"
+msgstr "Establecer nueva contraseña"
 
 #: app/templates/partner/portal/signup.html:3
-#, fuzzy
 msgid "Partner Portal Signup - Society Speaks"
-msgstr "Acerca de Society Speaks"
+msgstr "Registro del Portal de Socios - Society Speaks"
 
 #: app/templates/partner/portal/signup.html:12
-#, fuzzy
 msgid "Create your Partner Portal"
-msgstr "Portal de Socios"
+msgstr "Crear tu Portal de Socios"
 
 #: app/templates/partner/portal/signup.html:14
 msgid "Get your test API key in minutes. No credit card required."
 msgstr ""
+"Obtén tu clave API de prueba en minutos. No se requiere tarjeta de crédito."
 
 #: app/templates/partner/portal/signup.html:21
-#, fuzzy
 msgid "Organization name"
-msgstr "Organización"
+msgstr "Nombre de la organización"
 
 #: app/templates/partner/portal/signup.html:22
-#, fuzzy
 msgid "Acme News"
-msgstr "Noticias"
+msgstr "Acme News"
 
 #: app/templates/partner/portal/signup.html:25
-#, fuzzy
 msgid "Contact email"
-msgstr "Desinformación"
+msgstr "Email de contacto"
 
 #: app/templates/partner/portal/signup.html:32
 msgid "Test domain"
-msgstr ""
+msgstr "Dominio de prueba"
 
 #: app/templates/partner/portal/signup.html:34
 msgid "You can add more domains later from your dashboard."
-msgstr ""
+msgstr "Puedes añadir más dominios posteriormente desde tu panel."
 
 #: app/templates/partner/portal/signup.html:39
-#, fuzzy
 msgid "Creating account…"
-msgstr "¿Ya tienes cuenta?"
+msgstr "Creando cuenta…"
 
 #: app/templates/partner/portal/signup.html:46
-#, fuzzy
 msgid "I already have an account"
-msgstr "¿Ya tienes cuenta?"
+msgstr "Ya tengo una cuenta"
 
 #: app/templates/partner/portal/signup.html:60
 msgid ""
 "Your account is created with a <strong>test API key</strong> ready to use "
 "immediately."
 msgstr ""
+"Tu cuenta ha sido creada con una <strong>clave API de prueba</strong> lista "
+"para usar inmediatamente."
 
 #: app/templates/partner/portal/signup.html:64
 msgid ""
 "Add a DNS TXT record to <strong>verify your domain</strong> for embeds."
 msgstr ""
+"Añade un registro DNS TXT para <strong>verificar tu dominio</strong> en los "
+"embeds."
 
 #: app/templates/partner/portal/signup.html:68
 msgid ""
 "Create discussions via the API and <strong>embed them on your site</strong>."
 msgstr ""
+"Crea discusiones a través de la API e <strong>incrustalas en tu "
+"sitio</strong>."
 
 #: app/templates/partner/portal/signup.html:72
 msgid ""
 "When ready, activate billing for <strong>live production keys</strong>."
 msgstr ""
+"Cuando estés listo, activa la facturación para <strong>claves de producción "
+"en vivo</strong>."
 
 #: app/templates/partner/portal/signup.html:77
 msgid "Free test tier includes"
-msgstr ""
+msgstr "El nivel de prueba gratuito incluye"
 
 #: app/templates/partner/portal/signup.html:83
-#, fuzzy
 msgid "Up to 25 test discussions"
-msgstr "Últimos debates"
+msgstr "Hasta 25 discusiones de prueba"
 
 #: app/templates/partner/portal/signup.html:89
 msgid "Full API access"
-msgstr ""
+msgstr "Acceso completo a la API"
 
 #: app/templates/partner/portal/signup.html:95
 msgid "Embed generator and API playground"
-msgstr ""
+msgstr "Generador de embeds y API playground"
 
 #: app/templates/partner/portal/signup.html:104
 msgid "Paid plans from &pound;49/mo when you're ready to go live."
-msgstr ""
+msgstr "Planes pagados desde £49/mes cuando estés listo para ir en vivo."
 
 #: app/templates/partner/portal/success.html:3
-#, fuzzy
 msgid "First Embed Live - Society Speaks"
-msgstr "Acerca de Society Speaks"
+msgstr "First Embed Live - Society Speaks"
 
 #: app/templates/partner/portal/success.html:11
 msgid ""
 "Admin preview mode (read-only): this is the post-setup success page shown to"
 " partners."
 msgstr ""
+"Modo de vista previa del administrador (solo lectura): esta es la página de "
+"éxito posterior a la configuración que se muestra a los socios."
 
 #: app/templates/partner/portal/success.html:15
-#, fuzzy
 msgid "Exit preview"
-msgstr "Crear perfil"
+msgstr "Salir de la vista previa"
 
 #: app/templates/partner/portal/success.html:20
 msgid "Your first embed is live"
-msgstr ""
+msgstr "Tu primer embed está en vivo"
 
 #: app/templates/partner/portal/success.html:21
 msgid "You are ready to scale across your site."
-msgstr ""
+msgstr "Estás listo para escalar en todo tu sitio."
 
 #: app/templates/partner/portal/success.html:25
 #: app/templates/programmes/journey_recap.html:115
-#, fuzzy
 msgid "Completed"
-msgstr "temas completados"
+msgstr "Completado"
 
 #: app/templates/partner/portal/success.html:27
 msgid "Domain verified"
-msgstr ""
+msgstr "Dominio verificado"
 
 #: app/templates/partner/portal/success.html:28
-#, fuzzy
 msgid "Test key active"
-msgstr "Más activos"
+msgstr "Clave de prueba activa"
 
 #: app/templates/partner/portal/success.html:29
 msgid "First embed deployed"
-msgstr ""
+msgstr "Primer embed implementado"
 
 #: app/templates/partner/portal/success.html:33
 msgid "Next: production rollout"
-msgstr ""
+msgstr "Siguiente: lanzamiento de producción"
 
 #: app/templates/partner/portal/success.html:35
-#, fuzzy
 msgid "Verify production domains"
-msgstr "Por favor verifica tu correo electrónico"
+msgstr "Verificar dominios de producción"
 
 #: app/templates/partner/portal/success.html:36
 msgid "Create live API keys"
-msgstr ""
+msgstr "Crear claves API en vivo"
 
 #: app/templates/partner/portal/success.html:37
 msgid "Roll out in CMS templates"
-msgstr ""
+msgstr "Implementar en plantillas de CMS"
 
 #: app/templates/partner/portal/success.html:41
 msgid "Need help?"
-msgstr ""
+msgstr "¿Necesitas ayuda?"
 
 #: app/templates/partner/portal/success.html:42
 msgid "We can review your integration and launch plan."
-msgstr ""
+msgstr "Podemos revisar tu integración y plan de lanzamiento."
 
 #: app/templates/partner/portal/success.html:52
 msgid "Review setup steps"
-msgstr ""
+msgstr "Revisar pasos de configuración"
 
 #: app/templates/partner/portal/success.html:61
 msgid "Invite team"
-msgstr ""
+msgstr "Invitar al equipo"
 
 #: app/templates/partner/portal/success.html:66
 msgid "Activate live access"
-msgstr ""
+msgstr "Activar acceso en vivo"
 
 #: app/templates/partner/portal/success.html:67
 msgid "Choose a plan to unlock live API keys and production domains."
 msgstr ""
+"Elige un plan para desbloquear claves API en vivo y dominios de producción."
 
 #: app/templates/partner/portal/success.html:74
-#, fuzzy
 msgid "Up to 100 live discussions"
-msgstr "Tus Debates"
+msgstr "Hasta 100 discusiones en vivo"
 
 #: app/templates/partner/portal/success.html:82
-#, fuzzy
 msgid "Up to 500 live discussions"
-msgstr "Tus Debates"
+msgstr "Hasta 500 discusiones en vivo"
 
 #: app/templates/profiles/_form_helpers.html:22
 #: app/templates/profiles/_form_helpers.html:24
 #: app/templates/profiles/edit_company_profile.html:28
 #: app/templates/profiles/edit_individual_profile.html:28
 msgid "Recommended: 400x400px"
-msgstr ""
+msgstr "Recomendado: 400x400px"
 
 #: app/templates/profiles/_form_helpers.html:26
 #: app/templates/profiles/edit_company_profile.html:52
 #: app/templates/profiles/edit_individual_profile.html:51
 msgid "Recommended: 1200x400px"
-msgstr ""
+msgstr "Recomendado: 1200x400px"
 
 #: app/templates/profiles/_form_helpers.html:46
 #: app/templates/profiles/_form_helpers.html:57
 #, python-format
 msgid "%(label)s preview"
-msgstr ""
+msgstr "vista previa de %(label)s"
 
 #: app/templates/profiles/_form_helpers.html:48
 #: app/templates/profiles/_form_helpers.html:59
@@ -28220,43 +28245,42 @@ msgstr ""
 #: app/templates/profiles/edit_individual_profile.html:39
 #: app/templates/profiles/edit_individual_profile.html:62
 msgid "Click to change"
-msgstr ""
+msgstr "Haz clic para cambiar"
 
 #: app/templates/profiles/_form_helpers.html:70
 msgid "Processing image..."
-msgstr ""
+msgstr "Procesando imagen..."
 
 #: app/templates/profiles/_form_helpers.html:83
 #: app/templates/profiles/_form_helpers.html:122
 msgid "Adjust Image"
-msgstr ""
+msgstr "Ajustar imagen"
 
 #: app/templates/profiles/_form_helpers.html:89
 msgid "Upload a clear, professional headshot or avatar"
-msgstr ""
+msgstr "Sube una foto de perfil o avatar profesional y clara"
 
 #: app/templates/profiles/_form_helpers.html:91
 msgid "Upload your company logo in a square format"
-msgstr ""
+msgstr "Sube el logo de tu empresa en formato cuadrado"
 
 #: app/templates/profiles/_form_helpers.html:93
 msgid "Upload a high-quality banner image that represents your brand"
-msgstr ""
+msgstr "Sube una imagen de banner de alta calidad que represente tu marca"
 
 #: app/templates/profiles/_form_helpers.html:125
 msgid "Crop preview"
-msgstr ""
+msgstr "Vista previa de recorte"
 
 #: app/templates/profiles/_form_helpers.html:133
-#, fuzzy
 msgid "Apply"
-msgstr "Diariamente"
+msgstr "Aplicar"
 
 #: app/templates/profiles/company_profile.html:7
 #: app/templates/profiles/individual_profile.html:7
 #, python-format
 msgid "%(name)s - Profile on SocietySpeaks"
-msgstr ""
+msgstr "%(name)s - Perfil en SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:8
 #, python-format
@@ -28265,47 +28289,53 @@ msgid ""
 "SocietySpeaks. Join their discussions on pressing societal issues and policy"
 " solutions."
 msgstr ""
+"Explora el perfil de %(name)s, un líder en el discurso público en "
+"SocietySpeaks. Únete a sus discusiones sobre temas sociales y soluciones "
+"políticas apremiantes."
 
 #: app/templates/profiles/company_profile.html:9
 #, python-format
 msgid "organisation profile, company profile, %(name)s, SocietySpeaks"
-msgstr ""
+msgstr "perfil de organización, perfil de empresa, %(name)s, SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:18
 msgid ""
 "An organization on SocietySpeaks contributing to public discourse and "
 "meaningful change."
 msgstr ""
+"Una organización en SocietySpeaks que contribuye al discurso público y al "
+"cambio significativo."
 
 #: app/templates/profiles/company_profile.html:45
 #: app/templates/profiles/individual_profile.html:45
 #: app/templates/sources/view_source.html:34
 #, python-format
 msgid "%(name)s banner"
-msgstr ""
+msgstr "banner de %(name)s"
 
 #: app/templates/profiles/company_profile.html:59
 #, python-format
 msgid "%(name)s logo"
-msgstr ""
+msgstr "logo de %(name)s"
 
 #: app/templates/profiles/company_profile.html:74
 msgid "Edit company profile"
-msgstr ""
+msgstr "Editar perfil de empresa"
 
 #: app/templates/profiles/company_profile.html:79
 #: app/templates/profiles/edit_company_profile.html:14
 #: app/templates/profiles/edit_individual_profile.html:14
 #: app/templates/profiles/edit_individual_profile.html:17
 #: app/templates/profiles/individual_profile.html:79
-#, fuzzy
 msgid "Edit Profile"
-msgstr "Crear perfil"
+msgstr "Editar perfil"
 
 #: app/templates/profiles/company_profile.html:84
 #, python-format
 msgid "%(name)s is driving change through public discourse on SocietySpeaks"
 msgstr ""
+"%(name)s está impulsando el cambio a través del discurso público en "
+"SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:86
 #, python-format
@@ -28313,6 +28343,8 @@ msgid ""
 "Join %(name)s in shaping policy solutions through meaningful dialogue on "
 "SocietySpeaks.io. Be part of the conversation that matters!"
 msgstr ""
+"Únete a %(name)s para dar forma a soluciones políticas a través del diálogo "
+"significativo en SocietySpeaks.io. ¡Sé parte de la conversación que importa!"
 
 #: app/templates/profiles/company_profile.html:99
 #: app/templates/profiles/individual_profile.html:99
@@ -28323,12 +28355,12 @@ msgstr "Leer más"
 #: app/templates/profiles/company_profile.html:136
 #: app/templates/profiles/individual_profile.html:138
 msgid "Visit Website"
-msgstr ""
+msgstr "Visitar sitio web"
 
 #: app/templates/profiles/company_profile.html:138
 #: app/templates/profiles/individual_profile.html:140
 msgid "No website provided"
-msgstr ""
+msgstr "No se proporcionó sitio web"
 
 #: app/templates/profiles/company_profile.html:144
 #: app/templates/profiles/create_company_profile.html:45
@@ -28336,107 +28368,98 @@ msgstr ""
 #: app/templates/profiles/edit_individual_profile.html:100
 #: app/templates/profiles/individual_profile.html:146
 msgid "Social Media"
-msgstr ""
+msgstr "Redes sociales"
 
 #: app/templates/profiles/company_profile.html:153
-#, fuzzy
 msgid "Active Programmes"
-msgstr "Otros programas"
+msgstr "Programas activos"
 
 #: app/templates/profiles/company_profile.html:186
 #, python-format
 msgid "+%(count)d more"
-msgstr ""
+msgstr "+%(count)d más"
 
 #: app/templates/profiles/company_profile.html:191
 msgid "Join the dialogue"
-msgstr ""
+msgstr "Únete al diálogo"
 
 #: app/templates/profiles/company_profile.html:203
 #, python-format
 msgid "Discussions by %(name)s"
-msgstr ""
+msgstr "Discusiones de %(name)s"
 
 #: app/templates/profiles/company_profile.html:212
 #: app/templates/profiles/individual_profile.html:163
-#, fuzzy
 msgid "No discussions started yet."
-msgstr "Aún no hay debates"
+msgstr "Sin discusiones iniciadas aún."
 
 #: app/templates/profiles/create_company_profile.html:30
 #: app/templates/profiles/create_individual_profile.html:30
 msgid "Choose Banner Image"
-msgstr ""
+msgstr "Elige imagen de banner"
 
 #: app/templates/profiles/create_company_profile.html:31
-#, fuzzy
 msgid "Choose Company Logo"
-msgstr "Logo de empresa"
+msgstr "Elige logo de empresa"
 
 #: app/templates/profiles/create_company_profile.html:60
 #: app/templates/profiles/select_profile_type.html:145
-#, fuzzy
 msgid "Create Organisation Profile"
-msgstr "Crear perfil"
+msgstr "Crear perfil de organización"
 
 #: app/templates/profiles/create_company_profile.html:77
 msgid "Please upload a valid image file (JPG, JPEG, or PNG)"
-msgstr ""
+msgstr "Por favor sube un archivo de imagen válido (JPG, JPEG o PNG)"
 
 #: app/templates/profiles/create_company_profile.html:82
 msgid "File size should not exceed 5MB"
-msgstr ""
+msgstr "El tamaño del archivo no debe exceder 5MB"
 
 #: app/templates/profiles/create_company_profile.html:98
 msgid "Please enter your company name"
-msgstr ""
+msgstr "Por favor ingresa el nombre de tu empresa"
 
 #: app/templates/profiles/create_individual_profile.html:31
 msgid "Choose Profile Picture"
-msgstr ""
+msgstr "Elige foto de perfil"
 
 #: app/templates/profiles/create_individual_profile.html:43
-#, fuzzy
 msgid "Social Links"
-msgstr "Enlaces rápidos"
+msgstr "Enlaces sociales"
 
 #: app/templates/profiles/create_individual_profile.html:73
-#, fuzzy
 msgid "Please enter your full name"
-msgstr "Por favor verifica tu correo electrónico"
+msgstr "Por favor ingresa tu nombre completo"
 
 #: app/templates/profiles/edit_company_profile.html:11
 #: app/templates/profiles/edit_individual_profile.html:11
-#, fuzzy
 msgid "Profile"
-msgstr "Tu Perfil"
+msgstr "Perfil"
 
 #: app/templates/profiles/edit_company_profile.html:17
-#, fuzzy
 msgid "Edit Organisation Profile"
-msgstr "Organización"
+msgstr "Editar perfil de organización"
 
 #: app/templates/profiles/edit_company_profile.html:27
 #: app/templates/profiles/edit_company_profile.html:38
-#, fuzzy
 msgid "Company Logo"
 msgstr "Logo de empresa"
 
 #: app/templates/profiles/edit_company_profile.html:44
 msgid "Click to upload a new company logo"
-msgstr ""
+msgstr "Haz clic para cargar un nuevo logo de empresa"
 
 #: app/templates/profiles/edit_company_profile.html:51
 #: app/templates/profiles/edit_company_profile.html:61
 #: app/templates/profiles/edit_individual_profile.html:50
 #: app/templates/profiles/edit_individual_profile.html:60
 msgid "Banner Image"
-msgstr ""
+msgstr "Imagen de banner"
 
 #: app/templates/profiles/edit_company_profile.html:67
 #: app/templates/profiles/edit_individual_profile.html:66
 msgid "Click to upload a new banner image"
-msgstr ""
+msgstr "Haz clic para subir una nueva imagen de banner"
 
 #: app/templates/profiles/edit_company_profile.html:97
 msgid ""
@@ -28444,16 +28467,19 @@ msgid ""
 "address, a generic inbox (e.g. hello@…), or leave it blank to hide contact "
 "email entirely. This is separate from your login email."
 msgstr ""
+"Este correo electrónico aparecerá públicamente en tu perfil. Puedes usar tu "
+"propia dirección, una bandeja de entrada genérica (p. ej. hola@…) o dejarla "
+"en blanco para ocultar completamente el correo de contacto. Esto es "
+"independiente de tu correo de inicio de sesión."
 
 #: app/templates/profiles/edit_individual_profile.html:27
 #: app/templates/profiles/edit_individual_profile.html:37
-#, fuzzy
 msgid "Profile Picture"
-msgstr "Vistas de Perfil"
+msgstr "Foto de perfil"
 
 #: app/templates/profiles/edit_individual_profile.html:43
 msgid "Click to upload a new profile picture"
-msgstr ""
+msgstr "Haz clic para subir una nueva foto de perfil"
 
 #: app/templates/profiles/individual_profile.html:8
 #, python-format
@@ -28461,30 +28487,33 @@ msgid ""
 "Explore the profile of %(name)s, who is actively shaping public discourse on"
 " SocietySpeaks. Join %(name)s in discussions on important societal issues."
 msgstr ""
+"Explora el perfil de %(name)s, quien está moldeando activamente el discurso "
+"público en SocietySpeaks. Únete a %(name)s en discusiones sobre cuestiones "
+"sociales importantes."
 
 #: app/templates/profiles/individual_profile.html:9
 #, python-format
 msgid "public discourse, %(name)s, SocietySpeaks"
-msgstr ""
+msgstr "discurso público, %(name)s, SocietySpeaks"
 
 #: app/templates/profiles/individual_profile.html:18
 msgid "Member on SocietySpeaks contributing to public discourse."
-msgstr ""
+msgstr "Miembro de SocietySpeaks que contribuye al discurso público."
 
 #: app/templates/profiles/individual_profile.html:59
 #, python-format
 msgid "%(name)s profile photo"
-msgstr ""
+msgstr "Foto de perfil de %(name)s"
 
 #: app/templates/profiles/individual_profile.html:74
-#, fuzzy
 msgid "Edit individual profile"
-msgstr "Individual"
+msgstr "Editar perfil individual"
 
 #: app/templates/profiles/individual_profile.html:84
 #, python-format
 msgid "%(name)s is shaping the future of public discourse on SocietySpeaks"
 msgstr ""
+"%(name)s está moldeando el futuro del discurso público en SocietySpeaks"
 
 #: app/templates/profiles/individual_profile.html:86
 #, python-format
@@ -28492,81 +28521,81 @@ msgid ""
 "Join %(name)s in tackling society's biggest challenges through nuanced "
 "debate and real policy solutions on SocietySpeaks.io. Your voice matters!"
 msgstr ""
+"Únete a %(name)s para enfrentar los mayores desafíos de la sociedad mediante"
+" debates matizados y soluciones políticas reales en SocietySpeaks.io. ¡Tu "
+"voz importa!"
 
 #: app/templates/profiles/individual_profile.html:129
 msgid "No email provided"
-msgstr ""
+msgstr "Sin correo electrónico proporcionado"
 
 #: app/templates/profiles/individual_profile.html:154
-#, fuzzy
 msgid "Discussions Started"
-msgstr "Debates"
+msgstr "Discusiones iniciadas"
 
 #: app/templates/profiles/select_profile_type.html:22
-#, fuzzy
 msgid "Account"
-msgstr "País"
+msgstr "Cuenta"
 
 #: app/templates/profiles/select_profile_type.html:30
-#, fuzzy
 msgid "Profile Type"
-msgstr "Vistas de Perfil"
+msgstr "Tipo de perfil"
 
 #: app/templates/profiles/select_profile_type.html:48
-#, fuzzy
 msgid "Choose Your Profile Type"
-msgstr "Tu Perfil"
+msgstr "Elige tu tipo de perfil"
 
 #: app/templates/profiles/select_profile_type.html:49
 msgid "Select the type of profile that best represents you on SocietySpeaks"
-msgstr ""
+msgstr "Selecciona el tipo de perfil que mejor te representa en SocietySpeaks"
 
 #: app/templates/profiles/select_profile_type.html:70
 msgid ""
 "Perfect for citizens, activists, and individuals who want to participate in "
 "community discussions."
 msgstr ""
+"Perfecto para ciudadanos, activistas e individuos que desean participar en "
+"discusiones comunitarias."
 
 #: app/templates/profiles/select_profile_type.html:78
 msgid "Share your personal perspective"
-msgstr ""
+msgstr "Comparte tu perspectiva personal"
 
 #: app/templates/profiles/select_profile_type.html:84
-#, fuzzy
 msgid "Join community discussions"
-msgstr "Unirse al debate"
+msgstr "Participa en discusiones comunitarias"
 
 #: app/templates/profiles/select_profile_type.html:90
 msgid "Build your personal brand"
-msgstr ""
+msgstr "Construye tu marca personal"
 
 #: app/templates/profiles/select_profile_type.html:97
-#, fuzzy
 msgid "Create Individual Profile"
-msgstr "Crear perfil"
+msgstr "Crear perfil individual"
 
 #: app/templates/profiles/select_profile_type.html:118
 msgid ""
 "Ideal for businesses, organisations, governments, and institutions looking "
 "to engage with their community."
 msgstr ""
+"Ideal para empresas, organizaciones, gobiernos e instituciones que desean "
+"interactuar con su comunidad."
 
 #: app/templates/profiles/select_profile_type.html:126
 msgid "Official organization presence"
-msgstr ""
+msgstr "Presencia oficial de la organización"
 
 #: app/templates/profiles/select_profile_type.html:132
-#, fuzzy
 msgid "Host community discussions"
-msgstr "Iniciar un debate"
+msgstr "Organiza discusiones comunitarias"
 
 #: app/templates/profiles/select_profile_type.html:138
 msgid "Gather community feedback"
-msgstr ""
+msgstr "Recopila comentarios de la comunidad"
 
 #: app/templates/profiles/select_profile_type.html:162
 msgid "Not sure which to choose?"
-msgstr ""
+msgstr "¿No estás seguro de cuál elegir?"
 
 #: app/templates/profiles/select_profile_type.html:164
 msgid ""
@@ -28575,79 +28604,96 @@ msgid ""
 "institution. You can always contact our support team if you need to change "
 "your profile type later."
 msgstr ""
+"Elige un perfil Individual si participas como tú mismo, u un perfil de "
+"Organización si representas una empresa, un organismo gubernamental o una "
+"institución. Siempre puedes contactar a nuestro equipo de soporte si "
+"necesitas cambiar tu tipo de perfil más tarde."
 
 #: app/templates/programmes/_form.html:8
 msgid "e.g. National Citizens' Dialogue on Climate"
-msgstr ""
+msgstr "p. ej. Diálogo Nacional de Ciudadanos sobre el Clima"
 
 #: app/templates/programmes/_form.html:14
 msgid ""
 "A short summary shown on the programme page. Helps participants and "
 "organisers understand the purpose."
 msgstr ""
+"Un breve resumen que aparece en la página del programa. Ayuda a los "
+"participantes y organizadores a entender el propósito."
 
 #: app/templates/programmes/_form.html:15
 msgid "Describe the purpose and goals of this programme."
-msgstr ""
+msgstr "Describe el propósito y los objetivos de este programa."
 
 #: app/templates/programmes/_form.html:24
 msgid "Location &amp; Access"
-msgstr ""
+msgstr "Ubicación y acceso"
 
 #: app/templates/programmes/_form.html:28
 msgid "Geographic Scope"
-msgstr ""
+msgstr "Alcance geográfico"
 
 #: app/templates/programmes/_form.html:29
 msgid ""
 "Where is this programme focused? Choose Country to narrow it to a specific "
 "location — this helps people find it."
 msgstr ""
+"¿En dónde se enfoca este programa? Elige País para limitarlo a una ubicación"
+" específica — esto ayuda a las personas a encontrarlo."
 
 #: app/templates/programmes/_form.html:57
 msgid "Anyone can find and join via search and the programme catalogue."
 msgstr ""
+"Cualquiera puede encontrarlo y unirse a través de búsqueda y el catálogo de "
+"programas."
 
 #: app/templates/programmes/_form.html:58
 msgid "Hidden from search — only people with the direct link can access it."
 msgstr ""
+"Oculto de la búsqueda — solo las personas con el enlace directo pueden "
+"acceder."
 
 #: app/templates/programmes/_form.html:59
 msgid ""
 "Hidden from search — only people you have explicitly invited can "
 "participate."
 msgstr ""
+"Oculto de la búsqueda — solo las personas que has invitado explícitamente "
+"pueden participar."
 
 #: app/templates/programmes/_form.html:60
 msgid ""
 "Only the programme team (owners and managers) can see this. Use while "
 "setting up."
 msgstr ""
+"Solo el equipo del programa (propietarios y gestores) pueden verlo. Úsalo "
+"mientras estés configurando."
 
 #: app/templates/programmes/_form.html:64
 msgid "Controls who can find and access this programme."
-msgstr ""
+msgstr "Controla quién puede encontrar y acceder a este programa."
 
 #: app/templates/programmes/_form.html:89
 msgid "Ownership"
-msgstr ""
+msgstr "Propiedad"
 
 #: app/templates/programmes/_form.html:94
 msgid "Who owns this programme — your personal account or an organisation."
 msgstr ""
+"Quién es propietario de este programa — tu cuenta personal u una "
+"organización."
 
 #: app/templates/programmes/_form.html:124
-#, fuzzy
 msgid "Advanced"
-msgstr "Cancelar"
+msgstr "Avanzado"
 
 #: app/templates/programmes/_form.html:124
 msgid "— all optional"
-msgstr ""
+msgstr "— todo opcional"
 
 #: app/templates/programmes/_form.html:128
 msgid "A public URL for the programme logo or banner image."
-msgstr ""
+msgstr "URL pública para el logo o imagen de banner del programa."
 
 #: app/templates/programmes/_form.html:135
 msgid ""
@@ -28655,10 +28701,13 @@ msgid ""
 "comma-separated list, e.g. <code class=\"bg-gray-100 px-1 rounded\">Health, "
 "Prosperity, Security</code>"
 msgstr ""
+"Etiqueta las discusiones por tema para que los participantes puedan filtrar "
+"por categoría. Ingresa como una lista separada por comas, p. ej. <code "
+"class=\"bg-gray-100 px-1 rounded\">Salud, Prosperidad, Seguridad</code>"
 
 #: app/templates/programmes/_form.html:136
 msgid "Health, Prosperity, Security, Environment"
-msgstr ""
+msgstr "Salud, Prosperidad, Seguridad, Medio Ambiente"
 
 #: app/templates/programmes/_form.html:142
 msgid ""
@@ -28666,43 +28715,48 @@ msgid ""
 "followed by a deliberation wave. Enter as a comma-separated list, e.g. <code"
 " class=\"bg-gray-100 px-1 rounded\">Agenda-setting, Wave 1, Wave 2</code>"
 msgstr ""
+"Divide el programa en etapas basadas en tiempo, p. ej. un período de "
+"consulta seguido por una onda de deliberación. Ingresa como una lista "
+"separada por comas, p. ej. <code class=\"bg-gray-100 px-1 "
+"rounded\">Establecimiento de agenda, Onda 1, Onda 2</code>"
 
 #: app/templates/programmes/_form.html:143
 msgid "Agenda-setting, Wave 1, Wave 2"
-msgstr ""
+msgstr "Establecimiento de agenda, Onda 1, Onda 2"
 
 #: app/templates/programmes/_form.html:148
-#, fuzzy
 msgid "Participant Groups"
-msgstr "Participantes"
+msgstr "Grupos de Participantes"
 
 #: app/templates/programmes/_form.html:149
 msgid ""
 "Use this to track separate groups of participants — for example, a public "
 "survey group and an expert panel. Add one group per line."
 msgstr ""
+"Úsalo para rastrear grupos separados de participantes — por ejemplo, un "
+"grupo de encuesta pública y un panel de expertos. Agrega un grupo por línea."
 
 #: app/templates/programmes/_form.html:151
 msgid "Format:"
-msgstr ""
+msgstr "Formato:"
 
 #: app/templates/programmes/_form.html:157
 msgid ""
 "The short code is used internally (no spaces). The display name is shown to "
 "participants."
 msgstr ""
+"El código corto se utiliza internamente (sin espacios). El nombre para "
+"mostrar se ve para los participantes."
 
 #: app/templates/programmes/create.html:2
 #: app/templates/programmes/create.html:10
-#, fuzzy
 msgid "Create programme"
-msgstr "Crea tu primer programa"
+msgstr "Crear programa"
 
 #: app/templates/programmes/create.html:13
 #: app/templates/programmes/workspace.html:91
-#, fuzzy
 msgid "Create a programme"
-msgstr "Crea tu primer programa"
+msgstr "Crea un programa"
 
 #: app/templates/programmes/create.html:14
 msgid ""
@@ -28710,17 +28764,19 @@ msgid ""
 "add discussions to it after creating it, and invite stewards to help manage "
 "and export results."
 msgstr ""
+"Un Programa agrupa discusiones relacionadas en un diálogo estructurado. "
+"Puedes agregar discusiones después de crearlo e invitar a facilitadores para"
+" que ayuden a gestionar y exportar resultados."
 
 #: app/templates/programmes/edit.html:2 app/templates/programmes/edit.html:15
-#, fuzzy
 msgid "Edit programme"
-msgstr "Programa nuevo"
+msgstr "Editar programa"
 
 #: app/templates/programmes/journey_recap.html:2
 #: app/templates/programmes/journey_recap.html:6
 #, python-format
 msgid "%(name)s — Journey recap"
-msgstr ""
+msgstr "%(name)s — Resumen del recorrido"
 
 #: app/templates/programmes/journey_recap.html:3
 #, python-format
@@ -28728,33 +28784,38 @@ msgid ""
 "Crowd patterns and your votes across themes on %(name)s. Per-theme consensus"
 " analysis — not a single left–right score."
 msgstr ""
+"Patrones de la multitud y tus votos en temas de %(name)s. Análisis de "
+"consenso por tema — no una sola puntuación izquierda-derecha."
 
 #: app/templates/programmes/journey_recap.html:4
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s — Big Questions journey recap"
-msgstr "Viaje de Grandes Preguntas"
+msgstr "%(name)s — Resumen del recorrido de Grandes Preguntas"
 
 #: app/templates/programmes/journey_recap.html:5
 msgid ""
 "See where people agree, disagree, and which bridge ideas emerge — theme by "
 "theme."
 msgstr ""
+"Ve dónde la gente está de acuerdo, en desacuerdo y qué ideas puente emergen "
+"— tema por tema."
 
 #: app/templates/programmes/journey_recap.html:7
 msgid ""
 "Structured civic participation with consensus and bridge highlights per "
 "theme."
 msgstr ""
+"Participación cívica estructurada con destacados de consenso y puentes por "
+"tema."
 
 #: app/templates/programmes/journey_recap.html:30
-#, fuzzy
 msgid "Journey complete"
-msgstr "¡Tema completado!"
+msgstr "Recorrido completado"
 
 #: app/templates/programmes/journey_recap.html:31
 #, python-format
 msgid "You've explored all %(total)d big questions"
-msgstr ""
+msgstr "Has explorado todas las %(total)d grandes preguntas"
 
 #: app/templates/programmes/journey_recap.html:33
 #, python-format
@@ -28762,21 +28823,23 @@ msgid ""
 "%(votes)s votes cast across %(total)d themes on %(name)s. Scroll down to see"
 " how the crowd voted and where you stand."
 msgstr ""
+"%(votes)s votos emitidos en %(total)d temas en %(name)s. Desplázate hacia "
+"abajo para ver cómo votó la multitud y dónde te encuentras."
 
 #: app/templates/programmes/journey_recap.html:37
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s — I completed the Big Questions journey"
-msgstr "Viaje de Grandes Preguntas"
+msgstr "%(name)s — Completé el recorrido de Grandes Preguntas"
 
 #: app/templates/programmes/journey_recap.html:40
 msgid "Share your recap"
-msgstr ""
+msgstr "Comparte tu resumen"
 
 #: app/templates/programmes/journey_recap.html:52
 #: app/templates/programmes/journey_recap.html:73
 #, python-format
 msgid "%(name)s — journey recap"
-msgstr ""
+msgstr "%(name)s — resumen del recorrido"
 
 #: app/templates/programmes/journey_recap.html:54
 #, python-format
@@ -28784,24 +28847,27 @@ msgid ""
 "You've fully explored %(done)s of %(total)d themes and cast %(votes)s votes "
 "in total."
 msgstr ""
+"Has explorado completamente %(done)s de %(total)d temas y emitiste %(votes)s"
+" votos en total."
 
 #: app/templates/programmes/journey_recap.html:56
 #, python-format
 msgid "Keep going — %(remaining)s theme%(plural)s to go!"
-msgstr ""
+msgstr "Sigue adelante — ¡%(remaining)s tema%(plural)s por explorar!"
 
 #: app/templates/programmes/journey_recap.html:62
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s — civic journey on Society Speaks"
-msgstr "Acerca de Society Speaks"
+msgstr "%(name)s — recorrido cívico en Society Speaks"
 
 #: app/templates/programmes/journey_recap.html:65
 msgid "Invite a friend"
-msgstr ""
+msgstr "Invita a un amigo"
 
 #: app/templates/programmes/journey_recap.html:74
 msgid "Theme-by-theme participation and where the crowd leans overall."
 msgstr ""
+"Participación tema por tema y hacia dónde se inclina la multitud en general."
 
 #: app/templates/programmes/journey_recap.html:77
 #, python-format
@@ -28810,21 +28876,25 @@ msgid ""
 "hover:underline\">Sign in</a> to see your votes alongside the crowd on every"
 " statement."
 msgstr ""
+"<a href=\"%(login_url)s\" class=\"text-primary-600 font-semibold "
+"hover:underline\">Inicia sesión</a> para ver tus votos junto a la multitud "
+"en cada declaración."
 
 #: app/templates/programmes/journey_recap.html:85
 msgid "How to read this."
-msgstr ""
+msgstr "Cómo leer esto."
 
 #: app/templates/programmes/journey_recap.html:87
 msgid ""
 "This page is <em>not</em> a single political compass — each theme has its "
 "own deliberation space."
 msgstr ""
+"Esta página <em>no</em> es una sola brújula política — cada tema tiene su "
+"propio espacio de deliberación."
 
 #: app/templates/programmes/journey_recap.html:90
-#, fuzzy
 msgid "Richer consensus maps."
-msgstr "Análisis de consenso"
+msgstr "Mapas de consenso más ricos."
 
 #: app/templates/programmes/journey_recap.html:91
 msgid ""
@@ -28832,110 +28902,105 @@ msgid ""
 "each theme. Sharing the journey brings in diverse views — which strengthens "
 "the signal for everyone."
 msgstr ""
+"El agrupamiento y la detección de puentes/divisiones mejoran conforme más "
+"personas votan en cada tema. Compartir el recorrido atrae puntos de vista "
+"diversos — lo que fortalece la señal para todos."
 
 #: app/templates/programmes/journey_recap.html:119
 #, python-format
 msgid "%(done)s/%(total)d votes"
-msgstr ""
+msgstr "%(done)s/%(total)d votos"
 
 #: app/templates/programmes/journey_recap.html:123
-#, fuzzy
 msgid "Not started"
-msgstr "Empezar"
+msgstr "No iniciado"
 
 #: app/templates/programmes/journey_recap.html:135
 #, python-format
 msgid "How %(total)d people voted"
-msgstr ""
+msgstr "Cómo %(total)d personas votaron"
 
 #: app/templates/programmes/journey_recap.html:176
 msgid "No votes yet on this theme."
-msgstr ""
+msgstr "Sin votos aún en este tema."
 
 #: app/templates/programmes/journey_recap.html:185
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d consensus point"
 msgid_plural "%(num)d consensus points"
-msgstr[0] "Análisis de consenso"
-msgstr[1] ""
+msgstr[0] "%(num)d punto de consenso"
+msgstr[1] "%(num)d puntos de consenso"
 
 #: app/templates/programmes/journey_recap.html:191
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d bridge idea"
 msgid_plural "%(num)d bridge ideas"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d idea puente"
+msgstr[1] "%(num)d ideas puente"
 
 #: app/templates/programmes/journey_recap.html:197
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d divisive point"
 msgid_plural "%(num)d divisive points"
-msgstr[0] "Nuevo Debate"
-msgstr[1] ""
+msgstr[0] "%(num)d punto divisivo"
+msgstr[1] "%(num)d puntos divisivos"
 
 #: app/templates/programmes/journey_recap.html:209
-#, fuzzy
 msgid "View consensus map"
-msgstr "Análisis de consenso"
+msgstr "Ver mapa de consenso"
 
 #: app/templates/programmes/journey_recap.html:213
-#, fuzzy
 msgid "Revisit discussion"
-msgstr "Ver discusión"
+msgstr "Revisitar la discusión"
 
 #: app/templates/programmes/journey_recap.html:219
-#, fuzzy
 msgid "Continue voting"
-msgstr "Continuar"
+msgstr "Continuar votando"
 
 #: app/templates/programmes/journey_recap.html:219
-#, fuzzy
 msgid "Start voting"
-msgstr "Empezar →"
+msgstr "Empezar a votar"
 
 #: app/templates/programmes/journey_recap.html:237
-#, fuzzy, python-format
+#, python-format
 msgid "✓ Agreed: %(num)d"
-msgstr "en desacuerdo"
+msgstr "✓ De acuerdo: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:238
-#, fuzzy, python-format
+#, python-format
 msgid "✗ Disagreed: %(num)d"
-msgstr "en desacuerdo"
+msgstr "✗ En desacuerdo: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:239
-#, fuzzy, python-format
+#, python-format
 msgid "? Unsure: %(num)d"
-msgstr "en desacuerdo"
+msgstr "? Indeciso: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:242
-#, fuzzy, python-format
+#, python-format
 msgid "%(voted)s of %(total)d statements voted"
-msgstr "Ir a las afirmaciones"
+msgstr "%(voted)s de %(total)d declaraciones votadas"
 
 #: app/templates/programmes/journey_recap.html:249
-#, fuzzy
 msgid "Your votes on each statement"
-msgstr "Ir a las afirmaciones"
+msgstr "Tus votos en cada declaración"
 
 #: app/templates/programmes/journey_recap.html:279
-#, fuzzy, python-format
+#, python-format
 msgid "Back to %(name)s"
-msgstr "¡Bienvenido de nuevo, %(name)s!"
+msgstr "Volver a %(name)s"
 
 #: app/templates/programmes/journey_recap.html:306
-#, fuzzy
 msgid "Shared ✓"
-msgstr "en desacuerdo"
+msgstr "Compartido ✓"
 
 #: app/templates/programmes/journey_recap.html:316
 msgid "Link copied ✓"
-msgstr ""
+msgstr "Enlace copiado ✓"
 
 #: app/templates/programmes/journey_recap.html:320
-#, fuzzy
 msgid "Copy this link:"
-msgstr "Enlaces rápidos"
+msgstr "Copia este enlace:"
 
 #: app/templates/programmes/list.html:2 app/templates/programmes/list.html:10
 msgid "Public Programmes"
@@ -28972,28 +29037,24 @@ msgstr "Otros programas"
 
 #: app/templates/programmes/settings.html:2
 #: app/templates/programmes/settings.html:15
-#, fuzzy
 msgid "Programme settings"
-msgstr "Configuración"
+msgstr "Configuración del programa"
 
 #: app/templates/programmes/settings.html:16
 msgid "Visibility:"
-msgstr ""
+msgstr "Visibilidad:"
 
 #: app/templates/programmes/settings.html:21
-#, fuzzy
 msgid "Archive programme"
-msgstr "Otros programas"
+msgstr "Archivar programa"
 
 #: app/templates/programmes/settings.html:26
-#, fuzzy
 msgid "Restore programme"
-msgstr "Otros programas"
+msgstr "Restaurar programa"
 
 #: app/templates/programmes/settings.html:35
-#, fuzzy
 msgid "Programme structure"
-msgstr "Programas"
+msgstr "Estructura del programa"
 
 #: app/templates/programmes/settings.html:60
 msgid ""
@@ -29001,41 +29062,43 @@ msgid ""
 "cohort assignment relies on link-sharing and cannot prevent participants "
 "from modifying the parameter."
 msgstr ""
+"Añade <code>?cohort=slug</code> a los enlaces de discusión para rastrear "
+"grupos. Nota: la asignación de cohorte depende de compartir el enlace y no "
+"puede impedir que los participantes modifiquen el parámetro."
 
 #: app/templates/programmes/settings.html:73
-#, fuzzy
 msgid "Stewards"
-msgstr "Buscar"
+msgstr "Coordinadores"
 
 #: app/templates/programmes/settings.html:82
 msgid "Pending registration"
-msgstr ""
+msgstr "Registro pendiente"
 
 #: app/templates/programmes/settings.html:84
 #: app/templates/programmes/settings.html:127
 #, python-format
 msgid "User #%(id)s"
-msgstr ""
+msgstr "Usuario #%(id)s"
 
 #: app/templates/programmes/settings.html:88
 msgid "Remove this steward?"
-msgstr ""
+msgstr "¿Eliminar este coordinador?"
 
 #: app/templates/programmes/settings.html:96
-#, fuzzy
 msgid "No stewards yet."
-msgstr "Sin afirmaciones todavía"
+msgstr "Sin coordinadores aún."
 
 #: app/templates/programmes/settings.html:112
-#, fuzzy
 msgid "Participant access"
-msgstr "Participar"
+msgstr "Acceso de participantes"
 
 #: app/templates/programmes/settings.html:114
 msgid ""
 "Use this for <strong>Invite-only</strong> programmes. Users must already "
 "have an account."
 msgstr ""
+"Utiliza esto para programas <strong>Solo por invitación</strong>. Los "
+"usuarios deben tener ya una cuenta."
 
 #: app/templates/programmes/settings.html:118
 msgid ""
@@ -29043,11 +29106,13 @@ msgid ""
 "disabled. Invite users as stewards or switch visibility to <strong>Invite-"
 "only</strong>."
 msgstr ""
+"Este programa es <strong>Privado</strong>, por lo que los invites de "
+"participantes están deshabilitados. Invita usuarios como coordinadores o "
+"cambia la visibilidad a <strong>Solo por invitación</strong>."
 
 #: app/templates/programmes/settings.html:149
-#, fuzzy
 msgid "No participant access grants yet."
-msgstr "Participantes"
+msgstr "Sin permisos de acceso de participantes aún."
 
 #: app/templates/programmes/view.html:241
 msgid "themes completed"
@@ -29070,474 +29135,460 @@ msgid "Add discussion"
 msgstr "Añadir debate"
 
 #: app/templates/programmes/workspace.html:16
-#, fuzzy
 msgid "Programmes you own, steward, or have been invited to participate in."
-msgstr "Programas que posees, administras o en los que participas"
+msgstr ""
+"Programas que posees, coordinas o en los que has sido invitado a participar."
 
 #: app/templates/programmes/workspace.html:21
-#, fuzzy
 msgid "Public catalogue"
-msgstr "Programas públicos"
+msgstr "Catálogo público"
 
 #: app/templates/programmes/workspace.html:68
-#, fuzzy
 msgid "← Previous"
-msgstr "Anterior"
+msgstr "← Anterior"
 
 #: app/templates/programmes/workspace.html:86
-#, fuzzy
 msgid ""
 "Create a programme to group discussions into a structured engagement "
 "campaign, or ask an owner to invite you as a steward or participant."
 msgstr ""
-"Los programas agrupan debates en campañas de participación estructuradas."
+"Crea un programa para agrupar discusiones en una campaña de participación "
+"estructurada, o solicita a un propietario que te invite como coordinador o "
+"participante."
 
 #: app/templates/programmes/workspace.html:95
-#, fuzzy
 msgid "Browse public catalogue"
-msgstr "Programas públicos"
+msgstr "Explorar catálogo público"
 
 #: app/templates/settings/add_api_key.html:3
 msgid "Add API Key - Settings"
-msgstr ""
+msgstr "Agregar clave API - Configuración"
 
 #: app/templates/settings/add_api_key.html:12
 #: app/templates/settings/api_keys.html:9
 #: app/templates/settings/api_keys.html:12
 msgid "API Keys"
-msgstr ""
+msgstr "Claves API"
 
 #: app/templates/settings/add_api_key.html:14
 msgid "Add Key"
-msgstr ""
+msgstr "Agregar clave"
 
 #: app/templates/settings/add_api_key.html:17
 #: app/templates/settings/api_keys.html:123
 msgid "Add API Key"
-msgstr ""
+msgstr "Agregar clave API"
 
 #: app/templates/settings/add_api_key.html:18
 msgid "Enable optional AI features with your own API key"
-msgstr ""
+msgstr "Habilita funciones de IA opcionales con tu propia clave API"
 
 #: app/templates/settings/add_api_key.html:23
 msgid "⚠️ Important"
-msgstr ""
+msgstr "⚠️ Importante"
 
 #: app/templates/settings/add_api_key.html:25
 msgid "• Your API key will be encrypted before storage"
-msgstr ""
+msgstr "• Tu clave API será encriptada antes de almacenarse"
 
 #: app/templates/settings/add_api_key.html:26
 msgid "• Keys are validated before saving"
-msgstr ""
+msgstr "• Las claves se validan antes de guardarse"
 
 #: app/templates/settings/add_api_key.html:27
 msgid "• You can disable or delete keys anytime"
-msgstr ""
+msgstr "• Puedes desactivar o eliminar claves en cualquier momento"
 
 #: app/templates/settings/add_api_key.html:28
 msgid "• Usage costs are charged by the provider (OpenAI/Anthropic)"
-msgstr ""
+msgstr "• Los costos de uso son cobrados por el proveedor (OpenAI/Anthropic)"
 
 #: app/templates/settings/add_api_key.html:38
-#, fuzzy
 msgid "Provider"
-msgstr "Tu Perfil"
+msgstr "Proveedor"
 
 #: app/templates/settings/add_api_key.html:40
 msgid "Select a provider..."
-msgstr ""
+msgstr "Selecciona un proveedor..."
 
 #: app/templates/settings/add_api_key.html:41
 msgid "OpenAI (GPT-4o-mini)"
-msgstr ""
+msgstr "OpenAI (GPT-4o-mini)"
 
 #: app/templates/settings/add_api_key.html:42
 msgid "Anthropic (Claude Haiku)"
-msgstr ""
+msgstr "Anthropic (Claude Haiku)"
 
 #: app/templates/settings/add_api_key.html:43
 msgid "Mistral (Coming Soon)"
-msgstr ""
+msgstr "Mistral (Próximamente)"
 
 #: app/templates/settings/add_api_key.html:45
 msgid "Choose which LLM provider you want to use"
-msgstr ""
+msgstr "Elige qué proveedor de LLM deseas usar"
 
 #: app/templates/settings/add_api_key.html:50
 msgid "API Key"
-msgstr ""
+msgstr "Clave API"
 
 #: app/templates/settings/add_api_key.html:53
 msgid "Your API key will be encrypted and validated before storage"
-msgstr ""
+msgstr "Tu clave API será encriptada y validada antes de almacenarse"
 
 #: app/templates/settings/add_api_key.html:60
 msgid "Validate & Save Key"
-msgstr ""
+msgstr "Validar y guardar clave"
 
 #: app/templates/settings/add_api_key.html:71
 msgid "How to Get an API Key"
-msgstr ""
+msgstr "Cómo obtener una clave API"
 
 #: app/templates/settings/add_api_key.html:75
-#, fuzzy
 msgid "OpenAI (Recommended for most users)"
-msgstr "Orden de viaje recomendado"
+msgstr "OpenAI (Recomendado para la mayoría de usuarios)"
 
 #: app/templates/settings/add_api_key.html:77
 msgid ""
 "Visit <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\" "
 "class=\"text-primary-600 hover:underline\">platform.openai.com/api-keys</a>"
 msgstr ""
+"Visita <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\" "
+"class=\"text-primary-600 hover:underline\">platform.openai.com/api-keys</a>"
 
 #: app/templates/settings/add_api_key.html:78
 msgid "Sign up or log in to your OpenAI account"
-msgstr ""
+msgstr "Regístrate o inicia sesión en tu cuenta de OpenAI"
 
 #: app/templates/settings/add_api_key.html:79
 msgid "Click \"Create new secret key\""
-msgstr ""
+msgstr "Haz clic en \"Create new secret key\""
 
 #: app/templates/settings/add_api_key.html:80
 msgid "Copy the key (it starts with \"sk-\")"
-msgstr ""
+msgstr "Copia la clave (comienza con \"sk-\")"
 
 #: app/templates/settings/add_api_key.html:81
 msgid "Paste it above and save"
-msgstr ""
+msgstr "Pégala arriba y guarda"
 
 #: app/templates/settings/add_api_key.html:83
 msgid "Estimated cost: ~$0.01-0.05 per analysis"
-msgstr ""
+msgstr "Costo estimado: ~$0.01-0.05 por análisis"
 
 #: app/templates/settings/add_api_key.html:87
 msgid "Anthropic Claude"
-msgstr ""
+msgstr "Anthropic Claude"
 
 #: app/templates/settings/add_api_key.html:89
 msgid ""
 "Visit <a href=\"https://console.anthropic.com/\" target=\"_blank\" "
 "class=\"text-primary-600 hover:underline\">console.anthropic.com</a>"
 msgstr ""
+"Visita <a href=\"https://console.anthropic.com/\" target=\"_blank\" "
+"class=\"text-primary-600 hover:underline\">console.anthropic.com</a>"
 
 #: app/templates/settings/add_api_key.html:90
-#, fuzzy
 msgid "Create an account or log in"
-msgstr "¿Ya tienes cuenta?"
+msgstr "Crea una cuenta o inicia sesión"
 
 #: app/templates/settings/add_api_key.html:91
 msgid "Go to \"API Keys\" section"
-msgstr ""
+msgstr "Ve a la sección \"API Keys\""
 
 #: app/templates/settings/add_api_key.html:92
 msgid "Generate a new API key"
-msgstr ""
+msgstr "Genera una nueva clave API"
 
 #: app/templates/settings/add_api_key.html:93
 msgid "Copy and paste it above"
-msgstr ""
+msgstr "Cópiala y pégala arriba"
 
 #: app/templates/settings/add_api_key.html:95
 msgid "Estimated cost: ~$0.01-0.03 per analysis"
-msgstr ""
+msgstr "Costo estimado: ~$0.01-0.03 por análisis"
 
 #: app/templates/settings/add_api_key.html:99
 msgid "Mistral"
-msgstr ""
+msgstr "Mistral"
 
 #: app/templates/settings/add_api_key.html:100
-#, fuzzy
 msgid "Support coming soon"
-msgstr "Opciones de idioma"
+msgstr "Soporte próximamente"
 
 #: app/templates/settings/add_api_key.html:107
 msgid "🔒 Privacy & Security"
-msgstr ""
+msgstr "🔒 Privacidad y seguridad"
 
 #: app/templates/settings/add_api_key.html:109
 msgid "• Keys are encrypted with Fernet (industry standard)"
-msgstr ""
+msgstr "• Las claves están encriptadas con Fernet (estándar de la industria)"
 
 #: app/templates/settings/add_api_key.html:110
 msgid "• Keys are never logged or transmitted in plain text"
-msgstr ""
+msgstr "• Las claves nunca se registran ni se transmiten en texto plano"
 
 #: app/templates/settings/add_api_key.html:111
 msgid "• Validation only checks if the key is active"
-msgstr ""
+msgstr "• La validación solo comprueba si la clave está activa"
 
 #: app/templates/settings/add_api_key.html:112
 msgid "• You can delete your key anytime"
-msgstr ""
+msgstr "• Puedes eliminar tu clave en cualquier momento"
 
 #: app/templates/settings/add_api_key.html:113
 msgid ""
 "• Open source: <a href=\"https://github.com/societyspeaks\" class=\"text-"
 "primary-600 hover:underline\">view the encryption code</a>"
 msgstr ""
+"• Código abierto: <a href=\"https://github.com/societyspeaks\" class=\"text-"
+"primary-600 hover:underline\">ver el código de cifrado</a>"
 
 #: app/templates/settings/api_keys.html:1
 msgid "API Keys - Settings"
-msgstr ""
+msgstr "Claves API - Configuración"
 
 #: app/templates/settings/api_keys.html:14
 msgid "Manage your LLM API keys for optional AI features"
-msgstr ""
+msgstr "Gestiona tus claves API de LLM para funciones de IA opcionales"
 
 #: app/templates/settings/api_keys.html:20
 msgid "🔐 Your Keys, Your Control"
-msgstr ""
+msgstr "🔐 Tus Claves, Tu Control"
 
 #: app/templates/settings/api_keys.html:22
 msgid "• API keys are encrypted before storage"
-msgstr ""
+msgstr "• Las claves API se cifran antes de almacenarse"
 
 #: app/templates/settings/api_keys.html:23
 msgid "• You control when AI features are used"
-msgstr ""
+msgstr "• Tú controlas cuándo se usan las funciones de IA"
 
 #: app/templates/settings/api_keys.html:24
-#, fuzzy
 msgid "• Keys are never shared with Society Speaks servers"
-msgstr "Acerca de Society Speaks"
+msgstr "• Las claves nunca se comparten con los servidores de Society Speaks"
 
 #: app/templates/settings/api_keys.html:25
 msgid "• Estimated cost: $0.01-0.05 per analysis"
-msgstr ""
+msgstr "• Costo estimado: $0.01-0.05 por análisis"
 
 #: app/templates/settings/api_keys.html:32
-#, fuzzy
 msgid "Your API Keys"
-msgstr "Tu Perfil"
+msgstr "Tus Claves API"
 
 #: app/templates/settings/api_keys.html:47
-#, fuzzy
 msgid "Inactive"
-msgstr "Activo"
+msgstr "Inactiva"
 
 #: app/templates/settings/api_keys.html:52
 msgid "Key: •••••••••••••••"
-msgstr ""
+msgstr "Clave: •••••••••••••••"
 
 #: app/templates/settings/api_keys.html:52
 msgid "Last validated:"
-msgstr ""
+msgstr "Última validación:"
 
 #: app/templates/settings/api_keys.html:64
-#, fuzzy
 msgid "Revalidate"
-msgstr "Crear"
+msgstr "Revalidar"
 
 #: app/templates/settings/api_keys.html:109
-#, fuzzy
 msgid "No API Keys Yet"
-msgstr "Sin afirmaciones todavía"
+msgstr "Sin Claves API Aún"
 
 #: app/templates/settings/api_keys.html:111
 msgid "Add an API key to unlock optional AI features"
-msgstr ""
+msgstr "Añade una clave API para desbloquear funciones de IA opcionales"
 
 #: app/templates/settings/api_keys.html:118
 msgid "Add New API Key"
-msgstr ""
+msgstr "Añadir Nueva Clave API"
 
 #: app/templates/settings/api_keys.html:129
 msgid "AI Features (Optional)"
-msgstr ""
+msgstr "Funciones de IA (Opcional)"
 
 #: app/templates/settings/api_keys.html:132
-#, fuzzy
 msgid "📝 AI Summaries"
-msgstr "Vistas de Debates"
+msgstr "📝 Resúmenes de IA"
 
 #: app/templates/settings/api_keys.html:134
 msgid "Generate human-readable summaries of consensus analysis results"
-msgstr ""
+msgstr "Genera resúmenes legibles de los resultados del análisis de consenso"
 
 #: app/templates/settings/api_keys.html:138
 msgid "🏷️ Cluster Labels"
-msgstr ""
+msgstr "🏷️ Etiquetas de Grupos"
 
 #: app/templates/settings/api_keys.html:140
 msgid "Automatically name opinion groups based on their shared beliefs"
 msgstr ""
+"Nombra automáticamente grupos de opiniones según sus creencias compartidas"
 
 #: app/templates/settings/api_keys.html:144
 msgid "🔍 Smart Deduplication"
-msgstr ""
+msgstr "🔍 Deduplicación Inteligente"
 
 #: app/templates/settings/api_keys.html:146
 msgid "Prevent similar statements using semantic analysis"
-msgstr ""
+msgstr "Evita declaraciones similares usando análisis semántico"
 
 #: app/templates/settings/api_keys.html:158
-#, fuzzy
 msgid "← Back to Settings"
-msgstr "Configuración"
+msgstr "← Volver a Configuración"
 
 #: app/templates/settings/api_keys.html:165
 msgid "Delete this API key?"
-msgstr ""
+msgstr "¿Eliminar esta clave API?"
 
 #: app/templates/settings/settings.html:2
 #: app/templates/settings/settings.html:13
-#, fuzzy
 msgid "Account Settings"
-msgstr "Configuración"
+msgstr "Configuración de Cuenta"
 
 #: app/templates/settings/settings.html:14
-#, fuzzy
 msgid "Manage your account preferences and security"
-msgstr "Gestionar preferencias"
+msgstr "Gestiona tus preferencias de cuenta y seguridad"
 
 #: app/templates/settings/settings.html:37
-#, fuzzy
 msgid "Language Preference"
-msgstr "Gestionar preferencias"
+msgstr "Preferencia de Idioma"
 
 #: app/templates/settings/settings.html:38
 msgid ""
 "Choose your preferred language for the site. Your votes are always counted "
 "on the same canonical statements regardless of language."
 msgstr ""
+"Elige tu idioma preferido para el sitio. Tus votos siempre se cuentan en las"
+" mismas declaraciones canónicas independientemente del idioma."
 
 #: app/templates/settings/settings.html:49
-#, fuzzy
 msgid "Save Language"
-msgstr "Seleccionar idioma"
+msgstr "Guardar Idioma"
 
 #: app/templates/settings/settings.html:56
-#, fuzzy
 msgid "Change Password"
-msgstr "Contraseña"
+msgstr "Cambiar Contraseña"
 
 #: app/templates/settings/settings.html:111
-#, fuzzy
 msgid "Update Password"
-msgstr "Contraseña"
+msgstr "Actualizar Contraseña"
 
 #: app/templates/settings/settings.html:118
-#, fuzzy
 msgid "Email Notifications"
-msgstr "Notificaciones"
+msgstr "Notificaciones por Correo"
 
 #: app/templates/settings/settings.html:119
 msgid "Choose which email notifications you'd like to receive."
-msgstr ""
+msgstr "Elige qué notificaciones por correo deseas recibir."
 
 #: app/templates/settings/settings.html:137
-#, fuzzy
 msgid "Enable email notifications"
-msgstr "Notificaciones"
+msgstr "Habilitar notificaciones por correo"
 
 #: app/templates/settings/settings.html:138
 msgid "Master toggle for all email notifications"
-msgstr ""
+msgstr "Control maestro para todas las notificaciones por correo"
 
 #: app/templates/settings/settings.html:152
-#, fuzzy
 msgid "New participants"
-msgstr "Participantes"
+msgstr "Nuevos participantes"
 
 #: app/templates/settings/settings.html:153
 msgid "Get notified when someone joins your discussion"
-msgstr ""
+msgstr "Recibe notificaciones cuando alguien se une a tu discusión"
 
 #: app/templates/settings/settings.html:166
-#, fuzzy
 msgid "Discussion activity"
-msgstr "Actividad de debates y alertas"
+msgstr "Actividad de discusión"
 
 #: app/templates/settings/settings.html:167
 msgid "New statements, replies, and votes in discussions you host or follow"
 msgstr ""
+"Nuevas declaraciones, respuestas y votos en discusiones que alojas o sigues"
 
 #: app/templates/settings/settings.html:180
-#, fuzzy
 msgid "Discussion updates"
-msgstr "Vistas de Debates"
+msgstr "Actualizaciones de discusión"
 
 #: app/templates/settings/settings.html:181
 msgid ""
 "When an organiser posts a &quot;what happened next&quot; update to a "
 "discussion you follow"
 msgstr ""
+"Cuando un organizador publica una actualización de \"qué pasó después\" en "
+"una discusión que sigues"
 
 #: app/templates/settings/settings.html:195
 msgid "Receive a weekly summary of discussions you're involved in"
-msgstr ""
+msgstr "Recibe un resumen semanal de las discusiones en las que participas"
 
 #: app/templates/settings/settings.html:208
-#, fuzzy
 msgid "Save Notification Preferences"
-msgstr "Gestionar preferencias"
+msgstr "Guardar preferencias de notificación"
 
 #: app/templates/settings/settings.html:216
-#, fuzzy
 msgid "Billing & Subscription"
-msgstr "Opciones de idioma"
+msgstr "Facturación y suscripción"
 
 #: app/templates/settings/settings.html:217
 msgid "Your current plan and billing details."
-msgstr ""
+msgstr "Tu plan actual y detalles de facturación."
 
 #: app/templates/settings/settings.html:235
 msgid "Cancels at period end"
-msgstr ""
+msgstr "Se cancela al final del período"
 
 #: app/templates/settings/settings.html:237
-#, fuzzy
 msgid "Free Trial"
-msgstr "Comenzar prueba gratuita"
+msgstr "Prueba gratuita"
 
 #: app/templates/settings/settings.html:245
-#, fuzzy
 msgid "Billing"
-msgstr "Gestionar Facturación"
+msgstr "Facturación"
 
 #: app/templates/settings/settings.html:247
 msgid "Annual"
-msgstr ""
+msgstr "Anual"
 
 #: app/templates/settings/settings.html:253
 msgid "Trial ends"
-msgstr ""
+msgstr "La prueba finaliza"
 
 #: app/templates/settings/settings.html:258
-#, fuzzy
 msgid "Access until"
-msgstr "País"
+msgstr "Acceso hasta"
 
 #: app/templates/settings/settings.html:263
 msgid "Next renewal"
-msgstr ""
+msgstr "Próxima renovación"
 
 #: app/templates/settings/settings.html:278
 msgid "Update payment method, download invoices, or cancel your subscription."
 msgstr ""
+"Actualiza tu método de pago, descarga facturas o cancela tu suscripción."
 
 #: app/templates/settings/settings.html:285
 #: app/templates/settings/settings.html:297
-#, fuzzy
 msgid "Delete Account"
-msgstr "¿Ya tienes cuenta?"
+msgstr "Eliminar cuenta"
 
 #: app/templates/settings/settings.html:286
 msgid ""
 "Once you delete your account, there is no going back. Please be certain."
 msgstr ""
+"Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate."
 
 #: app/templates/settings/settings.html:305
 msgid ""
 "Are you sure you want to delete your account? This action cannot be undone."
 msgstr ""
+"¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede "
+"deshacer."
 
 #: app/templates/sources/claim.html:5
-#, fuzzy, python-format
+#, python-format
 msgid "Claim %(name)s - SocietySpeaks"
-msgstr "Acerca de Society Speaks"
+msgstr "Reclamar %(name)s - SocietySpeaks"
 
 #: app/templates/sources/claim.html:6
 #, python-format
@@ -29545,53 +29596,53 @@ msgid ""
 "Request to claim %(name)s as your organization's source profile on "
 "SocietySpeaks."
 msgstr ""
+"Solicitud para reclamar %(name)s como el perfil de fuente de tu organización"
+" en SocietySpeaks."
 
 #: app/templates/sources/claim.html:15
-#, fuzzy
 msgid "Claim Source Profile"
-msgstr "Tu Perfil"
+msgstr "Reclamar perfil de fuente"
 
 #: app/templates/sources/claim.html:16
 #, python-format
 msgid "Request ownership of %(name)s"
-msgstr ""
+msgstr "Solicitar propiedad de %(name)s"
 
 #: app/templates/sources/claim.html:29
-#, fuzzy
 msgid "News Source"
-msgstr "Fuentes"
+msgstr "Fuente de noticias"
 
 #: app/templates/sources/claim.html:38
-#, fuzzy
 msgid "Claiming As"
-msgstr "Traducción pendiente"
+msgstr "Reclamando como"
 
 #: app/templates/sources/claim.html:52
-#, fuzzy
 msgid "Your organisation profile"
-msgstr "Organización"
+msgstr "Tu perfil de organización"
 
 #: app/templates/sources/claim.html:60
 msgid "What happens when you claim this source?"
-msgstr ""
+msgstr "¿Qué sucede cuando reclamas esta fuente?"
 
 #: app/templates/sources/claim.html:66
 msgid "Your claim will be reviewed by our admin team"
-msgstr ""
+msgstr "Tu reclamación será revisada por nuestro equipo de administración"
 
 #: app/templates/sources/claim.html:72
 msgid ""
 "Once approved, your organisation profile branding will appear on this source"
 " page"
 msgstr ""
+"Una vez aprobada, la marca de tu perfil de organización aparecerá en esta "
+"página de fuente"
 
 #: app/templates/sources/claim.html:78
 msgid "A verified badge will be displayed on the source profile"
-msgstr ""
+msgstr "Se mostrará un distintivo verificado en el perfil de la fuente"
 
 #: app/templates/sources/claim.html:84
 msgid "All discussions sourced from your content will be showcased"
-msgstr ""
+msgstr "Todas las discusiones originadas en tu contenido se mostrarán"
 
 #: app/templates/sources/claim.html:96
 #, python-format
@@ -29599,700 +29650,677 @@ msgid ""
 "By submitting this claim, you confirm that you are authorized to represent "
 "%(name)s. False claims may result in account suspension."
 msgstr ""
+"Al enviar esta reclamación, confirmas que estás autorizado para representar "
+"%(name)s. Las reclamaciones falsas pueden resultar en la suspensión de la "
+"cuenta."
 
 #: app/templates/sources/claim.html:114
-#, fuzzy
 msgid "Submit Claim Request"
-msgstr "Añadir argumento"
+msgstr "Enviar solicitud de reclamación"
 
 #: app/templates/sources/index.html:9
 msgid ""
 "Explore news sources and podcasts on SocietySpeaks. Discover discussions "
 "from your favorite media outlets."
 msgstr ""
+"Explora fuentes de noticias y podcasts en SocietySpeaks. Descubre "
+"discusiones de tus medios favoritos."
 
 #: app/templates/sources/index.html:13
 msgid "news sources, podcasts, media outlets, discussions, civic discourse"
 msgstr ""
+"fuentes de noticias, podcasts, medios de comunicación, discusiones, diálogo "
+"cívico"
 
 #: app/templates/sources/index.html:22
 msgid "Browse news sources and podcasts on SocietySpeaks"
-msgstr ""
+msgstr "Explora fuentes de noticias y podcasts en SocietySpeaks"
 
 #: app/templates/sources/index.html:45
 msgid "Explore discussions from newspapers, podcasts, and media outlets"
-msgstr ""
+msgstr "Descubre discusiones de periódicos, podcasts y medios de comunicación"
 
 #: app/templates/sources/index.html:108
 msgid "Newspapers"
-msgstr ""
+msgstr "Periódicos"
 
 #: app/templates/sources/index.html:111
 msgid "Magazines"
-msgstr ""
+msgstr "Revistas"
 
 #: app/templates/sources/index.html:114
 msgid "Broadcasters"
-msgstr ""
+msgstr "Emisoras"
 
 #: app/templates/sources/index.html:140
 msgid "Political Leaning"
-msgstr ""
+msgstr "Inclinación Política"
 
 #: app/templates/sources/index.html:146
 msgid "All Leanings"
-msgstr ""
+msgstr "Todas las Inclinaciones"
 
 #: app/templates/sources/index.html:169
 msgid "Name (A-Z)"
-msgstr ""
+msgstr "Nombre (A-Z)"
 
 #: app/templates/sources/index.html:172
-#, fuzzy
 msgid "Most Discussions"
-msgstr "Últimos debates"
+msgstr "Más Discusiones"
 
 #: app/templates/sources/index.html:175
-#, fuzzy
 msgid "Recently Updated"
-msgstr "Actualizaciones Recientes"
+msgstr "Actualizado Recientemente"
 
 #: app/templates/sources/index.html:267
 #: app/templates/sources/view_source.html:81
 msgid "Broadcaster"
-msgstr ""
+msgstr "Emisora"
 
 #: app/templates/sources/index.html:437
 #, python-format
 msgid "No sources match \"%(search)s\". Try adjusting your filters."
 msgstr ""
+"No hay fuentes que coincidan con \"%(search)s\". Intenta ajustar tus "
+"filtros."
 
 #: app/templates/sources/index.html:437
 msgid "No sources match your current filters."
-msgstr ""
+msgstr "No hay fuentes que coincidan con tus filtros actuales."
 
 #: app/templates/sources/view_source.html:7
 #, python-format
 msgid "Explore discussions sourced from %(name)s. "
-msgstr ""
+msgstr "Explora discusiones de %(name)s. "
 
 #: app/templates/sources/view_source.html:7
 msgid "View civic discussions and engagement insights."
-msgstr ""
+msgstr "Ver discusiones cívicas e información sobre participación."
 
 #: app/templates/sources/view_source.html:8
-#, fuzzy
 msgid "discussions, civic discourse"
-msgstr "Vistas de Debates"
+msgstr "discusiones, diálogo cívico"
 
 #: app/templates/sources/view_source.html:12
 #, python-format
 msgid "%(name)s on SocietySpeaks"
-msgstr ""
+msgstr "%(name)s en SocietySpeaks"
 
 #: app/templates/sources/view_source.html:13
 #, python-format
 msgid "Explore discussions sourced from %(name)s"
-msgstr ""
+msgstr "Explora discusiones de %(name)s"
 
 #: app/templates/sources/view_source.html:58
 msgid "Verified Source"
-msgstr ""
+msgstr "Fuente Verificada"
 
 #: app/templates/sources/view_source.html:155
-#, fuzzy
 msgid "Claim Pending"
-msgstr "Traducción pendiente"
+msgstr "Reclamación Pendiente"
 
 #: app/templates/sources/view_source.html:163
 msgid "Claim This Source"
-msgstr ""
+msgstr "Reclamar Esta Fuente"
 
 #: app/templates/sources/view_source.html:168
-#, fuzzy
 msgid "Create Profile to Claim"
-msgstr "Crear perfil"
+msgstr "Crear Perfil para Reclamar"
 
 #: app/templates/sources/view_source.html:234
 msgid "Engagement Insights"
-msgstr ""
+msgstr "Información de Participación"
 
 #: app/templates/sources/view_source.html:236
 msgid ""
 "Engagement Score: measures discussion activity relative to time on platform"
 msgstr ""
+"Puntuación de Participación: mide la actividad de discusión en relación al "
+"tiempo en la plataforma"
 
 #: app/templates/sources/view_source.html:241
-#, fuzzy
 msgid "score"
-msgstr "Fuentes"
+msgstr "puntuación"
 
 #: app/templates/sources/view_source.html:256
-#, fuzzy
 msgid "Total Votes"
-msgstr "votos en total"
+msgstr "Votos Totales"
 
 #: app/templates/sources/view_source.html:261
-#, fuzzy
 msgid "Avg Opinion Groups"
-msgstr "Grupos de opinión"
+msgstr "Grupos de Opinión Promedio"
 
 #: app/templates/sources/view_source.html:266
-#, fuzzy
 msgid "Articles"
-msgstr "Participar"
+msgstr "Artículos"
 
 #: app/templates/sources/view_source.html:276
 #, python-format
 msgid "Discussions from %(name)s"
-msgstr ""
+msgstr "Discusiones de %(name)s"
 
 #: app/templates/sources/view_source.html:334
 #, python-format
 msgid "Discussions sourced from %(name)s will appear here."
-msgstr ""
+msgstr "Las discusiones de %(name)s aparecerán aquí."
 
 #: app/templates/trending/articles.html:3
 msgid "Articles - Trending Topics"
-msgstr ""
+msgstr "Artículos - Temas Tendencia"
 
 #: app/templates/trending/articles.html:8
-#, fuzzy
 msgid "Back to Dashboard"
-msgstr "Panel"
+msgstr "Volver al Panel"
 
 #: app/templates/trending/articles.html:13
 msgid "Fetched Articles"
-msgstr ""
+msgstr "Artículos Obtenidos"
 
 #: app/templates/trending/articles.html:14
 #, python-format
 msgid "%(total)d articles"
-msgstr ""
+msgstr "%(total)d artículos"
 
 #: app/templates/trending/articles.html:14
 msgid "(filtered)"
-msgstr ""
+msgstr "(filtrado)"
 
 #: app/templates/trending/articles.html:19
 msgid "Score Unscored Articles"
-msgstr ""
+msgstr "Calificar Artículos Sin Puntuación"
 
 #: app/templates/trending/articles.html:29
 msgid "Search titles and summaries..."
-msgstr ""
+msgstr "Buscar títulos y resúmenes..."
 
 #: app/templates/trending/articles.html:35
-#, fuzzy
 msgid "All Sources"
-msgstr "Fuentes"
+msgstr "Todas las Fuentes"
 
 #: app/templates/trending/articles.html:45
 #, python-format
 msgid "High Relevance (70%%+)"
-msgstr ""
+msgstr "Alta Relevancia (70%%+)"
 
 #: app/templates/trending/articles.html:46
 #, python-format
 msgid "Medium Relevance (40%%+)"
-msgstr ""
+msgstr "Relevancia Media (40%%+)"
 
 #: app/templates/trending/articles.html:47
 #, python-format
 msgid "Low Relevance (under 40%%)"
-msgstr ""
+msgstr "Baja Relevancia (menos de 40%%)"
 
 #: app/templates/trending/articles.html:48
 #: app/templates/trending/articles.html:141
-#, fuzzy
 msgid "Unscored"
-msgstr "no estoy seguro"
+msgstr "Sin Puntuación"
 
 #: app/templates/trending/articles.html:49
-#, fuzzy
 msgid "Scored"
-msgstr "Fuentes"
+msgstr "Puntuado"
 
 #: app/templates/trending/articles.html:56
-#, fuzzy
 msgid "Filter"
-msgstr "Aplicar filtros"
+msgstr "Filtrar"
 
 #: app/templates/trending/articles.html:66
 msgid "Filtering by keyword:"
-msgstr ""
+msgstr "Filtrando por palabra clave:"
 
 #: app/templates/trending/articles.html:76
-#, fuzzy
 msgid "Recent Articles"
-msgstr "Actualizaciones Recientes"
+msgstr "Artículos Recientes"
 
 #: app/templates/trending/articles.html:78
 msgid "0 selected"
-msgstr ""
+msgstr "0 seleccionados"
 
 #: app/templates/trending/articles.html:82
 msgid "Score Selected"
-msgstr ""
+msgstr "Puntuación de Seleccionados"
 
 #: app/templates/trending/articles.html:87
-#, fuzzy
 msgid "Create Topic"
-msgstr "Crear perfil"
+msgstr "Crear Tema"
 
 #: app/templates/trending/articles.html:112
 msgid "Unknown"
-msgstr ""
+msgstr "Desconocido"
 
 #: app/templates/trending/articles.html:114
 #, python-format
 msgid "Published: %(date)s"
-msgstr ""
+msgstr "Publicado: %(date)s"
 
 #: app/templates/trending/articles.html:116
 #, python-format
 msgid "Fetched: %(date)s"
-msgstr ""
+msgstr "Obtenido: %(date)s"
 
 #: app/templates/trending/articles.html:126
 msgid ""
 "Relevance: How valuable for civic discussion (policy, society, debates)"
 msgstr ""
+"Relevancia: Valor para la deliberación cívica (política, sociedad, debates)"
 
 #: app/templates/trending/articles.html:133
 msgid "relevance"
-msgstr ""
+msgstr "relevancia"
 
 #: app/templates/trending/articles.html:146
 msgid "Clickbait risk: Higher = more sensational headlines"
-msgstr ""
+msgstr "Riesgo de sensacionalismo: Mayor = titulares más sensacionalistas"
 
 #: app/templates/trending/articles.html:151
 msgid "Low clickbait"
-msgstr ""
+msgstr "Bajo sensacionalismo"
 
 #: app/templates/trending/articles.html:151
 msgid "Med clickbait"
-msgstr ""
+msgstr "Medio sensacionalismo"
 
 #: app/templates/trending/articles.html:151
 msgid "High clickbait"
-msgstr ""
+msgstr "Alto sensacionalismo"
 
 #: app/templates/trending/articles.html:161
 msgid "Promote to Topic"
-msgstr ""
+msgstr "Promover a Tema"
 
 #: app/templates/trending/articles.html:195
 msgid "No articles found."
-msgstr ""
+msgstr "No se encontraron artículos."
 
 #: app/templates/trending/articles.html:197
 msgid "Try adjusting your filters."
-msgstr ""
+msgstr "Intenta ajustar tus filtros."
 
 #: app/templates/trending/articles.html:199
 msgid "Run the pipeline to fetch articles from news sources."
-msgstr ""
+msgstr "Ejecuta el pipeline para obtener artículos de fuentes de noticias."
 
 #: app/templates/trending/articles.html:217
-#, fuzzy
 msgid "selected"
-msgstr "Seleccionar idioma"
+msgstr "seleccionados"
 
 #: app/templates/trending/dashboard.html:3
 msgid "Trending Topics - Admin"
-msgstr ""
+msgstr "Temas en Tendencia - Admin"
 
 #: app/templates/trending/dashboard.html:9
 msgid ""
 "News-to-Deliberation Compiler - Manage trending topics from curated news "
 "sources"
 msgstr ""
+"Compilador de Noticias a Deliberación - Gestiona temas en tendencia de "
+"fuentes de noticias curadas"
 
 #: app/templates/trending/dashboard.html:14
 msgid "Pending Review"
-msgstr ""
+msgstr "Pendiente de Revisión"
 
 #: app/templates/trending/dashboard.html:18
 #: app/templates/trending/dashboard.html:254
-#, fuzzy
 msgid "Published"
-msgstr "Para editores"
+msgstr "Publicado"
 
 #: app/templates/trending/dashboard.html:22
-#, fuzzy
 msgid "Articles (24h)"
-msgstr "Participar"
+msgstr "Artículos (24h)"
 
 #: app/templates/trending/dashboard.html:26
-#, fuzzy
 msgid "Active Sources"
-msgstr "Fuentes"
+msgstr "Fuentes Activas"
 
 #: app/templates/trending/dashboard.html:34
 msgid "Social Media Posting Status"
-msgstr ""
+msgstr "Estado de Publicación en Redes Sociales"
 
 #: app/templates/trending/dashboard.html:46
 #: app/templates/trending/dashboard.html:64
-#, fuzzy
 msgid "Configured"
-msgstr "Continuar"
+msgstr "Configurado"
 
 #: app/templates/trending/dashboard.html:48
 msgid "Not Configured"
-msgstr ""
+msgstr "No Configurado"
 
 #: app/templates/trending/dashboard.html:52
 #: app/templates/trending/dashboard.html:70
 msgid "Handle:"
-msgstr ""
+msgstr "Usuario:"
 
 #: app/templates/trending/dashboard.html:62
 msgid "X (Twitter)"
-msgstr ""
+msgstr "X (Twitter)"
 
 #: app/templates/trending/dashboard.html:66
 msgid "Awaiting Setup"
-msgstr ""
+msgstr "Esperando Configuración"
 
 #: app/templates/trending/dashboard.html:74
-#, fuzzy
 msgid "Today:"
-msgstr "Diariamente"
+msgstr "Hoy:"
 
 #: app/templates/trending/dashboard.html:76
 #, python-format
 msgid "%(used)s/%(limit)s posts"
-msgstr ""
+msgstr "%(used)s/%(limit)s publicaciones"
 
 #: app/templates/trending/dashboard.html:80
 msgid "This Month:"
-msgstr ""
+msgstr "Este Mes:"
 
 #: app/templates/trending/dashboard.html:97
 #, python-format
 msgid "⚠️ Approaching monthly limit (%(remaining)s posts remaining)"
 msgstr ""
+"⚠️ Acercándose al límite mensual (%(remaining)s publicaciones restantes)"
 
 #: app/templates/trending/dashboard.html:103
 msgid ""
 "Add X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET to "
 "environment variables."
 msgstr ""
+"Añade X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET a las "
+"variables de entorno."
 
 #: app/templates/trending/dashboard.html:116
 msgid "Run Pipeline Now"
-msgstr ""
+msgstr "Ejecutar Pipeline Ahora"
 
 #: app/templates/trending/dashboard.html:122
 msgid "Process Pending Topics"
-msgstr ""
+msgstr "Procesar Temas Pendientes"
 
 #: app/templates/trending/dashboard.html:126
-#, fuzzy
 msgid "View Articles"
-msgstr "Participar"
+msgstr "Ver Artículos"
 
 #: app/templates/trending/dashboard.html:129
-#, fuzzy
 msgid "Manage Sources"
-msgstr "Fuentes"
+msgstr "Gestionar Fuentes"
 
 #: app/templates/trending/dashboard.html:132
 msgid ""
 "This will clean promotional content from all article summaries and topic "
 "descriptions. Continue?"
 msgstr ""
+"Esto eliminará contenido promocional de todos los resúmenes de artículos y "
+"descripciones de temas. ¿Continuar?"
 
 #: app/templates/trending/dashboard.html:135
-#, fuzzy
 msgid "Clean Summaries"
-msgstr "Leer más"
+msgstr "Resúmenes Limpios"
 
 #: app/templates/trending/dashboard.html:142
 msgid "Review Queue"
-msgstr ""
+msgstr "Cola de Revisión"
 
 #: app/templates/trending/dashboard.html:155
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d source"
 msgid_plural "%(num)d sources"
-msgstr[0] "Fuentes"
-msgstr[1] ""
+msgstr[0] "%(num)d fuente"
+msgstr[1] "%(num)d fuentes"
 
 #: app/templates/trending/dashboard.html:157
 msgid "Civic:"
-msgstr ""
+msgstr "Cívico:"
 
 #: app/templates/trending/dashboard.html:160
 #: app/templates/trending/topic_detail.html:86
 msgid "Quality:"
-msgstr ""
+msgstr "Calidad:"
 
 #: app/templates/trending/dashboard.html:163
 msgid "RISK:"
-msgstr ""
+msgstr "RIESGO:"
 
 #: app/templates/trending/dashboard.html:163
-#, fuzzy
 msgid "Flagged"
-msgstr "Idioma"
+msgstr "Marcado"
 
 #: app/templates/trending/dashboard.html:176
 msgid "Auto-Publish Eligible"
-msgstr ""
+msgstr "Apto para Publicación Automática"
 
 #: app/templates/trending/dashboard.html:182
-#, fuzzy
 msgid "Created:"
-msgstr "Crear"
+msgstr "Creado:"
 
 #: app/templates/trending/dashboard.html:190
 #, python-format
 msgid "Showing %(count)d of %(total)d pending topics"
-msgstr ""
+msgstr "Mostrando %(count)d de %(total)d temas pendientes"
 
 #: app/templates/trending/dashboard.html:213
 msgid "No topics pending review."
-msgstr ""
+msgstr "Sin temas pendientes de revisión."
 
 #: app/templates/trending/dashboard.html:214
 msgid "Click \"Run Pipeline Now\" to fetch and process new articles."
 msgstr ""
+"Haz clic en \"Ejecutar Pipeline Ahora\" para obtener y procesar nuevos "
+"artículos."
 
 #: app/templates/trending/dashboard.html:222
 msgid "Trending in Premium Sources"
-msgstr ""
+msgstr "Tendencias en Fuentes Premium"
 
 #: app/templates/trending/dashboard.html:223
 msgid ""
 "Topics being discussed by The Economist, FT, UnHerd, podcasts, etc. Click to"
 " filter articles."
 msgstr ""
+"Temas discutidos por The Economist, FT, UnHerd, podcasts, etc. Haz clic para"
+" filtrar artículos."
 
 #: app/templates/trending/dashboard.html:241
-#, fuzzy
 msgid "All Topics Summary"
-msgstr "Todos los temas"
+msgstr "Resumen de Todos los Temas"
 
 #: app/templates/trending/dashboard.html:258
 msgid "Merged"
-msgstr ""
+msgstr "Fusionado"
 
 #: app/templates/trending/dashboard.html:262
-#, fuzzy
 msgid "Discarded"
-msgstr "en desacuerdo"
+msgstr "Descartado"
 
 #: app/templates/trending/sources.html:3
 msgid "Manage News Sources - Trending Topics"
-msgstr ""
+msgstr "Gestionar Fuentes de Noticias - Temas Tendencia"
 
 #: app/templates/trending/sources.html:8
 #: app/templates/trending/topic_detail.html:8
-#, fuzzy
 msgid "← Back to Dashboard"
-msgstr "Panel"
+msgstr "← Volver al Panel"
 
 #: app/templates/trending/sources.html:11
-#, fuzzy
 msgid "Manage News Sources"
-msgstr "Fuentes"
+msgstr "Gestionar Fuentes de Noticias"
 
 #: app/templates/trending/sources.html:15
-#, fuzzy
 msgid "Add New Source"
-msgstr "Fuentes"
+msgstr "Agregar Nueva Fuente"
 
 #: app/templates/trending/sources.html:22
 msgid "e.g., Financial Times"
-msgstr ""
+msgstr "p. ej., Financial Times"
 
 #: app/templates/trending/sources.html:26
-#, fuzzy
 msgid "Source Type"
-msgstr "Fuentes"
+msgstr "Tipo de Fuente"
 
 #: app/templates/trending/sources.html:28
 msgid "RSS Feed"
-msgstr ""
+msgstr "Feed RSS"
 
 #: app/templates/trending/sources.html:29
 msgid "Guardian API"
-msgstr ""
+msgstr "Guardian API"
 
 #: app/templates/trending/sources.html:35
 msgid "Feed URL / API Endpoint"
-msgstr ""
+msgstr "URL del Feed / Punto Final de API"
 
 #: app/templates/trending/sources.html:40
 msgid "Reputation Score (0-1)"
-msgstr ""
+msgstr "Puntuación de Reputación (0-1)"
 
 #: app/templates/trending/sources.html:46
-#, fuzzy
 msgid "Add Source"
-msgstr "Fuentes"
+msgstr "Agregar Fuente"
 
 #: app/templates/trending/sources.html:53
-#, fuzzy
 msgid "Current Sources"
-msgstr "Fuentes"
+msgstr "Fuentes Actuales"
 
 #: app/templates/trending/sources.html:61
 msgid "Reputation:"
-msgstr ""
+msgstr "Reputación:"
 
 #: app/templates/trending/sources.html:65
 msgid "Last fetched:"
-msgstr ""
+msgstr "Última obtención:"
 
 #: app/templates/trending/sources.html:67
 msgid "Never fetched"
-msgstr ""
+msgstr "Nunca obtenido"
 
 #: app/templates/trending/sources.html:70
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d error"
 msgid_plural "%(num)d errors"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d error"
+msgstr[1] "%(num)d errores"
 
 #: app/templates/trending/sources.html:86
 msgid "Delete this source?"
-msgstr ""
+msgstr "¿Eliminar esta fuente?"
 
 #: app/templates/trending/sources.html:94
 msgid "No sources configured. Add your first source above."
-msgstr ""
+msgstr "Sin fuentes configuradas. Agrega tu primera fuente arriba."
 
 #: app/templates/trending/topic_detail.html:32
-#, fuzzy
 msgid "Civic Score"
-msgstr "Fuentes"
+msgstr "Puntuación Cívica"
 
 #: app/templates/trending/topic_detail.html:38
 msgid "Quality Score"
-msgstr ""
+msgstr "Puntuación de Calidad"
 
 #: app/templates/trending/topic_detail.html:44
 msgid "Risk Flag"
-msgstr ""
+msgstr "Bandera de Riesgo"
 
 #: app/templates/trending/topic_detail.html:46
 msgid "Yes"
-msgstr ""
+msgstr "Sí"
 
 #: app/templates/trending/topic_detail.html:53
 msgid "Risk Reason"
-msgstr ""
+msgstr "Motivo del Riesgo"
 
 #: app/templates/trending/topic_detail.html:60
 msgid "Canonical Tags"
-msgstr ""
+msgstr "Etiquetas Canónicas"
 
 #: app/templates/trending/topic_detail.html:97
-#, fuzzy
 msgid "Seed Statements"
-msgstr "Añadir afirmación"
+msgstr "Declaraciones Semilla"
 
 #: app/templates/trending/topic_detail.html:101
-#, fuzzy
 msgid "Regenerate"
-msgstr "Generar informe"
+msgstr "Regenerar"
 
 #: app/templates/trending/topic_detail.html:121
-#, fuzzy
 msgid "No seed statements generated yet."
-msgstr "Sin afirmaciones todavía"
+msgstr "Aún no se han generado declaraciones semilla."
 
 #: app/templates/trending/topic_detail.html:128
-#, fuzzy
 msgid "Edit Topic"
-msgstr "Crear perfil"
+msgstr "Editar Tema"
 
 #: app/templates/trending/topic_detail.html:133
 msgid "Title (Neutral Framing Question)"
-msgstr ""
+msgstr "Título (Pregunta de Encuadre Neutral)"
 
 #: app/templates/trending/topic_detail.html:143
-#, fuzzy
 msgid "Update Topic"
-msgstr "Crear perfil"
+msgstr "Actualizar Tema"
 
 #: app/templates/trending/topic_detail.html:157
-#, fuzzy
 msgid "Publish as Discussion"
-msgstr "Tus Debates"
+msgstr "Publicar como Discusión"
 
 #: app/templates/trending/topic_detail.html:164
-#, fuzzy
 msgid "Rescore Topic"
-msgstr "Crear perfil"
+msgstr "Puntuación de Tema"
 
 #: app/templates/trending/topic_detail.html:171
 msgid "Are you sure you want to discard this topic?"
-msgstr ""
+msgstr "¿Estás seguro de que deseas descartar este tema?"
 
 #: app/templates/trending/topic_detail.html:172
-#, fuzzy
 msgid "Discard"
-msgstr "en desacuerdo"
+msgstr "Descartar"
 
 #: app/templates/trending/topic_detail.html:177
-#, fuzzy
 msgid "Merge into Existing Discussion"
-msgstr "Unirse al debate"
+msgstr "Fusionar en Discusión Existente"
 
 #: app/templates/trending/topic_detail.html:181
-#, fuzzy
 msgid "Select a discussion..."
-msgstr "Buscar debates…"
+msgstr "Selecciona una discusión..."
 
 #: app/templates/trending/topic_detail.html:187
 msgid "Merge"
-msgstr ""
+msgstr "Fusionar"
 
 #: app/templates/trending/topic_detail.html:199
-#, fuzzy
 msgid "Published as Discussion"
-msgstr "Tus Debates"
+msgstr "Publicado como Discusión"
 
 #: app/templates/trending/topic_detail.html:202
 #, python-format
 msgid "View: %(title)s"
-msgstr ""
+msgstr "Ver: %(title)s"
 
 #: app/templates/trending/topic_detail.html:208
 msgid ""
 "This will delete the live discussion and revert the topic to the review "
 "queue. Continue?"
 msgstr ""
+"Esto eliminará la discusión en vivo y revertirá el tema a la cola de "
+"revisión. ¿Continuar?"
 
 #: app/templates/trending/topic_detail.html:209
-#, fuzzy
 msgid "Unpublish"
-msgstr "Perfil público"
+msgstr "Despublicar"
 
 #: app/templates/trending/topic_detail.html:216
 msgid "Share to Social Media"
-msgstr ""
+msgstr "Compartir en Redes Sociales"
 
 #: app/templates/trending/topic_detail.html:224
 msgid "Post to Bluesky"
-msgstr ""
+msgstr "Publicar en Bluesky"
 
 #: app/templates/trending/topic_detail.html:232
-#, fuzzy
 msgid "Share on X"
-msgstr "en desacuerdo"
+msgstr "Compartir en X"
 
 #: app/templates/trending/topic_detail.html:235
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr ""
+"Bluesky publica automáticamente. X se abre en una pestaña nueva con texto "
+"prellenado."
 
 #~ msgid "Claim"
 #~ msgstr "Afirmación"
