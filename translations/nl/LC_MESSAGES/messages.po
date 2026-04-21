@@ -28092,7 +28092,7 @@ msgstr "Aanbevolen: 1200x400px"
 #: app/templates/profiles/_form_helpers.html:57
 #, python-format
 msgid "%(label)s preview"
-msgstr ""
+msgstr "%(label)s voorvertoning"
 
 #: app/templates/profiles/_form_helpers.html:48
 #: app/templates/profiles/_form_helpers.html:59
@@ -28101,43 +28101,42 @@ msgstr ""
 #: app/templates/profiles/edit_individual_profile.html:39
 #: app/templates/profiles/edit_individual_profile.html:62
 msgid "Click to change"
-msgstr ""
+msgstr "Klik om te wijzigen"
 
 #: app/templates/profiles/_form_helpers.html:70
 msgid "Processing image..."
-msgstr ""
+msgstr "Afbeelding wordt verwerkt..."
 
 #: app/templates/profiles/_form_helpers.html:83
 #: app/templates/profiles/_form_helpers.html:122
 msgid "Adjust Image"
-msgstr ""
+msgstr "Afbeelding aanpassen"
 
 #: app/templates/profiles/_form_helpers.html:89
 msgid "Upload a clear, professional headshot or avatar"
-msgstr ""
+msgstr "Upload een duidelijke, professionele pasfoto of avatar"
 
 #: app/templates/profiles/_form_helpers.html:91
 msgid "Upload your company logo in a square format"
-msgstr ""
+msgstr "Upload uw bedrijfslogo in vierkant formaat"
 
 #: app/templates/profiles/_form_helpers.html:93
 msgid "Upload a high-quality banner image that represents your brand"
-msgstr ""
+msgstr "Upload een hoogwaardig bannerafbeelding die uw merk vertegenwoordigt"
 
 #: app/templates/profiles/_form_helpers.html:125
 msgid "Crop preview"
-msgstr ""
+msgstr "Voorvertoning bijsnijden"
 
 #: app/templates/profiles/_form_helpers.html:133
-#, fuzzy
 msgid "Apply"
-msgstr "Dagelijks"
+msgstr "Toepassen"
 
 #: app/templates/profiles/company_profile.html:7
 #: app/templates/profiles/individual_profile.html:7
 #, python-format
 msgid "%(name)s - Profile on SocietySpeaks"
-msgstr ""
+msgstr "%(name)s - Profiel op SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:8
 #, python-format
@@ -28146,47 +28145,51 @@ msgid ""
 "SocietySpeaks. Join their discussions on pressing societal issues and policy"
 " solutions."
 msgstr ""
+"Verken het profiel van %(name)s, een leider in openbaar debat op "
+"SocietySpeaks. Sluit u aan bij hun discussies over maatschappelijke kwesties"
+" en beleidsoplossingen."
 
 #: app/templates/profiles/company_profile.html:9
 #, python-format
 msgid "organisation profile, company profile, %(name)s, SocietySpeaks"
-msgstr ""
+msgstr "organisatieprofiel, bedrijfsprofiel, %(name)s, SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:18
 msgid ""
 "An organization on SocietySpeaks contributing to public discourse and "
 "meaningful change."
 msgstr ""
+"Een organisatie op SocietySpeaks die bijdraagt aan openbaar debat en "
+"betekenisvol verandering."
 
 #: app/templates/profiles/company_profile.html:45
 #: app/templates/profiles/individual_profile.html:45
 #: app/templates/sources/view_source.html:34
 #, python-format
 msgid "%(name)s banner"
-msgstr ""
+msgstr "%(name)s banner"
 
 #: app/templates/profiles/company_profile.html:59
 #, python-format
 msgid "%(name)s logo"
-msgstr ""
+msgstr "%(name)s logo"
 
 #: app/templates/profiles/company_profile.html:74
 msgid "Edit company profile"
-msgstr ""
+msgstr "Bedrijfsprofiel bewerken"
 
 #: app/templates/profiles/company_profile.html:79
 #: app/templates/profiles/edit_company_profile.html:14
 #: app/templates/profiles/edit_individual_profile.html:14
 #: app/templates/profiles/edit_individual_profile.html:17
 #: app/templates/profiles/individual_profile.html:79
-#, fuzzy
 msgid "Edit Profile"
-msgstr "Profiel aanmaken"
+msgstr "Profiel bewerken"
 
 #: app/templates/profiles/company_profile.html:84
 #, python-format
 msgid "%(name)s is driving change through public discourse on SocietySpeaks"
-msgstr ""
+msgstr "%(name)s voert verandering door via openbaar debat op SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:86
 #, python-format
@@ -28194,6 +28197,8 @@ msgid ""
 "Join %(name)s in shaping policy solutions through meaningful dialogue on "
 "SocietySpeaks.io. Be part of the conversation that matters!"
 msgstr ""
+"Werk samen met %(name)s aan beleidsoplossingen door betekenisvol dialoog op "
+"SocietySpeaks.io. Wees onderdeel van het gesprek dat ertoe doet!"
 
 #: app/templates/profiles/company_profile.html:99
 #: app/templates/profiles/individual_profile.html:99
@@ -28204,12 +28209,12 @@ msgstr "Meer lezen"
 #: app/templates/profiles/company_profile.html:136
 #: app/templates/profiles/individual_profile.html:138
 msgid "Visit Website"
-msgstr ""
+msgstr "Website bezoeken"
 
 #: app/templates/profiles/company_profile.html:138
 #: app/templates/profiles/individual_profile.html:140
 msgid "No website provided"
-msgstr ""
+msgstr "Geen website opgegeven"
 
 #: app/templates/profiles/company_profile.html:144
 #: app/templates/profiles/create_company_profile.html:45
@@ -28217,107 +28222,98 @@ msgstr ""
 #: app/templates/profiles/edit_individual_profile.html:100
 #: app/templates/profiles/individual_profile.html:146
 msgid "Social Media"
-msgstr ""
+msgstr "Sociale media"
 
 #: app/templates/profiles/company_profile.html:153
-#, fuzzy
 msgid "Active Programmes"
-msgstr "Andere programma's"
+msgstr "Actieve programma's"
 
 #: app/templates/profiles/company_profile.html:186
 #, python-format
 msgid "+%(count)d more"
-msgstr ""
+msgstr "+%(count)d meer"
 
 #: app/templates/profiles/company_profile.html:191
 msgid "Join the dialogue"
-msgstr ""
+msgstr "Sluit u aan bij het dialoog"
 
 #: app/templates/profiles/company_profile.html:203
 #, python-format
 msgid "Discussions by %(name)s"
-msgstr ""
+msgstr "Discussies van %(name)s"
 
 #: app/templates/profiles/company_profile.html:212
 #: app/templates/profiles/individual_profile.html:163
-#, fuzzy
 msgid "No discussions started yet."
-msgstr "Nog geen discussies"
+msgstr "Nog geen discussies gestart."
 
 #: app/templates/profiles/create_company_profile.html:30
 #: app/templates/profiles/create_individual_profile.html:30
 msgid "Choose Banner Image"
-msgstr ""
+msgstr "Kies bannerafbeelding"
 
 #: app/templates/profiles/create_company_profile.html:31
-#, fuzzy
 msgid "Choose Company Logo"
-msgstr "Bedrijfslogo"
+msgstr "Kies bedrijfslogo"
 
 #: app/templates/profiles/create_company_profile.html:60
 #: app/templates/profiles/select_profile_type.html:145
-#, fuzzy
 msgid "Create Organisation Profile"
-msgstr "Profiel aanmaken"
+msgstr "Organisatieprofiel maken"
 
 #: app/templates/profiles/create_company_profile.html:77
 msgid "Please upload a valid image file (JPG, JPEG, or PNG)"
-msgstr ""
+msgstr "Upload alstublieft een geldig afbeeldingsbestand (JPG, JPEG of PNG)"
 
 #: app/templates/profiles/create_company_profile.html:82
 msgid "File size should not exceed 5MB"
-msgstr ""
+msgstr "Bestandsgrootte mag niet groter zijn dan 5MB"
 
 #: app/templates/profiles/create_company_profile.html:98
 msgid "Please enter your company name"
-msgstr ""
+msgstr "Voer alstublieft uw bedrijfsnaam in"
 
 #: app/templates/profiles/create_individual_profile.html:31
 msgid "Choose Profile Picture"
-msgstr ""
+msgstr "Kies profielfoto"
 
 #: app/templates/profiles/create_individual_profile.html:43
-#, fuzzy
 msgid "Social Links"
-msgstr "Snelle links"
+msgstr "Socialemedialinks"
 
 #: app/templates/profiles/create_individual_profile.html:73
-#, fuzzy
 msgid "Please enter your full name"
-msgstr "Verifieer je e-mailadres"
+msgstr "Voer alstublieft uw volledige naam in"
 
 #: app/templates/profiles/edit_company_profile.html:11
 #: app/templates/profiles/edit_individual_profile.html:11
-#, fuzzy
 msgid "Profile"
-msgstr "Uw Profiel"
+msgstr "Profiel"
 
 #: app/templates/profiles/edit_company_profile.html:17
-#, fuzzy
 msgid "Edit Organisation Profile"
-msgstr "Organisatie"
+msgstr "Organisatieprofiel bewerken"
 
 #: app/templates/profiles/edit_company_profile.html:27
 #: app/templates/profiles/edit_company_profile.html:38
-#, fuzzy
 msgid "Company Logo"
 msgstr "Bedrijfslogo"
 
 #: app/templates/profiles/edit_company_profile.html:44
 msgid "Click to upload a new company logo"
-msgstr ""
+msgstr "Klik om een nieuw bedrijfslogo te uploaden"
 
 #: app/templates/profiles/edit_company_profile.html:51
 #: app/templates/profiles/edit_company_profile.html:61
 #: app/templates/profiles/edit_individual_profile.html:50
 #: app/templates/profiles/edit_individual_profile.html:60
 msgid "Banner Image"
-msgstr ""
+msgstr "Bannersafbeelding"
 
 #: app/templates/profiles/edit_company_profile.html:67
 #: app/templates/profiles/edit_individual_profile.html:66
 msgid "Click to upload a new banner image"
-msgstr ""
+msgstr "Klik om een nieuwe bannersafbeelding te uploaden"
 
 #: app/templates/profiles/edit_company_profile.html:97
 msgid ""
@@ -28325,16 +28321,19 @@ msgid ""
 "address, a generic inbox (e.g. hello@…), or leave it blank to hide contact "
 "email entirely. This is separate from your login email."
 msgstr ""
+"Dit e-mailadres wordt openbaar op uw profiel. U kunt uw eigen adres "
+"gebruiken, een generiek adres (bijv. hello@…) of het leeg laten om het "
+"contactadres volledig verborgen te houden. Dit is gescheiden van uw "
+"inloggegevens."
 
 #: app/templates/profiles/edit_individual_profile.html:27
 #: app/templates/profiles/edit_individual_profile.html:37
-#, fuzzy
 msgid "Profile Picture"
-msgstr "Profiel Weergaven"
+msgstr "Profielfoto"
 
 #: app/templates/profiles/edit_individual_profile.html:43
 msgid "Click to upload a new profile picture"
-msgstr ""
+msgstr "Klik om een nieuwe profielfoto te uploaden"
 
 #: app/templates/profiles/individual_profile.html:8
 #, python-format
@@ -28342,30 +28341,33 @@ msgid ""
 "Explore the profile of %(name)s, who is actively shaping public discourse on"
 " SocietySpeaks. Join %(name)s in discussions on important societal issues."
 msgstr ""
+"Verken het profiel van %(name)s, die actief het publieke debat vormgeeft op "
+"SocietySpeaks. Sluit u aan bij %(name)s in discussies over belangrijke "
+"maatschappelijke kwesties."
 
 #: app/templates/profiles/individual_profile.html:9
 #, python-format
 msgid "public discourse, %(name)s, SocietySpeaks"
-msgstr ""
+msgstr "publiek debat, %(name)s, SocietySpeaks"
 
 #: app/templates/profiles/individual_profile.html:18
 msgid "Member on SocietySpeaks contributing to public discourse."
-msgstr ""
+msgstr "Lid op SocietySpeaks dat bijdraagt aan het publieke debat."
 
 #: app/templates/profiles/individual_profile.html:59
 #, python-format
 msgid "%(name)s profile photo"
-msgstr ""
+msgstr "%(name)s profielfoto"
 
 #: app/templates/profiles/individual_profile.html:74
-#, fuzzy
 msgid "Edit individual profile"
-msgstr "Individu"
+msgstr "Individueel profiel bewerken"
 
 #: app/templates/profiles/individual_profile.html:84
 #, python-format
 msgid "%(name)s is shaping the future of public discourse on SocietySpeaks"
 msgstr ""
+"%(name)s vormgeeft de toekomst van het publieke debat op SocietySpeaks"
 
 #: app/templates/profiles/individual_profile.html:86
 #, python-format
@@ -28373,81 +28375,82 @@ msgid ""
 "Join %(name)s in tackling society's biggest challenges through nuanced "
 "debate and real policy solutions on SocietySpeaks.io. Your voice matters!"
 msgstr ""
+"Sluit u aan bij %(name)s in het aanpakken van de grootste maatschappelijke "
+"uitdagingen via genuanceerd debat en echte beleidsoplossingen op "
+"SocietySpeaks.io. Uw stem telt!"
 
 #: app/templates/profiles/individual_profile.html:129
 msgid "No email provided"
-msgstr ""
+msgstr "Geen e-mailadres opgegeven"
 
 #: app/templates/profiles/individual_profile.html:154
-#, fuzzy
 msgid "Discussions Started"
-msgstr "Discussies"
+msgstr "Discussies gestart"
 
 #: app/templates/profiles/select_profile_type.html:22
-#, fuzzy
 msgid "Account"
-msgstr "Land"
+msgstr "Account"
 
 #: app/templates/profiles/select_profile_type.html:30
-#, fuzzy
 msgid "Profile Type"
-msgstr "Profiel Weergaven"
+msgstr "Profieltype"
 
 #: app/templates/profiles/select_profile_type.html:48
-#, fuzzy
 msgid "Choose Your Profile Type"
-msgstr "Uw Profiel"
+msgstr "Kies uw profieltype"
 
 #: app/templates/profiles/select_profile_type.html:49
 msgid "Select the type of profile that best represents you on SocietySpeaks"
 msgstr ""
+"Selecteer het profieltype dat u het beste vertegenwoordigt op SocietySpeaks"
 
 #: app/templates/profiles/select_profile_type.html:70
 msgid ""
 "Perfect for citizens, activists, and individuals who want to participate in "
 "community discussions."
 msgstr ""
+"Perfect voor burgers, activisten en personen die aan gemeenschapsdiscussies "
+"willen deelnemen."
 
 #: app/templates/profiles/select_profile_type.html:78
 msgid "Share your personal perspective"
-msgstr ""
+msgstr "Deel uw persoonlijk perspectief"
 
 #: app/templates/profiles/select_profile_type.html:84
-#, fuzzy
 msgid "Join community discussions"
-msgstr "Meedoen aan discussie"
+msgstr "Neem deel aan gemeenschapsdiscussies"
 
 #: app/templates/profiles/select_profile_type.html:90
 msgid "Build your personal brand"
-msgstr ""
+msgstr "Bouw uw persoonlijk merk op"
 
 #: app/templates/profiles/select_profile_type.html:97
-#, fuzzy
 msgid "Create Individual Profile"
-msgstr "Profiel aanmaken"
+msgstr "Individueel profiel maken"
 
 #: app/templates/profiles/select_profile_type.html:118
 msgid ""
 "Ideal for businesses, organisations, governments, and institutions looking "
 "to engage with their community."
 msgstr ""
+"Ideaal voor bedrijven, organisaties, overheden en instellingen die met hun "
+"gemeenschap willen communiceren."
 
 #: app/templates/profiles/select_profile_type.html:126
 msgid "Official organization presence"
-msgstr ""
+msgstr "Officiële organisatiepresentie"
 
 #: app/templates/profiles/select_profile_type.html:132
-#, fuzzy
 msgid "Host community discussions"
-msgstr "Een discussie starten"
+msgstr "Organiseer gemeenschapsdiscussies"
 
 #: app/templates/profiles/select_profile_type.html:138
 msgid "Gather community feedback"
-msgstr ""
+msgstr "Verzamel feedback van de gemeenschap"
 
 #: app/templates/profiles/select_profile_type.html:162
 msgid "Not sure which to choose?"
-msgstr ""
+msgstr "Weet u niet zeker welke u moet kiezen?"
 
 #: app/templates/profiles/select_profile_type.html:164
 msgid ""
@@ -28456,79 +28459,95 @@ msgid ""
 "institution. You can always contact our support team if you need to change "
 "your profile type later."
 msgstr ""
+"Kies een Individueel profiel als u als jezelf deelneemt, of een "
+"Organisatieprofiel als u een bedrijf, overheidsinstelling of instelling "
+"vertegenwoordigt. U kunt altijd contact opnemen met ons ondersteuningsteam "
+"als u uw profieltype later wilt wijzigen."
 
 #: app/templates/programmes/_form.html:8
 msgid "e.g. National Citizens' Dialogue on Climate"
-msgstr ""
+msgstr "bijv. Nationale burgerdialoog over klimaat"
 
 #: app/templates/programmes/_form.html:14
 msgid ""
 "A short summary shown on the programme page. Helps participants and "
 "organisers understand the purpose."
 msgstr ""
+"Een korte samenvatting die op de programmasida wordt weergegeven. Helpt "
+"deelnemers en organisatoren het doel te begrijpen."
 
 #: app/templates/programmes/_form.html:15
 msgid "Describe the purpose and goals of this programme."
-msgstr ""
+msgstr "Beschrijf het doel en de doelstellingen van dit programma."
 
 #: app/templates/programmes/_form.html:24
 msgid "Location &amp; Access"
-msgstr ""
+msgstr "Locatie en toegang"
 
 #: app/templates/programmes/_form.html:28
 msgid "Geographic Scope"
-msgstr ""
+msgstr "Geografisch bereik"
 
 #: app/templates/programmes/_form.html:29
 msgid ""
 "Where is this programme focused? Choose Country to narrow it to a specific "
 "location — this helps people find it."
 msgstr ""
+"Waar richt dit programma zich op? Kies Land om het tot een specifieke "
+"locatie in te perken — dit helpt mensen het te vinden."
 
 #: app/templates/programmes/_form.html:57
 msgid "Anyone can find and join via search and the programme catalogue."
 msgstr ""
+"Iedereen kan het via zoekopdracht en de programmamap vinden en lid worden."
 
 #: app/templates/programmes/_form.html:58
 msgid "Hidden from search — only people with the direct link can access it."
 msgstr ""
+"Verborgen in zoekopdrachten — alleen mensen met de directe link hebben "
+"toegang."
 
 #: app/templates/programmes/_form.html:59
 msgid ""
 "Hidden from search — only people you have explicitly invited can "
 "participate."
 msgstr ""
+"Verborgen in zoekopdrachten — alleen mensen die u expliciet heeft "
+"uitgenodigd kunnen deelnemen."
 
 #: app/templates/programmes/_form.html:60
 msgid ""
 "Only the programme team (owners and managers) can see this. Use while "
 "setting up."
 msgstr ""
+"Alleen het programmateam (eigenaren en managers) kan dit zien. Gebruik dit "
+"tijdens de instellingen."
 
 #: app/templates/programmes/_form.html:64
 msgid "Controls who can find and access this programme."
-msgstr ""
+msgstr "Bepaalt wie dit programma kan vinden en raadplegen."
 
 #: app/templates/programmes/_form.html:89
 msgid "Ownership"
-msgstr ""
+msgstr "Eigenaarschap"
 
 #: app/templates/programmes/_form.html:94
 msgid "Who owns this programme — your personal account or an organisation."
 msgstr ""
+"Wie is eigenaar van dit programma — uw persoonlijke account of een "
+"organisatie."
 
 #: app/templates/programmes/_form.html:124
-#, fuzzy
 msgid "Advanced"
-msgstr "Annuleren"
+msgstr "Geavanceerd"
 
 #: app/templates/programmes/_form.html:124
 msgid "— all optional"
-msgstr ""
+msgstr "— allemaal optioneel"
 
 #: app/templates/programmes/_form.html:128
 msgid "A public URL for the programme logo or banner image."
-msgstr ""
+msgstr "Een openbare URL voor het programmalogo of bannerafbeelding."
 
 #: app/templates/programmes/_form.html:135
 msgid ""
@@ -28536,10 +28555,13 @@ msgid ""
 "comma-separated list, e.g. <code class=\"bg-gray-100 px-1 rounded\">Health, "
 "Prosperity, Security</code>"
 msgstr ""
+"Tag discussies op onderwerp zodat deelnemers op thema kunnen filteren. Voer "
+"in als een kommagescheiden lijst, bijvoorbeeld <code class=\"bg-gray-100 "
+"px-1 rounded\">Gezondheid, Welvaart, Veiligheid</code>"
 
 #: app/templates/programmes/_form.html:136
 msgid "Health, Prosperity, Security, Environment"
-msgstr ""
+msgstr "Gezondheid, Welvaart, Veiligheid, Milieu"
 
 #: app/templates/programmes/_form.html:142
 msgid ""
@@ -28547,43 +28569,49 @@ msgid ""
 "followed by a deliberation wave. Enter as a comma-separated list, e.g. <code"
 " class=\"bg-gray-100 px-1 rounded\">Agenda-setting, Wave 1, Wave 2</code>"
 msgstr ""
+"Verdeel het programma in op tijd gebaseerde fasen, bijvoorbeeld een "
+"consultatieperiode gevolgd door een deliberatiegolf. Voer in als een "
+"kommagescheiden lijst, bijvoorbeeld <code class=\"bg-gray-100 px-1 "
+"rounded\">Agenda-opstelling, Golf 1, Golf 2</code>"
 
 #: app/templates/programmes/_form.html:143
 msgid "Agenda-setting, Wave 1, Wave 2"
-msgstr ""
+msgstr "Agenda-opstelling, Golf 1, Golf 2"
 
 #: app/templates/programmes/_form.html:148
-#, fuzzy
 msgid "Participant Groups"
-msgstr "Deelnemers"
+msgstr "Deelnemer-groepen"
 
 #: app/templates/programmes/_form.html:149
 msgid ""
 "Use this to track separate groups of participants — for example, a public "
 "survey group and an expert panel. Add one group per line."
 msgstr ""
+"Gebruik dit om afzonderlijke groepen deelnemers bij te houden — bijvoorbeeld"
+" een openbare enquêtegroep en een deskundigengroep. Voeg per regel één groep"
+" toe."
 
 #: app/templates/programmes/_form.html:151
 msgid "Format:"
-msgstr ""
+msgstr "Formaat:"
 
 #: app/templates/programmes/_form.html:157
 msgid ""
 "The short code is used internally (no spaces). The display name is shown to "
 "participants."
 msgstr ""
+"De korte code wordt intern gebruikt (geen spaties). De weergavenaam wordt "
+"aan deelnemers getoond."
 
 #: app/templates/programmes/create.html:2
 #: app/templates/programmes/create.html:10
-#, fuzzy
 msgid "Create programme"
-msgstr "Maak uw eerste programma"
+msgstr "Programma aanmaken"
 
 #: app/templates/programmes/create.html:13
 #: app/templates/programmes/workspace.html:91
-#, fuzzy
 msgid "Create a programme"
-msgstr "Maak uw eerste programma"
+msgstr "Maak een programma"
 
 #: app/templates/programmes/create.html:14
 msgid ""
@@ -28591,17 +28619,19 @@ msgid ""
 "add discussions to it after creating it, and invite stewards to help manage "
 "and export results."
 msgstr ""
+"Een programma groepteert gerelateerde discussies in een gestructureerde "
+"dialoog. U kunt er discussies aan toevoegen nadat u het hebt gemaakt en "
+"stewards uitnodigen om te helpen bij beheer en exporteren van resultaten."
 
 #: app/templates/programmes/edit.html:2 app/templates/programmes/edit.html:15
-#, fuzzy
 msgid "Edit programme"
-msgstr "Nieuw programma"
+msgstr "Programma bewerken"
 
 #: app/templates/programmes/journey_recap.html:2
 #: app/templates/programmes/journey_recap.html:6
 #, python-format
 msgid "%(name)s — Journey recap"
-msgstr ""
+msgstr "%(name)s — Samen-vatting van jouw reis"
 
 #: app/templates/programmes/journey_recap.html:3
 #, python-format
@@ -28609,33 +28639,38 @@ msgid ""
 "Crowd patterns and your votes across themes on %(name)s. Per-theme consensus"
 " analysis — not a single left–right score."
 msgstr ""
+"Crowd-patronen en uw stemmen over thema's op %(name)s. Consensus-analyse per"
+" thema — geen enkelvoudige links-rechts score."
 
 #: app/templates/programmes/journey_recap.html:4
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s — Big Questions journey recap"
-msgstr "Grote Vragen-reis"
+msgstr "%(name)s — Grote Vragen-reis samenvatting"
 
 #: app/templates/programmes/journey_recap.html:5
 msgid ""
 "See where people agree, disagree, and which bridge ideas emerge — theme by "
 "theme."
 msgstr ""
+"Zie waar mensen het eens zijn, oneens zijn en welke brugideeën naar voren "
+"komen — thema voor thema."
 
 #: app/templates/programmes/journey_recap.html:7
 msgid ""
 "Structured civic participation with consensus and bridge highlights per "
 "theme."
 msgstr ""
+"Gestructureerde maatschappelijke participatie met consensus en brug-"
+"hoogtepunten per thema."
 
 #: app/templates/programmes/journey_recap.html:30
-#, fuzzy
 msgid "Journey complete"
-msgstr "Thema voltooid!"
+msgstr "Reis voltooid"
 
 #: app/templates/programmes/journey_recap.html:31
 #, python-format
 msgid "You've explored all %(total)d big questions"
-msgstr ""
+msgstr "U hebt alle %(total)d grote vragen verkend"
 
 #: app/templates/programmes/journey_recap.html:33
 #, python-format
@@ -28643,21 +28678,23 @@ msgid ""
 "%(votes)s votes cast across %(total)d themes on %(name)s. Scroll down to see"
 " how the crowd voted and where you stand."
 msgstr ""
+"%(votes)s stemmen uitgebracht over %(total)d thema's op %(name)s. Scroll "
+"omlaag om te zien hoe de menigte stemde en waar u staat."
 
 #: app/templates/programmes/journey_recap.html:37
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s — I completed the Big Questions journey"
-msgstr "Grote Vragen-reis"
+msgstr "%(name)s — Ik heb de Grote Vragen-reis voltooid"
 
 #: app/templates/programmes/journey_recap.html:40
 msgid "Share your recap"
-msgstr ""
+msgstr "Deel uw samenvatting"
 
 #: app/templates/programmes/journey_recap.html:52
 #: app/templates/programmes/journey_recap.html:73
 #, python-format
 msgid "%(name)s — journey recap"
-msgstr ""
+msgstr "%(name)s — reissamenvatting"
 
 #: app/templates/programmes/journey_recap.html:54
 #, python-format
@@ -28665,24 +28702,26 @@ msgid ""
 "You've fully explored %(done)s of %(total)d themes and cast %(votes)s votes "
 "in total."
 msgstr ""
+"U hebt %(done)s van %(total)d thema's volledig verkend en in totaal "
+"%(votes)s stemmen uitgebracht."
 
 #: app/templates/programmes/journey_recap.html:56
 #, python-format
 msgid "Keep going — %(remaining)s theme%(plural)s to go!"
-msgstr ""
+msgstr "Doorgaan — nog %(remaining)s thema%(plural)s te gaan!"
 
 #: app/templates/programmes/journey_recap.html:62
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s — civic journey on Society Speaks"
-msgstr "Over Society Speaks"
+msgstr "%(name)s — burgerschapsjourneys op Society Speaks"
 
 #: app/templates/programmes/journey_recap.html:65
 msgid "Invite a friend"
-msgstr ""
+msgstr "Nodig een vriend uit"
 
 #: app/templates/programmes/journey_recap.html:74
 msgid "Theme-by-theme participation and where the crowd leans overall."
-msgstr ""
+msgstr "Participatie per thema en waar de menigte over het geheel leunt."
 
 #: app/templates/programmes/journey_recap.html:77
 #, python-format
@@ -28691,21 +28730,25 @@ msgid ""
 "hover:underline\">Sign in</a> to see your votes alongside the crowd on every"
 " statement."
 msgstr ""
+"<a href=\"%(login_url)s\" class=\"text-primary-600 font-semibold "
+"hover:underline\">Meld u aan</a> om uw stemmen naast de menigte op elke "
+"stelling te zien."
 
 #: app/templates/programmes/journey_recap.html:85
 msgid "How to read this."
-msgstr ""
+msgstr "Hoe dit te lezen."
 
 #: app/templates/programmes/journey_recap.html:87
 msgid ""
 "This page is <em>not</em> a single political compass — each theme has its "
 "own deliberation space."
 msgstr ""
+"Deze pagina is <em>niet</em> een enkele politieke kompas — elk thema heeft "
+"zijn eigen deliberatieruimte."
 
 #: app/templates/programmes/journey_recap.html:90
-#, fuzzy
 msgid "Richer consensus maps."
-msgstr "Consensusanalyse"
+msgstr "Rijkere consensus-kaarten."
 
 #: app/templates/programmes/journey_recap.html:91
 msgid ""
@@ -28713,110 +28756,105 @@ msgid ""
 "each theme. Sharing the journey brings in diverse views — which strengthens "
 "the signal for everyone."
 msgstr ""
+"Clustering en brug/divisie-detectie verbeteren naarmate meer mensen over elk"
+" thema stemmen. Het delen van de reis haalt diverse standpunten binnen — wat"
+" het signaal voor iedereen versterkt."
 
 #: app/templates/programmes/journey_recap.html:119
 #, python-format
 msgid "%(done)s/%(total)d votes"
-msgstr ""
+msgstr "%(done)s/%(total)d stemmen"
 
 #: app/templates/programmes/journey_recap.html:123
-#, fuzzy
 msgid "Not started"
-msgstr "Aan de Slag"
+msgstr "Niet gestart"
 
 #: app/templates/programmes/journey_recap.html:135
 #, python-format
 msgid "How %(total)d people voted"
-msgstr ""
+msgstr "Hoe %(total)d mensen hebben gestemd"
 
 #: app/templates/programmes/journey_recap.html:176
 msgid "No votes yet on this theme."
-msgstr ""
+msgstr "Nog geen stemmen op dit thema."
 
 #: app/templates/programmes/journey_recap.html:185
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d consensus point"
 msgid_plural "%(num)d consensus points"
-msgstr[0] "Consensusanalyse"
-msgstr[1] ""
+msgstr[0] "%(num)d consensuspunt"
+msgstr[1] "%(num)d consensuspunten"
 
 #: app/templates/programmes/journey_recap.html:191
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d bridge idea"
 msgid_plural "%(num)d bridge ideas"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d overbruggend idee"
+msgstr[1] "%(num)d overbruggingideeën"
 
 #: app/templates/programmes/journey_recap.html:197
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d divisive point"
 msgid_plural "%(num)d divisive points"
-msgstr[0] "Nieuwe Discussie"
-msgstr[1] ""
+msgstr[0] "%(num)d omstreden punt"
+msgstr[1] "%(num)d omstreden punten"
 
 #: app/templates/programmes/journey_recap.html:209
-#, fuzzy
 msgid "View consensus map"
-msgstr "Consensusanalyse"
+msgstr "Bekijk consensuskaart"
 
 #: app/templates/programmes/journey_recap.html:213
-#, fuzzy
 msgid "Revisit discussion"
-msgstr "Discussie bekijken"
+msgstr "Terug naar discussie"
 
 #: app/templates/programmes/journey_recap.html:219
-#, fuzzy
 msgid "Continue voting"
-msgstr "Doorgaan"
+msgstr "Doorgaan met stemmen"
 
 #: app/templates/programmes/journey_recap.html:219
-#, fuzzy
 msgid "Start voting"
-msgstr "Start →"
+msgstr "Begin met stemmen"
 
 #: app/templates/programmes/journey_recap.html:237
-#, fuzzy, python-format
+#, python-format
 msgid "✓ Agreed: %(num)d"
-msgstr "oneens"
+msgstr "✓ Eens: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:238
-#, fuzzy, python-format
+#, python-format
 msgid "✗ Disagreed: %(num)d"
-msgstr "oneens"
+msgstr "✗ Oneens: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:239
-#, fuzzy, python-format
+#, python-format
 msgid "? Unsure: %(num)d"
-msgstr "oneens"
+msgstr "? Onzeker: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:242
-#, fuzzy, python-format
+#, python-format
 msgid "%(voted)s of %(total)d statements voted"
-msgstr "Naar stellingen"
+msgstr "%(voted)s van %(total)d uitspraken gestemd"
 
 #: app/templates/programmes/journey_recap.html:249
-#, fuzzy
 msgid "Your votes on each statement"
-msgstr "Naar stellingen"
+msgstr "Jouw stemmen per uitspraak"
 
 #: app/templates/programmes/journey_recap.html:279
-#, fuzzy, python-format
+#, python-format
 msgid "Back to %(name)s"
-msgstr "Welkom terug, %(name)s!"
+msgstr "Terug naar %(name)s"
 
 #: app/templates/programmes/journey_recap.html:306
-#, fuzzy
 msgid "Shared ✓"
-msgstr "oneens"
+msgstr "Gedeeld ✓"
 
 #: app/templates/programmes/journey_recap.html:316
 msgid "Link copied ✓"
-msgstr ""
+msgstr "Link gekopieerd ✓"
 
 #: app/templates/programmes/journey_recap.html:320
-#, fuzzy
 msgid "Copy this link:"
-msgstr "Snelle links"
+msgstr "Kopieer deze link:"
 
 #: app/templates/programmes/list.html:2 app/templates/programmes/list.html:10
 msgid "Public Programmes"
@@ -28850,28 +28888,24 @@ msgstr "Andere programma's"
 
 #: app/templates/programmes/settings.html:2
 #: app/templates/programmes/settings.html:15
-#, fuzzy
 msgid "Programme settings"
-msgstr "Instellingen"
+msgstr "Programma-instellingen"
 
 #: app/templates/programmes/settings.html:16
 msgid "Visibility:"
-msgstr ""
+msgstr "Zichtbaarheid:"
 
 #: app/templates/programmes/settings.html:21
-#, fuzzy
 msgid "Archive programme"
-msgstr "Andere programma's"
+msgstr "Archiveer programma"
 
 #: app/templates/programmes/settings.html:26
-#, fuzzy
 msgid "Restore programme"
-msgstr "Andere programma's"
+msgstr "Herstel programma"
 
 #: app/templates/programmes/settings.html:35
-#, fuzzy
 msgid "Programme structure"
-msgstr "Programma's"
+msgstr "Programmastructuur"
 
 #: app/templates/programmes/settings.html:60
 msgid ""
@@ -28879,41 +28913,43 @@ msgid ""
 "cohort assignment relies on link-sharing and cannot prevent participants "
 "from modifying the parameter."
 msgstr ""
+"Voeg <code>?cohort=slug</code> toe aan discussielinks om groepen bij te "
+"houden. Opmerking: cohortassignment is afhankelijk van linkdeling en kan "
+"niet voorkomen dat deelnemers de parameter wijzigen."
 
 #: app/templates/programmes/settings.html:73
-#, fuzzy
 msgid "Stewards"
-msgstr "Zoeken"
+msgstr "Beheerders"
 
 #: app/templates/programmes/settings.html:82
 msgid "Pending registration"
-msgstr ""
+msgstr "In afwachting van registratie"
 
 #: app/templates/programmes/settings.html:84
 #: app/templates/programmes/settings.html:127
 #, python-format
 msgid "User #%(id)s"
-msgstr ""
+msgstr "Gebruiker #%(id)s"
 
 #: app/templates/programmes/settings.html:88
 msgid "Remove this steward?"
-msgstr ""
+msgstr "Deze beheerder verwijderen?"
 
 #: app/templates/programmes/settings.html:96
-#, fuzzy
 msgid "No stewards yet."
-msgstr "Nog geen stellingen"
+msgstr "Nog geen beheerders."
 
 #: app/templates/programmes/settings.html:112
-#, fuzzy
 msgid "Participant access"
-msgstr "Doe mee"
+msgstr "Deelnemerstoegang"
 
 #: app/templates/programmes/settings.html:114
 msgid ""
 "Use this for <strong>Invite-only</strong> programmes. Users must already "
 "have an account."
 msgstr ""
+"Gebruik dit voor <strong>Uitnodigingsprogramma's</strong>. Gebruikers moeten"
+" al een account hebben."
 
 #: app/templates/programmes/settings.html:118
 msgid ""
@@ -28921,11 +28957,13 @@ msgid ""
 "disabled. Invite users as stewards or switch visibility to <strong>Invite-"
 "only</strong>."
 msgstr ""
+"Dit programma is <strong>Privé</strong>, dus deelnemersuitnodigingen zijn "
+"uitgeschakeld. Nodig gebruikers uit als beheerder of wijzig de zichtbaarheid"
+" in <strong>Uitnodigingsprogramma</strong>."
 
 #: app/templates/programmes/settings.html:149
-#, fuzzy
 msgid "No participant access grants yet."
-msgstr "Deelnemers"
+msgstr "Nog geen deelnemerstoegangen verleend."
 
 #: app/templates/programmes/view.html:241
 msgid "themes completed"
@@ -28948,474 +28986,468 @@ msgid "Add discussion"
 msgstr "Discussie toevoegen"
 
 #: app/templates/programmes/workspace.html:16
-#, fuzzy
 msgid "Programmes you own, steward, or have been invited to participate in."
-msgstr "Programma's die u bezit, beheert of waaraan u deelneemt"
+msgstr ""
+"Programma's die je bezit, beheert of waarvan je bent uitgenodigd om aan deel"
+" te nemen."
 
 #: app/templates/programmes/workspace.html:21
-#, fuzzy
 msgid "Public catalogue"
-msgstr "Openbare programma's"
+msgstr "Openbare catalogus"
 
 #: app/templates/programmes/workspace.html:68
-#, fuzzy
 msgid "← Previous"
-msgstr "Vorige"
+msgstr "← Vorige"
 
 #: app/templates/programmes/workspace.html:86
-#, fuzzy
 msgid ""
 "Create a programme to group discussions into a structured engagement "
 "campaign, or ask an owner to invite you as a steward or participant."
 msgstr ""
-"Programma's groeperen discussies in gestructureerde betrokkenheidscampagnes."
+"Maak een programma aan om discussies in een gestructureerde "
+"betrokkenheidsactie te groeperen, of vraag een eigenaar je uit te nodigen "
+"als beheerder of deelnemer."
 
 #: app/templates/programmes/workspace.html:95
-#, fuzzy
 msgid "Browse public catalogue"
-msgstr "Openbare programma's"
+msgstr "Bekijk openbare catalogus"
 
 #: app/templates/settings/add_api_key.html:3
 msgid "Add API Key - Settings"
-msgstr ""
+msgstr "API-sleutel toevoegen - Instellingen"
 
 #: app/templates/settings/add_api_key.html:12
 #: app/templates/settings/api_keys.html:9
 #: app/templates/settings/api_keys.html:12
 msgid "API Keys"
-msgstr ""
+msgstr "API-sleutels"
 
 #: app/templates/settings/add_api_key.html:14
 msgid "Add Key"
-msgstr ""
+msgstr "Sleutel toevoegen"
 
 #: app/templates/settings/add_api_key.html:17
 #: app/templates/settings/api_keys.html:123
 msgid "Add API Key"
-msgstr ""
+msgstr "API-sleutel toevoegen"
 
 #: app/templates/settings/add_api_key.html:18
 msgid "Enable optional AI features with your own API key"
-msgstr ""
+msgstr "Schakel optionele AI-functies in met je eigen API-sleutel"
 
 #: app/templates/settings/add_api_key.html:23
 msgid "⚠️ Important"
-msgstr ""
+msgstr "⚠️ Belangrijk"
 
 #: app/templates/settings/add_api_key.html:25
 msgid "• Your API key will be encrypted before storage"
-msgstr ""
+msgstr "• Je API-sleutel wordt versleuteld voordat deze wordt opgeslagen"
 
 #: app/templates/settings/add_api_key.html:26
 msgid "• Keys are validated before saving"
-msgstr ""
+msgstr "• Sleutels worden gevalideerd voordat ze worden opgeslagen"
 
 #: app/templates/settings/add_api_key.html:27
 msgid "• You can disable or delete keys anytime"
-msgstr ""
+msgstr "• Je kunt sleutels op elk moment uitschakelen of verwijderen"
 
 #: app/templates/settings/add_api_key.html:28
 msgid "• Usage costs are charged by the provider (OpenAI/Anthropic)"
 msgstr ""
+"• Gebruikskosten worden gefactureerd door de provider (OpenAI/Anthropic)"
 
 #: app/templates/settings/add_api_key.html:38
-#, fuzzy
 msgid "Provider"
-msgstr "Uw Profiel"
+msgstr "Provider"
 
 #: app/templates/settings/add_api_key.html:40
 msgid "Select a provider..."
-msgstr ""
+msgstr "Selecteer een provider..."
 
 #: app/templates/settings/add_api_key.html:41
 msgid "OpenAI (GPT-4o-mini)"
-msgstr ""
+msgstr "OpenAI (GPT-4o-mini)"
 
 #: app/templates/settings/add_api_key.html:42
 msgid "Anthropic (Claude Haiku)"
-msgstr ""
+msgstr "Anthropic (Claude Haiku)"
 
 #: app/templates/settings/add_api_key.html:43
 msgid "Mistral (Coming Soon)"
-msgstr ""
+msgstr "Mistral (Binnenkort beschikbaar)"
 
 #: app/templates/settings/add_api_key.html:45
 msgid "Choose which LLM provider you want to use"
-msgstr ""
+msgstr "Kies welke LLM-provider je wilt gebruiken"
 
 #: app/templates/settings/add_api_key.html:50
 msgid "API Key"
-msgstr ""
+msgstr "API-sleutel"
 
 #: app/templates/settings/add_api_key.html:53
 msgid "Your API key will be encrypted and validated before storage"
 msgstr ""
+"Je API-sleutel wordt versleuteld en gevalideerd voordat deze wordt "
+"opgeslagen"
 
 #: app/templates/settings/add_api_key.html:60
 msgid "Validate & Save Key"
-msgstr ""
+msgstr "Sleutel valideren en opslaan"
 
 #: app/templates/settings/add_api_key.html:71
 msgid "How to Get an API Key"
-msgstr ""
+msgstr "Een API-sleutel verkrijgen"
 
 #: app/templates/settings/add_api_key.html:75
-#, fuzzy
 msgid "OpenAI (Recommended for most users)"
-msgstr "Aanbevolen reisvolgorde"
+msgstr "OpenAI (Aanbevolen voor de meeste gebruikers)"
 
 #: app/templates/settings/add_api_key.html:77
 msgid ""
 "Visit <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\" "
 "class=\"text-primary-600 hover:underline\">platform.openai.com/api-keys</a>"
 msgstr ""
+"Bezoek <a href=\"https://platform.openai.com/api-keys\" target=\"_blank\" "
+"class=\"text-primary-600 hover:underline\">platform.openai.com/api-keys</a>"
 
 #: app/templates/settings/add_api_key.html:78
 msgid "Sign up or log in to your OpenAI account"
-msgstr ""
+msgstr "Meld je aan of log in op je OpenAI-account"
 
 #: app/templates/settings/add_api_key.html:79
 msgid "Click \"Create new secret key\""
-msgstr ""
+msgstr "Klik op \"Create new secret key\""
 
 #: app/templates/settings/add_api_key.html:80
 msgid "Copy the key (it starts with \"sk-\")"
-msgstr ""
+msgstr "Kopieer de sleutel (deze begint met \"sk-\")"
 
 #: app/templates/settings/add_api_key.html:81
 msgid "Paste it above and save"
-msgstr ""
+msgstr "Plak deze hierboven en sla op"
 
 #: app/templates/settings/add_api_key.html:83
 msgid "Estimated cost: ~$0.01-0.05 per analysis"
-msgstr ""
+msgstr "Geschatte kosten: ~€0,01-0,05 per analyse"
 
 #: app/templates/settings/add_api_key.html:87
 msgid "Anthropic Claude"
-msgstr ""
+msgstr "Anthropic Claude"
 
 #: app/templates/settings/add_api_key.html:89
 msgid ""
 "Visit <a href=\"https://console.anthropic.com/\" target=\"_blank\" "
 "class=\"text-primary-600 hover:underline\">console.anthropic.com</a>"
 msgstr ""
+"Bezoek <a href=\"https://console.anthropic.com/\" target=\"_blank\" "
+"class=\"text-primary-600 hover:underline\">console.anthropic.com</a>"
 
 #: app/templates/settings/add_api_key.html:90
-#, fuzzy
 msgid "Create an account or log in"
-msgstr "Heeft u al een account?"
+msgstr "Maak een account aan of log in"
 
 #: app/templates/settings/add_api_key.html:91
 msgid "Go to \"API Keys\" section"
-msgstr ""
+msgstr "Ga naar de sectie \"API Keys\""
 
 #: app/templates/settings/add_api_key.html:92
 msgid "Generate a new API key"
-msgstr ""
+msgstr "Genereer een nieuwe API-sleutel"
 
 #: app/templates/settings/add_api_key.html:93
 msgid "Copy and paste it above"
-msgstr ""
+msgstr "Kopieer en plak deze hierboven"
 
 #: app/templates/settings/add_api_key.html:95
 msgid "Estimated cost: ~$0.01-0.03 per analysis"
-msgstr ""
+msgstr "Geschatte kosten: ~€0,01-0,03 per analyse"
 
 #: app/templates/settings/add_api_key.html:99
 msgid "Mistral"
-msgstr ""
+msgstr "Mistral"
 
 #: app/templates/settings/add_api_key.html:100
-#, fuzzy
 msgid "Support coming soon"
-msgstr "Taalopties"
+msgstr "Ondersteuning binnenkort beschikbaar"
 
 #: app/templates/settings/add_api_key.html:107
 msgid "🔒 Privacy & Security"
-msgstr ""
+msgstr "🔒 Privacy en beveiliging"
 
 #: app/templates/settings/add_api_key.html:109
 msgid "• Keys are encrypted with Fernet (industry standard)"
-msgstr ""
+msgstr "• Sleutels worden versleuteld met Fernet (industriestandaard)"
 
 #: app/templates/settings/add_api_key.html:110
 msgid "• Keys are never logged or transmitted in plain text"
-msgstr ""
+msgstr "• Sleutels worden nooit in platte tekst geregistreerd of verzonden"
 
 #: app/templates/settings/add_api_key.html:111
 msgid "• Validation only checks if the key is active"
-msgstr ""
+msgstr "• Validatie controleert alleen of de sleutel actief is"
 
 #: app/templates/settings/add_api_key.html:112
 msgid "• You can delete your key anytime"
-msgstr ""
+msgstr "• U kunt uw sleutel op elk moment verwijderen"
 
 #: app/templates/settings/add_api_key.html:113
 msgid ""
 "• Open source: <a href=\"https://github.com/societyspeaks\" class=\"text-"
 "primary-600 hover:underline\">view the encryption code</a>"
 msgstr ""
+"• Open source: <a href=\"https://github.com/societyspeaks\" class=\"text-"
+"primary-600 hover:underline\">bekijk de versleutelingscode</a>"
 
 #: app/templates/settings/api_keys.html:1
 msgid "API Keys - Settings"
-msgstr ""
+msgstr "API-sleutels - Instellingen"
 
 #: app/templates/settings/api_keys.html:14
 msgid "Manage your LLM API keys for optional AI features"
-msgstr ""
+msgstr "Beheer uw LLM API-sleutels voor optionele AI-functies"
 
 #: app/templates/settings/api_keys.html:20
 msgid "🔐 Your Keys, Your Control"
-msgstr ""
+msgstr "🔐 Uw sleutels, uw controle"
 
 #: app/templates/settings/api_keys.html:22
 msgid "• API keys are encrypted before storage"
-msgstr ""
+msgstr "• API-sleutels worden versleuteld voordat ze worden opgeslagen"
 
 #: app/templates/settings/api_keys.html:23
 msgid "• You control when AI features are used"
-msgstr ""
+msgstr "• U bepaalt wanneer AI-functies worden gebruikt"
 
 #: app/templates/settings/api_keys.html:24
-#, fuzzy
 msgid "• Keys are never shared with Society Speaks servers"
-msgstr "Over Society Speaks"
+msgstr "• Sleutels worden nooit gedeeld met Society Speaks-servers"
 
 #: app/templates/settings/api_keys.html:25
 msgid "• Estimated cost: $0.01-0.05 per analysis"
-msgstr ""
+msgstr "• Geschatte kosten: $0,01-0,05 per analyse"
 
 #: app/templates/settings/api_keys.html:32
-#, fuzzy
 msgid "Your API Keys"
-msgstr "Uw Profiel"
+msgstr "Uw API-sleutels"
 
 #: app/templates/settings/api_keys.html:47
-#, fuzzy
 msgid "Inactive"
-msgstr "Actief"
+msgstr "Inactief"
 
 #: app/templates/settings/api_keys.html:52
 msgid "Key: •••••••••••••••"
-msgstr ""
+msgstr "Sleutel: •••••••••••••••"
 
 #: app/templates/settings/api_keys.html:52
 msgid "Last validated:"
-msgstr ""
+msgstr "Laatst gevalideerd:"
 
 #: app/templates/settings/api_keys.html:64
-#, fuzzy
 msgid "Revalidate"
-msgstr "Aanmaken"
+msgstr "Opnieuw valideren"
 
 #: app/templates/settings/api_keys.html:109
-#, fuzzy
 msgid "No API Keys Yet"
-msgstr "Nog geen stellingen"
+msgstr "Geen API-sleutels yet"
 
 #: app/templates/settings/api_keys.html:111
 msgid "Add an API key to unlock optional AI features"
-msgstr ""
+msgstr "Voeg een API-sleutel toe om optionele AI-functies in te schakelen"
 
 #: app/templates/settings/api_keys.html:118
 msgid "Add New API Key"
-msgstr ""
+msgstr "Nieuwe API-sleutel toevoegen"
 
 #: app/templates/settings/api_keys.html:129
 msgid "AI Features (Optional)"
-msgstr ""
+msgstr "AI-functies (optioneel)"
 
 #: app/templates/settings/api_keys.html:132
-#, fuzzy
 msgid "📝 AI Summaries"
-msgstr "Discussie Weergaven"
+msgstr "📝 AI-samenvattingen"
 
 #: app/templates/settings/api_keys.html:134
 msgid "Generate human-readable summaries of consensus analysis results"
 msgstr ""
+"Genereer samenvatting in begrijpelijk Nederlands van "
+"consensusanalyseresultaten"
 
 #: app/templates/settings/api_keys.html:138
 msgid "🏷️ Cluster Labels"
-msgstr ""
+msgstr "🏷️ Cluster-labels"
 
 #: app/templates/settings/api_keys.html:140
 msgid "Automatically name opinion groups based on their shared beliefs"
 msgstr ""
+"Geef opiniongroepen automatisch een naam op basis van hun gedeelde "
+"overtuigingen"
 
 #: app/templates/settings/api_keys.html:144
 msgid "🔍 Smart Deduplication"
-msgstr ""
+msgstr "🔍 Slimme deduplicatie"
 
 #: app/templates/settings/api_keys.html:146
 msgid "Prevent similar statements using semantic analysis"
-msgstr ""
+msgstr "Voorkom vergelijkbare uitspraken met semantische analyse"
 
 #: app/templates/settings/api_keys.html:158
-#, fuzzy
 msgid "← Back to Settings"
-msgstr "Instellingen"
+msgstr "← Terug naar Instellingen"
 
 #: app/templates/settings/api_keys.html:165
 msgid "Delete this API key?"
-msgstr ""
+msgstr "Deze API-sleutel verwijderen?"
 
 #: app/templates/settings/settings.html:2
 #: app/templates/settings/settings.html:13
-#, fuzzy
 msgid "Account Settings"
-msgstr "Instellingen"
+msgstr "Accountinstellingen"
 
 #: app/templates/settings/settings.html:14
-#, fuzzy
 msgid "Manage your account preferences and security"
-msgstr "Voorkeuren beheren"
+msgstr "Beheer uw accountvoorkeuren en beveiliging"
 
 #: app/templates/settings/settings.html:37
-#, fuzzy
 msgid "Language Preference"
-msgstr "Voorkeuren beheren"
+msgstr "Taalvoorkeur"
 
 #: app/templates/settings/settings.html:38
 msgid ""
 "Choose your preferred language for the site. Your votes are always counted "
 "on the same canonical statements regardless of language."
 msgstr ""
+"Kies uw voorkeurstaal voor de site. Uw stemmen worden altijd geteld op "
+"dezelfde canonieke uitspraken, ongeacht de taal."
 
 #: app/templates/settings/settings.html:49
-#, fuzzy
 msgid "Save Language"
-msgstr "Taal selecteren"
+msgstr "Taal opslaan"
 
 #: app/templates/settings/settings.html:56
-#, fuzzy
 msgid "Change Password"
-msgstr "Wachtwoord"
+msgstr "Wachtwoord wijzigen"
 
 #: app/templates/settings/settings.html:111
-#, fuzzy
 msgid "Update Password"
-msgstr "Wachtwoord"
+msgstr "Wachtwoord bijwerken"
 
 #: app/templates/settings/settings.html:118
-#, fuzzy
 msgid "Email Notifications"
-msgstr "Meldingen"
+msgstr "E-mailmeldingen"
 
 #: app/templates/settings/settings.html:119
 msgid "Choose which email notifications you'd like to receive."
-msgstr ""
+msgstr "Kies welke e-mailmeldingen u wilt ontvangen."
 
 #: app/templates/settings/settings.html:137
-#, fuzzy
 msgid "Enable email notifications"
-msgstr "Meldingen"
+msgstr "E-mailmeldingen inschakelen"
 
 #: app/templates/settings/settings.html:138
 msgid "Master toggle for all email notifications"
-msgstr ""
+msgstr "Hoofdschakelaar voor alle e-mailmeldingen"
 
 #: app/templates/settings/settings.html:152
-#, fuzzy
 msgid "New participants"
-msgstr "Deelnemers"
+msgstr "Nieuwe deelnemers"
 
 #: app/templates/settings/settings.html:153
 msgid "Get notified when someone joins your discussion"
-msgstr ""
+msgstr "Ontvang een bericht wanneer iemand aan uw discussie deelneemt"
 
 #: app/templates/settings/settings.html:166
-#, fuzzy
 msgid "Discussion activity"
-msgstr "Discussie-activiteit en meldingen"
+msgstr "Discussieactiviteit"
 
 #: app/templates/settings/settings.html:167
 msgid "New statements, replies, and votes in discussions you host or follow"
 msgstr ""
+"Nieuwe stellingen, antwoorden en stemmen in discussies die je host of volgt"
 
 #: app/templates/settings/settings.html:180
-#, fuzzy
 msgid "Discussion updates"
-msgstr "Discussie Weergaven"
+msgstr "Discussie-updates"
 
 #: app/templates/settings/settings.html:181
 msgid ""
 "When an organiser posts a &quot;what happened next&quot; update to a "
 "discussion you follow"
 msgstr ""
+"Wanneer een organisator een 'wat gebeurde er daarna'-update plaatst in een "
+"discussie die je volgt"
 
 #: app/templates/settings/settings.html:195
 msgid "Receive a weekly summary of discussions you're involved in"
 msgstr ""
+"Ontvang wekelijks een samenvatting van discussies waar je aan deelneemt"
 
 #: app/templates/settings/settings.html:208
-#, fuzzy
 msgid "Save Notification Preferences"
-msgstr "Voorkeuren beheren"
+msgstr "Meldingsvoorkeuren opslaan"
 
 #: app/templates/settings/settings.html:216
-#, fuzzy
 msgid "Billing & Subscription"
-msgstr "Taalopties"
+msgstr "Facturering & Abonnement"
 
 #: app/templates/settings/settings.html:217
 msgid "Your current plan and billing details."
-msgstr ""
+msgstr "Je huidige abonnement en factuurgegevens."
 
 #: app/templates/settings/settings.html:235
 msgid "Cancels at period end"
-msgstr ""
+msgstr "Wordt beëindigd aan het einde van de periode"
 
 #: app/templates/settings/settings.html:237
-#, fuzzy
 msgid "Free Trial"
-msgstr "Gratis proefperiode starten"
+msgstr "Gratis proefversie"
 
 #: app/templates/settings/settings.html:245
-#, fuzzy
 msgid "Billing"
-msgstr "Facturering beheren"
+msgstr "Facturering"
 
 #: app/templates/settings/settings.html:247
 msgid "Annual"
-msgstr ""
+msgstr "Jaarlijks"
 
 #: app/templates/settings/settings.html:253
 msgid "Trial ends"
-msgstr ""
+msgstr "Proefversie eindigt"
 
 #: app/templates/settings/settings.html:258
-#, fuzzy
 msgid "Access until"
-msgstr "Land"
+msgstr "Toegang tot"
 
 #: app/templates/settings/settings.html:263
 msgid "Next renewal"
-msgstr ""
+msgstr "Volgende verlenging"
 
 #: app/templates/settings/settings.html:278
 msgid "Update payment method, download invoices, or cancel your subscription."
-msgstr ""
+msgstr "Werk je betaalmethode bij, download facturen of zeg je abonnement op."
 
 #: app/templates/settings/settings.html:285
 #: app/templates/settings/settings.html:297
-#, fuzzy
 msgid "Delete Account"
-msgstr "Heeft u al een account?"
+msgstr "Account verwijderen"
 
 #: app/templates/settings/settings.html:286
 msgid ""
 "Once you delete your account, there is no going back. Please be certain."
 msgstr ""
+"Zodra je je account verwijdert, is er geen weg terug. Zorg ervoor dat je "
+"zeker bent."
 
 #: app/templates/settings/settings.html:305
 msgid ""
 "Are you sure you want to delete your account? This action cannot be undone."
 msgstr ""
+"Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet "
+"ongedaan worden gemaakt."
 
 #: app/templates/sources/claim.html:5
-#, fuzzy, python-format
+#, python-format
 msgid "Claim %(name)s - SocietySpeaks"
-msgstr "Over Society Speaks"
+msgstr "Claim %(name)s - SocietySpeaks"
 
 #: app/templates/sources/claim.html:6
 #, python-format
@@ -29423,53 +29455,53 @@ msgid ""
 "Request to claim %(name)s as your organization's source profile on "
 "SocietySpeaks."
 msgstr ""
+"Verzoek om %(name)s als bronprofiel van je organisatie op SocietySpeaks in "
+"te claimen."
 
 #: app/templates/sources/claim.html:15
-#, fuzzy
 msgid "Claim Source Profile"
-msgstr "Uw Profiel"
+msgstr "Bronprofiel claimen"
 
 #: app/templates/sources/claim.html:16
 #, python-format
 msgid "Request ownership of %(name)s"
-msgstr ""
+msgstr "Eigendom van %(name)s aanvragen"
 
 #: app/templates/sources/claim.html:29
-#, fuzzy
 msgid "News Source"
-msgstr "Bronnen"
+msgstr "Nieuwsbron"
 
 #: app/templates/sources/claim.html:38
-#, fuzzy
 msgid "Claiming As"
-msgstr "Vertaling in behandeling"
+msgstr "Claimen als"
 
 #: app/templates/sources/claim.html:52
-#, fuzzy
 msgid "Your organisation profile"
-msgstr "Organisatie"
+msgstr "Je organisatieprofiel"
 
 #: app/templates/sources/claim.html:60
 msgid "What happens when you claim this source?"
-msgstr ""
+msgstr "Wat gebeurt er wanneer je deze bron claimt?"
 
 #: app/templates/sources/claim.html:66
 msgid "Your claim will be reviewed by our admin team"
-msgstr ""
+msgstr "Je claim wordt beoordeeld door ons admin-team"
 
 #: app/templates/sources/claim.html:72
 msgid ""
 "Once approved, your organisation profile branding will appear on this source"
 " page"
 msgstr ""
+"Nadat goedgekeurd, zal je organisatieprofiel branding op deze bronpagina "
+"verschijnen"
 
 #: app/templates/sources/claim.html:78
 msgid "A verified badge will be displayed on the source profile"
-msgstr ""
+msgstr "Een geverifieerd badge wordt op het bronprofiel weergegeven"
 
 #: app/templates/sources/claim.html:84
 msgid "All discussions sourced from your content will be showcased"
-msgstr ""
+msgstr "Alle discussies vanuit je inhoud worden in de schijnwerpers gezet"
 
 #: app/templates/sources/claim.html:96
 #, python-format
@@ -29477,700 +29509,674 @@ msgid ""
 "By submitting this claim, you confirm that you are authorized to represent "
 "%(name)s. False claims may result in account suspension."
 msgstr ""
+"Door dit claimverzoek in te dienen, bevestig je dat je %(name)s mag "
+"vertegenwoordigen. Valse vorderingen kunnen tot accountopschorting leiden."
 
 #: app/templates/sources/claim.html:114
-#, fuzzy
 msgid "Submit Claim Request"
-msgstr "Argument toevoegen"
+msgstr "Claimverzoek indienen"
 
 #: app/templates/sources/index.html:9
 msgid ""
 "Explore news sources and podcasts on SocietySpeaks. Discover discussions "
 "from your favorite media outlets."
 msgstr ""
+"Verken nieuwsbronnen en podcasts op SocietySpeaks. Ontdek discussies van je "
+"favoriete mediakanalen."
 
 #: app/templates/sources/index.html:13
 msgid "news sources, podcasts, media outlets, discussions, civic discourse"
-msgstr ""
+msgstr "nieuwsbronnen, podcasts, mediakanalen, discussies, burgerlijk debat"
 
 #: app/templates/sources/index.html:22
 msgid "Browse news sources and podcasts on SocietySpeaks"
-msgstr ""
+msgstr "Verken nieuwsbronnen en podcasts op SocietySpeaks"
 
 #: app/templates/sources/index.html:45
 msgid "Explore discussions from newspapers, podcasts, and media outlets"
-msgstr ""
+msgstr "Ontdek discussies van kranten, podcasts en mediakanalen"
 
 #: app/templates/sources/index.html:108
 msgid "Newspapers"
-msgstr ""
+msgstr "Kranten"
 
 #: app/templates/sources/index.html:111
 msgid "Magazines"
-msgstr ""
+msgstr "Magazines"
 
 #: app/templates/sources/index.html:114
 msgid "Broadcasters"
-msgstr ""
+msgstr "Omroepen"
 
 #: app/templates/sources/index.html:140
 msgid "Political Leaning"
-msgstr ""
+msgstr "Politieke oriëntatie"
 
 #: app/templates/sources/index.html:146
 msgid "All Leanings"
-msgstr ""
+msgstr "Alle oriëntaties"
 
 #: app/templates/sources/index.html:169
 msgid "Name (A-Z)"
-msgstr ""
+msgstr "Naam (A-Z)"
 
 #: app/templates/sources/index.html:172
-#, fuzzy
 msgid "Most Discussions"
-msgstr "Laatste discussies"
+msgstr "Meeste discussies"
 
 #: app/templates/sources/index.html:175
-#, fuzzy
 msgid "Recently Updated"
-msgstr "Recente Updates"
+msgstr "Onlangs bijgewerkt"
 
 #: app/templates/sources/index.html:267
 #: app/templates/sources/view_source.html:81
 msgid "Broadcaster"
-msgstr ""
+msgstr "Uitgever"
 
 #: app/templates/sources/index.html:437
 #, python-format
 msgid "No sources match \"%(search)s\". Try adjusting your filters."
 msgstr ""
+"Geen bronnen komen overeen met \"%(search)s\". Probeer uw filters aan te "
+"passen."
 
 #: app/templates/sources/index.html:437
 msgid "No sources match your current filters."
-msgstr ""
+msgstr "Geen bronnen komen overeen met uw huidige filters."
 
 #: app/templates/sources/view_source.html:7
 #, python-format
 msgid "Explore discussions sourced from %(name)s. "
-msgstr ""
+msgstr "Verken discussies van %(name)s."
 
 #: app/templates/sources/view_source.html:7
 msgid "View civic discussions and engagement insights."
-msgstr ""
+msgstr "Bekijk burgerlijke discussies en betrokkenheidsinzichten."
 
 #: app/templates/sources/view_source.html:8
-#, fuzzy
 msgid "discussions, civic discourse"
-msgstr "Discussie Weergaven"
+msgstr "discussies, maatschappelijk debat"
 
 #: app/templates/sources/view_source.html:12
 #, python-format
 msgid "%(name)s on SocietySpeaks"
-msgstr ""
+msgstr "%(name)s op SocietySpeaks"
 
 #: app/templates/sources/view_source.html:13
 #, python-format
 msgid "Explore discussions sourced from %(name)s"
-msgstr ""
+msgstr "Verken discussies van %(name)s"
 
 #: app/templates/sources/view_source.html:58
 msgid "Verified Source"
-msgstr ""
+msgstr "Geverifieerde bron"
 
 #: app/templates/sources/view_source.html:155
-#, fuzzy
 msgid "Claim Pending"
-msgstr "Vertaling in behandeling"
+msgstr "Claim in afwachting"
 
 #: app/templates/sources/view_source.html:163
 msgid "Claim This Source"
-msgstr ""
+msgstr "Claim deze bron"
 
 #: app/templates/sources/view_source.html:168
-#, fuzzy
 msgid "Create Profile to Claim"
-msgstr "Profiel aanmaken"
+msgstr "Maak profiel aan om te claimen"
 
 #: app/templates/sources/view_source.html:234
 msgid "Engagement Insights"
-msgstr ""
+msgstr "Betrokkenheidsinzichten"
 
 #: app/templates/sources/view_source.html:236
 msgid ""
 "Engagement Score: measures discussion activity relative to time on platform"
 msgstr ""
+"Betrokkenheidscore: meet discussieactiviteit ten opzichte van tijd op het "
+"platform"
 
 #: app/templates/sources/view_source.html:241
-#, fuzzy
 msgid "score"
-msgstr "Bronnen"
+msgstr "score"
 
 #: app/templates/sources/view_source.html:256
-#, fuzzy
 msgid "Total Votes"
-msgstr "stemmen in totaal"
+msgstr "Totale stemmen"
 
 #: app/templates/sources/view_source.html:261
-#, fuzzy
 msgid "Avg Opinion Groups"
-msgstr "Meningsgroepen"
+msgstr "Gem. opiniegroeperingen"
 
 #: app/templates/sources/view_source.html:266
-#, fuzzy
 msgid "Articles"
-msgstr "Doe mee"
+msgstr "Artikelen"
 
 #: app/templates/sources/view_source.html:276
 #, python-format
 msgid "Discussions from %(name)s"
-msgstr ""
+msgstr "Discussies van %(name)s"
 
 #: app/templates/sources/view_source.html:334
 #, python-format
 msgid "Discussions sourced from %(name)s will appear here."
-msgstr ""
+msgstr "Discussies van %(name)s verschijnen hier."
 
 #: app/templates/trending/articles.html:3
 msgid "Articles - Trending Topics"
-msgstr ""
+msgstr "Artikelen - Trending onderwerpen"
 
 #: app/templates/trending/articles.html:8
-#, fuzzy
 msgid "Back to Dashboard"
-msgstr "Dashboard"
+msgstr "Terug naar Dashboard"
 
 #: app/templates/trending/articles.html:13
 msgid "Fetched Articles"
-msgstr ""
+msgstr "Opgehaalde artikelen"
 
 #: app/templates/trending/articles.html:14
 #, python-format
 msgid "%(total)d articles"
-msgstr ""
+msgstr "%(total)d artikelen"
 
 #: app/templates/trending/articles.html:14
 msgid "(filtered)"
-msgstr ""
+msgstr "(gefilterd)"
 
 #: app/templates/trending/articles.html:19
 msgid "Score Unscored Articles"
-msgstr ""
+msgstr "Score ongescoorde artikelen"
 
 #: app/templates/trending/articles.html:29
 msgid "Search titles and summaries..."
-msgstr ""
+msgstr "Zoek in titels en samenvattingen..."
 
 #: app/templates/trending/articles.html:35
-#, fuzzy
 msgid "All Sources"
-msgstr "Bronnen"
+msgstr "Alle bronnen"
 
 #: app/templates/trending/articles.html:45
 #, python-format
 msgid "High Relevance (70%%+)"
-msgstr ""
+msgstr "Hoge relevantie (70%%+)"
 
 #: app/templates/trending/articles.html:46
 #, python-format
 msgid "Medium Relevance (40%%+)"
-msgstr ""
+msgstr "Gemiddelde relevantie (40%%+)"
 
 #: app/templates/trending/articles.html:47
 #, python-format
 msgid "Low Relevance (under 40%%)"
-msgstr ""
+msgstr "Lage relevantie (onder 40%%)"
 
 #: app/templates/trending/articles.html:48
 #: app/templates/trending/articles.html:141
-#, fuzzy
 msgid "Unscored"
-msgstr "twijfel"
+msgstr "Niet gescoord"
 
 #: app/templates/trending/articles.html:49
-#, fuzzy
 msgid "Scored"
-msgstr "Bronnen"
+msgstr "Gescoord"
 
 #: app/templates/trending/articles.html:56
-#, fuzzy
 msgid "Filter"
-msgstr "Filters toepassen"
+msgstr "Filter"
 
 #: app/templates/trending/articles.html:66
 msgid "Filtering by keyword:"
-msgstr ""
+msgstr "Filteren op trefwoord:"
 
 #: app/templates/trending/articles.html:76
-#, fuzzy
 msgid "Recent Articles"
-msgstr "Recente Updates"
+msgstr "Recente artikelen"
 
 #: app/templates/trending/articles.html:78
 msgid "0 selected"
-msgstr ""
+msgstr "0 geselecteerd"
 
 #: app/templates/trending/articles.html:82
 msgid "Score Selected"
-msgstr ""
+msgstr "Geselecteerde items scoren"
 
 #: app/templates/trending/articles.html:87
-#, fuzzy
 msgid "Create Topic"
-msgstr "Profiel aanmaken"
+msgstr "Onderwerp aanmaken"
 
 #: app/templates/trending/articles.html:112
 msgid "Unknown"
-msgstr ""
+msgstr "Onbekend"
 
 #: app/templates/trending/articles.html:114
 #, python-format
 msgid "Published: %(date)s"
-msgstr ""
+msgstr "Gepubliceerd: %(date)s"
 
 #: app/templates/trending/articles.html:116
 #, python-format
 msgid "Fetched: %(date)s"
-msgstr ""
+msgstr "Opgehaald: %(date)s"
 
 #: app/templates/trending/articles.html:126
 msgid ""
 "Relevance: How valuable for civic discussion (policy, society, debates)"
 msgstr ""
+"Relevantie: Waarde voor maatschappelijk debat (beleid, samenleving, "
+"discussies)"
 
 #: app/templates/trending/articles.html:133
 msgid "relevance"
-msgstr ""
+msgstr "relevantie"
 
 #: app/templates/trending/articles.html:146
 msgid "Clickbait risk: Higher = more sensational headlines"
-msgstr ""
+msgstr "Clickbait-risico: Hoger = meer sensationele koppen"
 
 #: app/templates/trending/articles.html:151
 msgid "Low clickbait"
-msgstr ""
+msgstr "Laag clickbait"
 
 #: app/templates/trending/articles.html:151
 msgid "Med clickbait"
-msgstr ""
+msgstr "Gemiddeld clickbait"
 
 #: app/templates/trending/articles.html:151
 msgid "High clickbait"
-msgstr ""
+msgstr "Hoog clickbait"
 
 #: app/templates/trending/articles.html:161
 msgid "Promote to Topic"
-msgstr ""
+msgstr "Naar onderwerp promoveren"
 
 #: app/templates/trending/articles.html:195
 msgid "No articles found."
-msgstr ""
+msgstr "Geen artikelen gevonden."
 
 #: app/templates/trending/articles.html:197
 msgid "Try adjusting your filters."
-msgstr ""
+msgstr "Probeer uw filters aan te passen."
 
 #: app/templates/trending/articles.html:199
 msgid "Run the pipeline to fetch articles from news sources."
-msgstr ""
+msgstr "Voer de pipeline uit om artikelen van nieuwsbronnen op te halen."
 
 #: app/templates/trending/articles.html:217
-#, fuzzy
 msgid "selected"
-msgstr "Taal selecteren"
+msgstr "geselecteerd"
 
 #: app/templates/trending/dashboard.html:3
 msgid "Trending Topics - Admin"
-msgstr ""
+msgstr "Trending Topics - Admin"
 
 #: app/templates/trending/dashboard.html:9
 msgid ""
 "News-to-Deliberation Compiler - Manage trending topics from curated news "
 "sources"
 msgstr ""
+"News-to-Deliberation Compiler - Beheer trending topics van gecureerde "
+"nieuwsbronnen"
 
 #: app/templates/trending/dashboard.html:14
 msgid "Pending Review"
-msgstr ""
+msgstr "In afwachting van beoordeling"
 
 #: app/templates/trending/dashboard.html:18
 #: app/templates/trending/dashboard.html:254
-#, fuzzy
 msgid "Published"
-msgstr "Voor uitgevers"
+msgstr "Gepubliceerd"
 
 #: app/templates/trending/dashboard.html:22
-#, fuzzy
 msgid "Articles (24h)"
-msgstr "Doe mee"
+msgstr "Artikelen (24u)"
 
 #: app/templates/trending/dashboard.html:26
-#, fuzzy
 msgid "Active Sources"
-msgstr "Bronnen"
+msgstr "Actieve bronnen"
 
 #: app/templates/trending/dashboard.html:34
 msgid "Social Media Posting Status"
-msgstr ""
+msgstr "Status social media-berichten"
 
 #: app/templates/trending/dashboard.html:46
 #: app/templates/trending/dashboard.html:64
-#, fuzzy
 msgid "Configured"
-msgstr "Doorgaan"
+msgstr "Geconfigureerd"
 
 #: app/templates/trending/dashboard.html:48
 msgid "Not Configured"
-msgstr ""
+msgstr "Niet geconfigureerd"
 
 #: app/templates/trending/dashboard.html:52
 #: app/templates/trending/dashboard.html:70
 msgid "Handle:"
-msgstr ""
+msgstr "Handle:"
 
 #: app/templates/trending/dashboard.html:62
 msgid "X (Twitter)"
-msgstr ""
+msgstr "X (Twitter)"
 
 #: app/templates/trending/dashboard.html:66
 msgid "Awaiting Setup"
-msgstr ""
+msgstr "Wacht op setup"
 
 #: app/templates/trending/dashboard.html:74
-#, fuzzy
 msgid "Today:"
-msgstr "Dagelijks"
+msgstr "Vandaag:"
 
 #: app/templates/trending/dashboard.html:76
 #, python-format
 msgid "%(used)s/%(limit)s posts"
-msgstr ""
+msgstr "%(used)s/%(limit)s berichten"
 
 #: app/templates/trending/dashboard.html:80
 msgid "This Month:"
-msgstr ""
+msgstr "Deze maand:"
 
 #: app/templates/trending/dashboard.html:97
 #, python-format
 msgid "⚠️ Approaching monthly limit (%(remaining)s posts remaining)"
-msgstr ""
+msgstr "⚠️ Nadert maandelijks limiet (%(remaining)s berichten resterend)"
 
 #: app/templates/trending/dashboard.html:103
 msgid ""
 "Add X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET to "
 "environment variables."
 msgstr ""
+"Voeg X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET toe aan "
+"omgevingsvariabelen."
 
 #: app/templates/trending/dashboard.html:116
 msgid "Run Pipeline Now"
-msgstr ""
+msgstr "Pipeline nu uitvoeren"
 
 #: app/templates/trending/dashboard.html:122
 msgid "Process Pending Topics"
-msgstr ""
+msgstr "Behandel openstaande onderwerpen"
 
 #: app/templates/trending/dashboard.html:126
-#, fuzzy
 msgid "View Articles"
-msgstr "Doe mee"
+msgstr "Bekijk artikelen"
 
 #: app/templates/trending/dashboard.html:129
-#, fuzzy
 msgid "Manage Sources"
-msgstr "Bronnen"
+msgstr "Beheer bronnen"
 
 #: app/templates/trending/dashboard.html:132
 msgid ""
 "This will clean promotional content from all article summaries and topic "
 "descriptions. Continue?"
 msgstr ""
+"Dit verwijdert promotionele inhoud uit alle artikelsamenvatting en "
+"onderwerpbeschrijvingen. Doorgaan?"
 
 #: app/templates/trending/dashboard.html:135
-#, fuzzy
 msgid "Clean Summaries"
-msgstr "Meer lezen"
+msgstr "Schone samenvattingen"
 
 #: app/templates/trending/dashboard.html:142
 msgid "Review Queue"
-msgstr ""
+msgstr "Beoordelingswachtrij"
 
 #: app/templates/trending/dashboard.html:155
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d source"
 msgid_plural "%(num)d sources"
-msgstr[0] "Bronnen"
-msgstr[1] ""
+msgstr[0] "%(num)d bron"
+msgstr[1] "%(num)d bronnen"
 
 #: app/templates/trending/dashboard.html:157
 msgid "Civic:"
-msgstr ""
+msgstr "Maatschappelijk:"
 
 #: app/templates/trending/dashboard.html:160
 #: app/templates/trending/topic_detail.html:86
 msgid "Quality:"
-msgstr ""
+msgstr "Kwaliteit:"
 
 #: app/templates/trending/dashboard.html:163
 msgid "RISK:"
-msgstr ""
+msgstr "RISICO:"
 
 #: app/templates/trending/dashboard.html:163
-#, fuzzy
 msgid "Flagged"
-msgstr "Taal"
+msgstr "Gemarkeerd"
 
 #: app/templates/trending/dashboard.html:176
 msgid "Auto-Publish Eligible"
-msgstr ""
+msgstr "Geschikt voor automatisch publiceren"
 
 #: app/templates/trending/dashboard.html:182
-#, fuzzy
 msgid "Created:"
-msgstr "Aanmaken"
+msgstr "Gemaakt:"
 
 #: app/templates/trending/dashboard.html:190
 #, python-format
 msgid "Showing %(count)d of %(total)d pending topics"
-msgstr ""
+msgstr "%(count)d van %(total)d onderwerpen in afwachting weergegeven"
 
 #: app/templates/trending/dashboard.html:213
 msgid "No topics pending review."
-msgstr ""
+msgstr "Geen onderwerpen in afwachting van beoordeling."
 
 #: app/templates/trending/dashboard.html:214
 msgid "Click \"Run Pipeline Now\" to fetch and process new articles."
 msgstr ""
+"Klik op \"Pipeline nu uitvoeren\" om nieuwe artikelen op te halen en te "
+"verwerken."
 
 #: app/templates/trending/dashboard.html:222
 msgid "Trending in Premium Sources"
-msgstr ""
+msgstr "Trending in Premium-bronnen"
 
 #: app/templates/trending/dashboard.html:223
 msgid ""
 "Topics being discussed by The Economist, FT, UnHerd, podcasts, etc. Click to"
 " filter articles."
 msgstr ""
+"Onderwerpen die worden besproken door The Economist, FT, UnHerd, podcasts, "
+"enz. Klik om artikelen te filteren."
 
 #: app/templates/trending/dashboard.html:241
-#, fuzzy
 msgid "All Topics Summary"
-msgstr "Alle onderwerpen"
+msgstr "Samenvatting alle onderwerpen"
 
 #: app/templates/trending/dashboard.html:258
 msgid "Merged"
-msgstr ""
+msgstr "Samengevoegd"
 
 #: app/templates/trending/dashboard.html:262
-#, fuzzy
 msgid "Discarded"
-msgstr "oneens"
+msgstr "Verworpen"
 
 #: app/templates/trending/sources.html:3
 msgid "Manage News Sources - Trending Topics"
-msgstr ""
+msgstr "Nieuwsbronnen beheren - Trending topics"
 
 #: app/templates/trending/sources.html:8
 #: app/templates/trending/topic_detail.html:8
-#, fuzzy
 msgid "← Back to Dashboard"
-msgstr "Dashboard"
+msgstr "← Terug naar Dashboard"
 
 #: app/templates/trending/sources.html:11
-#, fuzzy
 msgid "Manage News Sources"
-msgstr "Bronnen"
+msgstr "Nieuwsbronnen beheren"
 
 #: app/templates/trending/sources.html:15
-#, fuzzy
 msgid "Add New Source"
-msgstr "Bronnen"
+msgstr "Nieuwe bron toevoegen"
 
 #: app/templates/trending/sources.html:22
 msgid "e.g., Financial Times"
-msgstr ""
+msgstr "bijv. Financial Times"
 
 #: app/templates/trending/sources.html:26
-#, fuzzy
 msgid "Source Type"
-msgstr "Bronnen"
+msgstr "Brontype"
 
 #: app/templates/trending/sources.html:28
 msgid "RSS Feed"
-msgstr ""
+msgstr "RSS Feed"
 
 #: app/templates/trending/sources.html:29
 msgid "Guardian API"
-msgstr ""
+msgstr "Guardian API"
 
 #: app/templates/trending/sources.html:35
 msgid "Feed URL / API Endpoint"
-msgstr ""
+msgstr "Feed-URL / API-eindpunt"
 
 #: app/templates/trending/sources.html:40
 msgid "Reputation Score (0-1)"
-msgstr ""
+msgstr "Reputatiescore (0-1)"
 
 #: app/templates/trending/sources.html:46
-#, fuzzy
 msgid "Add Source"
-msgstr "Bronnen"
+msgstr "Bron toevoegen"
 
 #: app/templates/trending/sources.html:53
-#, fuzzy
 msgid "Current Sources"
-msgstr "Bronnen"
+msgstr "Huidige bronnen"
 
 #: app/templates/trending/sources.html:61
 msgid "Reputation:"
-msgstr ""
+msgstr "Reputatie:"
 
 #: app/templates/trending/sources.html:65
 msgid "Last fetched:"
-msgstr ""
+msgstr "Laatst opgehaald:"
 
 #: app/templates/trending/sources.html:67
 msgid "Never fetched"
-msgstr ""
+msgstr "Nooit opgehaald"
 
 #: app/templates/trending/sources.html:70
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d error"
 msgid_plural "%(num)d errors"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d fout"
+msgstr[1] "%(num)d fouten"
 
 #: app/templates/trending/sources.html:86
 msgid "Delete this source?"
-msgstr ""
+msgstr "Deze bron verwijderen?"
 
 #: app/templates/trending/sources.html:94
 msgid "No sources configured. Add your first source above."
-msgstr ""
+msgstr "Geen bronnen geconfigureerd. Voeg hierboven uw eerste bron toe."
 
 #: app/templates/trending/topic_detail.html:32
-#, fuzzy
 msgid "Civic Score"
-msgstr "Bronnen"
+msgstr "Maatschappelijke score"
 
 #: app/templates/trending/topic_detail.html:38
 msgid "Quality Score"
-msgstr ""
+msgstr "Kwaliteitsscore"
 
 #: app/templates/trending/topic_detail.html:44
 msgid "Risk Flag"
-msgstr ""
+msgstr "Risicomarkering"
 
 #: app/templates/trending/topic_detail.html:46
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #: app/templates/trending/topic_detail.html:53
 msgid "Risk Reason"
-msgstr ""
+msgstr "Risicoredenen"
 
 #: app/templates/trending/topic_detail.html:60
 msgid "Canonical Tags"
-msgstr ""
+msgstr "Canonical Tags"
 
 #: app/templates/trending/topic_detail.html:97
-#, fuzzy
 msgid "Seed Statements"
-msgstr "Stelling toevoegen"
+msgstr "Seed Statements"
 
 #: app/templates/trending/topic_detail.html:101
-#, fuzzy
 msgid "Regenerate"
-msgstr "Rapport genereren"
+msgstr "Opnieuw genereren"
 
 #: app/templates/trending/topic_detail.html:121
-#, fuzzy
 msgid "No seed statements generated yet."
-msgstr "Nog geen stellingen"
+msgstr "Nog geen seed statements gegenereerd."
 
 #: app/templates/trending/topic_detail.html:128
-#, fuzzy
 msgid "Edit Topic"
-msgstr "Profiel aanmaken"
+msgstr "Onderwerp bewerken"
 
 #: app/templates/trending/topic_detail.html:133
 msgid "Title (Neutral Framing Question)"
-msgstr ""
+msgstr "Titel (Neutrale Vraagstelling)"
 
 #: app/templates/trending/topic_detail.html:143
-#, fuzzy
 msgid "Update Topic"
-msgstr "Profiel aanmaken"
+msgstr "Onderwerp bijwerken"
 
 #: app/templates/trending/topic_detail.html:157
-#, fuzzy
 msgid "Publish as Discussion"
-msgstr "Uw Discussies"
+msgstr "Publiceren als Discussie"
 
 #: app/templates/trending/topic_detail.html:164
-#, fuzzy
 msgid "Rescore Topic"
-msgstr "Profiel aanmaken"
+msgstr "Onderwerp Opnieuw Scoren"
 
 #: app/templates/trending/topic_detail.html:171
 msgid "Are you sure you want to discard this topic?"
-msgstr ""
+msgstr "Weet je zeker dat je dit onderwerp wilt verwijderen?"
 
 #: app/templates/trending/topic_detail.html:172
-#, fuzzy
 msgid "Discard"
-msgstr "oneens"
+msgstr "Verwijderen"
 
 #: app/templates/trending/topic_detail.html:177
-#, fuzzy
 msgid "Merge into Existing Discussion"
-msgstr "Meedoen aan discussie"
+msgstr "Samenvoegen met Bestaande Discussie"
 
 #: app/templates/trending/topic_detail.html:181
-#, fuzzy
 msgid "Select a discussion..."
-msgstr "Discussies zoeken…"
+msgstr "Selecteer een discussie..."
 
 #: app/templates/trending/topic_detail.html:187
 msgid "Merge"
-msgstr ""
+msgstr "Samenvoegen"
 
 #: app/templates/trending/topic_detail.html:199
-#, fuzzy
 msgid "Published as Discussion"
-msgstr "Uw Discussies"
+msgstr "Gepubliceerd als Discussie"
 
 #: app/templates/trending/topic_detail.html:202
 #, python-format
 msgid "View: %(title)s"
-msgstr ""
+msgstr "Weergave: %(title)s"
 
 #: app/templates/trending/topic_detail.html:208
 msgid ""
 "This will delete the live discussion and revert the topic to the review "
 "queue. Continue?"
 msgstr ""
+"Dit verwijdert de live discussie en zet het onderwerp terug in de "
+"beoordelingswachtrij. Doorgaan?"
 
 #: app/templates/trending/topic_detail.html:209
-#, fuzzy
 msgid "Unpublish"
-msgstr "Openbaar Profiel"
+msgstr "Publicatie Ongedaan Maken"
 
 #: app/templates/trending/topic_detail.html:216
 msgid "Share to Social Media"
-msgstr ""
+msgstr "Delen op Social Media"
 
 #: app/templates/trending/topic_detail.html:224
 msgid "Post to Bluesky"
-msgstr ""
+msgstr "Posten naar Bluesky"
 
 #: app/templates/trending/topic_detail.html:232
-#, fuzzy
 msgid "Share on X"
-msgstr "oneens"
+msgstr "Delen op X"
 
 #: app/templates/trending/topic_detail.html:235
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr ""
+"Bluesky plaatst automatisch. X opent in een nieuw tabblad met vooringevulde "
+"tekst."
 
 #~ msgid "Claim"
 #~ msgstr "Stelling"
