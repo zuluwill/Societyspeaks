@@ -7,7 +7,7 @@ try:
 except ImportError:  # Optional in dev/test environments
     Talisman = None
 from flask_wtf.csrf import CSRFProtect
-from flask_babel import Babel
+from flask_babel import Babel, gettext as _
 from config import Config, config_dict
 from datetime import timedelta
 from werkzeug.exceptions import HTTPException
@@ -419,6 +419,11 @@ def create_app():
         app.config['BABEL_TRANSLATION_DIRECTORIES'] = Config.BABEL_TRANSLATION_DIRECTORIES
     # Expose supported languages and current locale to every Jinja2 template
     app.jinja_env.globals['supported_languages'] = SUPPORTED_LANGUAGES
+    # For strings passed to JSON/JS: Jinja's _() always does ``msg % kwargs`` (empty dict
+    # breaks ``%(name)s`` placeholders). Flask-Babel gettext leaves the string unchanged
+    # when no kwargs — use gettext_js for runtime JS format strings.
+    from flask_babel import gettext as gettext_js
+    app.jinja_env.globals['gettext_js'] = gettext_js
 
     @app.context_processor
     def inject_i18n():
@@ -718,20 +723,20 @@ def create_app():
     @app.errorhandler(403)
     def forbidden(e):
         app.logger.warning(f"403 Forbidden: {e}")
-        return render_template('errors/403.html', error_code=403, error_message="You don't have permission to access this resource."), 403
+        return render_template('errors/403.html', error_code=403, error_message=_("You don't have permission to access this resource.")), 403
 
     # Error handler for 404 Not Found
     @app.errorhandler(404)
     def page_not_found(e):
         # Log at debug level to avoid log pollution from bots/crawlers
         app.logger.debug(f"404 Page Not Found: {e}")
-        return render_template('errors/404.html', error_code=404, error_message="The page you're looking for doesn't exist."), 404
+        return render_template('errors/404.html', error_code=404, error_message=_("The page you're looking for doesn't exist.")), 404
 
     # Error handler for 500 Internal Server Error
     @app.errorhandler(500)
     def internal_server_error(e):
         app.logger.error(f"500 Internal Server Error: {e}")
-        return render_template('errors/500.html', error_code=500, error_message="An internal server error occurred. Please try again later."), 500
+        return render_template('errors/500.html', error_code=500, error_message=_("An internal server error occurred. Please try again later.")), 500
 
     # Catch-all error handler for unhandled exceptions
     @app.errorhandler(Exception)
@@ -740,28 +745,28 @@ def create_app():
         if isinstance(e, HTTPException):
             return e
         app.logger.error(f"Unhandled Exception: {e}", exc_info=True)  # Logs full stack trace
-        return render_template('errors/general_error.html', error_code=500, error_message="An unexpected error occurred."), 500
+        return render_template('errors/general_error.html', error_code=500, error_message=_("An unexpected error occurred.")), 500
 
     # Error handler for 400 Bad Request
     @app.errorhandler(400)
     def bad_request(e):
         app.logger.warning(f"400 Bad Request: {e}")
-        return render_template('errors/400.html', error_code=400, 
-               error_message="The server couldn't understand your request."), 400
+        return render_template('errors/400.html', error_code=400,
+               error_message=_("The server couldn't understand your request.")), 400
 
     # Error handler for 401 Unauthorized
     @app.errorhandler(401)
     def unauthorized(e):
         app.logger.warning(f"401 Unauthorized: {e}")
-        return render_template('errors/401.html', error_code=401, 
-               error_message="Authentication is required to access this resource."), 401
+        return render_template('errors/401.html', error_code=401,
+               error_message=_("Authentication is required to access this resource.")), 401
 
     # Error handler for 405 Method Not Allowed
     @app.errorhandler(405)
     def method_not_allowed(e):
         app.logger.warning(f"405 Method Not Allowed: {e}")
-        return render_template('errors/405.html', error_code=405, 
-               error_message="The method used is not allowed for this resource."), 405
+        return render_template('errors/405.html', error_code=405,
+               error_message=_("The method used is not allowed for this resource.")), 405
 
     # Error handler for 429 Too Many Requests
     @app.errorhandler(429)
@@ -776,12 +781,12 @@ def create_app():
             or request.path.startswith('/api/')
         )
         if is_json_client:
-            resp = jsonify({'error': 'rate_limited', 'message': f'Too many requests. Please retry in {retry_after} seconds.'})
+            resp = jsonify({'error': 'rate_limited', 'message': _('Too many requests. Please retry in %(retry_after)s seconds.', retry_after=retry_after)})
             resp.status_code = 429
             resp.headers['Retry-After'] = str(retry_after)
             return resp
         r = make_response(render_template('errors/429.html', error_code=429,
-               error_message="Too many requests. Please try again later."), 429)
+               error_message=_("Too many requests. Please try again later.")), 429)
         r.headers['Retry-After'] = str(retry_after)
         return r
 

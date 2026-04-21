@@ -1,29 +1,29 @@
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
-{% block title %}Saved Discussions{% endblock %}
+{% block title %}{{ _('Saved Discussions') }}{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 px-4 sm:py-8 sm:px-6 lg:px-8">
   <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">Saved Discussions</span>
+    <span class="text-gray-900 font-medium">{{ _('Saved Discussions') }}</span>
   </nav>
 
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Saved Discussions</h1>
+      <h1 class="text-2xl font-bold text-gray-900">{{ _('Saved Discussions') }}</h1>
       <p class="text-sm text-gray-500 mt-0.5">
         {% if q %}
-          {{ pagination.total }} result{{ 's' if pagination.total != 1 else '' }} for "<strong>{{ q }}</strong>"
+          {{ ngettext('%(num)d result for "%(query)s"', '%(num)d results for "%(query)s"', pagination.total, query=q) }}
         {% else %}
-          {{ pagination.total }} saved discussion{{ 's' if pagination.total != 1 else '' }}
+          {{ ngettext('%(num)d saved discussion', '%(num)d saved discussions', pagination.total) }}
         {% endif %}
       </p>
     </div>
     <a href="{{ url_for('discussions.search_discussions') }}"
        class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 shrink-0">
-      Browse discussions
+      {{ _('Browse discussions') }}
     </a>
   </div>
 
@@ -36,7 +36,7 @@
         type="search"
         name="q"
         value="{{ q }}"
-        placeholder="Search saved discussions..."
+        placeholder="{{ _('Search saved discussions...') }}"
         class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
       >
     </div>
@@ -45,20 +45,20 @@
   {% if discussions %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {% for discussion in discussions %}
-        {{ discussion_card(discussion, button_label='Open') }}
+        {{ discussion_card(discussion, button_label=_('Open')) }}
       {% endfor %}
     </div>
 
     {% if pagination.pages > 1 %}
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-6">
       <p class="text-sm text-gray-500">
-        Showing {{ (pagination.page - 1) * pagination.per_page + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+        {{ _('Showing %(from)s–%(to)s of %(total)d', from=(pagination.page - 1) * pagination.per_page + 1, to=[pagination.page * pagination.per_page, pagination.total] | min, total=pagination.total) }}
       </p>
       <nav class="flex items-center gap-1">
         {% if pagination.has_prev %}
-          <a href="{{ url_for('auth.saved_discussions', page=pagination.prev_num, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">← Prev</a>
+          <a href="{{ url_for('auth.saved_discussions', page=pagination.prev_num, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ _('← Prev') }}</a>
         {% else %}
-          <span class="px-3 py-1.5 text-sm text-gray-300 border border-gray-200 rounded-md">← Prev</span>
+          <span class="px-3 py-1.5 text-sm text-gray-300 border border-gray-200 rounded-md">{{ _('← Prev') }}</span>
         {% endif %}
         {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
           {% if p %}
@@ -72,9 +72,9 @@
           {% endif %}
         {% endfor %}
         {% if pagination.has_next %}
-          <a href="{{ url_for('auth.saved_discussions', page=pagination.next_num, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Next →</a>
+          <a href="{{ url_for('auth.saved_discussions', page=pagination.next_num, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ _('Next →') }}</a>
         {% else %}
-          <span class="px-3 py-1.5 text-sm text-gray-300 border border-gray-200 rounded-md">Next →</span>
+          <span class="px-3 py-1.5 text-sm text-gray-300 border border-gray-200 rounded-md">{{ _('Next →') }}</span>
         {% endif %}
       </nav>
     </div>
@@ -82,13 +82,13 @@
   {% else %}
     <div class="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
       {% if q %}
-        <p class="text-sm font-medium text-gray-600 mb-1">No saved discussions match "{{ q }}"</p>
-        <a href="{{ url_for('auth.saved_discussions') }}" class="text-sm text-primary-600 hover:underline">Clear search</a>
+        <p class="text-sm font-medium text-gray-600 mb-1">{{ _('No saved discussions match "%(query)s"', query=q) }}</p>
+        <a href="{{ url_for('auth.saved_discussions') }}" class="text-sm text-primary-600 hover:underline">{{ _('Clear search') }}</a>
       {% else %}
-        <p class="text-sm font-medium text-gray-600 mb-1">No saved discussions yet</p>
-        <p class="text-xs text-gray-400 mb-4">Save a discussion from its page to build your watchlist.</p>
+        <p class="text-sm font-medium text-gray-600 mb-1">{{ _('No saved discussions yet') }}</p>
+        <p class="text-xs text-gray-400 mb-4">{{ _('Save a discussion from its page to build your watchlist.') }}</p>
         <a href="{{ url_for('discussions.search_discussions') }}" class="inline-block bg-primary-600 text-white px-5 py-2 rounded-md hover:bg-primary-700 text-sm font-medium">
-          Explore discussions
+          {{ _('Explore discussions') }}
         </a>
       {% endif %}
     </div>

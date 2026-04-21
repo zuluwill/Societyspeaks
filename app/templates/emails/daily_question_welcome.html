@@ -1,15 +1,15 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Welcome to Daily Civic Questions - Society Speaks{% endblock %}
+{% block title %}{{ _('Welcome to Daily Civic Questions - Society Speaks') }}{% endblock %}
 
-{% block preheader %}You're subscribed! Get 5 civic questions each week (or choose daily).{% endblock %}
+{% block preheader %}{{ _("You're subscribed! Get 5 civic questions each week (or choose daily).") }}{% endblock %}
 
-{% block header_title %}Daily Questions{% endblock %}
+{% block header_title %}{{ _('Daily Questions') }}{% endblock %}
 
 {% block header_subtitle %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #bfdbfe;">
-        You're subscribed!
+        {{ _("You're subscribed!") }}
     </td>
 </tr>
 {% endblock %}
@@ -18,7 +18,7 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 24px;">
-            Welcome to Daily Civic Questions! By default, you'll receive <strong>5 questions each week</strong> (on Tuesdays at 9am), but you can choose daily or monthly if you prefer.
+            {{ _("Welcome to Daily Civic Questions! By default, you'll receive <strong>5 questions each week</strong> (on Tuesdays at 9am), but you can choose daily or monthly if you prefer.")|safe }}
         </td>
     </tr>
     <tr>
@@ -26,15 +26,15 @@
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af; padding-bottom: 8px;">
-                        How it works:
+                        {{ _('How it works:') }}
                     </td>
                 </tr>
                 <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.8; color: #374151;">
-                        <strong>1.</strong> You'll receive questions by email (weekly by default, or choose daily/monthly)<br>
-                        <strong>2.</strong> Click the magic link to vote (no login needed)<br>
-                        <strong>3.</strong> See how your view compares to others<br>
-                        <strong>4.</strong> Build your participation streak!
+                        {{ _("<strong>1.</strong> You'll receive questions by email (weekly by default, or choose daily/monthly)")|safe }}<br>
+                        {{ _('<strong>2.</strong> Click the magic link to vote (no login needed)')|safe }}<br>
+                        {{ _('<strong>3.</strong> See how your view compares to others')|safe }}<br>
+                        {{ _('<strong>4.</strong> Build your participation streak!')|safe }}
                     </td>
                 </tr>
             </table>
@@ -49,7 +49,7 @@
                             <tr>
                                 <td align="center" style="background-color: #1e40af; border-radius: 6px;">
                                     <a href="{{ magic_link_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 32px;">
-                                        Answer Today's Question
+                                        {{ _("Answer Today's Question") }}
                                     </a>
                                 </td>
                             </tr>
@@ -61,13 +61,15 @@
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #6b7280; padding-bottom: 16px;">
-            You can always visit <a href="{{ daily_question_url }}" style="color: #1e40af;">{{ daily_question_url }}</a> to see the latest question.
+            {% set _dq_link = '<a href="' ~ daily_question_url ~ '" style="color: #1e40af;">' ~ daily_question_url ~ '</a>' %}
+            {{ _('You can always visit %(link)s to see the latest question.', link=_dq_link)|safe }}
         </td>
     </tr>
     {% if preferences_url %}
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #6b7280;">
-            Want to change your email frequency? <a href="{{ preferences_url }}" style="color: #1e40af; text-decoration: underline;">Manage your preferences</a>.
+            {% set _pref_link = '<a href="' ~ preferences_url ~ '" style="color: #1e40af; text-decoration: underline;">' ~ _('Manage your preferences') ~ '</a>' %}
+            {{ _('Want to change your email frequency? %(link)s.', link=_pref_link)|safe }}
         </td>
     </tr>
     {% endif %}
@@ -77,7 +79,7 @@
 {% block footer_links %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569;">
-        <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">Unsubscribe</a>
+        <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">{{ _('Unsubscribe') }}</a>
     </td>
 </tr>
 {% endblock %}

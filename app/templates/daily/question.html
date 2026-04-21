@@ -1,18 +1,22 @@
 {% extends "layout.html" %}
 {% from "components/share_button.html" import share_button %}
 
-{% block title %}Daily Question #{{ question.question_number }} - Society Speaks{% endblock %}
+{% block title %}{{ _('Daily Question #%(num)d - Society Speaks', num=question.question_number) }}{% endblock %}
 
-{% block meta_description %}Today's civic question: {{ question.question_text[:100] }}... Share your perspective in under 2 minutes.{% endblock %}
+{% block meta_description %}{{ _("Today's civic question: %(text)s... Share your perspective in under 2 minutes.", text=question.question_text[:100]) }}{% endblock %}
 
 {% set share_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
-{% set share_text = '"' ~ question.question_text[:200] ~ '"' ~ (' - Powered by https://societyspeaks.io' if question.question_text|length <= 200 else '..." - societyspeaks.io') %}
+{% if question.question_text|length <= 200 %}
+  {% set share_text = _('"%(text)s" - Powered by https://societyspeaks.io', text=question.question_text) %}
+{% else %}
+  {% set share_text = _('"%(text)s..." - societyspeaks.io', text=question.question_text[:200]) %}
+{% endif %}
 
-{% block og_title %}{{ question.question_text[:70] }}... - Daily Civic Question{% endblock %}
-{% block og_description %}Take 2 minutes to share your view on today's civic question. Powered by Society Speaks - building consensus through meaningful dialogue.{% endblock %}
+{% block og_title %}{{ _('%(text)s... - Daily Civic Question', text=question.question_text[:70]) }}{% endblock %}
+{% block og_description %}{{ _("Take 2 minutes to share your view on today's civic question. Powered by Society Speaks - building consensus through meaningful dialogue.") }}{% endblock %}
 
-{% block twitter_title %}{{ question.question_text[:70] }}... - Daily Question{% endblock %}
-{% block twitter_description %}{{ question.question_text[:200] }}... | Share your perspective in under 2 minutes. Powered by societyspeaks.io{% endblock %}
+{% block twitter_title %}{{ _('%(text)s... - Daily Question', text=question.question_text[:70]) }}{% endblock %}
+{% block twitter_description %}{{ _('%(text)s... | Share your perspective in under 2 minutes. Powered by societyspeaks.io', text=question.question_text[:200]) }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -22,7 +26,7 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Daily Question #{{ question.question_number }}
+                {{ _('Daily Question #%(num)d', num=question.question_number) }}
             </div>
             <p class="text-gray-500 text-sm">{{ question.question_date.strftime('%B %d, %Y') }}</p>
         </div>
@@ -41,7 +45,7 @@
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
                         </svg>
-                        Global
+                        {{ _('Global') }}
                     </span>
                     {% elif question.source_discussion.country %}
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -61,21 +65,21 @@
 
             {% if question.context or question.why_this_question or (source_articles and source_articles|length > 0) %}
             <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-100">
-                <p class="text-sm text-gray-500 mb-2 font-semibold">Context in 15 seconds</p>
+                <p class="text-sm text-gray-500 mb-2 font-semibold">{{ _('Context in 15 seconds') }}</p>
                 {% if question.context %}
                 <p class="text-gray-800 font-medium">{{ question.context }}</p>
                 {% endif %}
 
                 {% if question.why_this_question %}
                 <p class="text-sm text-gray-600 mt-2">
-                    <span class="font-semibold">Why this question:</span> {{ question.why_this_question }}
+                    <span class="font-semibold">{{ _('Why this question:') }}</span> {{ question.why_this_question }}
                 </p>
                 {% endif %}
 
                 {% if source_articles and source_articles|length > 0 %}
                 <div class="mt-3 pt-3 border-t border-gray-200">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                        Source{% if source_articles|length > 1 %}s{% endif %}
+                        {% if source_articles|length > 1 %}{{ _('Sources') }}{% else %}{{ _('Source') }}{% endif %}
                     </p>
                     <div class="space-y-2">
                         {% for article in source_articles %}
@@ -104,9 +108,9 @@
                 {% endif %}
 
                 {% if question.source_discussion %}
-                <a href="{{ url_for('discussions.view_discussion', discussion_id=question.source_discussion.id, slug=question.source_discussion.slug) }}" 
+                <a href="{{ url_for('discussions.view_discussion', discussion_id=question.source_discussion.id, slug=question.source_discussion.slug) }}"
                    class="inline-flex items-center text-primary-600 hover:text-primary-800 text-sm mt-3 font-medium">
-                    Dive deeper into the full discussion
+                    {{ _('Dive deeper into the full discussion') }}
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
@@ -120,25 +124,25 @@
                 <input type="hidden" id="context_expanded" name="context_expanded" value="0">
                 <input type="hidden" id="source_link_click_count" name="source_link_click_count" value="0">
                 <fieldset class="border-0 p-0 m-0 min-w-0">
-                <legend class="sr-only">Your vote on today&rsquo;s question: agree, disagree, or unsure</legend>
+                <legend class="sr-only">{{ _("Your vote on today's question: agree, disagree, or unsure") }}</legend>
                 <div class="vote-buttons-grid">
                     <button type="button" value="agree"
-                            aria-label="Agree with this statement"
+                            aria-label="{{ _('Agree with this statement') }}"
                             class="vote-btn vote-btn-agree"
                             aria-pressed="false">
-                      <span class="vote-content"><span class="vote-label">Agree</span></span>
+                      <span class="vote-content"><span class="vote-label">{{ _('Agree') }}</span></span>
                     </button>
                     <button type="button" value="disagree"
-                            aria-label="Disagree with this statement"
+                            aria-label="{{ _('Disagree with this statement') }}"
                             class="vote-btn vote-btn-disagree"
                             aria-pressed="false">
-                      <span class="vote-content"><span class="vote-label">Disagree</span></span>
+                      <span class="vote-content"><span class="vote-label">{{ _('Disagree') }}</span></span>
                     </button>
                     <button type="button" value="unsure"
-                            aria-label="Unsure about this statement"
+                            aria-label="{{ _('Unsure about this statement') }}"
                             class="vote-btn vote-btn-unsure"
                             aria-pressed="false">
-                      <span class="vote-content"><span class="vote-label">Unsure</span></span>
+                      <span class="vote-content"><span class="vote-label">{{ _('Unsure') }}</span></span>
                     </button>
                 </div>
                 </fieldset>
@@ -147,39 +151,39 @@
                 {% set show_initially = false %}
                 {% set include_submit_button = true %}
                 {% set button_type = 'button' %}
-                {% set submit_button_text = 'Submit My Response' %}
+                {% set submit_button_text = _('Submit My Response') %}
                 {% include 'daily/_reason_input.html' %}
             </form>
         </div>
 
         <div class="text-center text-sm space-y-2">
-            <p class="text-gray-500">Takes less than 2 minutes. Your response helps shape the signal.</p>
+            <p class="text-gray-500">{{ _('Takes less than 2 minutes. Your response helps shape the signal.') }}</p>
             <p class="text-gray-400 text-xs">
-                Share your first take, then explore the full discussion and research tools after voting. Not sure yet? That's a valid answer too.
+                {{ _("Share your first take, then explore the full discussion and research tools after voting. Not sure yet? That's a valid answer too.") }}
             </p>
         </div>
 
         <div class="mt-8 bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">Share This Question</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">{{ _('Share This Question') }}</h3>
             <div class="flex justify-center">
                 {{ share_button(
-                    title="Daily Civic Question #" ~ question.question_number,
+                    title=_('Daily Civic Question #%(num)d', num=question.question_number),
                     url=share_url,
                     description=share_text,
                     button_style="primary"
                 ) }}
             </div>
-            <p class="text-center text-sm text-gray-500 mt-4">Help us build consensus - share with friends</p>
+            <p class="text-center text-sm text-gray-500 mt-4">{{ _('Help us build consensus - share with friends') }}</p>
         </div>
 
         <div class="mt-8 bg-blue-50 rounded-xl p-6 text-center">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Get tomorrow's question in your inbox</h3>
-            <p class="text-gray-600 mb-4">No login required. We'll send a magic link.</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _("Get tomorrow's question in your inbox") }}</h3>
+            <p class="text-gray-600 mb-4">{{ _("No login required. We'll send a magic link.") }}</p>
             <a href="{{ url_for('daily.subscribe') }}" class="inline-flex items-center px-6 py-3 border-2 border-blue-600 text-primary-600 font-medium rounded-lg hover:bg-blue-100 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                Subscribe for Free
+                {{ _('Subscribe for Free') }}
             </a>
         </div>
     </div>
@@ -231,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.addEventListener('click', function(e) {
             e.preventDefault();
             if (!selectedVote) {
-                alert('Please select Agree, Disagree, or Unsure first.');
+                alert({{ _('Please select Agree, Disagree, or Unsure first.')|tojson }});
                 return;
             }
             const voteInput = document.createElement('input');

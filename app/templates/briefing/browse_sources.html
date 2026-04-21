@@ -5,34 +5,34 @@
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{ breadcrumb([
-            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
-            {'label': 'Browse Sources', 'url': '#'}
+            {'label': _('My Briefings'), 'url': url_for('briefing.list_briefings')},
+            {'label': _('Browse Sources'), 'url': '#'}
         ]) }}
-        
+
         <div class="mb-8">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Browse Sources</h1>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ _('Browse Sources') }}</h1>
                     <p class="mt-2 text-gray-600">
                         {% if briefing %}
-                        Add sources to "{{ briefing.name }}"
+                        {{ _('Add sources to "%(name)s"', name=briefing.name) }}
                         {% else %}
-                        Discover and add content sources to your briefings
+                        {{ _('Discover and add content sources to your briefings') }}
                         {% endif %}
                     </p>
                     {% if briefing %}
-                    <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}" 
-                       class="mt-1 text-sm text-primary-600 hover:text-primary-800">← Back to Briefing</a>
+                    <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}"
+                       class="mt-1 text-sm text-primary-600 hover:text-primary-800">{{ _('← Back to Briefing') }}</a>
                     {% endif %}
                 </div>
                 <div class="flex space-x-3">
                     <a href="{{ url_for('briefing.add_rss_source') }}"
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Add RSS Feed
+                        {{ _('Add RSS Feed') }}
                     </a>
                     <a href="{{ url_for('briefing.upload_source', briefing_id=briefing_id if briefing_id else None) }}"
                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">
-                        Upload File
+                        {{ _('Upload File') }}
                     </a>
                 </div>
             </div>
@@ -42,19 +42,19 @@
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
-                    <input type="text" id="source-search" value="{{ search_query }}" placeholder="Search sources... (filters as you type)"
+                    <input type="text" id="source-search" value="{{ search_query }}" placeholder="{{ _('Search sources... (filters as you type)') }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                 </div>
                 <div class="w-full md:w-48">
                     <select id="source-type-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
-                        <option value="">All Types</option>
+                        <option value="">{{ _('All Types') }}</option>
                         {% for stype in source_types %}
                         <option value="{{ stype|lower }}" {% if source_type == stype %}selected{% endif %}>{{ stype|upper }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <button type="button" id="clear-filters" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hidden">
-                    Clear
+                    {{ _('Clear') }}
                 </button>
             </div>
             <p id="filter-status" class="text-xs text-gray-500 mt-2 hidden"></p>
@@ -68,13 +68,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <div>
-                    <h4 class="font-medium text-amber-900">Want to add sources to a briefing?</h4>
+                    <h4 class="font-medium text-amber-900">{{ _('Want to add sources to a briefing?') }}</h4>
                     <p class="text-sm text-amber-800 mt-1">
-                        Open one of your briefings first, then browse sources to add them directly.
+                        {{ _('Open one of your briefings first, then browse sources to add them directly.') }}
                     </p>
                     <a href="{{ url_for('briefing.list_briefings') }}"
                        class="inline-flex items-center gap-1 text-sm text-amber-900 font-medium mt-2 hover:underline">
-                        View my briefings
+                        {{ _('View my briefings') }}
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
@@ -88,8 +88,8 @@
         {% if system_sources %}
         <div class="mb-8 source-section" id="system-sources-section">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                System Sources
-                <span class="text-sm font-normal text-gray-500" data-count="{{ system_sources|length }}">({{ system_sources|length }} curated sources)</span>
+                {{ _('System Sources') }}
+                <span class="text-sm font-normal text-gray-500" data-count="{{ system_sources|length }}">{{ _('(%(count)d curated sources)', count=system_sources|length) }}</span>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for source_info in system_sources %}
@@ -103,34 +103,34 @@
                             <p class="text-xs text-gray-500 mt-1">{{ source_info.type|upper }}</p>
                         </div>
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-primary-800">
-                            System
+                            {{ _('System') }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-600 mb-3">
                         {% if source_info.is_news_source %}
-                        Curated news source
+                        {{ _('Curated news source') }}
                         {% else %}
-                        System source
+                        {{ _('System source') }}
                         {% endif %}
                     </p>
                     {% if briefing_id and briefing %}
                     {% if source_info.source_obj and source_info.source_obj.status == 'extracting' %}
-                    <p class="text-xs text-gray-500 italic">Extracting text... will be ready shortly</p>
+                    <p class="text-xs text-gray-500 italic">{{ _('Extracting text... will be ready shortly') }}</p>
                     {% elif source_info.source_obj and source_info.source_obj.status == 'failed' %}
-                    <p class="text-xs text-red-600 italic">Extraction failed. Please check the source.</p>
+                    <p class="text-xs text-red-600 italic">{{ _('Extraction failed. Please check the source.') }}</p>
                     {% else %}
                     <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
-                          class="inline" data-confirm="Add {{ source_info.name }} to briefing?">
+                          class="inline" data-confirm="{{ _('Add %(name)s to briefing?', name=source_info.name) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="source_id" value="{{ source_info.id }}">
                         <button type="submit"
                                 class="w-full text-xs px-3 py-1.5 bg-primary-600 text-white font-medium rounded hover:bg-primary-700">
-                            Add to Briefing
+                            {{ _('Add to Briefing') }}
                         </button>
                     </form>
                     {% endif %}
                     {% elif not briefing_id %}
-                    <p class="text-xs text-gray-500 italic">Open a briefing to add sources</p>
+                    <p class="text-xs text-gray-500 italic">{{ _('Open a briefing to add sources') }}</p>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -142,7 +142,7 @@
         {% if user_sources %}
         <div class="mb-8 source-section" id="user-sources-section">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                Your Sources
+                {{ _('Your Sources') }}
                 <span class="text-sm font-normal text-gray-500" data-count="{{ user_sources|length }}">({{ user_sources|length }})</span>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -157,7 +157,7 @@
                             <p class="text-xs text-gray-500 mt-1">{{ source_info.type|upper }}</p>
                         </div>
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            Your Source
+                            {{ _('Your Source') }}
                         </span>
                     </div>
                     <div class="flex items-center space-x-2 mb-3">
@@ -171,22 +171,22 @@
                     </div>
                     {% if briefing_id and briefing %}
                     {% if source_info.source_obj.status == 'extracting' %}
-                    <p class="text-xs text-gray-500 italic">Extracting text... will be ready shortly</p>
+                    <p class="text-xs text-gray-500 italic">{{ _('Extracting text... will be ready shortly') }}</p>
                     {% elif source_info.source_obj.status == 'failed' %}
-                    <p class="text-xs text-red-600 italic">Extraction failed. Please check the source.</p>
+                    <p class="text-xs text-red-600 italic">{{ _('Extraction failed. Please check the source.') }}</p>
                     {% else %}
                     <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
-                          class="inline" data-confirm="Add {{ source_info.name }} to briefing?">
+                          class="inline" data-confirm="{{ _('Add %(name)s to briefing?', name=source_info.name) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="source_id" value="{{ source_info.id }}">
                         <button type="submit"
                                 class="w-full text-xs px-3 py-1.5 bg-primary-600 text-white font-medium rounded hover:bg-primary-700">
-                            Add to Briefing
+                            {{ _('Add to Briefing') }}
                         </button>
                     </form>
                     {% endif %}
                     {% elif not briefing_id %}
-                    <p class="text-xs text-gray-500 italic">Open a briefing to add sources</p>
+                    <p class="text-xs text-gray-500 italic">{{ _('Open a briefing to add sources') }}</p>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -200,12 +200,12 @@
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No sources found</h3>
-            <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">{{ _('No sources found') }}</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ _('Try adjusting your search or filters.') }}</p>
             <div class="mt-6">
                 <a href="{{ url_for('briefing.browse_sources') }}"
                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    Clear Filters
+                    {{ _('Clear Filters') }}
                 </a>
             </div>
         </div>
@@ -274,9 +274,9 @@ document.addEventListener('DOMContentLoaded', function() {
             clearButton.classList.remove('hidden');
             filterStatus.classList.remove('hidden');
             if (visibleCount === 0 && totalCount > 0) {
-                filterStatus.textContent = `No sources match your search`;
+                filterStatus.textContent = '{{ _("No sources match your search") }}';
             } else {
-                filterStatus.textContent = `Showing ${visibleCount} of ${totalCount} sources`;
+                filterStatus.textContent = '{{ _("Showing") }} ' + visibleCount + ' {{ _("of") }} ' + totalCount + ' {{ _("sources") }}';
             }
         } else {
             clearButton.classList.add('hidden');

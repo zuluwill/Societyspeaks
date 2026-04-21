@@ -9,6 +9,9 @@ echo "Running database migrations..."
 # (personal_impact on brief_item). Use normal Alembic upgrades only.
 SQLALCHEMY_MIGRATE=1 flask db upgrade
 
+echo "Running i18n sanity checks (placeholders, bindings, email locale)..."
+python3 scripts/i18n_check.py --skip-pybabel
+
 echo "Compiling translation catalogs (.po -> .mo)..."
 pybabel compile -d translations
 

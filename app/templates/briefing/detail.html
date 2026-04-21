@@ -7,10 +7,10 @@
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{ breadcrumb([
-            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': _('My Briefings'), 'url': url_for('briefing.list_briefings')},
             {'label': briefing.name, 'url': '#'}
         ]) }}
-        
+
         <!-- Header -->
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -23,7 +23,7 @@
                 <div class="flex flex-col sm:flex-row gap-3">
                     <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}"
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Edit
+                        {{ _('Edit') }}
                     </a>
                     <span class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium
                         {% if briefing.status == 'active' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
@@ -45,22 +45,22 @@
                     </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 class="text-sm font-semibold text-amber-900 mb-1">Next Step: Add Content Sources</h3>
+                    <h3 class="text-sm font-semibold text-amber-900 mb-1">{{ _('Next Step: Add Content Sources') }}</h3>
                     <p class="text-sm text-amber-800 mb-3">
-                        Your briefing is ready, but it needs content sources to generate briefs. Add RSS feeds, browse curated sources, or upload documents below.
+                        {{ _('Your briefing is ready, but it needs content sources to generate briefs. Add RSS feeds, browse curated sources, or upload documents below.') }}
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ url_for('briefing.browse_sources', briefing_id=briefing.id) }}"
                            class="inline-flex items-center px-3 sm:px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-md hover:bg-amber-700 transition-colors">
-                            Browse Sources
+                            {{ _('Browse Sources') }}
                         </a>
                         <a href="{{ url_for('briefing.add_rss_source') }}"
                            class="inline-flex items-center px-3 sm:px-4 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-md hover:bg-amber-50 transition-colors">
-                            Add RSS Feed
+                            {{ _('Add RSS Feed') }}
                         </a>
                         <a href="{{ url_for('briefing.upload_source', briefing_id=briefing.id) }}"
                            class="inline-flex items-center px-3 sm:px-4 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-md hover:bg-amber-50 transition-colors">
-                            Upload Document
+                            {{ _('Upload Document') }}
                         </a>
                     </div>
                 </div>
@@ -73,61 +73,61 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- Configuration -->
                 <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Configuration</h2>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Configuration') }}</h2>
                     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Frequency</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Frequency') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">{{ briefing.cadence|title }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Timezone</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Timezone') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">{{ briefing.timezone }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Send Time</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Send Time') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">
                                 {{ "%02d:%02d"|format(briefing.preferred_send_hour, briefing.preferred_send_minute|default(0)) }}
-                                {% if briefing.preferred_send_hour < 12 %}AM{% else %}PM{% endif %}
+                                {% if briefing.preferred_send_hour < 12 %}{{ _('AM') }}{% else %}{{ _('PM') }}{% endif %}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Mode</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Mode') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">
-                                {% if briefing.mode == 'auto_send' %}Auto-send{% else %}Approval Required{% endif %}
+                                {% if briefing.mode == 'auto_send' %}{{ _('Auto-send') }}{% else %}{{ _('Approval Required') }}{% endif %}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Visibility</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Visibility') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">{{ briefing.visibility|title }}</dd>
                         </div>
                         {% if next_scheduled_time %}
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Next Brief</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Next Brief') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">
-                                {{ next_scheduled_time.strftime('%B %d, %Y at %I:%M %p') }} 
+                                {{ next_scheduled_time.strftime('%B %d, %Y at %I:%M %p') }}
                                 <span class="text-xs text-gray-500">({{ briefing.timezone }})</span>
                             </dd>
                         </div>
                         {% endif %}
                         {% if briefing.owner_type == 'org' %}
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Sender Name</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Sender Name') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">{{ briefing.from_name or briefing.name }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Sender Email</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Sender Email') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">
                                 {% if briefing.sending_domain and briefing.from_email %}
                                     {{ briefing.from_email }}
                                     <span class="text-xs text-gray-500">({{ briefing.sending_domain.domain }})</span>
                                 {% else %}
-                                    Default
+                                    {{ _('Default') }}
                                 {% endif %}
                             </dd>
                         </div>
                         {% endif %}
                     </dl>
-                    
+
                     {% if briefing.owner_type == 'org' and briefing.sending_domain %}
                         {% if briefing.sending_domain.status != 'verified' %}
                         <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -136,23 +136,22 @@
                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                                 </svg>
                                 <div class="sm:ml-3 flex-1">
-                                    <h3 class="text-sm font-medium text-yellow-800">Domain Not Verified</h3>
+                                    <h3 class="text-sm font-medium text-yellow-800">{{ _('Domain Not Verified') }}</h3>
                                     <p class="mt-1 text-sm text-yellow-700">
-                                        Your sending domain "{{ briefing.sending_domain.domain }}" is not verified. 
-                                        Emails will be sent from the default address until verification is complete.
-                                        <a href="{{ url_for('briefing.verify_domain', domain_id=briefing.sending_domain.id) }}" class="underline font-medium">Verify domain</a>
+                                        {{ _('Your sending domain "%(domain)s" is not verified. Emails will be sent from the default address until verification is complete.', domain=briefing.sending_domain.domain) }}
+                                        <a href="{{ url_for('briefing.verify_domain', domain_id=briefing.sending_domain.id) }}" class="underline font-medium">{{ _('Verify domain') }}</a>
                                     </p>
                                 </div>
                             </div>
                         </div>
                         {% endif %}
                     {% endif %}
-                    
+
                     {% if briefing.owner_type == 'org' %}
                     <div class="mt-4 pt-4 border-t border-gray-200">
-                        <a href="{{ url_for('briefing.list_domains') }}" 
+                        <a href="{{ url_for('briefing.list_domains') }}"
                            class="text-sm text-primary-600 hover:text-primary-800">
-                            Manage Sending Domains →
+                            {{ _('Manage Sending Domains →') }}
                         </a>
                     </div>
                     {% endif %}
@@ -161,27 +160,27 @@
                 <!-- AI Settings / Customise Output -->
                 <div class="bg-white shadow rounded-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900">AI Settings</h2>
-                        <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}#ai-settings" 
-                           class="text-sm text-primary-600 hover:text-primary-800">Customise</a>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ _('AI Settings') }}</h2>
+                        <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}#ai-settings"
+                           class="text-sm text-primary-600 hover:text-primary-800">{{ _('Customise') }}</a>
                     </div>
-                    <p class="text-sm text-gray-500 mb-4">Control how your brief content is generated.</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ _('Control how your brief content is generated.') }}</p>
                     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Tone</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Tone') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">{{ (briefing.tone or 'calm_neutral')|replace('_', ' ')|title }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Max Items</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ briefing.max_items|default(10) }} stories per brief</dd>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Max Items') }}</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ _('%(count)d stories per brief', count=briefing.max_items|default(10)) }}</dd>
                         </div>
                         <div class="sm:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500">Custom Instructions</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ _('Custom Instructions') }}</dt>
                             <dd class="mt-1 text-sm text-gray-900">
                                 {% if briefing.custom_prompt %}
                                 <div class="bg-gray-50 rounded-md p-3 text-sm">{{ briefing.custom_prompt[:200] }}{% if briefing.custom_prompt|length > 200 %}...{% endif %}</div>
                                 {% else %}
-                                <span class="text-gray-400 italic">No custom instructions. Using default prompt.</span>
+                                <span class="text-gray-400 italic">{{ _('No custom instructions. Using default prompt.') }}</span>
                                 {% endif %}
                             </dd>
                         </div>
@@ -191,21 +190,21 @@
                 <!-- Branding -->
                 <div class="bg-white shadow rounded-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900">Branding</h2>
-                        <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}#branding" 
-                           class="text-sm text-primary-600 hover:text-primary-800">Customise</a>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ _('Branding') }}</h2>
+                        <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}#branding"
+                           class="text-sm text-primary-600 hover:text-primary-800">{{ _('Customise') }}</a>
                     </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Logo</p>
                             {% if briefing.logo_url %}
-                            <img src="{{ briefing.logo_url }}" alt="Briefing logo" class="mt-2 h-12 w-auto object-contain">
+                            <img src="{{ briefing.logo_url }}" alt="{{ _('Briefing logo') }}" class="mt-2 h-12 w-auto object-contain">
                             {% else %}
-                            <p class="mt-1 text-sm text-gray-400 italic">No logo set</p>
+                            <p class="mt-1 text-sm text-gray-400 italic">{{ _('No logo set') }}</p>
                             {% endif %}
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Accent Colour</p>
+                            <p class="text-sm font-medium text-gray-500">{{ _('Accent Colour') }}</p>
                             <div class="mt-2 flex items-center space-x-2">
                                 <div class="h-6 w-6 rounded border border-gray-200" style="background-color: {{ briefing.accent_color|default('#3B82F6') }}"></div>
                                 <span class="text-sm text-gray-600">{{ briefing.accent_color|default('#3B82F6') }}</span>
@@ -213,7 +212,7 @@
                         </div>
                         {% if briefing.header_text %}
                         <div class="sm:col-span-2">
-                            <p class="text-sm font-medium text-gray-500">Header Text</p>
+                            <p class="text-sm font-medium text-gray-500">{{ _('Header Text') }}</p>
                             <p class="mt-1 text-sm text-gray-900">{{ briefing.header_text }}</p>
                         </div>
                         {% endif %}
@@ -223,10 +222,10 @@
                 <!-- Sources -->
                 <div class="bg-white shadow rounded-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900">Sources ({{ sources|length if sources else 0 }})</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ _('Sources (%(count)d)', count=sources|length if sources else 0) }}</h2>
                         <div class="flex space-x-3">
-                            <a href="{{ url_for('briefing.browse_sources') }}" class="text-sm text-primary-600 hover:text-primary-800">Browse Sources</a>
-                            <a href="{{ url_for('briefing.list_sources') }}" class="text-sm text-gray-600 hover:text-gray-800">Manage</a>
+                            <a href="{{ url_for('briefing.browse_sources') }}" class="text-sm text-primary-600 hover:text-primary-800">{{ _('Browse Sources') }}</a>
+                            <a href="{{ url_for('briefing.list_sources') }}" class="text-sm text-gray-600 hover:text-gray-800">{{ _('Manage') }}</a>
                         </div>
                     </div>
                     {% if sources and sources|length > 0 %}
@@ -240,23 +239,23 @@
                                     {% if source.last_fetched_at %}
                                     <span class="text-xs text-gray-400">•</span>
                                     <p class="text-xs text-gray-400">
-                                        Last fetched {{ source.last_fetched_at.strftime('%b %d') if source.last_fetched_at else 'Never' }}
+                                        {{ _('Last fetched %(date)s', date=source.last_fetched_at.strftime('%b %d')) if source.last_fetched_at else _('Never') }}
                                     </p>
                                     {% endif %}
                                     {% if source.fetch_error_count and source.fetch_error_count > 0 %}
                                     <span class="text-xs text-gray-400">•</span>
-                                    <span class="text-xs text-red-600">{{ source.fetch_error_count }} error{{ 's' if source.fetch_error_count > 1 else '' }}</span>
+                                    <span class="text-xs text-red-600">{% if source.fetch_error_count == 1 %}{{ _('1 error') }}{% else %}{{ _('%(count)d errors', count=source.fetch_error_count) }}{% endif %}</span>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="flex items-center space-x-3">
                                 <form method="POST" action="{{ url_for('briefing.update_source_priority', briefing_id=briefing.id, source_id=source.id) }}" class="flex items-center space-x-1">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <label class="text-xs text-gray-500">Priority:</label>
+                                    <label class="text-xs text-gray-500">{{ _('Priority:') }}</label>
                                     <select name="priority" class="auto-submit-select text-xs border-gray-300 rounded py-1 px-2 focus:ring-primary-500 focus:border-primary-500">
-                                        <option value="1" {% if source._priority == 1 %}selected{% endif %}>Low</option>
-                                        <option value="2" {% if source._priority == 2 %}selected{% endif %}>Medium</option>
-                                        <option value="3" {% if source._priority == 3 %}selected{% endif %}>High</option>
+                                        <option value="1" {% if source._priority == 1 %}selected{% endif %}>{{ _('Low') }}</option>
+                                        <option value="2" {% if source._priority == 2 %}selected{% endif %}>{{ _('Medium') }}</option>
+                                        <option value="3" {% if source._priority == 3 %}selected{% endif %}>{{ _('High') }}</option>
                                     </select>
                                 </form>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -268,9 +267,9 @@
                                     {{ source.status|title }}
                                 </span>
                                 <form method="POST" action="{{ url_for('briefing.remove_source_from_briefing', briefing_id=briefing.id, source_id=source.id) }}"
-                                      data-confirm="Remove this source?">
+                                      data-confirm="{{ _('Remove this source?') }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="text-sm text-red-600 hover:text-red-800">Remove</button>
+                                    <button type="submit" class="text-sm text-red-600 hover:text-red-800">{{ _('Remove') }}</button>
                                 </form>
                             </div>
                         </li>
@@ -281,63 +280,63 @@
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">Add sources to get started</h3>
-                        <p class="mt-1 text-sm text-gray-500 mb-2">Your briefing needs content sources to generate briefs.</p>
-                        <p class="text-xs text-gray-400 mb-4">Browse curated sources, add RSS feeds, or upload your own documents.</p>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">{{ _('Add sources to get started') }}</h3>
+                        <p class="mt-1 text-sm text-gray-500 mb-2">{{ _('Your briefing needs content sources to generate briefs.') }}</p>
+                        <p class="text-xs text-gray-400 mb-4">{{ _('Browse curated sources, add RSS feeds, or upload your own documents.') }}</p>
                         <div class="flex flex-wrap justify-center gap-3">
                             <a href="{{ url_for('briefing.browse_sources', briefing_id=briefing.id) }}"
                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
-                                Browse Sources
+                                {{ _('Browse Sources') }}
                             </a>
                             <a href="{{ url_for('briefing.add_rss_source') }}"
                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                Add RSS Feed
+                                {{ _('Add RSS Feed') }}
                             </a>
                             <a href="{{ url_for('briefing.upload_source', briefing_id=briefing.id) }}"
                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                 </svg>
-                                Upload Document
+                                {{ _('Upload Document') }}
                             </a>
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <!-- Quick Add -->
                     <div class="border-t border-gray-200 pt-4">
                         <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-sm font-medium text-gray-700">Add Sources</h3>
-                            <a href="{{ url_for('briefing.browse_sources', briefing_id=briefing.id) }}" 
-                               class="text-xs text-primary-600 hover:text-primary-800">Browse all sources →</a>
+                            <h3 class="text-sm font-medium text-gray-700">{{ _('Add Sources') }}</h3>
+                            <a href="{{ url_for('briefing.browse_sources', briefing_id=briefing.id) }}"
+                               class="text-xs text-primary-600 hover:text-primary-800">{{ _('Browse all sources →') }}</a>
                         </div>
                         {% if available_sources %}
                         <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <select name="source_id" id="source_id" class="block w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500">
-                                <option value="">Select a source...</option>
+                                <option value="">{{ _('Select a source...') }}</option>
                                 {% for source_info in available_sources %}
                                 <option value="{{ source_info.id }}">
                                     {{ source_info.name }}
-                                    ({{ source_info.type|upper }}{% if source_info.is_system %} - System{% endif %})
+                                    ({{ source_info.type|upper }}{% if source_info.is_system %}{{ _(' - System') }}{% endif %})
                                 </option>
                                 {% endfor %}
                             </select>
                             <button type="submit" class="mt-2 px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                Add to Briefing
+                                {{ _('Add to Briefing') }}
                             </button>
                         </form>
                         {% else %}
-                        <p class="text-xs text-gray-500 mb-2">All available sources have been added.</p>
-                        <a href="{{ url_for('briefing.add_rss_source') }}" 
-                           class="text-xs text-primary-600 hover:text-primary-800">Add a new RSS feed →</a>
+                        <p class="text-xs text-gray-500 mb-2">{{ _('All available sources have been added.') }}</p>
+                        <a href="{{ url_for('briefing.add_rss_source') }}"
+                           class="text-xs text-primary-600 hover:text-primary-800">{{ _('Add a new RSS feed →') }}</a>
                         {% endif %}
                     </div>
                 </div>
 
                 <!-- Recent Runs -->
                 <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Briefs</h2>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Recent Briefs') }}</h2>
                     {% if recent_runs %}
                     <div class="space-y-3">
                         {% for run in recent_runs %}
@@ -346,9 +345,9 @@
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">
-                                        {{ run.scheduled_at.strftime('%B %d, %Y at %I:%M %p') if run.scheduled_at else 'Not scheduled' }}
+                                        {{ run.scheduled_at.strftime('%B %d, %Y at %I:%M %p') if run.scheduled_at else _('Not scheduled') }}
                                     </p>
-                                    <p class="text-xs text-gray-500">{{ run.item_count }} items</p>
+                                    <p class="text-xs text-gray-500">{{ _('%(count)d items', count=run.item_count) }}</p>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -367,7 +366,7 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-sm text-gray-500">No briefs generated yet. Add sources and generate a test brief to see results here.</p>
+                    <p class="text-sm text-gray-500">{{ _('No briefs generated yet. Add sources and generate a test brief to see results here.') }}</p>
                     {% endif %}
                 </div>
             </div>
@@ -377,8 +376,8 @@
                 <!-- Recipients -->
                 <div class="bg-white shadow rounded-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900">Recipients</h2>
-                        <a href="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="text-sm text-primary-600 hover:text-primary-800">Manage</a>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ _('Recipients') }}</h2>
+                        <a href="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="text-sm text-primary-600 hover:text-primary-800">{{ _('Manage') }}</a>
                     </div>
                     {% if not recipients %}
                     <div class="rounded-md bg-amber-50 border border-amber-200 p-3 mb-3">
@@ -387,20 +386,20 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                             </svg>
                             <div class="ml-2">
-                                <p class="text-sm font-medium text-amber-800">No recipients — briefs won't be sent</p>
-                                <a href="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="text-sm text-amber-700 underline">Add yourself or others</a>
+                                <p class="text-sm font-medium text-amber-800">{{ _("No recipients — briefs won't be sent") }}</p>
+                                <a href="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="text-sm text-amber-700 underline">{{ _('Add yourself or others') }}</a>
                             </div>
                         </div>
                     </div>
                     {% else %}
                     <p class="text-2xl font-bold text-gray-900 mb-2">{{ recipients|length }}</p>
-                    <p class="text-sm text-gray-500">active recipients</p>
+                    <p class="text-sm text-gray-500">{{ _('active recipients') }}</p>
                     <ul class="mt-4 space-y-2">
                         {% for recipient in recipients[:5] %}
                         <li class="text-sm text-gray-600">{{ recipient.email }}</li>
                         {% endfor %}
                         {% if recipients|length > 5 %}
-                        <li class="text-sm text-gray-500">+ {{ recipients|length - 5 }} more</li>
+                        <li class="text-sm text-gray-500">{{ _('+ %(count)d more', count=recipients|length - 5) }}</li>
                         {% endif %}
                     </ul>
                     {% endif %}
@@ -408,7 +407,7 @@
 
                 <!-- Quick Actions -->
                 <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Quick Actions') }}</h2>
                     <div class="space-y-3">
                         {% if sources %}
                         <div id="generate-section">
@@ -417,7 +416,7 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" id="generate-btn"
                                         class="w-full text-left px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 flex items-center justify-between">
-                                    <span id="generate-btn-text">Generate Test Brief</span>
+                                    <span id="generate-btn-text">{{ _('Generate Test Brief') }}</span>
                                     <svg id="generate-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
@@ -432,7 +431,7 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                <span id="generate-status-text">Generating brief...</span>
+                                <span id="generate-status-text">{{ _('Generating brief...') }}</span>
                             </div>
                         </div>
                         
@@ -441,7 +440,7 @@
                             <input type="hidden" name="email" value="{{ current_user.email }}">
                             <button type="submit" id="test-send-btn"
                                     class="w-full text-left px-4 py-2 text-sm font-medium text-primary-700 bg-blue-50 rounded-md hover:bg-blue-100 flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span id="test-send-text">Send Test Email</span>
+                                <span id="test-send-text">{{ _('Send Test Email') }}</span>
                                 <svg class="w-4 h-4" id="test-send-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
@@ -453,7 +452,7 @@
                         </form>
                         <script nonce="{{ csp_nonce() }}">
                         function handleTestEmailSubmit(form) {
-                            if (!confirm('Send test email to {{ current_user.email }}?')) {
+                            if (!confirm('{{ _("Send test email to %(email)s?", email=current_user.email) }}')) {
                                 return false;
                             }
                             var btn = document.getElementById('test-send-btn');
@@ -462,7 +461,7 @@
                             var spinner = document.getElementById('test-send-spinner');
                             if (btn.disabled) return false;
                             btn.disabled = true;
-                            text.textContent = 'Sending...';
+                            text.textContent = '{{ _("Sending...") }}';
                             icon.classList.add('hidden');
                             spinner.classList.remove('hidden');
                             return true;
@@ -474,11 +473,11 @@
                         {% endif %}
                         
                         <form method="POST" action="{{ url_for('briefing.duplicate_briefing', briefing_id=briefing.id) }}"
-                              data-confirm="Duplicate this briefing? All sources will be copied.">
+                              data-confirm="{{ _('Duplicate this briefing? All sources will be copied.') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit"
                                     class="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center justify-between">
-                                <span>Duplicate Briefing</span>
+                                <span>{{ _('Duplicate Briefing') }}</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
@@ -488,7 +487,7 @@
                         {% if recent_runs and recent_runs|length > 0 %}
                         <a href="{{ url_for('briefing.view_run', briefing_id=briefing.id, run_id=recent_runs[0].id) }}"
                            class="block w-full text-left px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center justify-between">
-                            <span>View Last Brief</span>
+                            <span>{{ _('View Last Brief') }}</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
@@ -497,7 +496,7 @@
 
                         <a href="{{ url_for('briefing.analytics', briefing_id=briefing.id) }}"
                            class="block w-full text-left px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center justify-between">
-                            <span>View Analytics</span>
+                            <span>{{ _('View Analytics') }}</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
@@ -505,11 +504,11 @@
 
                         <div class="pt-3 border-t border-gray-200">
                             <form method="POST" action="{{ url_for('briefing.delete', briefing_id=briefing.id) }}"
-                                  data-confirm="Are you sure you want to delete this briefing? This action cannot be undone.">
+                                  data-confirm="{{ _('Are you sure you want to delete this briefing? This action cannot be undone.') }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit"
                                         class="w-full text-left px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100">
-                                    Delete Briefing
+                                    {{ _('Delete Briefing') }}
                                 </button>
                             </form>
                         </div>
@@ -536,7 +535,7 @@
         e.preventDefault();
         
         generateBtn.disabled = true;
-        generateBtnText.textContent = 'Starting...';
+        generateBtnText.textContent = '{{ _("Starting...") }}';
         generateIcon.classList.add('hidden');
         generateSpinner.classList.remove('hidden');
         
@@ -553,12 +552,12 @@
         .then(data => {
             if (data.success && data.status_url) {
                 // Async mode: poll for status
-                generateBtnText.textContent = 'Generating...';
+                generateBtnText.textContent = '{{ _("Generating...") }}';
                 generateStatus.classList.remove('hidden');
                 pollStatus(data.status_url);
             } else if (data.success && data.redirect_url) {
                 // Sync mode: immediate completion
-                generateStatusText.textContent = 'Brief generated! Redirecting...';
+                generateStatusText.textContent = '{{ _("Brief generated! Redirecting...") }}';
                 generateStatus.classList.remove('hidden');
                 window.location.href = data.redirect_url;
             } else if (data.error) {
@@ -567,7 +566,7 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            showError('Failed to start generation. Please try again.');
+            showError('{{ _("Failed to start generation. Please try again.") }}');
         });
     });
     
@@ -579,7 +578,7 @@
             pollCount++;
             
             if (pollCount > maxPolls) {
-                showError('Generation timed out. Please try again.');
+                showError('{{ _("Generation timed out. Please try again.") }}');
                 return;
             }
             
@@ -591,10 +590,10 @@
                     }
                     
                     if (data.status === 'completed' && data.redirect_url) {
-                        generateStatusText.textContent = 'Brief generated! Redirecting...';
+                        generateStatusText.textContent = '{{ _("Brief generated! Redirecting...") }}';
                         window.location.href = data.redirect_url;
                     } else if (data.status === 'failed') {
-                        showError(data.error || 'Generation failed. Please try again.');
+                        showError(data.error || '{{ _("Generation failed. Please try again.") }}');
                     } else {
                         setTimeout(checkStatus, 2000);
                     }
@@ -610,7 +609,7 @@
     
     function showError(message) {
         generateBtn.disabled = false;
-        generateBtnText.textContent = 'Generate Test Brief';
+        generateBtnText.textContent = '{{ _("Generate Test Brief") }}';
         generateIcon.classList.remove('hidden');
         generateSpinner.classList.add('hidden');
         generateStatus.classList.add('hidden');
@@ -622,7 +621,7 @@
 <script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        {{ init_choices_dropdown('source_id', 'Search sources...', 'Select a source...') }}
+        {{ init_choices_dropdown('source_id', _('Search sources...'), _('Select a source...')) }}
     } catch (e) {
         console.warn('Choices.js initialization failed, using regular select:', e);
         // Fallback: regular select still works

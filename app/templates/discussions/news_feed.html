@@ -1,21 +1,21 @@
 {% extends "layout.html" %} {% from "components/discussion_card.html" import
 discussion_card %} {% block head %}
 <title>
-  News Discussions - SocietySpeaks | Trending Topics for Structured Debate
+  {{ _('News Discussions - SocietySpeaks | Trending Topics for Structured Debate') }}
 </title>
 <meta
   name="description"
-  content="Join discussions on trending news topics. Curated from 140+ trusted journalism sources across the political spectrum for thoughtful, nuanced public debate."
+  content="{{ _('Join discussions on trending news topics. Curated from 140+ trusted journalism sources across the political spectrum for thoughtful, nuanced public debate.') }}"
 />
 <link
   rel="canonical"
   href="{{ url_for('discussions.news_feed', _external=True) }}"
 />
 
-<meta property="og:title" content="News Discussions - Society Speaks" />
+<meta property="og:title" content="{{ _('News Discussions - Society Speaks') }}" />
 <meta
   property="og:description"
-  content="Trending news transformed into structured debates. Join the conversation on current affairs."
+  content="{{ _('Trending news transformed into structured debates. Join the conversation on current affairs.') }}"
 />
 <meta property="og:type" content="website" />
 
@@ -80,12 +80,10 @@ discussion_card %} {% block head %}
           d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
         />
       </svg>
-      <h1 class="text-3xl font-bold text-gray-900">News Discussions</h1>
+      <h1 class="text-3xl font-bold text-gray-900">{{ _('News Discussions') }}</h1>
     </div>
     <p class="text-gray-600 max-w-3xl">
-      Trending topics from trusted journalism, transformed into structured
-      debates. Unlike our community discussions, these are automatically curated
-      from breaking news to spark timely, nuanced conversation.
+      {{ _('Trending topics from trusted journalism, transformed into structured debates. Unlike our community discussions, these are automatically curated from breaking news to spark timely, nuanced conversation.') }}
     </p>
   </div>
 
@@ -114,14 +112,10 @@ discussion_card %} {% block head %}
       </div>
       <div class="flex-1">
         <h3 class="font-semibold text-gray-900 mb-1">
-          How is this different from Explore?
+          {{ _('How is this different from Explore?') }}
         </h3>
         <p class="text-sm text-gray-700">
-          <strong>News Discussions</strong> are automatically generated from
-          trending stories in real-time.
-          <strong>Explore Discussions</strong> shows community-created topics on
-          any subject. Both use the same structured debate format, but News
-          focuses on current affairs.
+          {{ _('<strong>News Discussions</strong> are automatically generated from trending stories in real-time. <strong>Explore Discussions</strong> shows community-created topics on any subject. Both use the same structured debate format, but News focuses on current affairs.') }}
         </p>
       </div>
     </div>
@@ -146,9 +140,9 @@ discussion_card %} {% block head %}
             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
           />
         </svg>
-        <span class="font-medium text-gray-900">Our News Sources</span>
+        <span class="font-medium text-gray-900">{{ _('Our News Sources') }}</span>
         <span class="text-sm text-gray-500"
-          >({{ news_sources|length }} trusted outlets)</span
+          >{{ _('(%(count)d trusted outlets)', count=news_sources|length) }}</span
         >
       </div>
       <svg
@@ -167,8 +161,7 @@ discussion_card %} {% block head %}
     </summary>
     <div class="px-4 pb-4 pt-2 border-t border-gray-100">
       <p class="text-sm text-gray-600 mb-3">
-        We aggregate stories from these reputable sources to ensure balanced,
-        quality coverage:
+        {{ _('We aggregate stories from these reputable sources to ensure balanced, quality coverage:') }}
       </p>
       <div class="flex flex-wrap gap-2">
         {% for source in news_sources %}
@@ -200,7 +193,7 @@ discussion_card %} {% block head %}
           d="M10 19l-7-7m0 0l7-7m-7 7h18"
         />
       </svg>
-      Back to all topics
+      {{ _('Back to all topics') }}
     </a>
   </div>
   {% endif %}
@@ -211,13 +204,13 @@ discussion_card %} {% block head %}
         href="{{ url_for('discussions.news_feed') }}"
         class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'latest' and not topic_filter %}bg-primary-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
       >
-        Latest
+        {{ _('Latest') }}
       </a>
       <a
         href="{{ url_for('discussions.news_feed', view='topics') }}"
         class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'topics' and not topic_filter %}bg-primary-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
       >
-        By Topic
+        {{ _('By Topic') }}
       </a>
       <span class="border-l border-gray-300 mx-1"></span>
       {% for topic in topics %}
@@ -242,7 +235,7 @@ discussion_card %} {% block head %}
           for="discussion-search"
           class="block text-sm font-medium text-gray-700 mb-1"
         >
-          Search discussions
+          {{ _('Search discussions') }}
         </label>
         <div class="relative">
           <span
@@ -268,21 +261,21 @@ discussion_card %} {% block head %}
             type="text"
             value="{{ search_term or '' }}"
             class="block w-full pl-9 pr-20 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-            placeholder="Search titles, topics, descriptions..."
+            placeholder="{{ _('Search titles, topics, descriptions...') }}"
           />
           <button
             id="discussion-search-clear"
             type="button"
             class="absolute inset-y-0 right-0 px-3 text-xs text-gray-500 hover:text-gray-700 {{ '' if search_term else 'hidden' }}"
-            aria-label="Clear search"
+            aria-label="{{ _('Clear search') }}"
           >
-            Clear
+            {{ _('Clear') }}
           </button>
         </div>
       </div>
       {% if search_term %}
       <p class="text-sm text-gray-600">
-        Found {{ discussions.total if discussions else 0 }} result{{ 's' if not discussions or discussions.total != 1 else '' }} for "{{ search_term }}"
+        {{ ngettext('Found %(num)d result for "%(term)s"', 'Found %(num)d results for "%(term)s"', discussions.total if discussions else 0, term=search_term) }}
       </p>
       {% endif %}
     </form>
@@ -299,15 +292,14 @@ discussion_card %} {% block head %}
           {{ topic }}
         </span>
         <span class="text-sm text-gray-500"
-          >{{ topic_discussions|length }} discussion{{ 's' if
-          topic_discussions|length != 1 else '' }}</span
+          >{{ ngettext('%(num)d discussion', '%(num)d discussions', topic_discussions|length) }}</span
         >
       </div>
       <a
         href="{{ url_for('discussions.news_feed', topic=topic) }}"
         class="text-sm text-primary-600 hover:text-primary-800 font-medium"
       >
-        View all {{ topic }}
+        {{ _('View all %(topic)s', topic=topic) }}
       </a>
     </div>
     <div class="topic-scroll overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -336,17 +328,17 @@ discussion_card %} {% block head %}
       />
     </svg>
     <h3 class="mt-4 text-lg font-medium text-gray-900">
-      No news discussions yet
+      {{ _('No news discussions yet') }}
     </h3>
     <p class="mt-2 text-gray-500">
-      Check back soon - we're curating the latest topics for debate.
+      {{ _("Check back soon - we're curating the latest topics for debate.") }}
     </p>
     <div class="mt-6">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
       >
-        Explore Community Discussions
+        {{ _('Explore Community Discussions') }}
       </a>
     </div>
   </div>
@@ -363,14 +355,14 @@ discussion_card %} {% block head %}
   <div class="mt-8 flex justify-center">
     <nav
       class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-      aria-label="Pagination"
+      aria-label="{{ _('Pagination') }}"
     >
       {% if discussions.has_prev %}
       <a
         href="{{ url_for('discussions.news_feed', page=discussions.prev_num, topic=topic_filter, view=view_mode, q=search_term or None) }}"
         class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
       >
-        <span class="sr-only">Previous</span>
+        <span class="sr-only">{{ _('Previous') }}</span>
         <svg
           class="h-5 w-5"
           fill="none"
@@ -403,7 +395,7 @@ discussion_card %} {% block head %}
         href="{{ url_for('discussions.news_feed', page=discussions.next_num, topic=topic_filter, view=view_mode, q=search_term or None) }}"
         class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
       >
-        <span class="sr-only">Next</span>
+        <span class="sr-only">{{ _('Next') }}</span>
         <svg
           class="h-5 w-5"
           fill="none"
@@ -437,15 +429,15 @@ discussion_card %} {% block head %}
       />
     </svg>
     <h3 class="mt-4 text-lg font-medium text-gray-900">
-      No discussions in this category yet
+      {{ _('No discussions in this category yet') }}
     </h3>
-    <p class="mt-2 text-gray-500">Check back soon or explore other topics.</p>
+    <p class="mt-2 text-gray-500">{{ _('Check back soon or explore other topics.') }}</p>
     <div class="mt-6">
       <a
         href="{{ url_for('discussions.news_feed') }}"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
       >
-        View All Topics
+        {{ _('View All Topics') }}
       </a>
     </div>
   </div>
@@ -465,17 +457,17 @@ discussion_card %} {% block head %}
       />
     </svg>
     <h3 class="mt-4 text-lg font-medium text-gray-900">
-      No news discussions yet
+      {{ _('No news discussions yet') }}
     </h3>
     <p class="mt-2 text-gray-500">
-      Check back soon - we're curating the latest topics for debate.
+      {{ _("Check back soon - we're curating the latest topics for debate.") }}
     </p>
     <div class="mt-6">
       <a
         href="{{ url_for('discussions.search_discussions') }}"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
       >
-        Explore Community Discussions
+        {{ _('Explore Community Discussions') }}
       </a>
     </div>
   </div>

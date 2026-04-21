@@ -1,28 +1,29 @@
 {% extends "layout.html" %}
+{% block title %}{{ _('My Programmes') }} — Society Speaks{% endblock %}
 {% block content %}
 
 {# Hero #}
 <div class="bg-gradient-to-r from-primary-900 to-primary-600 pb-16">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-8">
     <nav class="flex items-center gap-1.5 text-sm text-primary-300 mb-5">
-      <a href="{{ url_for('auth.dashboard') }}" class="hover:text-white">Dashboard</a>
+      <a href="{{ url_for('auth.dashboard') }}" class="hover:text-white">{{ _('Dashboard') }}</a>
       <svg class="w-4 h-4 shrink-0 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      <span class="text-white">Workspace</span>
+      <span class="text-white">{{ _('Workspace') }}</span>
     </nav>
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-white">My Programmes</h1>
-        <p class="mt-1 text-sm text-primary-200">Programmes you own, steward, or have been invited to participate in.</p>
+        <h1 class="text-3xl font-bold text-white">{{ _('My Programmes') }}</h1>
+        <p class="mt-1 text-sm text-primary-200">{{ _('Programmes you own, steward, or have been invited to participate in.') }}</p>
       </div>
       <div class="flex items-center gap-3 pb-1">
         <a href="{{ url_for('programmes.list_programmes') }}"
            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm border border-primary-300 text-white rounded-md hover:bg-primary-700 transition-colors">
-          Public catalogue
+          {{ _('Public catalogue') }}
         </a>
         <a href="{{ url_for('programmes.create_programme') }}"
            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-white text-primary-700 rounded-md hover:bg-primary-50 font-semibold transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          New programme
+          {{ _('New programme') }}
         </a>
       </div>
     </div>
@@ -42,7 +43,7 @@
         <div class="flex items-center gap-1.5 shrink-0">
           <span class="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 whitespace-nowrap">{{ row.access_label }}</span>
           {% if row.can_manage_settings %}
-          <a href="{{ url_for('programmes.programme_settings', slug=programme.slug) }}" title="Manage: stewards, participants, settings" class="text-gray-400 hover:text-primary-600 transition-colors">
+          <a href="{{ url_for('programmes.programme_settings', slug=programme.slug) }}" title="{{ _('Manage: stewards, participants, settings') }}" class="text-gray-400 hover:text-primary-600 transition-colors">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           </a>
           {% endif %}
@@ -64,12 +65,12 @@
   <div class="mt-8 flex items-center justify-center gap-2">
     {% if programmes_pagination.has_prev %}
     <a href="{{ url_for('programmes.workspace_programmes', page=programmes_pagination.prev_num) }}"
-       class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">← Previous</a>
+       class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">{{ _('← Previous') }}</a>
     {% endif %}
-    <span class="px-4 py-2 text-sm text-gray-500">Page {{ programmes_pagination.page }} of {{ programmes_pagination.pages }}</span>
+    <span class="px-4 py-2 text-sm text-gray-500">{{ _('Page %(page)d of %(pages)d', page=programmes_pagination.page, pages=programmes_pagination.pages) }}</span>
     {% if programmes_pagination.has_next %}
     <a href="{{ url_for('programmes.workspace_programmes', page=programmes_pagination.next_num) }}"
-       class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">Next →</a>
+       class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">{{ _('Next →') }}</a>
     {% endif %}
   </div>
   {% endif %}
@@ -81,17 +82,17 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
       </svg>
     </div>
-    <h2 class="text-lg font-semibold text-gray-800 mb-2">No programmes yet</h2>
-    <p class="text-sm text-gray-500 max-w-sm mx-auto mb-8">Create a programme to group discussions into a structured engagement campaign, or ask an owner to invite you as a steward or participant.</p>
+    <h2 class="text-lg font-semibold text-gray-800 mb-2">{{ _('No programmes yet') }}</h2>
+    <p class="text-sm text-gray-500 max-w-sm mx-auto mb-8">{{ _('Create a programme to group discussions into a structured engagement campaign, or ask an owner to invite you as a steward or participant.') }}</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
       <a href="{{ url_for('programmes.create_programme') }}"
          class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-semibold transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Create a programme
+        {{ _('Create a programme') }}
       </a>
       <a href="{{ url_for('programmes.list_programmes') }}"
          class="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-50 text-sm font-medium transition-colors">
-        Browse public catalogue
+        {{ _('Browse public catalogue') }}
       </a>
     </div>
   </div>

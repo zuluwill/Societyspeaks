@@ -19,11 +19,11 @@
         <label for="{{ field.id }}" class="block text-sm font-medium text-gray-700">{{ field.label.text }}</label>
         <span class="text-xs text-gray-500">
             {% if 'profile' in preview_id %}
-                Recommended: 400x400px
+                {{ _('Recommended: 400x400px') }}
             {% elif 'logo' in preview_id %}
-                Recommended: 400x400px
+                {{ _('Recommended: 400x400px') }}
             {% else %}
-                Recommended: 1200x400px
+                {{ _('Recommended: 1200x400px') }}
             {% endif %}
         </span>
     </div>
@@ -43,9 +43,9 @@
                 <img id="{{ preview_id }}" 
                      class="w-full h-full object-cover" 
                      src="{{ url_for('main.serve_asset', filename='images/default-' + ('avatar' if 'profile' in preview_id else 'logo') + '.png') }}" 
-                     alt="{{ field.label.text }} preview">
+                     alt="{{ _('%(label)s preview', label=field.label.text) }}">
                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span class="text-white text-xs">Click to change</span>
+                    <span class="text-white text-xs">{{ _('Click to change') }}</span>
                 </div>
             </div>
         {% else %}
@@ -54,9 +54,9 @@
                 <img id="{{ preview_id }}" 
                      class="w-full h-full object-cover" 
                      src="{{ url_for('main.serve_asset', filename='images/default-banner.png') }}" 
-                     alt="{{ field.label.text }} preview">
+                     alt="{{ _('%(label)s preview', label=field.label.text) }}">
                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span class="text-white text-sm">Click to change</span>
+                    <span class="text-white text-sm">{{ _('Click to change') }}</span>
                 </div>
             </div>
         {% endif %}
@@ -67,7 +67,7 @@
                 <div id="progress-bar-{{ preview_id }}" class="bg-primary-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
             <div class="mt-1 text-xs text-gray-500 flex justify-between">
-                <span>Processing image...</span>
+                <span>{{ _('Processing image...') }}</span>
                 <span id="progress-text-{{ preview_id }}">0%</span>
             </div>
         </div>
@@ -80,17 +80,17 @@
             <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
-            Adjust Image
+            {{ _('Adjust Image') }}
         </button>
 
         <!-- Help text -->
         <div class="mt-1 text-xs text-gray-500">
             {% if 'profile' in preview_id %}
-                Upload a clear, professional headshot or avatar
+                {{ _('Upload a clear, professional headshot or avatar') }}
             {% elif 'logo' in preview_id %}
-                Upload your company logo in a square format
+                {{ _('Upload your company logo in a square format') }}
             {% else %}
-                Upload a high-quality banner image that represents your brand
+                {{ _('Upload a high-quality banner image that represents your brand') }}
             {% endif %}
         </div>
 
@@ -110,7 +110,7 @@
         <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
             <div class="absolute top-0 right-0 pt-4 pr-4">
                 <button type="button" data-close-crop="{{ preview_id }}" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                    <span class="sr-only">Close</span>
+                    <span class="sr-only">{{ _('Close') }}</span>
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -119,10 +119,10 @@
             <div class="sm:flex sm:items-start">
                 <div class="mt-3 w-full">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                        Adjust Image
+                        {{ _('Adjust Image') }}
                     </h3>
                     <div class="max-h-[60vh] overflow-hidden bg-gray-100 rounded-lg">
-                        <img id="crop-preview-{{ preview_id }}" src="" alt="Crop preview" class="max-w-full">
+                        <img id="crop-preview-{{ preview_id }}" src="" alt="{{ _('Crop preview') }}" class="max-w-full">
                     </div>
                 </div>
             </div>
@@ -130,12 +130,12 @@
                 <button type="button"
                         data-apply-crop="{{ preview_id }}"
                         class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Apply
+                    {{ _('Apply') }}
                 </button>
                 <button type="button"
                         data-close-crop="{{ preview_id }}"
                         class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm">
-                    Cancel
+                    {{ _('Cancel') }}
                 </button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}First Embed Live - Society Speaks{% endblock %}
+{% block title %}{{ _('First Embed Live - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gray-50">
@@ -8,82 +8,82 @@
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
       {% if is_admin_preview %}
       <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div class="text-sm text-blue-900 font-medium">Admin preview mode (read-only): this is the post-setup success page shown to partners.</div>
+        <div class="text-sm text-blue-900 font-medium">{{ _('Admin preview mode (read-only): this is the post-setup success page shown to partners.') }}</div>
         <form method="POST" action="{{ url_for('admin.stop_partner_preview') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            Exit preview
+            {{ _('Exit preview') }}
           </button>
         </form>
       </div>
       {% endif %}
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Your first embed is live</h1>
-      <p class="text-gray-600 mb-6">You are ready to scale across your site.</p>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ _('Your first embed is live') }}</h1>
+      <p class="text-gray-600 mb-6">{{ _('You are ready to scale across your site.') }}</p>
 
       <div class="grid gap-6 md:grid-cols-3">
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-          <h3 class="text-sm font-semibold text-emerald-900 mb-2">Completed</h3>
+          <h3 class="text-sm font-semibold text-emerald-900 mb-2">{{ _('Completed') }}</h3>
           <ul class="text-sm text-emerald-900 space-y-1">
-            <li>Domain verified</li>
-            <li>Test key active</li>
-            <li>First embed deployed</li>
+            <li>{{ _('Domain verified') }}</li>
+            <li>{{ _('Test key active') }}</li>
+            <li>{{ _('First embed deployed') }}</li>
           </ul>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-5">
-          <h3 class="text-sm font-semibold text-gray-900 mb-2">Next: production rollout</h3>
+          <h3 class="text-sm font-semibold text-gray-900 mb-2">{{ _('Next: production rollout') }}</h3>
           <ul class="text-sm text-gray-700 space-y-1">
-            <li>Verify production domains</li>
-            <li>Create live API keys</li>
-            <li>Roll out in CMS templates</li>
+            <li>{{ _('Verify production domains') }}</li>
+            <li>{{ _('Create live API keys') }}</li>
+            <li>{{ _('Roll out in CMS templates') }}</li>
           </ul>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-5">
-          <h3 class="text-sm font-semibold text-gray-900 mb-2">Need help?</h3>
-          <p class="text-sm text-gray-700 mb-3">We can review your integration and launch plan.</p>
-          <a href="mailto:info@societyspeaks.io" class="text-sm font-semibold text-primary-600 hover:underline">Contact us</a>
+          <h3 class="text-sm font-semibold text-gray-900 mb-2">{{ _('Need help?') }}</h3>
+          <p class="text-sm text-gray-700 mb-3">{{ _('We can review your integration and launch plan.') }}</p>
+          <a href="mailto:info@societyspeaks.io" class="text-sm font-semibold text-primary-600 hover:underline">{{ _('Contact us') }}</a>
         </div>
       </div>
 
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="{{ url_for('partner.portal_dashboard') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          Back to dashboard
+          {{ _('Back to dashboard') }}
         </a>
         <a href="{{ url_for('partner.portal_getting_started') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          Review setup steps
+          {{ _('Review setup steps') }}
         </a>
         {% if partner.stripe_customer_id %}
         <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          Manage billing
+          {{ _('Manage billing') }}
         </a>
         {% endif %}
         {% if can_manage_team %}
         <a href="{{ url_for('partner.portal_dashboard') }}#team" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          Invite team
+          {{ _('Invite team') }}
         </a>
         {% endif %}
         {% if partner.billing_status != 'active' %}
         <div class="w-full mt-4 rounded-xl border border-blue-200 bg-blue-50 p-5">
-          <h3 class="text-sm font-semibold text-gray-900 mb-2">Activate live access</h3>
-          <p class="text-xs text-gray-600 mb-3">Choose a plan to unlock live API keys and production domains.</p>
+          <h3 class="text-sm font-semibold text-gray-900 mb-2">{{ _('Activate live access') }}</h3>
+          <p class="text-xs text-gray-600 mb-3">{{ _('Choose a plan to unlock live API keys and production domains.') }}</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="tier" value="starter">
               <button type="submit" class="w-full text-left rounded-lg border border-gray-200 bg-white p-3 hover:border-blue-300 hover:bg-blue-50 transition-colors">
-                <div class="text-sm font-semibold text-gray-900">Starter &mdash; &pound;49/mo</div>
-                <div class="text-xs text-gray-500 mt-0.5">Up to 100 live discussions</div>
+                <div class="text-sm font-semibold text-gray-900">{{ _('Starter &mdash; &pound;49/mo')|safe }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">{{ _('Up to 100 live discussions') }}</div>
               </button>
             </form>
             <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="tier" value="professional">
               <button type="submit" class="w-full text-left rounded-lg border-2 border-blue-600 bg-white p-3 hover:bg-blue-50 transition-colors">
-                <div class="text-sm font-semibold text-gray-900">Professional &mdash; &pound;249/mo</div>
-                <div class="text-xs text-gray-500 mt-0.5">Up to 500 live discussions</div>
+                <div class="text-sm font-semibold text-gray-900">{{ _('Professional &mdash; &pound;249/mo')|safe }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">{{ _('Up to 500 live discussions') }}</div>
               </button>
             </form>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Need more? <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">Contact us</a> for Enterprise.</p>
+          <p class="text-xs text-gray-400 mt-2">{{ _('Need more?') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">{{ _('Contact us') }}</a> {{ _('for Enterprise.') }}</p>
         </div>
         {% endif %}
       </div>

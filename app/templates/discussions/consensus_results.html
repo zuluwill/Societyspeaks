@@ -193,7 +193,7 @@
               <div class="text-gray-900 text-sm mb-2">{{ (translation_map.get(stmt.statement_id) or stmt.content) | e }}</div>
               <div class="flex items-center text-xs text-gray-500">
                 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded font-medium">
-                  {{ "%.0f"|format(stmt.agreement_rate * 100) }}{{ _('% agree') }}
+                  {{ "%.0f"|format(stmt.agreement_rate * 100) }}{{ _('%% agree') }}
                 </span>
                 <span class="ml-2">{{ stmt.vote_count }} votes in group</span>
               </div>

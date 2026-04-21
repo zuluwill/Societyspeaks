@@ -51,6 +51,7 @@ from app.programmes.journey import (
     ordered_journey_discussions,
     user_statement_votes_detail_batch,
 )
+from flask_babel import gettext as _
 
 
 programmes_bp = Blueprint('programmes', __name__, template_folder='../templates/programmes')
@@ -363,12 +364,12 @@ def create_programme():
         try:
             db.session.commit()
             invalidate_programme_summary_cache(programme.id)
-            flash('Programme created successfully.', 'success')
+            flash(_('Programme created successfully.'), 'success')
             return redirect(url_for('programmes.view_programme', slug=programme.slug))
         except Exception:
             db.session.rollback()
             current_app.logger.exception('Failed to create programme')
-            flash('Could not create programme. Please try again.', 'danger')
+            flash(_('Could not create programme. Please try again.'), 'danger')
 
     return render_template('programmes/create.html', form=form, orgs=orgs)
 
@@ -379,7 +380,7 @@ def view_programme(slug):
     if not can_view_programme(programme, current_user):
         visibility = getattr(programme, 'visibility', 'public')
         if visibility == 'invite_only' and not current_user.is_authenticated:
-            flash('Please log in to access this programme.', 'info')
+            flash(_('Please log in to access this programme.'), 'info')
             return redirect(url_for('auth.login'))
         abort(404)
 
@@ -388,7 +389,7 @@ def view_programme(slug):
         sub = JourneyReminderSubscription.verify_resume_token(jrt)
         if sub and sub.programme_id == programme.id:
             session['journey_resume_sub_id'] = sub.id
-            flash('Welcome back! Pick up where you left off.', 'success')
+            flash(_('Welcome back! Pick up where you left off.'), 'success')
         return redirect(url_for('programmes.view_programme', slug=slug))
 
     theme = request.args.get('theme', '').strip() or None
@@ -494,11 +495,11 @@ def programme_journey_recap(slug):
     if not can_view_programme(programme, current_user):
         visibility = getattr(programme, 'visibility', 'public')
         if visibility == 'invite_only' and not current_user.is_authenticated:
-            flash('Please log in to access this programme.', 'info')
+            flash(_('Please log in to access this programme.'), 'info')
             return redirect(url_for('auth.login'))
         abort(404)
     if not is_guided_journey_programme(programme):
-        flash('This recap view is only available for guided flagship programmes.', 'info')
+        flash(_('This recap view is only available for guided flagship programmes.'), 'info')
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     uid = current_user.id if current_user.is_authenticated else None
@@ -713,9 +714,9 @@ def journey_reminder_unsubscribe(slug):
         db.session.commit()
         # Clear the session reference so anonymous users stop seeing the "set" pill
         session.pop('journey_resume_sub_id', None)
-        flash('You\'ve been unsubscribed from journey reminders.', 'success')
+        flash(_('You\'ve been unsubscribed from journey reminders.'), 'success')
     else:
-        flash('Could not find that subscription — it may have already been removed.', 'info')
+        flash(_('Could not find that subscription — it may have already been removed.'), 'info')
 
     return redirect(url_for('programmes.view_programme', slug=slug))
 
@@ -725,7 +726,7 @@ def journey_reminder_unsubscribe(slug):
 def edit_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to edit this programme.", "danger")
+        flash(_("You don't have permission to edit this programme."), "danger")
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     form = ProgrammeForm(obj=programme)
@@ -766,12 +767,12 @@ def edit_programme(slug):
         try:
             db.session.commit()
             invalidate_programme_summary_cache(programme.id)
-            flash('Programme updated successfully.', 'success')
+            flash(_('Programme updated successfully.'), 'success')
             return redirect(url_for('programmes.view_programme', slug=programme.slug))
         except Exception:
             db.session.rollback()
             current_app.logger.exception('Failed to update programme')
-            flash('Could not update programme. Please try again.', 'danger')
+            flash(_('Could not update programme. Please try again.'), 'danger')
 
     return render_template('programmes/edit.html', form=form, programme=programme, orgs=orgs)
 
@@ -781,7 +782,7 @@ def edit_programme(slug):
 def programme_settings(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to access settings.", "danger")
+        flash(_("You don't have permission to access settings."), "danger")
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     access_page = request.args.get('access_page', 1, type=int)
@@ -814,13 +815,13 @@ def programme_settings(slug):
 def archive_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to archive this programme.", "danger")
+        flash(_("You don't have permission to archive this programme."), "danger")
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     programme.status = 'archived'
     db.session.commit()
     invalidate_programme_summary_cache(programme.id)
-    flash('Programme archived.', 'success')
+    flash(_('Programme archived.'), 'success')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
@@ -829,13 +830,13 @@ def archive_programme(slug):
 def unarchive_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to unarchive this programme.", "danger")
+        flash(_("You don't have permission to unarchive this programme."), "danger")
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     programme.status = 'active'
     db.session.commit()
     invalidate_programme_summary_cache(programme.id)
-    flash('Programme restored to active.', 'success')
+    flash(_('Programme restored to active.'), 'success')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
@@ -881,12 +882,12 @@ def _send_pending_steward_invite_email(programme, email, invite_url, inviter_nam
 def invite_steward(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to invite stewards.", "danger")
+        flash(_("You don't have permission to invite stewards."), "danger")
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     form = InviteStewardForm()
     if not form.validate_on_submit():
-        flash('Please provide a valid email.', 'danger')
+        flash(_('Please provide a valid email.'), 'danger')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     email = normalize_email(form.email.data)
@@ -920,16 +921,16 @@ def invite_steward(slug):
         except Exception:
             db.session.rollback()
             current_app.logger.exception('Failed to save pending steward invite')
-            flash('Could not create steward invite.', 'danger')
+            flash(_('Could not create steward invite.'), 'danger')
             return redirect(url_for('programmes.programme_settings', slug=programme.slug))
         invite_url = url_for('programmes.accept_steward_invite', token=token, _external=True)
         try:
             _send_pending_steward_invite_email(programme, email, invite_url, current_user.username)
         except Exception:
             current_app.logger.exception('Failed to send pending steward invite email')
-            flash('Invite saved but email failed. Please retry.', 'warning')
+            flash(_('Invite saved but email failed. Please retry.'), 'warning')
             return redirect(url_for('programmes.programme_settings', slug=programme.slug))
-        flash(f'Invite sent to {email}. They will need to register an account first.', 'success')
+        flash(_('Invite sent to %(email)s. They will need to register an account first.', email=email), 'success')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     active_steward = ProgrammeSteward.query.filter_by(
@@ -938,7 +939,7 @@ def invite_steward(slug):
         status='active'
     ).first()
     if active_steward:
-        flash('That user is already a steward.', 'info')
+        flash(_('That user is already a steward.'), 'info')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     steward = ProgrammeSteward.query.filter_by(programme_id=programme.id, user_id=user.id).first()
@@ -964,7 +965,7 @@ def invite_steward(slug):
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Failed to save steward invite')
-        flash('Could not create steward invite.', 'danger')
+        flash(_('Could not create steward invite.'), 'danger')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     invite_url = url_for('programmes.accept_steward_invite', token=token, _external=True)
@@ -972,10 +973,10 @@ def invite_steward(slug):
         _send_steward_invite_email(programme, email, invite_url)
     except Exception:
         current_app.logger.exception('Failed to send steward invite email')
-        flash('Invite saved but email failed. Please retry.', 'warning')
+        flash(_('Invite saved but email failed. Please retry.'), 'warning')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
-    flash(f'Invite sent to {email}.', 'success')
+    flash(_('Invite sent to %(email)s.', email=email), 'success')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
@@ -1003,34 +1004,34 @@ def _send_access_grant_email(programme, email, programme_url):
 def invite_programme_access(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to invite participants.", "danger")
+        flash(_("You don't have permission to invite participants."), "danger")
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
     if programme.visibility == 'private':
         flash(
-            "Private programmes only allow owner/steward access. Invite as steward or switch visibility to invite-only.",
+            _("Private programmes only allow owner/steward access. Invite as steward or switch visibility to invite-only."),
             "warning"
         )
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     form = InviteProgrammeAccessForm()
     if not form.validate_on_submit():
-        flash('Please provide a valid participant email.', 'danger')
+        flash(_('Please provide a valid participant email.'), 'danger')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     email = normalize_email(form.email.data)
     from app.models import User
     user = User.query.filter(db.func.lower(User.email) == email).first()
     if not user:
-        flash('No existing user found with that email. They must register first.', 'warning')
+        flash(_('No existing user found with that email. They must register first.'), 'warning')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     if can_steward_programme(programme, user):
-        flash('That user already has steward or owner access.', 'info')
+        flash(_('That user already has steward or owner access.'), 'info')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     grant = ProgrammeAccessGrant.query.filter_by(programme_id=programme.id, user_id=user.id).first()
     if grant and grant.status == 'active':
-        flash('That user already has participant access.', 'info')
+        flash(_('That user already has participant access.'), 'info')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     if grant:
@@ -1050,7 +1051,7 @@ def invite_programme_access(slug):
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Failed to save programme access grant')
-        flash('Could not grant participant access.', 'danger')
+        flash(_('Could not grant participant access.'), 'danger')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     programme_url = url_for('programmes.view_programme', slug=programme.slug, _external=True)
@@ -1061,9 +1062,9 @@ def invite_programme_access(slug):
         current_app.logger.exception('Failed to send programme access invite email')
         email_delivery_failed = True
 
-    flash(f'Participant access granted to {email}.', 'success')
+    flash(_('Participant access granted to %(email)s.', email=email), 'success')
     if email_delivery_failed:
-        flash("Invite email could not be delivered. Access is active, but you may need to share the programme link manually.", 'warning')
+        flash(_("Invite email could not be delivered. Access is active, but you may need to share the programme link manually."), 'warning')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
@@ -1072,7 +1073,7 @@ def invite_programme_access(slug):
 def revoke_programme_access(slug, grant_id):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to revoke participant access.", "danger")
+        flash(_("You don't have permission to revoke participant access."), "danger")
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     grant = ProgrammeAccessGrant.query.filter_by(id=grant_id, programme_id=programme.id).first_or_404()
@@ -1082,9 +1083,9 @@ def revoke_programme_access(slug, grant_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Failed to revoke programme access grant')
-        flash('Could not revoke participant access. Please try again.', 'danger')
+        flash(_('Could not revoke participant access. Please try again.'), 'danger')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
-    flash('Participant access revoked.', 'success')
+    flash(_('Participant access revoked.'), 'success')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
@@ -1093,7 +1094,7 @@ def revoke_programme_access(slug, grant_id):
 def remove_steward(slug, steward_id):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
-        flash("You don't have permission to remove stewards.", "danger")
+        flash(_("You don't have permission to remove stewards."), "danger")
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     steward = ProgrammeSteward.query.filter_by(id=steward_id, programme_id=programme.id).first_or_404()
@@ -1103,9 +1104,9 @@ def remove_steward(slug, steward_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Failed to remove steward')
-        flash('Could not remove steward. Please try again.', 'danger')
+        flash(_('Could not remove steward. Please try again.'), 'danger')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
-    flash('Steward removed.', 'success')
+    flash(_('Steward removed.'), 'success')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
@@ -1115,17 +1116,17 @@ def accept_steward_invite(token):
 
     if not current_user.is_authenticated:
         session['pending_steward_invite_token'] = token
-        flash('Please log in or register to accept the steward invitation.', 'info')
+        flash(_('Please log in or register to accept the steward invitation.'), 'info')
         return redirect(url_for('auth.login'))
 
     if steward.user_id is not None:
         if steward.user_id != current_user.id:
-            flash('This invite is for another user account.', 'danger')
+            flash(_('This invite is for another user account.'), 'danger')
             return redirect(url_for('main.index'))
     else:
         # Pending invite for an unregistered email
         if not steward.pending_email or current_user.email.lower() != steward.pending_email.lower():
-            flash('This invite is for a different email address.', 'danger')
+            flash(_('This invite is for a different email address.'), 'danger')
             return redirect(url_for('main.index'))
         steward.user_id = current_user.id
         steward.pending_email = None
@@ -1134,7 +1135,7 @@ def accept_steward_invite(token):
     steward.accepted_at = utcnow_naive()
     steward.invite_token = None
     db.session.commit()
-    flash('Steward access granted.', 'success')
+    flash(_('Steward access granted.'), 'success')
     return redirect(url_for('programmes.view_programme', slug=steward.programme.slug))
 
 
@@ -1143,13 +1144,13 @@ def accept_steward_invite(token):
 def export_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_steward_programme(programme, current_user):
-        flash("You don't have permission to export this programme.", "danger")
+        flash(_("You don't have permission to export this programme."), "danger")
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     cohort_slug = (request.args.get('cohort') or '').strip() or None
     if cohort_slug:
         if cohort_slug not in get_programme_cohort_slugs(programme):
-            flash('Unknown cohort slug for this programme.', 'danger')
+            flash(_('Unknown cohort slug for this programme.'), 'danger')
             return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     export_format = (request.args.get('format') or 'csv').strip().lower()

@@ -328,7 +328,7 @@
           {{ statement_metrics.statement_count|default(statements|length) }} {{ _('statements to vote on') }} •
           <span
             class="cursor-help"
-            title="Your votes help identify where people agree, disagree, and find common ground. The more diverse perspectives we gather, the richer the consensus analysis becomes."
+            title="{{ _('Your votes help identify where people agree, disagree, and find common ground. The more diverse perspectives we gather, the richer the consensus analysis becomes.') }}"
             >Your perspective shapes the analysis</span
           >
         </div>
@@ -1053,7 +1053,7 @@
                       Want to explain your ${positionLabel} view?
                   </p>
                   <button class="argument-prompt-dismiss text-purple-400 hover:text-purple-600 p-1 -mr-1 flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
-                          aria-label="Dismiss">
+                          aria-label="{{ _('Dismiss') }}">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                       </svg>
@@ -1064,7 +1064,7 @@
                   <input type="hidden" name="position" value="${position}">
                   <input type="text" name="content"
                          class="w-full sm:flex-1 min-w-0 px-3 py-2 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                         placeholder="Quick thought (optional)..."
+                         placeholder="{{ _('Quick thought (optional)...') }}"
                          maxlength="500">
                   <button type="submit"
                           class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors min-h-[44px] sm:min-h-0">
@@ -1171,6 +1171,19 @@
   var CONSENSUS_STAFF_BYPASS = {{ 'true' if (is_creator or is_admin) else 'false' }};
   var SHARE_URL = {{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) | tojson }};
   var SHARE_TITLE = {{ (discussion.programme_theme or discussion.title) | tojson }};
+
+  // i18n strings used when this script builds DOM markup dynamically.
+  // Gettext returns plain str, so |tojson is safe.
+  var I18N = {
+    consensusAnalysis: {{ _('Consensus analysis')|tojson }},
+    consensusTooltip:  {{ gettext_js('Vote on at least %(n)d statements in this theme to open full analysis (you can still open the page for a reminder).')|tojson }},
+    shareAria:         {{ _('Share this discussion')|tojson }},
+    shareLabel:        {{ _('Share')|tojson }},
+    copyLinkAria:      {{ _('Copy link to this discussion')|tojson }},
+    copyLinkLabel:     {{ _('Copy link')|tojson }},
+    deliberationNote:  {{ _('Open the deliberation map for this theme, or share this page. If analysis is still computing, the results page explains what happens next.')|tojson }},
+    journeyCompleteMsg:{{ _("You've completed the entire Big Questions Journey! See how your views compare to everyone else's.")|tojson }}
+  };
 
   /** Escape text for safe insertion into HTML (theme titles, etc.). */
   function escHtml(s) {
@@ -1344,10 +1357,10 @@
         : btnClass + ' bg-white/10 text-white/75 hover:bg-white/15';
       var consTitle = unlocked
         ? ''
-        : ' title="Vote on at least ' + CONSENSUS_THRESHOLD + ' statements in this theme to open full analysis (you can still open the page for a reminder)."';
+        : ' title="' + escHtml(I18N.consensusTooltip.replace('%(n)d', String(CONSENSUS_THRESHOLD))) + '"';
       var consInner =
         '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' +
-        '<span>Consensus analysis</span>';
+        '<span>' + escHtml(I18N.consensusAnalysis) + '</span>';
       var consLink =
         '<a href="' +
         CONSENSUS_URL +
@@ -1361,17 +1374,17 @@
       var shareRow =
         '<button type="button" id="journey-share-btn" class="' +
         btnClass +
-        ' bg-white/15 text-white hover:bg-white/25" aria-label="Share this discussion">' +
+        ' bg-white/15 text-white hover:bg-white/25" aria-label="' + escHtml(I18N.shareAria) + '">' +
         '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>' +
-        '<span>Share</span></button>' +
+        '<span>' + escHtml(I18N.shareLabel) + '</span></button>' +
         '<button type="button" id="journey-copy-link-btn" class="' +
         btnClass +
-        ' bg-white/15 text-white hover:bg-white/25" aria-label="Copy link to this discussion">' +
+        ' bg-white/15 text-white hover:bg-white/25" aria-label="' + escHtml(I18N.copyLinkAria) + '">' +
         '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>' +
-        '<span>Copy link</span></button>';
+        '<span>' + escHtml(I18N.copyLinkLabel) + '</span></button>';
       return (
         '<div class="border-t border-white/25 pt-4 mt-1 text-left">' +
-        '<p class="text-xs text-emerald-50/95 mb-3 leading-relaxed text-center">Open the deliberation map for this theme, or share this page. If analysis is still computing, the results page explains what happens next.</p>' +
+        '<p class="text-xs text-emerald-50/95 mb-3 leading-relaxed text-center">' + escHtml(I18N.deliberationNote) + '</p>' +
         '<div class="flex flex-col sm:flex-row flex-wrap gap-2 justify-center">' +
         consLink +
         shareRow +
@@ -1385,8 +1398,7 @@
       var journeyNowComplete = IS_JOURNEY_COMPLETE || (!NEXT_THEME_URL && allVoted());
       var primaryRow = '';
       if (journeyNowComplete) {
-        document.getElementById('journey-complete-msg').textContent =
-          "You've completed the entire Big Questions Journey! See how your views compare to everyone else's.";
+        document.getElementById('journey-complete-msg').textContent = I18N.journeyCompleteMsg;
         primaryRow =
           '<a href="' +
           RECAP_URL +

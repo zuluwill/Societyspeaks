@@ -14,17 +14,13 @@
     {% if guided_journey_context %}
     <p class="text-sm text-blue-900/95 mb-3 leading-relaxed border-l-4 border-blue-400 pl-3">
       {% if guided_journey_context.has_source_articles %}
-      Vote on your <strong>current</strong> views first. <strong>Linked articles</strong> above are optional timely context;
-      the references in this box are further optional background — not a test. We surface more perspectives and analysis
-      <strong>after</strong> you participate (consensus map and journey recap).
+      {{ _('Vote on your <strong>current</strong> views first. <strong>Linked articles</strong> above are optional timely context; the references in this box are further optional background — not a test. We surface more perspectives and analysis <strong>after</strong> you participate (consensus map and journey recap).') }}
       {% else %}
-      Vote on your <strong>current</strong> views first. The references in this box are optional background — they are not a test,
-      and we surface more perspectives and analysis <strong>after</strong> you participate (consensus map and journey recap).
+      {{ _('Vote on your <strong>current</strong> views first. The references in this box are optional background — they are not a test, and we surface more perspectives and analysis <strong>after</strong> you participate (consensus map and journey recap).') }}
       {% endif %}
     </p>
     <p class="text-xs text-blue-900/80 mb-3 leading-relaxed max-w-2xl">
-      References aim for <strong>institutional variety</strong> (for example official data, legislatures, international bodies,
-      and independent research). Inclusion is <strong>not</strong> endorsement; external sites set their own editorial standards.
+      {{ _('References aim for <strong>institutional variety</strong> (for example official data, legislatures, international bodies, and independent research). Inclusion is <strong>not</strong> endorsement; external sites set their own editorial standards.') }}
     </p>
     {% endif %}
 
@@ -39,7 +35,7 @@
         href="{{ link.url }}"
         target="_blank"
         rel="noopener noreferrer"
-        title="Opens in a new tab — external site"
+        title="{{ _('Opens in a new tab — external site') }}"
         class="inline-flex items-center px-3 py-2 text-sm font-medium text-primary-700 bg-white border border-blue-300 rounded-md hover:bg-blue-100"
       >
         {{ link.label }}
@@ -50,23 +46,23 @@
 
     {% if guided_journey_context and guided_journey_context.theme_item.is_complete %}
     <div class="rounded-md border border-emerald-200 bg-emerald-50/80 px-4 py-3 mb-4">
-      <p class="text-sm text-emerald-950 font-medium mb-2">You have already finished voting on every statement in this theme.</p>
-      <p class="text-xs text-emerald-900/90 mb-3">Use the green summary below for recap, sharing, and the next theme (if there is one). You do not need to press &quot;Continue to voting&quot; again.</p>
+      <p class="text-sm text-emerald-950 font-medium mb-2">{{ _('You have already finished voting on every statement in this theme.') }}</p>
+      <p class="text-xs text-emerald-900/90 mb-3">{{ _('Use the green summary below for recap, sharing, and the next theme (if there is one). You do not need to press &quot;Continue to voting&quot; again.') }}</p>
       <div class="flex flex-wrap gap-2">
         <a href="#journey-theme-complete"
            class="inline-flex items-center px-4 py-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 transition-colors text-sm font-medium">
-          Jump to theme summary
+          {{ _('Jump to theme summary') }}
         </a>
         {% set _nt = guided_journey_context.next_theme_in_programme %}
         {% if _nt %}
         <a href="{{ url_for('discussions.view_discussion', discussion_id=_nt.discussion.id, slug=_nt.discussion.slug) }}"
            class="inline-flex items-center px-4 py-2 bg-white border border-emerald-300 text-emerald-900 rounded-md hover:bg-emerald-100 transition-colors text-sm font-medium">
-          Continue to next theme →
+          {{ _('Continue to next theme →') }}
         </a>
         {% endif %}
         <a href="{{ url_for('programmes.programme_journey_recap', slug=guided_journey_context.programme.slug) }}"
            class="inline-flex items-center px-4 py-2 bg-white border border-emerald-300 text-emerald-900 rounded-md hover:bg-emerald-100 transition-colors text-sm font-medium">
-          Journey recap
+          {{ _('Journey recap') }}
         </a>
       </div>
     </div>
@@ -80,12 +76,12 @@
         type="submit"
         class="inline-flex items-center px-4 py-2 bg-primary-700 text-white rounded-md hover:bg-blue-800 transition-colors"
         {% if guided_journey_context %}
-        aria-label="Continue to voting on statements"
+        aria-label="{{ _('Continue to voting on statements') }}"
         {% else %}
-        aria-label="Continue past this information step"
+        aria-label="{{ _('Continue past this information step') }}"
         {% endif %}
       >
-        {% if guided_journey_context %}Continue to voting{% else %}Continue{% endif %}
+        {% if guided_journey_context %}{{ _('Continue to voting') }}{% else %}{{ _('Continue') }}{% endif %}
       </button>
     </form>
     {% endif %}

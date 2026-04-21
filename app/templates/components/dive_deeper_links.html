@@ -2,10 +2,10 @@
 {% macro dive_deeper_links(item, prefix='', textarea_id_prefix='dive-deeper-text') %}
 <div class="mb-4">
     <div class="flex flex-wrap items-center gap-2">
-        <span class="text-sm font-medium text-gray-700">Dive deeper with AI:</span>
+        <span class="text-sm font-medium text-gray-700">{{ _('Dive deeper with AI:') }}</span>
         {% set item_text = item.headline + ' ' + (item.summary_bullets|join(' ') if item.summary_bullets else '') %}
-        <a href="https://chat.openai.com/?q={{ item_text|urlencode }}" 
-           target="_blank" 
+        <a href="https://chat.openai.com/?q={{ item_text|urlencode }}"
+           target="_blank"
            rel="noopener"
            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -13,8 +13,8 @@
             </svg>
             ChatGPT
         </a>
-        <a href="https://claude.ai/new?prompt={{ ('Analyze this news story: ' + item_text)|urlencode }}" 
-           target="_blank" 
+        <a href="https://claude.ai/new?prompt={{ (_('Analyze this news story:') + ' ' + item_text)|urlencode }}"
+           target="_blank"
            rel="noopener"
            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -22,8 +22,8 @@
             </svg>
             Claude
         </a>
-        <a href="https://www.perplexity.ai/?q={{ item_text|urlencode }}" 
-           target="_blank" 
+        <a href="https://www.perplexity.ai/?q={{ item_text|urlencode }}"
+           target="_blank"
            rel="noopener"
            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -31,33 +31,33 @@
             </svg>
             Perplexity
         </a>
-        <button data-item-id="{{ item.id }}" 
+        <button data-item-id="{{ item.id }}"
                 data-prefix="{{ prefix }}"
                 class="copy-dive-deeper-btn inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            Copy Text
+            {{ _('Copy Text') }}
         </button>
     </div>
     <textarea id="{% if prefix %}dive-deeper-text-{{ prefix }}-{{ item.id }}{% else %}dive-deeper-text-{{ item.id }}{% endif %}" class="hidden">{{ item.headline }}
 
-Key Points:
+{{ _('Key Points:') }}
 {% for bullet in item.summary_bullets %}- {{ bullet }}
 {% endfor %}
 {% if item.personal_impact %}
-Why This Matters: {{ item.personal_impact }}
+{{ _('Why This Matters:') }} {{ item.personal_impact }}
 {% endif %}
 {% if item.so_what %}
-So What: {{ item.so_what|strip_so_what }}
+{{ _('So What:') }} {{ item.so_what|strip_so_what }}
 {% endif %}
 {% if item.content_markdown %}
-Content: {{ item.content_markdown[:500] }}
+{{ _('Content:') }} {{ item.content_markdown[:500] }}
 {% endif %}
 {% if item.deeper_context %}
-Deeper Context: {{ item.deeper_context }}
+{{ _('Deeper Context:') }} {{ item.deeper_context }}
 {% endif %}
 
-Can you provide additional analysis, historical context, and implications of this story?</textarea>
+{{ _('Can you provide additional analysis, historical context, and implications of this story?') }}</textarea>
 </div>
 {% endmacro %}

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Weekly Questions - Society Speaks{% endblock %}
+{% block title %}{{ _('Weekly Questions - Society Speaks') }}{% endblock %}
 
 {% block head %}
 <style>
@@ -42,12 +42,12 @@
     <div class="max-w-2xl mx-auto px-4">
         <!-- Header with Progress -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">5 Questions This Week</h1>
-            <p class="text-gray-600 mb-4">Vote on each question below</p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ _('5 Questions This Week') }}</h1>
+            <p class="text-gray-600 mb-4">{{ _('Vote on each question below') }}</p>
 
             <!-- Progress Indicator -->
             <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200">
-                <span class="text-sm font-medium text-gray-600">Progress:</span>
+                <span class="text-sm font-medium text-gray-600">{{ _('Progress:') }}</span>
                 <div class="flex gap-1">
                     {% for i in range(total_questions) %}
                     <div class="w-3 h-3 rounded-full progress-indicator {% if i < votes_completed %}bg-green-500{% else %}bg-gray-300{% endif %}"
@@ -62,10 +62,10 @@
         {% if all_voted %}
         <div class="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl text-center">
             <div class="text-4xl mb-2">&#127881;</div>
-            <h2 class="text-xl font-bold text-green-800 mb-2">All Done!</h2>
-            <p class="text-green-700 mb-4">You've voted on all 5 questions this week. See you next week!</p>
+            <h2 class="text-xl font-bold text-green-800 mb-2">{{ _('All Done!') }}</h2>
+            <p class="text-green-700 mb-4">{{ _("You've voted on all 5 questions this week. See you next week!") }}</p>
             <a href="{{ url_for('daily.today') }}" class="inline-block px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
-                Explore More Questions
+                {{ _('Explore More Questions') }}
             </a>
         </div>
         {% endif %}
@@ -81,8 +81,8 @@
                 <div class="px-6 pt-5 pb-2">
                     <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full
                         {% if q_data.has_voted %}bg-green-100 text-green-700{% else %}bg-primary-100 text-primary-700{% endif %}">
-                        Question {{ loop.index }} of {{ total_questions }}
-                        {% if q_data.has_voted %} - Voted{% endif %}
+                        {{ _('Question %(idx)s of %(total)d', idx=loop.index, total=total_questions) }}
+                        {% if q_data.has_voted %} - {{ _('Voted') }}{% endif %}
                     </span>
                 </div>
 
@@ -93,18 +93,18 @@
                     </p>
                     {% if (q_data.question.context and q_data.question.context.strip()) or (q_data.question.why_this_question and q_data.question.why_this_question.strip()) or q_data.source_articles %}
                     <div class="mt-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                        <p class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">Context</p>
+                        <p class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">{{ _('Context') }}</p>
                         {% if q_data.question.context and q_data.question.context.strip() %}
                         <p>{{ q_data.question.context[:300] }}{% if q_data.question.context|length > 300 %}...{% endif %}</p>
                         {% endif %}
                         {% if q_data.question.why_this_question and q_data.question.why_this_question.strip() %}
                         <p class="mt-2 text-xs text-gray-600">
-                            <span class="font-semibold">Why this question:</span> {{ q_data.question.why_this_question }}
+                            <span class="font-semibold">{{ _('Why this question:') }}</span> {{ q_data.question.why_this_question }}
                         </p>
                         {% endif %}
                         {% if q_data.source_articles %}
                         <div class="mt-3 pt-3 border-t border-gray-200">
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Source{% if q_data.source_articles|length > 1 %}s{% endif %}</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{% if q_data.source_articles|length > 1 %}{{ _('Sources') }}{% else %}{{ _('Source') }}{% endif %}</p>
                             <div class="space-y-2">
                                 {% for article in q_data.source_articles %}
                                 <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer"
@@ -136,9 +136,9 @@
                     <!-- Show Results -->
                     <div class="vote-results">
                         <p class="text-sm text-gray-500 mb-3">
-                            You voted:
+                            {{ _('You voted:') }}
                             <span class="font-medium {% if q_data.user_vote == 1 %}text-primary-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-amber-600{% endif %}">
-                                {% if q_data.user_vote == 1 %}Agree{% elif q_data.user_vote == -1 %}Disagree{% else %}Unsure{% endif %}
+                                {% if q_data.user_vote == 1 %}{{ _('Agree') }}{% elif q_data.user_vote == -1 %}{{ _('Disagree') }}{% else %}{{ _('Unsure') }}{% endif %}
                             </span>
                         </p>
 
@@ -153,54 +153,54 @@
 
                         <!-- Results Legend -->
                         <div class="flex justify-between text-xs text-gray-600">
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>Agree {{ q_data.vote_results.agree_pct }}%</span>
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree {{ q_data.vote_results.disagree_pct }}%</span>
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>Unsure {{ q_data.vote_results.unsure_pct }}%</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>{{ _('Agree %(pct)s%%', pct=q_data.vote_results.agree_pct) }}</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>{{ _('Disagree %(pct)s%%', pct=q_data.vote_results.disagree_pct) }}</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>{{ _('Unsure %(pct)s%%', pct=q_data.vote_results.unsure_pct) }}</span>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">{{ q_data.vote_results.total }} votes</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ _('%(count)d votes', count=q_data.vote_results.total) }}</p>
                     </div>
                     {% else %}
                     <!-- Vote Buttons -->
                     <fieldset class="vote-buttons border-0 p-0 m-0 min-w-0">
-                    <legend class="sr-only">Vote on this question: agree, disagree, or unsure</legend>
+                    <legend class="sr-only">{{ _('Vote on this question: agree, disagree, or unsure') }}</legend>
                     <div class="vote-buttons-grid">
                         <button type="button" class="vote-btn vote-btn-agree"
                                 data-vote="agree" data-question="{{ q_data.question.id }}"
-                                aria-label="Agree with this statement" aria-pressed="false">
-                          <span class="vote-content"><span class="vote-label">Agree</span></span>
+                                aria-label="{{ _('Agree with this statement') }}" aria-pressed="false">
+                          <span class="vote-content"><span class="vote-label">{{ _('Agree') }}</span></span>
                         </button>
                         <button type="button" class="vote-btn vote-btn-disagree"
                                 data-vote="disagree" data-question="{{ q_data.question.id }}"
-                                aria-label="Disagree with this statement" aria-pressed="false">
-                          <span class="vote-content"><span class="vote-label">Disagree</span></span>
+                                aria-label="{{ _('Disagree with this statement') }}" aria-pressed="false">
+                          <span class="vote-content"><span class="vote-label">{{ _('Disagree') }}</span></span>
                         </button>
                         <button type="button" class="vote-btn vote-btn-unsure"
                                 data-vote="unsure" data-question="{{ q_data.question.id }}"
-                                aria-label="Unsure about this statement" aria-pressed="false">
-                          <span class="vote-content"><span class="vote-label">Unsure</span></span>
+                                aria-label="{{ _('Unsure about this statement') }}" aria-pressed="false">
+                          <span class="vote-content"><span class="vote-label">{{ _('Unsure') }}</span></span>
                         </button>
                     </div>
                     </fieldset>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <select class="confidence-select rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
                                 data-question="{{ q_data.question.id }}">
-                            <option value="">Confidence (optional)</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
+                            <option value="">{{ _('Confidence (optional)') }}</option>
+                            <option value="low">{{ _('Low') }}</option>
+                            <option value="medium">{{ _('Medium') }}</option>
+                            <option value="high">{{ _('High') }}</option>
                         </select>
                         <select class="reason-tag-select rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
                                 data-question="{{ q_data.question.id }}">
-                            <option value="">Reason category (optional)</option>
-                            <option value="evidence">Evidence</option>
-                            <option value="fairness">Fairness</option>
-                            <option value="cost">Cost</option>
-                            <option value="feasibility">Feasibility</option>
-                            <option value="rights">Rights</option>
-                            <option value="safety">Safety</option>
-                            <option value="trust">Trust</option>
-                            <option value="long_term_impact">Long-term impact</option>
-                            <option value="other">Other</option>
+                            <option value="">{{ _('Reason category (optional)') }}</option>
+                            <option value="evidence">{{ _('Evidence') }}</option>
+                            <option value="fairness">{{ _('Fairness') }}</option>
+                            <option value="cost">{{ _('Cost') }}</option>
+                            <option value="feasibility">{{ _('Feasibility') }}</option>
+                            <option value="rights">{{ _('Rights') }}</option>
+                            <option value="safety">{{ _('Safety') }}</option>
+                            <option value="trust">{{ _('Trust') }}</option>
+                            <option value="long_term_impact">{{ _('Long-term impact') }}</option>
+                            <option value="other">{{ _('Other') }}</option>
                         </select>
                     </div>
                     {% endif %}
@@ -209,12 +209,9 @@
                 <!-- Discussion Link (if available) -->
                 {% if q_data.discussion_stats.has_discussion %}
                 <div class="px-6 pb-5 pt-3 border-t border-gray-100 bg-gray-50">
+                    {% set _disc_view_link = '<a href="' ~ q_data.discussion_stats.discussion_url ~ '?source=weekly_batch&q=' ~ q_data.question.id ~ '" class="text-primary-600 hover:text-primary-700 underline ml-1">' ~ _('View discussion') ~ ' &rarr;</a>' %}
                     <p class="text-sm text-gray-600">
-                        &#128172; {{ q_data.discussion_stats.participant_count }} people discussing
-                        <a href="{{ q_data.discussion_stats.discussion_url }}?source=weekly_batch&q={{ q_data.question.id }}"
-                           class="text-primary-600 hover:text-primary-700 underline ml-1">
-                            View discussion &rarr;
-                        </a>
+                        &#128172; {{ _('%(count)d people discussing %(link)s', count=q_data.discussion_stats.participant_count, link=_disc_view_link)|safe }}
                     </p>
                 </div>
                 {% endif %}
@@ -225,12 +222,12 @@
         <!-- Footer Actions -->
         <div class="mt-8 text-center space-y-4">
             <a href="{{ url_for('daily.today') }}" class="inline-block text-primary-600 hover:text-primary-700 font-medium">
-                &#8592; Back to Today's Question
+                &#8592; {{ _("Back to Today's Question") }}
             </a>
             {% if token %}
             <p class="text-sm text-gray-500">
                 <a href="{{ url_for('daily.manage_preferences', token=token) }}" class="text-gray-600 hover:text-gray-700 underline">
-                    Manage email preferences
+                    {{ _('Manage email preferences') }}
                 </a>
             </p>
             {% endif %}
@@ -270,10 +267,10 @@ document.addEventListener('DOMContentLoaded', function() {
         completionMsg.className = 'mb-8 p-6 bg-green-50 border border-green-200 rounded-xl text-center vote-recorded';
         completionMsg.innerHTML = `
             <div class="text-4xl mb-2">&#127881;</div>
-            <h2 class="text-xl font-bold text-green-800 mb-2">All Done!</h2>
-            <p class="text-green-700 mb-4">You've voted on all 5 questions this week. See you next week!</p>
+            <h2 class="text-xl font-bold text-green-800 mb-2">{{ _('All Done!') }}</h2>
+            <p class="text-green-700 mb-4">{{ _("You've voted on all 5 questions this week. See you next week!") }}</p>
             <a href="{{ url_for('daily.today') }}" class="inline-block px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
-                Explore More Questions
+                {{ _('Explore More Questions') }}
             </a>
         `;
         container.parentNode.insertBefore(completionMsg, container);
@@ -283,14 +280,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const buttonsContainer = card.querySelector('.vote-buttons');
         if (!buttonsContainer) return;
 
-        const voteLabels = {agree: 'Agree', disagree: 'Disagree', unsure: 'Unsure'};
+        const voteLabels = {agree: {{ _('Agree')|tojson }}, disagree: {{ _('Disagree')|tojson }}, unsure: {{ _('Unsure')|tojson }}};
         const voteColors = {agree: 'text-primary-600', disagree: 'text-red-600', unsure: 'text-gray-500'};
         const voteEmojis = {agree: '✓', disagree: '✗', unsure: '?'};
 
         // Build source articles HTML
         let articlesHtml = '';
         if (sourceArticles && sourceArticles.length > 0) {
-            const label = sourceArticles.length > 1 ? 'Sources' : 'Source';
+            const label = sourceArticles.length > 1 ? {{ _('Sources')|tojson }} : {{ _('Source')|tojson }};
             articlesHtml = `<div class="mt-3 pt-3 border-t border-gray-200"><p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">${label}</p><div class="space-y-2">`;
             sourceArticles.slice(0, 3).forEach(article => {
                 const sourceName = (article.source_name && article.source_name !== 'Unknown') ? `<p class="text-xs text-gray-500 mt-0.5">${article.source_name}</p>` : '';
@@ -303,9 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let discussionHtml = '';
         if (discussionStats && discussionStats.has_discussion && discussionStats.discussion_url) {
             discussionHtml = `
-                <a href="${discussionStats.discussion_url}?source=weekly_batch" 
+                <a href="${discussionStats.discussion_url}?source=weekly_batch"
                    class="block w-full text-center py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition text-sm font-medium mb-3">
-                    Join ${discussionStats.participant_count || 0} people discussing →
+                    ${ {{ gettext_js('Join %(count)d people discussing')|tojson }}.replace('%(count)d', discussionStats.participant_count || 0) } →
                 </a>
             `;
         }
@@ -314,22 +311,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const questionText = encodeURIComponent(card.querySelector('p.text-xl').textContent.replace(/"/g, '').trim());
         const researchToolsHtml = `
             <div class="border-t pt-3 mt-3">
-                <p class="text-xs text-gray-500 mb-2">Research with AI:</p>
+                <p class="text-xs text-gray-500 mb-2">{{ _('Research with AI:') }}</p>
                 <div class="grid grid-cols-3 gap-2 mb-3">
-                    <a href="https://perplexity.ai/search?q=${questionText}" target="_blank" 
+                    <a href="https://perplexity.ai/search?q=${questionText}" target="_blank"
                        class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <span class="text-xs font-medium text-gray-900">Perplexity</span>
-                        <span class="text-xs text-gray-500">Web search</span>
+                        <span class="text-xs text-gray-500">{{ _('Web search') }}</span>
                     </a>
-                    <a href="https://chat.openai.com/?q=${questionText}" target="_blank" 
+                    <a href="https://chat.openai.com/?q=${questionText}" target="_blank"
                        class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <span class="text-xs font-medium text-gray-900">ChatGPT</span>
-                        <span class="text-xs text-gray-500">Discuss</span>
+                        <span class="text-xs text-gray-500">{{ _('Discuss') }}</span>
                     </a>
-                    <a href="https://claude.ai/new?q=${questionText}" target="_blank" 
+                    <a href="https://claude.ai/new?q=${questionText}" target="_blank"
                        class="flex flex-col items-center p-2 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <span class="text-xs font-medium text-gray-900">Claude</span>
-                        <span class="text-xs text-gray-500">Analyze</span>
+                        <span class="text-xs text-gray-500">{{ _('Analyze') }}</span>
                     </a>
                 </div>
             </div>
@@ -340,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="text-center mb-3">
                     <span class="text-3xl">${voteEmojis[vote]}</span>
                     <p class="text-sm text-gray-600 mt-1">
-                        You voted: <span class="font-medium ${voteColors[vote]}">${voteLabels[vote]}</span>
+                        {{ _('You voted:') }} <span class="font-medium ${voteColors[vote]}">${voteLabels[vote]}</span>
                     </p>
                 </div>
 
@@ -353,18 +350,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
                 <div class="flex justify-between text-xs text-gray-600 mb-2">
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>Agree ${results.agree_pct}%</span>
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree ${results.disagree_pct}%</span>
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unsure ${results.unsure_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-primary-600 mr-1"></span>{{ _('Agree') }} ${results.agree_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>{{ _('Disagree') }} ${results.disagree_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>{{ _('Unsure') }} ${results.unsure_pct}%</span>
                 </div>
-                <p class="text-xs text-gray-400 mb-3">${results.total} votes</p>
+                <p class="text-xs text-gray-400 mb-3">${ {{ gettext_js('%(count)d votes')|tojson }}.replace('%(count)d', results.total) }</p>
 
                 ${articlesHtml}
                 ${researchToolsHtml}
                 ${discussionHtml}
 
                 <button class="show-next-question-btn w-full py-2 px-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-semibold text-sm">
-                    Next Question →
+                    {{ _('Next Question') }} →
                 </button>
             </div>
         `;
@@ -379,7 +376,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (badge) {
             badge.classList.remove('bg-blue-100', 'text-primary-700');
             badge.classList.add('bg-green-100', 'text-green-700');
-            badge.textContent = badge.textContent.replace(/ - Voted$/, '') + ' - Voted';
+            const votedSuffix = ' - ' + {{ _('Voted')|tojson }};
+            badge.textContent = badge.textContent.replace(new RegExp(votedSuffix + '$'), '') + votedSuffix;
         }
     }
 
@@ -437,12 +435,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Already voted - refresh to show results
                     window.location.reload();
                 } else {
-                    alert('Failed to record vote: ' + (data.error || 'Unknown error'));
+                    alert({{ _('Failed to record vote:')|tojson }} + ' ' + (data.error || {{ _('Unknown error')|tojson }}));
                     card.querySelectorAll('.vote-btn').forEach(b => b.disabled = false);
                 }
             } catch (error) {
                 console.error('Vote error:', error);
-                alert('Failed to record vote. Please try again.');
+                alert({{ _('Failed to record vote. Please try again.')|tojson }});
                 card.querySelectorAll('.vote-btn').forEach(b => b.disabled = false);
             }
         });

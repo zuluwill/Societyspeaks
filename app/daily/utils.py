@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from flask import url_for
 from app import db
+from flask_babel import gettext as _
 
 
 def _coerce_daily_question_delivery_prefs(
@@ -206,7 +207,7 @@ def process_daily_question_subscription(
             return {
                 'status': 'already_active',
                 'subscriber': existing,
-                'message': 'This email is already subscribed to daily questions.',
+                'message': _('This email is already subscribed to daily questions.'),
             }
 
         existing.is_active = True
@@ -225,14 +226,14 @@ def process_daily_question_subscription(
             return {
                 'status': 'error',
                 'subscriber': None,
-                'message': 'An error occurred. Please try again.',
+                'message': _('An error occurred. Please try again.'),
                 'error': str(e),
             }
         _capture_daily_question_subscribe_posthog(email, existing, user, track_posthog=track_posthog)
         return {
             'status': 'reactivated',
             'subscriber': existing,
-            'message': 'Welcome back! Your subscription has been reactivated.',
+            'message': _('Welcome back! Your subscription has been reactivated.'),
         }
 
     try:
@@ -256,7 +257,7 @@ def process_daily_question_subscription(
         return {
             'status': 'created',
             'subscriber': subscriber,
-            'message': 'You have successfully subscribed to daily civic questions!',
+            'message': _('You have successfully subscribed to daily civic questions!'),
         }
     except Exception as e:
         db.session.rollback()
@@ -265,7 +266,7 @@ def process_daily_question_subscription(
         return {
             'status': 'error',
             'subscriber': None,
-            'message': 'There was an error processing your subscription. Please try again.',
+            'message': _('There was an error processing your subscription. Please try again.'),
             'error': str(e),
         }
 

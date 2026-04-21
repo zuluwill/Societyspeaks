@@ -1,24 +1,23 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Continue your civic journey — Society Speaks{% endblock %}
+{% block title %}{{ _('Continue your civic journey — Society Speaks') }}{% endblock %}
 
-{% block preheader %}{{ completed_themes }} of {{ total_themes }} themes done. Up next: {{ next_theme_name }} (~5 mins){% endblock %}
+{% block preheader %}{{ _('%(done)s of %(total)d themes done. Up next: %(next)s (~5 mins)', done=completed_themes, total=total_themes, next=next_theme_name) }}{% endblock %}
 
 {% block content %}
 <!-- Journey Reminder Email -->
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="background: linear-gradient(135deg, #4338ca 0%, #1d4ed8 100%); padding: 28px 32px 24px; border-radius: 8px 8px 0 0;">
-            <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #a5b4fc; text-transform: uppercase;">Guided Civic Journey</p>
+            <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #a5b4fc; text-transform: uppercase;">{{ _('Guided Civic Journey') }}</p>
             <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; line-height: 1.3;">
-                Time for your next topic, {{ username }}
+                {{ _('Time for your next topic, %(username)s', username=username) }}
             </h1>
             <p style="margin: 10px 0 0; font-size: 14px; color: #c7d2fe; line-height: 1.5;">
-                You've completed {{ completed_themes }} of {{ total_themes }} themes — you're
-                {% if pct >= 75 %}almost there!
-                {% elif pct >= 50 %}more than halfway through!
-                {% elif pct >= 25 %}making good progress.
-                {% else %}on your way.
+                {% if pct >= 75 %}{{ _("You've completed %(done)s of %(total)d themes — you're almost there!", done=completed_themes, total=total_themes) }}
+                {% elif pct >= 50 %}{{ _("You've completed %(done)s of %(total)d themes — you're more than halfway through!", done=completed_themes, total=total_themes) }}
+                {% elif pct >= 25 %}{{ _("You've completed %(done)s of %(total)d themes — you're making good progress.", done=completed_themes, total=total_themes) }}
+                {% else %}{{ _("You've completed %(done)s of %(total)d themes — you're on your way.", done=completed_themes, total=total_themes) }}
                 {% endif %}
             </p>
         </td>
@@ -30,7 +29,7 @@
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                     <td style="padding-bottom: 6px;">
-                        <p style="margin: 0; font-size: 12px; color: #a5b4fc;">{{ completed_themes }} / {{ total_themes }} themes complete</p>
+                        <p style="margin: 0; font-size: 12px; color: #a5b4fc;">{{ _('%(done)s / %(total)d themes complete', done=completed_themes, total=total_themes) }}</p>
                     </td>
                 </tr>
                 <tr>
@@ -50,10 +49,10 @@
     <!-- Next theme card -->
     <tr>
         <td style="background-color: #ffffff; padding: 28px 32px 0;">
-            <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #6b7280; text-transform: uppercase;">Up next</p>
+            <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #6b7280; text-transform: uppercase;">{{ _('Up next') }}</p>
             <h2 style="margin: 0 0 6px; font-size: 19px; font-weight: 700; color: #111827;">{{ next_theme_name }}</h2>
             <p style="margin: 0; font-size: 13px; color: #6b7280;">
-                About 5 minutes &nbsp;·&nbsp; {{ next_statement_count or 7 }} statements to vote on
+                {{ _('About 5 minutes &nbsp;·&nbsp; %(count)d statements to vote on', count=(next_statement_count or 7))|safe }}
             </p>
         </td>
     </tr>
@@ -66,13 +65,13 @@
                     <td style="background-color: #4f46e5; border-radius: 8px;">
                         <a href="{{ continue_url }}" target="_blank"
                            style="display: inline-block; padding: 13px 28px; font-size: 15px; font-weight: 700; color: #ffffff; text-decoration: none; letter-spacing: 0.2px;">
-                            Continue your journey &rarr;
+                            {{ _('Continue your journey') }} &rarr;
                         </a>
                     </td>
                 </tr>
             </table>
             <p style="margin: 14px 0 0; font-size: 12px; color: #9ca3af;">
-                {% if is_anonymous %}This link takes you straight back to where you left off — no login needed.{% else %}Takes you straight back in — you're already signed in.{% endif %}
+                {% if is_anonymous %}{{ _('This link takes you straight back to where you left off — no login needed.') }}{% else %}{{ _("Takes you straight back in — you're already signed in.") }}{% endif %}
             </p>
         </td>
     </tr>
@@ -80,7 +79,7 @@
     <!-- Theme checklist -->
     <tr>
         <td style="background-color: #f9fafb; padding: 20px 32px; border-top: 1px solid #e5e7eb;">
-            <p style="margin: 0 0 12px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #9ca3af; text-transform: uppercase;">Your progress</p>
+            <p style="margin: 0 0 12px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #9ca3af; text-transform: uppercase;">{{ _('Your progress') }}</p>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 {% for theme in theme_checklist %}
                 <tr>
@@ -110,10 +109,10 @@
     <tr>
         <td style="background-color: #f9fafb; padding: 16px 32px 20px; border-top: 1px solid #e5e7eb; text-align: center;">
             <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
-                You're receiving this because you asked for reminders on the
-                <a href="{{ programme_url }}" style="color: #6b7280; text-decoration: underline;">{{ programme_name }}</a> journey.
+                {% set _prog_link = '<a href="' ~ programme_url ~ '" style="color: #6b7280; text-decoration: underline;">' ~ programme_name ~ '</a>' %}
+                {{ _("You're receiving this because you asked for reminders on the %(link)s journey.", link=_prog_link)|safe }}
                 <br>
-                <a href="{{ unsubscribe_url }}" style="color: #9ca3af; text-decoration: underline;">Stop reminders</a>
+                <a href="{{ unsubscribe_url }}" style="color: #9ca3af; text-decoration: underline;">{{ _('Stop reminders') }}</a>
             </p>
         </td>
     </tr>

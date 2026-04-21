@@ -10,7 +10,7 @@
         <div class="mb-6">
             <a href="{{ url_for('briefing.public_briefing', briefing_id=briefing.id) }}"
                class="text-sm text-gray-600 hover:text-gray-900">
-                &larr; Back to {{ briefing.name }} Archive
+                {{ _('← Back to %(name)s Archive', name=briefing.name) }}
             </a>
         </div>
 
@@ -19,11 +19,11 @@
             <div class="text-center">
                 <p class="text-sm font-medium text-primary-600 uppercase tracking-wide">{{ briefing.name }}</p>
                 <h1 class="mt-2 text-3xl font-bold text-gray-900">
-                    {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Brief' }}
+                    {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else _('Brief') }}
                 </h1>
                 {% if brief_run.sent_at %}
                 <p class="mt-2 text-sm text-gray-500">
-                    Published {{ brief_run.sent_at.strftime('%B %d, %Y at %H:%M UTC') }}
+                    {{ _('Published %(date)s', date=brief_run.sent_at.strftime('%B %d, %Y at %H:%M UTC')) }}
                 </p>
                 {% endif %}
 
@@ -87,7 +87,7 @@
                         <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
-                        <span>Want a bit more detail?</span>
+                        <span>{{ _('Want a bit more detail?') }}</span>
                     </button>
                     <div id="deeper-context-public-{{ item.id }}" 
                          class="hidden mt-4 p-5 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg">
@@ -110,7 +110,7 @@
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <a href="{{ item.ingested_item.url }}" target="_blank" rel="noopener"
                        class="text-sm text-primary-600 hover:text-primary-800">
-                        Read original source &rarr;
+                        {{ _('Read original source →') }}
                     </a>
                 </div>
                 {% endif %}
@@ -121,7 +121,7 @@
 
         <!-- Footer -->
         <div class="mt-12 text-center text-sm text-gray-500">
-            <p>This briefing is powered by <a href="{{ url_for('main.index') }}" class="text-primary-600 hover:underline">Society Speaks</a></p>
+            <p>{{ _('This briefing is powered by %(link_start)sSociety Speaks%(link_end)s', link_start='<a href="' + url_for('main.index') + '" class="text-primary-600 hover:underline">', link_end='</a>')|safe }}</p>
         </div>
     </div>
 </div>

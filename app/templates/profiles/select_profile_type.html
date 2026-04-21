@@ -19,7 +19,7 @@
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <span class="mt-2 hidden text-sm font-medium text-primary-600 sm:block">Account</span>
+                    <span class="mt-2 hidden text-sm font-medium text-primary-600 sm:block">{{ _('Account') }}</span>
                 </div>
 
                 <!-- Step 2 -->
@@ -27,7 +27,7 @@
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white">
                         <span>2</span>
                     </div>
-                    <span class="mt-2 hidden text-sm font-medium text-primary-600 sm:block">Profile Type</span>
+                    <span class="mt-2 hidden text-sm font-medium text-primary-600 sm:block">{{ _('Profile Type') }}</span>
                 </div>
 
                 <!-- Step 3 -->
@@ -35,7 +35,7 @@
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
                         <span class="text-gray-600">3</span>
                     </div>
-                    <span class="mt-2 hidden text-sm font-medium text-gray-500 sm:block">Get Started</span>
+                    <span class="mt-2 hidden text-sm font-medium text-gray-500 sm:block">{{ _('Get Started') }}</span>
                 </div>
             </div>
         </div>
@@ -45,8 +45,8 @@
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <!-- Header Section -->
         <div class="text-center mb-8 sm:mb-12">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Choose Your Profile Type</h1>
-            <p class="text-base sm:text-lg text-gray-600 px-4">Select the type of profile that best represents you on SocietySpeaks</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{{ _('Choose Your Profile Type') }}</h1>
+            <p class="text-base sm:text-lg text-gray-600 px-4">{{ _('Select the type of profile that best represents you on SocietySpeaks') }}</p>
         </div>
 
         <!-- Profile Cards - Mobile First Grid -->
@@ -63,11 +63,11 @@
                                 </svg>
                             </div>
                         </div>
-                        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Individual Profile</h2>
+                        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ _('Individual Profile') }}</h2>
                     </div>
 
                     <!-- Description -->
-                    <p class="text-gray-600 mb-6">Perfect for citizens, activists, and individuals who want to participate in community discussions.</p>
+                    <p class="text-gray-600 mb-6">{{ _('Perfect for citizens, activists, and individuals who want to participate in community discussions.') }}</p>
 
                     <!-- Feature List -->
                     <ul class="space-y-3 mb-8">
@@ -75,26 +75,26 @@
                             <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="text-sm sm:text-base">Share your personal perspective</span>
+                            <span class="text-sm sm:text-base">{{ _('Share your personal perspective') }}</span>
                         </li>
                         <li class="flex items-center text-gray-600">
                             <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="text-sm sm:text-base">Join community discussions</span>
+                            <span class="text-sm sm:text-base">{{ _('Join community discussions') }}</span>
                         </li>
                         <li class="flex items-center text-gray-600">
                             <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="text-sm sm:text-base">Build your personal brand</span>
+                            <span class="text-sm sm:text-base">{{ _('Build your personal brand') }}</span>
                         </li>
                     </ul>
 
                     <!-- CTA Button -->
                     <a href="{{ url_for('profiles.create_individual_profile', next=next_url) if next_url else url_for('profiles.create_individual_profile') }}" 
                        class="inline-flex w-full items-center justify-center rounded-lg bg-primary-600 px-4 py-3 text-sm sm:text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200">
-                        Create Individual Profile
+                        {{ _('Create Individual Profile') }}
                     </a>
                 </div>
             </div>
@@ -111,11 +111,11 @@
                                 </svg>
                             </div>
                         </div>
-                        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Organisation Profile</h2>
+                        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ _('Organisation Profile') }}</h2>
                     </div>
 
                     <!-- Description -->
-                    <p class="text-gray-600 mb-6">Ideal for businesses, organisations, governments, and institutions looking to engage with their community.</p>
+                    <p class="text-gray-600 mb-6">{{ _('Ideal for businesses, organisations, governments, and institutions looking to engage with their community.') }}</p>
 
                     <!-- Feature List -->
                     <ul class="space-y-3 mb-8">
@@ -123,26 +123,26 @@
                             <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="text-sm sm:text-base">Official organization presence</span>
+                            <span class="text-sm sm:text-base">{{ _('Official organization presence') }}</span>
                         </li>
                         <li class="flex items-center text-gray-600">
                             <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="text-sm sm:text-base">Host community discussions</span>
+                            <span class="text-sm sm:text-base">{{ _('Host community discussions') }}</span>
                         </li>
                         <li class="flex items-center text-gray-600">
                             <svg class="h-5 w-5 text-green-500 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="text-sm sm:text-base">Gather community feedback</span>
+                            <span class="text-sm sm:text-base">{{ _('Gather community feedback') }}</span>
                         </li>
                     </ul>
 
                     <!-- CTA Button -->
                     <a href="{{ url_for('profiles.create_company_profile', next=next_url) if next_url else url_for('profiles.create_company_profile') }}" 
                        class="inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 text-sm sm:text-base font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-200">
-                        Create Organisation Profile
+                        {{ _('Create Organisation Profile') }}
                     </a>
                 </div>
             </div>
@@ -159,9 +159,9 @@
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-medium text-primary-800">Not sure which to choose?</h3>
+                    <h3 class="text-sm font-medium text-primary-800">{{ _('Not sure which to choose?') }}</h3>
                     <div class="mt-2 text-sm text-primary-700">
-                        <p>Choose an Individual profile if you're participating as yourself, or an Organisation profile if you're representing a business, government body, or institution. You can always contact our support team if you need to change your profile type later.</p>
+                        <p>{{ _("Choose an Individual profile if you're participating as yourself, or an Organisation profile if you're representing a business, government body, or institution. You can always contact our support team if you need to change your profile type later.") }}</p>
                     </div>
                 </div>
             </div>

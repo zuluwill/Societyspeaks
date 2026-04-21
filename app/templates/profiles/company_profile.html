@@ -4,9 +4,9 @@
 {% from "components/profile_pagination.html" import pagination %}
 
 {% block head %}
-    <title>{{ profile.company_name }} - Profile on SocietySpeaks</title>
-    <meta name="description" content="Explore the profile of {{ profile.company_name }}, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.">
-    <meta name="keywords" content="organisation profile, company profile, {{ profile.company_name }}, SocietySpeaks{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
+    <title>{{ _('%(name)s - Profile on SocietySpeaks', name=profile.company_name) }}</title>
+    <meta name="description" content="{{ _('Explore the profile of %(name)s, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.', name=profile.company_name) }}">
+    <meta name="keywords" content="{{ _('organisation profile, company profile, %(name)s, SocietySpeaks', name=profile.company_name) }}{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
     <link rel="canonical" href="{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}">
 
     <!-- Structured Data for SEO -->
@@ -15,7 +15,7 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "{{ profile.company_name }}",
-      "description": "{{ profile.description | default('An organization on SocietySpeaks contributing to public discourse and meaningful change.') }}",
+      "description": "{{ profile.description | default(_('An organization on SocietySpeaks contributing to public discourse and meaningful change.')) }}",
       "url": "{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}",
       "logo": "{{ url_for('profiles.get_image', filename=profile.logo, _external=True) }}",
       {% if profile.city and profile.country %}
@@ -42,7 +42,7 @@
     <div class="relative h-60 bg-gray-200 rounded-xl overflow-hidden">
         <img
             src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}"
-            alt="{{ profile.company_name }} banner"
+            alt="{{ _('%(name)s banner', name=profile.company_name) }}"
             class="w-full h-full object-cover"
             onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-banner.png') }}';"
         >
@@ -56,7 +56,7 @@
             <div class="w-32 h-32 md:w-40 md:h-40 bg-white rounded-xl overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
                 <img
                     src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
-                    alt="{{ profile.company_name }} logo"
+                    alt="{{ _('%(name)s logo', name=profile.company_name) }}"
                     class="w-full h-full object-cover"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                 >
@@ -71,19 +71,19 @@
                         <div class="flex items-center gap-2 flex-shrink-0">
                             {% if current_user.is_authenticated and current_user.profile_type == 'company' and current_user.company_profile and current_user.company_profile.id == profile.id %}
                             <a href="{{ url_for('profiles.edit_company_profile', company_name=profile.slug) }}"
-                               aria-label="Edit company profile"
+                               aria-label="{{ _('Edit company profile') }}"
                                class="inline-flex items-center px-3 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
                                 <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                                <span class="hidden md:inline">Edit Profile</span>
+                                <span class="hidden md:inline">{{ _('Edit Profile') }}</span>
                             </a>
                             {% endif %}
                             {% from "components/share_button.html" import share_button %}
                             {{ share_button(
-                                title=profile.company_name + " is driving change through public discourse on SocietySpeaks",
+                                title=_('%(name)s is driving change through public discourse on SocietySpeaks', name=profile.company_name),
                                 url=url_for('profiles.view_company_profile', company_name=profile.slug, _external=True),
-                                description="Join " + profile.company_name + " in shaping policy solutions through meaningful dialogue on SocietySpeaks.io. Be part of the conversation that matters!",
+                                description=_('Join %(name)s in shaping policy solutions through meaningful dialogue on SocietySpeaks.io. Be part of the conversation that matters!', name=profile.company_name),
                                 button_style="primary"
                             ) }}
                         </div>
@@ -96,7 +96,7 @@
                         <button data-read-more-btn aria-expanded="false" aria-controls="profile-description"
                                 type="button"
                                 class="read-more-toggle md:hidden text-primary-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded">
-                            Read more
+                            {{ _('Read more') }}
                         </button>
                     </div>
                     {% endif %}
@@ -118,7 +118,7 @@
     <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-900">Contact Information</h3>
+                <h3 class="text-lg font-semibold text-gray-900">{{ _('Contact Information') }}</h3>
                 {% if profile.email %}
                 <div class="flex items-center text-gray-600">
                     <svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -133,15 +133,15 @@
                     </svg>
                     {% if profile.website %}
                         <a href="{{ profile.website }}" target="_blank" rel="noopener noreferrer"
-                           class="hover:text-primary-600">Visit Website</a>
+                           class="hover:text-primary-600">{{ _('Visit Website') }}</a>
                     {% else %}
-                        <span class="text-gray-400">No website provided</span>
+                        <span class="text-gray-400">{{ _('No website provided') }}</span>
                     {% endif %}
                 </div>
             </div>
 
             <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-900">Social Media</h3>
+                <h3 class="text-lg font-semibold text-gray-900">{{ _('Social Media') }}</h3>
                 {{ social_links(profile) }}
             </div>
         </div>
@@ -150,7 +150,7 @@
     <!-- Active Programmes -->
     {% if programmes %}
     <div class="mt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Active Programmes</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ _('Active Programmes') }}</h2>
         <div class="grid grid-cols-1 {% if programmes|length > 1 %}md:grid-cols-2{% endif %} gap-6">
             {% for prog in programmes %}
             <a href="{{ url_for('programmes.view_programme', slug=prog.slug) }}"
@@ -167,7 +167,7 @@
                         {% if prog.discussions %}
                         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-200">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                            {{ prog.discussions|length }} discussion{{ 's' if prog.discussions|length != 1 }}
+                            {{ ngettext('%(num)d discussion', '%(num)d discussions', prog.discussions|length) }}
                         </span>
                         {% endif %}
                         {% if prog.geographic_scope %}
@@ -183,12 +183,12 @@
                         <span class="px-2.5 py-1 bg-white/15 text-white text-xs font-medium rounded-full">{{ theme }}</span>
                         {% endfor %}
                         {% if prog.themes|length > 4 %}
-                        <span class="px-2.5 py-1 bg-white/10 text-blue-200 text-xs rounded-full">+{{ prog.themes|length - 4 }} more</span>
+                        <span class="px-2.5 py-1 bg-white/10 text-blue-200 text-xs rounded-full">{{ _('+%(count)d more', count=prog.themes|length - 4) }}</span>
                         {% endif %}
                     </div>
                     {% endif %}
                     <span class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary-700 text-sm font-semibold rounded-lg group-hover:bg-blue-50 transition-colors">
-                        Join the dialogue
+                        {{ _('Join the dialogue') }}
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                     </span>
                 </div>
@@ -200,7 +200,7 @@
 
     <!-- Company's Discussions -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Discussions by {{ profile.company_name }}</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ _('Discussions by %(name)s', name=profile.company_name) }}</h2>
         {% if discussions.items %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for discussion in discussions.items %}
@@ -209,7 +209,7 @@
             </div>
             {{ pagination(discussions) }}
         {% else %}
-            <p class="text-gray-600">No discussions started yet.</p>
+            <p class="text-gray-600">{{ _('No discussions started yet.') }}</p>
         {% endif %}
     </div>
 </div>

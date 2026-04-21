@@ -32,9 +32,10 @@ def test_moderation_queue_allows_owner(app, db):
         db.session.add(discussion)
         db.session.commit()
         did, slug = discussion.id, discussion.slug
+        owner_id = owner.id
 
     client = app.test_client()
-    _login(client, owner.id)
+    _login(client, owner_id)
     resp = client.get(f'/discussions/{did}/moderation', follow_redirects=False)
     assert resp.status_code == 200
 
@@ -54,9 +55,10 @@ def test_moderation_queue_allows_site_admin_not_owner(app, db):
         db.session.add(discussion)
         db.session.commit()
         did = discussion.id
+        admin_id = admin.id
 
     client = app.test_client()
-    _login(client, admin.id)
+    _login(client, admin_id)
     resp = client.get(f'/discussions/{did}/moderation', follow_redirects=False)
     assert resp.status_code == 200
 
@@ -76,9 +78,10 @@ def test_moderation_queue_denies_non_owner_non_admin(app, db):
         db.session.add(discussion)
         db.session.commit()
         did, slug = discussion.id, discussion.slug
+        stranger_id = stranger.id
 
     client = app.test_client()
-    _login(client, stranger.id)
+    _login(client, stranger_id)
     resp = client.get(f'/discussions/{did}/moderation', follow_redirects=False)
     assert resp.status_code == 302
     assert f'/discussions/{did}/{slug}' in resp.headers.get('Location', '')
@@ -99,9 +102,10 @@ def test_moderation_summary_api_allows_admin(app, db):
         db.session.add(discussion)
         db.session.commit()
         did = discussion.id
+        admin_id = admin.id
 
     client = app.test_client()
-    _login(client, admin.id)
+    _login(client, admin_id)
     resp = client.get(f'/api/discussions/{did}/moderation/summary')
     assert resp.status_code == 200
     data = resp.get_json()

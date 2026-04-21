@@ -33,6 +33,7 @@ from sqlalchemy import and_, func, or_
 import json
 import os
 import re
+from flask_babel import gettext as _
 try:
     import posthog
 except ImportError:
@@ -230,7 +231,7 @@ def create_discussion():
     from app.models import Statement
 
     if not current_user.profile_type:
-        flash("Please complete your profile before creating a discussion.", "info")
+        flash(_("Please complete your profile before creating a discussion."), "info")
         return redirect(url_for('profiles.select_profile_type'))
 
     form = CreateDiscussionForm()
@@ -378,7 +379,7 @@ def edit_discussion(discussion_id):
         abort(404)
 
     if discussion.creator_id != current_user.id and not current_user.is_admin:
-        flash("You don't have permission to edit this discussion.", "error")
+        flash(_("You don't have permission to edit this discussion."), "error")
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     # Build editable programmes list
@@ -551,7 +552,7 @@ def edit_discussion(discussion_id):
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
-    flash("Discussion updated successfully.", "success")
+    flash(_("Discussion updated successfully."), "success")
     return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
 
@@ -973,9 +974,9 @@ def follow_discussion(discussion_id):
     if not existing:
         db.session.add(DiscussionFollow(user_id=current_user.id, discussion_id=discussion.id))
         db.session.commit()
-        flash('Discussion saved to your dashboard.', 'success')
+        flash(_('Discussion saved to your dashboard.'), 'success')
     else:
-        flash('This discussion is already saved.', 'info')
+        flash(_('This discussion is already saved.'), 'info')
 
     return redirect(_safe_next_url(
         'discussions.view_discussion',
@@ -1002,7 +1003,7 @@ def start_follow_discussion(discussion_id):
     )
     session['pending_follow_discussion_id'] = discussion.id
     session['pending_post_auth_redirect'] = next_url
-    flash('Create an account or sign in to save this discussion and follow future updates.', 'info')
+    flash(_('Create an account or sign in to save this discussion and follow future updates.'), 'info')
     return redirect(url_for('auth.login', next=next_url))
 
 
@@ -1022,9 +1023,9 @@ def unfollow_discussion(discussion_id):
     if existing:
         db.session.delete(existing)
         db.session.commit()
-        flash('Discussion removed from your saved list.', 'success')
+        flash(_('Discussion removed from your saved list.'), 'success')
     else:
-        flash('This discussion was not in your saved list.', 'info')
+        flash(_('This discussion was not in your saved list.'), 'info')
 
     return redirect(_safe_next_url(
         'discussions.view_discussion',
@@ -1042,7 +1043,7 @@ def create_discussion_update(discussion_id):
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(404)
     if not _can_manage_discussion_updates(discussion):
-        flash("You don't have permission to add updates to this discussion.", 'error')
+        flash(_("You don't have permission to add updates to this discussion."), 'error')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     form = DiscussionUpdateForm()
@@ -1062,7 +1063,7 @@ def create_discussion_update(discussion_id):
             'discussion_update',
             actor_user_id=current_user.id,
         )
-        flash('Discussion update published.', 'success')
+        flash(_('Discussion update published.'), 'success')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     return render_template(
@@ -1086,7 +1087,7 @@ def edit_discussion_update(discussion_id, update_id):
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(404)
     if not _can_manage_discussion_updates(discussion):
-        flash("You don't have permission to edit updates for this discussion.", 'error')
+        flash(_("You don't have permission to edit updates for this discussion."), 'error')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     if request.method == 'GET':
@@ -1105,7 +1106,7 @@ def edit_discussion_update(discussion_id, update_id):
         update.body = form.body.data.strip()
         update.links = _parse_markdown_links(form.links.data)
         db.session.commit()
-        flash('Discussion update saved.', 'success')
+        flash(_('Discussion update saved.'), 'success')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     return render_template(
@@ -1130,12 +1131,12 @@ def delete_discussion_update(discussion_id, update_id):
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(404)
     if not _can_manage_discussion_updates(discussion):
-        flash("You don't have permission to delete updates for this discussion.", 'error')
+        flash(_("You don't have permission to delete updates for this discussion."), 'error')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     db.session.delete(update)
     db.session.commit()
-    flash('Discussion update deleted.', 'success')
+    flash(_('Discussion update deleted.'), 'success')
     return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
 
@@ -1202,7 +1203,7 @@ def api_discussion_statements(discussion_id):
     if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):
         cohort_slug = None
 
-    _, query = _statement_queries_for_discussion(discussion)
+    __, query = _statement_queries_for_discussion(discussion)
     query = _apply_statement_text_search(query, search_term)
     query = apply_statement_sort(query, sort, discussion.id, db.session)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -1374,8 +1375,8 @@ def api_search_discussions():
         # Validate page number
         if page < 1:
             return jsonify({
-                'error': 'Invalid page number',
-                'message': 'Page number must be greater than 0'
+                'error': _('Invalid page number'),
+                'message': _('Page number must be greater than 0')
             }), 400
 
         # Get paginated discussions
@@ -1426,7 +1427,7 @@ def api_search_discussions():
         return jsonify({
             'status': 'error',
             'message': str(e),
-            'error': 'Invalid parameter'
+            'error': _('Invalid parameter')
         }), 400
 
     except Exception as e:
@@ -1434,8 +1435,8 @@ def api_search_discussions():
         current_app.logger.error(f"Error in API search: {str(e)}")
         return jsonify({
             'status': 'error',
-            'message': 'An internal server error occurred',
-            'error': 'Internal server error'
+            'message': _('An internal server error occurred'),
+            'error': _('Internal server error')
         }), 500
 
 country_mapping = {
@@ -1704,14 +1705,14 @@ def track_discussion_activity(discussion_id):
         
         return jsonify({
             'status': 'success',
-            'message': 'Activity tracked successfully'
+            'message': _('Activity tracked successfully')
         }), 200
         
     except Exception as e:
         current_app.logger.error(f"Error tracking discussion activity: {str(e)}")
         return jsonify({
             'status': 'error',
-            'message': 'Failed to track activity'
+            'message': _('Failed to track activity')
         }), 500
 
 
@@ -1749,14 +1750,14 @@ def track_new_participant(discussion_id):
             
             return jsonify({
                 'status': 'success',
-                'message': 'Participant tracked and notification sent',
+                'message': _('Participant tracked and notification sent'),
                 'participant_id': participant.id,
                 'notification_id': notification.id if notification else None
             }), 200
         else:
             return jsonify({
                 'status': 'success', 
-                'message': 'Participant tracked',
+                'message': _('Participant tracked'),
                 'participant_id': participant.id
             }), 200
             
@@ -1764,7 +1765,7 @@ def track_new_participant(discussion_id):
         current_app.logger.error(f"Error tracking participant: {str(e)}")
         return jsonify({
             'status': 'error',
-            'message': 'Failed to track participant'
+            'message': _('Failed to track participant')
         }), 500
 
 

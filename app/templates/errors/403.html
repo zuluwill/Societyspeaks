@@ -5,13 +5,13 @@
     <div class="max-w-lg w-full text-center">
         <h1 class="text-9xl font-extrabold text-primary-600 tracking-widest">403</h1>
         <div class="bg-blue-100 px-4 py-2 text-sm rounded-lg text-primary-700 mt-4 inline-block">
-            Access Forbidden
+            {{ _('Access Forbidden') }}
         </div>
         <div class="mt-8">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">You don't have permission to access this resource</h2>
-            <p class="text-gray-600 mb-8">Please check your credentials or contact the administrator if you believe this is a mistake.</p>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">{{ _("You don't have permission to access this resource") }}</h2>
+            <p class="text-gray-600 mb-8">{{ _('Please check your credentials or contact the administrator if you believe this is a mistake.') }}</p>
             <a href="{{ url_for('main.index') }}" class="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors">
-                Return Home
+                {{ _('Return Home') }}
             </a>
         </div>
     </div>

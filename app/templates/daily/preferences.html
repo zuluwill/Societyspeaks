@@ -1,15 +1,15 @@
 {% extends "layout.html" %}
 {% from "components/timezone_select.html" import timezone_select %}
 
-{% block title %}Email Preferences - Society Speaks{% endblock %}
+{% block title %}{{ _('Email Preferences - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-12">
     <div class="max-w-lg mx-auto px-4">
         <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Email Preferences</h1>
-            <p class="text-gray-600">Customize how you receive questions from Society Speaks</p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ _('Email Preferences') }}</h1>
+            <p class="text-gray-600">{{ _('Customize how you receive questions from Society Speaks') }}</p>
         </div>
 
         <!-- Success/Error Messages -->
@@ -28,8 +28,8 @@
             <form method="POST" action="{{ url_for('daily.manage_preferences', token=token) }}">
                 <!-- Email Frequency Section -->
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Email Frequency</h2>
-                    <p class="text-sm text-gray-600 mb-4">How often would you like to receive civic questions?</p>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Email Frequency') }}</h2>
+                    <p class="text-sm text-gray-600 mb-4">{{ _('How often would you like to receive civic questions?') }}</p>
 
                     <div class="space-y-3">
                         <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {% if subscriber.email_frequency == 'daily' %}border-primary-500 bg-blue-50{% else %}border-gray-200{% endif %}">
@@ -37,8 +37,8 @@
                                    class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500"
                                    {% if subscriber.email_frequency == 'daily' %}checked{% endif %}>
                             <div class="ml-3">
-                                <span class="block font-medium text-gray-900">Daily</span>
-                                <span class="block text-sm text-gray-500">One question each day, sent around {{ daily_send_window_label }} (same moment for all daily subscribers)</span>
+                                <span class="block font-medium text-gray-900">{{ _('Daily') }}</span>
+                                <span class="block text-sm text-gray-500">{{ _('One question each day, sent around %(window)s (same moment for all daily subscribers)', window=daily_send_window_label) }}</span>
                             </div>
                         </label>
 
@@ -47,9 +47,9 @@
                                    class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500"
                                    {% if subscriber.email_frequency == 'weekly' %}checked{% endif %}>
                             <div class="ml-3">
-                                <span class="block font-medium text-gray-900">Weekly</span>
-                                <span class="block text-sm text-gray-500">5 questions once per week - vote on them all at once</span>
-                                <span class="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">Recommended</span>
+                                <span class="block font-medium text-gray-900">{{ _('Weekly') }}</span>
+                                <span class="block text-sm text-gray-500">{{ _('5 questions once per week - vote on them all at once') }}</span>
+                                <span class="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">{{ _('Recommended') }}</span>
                             </div>
                         </label>
 
@@ -58,8 +58,8 @@
                                    class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500"
                                    {% if subscriber.email_frequency == 'monthly' %}checked{% endif %}>
                             <div class="ml-3">
-                                <span class="block font-medium text-gray-900">Monthly</span>
-                                <span class="block text-sm text-gray-500">Highlights digest — {{ monthly_schedule_short }}</span>
+                                <span class="block font-medium text-gray-900">{{ _('Monthly') }}</span>
+                                <span class="block text-sm text-gray-500">{{ _('Highlights digest — %(schedule)s', schedule=monthly_schedule_short) }}</span>
                             </div>
                         </label>
                     </div>
@@ -67,18 +67,18 @@
 
                 <!-- Send Time Section (for weekly) -->
                 <div class="p-6 border-b border-gray-200" id="weekly-options">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Weekly Delivery Time</h2>
-                    <p class="text-sm text-gray-600 mb-4">Choose when you'd like to receive your weekly digest</p>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Weekly Delivery Time') }}</h2>
+                    <p class="text-sm text-gray-600 mb-4">{{ _("Choose when you'd like to receive your weekly digest") }}</p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Day Selection -->
                         <div>
-                            <label for="preferred_send_day" class="block text-sm font-medium text-gray-700 mb-2">Day of week</label>
+                            <label for="preferred_send_day" class="block text-sm font-medium text-gray-700 mb-2">{{ _('Day of week') }}</label>
                             <select name="preferred_send_day" id="preferred_send_day"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 {% for day_value, day_name in send_days.items() %}
                                     <option value="{{ day_value }}" {% if subscriber.preferred_send_day == day_value %}selected{% endif %}>
-                                        {{ day_name }}{% if day_value == 1 %} (Recommended){% endif %}
+                                        {{ day_name }}{% if day_value == 1 %} {{ _('(Recommended)') }}{% endif %}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -86,17 +86,17 @@
 
                         <!-- Hour Selection -->
                         <div>
-                            <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                            <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700 mb-2">{{ _('Time') }}</label>
                             <select name="preferred_send_hour" id="preferred_send_hour"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 {% for hour in range(24) %}
                                     <option value="{{ hour }}" {% if subscriber.preferred_send_hour == hour %}selected{% endif %}>
-                                        {% if hour == 0 %}12:00 AM (Midnight)
-                                        {% elif hour < 12 %}{{ hour }}:00 AM
-                                        {% elif hour == 12 %}12:00 PM (Noon)
-                                        {% else %}{{ hour - 12 }}:00 PM
+                                        {% if hour == 0 %}{{ _('12:00 AM (Midnight)') }}
+                                        {% elif hour < 12 %}{{ _('%(hour)s:00 AM', hour=hour) }}
+                                        {% elif hour == 12 %}{{ _('12:00 PM (Noon)') }}
+                                        {% else %}{{ _('%(hour)s:00 PM', hour=(hour - 12)) }}
                                         {% endif %}
-                                        {% if hour == 9 %} (Recommended){% endif %}
+                                        {% if hour == 9 %} {{ _('(Recommended)') }}{% endif %}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -105,24 +105,24 @@
 
                     <!-- Timezone -->
                     <div class="mt-4">
-                        <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                        <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">{{ _('Timezone') }}</label>
                         {{ timezone_select(name='timezone', selected=subscriber.timezone or 'UTC', css_class='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500') }}
-                        <p class="mt-1 text-xs text-gray-500">Weekly: your chosen day and hour in this time zone. Monthly: {{ monthly_schedule_short }}.</p>
+                        <p class="mt-1 text-xs text-gray-500">{{ _('Weekly: your chosen day and hour in this time zone. Monthly: %(schedule)s.', schedule=monthly_schedule_short) }}</p>
                     </div>
                 </div>
 
                 <!-- Current Status -->
                 <div class="p-6 bg-gray-50 border-b border-gray-200">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Current subscription</h3>
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">{{ _('Current subscription') }}</h3>
                     <p class="text-sm text-gray-600">
                         <span class="font-medium">{{ subscriber.email }}</span>
                         {% if subscriber.email_frequency == 'weekly' %}
-                            &bull; Weekly on {{ send_days[subscriber.preferred_send_day] }}s at {{ subscriber.preferred_send_hour | dq_hour_12h }}
+                            &bull; {{ _('Weekly on %(day)ss at %(time)s', day=send_days[subscriber.preferred_send_day], time=subscriber.preferred_send_hour | dq_hour_12h) }}
                             {% if subscriber.timezone %} ({{ subscriber.timezone }}){% endif %}
                         {% elif subscriber.email_frequency == 'daily' %}
-                            &bull; Daily — around {{ daily_send_window_label }} each day
+                            &bull; {{ _('Daily — around %(window)s each day', window=daily_send_window_label) }}
                         {% else %}
-                            &bull; Monthly — {{ monthly_schedule_short }}{% if subscriber.timezone %} ({{ subscriber.timezone }}){% endif %}
+                            &bull; {{ _('Monthly — %(schedule)s', schedule=monthly_schedule_short) }}{% if subscriber.timezone %} ({{ subscriber.timezone }}){% endif %}
                         {% endif %}
                     </p>
                 </div>
@@ -131,24 +131,24 @@
                 <div class="p-6">
                     <button type="submit"
                             class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-                        Save Preferences
+                        {{ _('Save Preferences') }}
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- Unsubscribe Link -->
+        {% set _unsub_link = '<a href="' ~ url_for('daily.unsubscribe', token=token) ~ '" class="text-red-600 hover:text-red-700 underline">' ~ _('Unsubscribe') ~ '</a>' %}
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-500">
-                Don't want to receive any emails?
-                <a href="{{ url_for('daily.unsubscribe', token=token) }}" class="text-red-600 hover:text-red-700 underline">Unsubscribe</a>
+                {{ _("Don't want to receive any emails? %(unsub_link)s", unsub_link=_unsub_link)|safe }}
             </p>
         </div>
 
         <!-- Back to Home -->
         <div class="mt-4 text-center">
             <a href="{{ url_for('daily.today') }}" class="text-sm text-primary-600 hover:text-primary-700">
-                &larr; Back to Today's Question
+                &larr; {{ _("Back to Today's Question") }}
             </a>
         </div>
     </div>

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Discussion #{{ discussion.id }} — Partner Portal{% endblock %}
+{% block title %}{{ _('Discussion #%(id)s — Partner Portal', id=discussion.id) }}{% endblock %}
 
 {% block content %}
 {% include 'partner/portal/_portal_nav.html' %}
@@ -9,7 +9,7 @@
 
     {# Breadcrumb #}
     <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-      <a href="{{ url_for('partner.portal_discussions') }}" class="hover:text-primary-600">Discussions</a>
+      <a href="{{ url_for('partner.portal_discussions') }}" class="hover:text-primary-600">{{ _('Discussions') }}</a>
       <span>/</span>
       <span class="text-gray-800 font-medium">{{ discussion.title|truncate(60) }}</span>
     </nav>
@@ -36,17 +36,17 @@
               {{ discussion.partner_env }}
             </span>
             {% if discussion.is_closed %}
-              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">Closed</span>
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">{{ _('Closed') }}</span>
             {% else %}
-              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">Open</span>
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">{{ _('Open') }}</span>
             {% endif %}
             {% if discussion.integrity_mode %}
-              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-primary-800">Integrity mode</span>
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-primary-800">{{ _('Integrity mode') }}</span>
             {% endif %}
           </div>
           <h1 class="text-2xl font-bold text-gray-900 leading-snug">{{ discussion.title }}</h1>
           {% if discussion.partner_external_id %}
-            <p class="text-xs text-gray-500 mt-1">External ID: <span class="font-mono">{{ discussion.partner_external_id }}</span></p>
+            <p class="text-xs text-gray-500 mt-1">{{ _('External ID:') }} <span class="font-mono">{{ discussion.partner_external_id }}</span></p>
           {% endif %}
           {% if discussion.partner_article_url %}
             <a href="{{ discussion.partner_article_url }}" target="_blank" rel="noopener"
@@ -56,22 +56,22 @@
         <div class="flex flex-wrap gap-2 shrink-0">
           <a href="{{ embed_url }}" target="_blank" rel="noopener"
             class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            View embed ↗
+            {{ _('View embed ↗') }}
           </a>
           <a href="{{ consensus_url }}" target="_blank" rel="noopener"
             class="rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700">
-            Consensus ↗
+            {{ _('Consensus ↗') }}
           </a>
           {% if can_edit %}
           <form method="post"
             action="{{ url_for('partner.portal_toggle_discussion_closed', discussion_id=discussion.id) }}"
-            data-confirm="{% if discussion.is_closed %}Reopen{% else %}Close{% endif %} this discussion?">
+            data-confirm="{% if discussion.is_closed %}{{ _('Reopen this discussion?') }}{% else %}{{ _('Close this discussion?') }}{% endif %}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit"
               class="rounded-md px-3 py-2 text-sm font-semibold shadow-sm ring-1 ring-inset
                 {% if discussion.is_closed %}bg-white text-emerald-700 ring-emerald-300 hover:bg-emerald-50
                 {% else %}bg-white text-amber-700 ring-amber-300 hover:bg-amber-50{% endif %}">
-              {% if discussion.is_closed %}Reopen{% else %}Close{% endif %}
+              {% if discussion.is_closed %}{{ _('Reopen') }}{% else %}{{ _('Close') }}{% endif %}
             </button>
           </form>
           {% endif %}
@@ -81,25 +81,25 @@
       {# Meta row #}
       <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4 text-sm">
         <div>
-          <dt class="text-xs text-gray-500">Created</dt>
+          <dt class="text-xs text-gray-500">{{ _('Created') }}</dt>
           <dd class="font-medium text-gray-800">{{ discussion.created_at.strftime('%d %b %Y') if discussion.created_at else '—' }}</dd>
         </div>
         <div>
-          <dt class="text-xs text-gray-500">Total votes</dt>
+          <dt class="text-xs text-gray-500">{{ _('Total votes') }}</dt>
           <dd class="font-medium text-gray-800 tabular-nums">{{ total_votes }}</dd>
         </div>
         <div>
-          <dt class="text-xs text-gray-500">Statements</dt>
+          <dt class="text-xs text-gray-500">{{ _('Statements') }}</dt>
           <dd class="font-medium text-gray-800 tabular-nums">{{ statements | length }}</dd>
         </div>
         <div>
-          <dt class="text-xs text-gray-500">Created via key</dt>
+          <dt class="text-xs text-gray-500">{{ _('Created via key') }}</dt>
           <dd class="font-medium text-gray-800 font-mono text-xs">
             {% if key_info %}
               {{ key_info.prefix }}••••{{ key_info.last4 }}
               <span class="font-sans text-gray-400">({{ key_info.env }}{% if key_info.status != 'active' %}, {{ key_info.status }}{% endif %})</span>
             {% else %}
-              <span class="text-gray-400">Legacy / unknown</span>
+              <span class="text-gray-400">{{ _('Legacy / unknown') }}</span>
             {% endif %}
           </dd>
         </div>
@@ -109,51 +109,51 @@
     {# Consensus status #}
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm mb-6">
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-lg font-semibold text-gray-900">Consensus analysis</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Consensus analysis') }}</h2>
         {% if latest_consensus %}
         <a href="{{ consensus_url }}" target="_blank" rel="noopener"
-           class="text-xs font-semibold text-primary-600 hover:underline">View full consensus ↗</a>
+           class="text-xs font-semibold text-primary-600 hover:underline">{{ _('View full consensus ↗') }}</a>
         {% endif %}
       </div>
       {% if latest_consensus %}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
           <div class="rounded-lg bg-gray-50 p-3">
-            <div class="text-xs text-gray-500">Participants</div>
+            <div class="text-xs text-gray-500">{{ _('Participants') }}</div>
             <div class="text-xl font-semibold text-gray-900 tabular-nums">{{ latest_consensus.participants_count or '—' }}</div>
           </div>
           <div class="rounded-lg bg-gray-50 p-3">
-            <div class="text-xs text-gray-500">Statements analysed</div>
+            <div class="text-xs text-gray-500">{{ _('Statements analysed') }}</div>
             <div class="text-xl font-semibold text-gray-900 tabular-nums">{{ latest_consensus.statements_count or '—' }}</div>
           </div>
           <div class="rounded-lg bg-gray-50 p-3">
-            <div class="text-xs text-gray-500">Opinion clusters</div>
+            <div class="text-xs text-gray-500">{{ _('Opinion clusters') }}</div>
             <div class="text-xl font-semibold text-gray-900 tabular-nums">{{ latest_consensus.num_clusters or '—' }}</div>
           </div>
           <div class="rounded-lg bg-gray-50 p-3">
-            <div class="text-xs text-gray-500">Last run</div>
+            <div class="text-xs text-gray-500">{{ _('Last run') }}</div>
             <div class="text-sm font-medium text-gray-900">{{ latest_consensus.created_at.strftime('%d %b %Y') if latest_consensus.created_at else '—' }}</div>
             <div class="text-xs text-gray-400">{{ latest_consensus.created_at.strftime('%H:%M UTC') if latest_consensus.created_at else '' }}</div>
           </div>
         </div>
-        <p class="text-xs text-gray-500">Opinion clusters show how readers divided on the topic — 1 cluster means broad agreement, multiple clusters indicate distinct viewpoints.</p>
+        <p class="text-xs text-gray-500">{{ _('Opinion clusters show how readers divided on the topic — 1 cluster means broad agreement, multiple clusters indicate distinct viewpoints.') }}</p>
       {% else %}
-        <p class="text-sm text-gray-500">No consensus analysis yet — analysis runs automatically after enough votes are cast.</p>
+        <p class="text-sm text-gray-500">{{ _('No consensus analysis yet — analysis runs automatically after enough votes are cast.') }}</p>
       {% endif %}
-      <p class="text-xs text-gray-500 mt-2">Closing a discussion pauses new votes and submissions, but historical analytics remain available.</p>
+      <p class="text-xs text-gray-500 mt-2">{{ _('Closing a discussion pauses new votes and submissions, but historical analytics remain available.') }}</p>
     </div>
 
     {% if can_edit %}
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm mb-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-2">Embed submission policy</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Embed submission policy') }}</h2>
       <p class="text-sm text-gray-600 mb-3">
-        Control whether readers can submit new statements directly from the embed on your site.
+        {{ _('Control whether readers can submit new statements directly from the embed on your site.') }}
       </p>
       <form method="POST" action="{{ url_for('partner.portal_set_embed_statement_submissions', discussion_id=discussion.id) }}" class="grid gap-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="text-xs text-gray-500">Quick presets:</span>
-          <button type="button" data-embed-preset="recommended" class="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Recommended (vote/report only)</button>
-          <button type="button" data-embed-preset="high-engagement" class="rounded-md border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-primary-700 hover:bg-blue-100">High-engagement (allow inline submit)</button>
+          <span class="text-xs text-gray-500">{{ _('Quick presets:') }}</span>
+          <button type="button" data-embed-preset="recommended" class="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">{{ _('Recommended (vote/report only)') }}</button>
+          <button type="button" data-embed-preset="high-engagement" class="rounded-md border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-primary-700 hover:bg-blue-100">{{ _('High-engagement (allow inline submit)') }}</button>
         </div>
         <label class="inline-flex items-start gap-3 text-sm text-gray-700">
           <input
@@ -165,17 +165,17 @@
             {% if discussion.is_closed %}disabled{% endif %}
           >
           <span>
-            Allow inline statement submissions in embed
-            <span class="block text-xs text-gray-500">Default recommendation: keep off for most article pages. Turn on for high-engagement workflows (live blogs, campaign hubs) when moderation coverage is in place.</span>
-            <span class="block text-xs text-gray-500">When enabled, readers can propose statements from the embed (same 10-500 character rules and anti-abuse limits).</span>
+            {{ _('Allow inline statement submissions in embed') }}
+            <span class="block text-xs text-gray-500">{{ _('Default recommendation: keep off for most article pages. Turn on for high-engagement workflows (live blogs, campaign hubs) when moderation coverage is in place.') }}</span>
+            <span class="block text-xs text-gray-500">{{ _('When enabled, readers can propose statements from the embed (same 10-500 character rules and anti-abuse limits).') }}</span>
           </span>
         </label>
         {% if discussion.is_closed %}
-        <p class="text-xs text-amber-700">This discussion is closed. Reopen it before changing embed submission behavior.</p>
+        <p class="text-xs text-amber-700">{{ _('This discussion is closed. Reopen it before changing embed submission behavior.') }}</p>
         {% else %}
         <div>
           <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            Save embed policy
+            {{ _('Save embed policy') }}
           </button>
         </div>
         {% endif %}
@@ -200,8 +200,8 @@
     {# Statement breakdown #}
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900">Statement analytics</h2>
-        <span class="text-sm text-gray-500">{{ statements | length }} statement{{ 's' if statements | length != 1 }} · {{ total_votes }} total vote{{ 's' if total_votes != 1 }}</span>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Statement analytics') }}</h2>
+        <span class="text-sm text-gray-500">{{ ngettext('%(num)d statement', '%(num)d statements', statements | length, num=statements | length) }} · {{ ngettext('%(num)d total vote', '%(num)d total votes', total_votes, num=total_votes) }}</span>
       </div>
 
       {% if statements %}
@@ -217,13 +217,13 @@
               <p class="text-sm text-gray-900 leading-snug">{{ s.content }}</p>
               <div class="flex flex-wrap gap-2 mt-1">
                 {% if s.source == 'user_submitted' %}
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">Reader submitted</span>
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">{{ _('Reader submitted') }}</span>
                 {% elif s.source == 'ai_generated' %}
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-primary-600">AI generated</span>
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-primary-600">{{ _('AI generated') }}</span>
                 {% elif s.source == 'partner_provided' %}
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">Partner added</span>
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">{{ _('Partner added') }}</span>
                 {% elif s.is_seed %}
-                  <span class="text-xs text-gray-400">seed</span>
+                  <span class="text-xs text-gray-400">{{ _('seed') }}</span>
                 {% endif %}
                 {% if s.seed_stance %}
                   <span class="text-xs px-1.5 py-0.5 rounded
@@ -236,7 +236,7 @@
               </div>
             </div>
             <div class="shrink-0 text-right text-xs tabular-nums text-gray-500 leading-relaxed">
-              <div class="font-semibold text-gray-800 text-sm">{{ tv }} vote{{ 's' if tv != 1 }}</div>
+              <div class="font-semibold text-gray-800 text-sm">{{ ngettext('%(num)d vote', '%(num)d votes', tv, num=tv) }}</div>
               <div class="text-emerald-700">✓ {{ agree_pct }}%</div>
               <div class="text-red-700">✗ {{ disagree_pct }}%</div>
               <div class="text-gray-400">~ {{ unsure_pct }}%</div>
@@ -258,9 +258,9 @@
       {% else %}
       <div class="px-6 py-8 text-center text-gray-500 text-sm">
         {% if can_edit and not discussion.is_closed %}
-          No statements yet — add the first one below.
+          {{ _('No statements yet — add the first one below.') }}
         {% else %}
-          No statements yet.
+          {{ _('No statements yet.') }}
         {% endif %}
       </div>
       {% endif %}
@@ -269,50 +269,49 @@
     {# Add statement form #}
     {% if can_edit %}
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">Add a statement</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Add a statement') }}</h2>
       {% if discussion.is_closed %}
       <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-        This discussion is closed. Reopen it to add new statements.
+        {{ _('This discussion is closed. Reopen it to add new statements.') }}
       </p>
       {% else %}
       <p class="text-sm text-gray-500 mb-4">
-        Statements are immediately visible to readers as they vote. Keep them concise (10–500 characters), specific, and debatable.
-        These behave exactly like the seed statements regular users see — they are pre-approved and framed with a stance.
+        {{ _('Statements are immediately visible to readers as they vote. Keep them concise (10–500 characters), specific, and debatable. These behave exactly like the seed statements regular users see — they are pre-approved and framed with a stance.') }}
       </p>
       <form method="POST" action="{{ url_for('partner.portal_add_statement', discussion_id=discussion.id) }}" class="grid gap-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div>
           <label for="statement-content-input" class="block text-sm font-medium text-gray-700 mb-1">
-            Statement <span class="text-red-500">*</span>
-            <span class="font-normal text-gray-400 ml-1">(10–500 characters)</span>
+            {{ _('Statement') }} <span class="text-red-500">*</span>
+            <span class="font-normal text-gray-400 ml-1">{{ _('(10–500 characters)') }}</span>
           </label>
           <textarea name="content" rows="3" maxlength="500" required
-                    placeholder="e.g. Stricter emissions targets would cost more jobs than they create."
+                    placeholder="{{ _('e.g. Stricter emissions targets would cost more jobs than they create.') }}"
                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
                     id="statement-content-input"></textarea>
           <p class="text-xs text-gray-400 mt-1" id="statement-char-count">0 / 500</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Stance <span class="text-gray-400 font-normal">(optional — helps frame the statement for readers)</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ _('Stance') }} <span class="text-gray-400 font-normal">{{ _('(optional — helps frame the statement for readers)') }}</span></label>
           <div class="flex flex-wrap gap-3">
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" name="stance" value="pro" class="accent-emerald-600">
-              <span class="text-sm text-emerald-700 font-medium">Pro</span>
+              <span class="text-sm text-emerald-700 font-medium">{{ _('Pro') }}</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" name="stance" value="con" class="accent-red-600">
-              <span class="text-sm text-red-700 font-medium">Con</span>
+              <span class="text-sm text-red-700 font-medium">{{ _('Con') }}</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" name="stance" value="neutral" class="accent-gray-500">
-              <span class="text-sm text-gray-600 font-medium">Neutral</span>
+              <span class="text-sm text-gray-600 font-medium">{{ _('Neutral') }}</span>
             </label>
           </div>
         </div>
         <div>
           <button type="submit" id="add-statement-btn"
                   class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-            Add statement
+            {{ _('Add statement') }}
           </button>
         </div>
       </form>
@@ -327,7 +326,7 @@
           if (btn) {
             btn.closest('form').addEventListener('submit', function() {
               btn.disabled = true;
-              btn.textContent = 'Adding…';
+              btn.textContent = {{ _('Adding…')|tojson }};
             });
           }
         })();

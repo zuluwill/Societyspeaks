@@ -1,39 +1,39 @@
 {# templates/help/creating_discussions.html #} {% extends "layout.html" %}
 
 {% block head %}
-<title>Creating Discussions - Society Speaks Help | Start Meaningful Public Debates</title>
-<meta name="description" content="Learn how to create effective discussions on Society Speaks. Choose between our Native Debate System or Pol.is embed, add seed statements, and start meaningful conversations.">
+<title>{{ _('Creating Discussions - Society Speaks Help | Start Meaningful Public Debates') }}</title>
+<meta name="description" content="{{ _('Learn how to create effective discussions on Society Speaks. Choose between our Native Debate System or Pol.is embed, add seed statements, and start meaningful conversations.') }}">
 <link rel="canonical" href="{{ url_for('help.creating_discussions', _external=True) }}">
 
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "Creating Discussions on Society Speaks",
-  "description": "Learn how to create effective discussions using our Native System or Pol.is",
+  "name": _('Creating Discussions on Society Speaks'),
+  "description": _('Learn how to create effective discussions using our Native System or Pol.is'),
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Choose Your System",
-      "text": "Select between the Native Debate System for in-depth deliberation or Pol.is for large-scale polling."
+      "name": _('Choose Your System'),
+      "text": _('Select between the Native Debate System for in-depth deliberation or Pol.is for large-scale polling.')
     },
     {
       "@type": "HowToStep",
-      "name": "Add Seed Statements",
-      "text": "Create initial statements covering multiple viewpoints to encourage balanced participation."
+      "name": _('Add Seed Statements'),
+      "text": _('Create initial statements covering multiple viewpoints to encourage balanced participation.')
     },
     {
       "@type": "HowToStep",
-      "name": "Configure Settings",
-      "text": "Set topic, location scope, and moderation preferences for your discussion."
+      "name": _('Configure Settings'),
+      "text": _('Set topic, location scope, and moderation preferences for your discussion.')
     },
     {
       "@type": "HowToStep",
-      "name": "Share and Engage",
-      "text": "Share your discussion link and actively engage with participants."
+      "name": _('Share and Engage'),
+      "text": _('Share your discussion link and actively engage with participants.')
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -41,10 +41,9 @@
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-4">Creating Discussions</h1>
+    <h1 class="text-3xl font-bold mb-4">{{ _('Creating Discussions') }}</h1>
     <p class="text-gray-600">
-      Learn how to create effective discussions using our Native System or
-      Pol.is
+      {{ _('Learn how to create effective discussions using our Native System or Pol.is') }}
     </p>
   </div>
 
@@ -52,52 +51,52 @@
   <div class="space-y-8">
     <!-- Choose Your System -->
     <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
-      <h2 class="text-xl font-semibold mb-4">Choose Your Discussion System</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Choose Your Discussion System') }}</h2>
       <p class="text-gray-700 mb-4">
-        When creating a discussion, you can choose between two powerful systems:
+        {{ _('When creating a discussion, you can choose between two powerful systems:') }}
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div class="bg-white p-6 rounded-lg shadow">
           <h3 class="font-semibold text-primary-600 text-lg mb-3">
-            ✨ Native System (Recommended)
+            {{ _('✨ Native System (Recommended)') }}
           </h3>
           <p class="text-gray-700 text-sm mb-3">
-            Best for in-depth deliberation with threaded responses and evidence.
+            {{ _('Best for in-depth deliberation with threaded responses and evidence.') }}
           </p>
           <ul class="text-sm text-gray-700 space-y-1 mb-3">
-            <li>✓ Real-time AJAX voting</li>
-            <li>✓ Pro/con threaded responses</li>
-            <li>✓ Evidence linking (citations, files)</li>
-            <li>✓ Consensus visualization</li>
-            <li>✓ Optional AI features</li>
+            <li>{{ _('✓ Real-time AJAX voting') }}</li>
+            <li>{{ _('✓ Pro/con threaded responses') }}</li>
+            <li>{{ _('✓ Evidence linking (citations, files)') }}</li>
+            <li>{{ _('✓ Consensus visualization') }}</li>
+            <li>{{ _('✓ Optional AI features') }}</li>
           </ul>
           <a
             href="{{ url_for('help.native_system') }}"
             class="text-primary-600 hover:underline text-sm"
           >
-            Learn more →
+            {{ _('Learn more →') }}
           </a>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow">
           <h3 class="font-semibold text-gray-700 text-lg mb-3">
-            🌐 Pol.is Embed
+            {{ _('🌐 Pol.is Embed') }}
           </h3>
           <p class="text-gray-700 text-sm mb-3">
-            Best for quick large-scale opinion polling.
+            {{ _('Best for quick large-scale opinion polling.') }}
           </p>
           <ul class="text-sm text-gray-700 space-y-1 mb-3">
-            <li>✓ Proven at scale (100,000+ participants)</li>
-            <li>✓ Simple agree/disagree/pass</li>
-            <li>✓ Instant visualization</li>
-            <li>✓ Multilingual support</li>
+            <li>{{ _('✓ Proven at scale (100,000+ participants)') }}</li>
+            <li>{{ _('✓ Simple agree/disagree/pass') }}</li>
+            <li>{{ _('✓ Instant visualization') }}</li>
+            <li>{{ _('✓ Multilingual support') }}</li>
           </ul>
           <a
             href="{{ url_for('help.polis_algorithms') }}"
             class="text-primary-600 hover:underline text-sm"
           >
-            Learn more →
+            {{ _('Learn more →') }}
           </a>
         </div>
       </div>
@@ -105,35 +104,35 @@
 
     <!-- Native System Guide -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Creating a Native Discussion</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Creating a Native Discussion') }}</h2>
 
       <div class="space-y-4">
         <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">1. Click "Create Discussion"</h3>
+          <h3 class="font-semibold mb-2">{{ _('1. Click "Create Discussion"') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Fill in title and description</li>
-            <li>Check "Use Native Statement System"</li>
-            <li>Set geographic scope and topics</li>
+            <li>{{ _('Fill in title and description') }}</li>
+            <li>{{ _('Check "Use Native Statement System"') }}</li>
+            <li>{{ _('Set geographic scope and topics') }}</li>
           </ul>
         </div>
 
         <div class="bg-blue-50 p-4 rounded-lg">
           <h3 class="font-semibold mb-2">
-            2. Add Seed Statements (Optional but Recommended)
+            {{ _('2. Add Seed Statements (Optional but Recommended)') }}
           </h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Post 3-5 initial statements to start the conversation</li>
-            <li>Include diverse viewpoints</li>
-            <li>Keep statements concise (10-500 characters)</li>
+            <li>{{ _('Post 3-5 initial statements to start the conversation') }}</li>
+            <li>{{ _('Include diverse viewpoints') }}</li>
+            <li>{{ _('Keep statements concise (10-500 characters)') }}</li>
           </ul>
         </div>
 
         <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">3. Share & Engage</h3>
+          <h3 class="font-semibold mb-2">{{ _('3. Share & Engage') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Share the discussion link</li>
-            <li>Monitor participation</li>
-            <li>Run consensus analysis after 7+ participants and 20+ votes</li>
+            <li>{{ _('Share the discussion link') }}</li>
+            <li>{{ _('Monitor participation') }}</li>
+            <li>{{ _('Run consensus analysis after 7+ participants and 20+ votes') }}</li>
           </ul>
         </div>
       </div>
@@ -141,29 +140,29 @@
 
     <!-- Pol.is Guide -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Creating a Pol.is Discussion</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Creating a Pol.is Discussion') }}</h2>
 
       <div class="space-y-4">
         <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">1. Create on Pol.is</h3>
+          <h3 class="font-semibold mb-2">{{ _('1. Create on Pol.is') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Sign in or create a Pol.is account</li>
-            <li>Configure your discussion settings</li>
-            <li>Copy the embed code</li>
+            <li>{{ _('Sign in or create a Pol.is account') }}</li>
+            <li>{{ _('Configure your discussion settings') }}</li>
+            <li>{{ _('Copy the embed code') }}</li>
           </ul>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">2. Add to Society Speaks</h3>
+          <h3 class="font-semibold mb-2">{{ _('2. Add to Society Speaks') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Click "Create Discussion" on Society Speaks</li>
-            <li>Leave "Use Native Statement System" unchecked</li>
-            <li>Paste your Pol.is embed code</li>
+            <li>{{ _('Click "Create Discussion" on Society Speaks') }}</li>
+            <li>{{ _('Leave "Use Native Statement System" unchecked') }}</li>
+            <li>{{ _('Paste your Pol.is embed code') }}</li>
             <li>
               <a
                 href="{{ url_for('help.seed_comments') }}"
                 class="text-primary-600 hover:underline"
-                >Learn about seed comments</a
+                >{{ _('Learn about seed comments') }}</a
               >
             </li>
           </ul>
@@ -173,33 +172,32 @@
 
     <!-- Best Practices -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Discussion Best Practices</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Discussion Best Practices') }}</h2>
       <div class="space-y-4">
         <p class="text-gray-700">
-          Creating an effective discussion requires careful thought and
-          preparation:
+          {{ _('Creating an effective discussion requires careful thought and preparation:') }}
         </p>
         <ul class="list-disc pl-5 text-gray-700">
-          <li>Choose a clear, specific topic</li>
-          <li>Write a detailed description that provides context</li>
-          <li>Add diverse seed comments to encourage participation</li>
-          <li>Consider your target audience when setting geographic scope</li>
-          <li>Share your discussion on relevant platforms and communities</li>
+          <li>{{ _('Choose a clear, specific topic') }}</li>
+          <li>{{ _('Write a detailed description that provides context') }}</li>
+          <li>{{ _('Add diverse seed comments to encourage participation') }}</li>
+          <li>{{ _('Consider your target audience when setting geographic scope') }}</li>
+          <li>{{ _('Share your discussion on relevant platforms and communities') }}</li>
         </ul>
       </div>
     </div>
 
     <!-- Using Pol.is Effectively -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Using Pol.is Effectively</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Using Pol.is Effectively') }}</h2>
 
       <div class="space-y-4">
-        <p class="text-gray-700">Key features of Pol.is:</p>
+        <p class="text-gray-700">{{ _('Key features of Pol.is:') }}</p>
         <ul class="list-disc pl-5 text-gray-700">
-          <li>Real-time visualization of opinions</li>
-          <li>Automated clustering of viewpoints</li>
-          <li>Support for multiple languages</li>
-          <li>Moderation tools</li>
+          <li>{{ _('Real-time visualization of opinions') }}</li>
+          <li>{{ _('Automated clustering of viewpoints') }}</li>
+          <li>{{ _('Support for multiple languages') }}</li>
+          <li>{{ _('Moderation tools') }}</li>
         </ul>
 
         <div class="mt-4">
@@ -208,7 +206,7 @@
             target="_blank"
             class="text-primary-600 hover:underline"
           >
-            View Complete Pol.is Documentation →
+            {{ _('View Complete Pol.is Documentation →') }}
           </a>
         </div>
       </div>
@@ -218,13 +216,13 @@
   <!-- Help Footer -->
   <div class="mt-8 text-center">
     <p class="text-gray-600">
-      Still need help?
+      {{ _('Still need help?') }}
       <a
         href="https://forms.gle/g3BQVhJgFLiGjmSP6"
         target="_blank"
         class="text-primary-600 hover:underline"
       >
-        Send us feedback
+        {{ _('Send us feedback') }}
       </a>
     </p>
   </div>

@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% from 'components/vote_buttons.html' import vote_buttons_form_post, statement_vote_stats_footer %}
-{% block title %}Statement - {{ discussion.title }}{% endblock %}
+{% block title %}{{ _('Statement') }} - {{ discussion.title }}{% endblock %}
 {% block content %}
 <div class="container mx-auto px-4 py-8">
   <!-- Back Button (Top) -->
@@ -22,7 +22,7 @@
           d="M10 19l-7-7m0 0l7-7m-7 7h18"
         />
       </svg>
-      Back to Discussion
+      {{ _('Back to Discussion') }}
     </a>
   </div>
 
@@ -32,7 +32,7 @@
       <a
         href="{{ url_for('discussions.search_discussions') }}"
         class="text-primary-600 hover:underline"
-        >Discussions</a
+        >{{ _('Discussions') }}</a
       >
       <span class="mx-2">/</span>
       <a
@@ -41,7 +41,7 @@
         >{{ discussion.title }}</a
       >
       <span class="mx-2">/</span>
-      <span class="text-gray-600">Statement</span>
+      <span class="text-gray-600">{{ _('Statement') }}</span>
     </nav>
   </div>
 
@@ -55,8 +55,8 @@
             >{{ statement.statement_type }}</span
           >
           <span
-            >Posted by {% if statement.user %}{{ statement.user.username }}{%
-            else %}<span class="text-gray-400">Anonymous</span>{% endif %}</span
+            >{% if statement.user %}{{ _('Posted by %(username)s', username=statement.user.username) }}{%
+            else %}{{ _('Posted by') }} <span class="text-gray-400">{{ _('Anonymous') }}</span>{% endif %}</span
           >
           <span>•</span>
           <span
@@ -70,7 +70,7 @@
     <div class="border-t border-gray-200 pt-4">
       {% if discussion.is_closed %}
       <p class="text-sm text-amber-800 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-        This discussion is closed — voting is no longer open.
+        {{ _('This discussion is closed — voting is no longer open.') }}
       </p>
       {% else %}
       {{ vote_buttons_form_post(
@@ -93,11 +93,11 @@
 
   <!-- Responses Section -->
   <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-    <h2 class="text-2xl font-bold mb-4">Responses & Discussion</h2>
+    <h2 class="text-2xl font-bold mb-4">{{ _('Responses & Discussion') }}</h2>
 
     {% if current_user.is_authenticated %}
     <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-      <h3 class="font-semibold text-blue-900 mb-3">Add Your Response</h3>
+      <h3 class="font-semibold text-blue-900 mb-3">{{ _('Add Your Response') }}</h3>
       <form
         method="POST"
         action="{{ url_for('statements.create_response', statement_id=statement.id) }}"
@@ -105,7 +105,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
         <div class="mb-4">
-          <label class="block text-gray-700 font-medium mb-2">Position</label>
+          <label class="block text-gray-700 font-medium mb-2">{{ _('Position') }}</label>
           {% set vote_val = user_vote.vote if user_vote and user_vote.vote is not none else (viewer_vote_value if viewer_vote_value is defined else none) %}
           <select
             name="position"
@@ -114,33 +114,32 @@
             required
           >
             <option value="pro" {% if vote_val == 1 %}selected{% endif %}>
-              Pro (Supporting this statement)
+              {{ _('Pro (Supporting this statement)') }}
             </option>
             <option value="con" {% if vote_val == -1 %}selected{% endif %}>
-              Con (Opposing this statement)
+              {{ _('Con (Opposing this statement)') }}
             </option>
             <option value="neutral" {% if vote_val is none or vote_val == 0 %}selected{% endif %}>
-              Neutral (Commentary)
+              {{ _('Neutral (Commentary)') }}
             </option>
           </select>
           {% if vote_val is not none %}
           <p class="text-xs text-gray-500 mt-1">
-            Pre-selected based on your {{ 'agree' if vote_val == 1 else
-            'disagree' if vote_val == -1 else 'unsure' }} vote
+            {% if vote_val == 1 %}{{ _('Pre-selected based on your agree vote') }}{% elif vote_val == -1 %}{{ _('Pre-selected based on your disagree vote') }}{% else %}{{ _('Pre-selected based on your unsure vote') }}{% endif %}
           </p>
           {% endif %}
         </div>
 
         <div class="mb-4">
           <label class="block text-gray-700 font-medium mb-2"
-            >Your Response</label
+            >{{ _('Your Response') }}</label
           >
           <textarea
             name="content"
             rows="4"
             class="w-full border border-gray-300 rounded-lg px-4 py-2"
             required
-            placeholder="Share your thoughts, reasoning, or evidence..."
+            placeholder="{{ _('Share your thoughts, reasoning, or evidence...') }}"
           ></textarea>
         </div>
 
@@ -148,19 +147,19 @@
           type="submit"
           class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 font-semibold min-h-11"
         >
-          Post Response
+          {{ _('Post Response') }}
         </button>
       </form>
     </div>
     {% else %}
     <div class="mb-6 p-4 bg-gray-50 rounded-lg text-center">
       <p class="text-gray-600 mb-3">
-        Log in to add your response to this statement
+        {{ _('Log in to add your response to this statement') }}
       </p>
       <a
         href="{{ url_for('auth.login') }}"
         class="text-primary-600 hover:underline font-semibold"
-        >Log In</a
+        >{{ _('Log In') }}</a
       >
     </div>
     {% endif %}
@@ -177,17 +176,17 @@
             {% if response.position == 'pro' %}
             <span
               class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold uppercase"
-              >Pro</span
+              >{{ _('Pro') }}</span
             >
             {% elif response.position == 'con' %}
             <span
               class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold uppercase"
-              >Con</span
+              >{{ _('Con') }}</span
             >
             {% else %}
             <span
               class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold uppercase"
-              >Neutral</span
+              >{{ _('Neutral') }}</span
             >
             {% endif %}
 
@@ -197,7 +196,7 @@
               >{{ response.user.username }}</span
             >
             {% else %}
-            <span class="text-sm text-gray-400">Anonymous</span>
+            <span class="text-sm text-gray-400">{{ _('Anonymous') }}</span>
             {% endif %}
 
             <span class="text-gray-400">•</span>
@@ -228,7 +227,7 @@
           ></path>
         </svg>
         <p class="text-gray-500">
-          No responses yet. Be the first to share your perspective!
+          {{ _('No responses yet. Be the first to share your perspective!') }}
         </p>
       </div>
       {% endif %}
@@ -241,7 +240,7 @@
       href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
       class="text-primary-600 hover:underline"
     >
-      ← Back to Discussion
+      {{ _('← Back to Discussion') }}
     </a>
   </div>
 </div>

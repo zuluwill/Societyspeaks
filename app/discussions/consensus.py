@@ -16,6 +16,7 @@ from app.programmes.permissions import can_view_programme
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 import logging
+from flask_babel import gettext as _
 
 consensus_bp = Blueprint('consensus', __name__)
 logger = logging.getLogger(__name__)
@@ -156,7 +157,7 @@ def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_c
     from app.api.utils import get_discussion_participant_count
 
     thresholds = consensus_thresholds_dict()
-    user_vote_count, _ = get_user_vote_count(discussion.id)
+    user_vote_count, __ = get_user_vote_count(discussion.id)
     participation_threshold = PARTICIPATION_THRESHOLD
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
@@ -230,7 +231,7 @@ def trigger_analysis(discussion_id):
 
     # Only discussion owner can trigger analysis
     if discussion.creator_id != current_user.id:
-        flash("Only the discussion owner can run consensus analysis", "danger")
+        flash(_("Only the discussion owner can run consensus analysis"), "danger")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -268,13 +269,13 @@ def trigger_analysis(discussion_id):
                     "success"
                 )
                 return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
-            flash("Consensus analysis queued. Results will appear once processing completes.", "success")
+            flash(_("Consensus analysis queued. Results will appear once processing completes."), "success")
         else:
             flash(message or "Analysis is already queued for this discussion.", "info")
         return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
     except Exception as e:
         logger.error(f"Error queueing consensus analysis: {e}", exc_info=True)
-        flash("An error occurred while queueing analysis. Please try again later.", "danger")
+        flash(_("An error occurred while queueing analysis. Please try again later."), "danger")
         return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -499,7 +500,7 @@ def get_cluster_data(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        return jsonify({'error': 'No analysis available'}), 404
+        return jsonify({'error': _('No analysis available')}), 404
 
     is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
     if not is_publishable:
@@ -532,7 +533,7 @@ def get_special_statements(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        return jsonify({'error': 'No analysis available'}), 404
+        return jsonify({'error': _('No analysis available')}), 404
 
     is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
     if not is_publishable:
@@ -646,7 +647,7 @@ def generate_report(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        flash("No analysis available to generate report", "warning")
+        flash(_("No analysis available to generate report"), "warning")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -696,7 +697,7 @@ def export_analysis(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        return jsonify({'error': 'No analysis available'}), 404
+        return jsonify({'error': _('No analysis available')}), 404
 
     is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
     if not is_publishable:
@@ -827,7 +828,7 @@ def generate_summary(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        flash("No consensus analysis available. Run analysis first.", "warning")
+        flash(_("No consensus analysis available. Run analysis first."), "warning")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -840,7 +841,7 @@ def generate_summary(discussion_id):
     ).first() is not None
     
     if not has_key:
-        flash("Please add an LLM API key in settings to use AI summary features", "info")
+        flash(_("Please add an LLM API key in settings to use AI summary features"), "info")
         return redirect(url_for('api_keys.add_api_key'))
     
     # Get statement details
@@ -873,13 +874,13 @@ def generate_summary(discussion_id):
             db.session.commit()
             _invalidate_snapshot_cache(discussion_id)
             
-            flash("AI summary generated successfully!", "success")
+            flash(_("AI summary generated successfully!"), "success")
         else:
-            flash("Failed to generate summary. Check your API key status.", "danger")
+            flash(_("Failed to generate summary. Check your API key status."), "danger")
     
     except Exception as e:
         logger.error(f"Error generating summary: {e}", exc_info=True)
-        flash("An error occurred while generating summary", "danger")
+        flash(_("An error occurred while generating summary"), "danger")
     
     return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
 
@@ -898,12 +899,12 @@ def get_summary_api(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        return jsonify({'error': 'No analysis available'}), 404
+        return jsonify({'error': _('No analysis available')}), 404
     
     summary = analysis.cluster_data.get('ai_summary')
     
     if not summary:
-        return jsonify({'error': 'No summary generated yet'}), 404
+        return jsonify({'error': _('No summary generated yet')}), 404
     
     return jsonify({
         'summary': summary,
@@ -933,7 +934,7 @@ def generate_cluster_labels_route(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if not analysis:
-        flash("No consensus analysis available. Run analysis first.", "warning")
+        flash(_("No consensus analysis available. Run analysis first."), "warning")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -946,7 +947,7 @@ def generate_cluster_labels_route(discussion_id):
     ).first() is not None
     
     if not has_key:
-        flash("Please add an LLM API key in settings to use AI labeling features", "info")
+        flash(_("Please add an LLM API key in settings to use AI labeling features"), "info")
         return redirect(url_for('api_keys.add_api_key'))
     
     # Get all statements for context
@@ -972,13 +973,13 @@ def generate_cluster_labels_route(discussion_id):
             db.session.commit()
             _invalidate_snapshot_cache(discussion_id)
             
-            flash("Cluster labels generated successfully!", "success")
+            flash(_("Cluster labels generated successfully!"), "success")
         else:
-            flash("Failed to generate labels. Check your API key status.", "danger")
+            flash(_("Failed to generate labels. Check your API key status."), "danger")
     
     except Exception as e:
         logger.error(f"Error generating labels: {e}", exc_info=True)
-        flash("An error occurred while generating labels", "danger")
+        flash(_("An error occurred while generating labels"), "danger")
     
     return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
 

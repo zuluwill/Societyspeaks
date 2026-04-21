@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Discussions - Partner Portal{% endblock %}
+{% block title %}{{ _('Discussions - Partner Portal') }}{% endblock %}
 
 {% block content %}
 {% include 'partner/portal/_portal_nav.html' %}
@@ -9,20 +9,20 @@
 
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Discussions</h1>
-        <p class="text-gray-500 text-sm mt-1">All discussions created for your integration.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ _('Discussions') }}</h1>
+        <p class="text-gray-500 text-sm mt-1">{{ _('All discussions created for your integration.') }}</p>
       </div>
       {% if can_create %}
       <a href="#new-discussion-form"
          class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
-        + New discussion
+        {{ _('+ New discussion') }}
       </a>
       {% endif %}
     </div>
 
     {% if is_admin_preview %}
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6">
-      <p class="text-sm text-blue-900 font-medium">Admin preview mode (read-only) — create actions are disabled.</p>
+      <p class="text-sm text-blue-900 font-medium">{{ _('Admin preview mode (read-only) — create actions are disabled.') }}</p>
     </div>
     {% endif %}
 
@@ -40,72 +40,72 @@
 
     {% if can_create %}
     <div id="new-discussion-form" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">Create a discussion</h2>
-      <p class="text-sm text-gray-500 mb-4">Start a discussion from the portal without needing to call the API. Provide an article URL <em>or</em> an external ID — or both.</p>
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Create a discussion') }}</h2>
+      <p class="text-sm text-gray-500 mb-4">{{ _('Start a discussion from the portal without needing to call the API. Provide an article URL <em>or</em> an external ID — or both.')|safe }}</p>
       <form method="POST" action="{{ url_for('partner.portal_create_discussion') }}" class="grid gap-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="sm:col-span-2">
-            <label for="disc-title" class="block text-sm font-medium text-gray-700 mb-1">Discussion title <span class="text-red-500">*</span></label>
-            <input id="disc-title" name="title" type="text" required maxlength="200" placeholder="e.g. Should the UK rejoin the EU single market?"
+            <label for="disc-title" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Discussion title') }} <span class="text-red-500">*</span></label>
+            <input id="disc-title" name="title" type="text" required maxlength="200" placeholder="{{ _('e.g. Should the UK rejoin the EU single market?') }}"
                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
           </div>
           <div>
-            <label for="disc-url" class="block text-sm font-medium text-gray-700 mb-1">Article URL</label>
+            <label for="disc-url" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Article URL') }}</label>
             <input id="disc-url" name="article_url" type="url" maxlength="2048" placeholder="https://observer.com/your-article"
                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-            <p class="text-xs text-gray-400 mt-1">Used to link the discussion to a specific article.</p>
+            <p class="text-xs text-gray-400 mt-1">{{ _('Used to link the discussion to a specific article.') }}</p>
           </div>
           <div>
-            <label for="disc-ext-id" class="block text-sm font-medium text-gray-700 mb-1">External / CMS ID</label>
-            <input id="disc-ext-id" name="external_id" type="text" maxlength="128" placeholder="e.g. observer-cms-12345"
+            <label for="disc-ext-id" class="block text-sm font-medium text-gray-700 mb-1">{{ _('External / CMS ID') }}</label>
+            <input id="disc-ext-id" name="external_id" type="text" maxlength="128" placeholder="{{ _('e.g. observer-cms-12345') }}"
                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-            <p class="text-xs text-gray-400 mt-1">Your own stable reference. Useful when there is no article URL.</p>
+            <p class="text-xs text-gray-400 mt-1">{{ _('Your own stable reference. Useful when there is no article URL.') }}</p>
           </div>
           <div class="sm:col-span-2">
-            <label for="disc-desc" class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-gray-400 font-normal">(optional)</span></label>
+            <label for="disc-desc" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Description') }} <span class="text-gray-400 font-normal">{{ _('(optional)') }}</span></label>
             <textarea id="disc-desc" name="description" rows="2" maxlength="1000"
-                      placeholder="A sentence or two providing context for readers — what is being debated and why it matters."
+                      placeholder="{{ _('A sentence or two providing context for readers — what is being debated and why it matters.') }}"
                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"></textarea>
           </div>
           <div>
-            <label for="disc-topic" class="block text-sm font-medium text-gray-700 mb-1">Topic <span class="text-gray-400 font-normal">(optional)</span></label>
+            <label for="disc-topic" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Topic') }} <span class="text-gray-400 font-normal">{{ _('(optional)') }}</span></label>
             <select id="disc-topic" name="topic" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-primary-500 w-full">
-              <option value="">— No topic —</option>
+              <option value="">{{ _('— No topic —') }}</option>
               {% for t in discussion_topics %}
               <option value="{{ t }}">{{ t }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="sm:col-span-2">
-            <label for="disc-excerpt" class="block text-sm font-medium text-gray-700 mb-1">Article excerpt <span class="text-gray-400 font-normal">(optional — used to generate opening statements)</span></label>
+            <label for="disc-excerpt" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Article excerpt') }} <span class="text-gray-400 font-normal">{{ _('(optional — used to generate opening statements)') }}</span></label>
             <textarea id="disc-excerpt" name="excerpt" rows="3" maxlength="2000"
-                      placeholder="Paste a short excerpt from the article to help generate balanced opening statements for readers…"
+                      placeholder="{{ _('Paste a short excerpt from the article to help generate balanced opening statements for readers…') }}"
                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"></textarea>
           </div>
           <div class="sm:col-span-2">
             <label class="inline-flex items-start gap-3 text-sm text-gray-700">
               <input type="checkbox" name="embed_statement_submissions_enabled" value="1" class="mt-0.5 accent-blue-600">
               <span>
-                Allow reader statement submissions directly in the embed
-                <span class="block text-xs text-gray-500">Off by default for moderation safety. You can change this per discussion later.</span>
+                {{ _('Allow reader statement submissions directly in the embed') }}
+                <span class="block text-xs text-gray-500">{{ _('Off by default for moderation safety. You can change this per discussion later.') }}</span>
               </span>
             </label>
           </div>
           <div>
-            <label for="disc-env" class="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+            <label for="disc-env" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Environment') }}</label>
             <select id="disc-env" name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-primary-500">
-              <option value="test">Test</option>
-              {% if partner.billing_status == 'active' %}<option value="live">Live</option>{% endif %}
+              <option value="test">{{ _('Test') }}</option>
+              {% if partner.billing_status == 'active' %}<option value="live">{{ _('Live') }}</option>{% endif %}
             </select>
           </div>
         </div>
         <div class="flex items-center gap-3">
           <button type="submit" id="create-discussion-btn"
                   class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-            Create discussion
+            {{ _('Create discussion') }}
           </button>
-          <p class="text-xs text-gray-400" id="create-discussion-hint">Article URL or external ID is required.</p>
+          <p class="text-xs text-gray-400" id="create-discussion-hint">{{ _('Article URL or external ID is required.') }}</p>
         </div>
       </form>
       <script>
@@ -114,26 +114,29 @@
           var btn = document.getElementById('create-discussion-btn');
           var hint = document.getElementById('create-discussion-hint');
           if (!form || !btn) return;
+          var MSG_REQUIRED = {{ _('Article URL or external ID is required.')|tojson }};
+          var MSG_ENTER = {{ _('Please enter an article URL or an external ID before submitting.')|tojson }};
+          var MSG_CREATING = {{ _('Creating…')|tojson }};
 
           form.addEventListener('submit', function (e) {
             var url = form.querySelector('[name="article_url"]').value.trim();
             var extId = form.querySelector('[name="external_id"]').value.trim();
             if (!url && !extId) {
               e.preventDefault();
-              hint.textContent = 'Please enter an article URL or an external ID before submitting.';
+              hint.textContent = MSG_ENTER;
               hint.classList.add('text-red-600');
               hint.classList.remove('text-gray-400');
               form.querySelector('[name="article_url"]').focus();
               return;
             }
             btn.disabled = true;
-            btn.textContent = 'Creating…';
+            btn.textContent = MSG_CREATING;
           });
 
           form.querySelector('[name="article_url"]').addEventListener('input', resetHint);
           form.querySelector('[name="external_id"]').addEventListener('input', resetHint);
           function resetHint() {
-            hint.textContent = 'Article URL or external ID is required.';
+            hint.textContent = MSG_REQUIRED;
             hint.classList.remove('text-red-600');
             hint.classList.add('text-gray-400');
           }
@@ -144,40 +147,40 @@
 
     {# Quota strip #}
     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm mb-4 text-sm text-gray-700">
-      <strong>Quota:</strong>
-      Live this month: <strong>{{ partner_quota.live_used_month }}</strong>
+      <strong>{{ _('Quota:') }}</strong>
+      {{ _('Live this month:') }} <strong>{{ partner_quota.live_used_month }}</strong>
       {% if partner_quota.live_limit is not none %}
-        / {{ partner_quota.live_limit }} ({{ partner_quota.tier|title }} plan)
+        {{ _('/ %(limit)s (%(tier)s plan)', limit=partner_quota.live_limit, tier=partner_quota.tier|title) }}
       {% else %}
-        (Enterprise — no monthly cap)
+        {{ _('(Enterprise — no monthly cap)') }}
       {% endif %}
-      · Test (lifetime): {{ partner_quota.test_used_lifetime }}
+      · {{ _('Test (lifetime):') }} {{ partner_quota.test_used_lifetime }}
     </div>
 
     {# Filters #}
     <form method="get" class="flex flex-wrap gap-3 mb-4 items-end">
       <div>
-        <label class="block text-xs text-gray-500 mb-1">Environment</label>
+        <label class="block text-xs text-gray-500 mb-1">{{ _('Environment') }}</label>
         <select name="env" onchange="this.form.submit()"
           class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white">
-          <option value="all" {% if env_filter == 'all' %}selected{% endif %}>All envs</option>
-          <option value="live" {% if env_filter == 'live' %}selected{% endif %}>Live</option>
-          <option value="test" {% if env_filter == 'test' %}selected{% endif %}>Test</option>
+          <option value="all" {% if env_filter == 'all' %}selected{% endif %}>{{ _('All envs') }}</option>
+          <option value="live" {% if env_filter == 'live' %}selected{% endif %}>{{ _('Live') }}</option>
+          <option value="test" {% if env_filter == 'test' %}selected{% endif %}>{{ _('Test') }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs text-gray-500 mb-1">Status</label>
+        <label class="block text-xs text-gray-500 mb-1">{{ _('Status') }}</label>
         <select name="status" onchange="this.form.submit()"
           class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white">
-          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All statuses</option>
-          <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
-          <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>{{ _('All statuses') }}</option>
+          <option value="open" {% if status_filter == 'open' %}selected{% endif %}>{{ _('Open') }}</option>
+          <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>{{ _('Closed') }}</option>
         </select>
       </div>
     </form>
 
     <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 mb-4 text-xs text-gray-600">
-      <strong>Tip:</strong> Use <em>View</em> for per-statement analytics, <em>Close</em> to pause new participation, and <em>Created via key</em> plus <em>External ID</em> to reconcile discussions back to your CMS.
+      {{ _('<strong>Tip:</strong> Use <em>View</em> for per-statement analytics, <em>Close</em> to pause new participation, and <em>Created via key</em> plus <em>External ID</em> to reconcile discussions back to your CMS.')|safe }}
     </div>
 
     {# Table #}
@@ -186,15 +189,15 @@
         <table class="min-w-full text-sm">
           <thead class="bg-gray-50 text-left text-gray-600">
             <tr>
-              <th class="px-4 py-3 font-semibold hidden sm:table-cell">ID</th>
-              <th class="px-4 py-3 font-semibold">Title</th>
-              <th class="px-4 py-3 font-semibold">Env</th>
-              <th class="px-4 py-3 font-semibold hidden sm:table-cell">Votes</th>
-              <th class="px-4 py-3 font-semibold">Status</th>
-              <th class="px-4 py-3 font-semibold hidden lg:table-cell">Created via key</th>
-              <th class="px-4 py-3 font-semibold hidden lg:table-cell">External ID</th>
-              <th class="px-4 py-3 font-semibold hidden md:table-cell">Article URL</th>
-              <th class="px-4 py-3 font-semibold">Links</th>
+              <th class="px-4 py-3 font-semibold hidden sm:table-cell">{{ _('ID') }}</th>
+              <th class="px-4 py-3 font-semibold">{{ _('Title') }}</th>
+              <th class="px-4 py-3 font-semibold">{{ _('Env') }}</th>
+              <th class="px-4 py-3 font-semibold hidden sm:table-cell">{{ _('Votes') }}</th>
+              <th class="px-4 py-3 font-semibold">{{ _('Status') }}</th>
+              <th class="px-4 py-3 font-semibold hidden lg:table-cell">{{ _('Created via key') }}</th>
+              <th class="px-4 py-3 font-semibold hidden lg:table-cell">{{ _('External ID') }}</th>
+              <th class="px-4 py-3 font-semibold hidden md:table-cell">{{ _('Article URL') }}</th>
+              <th class="px-4 py-3 font-semibold">{{ _('Links') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -213,31 +216,31 @@
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   {% if d.is_closed %}
-                    <span class="text-amber-700 font-medium">Closed</span>
+                    <span class="text-amber-700 font-medium">{{ _('Closed') }}</span>
                   {% else %}
-                    <span class="text-emerald-700 font-medium">Open</span>
+                    <span class="text-emerald-700 font-medium">{{ _('Open') }}</span>
                   {% endif %}
-                  {% if d.integrity_mode %}<span class="text-xs text-gray-500">· Integrity</span>{% endif %}
+                  {% if d.integrity_mode %}<span class="text-xs text-gray-500">· {{ _('Integrity') }}</span>{% endif %}
                   <span class="text-xs {{ 'text-primary-700' if d.embed_statement_submissions_enabled else 'text-gray-500' }}">
-                    · Embed submit {{ 'on' if d.embed_statement_submissions_enabled else 'off' }}
+                    · {% if d.embed_statement_submissions_enabled %}{{ _('Embed submit on') }}{% else %}{{ _('Embed submit off') }}{% endif %}
                   </span>
                   {% if can_edit %}
                   <form method="post"
                     action="{{ url_for('partner.portal_toggle_discussion_closed', discussion_id=d.id, env=env_filter, status=status_filter, page=pagination.page) }}"
                     class="inline"
-                    data-confirm="{% if d.is_closed %}Reopen{% else %}Close{% endif %} discussion #{{ d.id }}?">
+                    data-confirm="{% if d.is_closed %}{{ _('Reopen discussion #%(id)s?', id=d.id) }}{% else %}{{ _('Close discussion #%(id)s?', id=d.id) }}{% endif %}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                       class="text-xs px-2 py-0.5 rounded border
                         {% if d.is_closed %}border-emerald-300 text-emerald-700 hover:bg-emerald-50{% else %}border-amber-300 text-amber-700 hover:bg-amber-50{% endif %}">
-                      {% if d.is_closed %}Reopen{% else %}Close{% endif %}
+                      {% if d.is_closed %}{{ _('Reopen') }}{% else %}{{ _('Close') }}{% endif %}
                     </button>
                   </form>
                   {% endif %}
                 </div>
               </td>
               <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap hidden lg:table-cell">
-                {{ row.key_label or 'legacy/unknown' }}
+                {{ row.key_label or _('legacy/unknown') }}
               </td>
               <td class="px-4 py-3 font-mono text-xs text-gray-600 whitespace-nowrap hidden lg:table-cell">
                 {{ d.partner_external_id or '—' }}
@@ -246,19 +249,19 @@
                 {{ d.partner_article_url or '—' }}
               </td>
               <td class="px-4 py-3 space-x-2 whitespace-nowrap">
-                <a href="{{ url_for('partner.portal_discussion_detail', discussion_id=d.id) }}" class="text-primary-600 hover:underline">View</a>
-                <a href="{{ row.embed_url }}" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Embed</a>
-                <a href="{{ row.consensus_url }}" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Consensus</a>
+                <a href="{{ url_for('partner.portal_discussion_detail', discussion_id=d.id) }}" class="text-primary-600 hover:underline">{{ _('View') }}</a>
+                <a href="{{ row.embed_url }}" target="_blank" rel="noopener" class="text-primary-600 hover:underline">{{ _('Embed') }}</a>
+                <a href="{{ row.consensus_url }}" target="_blank" rel="noopener" class="text-primary-600 hover:underline">{{ _('Consensus') }}</a>
               </td>
             </tr>
             {% else %}
             <tr>
               <td colspan="9" class="px-4 py-10 text-center">
-                <p class="text-gray-500 mb-2">No discussions found.</p>
+                <p class="text-gray-500 mb-2">{{ _('No discussions found.') }}</p>
                 {% if can_create %}
-                <a href="#new-discussion-form" class="text-sm font-semibold text-primary-600 hover:underline">Create your first discussion ↑</a>
+                <a href="#new-discussion-form" class="text-sm font-semibold text-primary-600 hover:underline">{{ _('Create your first discussion ↑') }}</a>
                 {% else %}
-                <p class="text-xs text-gray-400">Use <code class="bg-gray-100 px-1 rounded">POST /api/partner/discussions</code> from your backend, or ask an admin to create one here.</p>
+                <p class="text-xs text-gray-400">{{ _('Use <code class="bg-gray-100 px-1 rounded">POST /api/partner/discussions</code> from your backend, or ask an admin to create one here.')|safe }}</p>
                 {% endif %}
               </td>
             </tr>
@@ -271,20 +274,20 @@
     {# Pagination #}
     {% if pagination.pages > 1 %}
     <div class="flex items-center justify-between mt-4 text-sm text-gray-600">
-      <span>{{ pagination.total }} discussion{{ 's' if pagination.total != 1 }} &middot; page {{ pagination.page }} of {{ pagination.pages }}</span>
+      <span>{{ ngettext('%(num)d discussion', '%(num)d discussions', pagination.total, num=pagination.total) }} &middot; {{ _('page %(page)d of %(pages)d', page=pagination.page, pages=pagination.pages) }}</span>
       <div class="flex gap-2">
         {% if pagination.has_prev %}
           <a href="{{ url_for('partner.portal_discussions', env=env_filter, status=status_filter, page=pagination.prev_num) }}"
-            class="rounded-lg border border-gray-300 bg-white px-3 py-1 hover:bg-gray-50">← Prev</a>
+            class="rounded-lg border border-gray-300 bg-white px-3 py-1 hover:bg-gray-50">{{ _('← Prev') }}</a>
         {% endif %}
         {% if pagination.has_next %}
           <a href="{{ url_for('partner.portal_discussions', env=env_filter, status=status_filter, page=pagination.next_num) }}"
-            class="rounded-lg border border-gray-300 bg-white px-3 py-1 hover:bg-gray-50">Next →</a>
+            class="rounded-lg border border-gray-300 bg-white px-3 py-1 hover:bg-gray-50">{{ _('Next →') }}</a>
         {% endif %}
       </div>
     </div>
     {% else %}
-    <p class="mt-3 text-xs text-gray-500 text-right">{{ pagination.total }} discussion{{ 's' if pagination.total != 1 }}</p>
+    <p class="mt-3 text-xs text-gray-500 text-right">{{ ngettext('%(num)d discussion', '%(num)d discussions', pagination.total, num=pagination.total) }}</p>
     {% endif %}
 
   </div>

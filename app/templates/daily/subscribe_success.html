@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Subscribed Successfully - Society Speaks{% endblock %}
+{% block title %}{{ _('Subscribed Successfully - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -11,75 +11,76 @@
             </svg>
         </div>
 
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">You're subscribed</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ _("You're subscribed") }}</h1>
 
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6 text-left">
             <p class="text-gray-600 mb-4 text-center">
-                Check your inbox for a welcome email with your personal magic link.
+                {{ _('Check your inbox for a welcome email with your personal magic link.') }}
             </p>
 
             {% if recap %}
             <div class="rounded-lg border border-green-100 bg-green-50/80 p-4 mb-4">
-                <h2 class="text-sm font-semibold text-green-900 mb-2">Your delivery choices</h2>
+                <h2 class="text-sm font-semibold text-green-900 mb-2">{{ _('Your delivery choices') }}</h2>
                 <ul class="text-sm text-green-900/90 space-y-1.5 list-disc list-inside">
-                    <li><span class="font-medium">Frequency:</span> {{ recap.frequency_label }}</li>
+                    <li><span class="font-medium">{{ _('Frequency:') }}</span> {{ recap.frequency_label }}</li>
                     {% if recap.timezone %}
-                    <li><span class="font-medium">Time zone:</span> {{ recap.timezone }}</li>
+                    <li><span class="font-medium">{{ _('Time zone:') }}</span> {{ recap.timezone }}</li>
                     {% else %}
-                    <li><span class="font-medium">Time zone:</span> UTC (default)</li>
+                    <li><span class="font-medium">{{ _('Time zone:') }}</span> {{ _('UTC (default)') }}</li>
                     {% endif %}
                     {% if recap.frequency == 'weekly' %}
-                    <li><span class="font-medium">Weekly digest:</span> each {{ recap.weekly_day_name }} at {{ recap.weekly_time_label }}{% if recap.timezone %} ({{ recap.timezone }}){% endif %}</li>
+                    <li><span class="font-medium">{{ _('Weekly digest:') }}</span> {{ _('each %(day)s at %(time)s', day=recap.weekly_day_name, time=recap.weekly_time_label) }}{% if recap.timezone %} ({{ recap.timezone }}){% endif %}</li>
                     {% elif recap.frequency == 'daily' %}
-                    <li><span class="font-medium">Daily emails:</span> around {{ recap.daily_window_label }} each day (same moment for all daily subscribers)</li>
+                    <li><span class="font-medium">{{ _('Daily emails:') }}</span> {{ _('around %(window)s each day (same moment for all daily subscribers)', window=recap.daily_window_label) }}</li>
                     {% elif recap.frequency == 'monthly' %}
-                    <li><span class="font-medium">Monthly digest:</span> {{ recap.monthly_schedule_short }}{% if recap.timezone %} — using {{ recap.timezone }}{% endif %}</li>
+                    <li><span class="font-medium">{{ _('Monthly digest:') }}</span> {{ recap.monthly_schedule_short }}{% if recap.timezone %} {{ _('— using %(tz)s', tz=recap.timezone) }}{% endif %}</li>
                     {% endif %}
                 </ul>
             </div>
             {% endif %}
 
+            {% set _open_prefs_link = '<a href="' ~ url_for('daily.manage_preferences') ~ '" class="text-primary-600 hover:underline font-medium">' ~ _('open preferences now') ~ '</a>' %}
             <p class="text-sm text-gray-600 mb-4">
-                You can change frequency, day, time, and time zone anytime from the preferences link in any email we send.
+                {{ _('You can change frequency, day, time, and time zone anytime from the preferences link in any email we send.') }}
                 {% if can_manage_daily_preferences %}
-                If you are logged in, you can also
-                <a href="{{ url_for('daily.manage_preferences') }}" class="text-primary-600 hover:underline font-medium">open preferences now</a>.
+                {{ _('If you are logged in, you can also %(open_prefs_link)s.', open_prefs_link=_open_prefs_link)|safe }}
                 {% endif %}
             </p>
 
             <div class="bg-blue-50 rounded-lg p-4">
-                <h3 class="text-sm font-semibold text-blue-900 mb-2">What happens next?</h3>
+                <h3 class="text-sm font-semibold text-blue-900 mb-2">{{ _('What happens next?') }}</h3>
                 <ol class="text-sm text-primary-800 space-y-2">
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">1.</span>
-                        <span>Check your email for the welcome message</span>
+                        <span>{{ _('Check your email for the welcome message') }}</span>
                     </li>
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">2.</span>
                         <span>
                             {% if recap %}
-                            Your first message follows the schedule above
-                            {% if recap.frequency == 'daily' %} (daily sends at {{ recap.daily_window_label }}){% endif %}
+                            {{ _('Your first message follows the schedule above') }}
+                            {% if recap.frequency == 'daily' %} {{ _('(daily sends at %(window)s)', window=recap.daily_window_label) }}{% endif %}
                             {% else %}
-                            Your first message follows the schedule you chose at sign-up
+                            {{ _('Your first message follows the schedule you chose at sign-up') }}
                             {% endif %}
                         </span>
                     </li>
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">3.</span>
-                        <span>Click the magic link to vote instantly — no password needed</span>
+                        <span>{{ _('Click the magic link to vote instantly — no password needed') }}</span>
                     </li>
                 </ol>
             </div>
         </div>
 
+        {% set _explore_link = '<a href="/" class="text-primary-600 hover:underline">' ~ _('explore more discussions') ~ '</a>' %}
         <div class="space-y-3">
             <a href="{{ url_for('daily.today') }}"
                class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
-                Try today's question
+                {{ _("Try today's question") }}
             </a>
             <p class="text-sm text-gray-500">
-                Or <a href="/" class="text-primary-600 hover:underline">explore more discussions</a>
+                {{ _('Or %(explore_link)s', explore_link=_explore_link)|safe }}
             </p>
         </div>
     </div>

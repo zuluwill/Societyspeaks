@@ -10,6 +10,7 @@ import time
 import logging
 from typing import Dict, Any, List, Optional
 import requests
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ def _request_with_retry(
             elif method == 'DELETE':
                 response = requests.delete(url, headers=_get_headers(), timeout=timeout)
             else:
-                return {'success': False, 'error': f'Unsupported method: {method}'}
+                return {'success': False, 'error': _('Unsupported method: %(method)s', method=method)}
 
             # Success
             if response.status_code in (200, 201):
@@ -88,11 +89,11 @@ def _request_with_retry(
                     time.sleep(wait_time)
                     continue
                 else:
-                    return {'success': False, 'error': 'Rate limited after retries'}
+                    return {'success': False, 'error': _('Rate limited after retries')}
 
             # Not found
             if response.status_code == 404:
-                return {'success': False, 'error': 'Not found'}
+                return {'success': False, 'error': _('Not found')}
 
             # Other errors
             try:
@@ -109,13 +110,13 @@ def _request_with_retry(
                 logger.warning(f"Timeout (attempt {attempt + 1}/{MAX_RETRIES}), retrying...")
                 time.sleep(RETRY_DELAY * (attempt + 1))
             else:
-                return {'success': False, 'error': 'Request timeout after retries'}
+                return {'success': False, 'error': _('Request timeout after retries')}
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {e}")
             return {'success': False, 'error': str(e)}
 
-    return {'success': False, 'error': 'Max retries exceeded'}
+    return {'success': False, 'error': _('Max retries exceeded')}
 
 
 def register_domain_with_resend(domain_name: str) -> Dict[str, Any]:
@@ -139,9 +140,9 @@ def register_domain_with_resend(domain_name: str) -> Dict[str, Any]:
             error = result.get('error', 'Unknown error')
             # Check for common errors
             if 'already exists' in error.lower():
-                return {'success': False, 'error': 'Domain already registered with Resend'}
+                return {'success': False, 'error': _('Domain already registered with Resend')}
             elif 'invalid' in error.lower():
-                return {'success': False, 'error': 'Invalid domain name'}
+                return {'success': False, 'error': _('Invalid domain name')}
             return {'success': False, 'error': error}
 
         data = result.get('data', {})
@@ -150,7 +151,7 @@ def register_domain_with_resend(domain_name: str) -> Dict[str, Any]:
 
         if not domain_id:
             logger.error(f"No domain ID returned from Resend for {domain_name}")
-            return {'success': False, 'error': 'No domain ID returned from Resend'}
+            return {'success': False, 'error': _('No domain ID returned from Resend')}
 
         logger.info(f"Registered domain {domain_name} with Resend (ID: {domain_id})")
 
@@ -190,7 +191,7 @@ def check_domain_verification_status(resend_domain_id: str) -> Dict[str, Any]:
         if not result['success']:
             error = result.get('error', 'Unknown error')
             if 'not found' in error.lower():
-                return {'success': False, 'error': 'Domain not found in Resend'}
+                return {'success': False, 'error': _('Domain not found in Resend')}
             return {'success': False, 'error': error}
 
         data = result.get('data', {})
@@ -250,7 +251,7 @@ def verify_domain_with_resend(resend_domain_id: str) -> Dict[str, Any]:
         return {
             'success': True,
             'status': data.get('status', 'pending'),
-            'message': 'Verification check triggered'
+            'message': _('Verification check triggered')
         }
 
     except ValueError as e:
@@ -280,7 +281,7 @@ def delete_domain_from_resend(resend_domain_id: str) -> Dict[str, Any]:
             error = result.get('error', 'Unknown error')
             if 'not found' in error.lower():
                 # Domain already deleted, consider success
-                return {'success': True, 'message': 'Domain already removed'}
+                return {'success': True, 'message': _('Domain already removed')}
             return {'success': False, 'error': error}
 
         logger.info(f"Deleted domain {resend_domain_id} from Resend")

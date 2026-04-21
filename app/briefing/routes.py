@@ -37,6 +37,7 @@ try:
 except ImportError:
     posthog = None
 from app.lib.posthog_utils import safe_posthog_capture
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -443,7 +444,7 @@ def briefing_owner_required(f):
     def decorated_function(briefing_id, *args, **kwargs):
         briefing = db.get_or_404(Briefing, briefing_id)
         if not can_access_briefing(current_user, briefing):
-            flash('You do not have permission to access this briefing', 'error')
+            flash(_('You do not have permission to access this briefing'), 'error')
             return redirect(url_for('briefing.list_briefings'))
         g.briefing = briefing
         return f(briefing_id, *args, **kwargs)
@@ -488,7 +489,7 @@ def source_owner_required(f):
             source_id = kwargs.get('source_id') or request.view_args.get('source_id')
         source = db.get_or_404(InputSource, source_id)
         if not can_access_source(current_user, source):
-            flash('You do not have access to this source', 'error')
+            flash(_('You do not have access to this source'), 'error')
             return redirect(url_for('briefing.list_sources'))
         g.source = source
         return f(*args, source_id=source_id, **kwargs)
@@ -659,7 +660,7 @@ def preview_template(template_id):
     template = db.get_or_404(BriefTemplate, template_id)
     
     if not template.is_active:
-        flash('This template is no longer available', 'error')
+        flash(_('This template is no longer available'), 'error')
         return redirect(url_for('briefing.marketplace'))
     
     config_options = template.configurable_options or {}
@@ -687,10 +688,10 @@ def use_template(template_id):
             # Check if user just completed payment and subscription is activating
             if session.get('pending_subscription_activation'):
                 session.pop('pending_subscription_activation', None)
-                flash('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.', 'info')
+                flash(_('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.'), 'info')
                 return redirect(url_for('briefing.list_briefings'))
             session['post_checkout_template_id'] = template_id
-            flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
+            flash(_('You need an active subscription to create briefings. Start your free trial today!'), 'info')
             return redirect(url_for('briefing.landing') + '#pricing')
         
         limit_error = enforce_brief_limit(current_user)
@@ -701,12 +702,12 @@ def use_template(template_id):
     template = db.get_or_404(BriefTemplate, template_id)
     
     if not template.is_active:
-        flash('This template is no longer available', 'error')
+        flash(_('This template is no longer available'), 'error')
         return redirect(url_for('briefing.marketplace'))
     
     # Check audience restrictions
     if template.audience_type == 'organization' and not get_user_organization(current_user):
-        flash('This template is only available for organizations. You need to be part of an organization to use it.', 'error')
+        flash(_('This template is only available for organizations. You need to be part of an organization to use it.'), 'error')
         return redirect(url_for('briefing.marketplace'))
     
     if request.method == 'POST':
@@ -726,7 +727,7 @@ def use_template(template_id):
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
-                    flash('You need to be part of an organization to create organization briefings', 'error')
+                    flash(_('You need to be part of an organization to create organization briefings'), 'error')
                     return redirect(url_for('briefing.use_template', template_id=template_id))
                 owner_id = user_org.id
             else:
@@ -789,7 +790,7 @@ def use_template(template_id):
             add_auto_recipient_for_user(briefing, current_user)
 
             # Auto-populate sources from template using utility function
-            sources_added, sources_failed, _ = populate_briefing_sources_from_template(
+            sources_added, sources_failed, __ = populate_briefing_sources_from_template(
                 briefing, template.default_sources, current_user
             )
 
@@ -816,15 +817,15 @@ def use_template(template_id):
                 flash(msg, 'success')
             else:
                 if sources_failed > 0:
-                    flash(f'Briefing "{name}" created from template, but {sources_failed} sources could not be added. Add more sources below to start generating briefs.', 'warning')
+                    flash(_('Briefing "%(name)s" created from template, but %(sources_failed)s sources could not be added. Add more sources below to start generating briefs.', name=name, sources_failed=sources_failed), 'warning')
                 else:
-                    flash(f'Briefing "{name}" created from template! Add sources below to start generating briefs.', 'success')
+                    flash(_('Briefing "%(name)s" created from template! Add sources below to start generating briefs.', name=name), 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing.id))
             
         except Exception as e:
             logger.error(f"Error creating briefing from template: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while creating your briefing. Please try again.', 'error')
+            flash(_('An error occurred while creating your briefing. Please try again.'), 'error')
             return redirect(url_for('briefing.use_template', template_id=template_id))
     
     # GET request - show configuration form
@@ -852,9 +853,9 @@ def create_briefing():
             # Check if user just completed payment and subscription is activating
             if session.get('pending_subscription_activation'):
                 session.pop('pending_subscription_activation', None)
-                flash('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.', 'info')
+                flash(_('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.'), 'info')
                 return redirect(url_for('briefing.list_briefings'))
-            flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
+            flash(_('You need an active subscription to create briefings. Start your free trial today!'), 'info')
             return redirect(url_for('briefing.landing') + '#pricing')
         
         limit_error = enforce_brief_limit(current_user)
@@ -921,7 +922,7 @@ def create_briefing():
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
-                    flash('You need to be part of an organization to create org briefings', 'error')
+                    flash(_('You need to be part of an organization to create org briefings'), 'error')
                     return redirect(url_for('briefing.create_briefing'))
                 owner_id = user_org.id
 
@@ -933,16 +934,16 @@ def create_briefing():
             # Validate from_email if domain is selected (email is required)
             if sending_domain_id:
                 if not from_email:
-                    flash('Email address is required when a sending domain is selected', 'error')
+                    flash(_('Email address is required when a sending domain is selected'), 'error')
                     return redirect(url_for('briefing.create_briefing'))
                 
                 domain = db.session.get(SendingDomain,sending_domain_id)
                 if not domain:
-                    flash('Selected domain not found', 'error')
+                    flash(_('Selected domain not found'), 'error')
                     return redirect(url_for('briefing.create_briefing'))
                 
                 if domain.status != 'verified':
-                    flash('Selected domain is not verified. Please verify it first.', 'error')
+                    flash(_('Selected domain is not verified. Please verify it first.'), 'error')
                     return redirect(url_for('briefing.create_briefing'))
                 
                 # Validate email format
@@ -954,7 +955,7 @@ def create_briefing():
                 # Validate email matches domain
                 domain_name = domain.domain
                 if not from_email.endswith(f'@{domain_name}'):
-                    flash(f'Email must be from verified domain: {domain_name}', 'error')
+                    flash(_('Email must be from verified domain: %(domain_name)s', domain_name=domain_name), 'error')
                     return redirect(url_for('briefing.create_briefing'))
             elif from_email:
                 # Email provided but no domain - validate format only
@@ -1014,7 +1015,7 @@ def create_briefing():
             sources_added = 0
             sources_failed = 0
             if template and template.default_sources:
-                sources_added, sources_failed, _ = populate_briefing_sources_from_template(
+                sources_added, sources_failed, __ = populate_briefing_sources_from_template(
                     briefing, template.default_sources, current_user
                 )
 
@@ -1023,7 +1024,7 @@ def create_briefing():
                 sub = get_active_subscription(current_user)
                 if not sub:
                     db.session.rollback()
-                    flash('Your subscription expired during this operation. Please renew to continue.', 'error')
+                    flash(_('Your subscription expired during this operation. Please renew to continue.'), 'error')
                     return redirect(url_for('briefing.landing'))
 
             db.session.commit()
@@ -1045,15 +1046,15 @@ def create_briefing():
                 flash(msg, 'success')
             else:
                 if sources_failed > 0:
-                    flash(f'Briefing "{name}" created successfully, but {sources_failed} sources from template could not be added. Add more sources below to start generating briefs.', 'warning')
+                    flash(_('Briefing "%(name)s" created successfully, but %(sources_failed)s sources from template could not be added. Add more sources below to start generating briefs.', name=name, sources_failed=sources_failed), 'warning')
                 else:
-                    flash(f'Briefing "{name}" created successfully! Add sources below to start generating briefs.', 'success')
+                    flash(_('Briefing "%(name)s" created successfully! Add sources below to start generating briefs.', name=name), 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing.id))
 
         except Exception as e:
             logger.error(f"Error creating briefing: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while creating the briefing', 'error')
+            flash(_('An error occurred while creating the briefing'), 'error')
             return redirect(url_for('briefing.create_briefing'))
 
     # GET: Show create form
@@ -1202,7 +1203,7 @@ def edit(briefing_id):
 
             # Validate status
             if status not in ['active', 'paused']:
-                flash("Status must be 'active' or 'paused'", 'error')
+                flash(_("Status must be 'active' or 'paused'"), 'error')
                 return redirect(url_for('briefing.edit', briefing_id=briefing_id))
 
             # Get branding fields (for org briefings)
@@ -1213,16 +1214,16 @@ def edit(briefing_id):
             # Validate from_email if domain is selected (email is required)
             if sending_domain_id:
                 if not from_email:
-                    flash('Email address is required when a sending domain is selected', 'error')
+                    flash(_('Email address is required when a sending domain is selected'), 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
                 
                 domain = db.session.get(SendingDomain,sending_domain_id)
                 if not domain:
-                    flash('Selected domain not found', 'error')
+                    flash(_('Selected domain not found'), 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
                 
                 if domain.status != 'verified':
-                    flash('Selected domain is not verified. Please verify it first.', 'error')
+                    flash(_('Selected domain is not verified. Please verify it first.'), 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
                 
                 # Validate email format
@@ -1234,7 +1235,7 @@ def edit(briefing_id):
                 # Validate email matches domain
                 domain_name = domain.domain
                 if not from_email.endswith(f'@{domain_name}'):
-                    flash(f'Email must be from verified domain: {domain_name}', 'error')
+                    flash(_('Email must be from verified domain: %(domain_name)s', domain_name=domain_name), 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
             elif from_email:
                 # Email provided but no domain - validate format only
@@ -1332,13 +1333,13 @@ def edit(briefing_id):
                     'new_cadence': briefing.cadence,
                 }, flush=True)
 
-            flash('Briefing updated successfully', 'success')
+            flash(_('Briefing updated successfully'), 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
         except Exception as e:
             logger.error(f"Error updating briefing: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while updating the briefing', 'error')
+            flash(_('An error occurred while updating the briefing'), 'error')
             return redirect(url_for('briefing.edit', briefing_id=briefing_id))
     
     # GET: Show edit form
@@ -1383,11 +1384,11 @@ def delete(briefing_id):
         name = briefing.name
         db.session.delete(briefing)
         db.session.commit()
-        flash(f'Briefing "{name}" deleted successfully', 'success')
+        flash(_('Briefing "%(name)s" deleted successfully', name=name), 'success')
     except Exception as e:
         logger.error(f"Error deleting briefing: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred while deleting the briefing', 'error')
+        flash(_('An error occurred while deleting the briefing'), 'error')
 
     return redirect(url_for('briefing.list_briefings'))
 
@@ -1410,7 +1411,7 @@ def api_detail(briefing_id):
 
     # Check permissions (DRY) - API endpoint returns JSON
     if not can_access_briefing(current_user, briefing):
-        return jsonify({'error': 'Permission denied'}), 403
+        return jsonify({'error': _('Permission denied')}), 403
 
     return jsonify(briefing.to_dict())
 
@@ -1474,13 +1475,13 @@ def edit_source(source_id):
             source.name = name
             db.session.commit()
             
-            flash(f'Source "{name}" updated successfully', 'success')
+            flash(_('Source "%(name)s" updated successfully', name=name), 'success')
             return redirect(url_for('briefing.list_sources'))
             
         except Exception as e:
             logger.error(f"Error updating source: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while updating the source', 'error')
+            flash(_('An error occurred while updating the source'), 'error')
     
     return render_template('briefing/edit_source.html', source=source)
 
@@ -1505,11 +1506,11 @@ def delete_source(source_id):
         db.session.delete(source)
         db.session.commit()
         
-        flash(f'Source "{source_name}" has been deleted', 'success')
+        flash(_('Source "%(source_name)s" has been deleted', source_name=source_name), 'success')
     except Exception as e:
         logger.error(f"Error deleting source: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred while deleting the source', 'error')
+        flash(_('An error occurred while deleting the source'), 'error')
     
     return redirect(url_for('briefing.list_sources'))
 
@@ -1541,7 +1542,7 @@ def add_rss_source():
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
-                    flash('You need to be part of an organization to create org sources', 'error')
+                    flash(_('You need to be part of an organization to create org sources'), 'error')
                     return redirect(url_for('briefing.add_rss_source'))
                 owner_id = user_org.id
             
@@ -1555,7 +1556,7 @@ def add_rss_source():
             ).first()
             
             if existing_source:
-                flash(f'A source with this RSS feed URL already exists: "{existing_source.name}"', 'info')
+                flash(_('A source with this RSS feed URL already exists: "%(name)s"', name=existing_source.name), 'info')
                 return redirect(url_for('briefing.list_sources'))
             
             # Check if we already have this URL as a system source or curated news source
@@ -1570,9 +1571,9 @@ def add_rss_source():
                 # Also check NewsSource table for curated sources
                 news_source = NewsSource.query.filter_by(feed_url=url).first()
                 if news_source:
-                    flash(f'This feed is already available as a curated source: "{news_source.name}". You can add it directly from the source library.', 'info')
+                    flash(_('This feed is already available as a curated source: "%(name)s". You can add it directly from the source library.', name=news_source.name), 'info')
             elif system_source:
-                flash(f'This feed is already available as a system source: "{system_source.name}". You can add it directly from the source library.', 'info')
+                flash(_('This feed is already available as a system source: "%(name)s". You can add it directly from the source library.', name=system_source.name), 'info')
             
             source = InputSource(
                 owner_type=owner_type,
@@ -1587,13 +1588,13 @@ def add_rss_source():
             db.session.add(source)
             db.session.commit()
             
-            flash(f'RSS source "{name}" added successfully', 'success')
+            flash(_('RSS source "%(name)s" added successfully', name=name), 'success')
             return redirect(url_for('briefing.list_sources'))
             
         except Exception as e:
             logger.error(f"Error adding RSS source: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while adding the source', 'error')
+            flash(_('An error occurred while adding the source'), 'error')
     
     return render_template('briefing/add_rss_source.html')
 
@@ -1616,12 +1617,12 @@ def upload_source():
             import hashlib
             
             if 'file' not in request.files:
-                flash('No file provided', 'error')
+                flash(_('No file provided'), 'error')
                 return redirect(url_for('briefing.upload_source'))
             
             file = request.files['file']
             if file.filename == '':
-                flash('No file selected', 'error')
+                flash(_('No file selected'), 'error')
                 return redirect(url_for('briefing.upload_source'))
             
             filename = secure_filename(file.filename or '')
@@ -1666,7 +1667,7 @@ def upload_source():
             
             record_upload(current_user.id, file_size)
             
-            flash(f'File uploaded successfully. Text extraction in progress...', 'success')
+            flash(_('File uploaded successfully. Text extraction in progress...'), 'success')
             
             # Redirect back to briefing if provided, otherwise to sources list
             if briefing_id:
@@ -1680,7 +1681,7 @@ def upload_source():
         except Exception as e:
             logger.error(f"Error uploading source: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while uploading the file', 'error')
+            flash(_('An error occurred while uploading the file'), 'error')
     
     return render_template('briefing/upload_source.html', briefing_id=briefing_id)
 
@@ -1704,7 +1705,7 @@ def add_source_to_briefing(briefing_id):
     try:
         source_id_str = request.form.get('source_id', '').strip()
         if not source_id_str:
-            flash('Source ID is required', 'error')
+            flash(_('Source ID is required'), 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
         # Handle NewsSource (prefixed with 'news_')
@@ -1717,21 +1718,21 @@ def add_source_to_briefing(briefing_id):
             source_id = int(source_id_str)
             source = db.session.get(InputSource,source_id)
             if not source:
-                flash('Source not found', 'error')
+                flash(_('Source not found'), 'error')
                 return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
         # Check ownership (delegates to can_access_source which grants admin bypass)
         if not can_access_source(current_user, source):
-            flash('You do not have access to this source', 'error')
+            flash(_('You do not have access to this source'), 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
         # Check if source is ready (not extracting or failed)
         if source.status == 'extracting':
-            flash('Source is still being processed. Please wait.', 'info')
+            flash(_('Source is still being processed. Please wait.'), 'info')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
         if source.status == 'failed':
-            flash('Source processing failed. Please check the source and try again.', 'error')
+            flash(_('Source processing failed. Please check the source and try again.'), 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
         # Check source limit before adding (plan-based enforcement)
@@ -1740,9 +1741,9 @@ def add_source_to_briefing(briefing_id):
             plan = sub.plan if sub else None
             if plan:
                 limit_msg = "unlimited" if plan.max_sources == -1 else str(plan.max_sources)
-                flash(f'You\'ve reached your source limit ({limit_msg}) for the {plan.name} plan. Please upgrade to add more sources.', 'error')
+                flash(_("You've reached your source limit (%(limit_msg)s) for the %(name)s plan. Please upgrade to add more sources.", limit_msg=limit_msg, name=plan.name), 'error')
             else:
-                flash('You need an active subscription to add sources.', 'error')
+                flash(_('You need an active subscription to add sources.'), 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
         # Check if already added
@@ -1752,7 +1753,7 @@ def add_source_to_briefing(briefing_id):
         ).first()
         
         if existing:
-            flash('Source already added to this briefing', 'info')
+            flash(_('Source already added to this briefing'), 'info')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
         # Add source
@@ -1763,12 +1764,12 @@ def add_source_to_briefing(briefing_id):
         db.session.add(briefing_source)
         db.session.commit()
         
-        flash(f'Source "{source.name}" added to briefing', 'success')
+        flash(_('Source "%(name)s" added to briefing', name=source.name), 'success')
         
     except Exception as e:
         logger.error(f"Error adding source to briefing: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred while adding the source', 'error')
+        flash(_('An error occurred while adding the source'), 'error')
     
     return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
@@ -1798,12 +1799,12 @@ def remove_source_from_briefing(briefing_id, source_id):
         db.session.delete(briefing_source)
         db.session.commit()
         
-        flash('Source removed from briefing', 'success')
+        flash(_('Source removed from briefing'), 'success')
         
     except Exception as e:
         logger.error(f"Error removing source from briefing: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred', 'error')
+        flash(_('An error occurred'), 'error')
     
     return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
@@ -1836,12 +1837,12 @@ def update_source_priority(briefing_id, source_id):
         briefing_source.priority = priority
         db.session.commit()
         
-        flash('Source priority updated', 'success')
+        flash(_('Source priority updated'), 'success')
         
     except Exception as e:
         logger.error(f"Error updating source priority: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred', 'error')
+        flash(_('An error occurred'), 'error')
     
     return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
@@ -1875,7 +1876,7 @@ def manage_recipients(briefing_id):
                 name = request.form.get('name', '').strip()
 
                 if not email:
-                    flash('Email is required', 'error')
+                    flash(_('Email is required'), 'error')
                     return redirect(url_for('briefing.manage_recipients', briefing_id=briefing_id))
 
                 # Validate email
@@ -1897,9 +1898,9 @@ def manage_recipients(briefing_id):
                         existing.unsubscribed_at = None
                         existing.generate_magic_token()
                         db.session.commit()
-                        flash(f'Recipient {email} reactivated', 'success')
+                        flash(_('Recipient %(email)s reactivated', email=email), 'success')
                     else:
-                        flash('Recipient already exists', 'info')
+                        flash(_('Recipient already exists'), 'info')
                 else:
                     # Check recipient limit before adding (plan-based enforcement)
                     if not current_user.is_admin and not check_recipient_limit(current_user, briefing_id, additional_recipients=1):
@@ -1907,9 +1908,9 @@ def manage_recipients(briefing_id):
                         plan = sub.plan if sub else None
                         if plan:
                             limit_msg = "unlimited" if plan.max_recipients == -1 else str(plan.max_recipients)
-                            flash(f'You\'ve reached your recipient limit ({limit_msg}) for the {plan.name} plan. Please upgrade to add more recipients.', 'error')
+                            flash(_("You've reached your recipient limit (%(limit_msg)s) for the %(name)s plan. Please upgrade to add more recipients.", limit_msg=limit_msg, name=plan.name), 'error')
                         else:
-                            flash('You need an active subscription to add recipients.', 'error')
+                            flash(_('You need an active subscription to add recipients.'), 'error')
                         return redirect(url_for('briefing.manage_recipients', briefing_id=briefing_id))
 
                     # Create new recipient
@@ -1928,7 +1929,7 @@ def manage_recipients(briefing_id):
                         'recipient_count': 1,
                         'bulk': False,
                     })
-                    flash(f'Recipient {email} added successfully', 'success')
+                    flash(_('Recipient %(email)s added successfully', email=email), 'success')
 
             elif action == 'bulk_add':
                 emails_text = request.form.get('emails', '')
@@ -1939,7 +1940,7 @@ def manage_recipients(briefing_id):
                 emails = [e.strip().lower() for e in emails if e.strip() and '@' in e]
                 
                 if not emails:
-                    flash('No valid email addresses found.', 'error')
+                    flash(_('No valid email addresses found.'), 'error')
                     return redirect(url_for('briefing.manage_recipients', briefing_id=briefing_id))
                 
                 added = 0
@@ -1998,7 +1999,7 @@ def manage_recipients(briefing_id):
                         'recipient_count': added,
                         'bulk': True,
                     })
-                flash(f'Imported {added} recipients. {skipped} skipped (already exists or invalid).', 'success')
+                flash(_('Imported %(added)s recipients. %(skipped)s skipped (already exists or invalid).', added=added, skipped=skipped), 'success')
                 
             elif action == 'bulk_remove':
                 recipient_ids = request.form.getlist('recipient_ids')
@@ -2008,9 +2009,9 @@ def manage_recipients(briefing_id):
                         BriefRecipient.briefing_id == briefing_id
                     ).delete(synchronize_session=False)
                     db.session.commit()
-                    flash(f'{count} recipient(s) removed', 'success')
+                    flash(_('%(count)s recipient(s) removed', count=count), 'success')
                 else:
-                    flash('No recipients selected', 'info')
+                    flash(_('No recipients selected'), 'info')
                     
             elif action == 'toggle':
                 recipient_id = request.form.get('recipient_id', type=int)
@@ -2023,13 +2024,13 @@ def manage_recipients(briefing_id):
                     if recipient:
                         if recipient.status == 'active':
                             recipient.status = 'paused'
-                            flash(f'{recipient.email} has been paused.', 'success')
+                            flash(_('%(email)s has been paused.', email=recipient.email), 'success')
                         elif recipient.status in ('paused', 'unsubscribed'):
                             recipient.status = 'active'
                             if recipient.status == 'unsubscribed':
                                 recipient.unsubscribed_at = None
                                 recipient.generate_magic_token()
-                            flash(f'{recipient.email} has been activated.', 'success')
+                            flash(_('%(email)s has been activated.', email=recipient.email), 'success')
                         db.session.commit()
                         
             elif action == 'remove':
@@ -2043,14 +2044,14 @@ def manage_recipients(briefing_id):
                     if recipient:
                         db.session.delete(recipient)
                         db.session.commit()
-                        flash('Recipient removed', 'success')
+                        flash(_('Recipient removed'), 'success')
 
             return redirect(url_for('briefing.manage_recipients', briefing_id=briefing_id))
 
         except Exception as e:
             logger.error(f"Error managing recipients: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred', 'error')
+            flash(_('An error occurred'), 'error')
     
     # GET: Show recipients
     recipients = briefing.recipients.order_by(BriefRecipient.created_at.desc()).all()
@@ -2075,11 +2076,11 @@ def unsubscribe(briefing_id, token):
     ).first()
 
     if not recipient:
-        flash('Invalid unsubscribe link', 'error')
+        flash(_('Invalid unsubscribe link'), 'error')
         return redirect(url_for('main.index'))
 
     if recipient.status == 'unsubscribed':
-        flash('You are already unsubscribed', 'info')
+        flash(_('You are already unsubscribed'), 'info')
     else:
         recipient.status = 'unsubscribed'
         recipient.unsubscribed_at = utcnow_naive()
@@ -2091,7 +2092,7 @@ def unsubscribe(briefing_id, token):
             'briefing_name': briefing.name,
             'recipient_id': recipient.id,
         }, flush=True)
-        flash('You have been unsubscribed from this briefing', 'success')
+        flash(_('You have been unsubscribed from this briefing'), 'success')
 
     return render_template('briefing/unsubscribed.html', briefing=briefing, recipient=recipient)
 
@@ -2111,7 +2112,7 @@ def generate_brief_run_audio(briefing_id, run_id):
     from app.models import BriefRun
 
     if not current_user.is_authenticated or not current_user.is_admin:
-        return jsonify({'error': 'Admin access required for audio generation'}), 403
+        return jsonify({'error': _('Admin access required for audio generation')}), 403
 
     BriefRun.query.filter_by(
         id=run_id,
@@ -2119,7 +2120,7 @@ def generate_brief_run_audio(briefing_id, run_id):
     ).first_or_404()
 
     return jsonify({
-        'error': 'Audio generation is disabled',
+        'error': _('Audio generation is disabled'),
         'code': 'AUDIO_DISABLED'
     }), 410
 
@@ -2204,7 +2205,7 @@ def edit_run(briefing_id, run_id):
                     result = send_brief_run_emails(brief_run.id)
                     flash(f'Brief approved and sent to {result["sent"]} recipients', 'success')
                 else:
-                    flash('Brief approved (ready to send)', 'success')
+                    flash(_('Brief approved (ready to send)'), 'success')
                 
                 return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
             
@@ -2226,13 +2227,13 @@ def edit_run(briefing_id, run_id):
                 db.session.add(edit)
                 db.session.commit()
                 
-                flash('Draft updated', 'success')
+                flash(_('Draft updated'), 'success')
                 return redirect(url_for('briefing.edit_run', briefing_id=briefing_id, run_id=run_id))
             
         except Exception as e:
             logger.error(f"Error editing BriefRun: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred', 'error')
+            flash(_('An error occurred'), 'error')
     
     items = sorted(brief_run.items, key=lambda x: x.position or 0)
     return render_template(
@@ -2265,14 +2266,14 @@ def send_run(briefing_id, run_id):
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
     
     if brief_run.status != 'approved':
-        flash('Brief must be approved before sending', 'error')
+        flash(_('Brief must be approved before sending'), 'error')
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
     
     # Verify subscription is still active before sending (race condition protection)
     if not current_user.is_admin:
         sub = get_active_subscription(current_user)
         if not sub:
-            flash('Your subscription expired. Please renew to send briefings.', 'error')
+            flash(_('Your subscription expired. Please renew to send briefings.'), 'error')
             return redirect(url_for('briefing.landing'))
     
     try:
@@ -2287,7 +2288,7 @@ def send_run(briefing_id, run_id):
         flash(f'Sent to {result["sent"]} recipients ({result["failed"]} failed)', 'success')
     except Exception as e:
         logger.error(f"Error sending BriefRun: {e}", exc_info=True)
-        flash('An error occurred while sending', 'error')
+        flash(_('An error occurred while sending'), 'error')
     
     return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
 
@@ -2335,7 +2336,7 @@ def approval_queue():
 def list_domains():
     """List sending domains for user's organization"""
     if not current_user.company_profile:
-        flash('You need a company profile to manage sending domains', 'error')
+        flash(_('You need a company profile to manage sending domains'), 'error')
         return redirect(url_for('briefing.list_briefings'))
 
     domains = SendingDomain.query.filter_by(
@@ -2352,7 +2353,7 @@ def list_domains():
 def add_domain():
     """Add a new sending domain"""
     if not current_user.company_profile:
-        flash('You need a company profile to add sending domains', 'error')
+        flash(_('You need a company profile to add sending domains'), 'error')
         return redirect(url_for('briefing.list_briefings'))
 
     if request.method == 'POST':
@@ -2361,20 +2362,20 @@ def add_domain():
 
             # Validate domain format
             if not domain:
-                flash('Domain is required', 'error')
+                flash(_('Domain is required'), 'error')
                 return redirect(url_for('briefing.add_domain'))
 
             # Basic domain validation
             import re
             domain_pattern = r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$'
             if not re.match(domain_pattern, domain):
-                flash('Invalid domain format', 'error')
+                flash(_('Invalid domain format'), 'error')
                 return redirect(url_for('briefing.add_domain'))
 
             # Check if domain already exists
             existing = SendingDomain.query.filter_by(domain=domain).first()
             if existing:
-                flash('This domain is already registered', 'error')
+                flash(_('This domain is already registered'), 'error')
                 return redirect(url_for('briefing.add_domain'))
 
             # Create domain record
@@ -2393,7 +2394,7 @@ def add_domain():
                 sending_domain.dns_records_required = result.get('records', [])
                 db.session.add(sending_domain)
                 db.session.commit()
-                flash(f'Domain "{domain}" added. Please configure DNS records.', 'success')
+                flash(_('Domain "%(domain)s" added. Please configure DNS records.', domain=domain), 'success')
                 return redirect(url_for('briefing.verify_domain', domain_id=sending_domain.id))
             else:
                 flash(f'Failed to register domain: {result.get("error", "Unknown error")}', 'error')
@@ -2402,7 +2403,7 @@ def add_domain():
         except Exception as e:
             logger.error(f"Error adding domain: {e}", exc_info=True)
             db.session.rollback()
-            flash('An error occurred while adding the domain', 'error')
+            flash(_('An error occurred while adding the domain'), 'error')
 
     return render_template('briefing/domains/add.html')
 
@@ -2413,7 +2414,7 @@ def add_domain():
 def verify_domain(domain_id):
     """View domain details and verification status"""
     if not current_user.company_profile:
-        flash('You need a company profile to manage domains', 'error')
+        flash(_('You need a company profile to manage domains'), 'error')
         return redirect(url_for('briefing.list_briefings'))
 
     domain = SendingDomain.query.filter_by(
@@ -2430,7 +2431,7 @@ def verify_domain(domain_id):
 def check_domain_verification(domain_id):
     """Check/refresh domain verification status"""
     if not current_user.company_profile:
-        return jsonify({'error': 'Company profile required'}), 403
+        return jsonify({'error': _('Company profile required')}), 403
 
     domain = SendingDomain.query.filter_by(
         id=domain_id,
@@ -2439,7 +2440,7 @@ def check_domain_verification(domain_id):
 
     try:
         if not domain.resend_domain_id:
-            flash('Domain not yet registered with Resend', 'error')
+            flash(_('Domain not yet registered with Resend'), 'error')
             return redirect(url_for('briefing.verify_domain', domain_id=domain_id))
         
         from app.briefing.domains import check_domain_verification_status
@@ -2453,15 +2454,15 @@ def check_domain_verification(domain_id):
             domain.status = 'verified'
             domain.verified_at = utcnow_naive()
             db.session.commit()
-            flash('Domain verified successfully!', 'success')
+            flash(_('Domain verified successfully!'), 'success')
         else:
             domain.status = 'pending_verification'
             db.session.commit()
-            flash('Domain not yet verified. Please check DNS records.', 'info')
+            flash(_('Domain not yet verified. Please check DNS records.'), 'info')
 
     except Exception as e:
         logger.error(f"Error checking domain verification: {e}", exc_info=True)
-        flash('An error occurred while checking verification', 'error')
+        flash(_('An error occurred while checking verification'), 'error')
 
     return redirect(url_for('briefing.verify_domain', domain_id=domain_id))
 
@@ -2472,7 +2473,7 @@ def check_domain_verification(domain_id):
 def get_domain_status(domain_id):
     """Get domain status as JSON (for AJAX requests)"""
     if not current_user.company_profile:
-        return jsonify({'error': 'Company profile required'}), 403
+        return jsonify({'error': _('Company profile required')}), 403
 
     domain = SendingDomain.query.filter_by(
         id=domain_id,
@@ -2483,7 +2484,7 @@ def get_domain_status(domain_id):
         if not domain.resend_domain_id:
             return jsonify({
                 'success': False,
-                'error': 'Domain not yet registered with Resend',
+                'error': _('Domain not yet registered with Resend'),
                 'status': domain.status
             })
 
@@ -2529,7 +2530,7 @@ def get_domain_status(domain_id):
 def delete_domain(domain_id):
     """Delete a sending domain"""
     if not current_user.company_profile:
-        flash('You need a company profile to manage domains', 'error')
+        flash(_('You need a company profile to manage domains'), 'error')
         return redirect(url_for('briefing.list_briefings'))
 
     domain = SendingDomain.query.filter_by(
@@ -2545,7 +2546,7 @@ def delete_domain(domain_id):
         ).count()
 
         if active_briefings > 0:
-            flash(f'Cannot delete domain: {active_briefings} active briefing(s) are using it. Please remove the domain from those briefings first.', 'error')
+            flash(_('Cannot delete domain: %(active_briefings)s active briefing(s) are using it. Please remove the domain from those briefings first.', active_briefings=active_briefings), 'error')
             return redirect(url_for('briefing.list_domains'))
 
         # Try to remove from Resend first
@@ -2556,19 +2557,19 @@ def delete_domain(domain_id):
             if not result.get('success'):
                 # Resend deletion failed - don't delete from DB
                 error_msg = result.get('error', 'Unknown error')
-                flash(f'Failed to delete domain from Resend: {error_msg}. Domain kept in database for manual cleanup.', 'error')
+                flash(_('Failed to delete domain from Resend: %(error_msg)s. Domain kept in database for manual cleanup.', error_msg=error_msg), 'error')
                 return redirect(url_for('briefing.list_domains'))
 
         # Resend deletion succeeded (or no resend_domain_id) - safe to delete from DB
         domain_name = domain.domain
         db.session.delete(domain)
         db.session.commit()
-        flash(f'Domain "{domain_name}" deleted successfully', 'success')
+        flash(_('Domain "%(domain_name)s" deleted successfully', domain_name=domain_name), 'success')
 
     except Exception as e:
         logger.error(f"Error deleting domain: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred while deleting the domain', 'error')
+        flash(_('An error occurred while deleting the domain'), 'error')
 
     return redirect(url_for('briefing.list_domains'))
 
@@ -2585,7 +2586,7 @@ def public_briefing(briefing_id):
 
     # Check if briefing is public
     if briefing.visibility != 'public':
-        flash('This briefing is not publicly accessible', 'error')
+        flash(_('This briefing is not publicly accessible'), 'error')
         return redirect(url_for('main.index'))
 
     # Get sent runs only
@@ -2609,7 +2610,7 @@ def public_brief_run(briefing_id, run_id):
 
     # Check if briefing is public
     if briefing.visibility != 'public':
-        flash('This briefing is not publicly accessible', 'error')
+        flash(_('This briefing is not publicly accessible'), 'error')
         return redirect(url_for('main.index'))
 
     brief_run = BriefRun.query.filter_by(
@@ -2701,14 +2702,14 @@ def test_generate(briefing_id):
     if not is_allowed:
         # For AJAX requests, return JSON
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': 'Permission denied'}), 403
+            return jsonify({'error': _('Permission denied')}), 403
         return redirect_response
     
     # Check if briefing has sources
     if not briefing.sources:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': 'Please add sources to your briefing before generating a test brief'}), 400
-        flash('Please add sources to your briefing before generating a test brief', 'error')
+            return jsonify({'error': _('Please add sources to your briefing before generating a test brief')}), 400
+        flash(_('Please add sources to your briefing before generating a test brief'), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     try:
@@ -2738,16 +2739,16 @@ def test_generate(briefing_id):
                     return jsonify({
                         'success': True,
                         'job_id': job_id,
-                        'message': 'Brief generation started',
+                        'message': _('Brief generation started'),
                         'status_url': url_for('briefing.generation_status', briefing_id=briefing_id, job_id=job_id)
                     })
                 # For regular form submission, redirect to a waiting page
-                flash('Brief generation started. This may take up to a minute.', 'info')
+                flash(_('Brief generation started. This may take up to a minute.'), 'info')
                 return redirect(url_for('briefing.generation_progress', briefing_id=briefing_id, job_id=job_id))
             else:
                 # Queue failed (likely full) - inform user
                 logger.warning(f"Job queue full or unavailable for briefing {briefing_id}, falling back to synchronous generation")
-                flash('System is busy. Brief generation may take longer than usual.', 'warning')
+                flash(_('System is busy. Brief generation may take longer than usual.'), 'warning')
         
         # Fallback to synchronous generation (Redis not available or queue failed)
         logger.info(f"Falling back to synchronous generation for briefing {briefing_id}")
@@ -2766,8 +2767,8 @@ def test_generate(briefing_id):
         
         if brief_run is None:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'error': 'No content available from your sources.'}), 400
-            flash('No content available from your sources. Try adding more sources or wait for content to be ingested.', 'warning')
+                return jsonify({'error': _('No content available from your sources.')}), 400
+            flash(_('No content available from your sources. Try adding more sources or wait for content to be ingested.'), 'warning')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
         brief_run.status = 'generated_draft'
@@ -2781,7 +2782,7 @@ def test_generate(briefing_id):
                 'status': 'completed',
                 'redirect_url': url_for('briefing.view_run', briefing_id=briefing_id, run_id=brief_run.id)
             })
-        flash('Test brief generated successfully!', 'success')
+        flash(_('Test brief generated successfully!'), 'success')
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=brief_run.id))
         
     except Exception as e:
@@ -2801,11 +2802,11 @@ def generation_status(briefing_id, job_id):
     
     job = GenerationJob.get(job_id)
     if not job:
-        return jsonify({'error': 'Job not found', 'status': 'failed'}), 404
+        return jsonify({'error': _('Job not found'), 'status': 'failed'}), 404
     
     # Verify this job belongs to the user AND briefing (security check)
     if job.briefing_id != briefing_id or job.user_id != current_user.id:
-        return jsonify({'error': 'Job not found', 'status': 'failed'}), 404
+        return jsonify({'error': _('Job not found'), 'status': 'failed'}), 404
     
     response = {
         'status': job.status,
@@ -2841,12 +2842,12 @@ def generation_progress(briefing_id, job_id):
     
     # If job completed, redirect to result
     if job and job.status == 'completed' and job.brief_run_id:
-        flash('Brief generated successfully!', 'success')
+        flash(_('Brief generated successfully!'), 'success')
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=job.brief_run_id))
     
     # If job failed, redirect back with error
     if job and job.status == 'failed':
-        flash(f'Generation failed: {job.error}', 'error')
+        flash(_('Generation failed: %(error)s', error=job.error), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     return render_template(
@@ -2878,7 +2879,7 @@ def test_send(briefing_id):
     
     # Validate email
     if not test_email:
-        flash('Email is required', 'error')
+        flash(_('Email is required'), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     is_valid, error = validate_email(test_email)
@@ -2893,7 +2894,7 @@ def test_send(briefing_id):
         if redis_client:
             dedup_key = f"test_email_dedup:{briefing_id}:{current_user.id}"
             if redis_client.get(dedup_key):
-                flash('Test email already sent. Please wait a moment before sending again.', 'warning')
+                flash(_('Test email already sent. Please wait a moment before sending again.'), 'warning')
                 return redirect(url_for('briefing.detail', briefing_id=briefing_id))
             # Set lock for 30 seconds
             redis_client.setex(dedup_key, 30, "1")
@@ -2905,17 +2906,17 @@ def test_send(briefing_id):
     recent_run = briefing.runs.order_by(BriefRun.generated_at.desc()).first()
     
     if not recent_run:
-        flash('No brief runs available. Generate a test brief first.', 'error')
+        flash(_('No brief runs available. Generate a test brief first.'), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     # Check if run has content (len() works for both InstrumentedList and eager-loaded lists)
     if not len(recent_run.items):
-        flash('The brief run has no content. Generate a new test brief.', 'error')
+        flash(_('The brief run has no content. Generate a new test brief.'), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     # Check if run is ready to send (has draft or approved content)
     if not recent_run.draft_html and not recent_run.approved_html:
-        flash('The brief run has no content. Generate a new test brief.', 'error')
+        flash(_('The brief run has no content. Generate a new test brief.'), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     try:
@@ -2943,9 +2944,9 @@ def test_send(briefing_id):
         success = email_client.send_brief_run(recent_run, test_recipient)
         
         if success:
-            flash(f'Test email sent to {test_email}', 'success')
+            flash(_('Test email sent to %(test_email)s', test_email=test_email), 'success')
         else:
-            flash('Failed to send test email. Check logs.', 'error')
+            flash(_('Failed to send test email. Check logs.'), 'error')
             
     except Exception as e:
         logger.error(f"Error sending test email: {e}", exc_info=True)
@@ -3032,7 +3033,7 @@ def duplicate_briefing(briefing_id):
     except Exception as e:
         logger.error(f"Error duplicating briefing: {e}", exc_info=True)
         db.session.rollback()
-        flash('An error occurred while duplicating the briefing', 'error')
+        flash(_('An error occurred while duplicating the briefing'), 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
 
@@ -3228,7 +3229,7 @@ def analytics(briefing_id):
     
     # Check access
     if not can_access_briefing(current_user, briefing):
-        flash("You do not have permission to view this briefing", "error")
+        flash(_("You do not have permission to view this briefing"), "error")
         return redirect(url_for("briefing.list_briefings"))
     
     # Get recent runs with analytics
@@ -3278,7 +3279,7 @@ def organization_settings():
     sub = get_active_subscription(current_user)
 
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash("Organization settings are only available for Team and Enterprise plans.", "info")
+        flash(_("Organization settings are only available for Team and Enterprise plans."), "info")
         return redirect(url_for("briefing.list_briefings"))
 
     org = current_user.company_profile
@@ -3295,7 +3296,7 @@ def organization_settings():
             org = membership.org
 
     if not org:
-        flash("No organization found. Please contact support.", "error")
+        flash(_("No organization found. Please contact support."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     # Get team members using the proper function
@@ -3335,12 +3336,12 @@ def update_organization():
     sub = get_active_subscription(current_user)
     
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash("Organization settings are only available for Team and Enterprise plans.", "error")
+        flash(_("Organization settings are only available for Team and Enterprise plans."), "error")
         return redirect(url_for("briefing.list_briefings"))
     
     org = current_user.company_profile
     if not org or org.user_id != current_user.id:
-        flash("You don't have permission to edit this organization.", "error")
+        flash(_("You don't have permission to edit this organization."), "error")
         return redirect(url_for("briefing.organization_settings"))
     
     org_name = request.form.get("company_name", "").strip()
@@ -3351,7 +3352,7 @@ def update_organization():
     org.website = request.form.get("website", "").strip()
     
     db.session.commit()
-    flash("Organization details updated successfully.", "success")
+    flash(_("Organization details updated successfully."), "success")
     return redirect(url_for("briefing.organization_settings"))
 
 
@@ -3362,7 +3363,7 @@ def invite_member():
     sub = get_active_subscription(current_user)
 
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash("Team management is only available for Team and Enterprise plans.", "error")
+        flash(_("Team management is only available for Team and Enterprise plans."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     org = current_user.company_profile
@@ -3370,7 +3371,7 @@ def invite_member():
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
 
     if not org:
-        flash("No organization found.", "error")
+        flash(_("No organization found."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     # Check if user has permission to invite (owner or admin)
@@ -3384,14 +3385,14 @@ def invite_member():
     is_admin = membership and membership.is_admin
 
     if not is_owner and not is_admin:
-        flash("You don't have permission to invite team members.", "error")
+        flash(_("You don't have permission to invite team members."), "error")
         return redirect(url_for("briefing.organization_settings"))
 
     email = request.form.get("email", "").strip().lower()
     role = request.form.get("role", "editor")
 
     if not email or not validate_email(email):
-        flash("Please enter a valid email address.", "error")
+        flash(_("Please enter a valid email address."), "error")
         return redirect(url_for("briefing.organization_settings"))
 
     try:
@@ -3414,7 +3415,7 @@ def invite_member():
             'invitee_email': email,
             'role': role,
         })
-        flash(f"Invitation sent to {email}.", "success")
+        flash(_('Invitation sent to %(email)s.', email=email), "success")
     except ValueError as e:
         flash(str(e), "error")
 
@@ -3428,7 +3429,7 @@ def remove_member(member_id):
     sub = get_active_subscription(current_user)
 
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash("Team management is only available for Team and Enterprise plans.", "error")
+        flash(_("Team management is only available for Team and Enterprise plans."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     org = current_user.company_profile
@@ -3436,12 +3437,12 @@ def remove_member(member_id):
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
 
     if not org:
-        flash("No organization found.", "error")
+        flash(_("No organization found."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     try:
         remove_team_member(org, member_id, current_user)
-        flash("Team member removed successfully.", "success")
+        flash(_("Team member removed successfully."), "success")
     except ValueError as e:
         flash(str(e), "error")
 
@@ -3455,7 +3456,7 @@ def change_member_role(member_id):
     sub = get_active_subscription(current_user)
 
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash("Team management is only available for Team and Enterprise plans.", "error")
+        flash(_("Team management is only available for Team and Enterprise plans."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     org = current_user.company_profile
@@ -3463,14 +3464,14 @@ def change_member_role(member_id):
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
 
     if not org:
-        flash("No organization found.", "error")
+        flash(_("No organization found."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     new_role = request.form.get("role", "editor")
 
     try:
         update_member_role(org, member_id, new_role, current_user)
-        flash("Member role updated successfully.", "success")
+        flash(_("Member role updated successfully."), "success")
     except ValueError as e:
         flash(str(e), "error")
 
@@ -3484,7 +3485,7 @@ def join_organization(token):
     try:
         membership = accept_invitation(token, current_user)
         org = membership.org
-        flash(f"Welcome to {org.company_name}! You now have access to the team's briefings.", "success")
+        flash(_("Welcome to %(company_name)s! You now have access to the team's briefings.", company_name=org.company_name), "success")
         return redirect(url_for("briefing.list_briefings"))
     except ValueError as e:
         flash(str(e), "error")

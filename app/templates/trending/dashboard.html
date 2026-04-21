@@ -1,29 +1,29 @@
 {% extends 'layout.html' %}
 
-{% block title %}Trending Topics - Admin{% endblock %}
+{% block title %}{{ _('Trending Topics - Admin') }}{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Trending Topics</h1>
-        <p class="text-gray-600 mt-2">News-to-Deliberation Compiler - Manage trending topics from curated news sources</p>
+        <h1 class="text-3xl font-bold text-gray-900">{{ _('Trending Topics') }}</h1>
+        <p class="text-gray-600 mt-2">{{ _('News-to-Deliberation Compiler - Manage trending topics from curated news sources') }}</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="text-sm text-gray-500">Pending Review</div>
+            <div class="text-sm text-gray-500">{{ _('Pending Review') }}</div>
             <div class="text-2xl font-bold text-yellow-600">{{ stats.topics.pending_review }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="text-sm text-gray-500">Published</div>
+            <div class="text-sm text-gray-500">{{ _('Published') }}</div>
             <div class="text-2xl font-bold text-green-600">{{ stats.topics.published }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="text-sm text-gray-500">Articles (24h)</div>
+            <div class="text-sm text-gray-500">{{ _('Articles (24h)') }}</div>
             <div class="text-2xl font-bold text-primary-600">{{ stats.articles.last_24h }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="text-sm text-gray-500">Active Sources</div>
+            <div class="text-sm text-gray-500">{{ _('Active Sources') }}</div>
             <div class="text-2xl font-bold text-purple-600">{{ stats.sources.active }}</div>
         </div>
     </div>
@@ -31,7 +31,7 @@
     <!-- Social Media Posting Status -->
     <div class="bg-white rounded-lg shadow mb-8">
         <div class="p-4 border-b">
-            <h2 class="text-xl font-semibold">Social Media Posting Status</h2>
+            <h2 class="text-xl font-semibold">{{ _('Social Media Posting Status') }}</h2>
         </div>
         <div class="p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -43,13 +43,13 @@
                         </svg>
                         <span class="font-medium">Bluesky</span>
                         {% if social_status.bluesky.configured %}
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">Configured</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">{{ _('Configured') }}</span>
                         {% else %}
-                        <span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">Not Configured</span>
+                        <span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">{{ _('Not Configured') }}</span>
                         {% endif %}
                     </div>
                     <div class="text-sm text-gray-600">
-                        <p>Handle: <span class="font-mono">{{ social_status.bluesky.handle }}</span></p>
+                        <p>{{ _('Handle:') }} <span class="font-mono">{{ social_status.bluesky.handle }}</span></p>
                     </div>
                 </div>
 
@@ -59,32 +59,32 @@
                         <svg class="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                         </svg>
-                        <span class="font-medium">X (Twitter)</span>
+                        <span class="font-medium">{{ _('X (Twitter)') }}</span>
                         {% if social_status.x.configured %}
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">Configured</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">{{ _('Configured') }}</span>
                         {% else %}
-                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">Awaiting Setup</span>
+                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">{{ _('Awaiting Setup') }}</span>
                         {% endif %}
                     </div>
                     <div class="text-sm text-gray-600 space-y-1">
-                        <p>Handle: <span class="font-mono">{{ social_status.x.handle }}</span></p>
+                        <p>{{ _('Handle:') }} <span class="font-mono">{{ social_status.x.handle }}</span></p>
                         {% if social_status.x.configured %}
                         <div class="mt-3 pt-3 border-t">
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-gray-500">Today:</span>
+                                <span class="text-gray-500">{{ _('Today:') }}</span>
                                 <span class="font-medium {% if social_status.x.is_rate_limited %}text-red-600{% else %}text-green-600{% endif %}">
-                                    {{ social_status.x.posts_today }}/{{ social_status.x.daily_limit }} posts
+                                    {{ _('%(used)s/%(limit)s posts', used=social_status.x.posts_today, limit=social_status.x.daily_limit) }}
                                 </span>
                             </div>
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-gray-500">This Month:</span>
+                                <span class="text-gray-500">{{ _('This Month:') }}</span>
                                 <span class="font-medium {% if social_status.x.approaching_monthly_limit %}text-orange-600{% else %}text-green-600{% endif %}">
                                     {{ social_status.x.posts_this_month }}/{{ social_status.x.monthly_limit }} ({{ social_status.x.monthly_usage_percent }}%)
                                 </span>
                             </div>
                             <!-- Progress bar for monthly usage -->
                             <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                                <div class="h-2 rounded-full {% if social_status.x.monthly_usage_percent >= 90 %}bg-red-500{% elif social_status.x.monthly_usage_percent >= 70 %}bg-orange-500{% else %}bg-green-500{% endif %}" 
+                                <div class="h-2 rounded-full {% if social_status.x.monthly_usage_percent >= 90 %}bg-red-500{% elif social_status.x.monthly_usage_percent >= 70 %}bg-orange-500{% else %}bg-green-500{% endif %}"
                                      style="width: {{ social_status.x.monthly_usage_percent }}%"></div>
                             </div>
                             {% if social_status.x.is_rate_limited %}
@@ -94,13 +94,13 @@
                             {% endif %}
                             {% if social_status.x.approaching_monthly_limit %}
                             <div class="mt-3 bg-orange-50 border border-orange-200 rounded p-2 text-orange-700 text-xs">
-                                ⚠️ Approaching monthly limit ({{ social_status.x.monthly_remaining }} posts remaining)
+                                {{ _('⚠️ Approaching monthly limit (%(remaining)s posts remaining)', remaining=social_status.x.monthly_remaining) }}
                             </div>
                             {% endif %}
                         </div>
                         {% else %}
                         <p class="mt-2 text-gray-400 text-xs">
-                            Add X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET to environment variables.
+                            {{ _('Add X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET to environment variables.') }}
                         </p>
                         {% endif %}
                     </div>
@@ -113,35 +113,35 @@
         <form action="{{ url_for('trending.trigger_pipeline') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700">
-                Run Pipeline Now
+                {{ _('Run Pipeline Now') }}
             </button>
         </form>
         <form action="{{ url_for('trending.process_pending') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                Process Pending Topics
+                {{ _('Process Pending Topics') }}
             </button>
         </form>
         <a href="{{ url_for('trending.view_articles') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-            View Articles
+            {{ _('View Articles') }}
         </a>
         <a href="{{ url_for('trending.manage_sources') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
-            Manage Sources
+            {{ _('Manage Sources') }}
         </a>
         <form action="{{ url_for('trending.clean_summaries') }}" method="post"
-              data-confirm="This will clean promotional content from all article summaries and topic descriptions. Continue?">
+              data-confirm="{{ _('This will clean promotional content from all article summaries and topic descriptions. Continue?') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
-                Clean Summaries
+                {{ _('Clean Summaries') }}
             </button>
         </form>
     </div>
 
     <div class="bg-white rounded-lg shadow">
         <div class="p-4 border-b">
-            <h2 class="text-xl font-semibold">Review Queue</h2>
+            <h2 class="text-xl font-semibold">{{ _('Review Queue') }}</h2>
         </div>
-        
+
         {% if queue.items %}
         <div class="divide-y">
             {% for topic in queue.items %}
@@ -152,15 +152,15 @@
                             {{ topic.title }}
                         </a>
                         <div class="flex gap-4 mt-2 text-sm text-gray-500">
-                            <span>{{ topic.source_count }} sources</span>
+                            <span>{{ ngettext('%(num)d source', '%(num)d sources', topic.source_count, num=topic.source_count) }}</span>
                             <span class="{% if topic.civic_score and topic.civic_score >= 0.7 %}text-green-600{% endif %}">
-                                Civic: {{ "%.0f"|format((topic.civic_score or 0) * 100) }}%
+                                {{ _('Civic:') }} {{ "%.0f"|format((topic.civic_score or 0) * 100) }}%
                             </span>
                             <span class="{% if topic.quality_score and topic.quality_score >= 0.7 %}text-green-600{% endif %}">
-                                Quality: {{ "%.0f"|format((topic.quality_score or 0) * 100) }}%
+                                {{ _('Quality:') }} {{ "%.0f"|format((topic.quality_score or 0) * 100) }}%
                             </span>
                             {% if topic.risk_flag %}
-                            <span class="text-red-600 font-medium">RISK: {{ topic.risk_reason or 'Flagged' }}</span>
+                            <span class="text-red-600 font-medium">{{ _('RISK:') }} {{ topic.risk_reason or _('Flagged') }}</span>
                             {% endif %}
                         </div>
                         {% if topic.canonical_tags %}
@@ -173,13 +173,13 @@
                     </div>
                     <div class="flex gap-2 ml-4">
                         {% if topic.should_auto_publish %}
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Auto-Publish Eligible</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ _('Auto-Publish Eligible') }}</span>
                         {% endif %}
                         <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">{{ topic.status }}</span>
                     </div>
                 </div>
                 <div class="mt-2 text-sm text-gray-400">
-                    Created: {{ topic.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    {{ _('Created:') }} {{ topic.created_at.strftime('%Y-%m-%d %H:%M') }}
                 </div>
             </div>
             {% endfor %}
@@ -187,22 +187,22 @@
         {% if queue.pages > 1 %}
         <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
             <div class="text-sm text-gray-600">
-                Showing {{ queue.items|length }} of {{ queue.total }} pending topics
+                {{ _('Showing %(count)d of %(total)d pending topics', count=queue.items|length, total=queue.total) }}
             </div>
             <div class="flex gap-2">
                 {% if queue.has_prev %}
                 <a href="{{ url_for('trending.dashboard', page=queue.prev_num) }}"
                    class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-100">
-                    Previous
+                    {{ _('Previous') }}
                 </a>
                 {% endif %}
                 <span class="px-3 py-1.5 text-sm rounded border border-gray-200 bg-white text-gray-700">
-                    Page {{ queue.page }} of {{ queue.pages }}
+                    {{ _('Page %(page)d of %(pages)d', page=queue.page, pages=queue.pages) }}
                 </span>
                 {% if queue.has_next %}
                 <a href="{{ url_for('trending.dashboard', page=queue.next_num) }}"
                    class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-100">
-                    Next
+                    {{ _('Next') }}
                 </a>
                 {% endif %}
             </div>
@@ -210,8 +210,8 @@
         {% endif %}
         {% else %}
         <div class="p-8 text-center text-gray-500">
-            <p>No topics pending review.</p>
-            <p class="mt-2">Click "Run Pipeline Now" to fetch and process new articles.</p>
+            <p>{{ _('No topics pending review.') }}</p>
+            <p class="mt-2">{{ _('Click "Run Pipeline Now" to fetch and process new articles.') }}</p>
         </div>
         {% endif %}
     </div>
@@ -219,13 +219,13 @@
     {% if hot_topics %}
     <div class="mt-8 bg-white rounded-lg shadow">
         <div class="p-4 border-b">
-            <h2 class="text-xl font-semibold">Trending in Premium Sources</h2>
-            <p class="text-sm text-gray-500 mt-1">Topics being discussed by The Economist, FT, UnHerd, podcasts, etc. Click to filter articles.</p>
+            <h2 class="text-xl font-semibold">{{ _('Trending in Premium Sources') }}</h2>
+            <p class="text-sm text-gray-500 mt-1">{{ _('Topics being discussed by The Economist, FT, UnHerd, podcasts, etc. Click to filter articles.') }}</p>
         </div>
         <div class="p-4">
             <div class="flex flex-wrap gap-2">
                 {% for topic in hot_topics %}
-                <a href="{{ url_for('trending.view_articles', keyword=topic.keyword) }}" 
+                <a href="{{ url_for('trending.view_articles', keyword=topic.keyword) }}"
                    class="inline-flex items-center gap-1 bg-blue-100 text-primary-800 text-sm px-3 py-1 rounded-full hover:bg-blue-200 transition-colors cursor-pointer">
                     {{ topic.keyword }}
                     <span class="bg-blue-200 text-blue-900 text-xs px-1.5 py-0.5 rounded-full">{{ topic.mentions }}</span>
@@ -238,28 +238,28 @@
 
     <div class="mt-8 bg-white rounded-lg shadow">
         <div class="p-4 border-b">
-            <h2 class="text-xl font-semibold">All Topics Summary</h2>
+            <h2 class="text-xl font-semibold">{{ _('All Topics Summary') }}</h2>
         </div>
         <div class="p-4 grid grid-cols-5 gap-4 text-center">
             <div>
                 <div class="text-2xl font-bold">{{ stats.topics.pending }}</div>
-                <div class="text-sm text-gray-500">Pending</div>
+                <div class="text-sm text-gray-500">{{ _('Pending') }}</div>
             </div>
             <div>
                 <div class="text-2xl font-bold text-yellow-600">{{ stats.topics.pending_review }}</div>
-                <div class="text-sm text-gray-500">Review</div>
+                <div class="text-sm text-gray-500">{{ _('Review') }}</div>
             </div>
             <div>
                 <div class="text-2xl font-bold text-green-600">{{ stats.topics.published }}</div>
-                <div class="text-sm text-gray-500">Published</div>
+                <div class="text-sm text-gray-500">{{ _('Published') }}</div>
             </div>
             <div>
                 <div class="text-2xl font-bold text-primary-600">{{ stats.topics.merged }}</div>
-                <div class="text-sm text-gray-500">Merged</div>
+                <div class="text-sm text-gray-500">{{ _('Merged') }}</div>
             </div>
             <div>
                 <div class="text-2xl font-bold text-gray-400">{{ stats.topics.discarded }}</div>
-                <div class="text-sm text-gray-500">Discarded</div>
+                <div class="text-sm text-gray-500">{{ _('Discarded') }}</div>
             </div>
         </div>
     </div>

@@ -11,6 +11,7 @@ from app.models import Discussion, Statement, StatementFlag, Response
 from sqlalchemy import desc, func
 from sqlalchemy.orm import joinedload
 from app.lib.time import utcnow_naive
+from flask_babel import gettext as _
 
 moderation_bp = Blueprint('moderation', __name__)
 
@@ -34,7 +35,7 @@ def moderation_queue(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
 
     if not _can_moderate_discussion(discussion):
-        flash("You do not have permission to access the moderation queue.", "danger")
+        flash(_("You do not have permission to access the moderation queue."), "danger")
         return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -104,14 +105,14 @@ def review_flag(discussion_id, flag_id):
     flag = db.get_or_404(StatementFlag, flag_id)
     
     if not _can_moderate_discussion(discussion):
-        flash("You do not have permission to review flags for this discussion.", "danger")
+        flash(_("You do not have permission to review flags for this discussion."), "danger")
         return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug))
     
     # Check that flag belongs to this discussion
     if flag.statement.discussion_id != discussion_id:
-        flash("Invalid flag for this discussion", "danger")
+        flash(_("Invalid flag for this discussion"), "danger")
         return redirect(url_for('moderation.moderation_queue', discussion_id=discussion_id))
     
     action = request.form.get('action')
@@ -130,7 +131,7 @@ def review_flag(discussion_id, flag_id):
             flag.statement.is_deleted = True
         
         db.session.commit()
-        flash("Flag approved. Statement has been moderated.", "success")
+        flash(_("Flag approved. Statement has been moderated."), "success")
         
     elif action == 'reject':
         # Reject the flag - content is fine
@@ -142,10 +143,10 @@ def review_flag(discussion_id, flag_id):
         flag.statement.mod_status = 1  # Accepted
         
         db.session.commit()
-        flash("Flag rejected. Statement is acceptable.", "success")
+        flash(_("Flag rejected. Statement is acceptable."), "success")
         
     else:
-        flash("Invalid action", "danger")
+        flash(_("Invalid action"), "danger")
     
     return redirect(url_for('moderation.moderation_queue', discussion_id=discussion_id))
 
@@ -161,7 +162,7 @@ def bulk_moderation_action(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
     
     if not _can_moderate_discussion(discussion):
-        flash("You do not have permission to perform bulk moderation on this discussion.", "danger")
+        flash(_("You do not have permission to perform bulk moderation on this discussion."), "danger")
         return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -171,7 +172,7 @@ def bulk_moderation_action(discussion_id):
     action = request.form.get('action')
 
     if not flag_ids:
-        flash("No flags selected", "warning")
+        flash(_("No flags selected"), "warning")
         return redirect(url_for('moderation.moderation_queue', discussion_id=discussion_id))
 
     # Discussion constraint is enforced in SQL; eager-load for the write loop
@@ -198,7 +199,7 @@ def bulk_moderation_action(discussion_id):
                 flag.statement.is_deleted = True
             count += 1
         db.session.commit()
-        flash(f"{count} flags approved", "success")
+        flash(_('%(count)s flags approved', count=count), "success")
         
     elif action == 'reject_all':
         for flag in flags:
@@ -208,10 +209,10 @@ def bulk_moderation_action(discussion_id):
             flag.statement.mod_status = 1
             count += 1
         db.session.commit()
-        flash(f"{count} flags rejected", "success")
+        flash(_('%(count)s flags rejected', count=count), "success")
         
     else:
-        flash("Invalid bulk action", "danger")
+        flash(_("Invalid bulk action"), "danger")
     
     return redirect(url_for('moderation.moderation_queue', discussion_id=discussion_id))
 
@@ -225,7 +226,7 @@ def moderation_stats(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
     
     if not _can_moderate_discussion(discussion):
-        flash("You do not have permission to view moderation stats for this discussion.", "danger")
+        flash(_("You do not have permission to view moderation stats for this discussion."), "danger")
         return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -296,7 +297,7 @@ def moderation_summary_api(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
     
     if not _can_moderate_discussion(discussion):
-        return jsonify({'error': 'Permission denied'}), 403
+        return jsonify({'error': _('Permission denied')}), 403
     
     stats = {
         'pending_flags': StatementFlag.query.join(Statement).filter(

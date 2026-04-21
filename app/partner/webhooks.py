@@ -12,6 +12,7 @@ from app import db
 from app.lib.llm_utils import decrypt_api_key, encrypt_api_key
 from app.lib.time import utcnow_naive
 from app.models import PartnerWebhookEndpoint, PartnerWebhookDelivery
+from flask_babel import gettext as _
 
 MAX_DELIVERY_ATTEMPTS = 5
 DELIVERY_TIMEOUT_SECONDS = 10
@@ -179,7 +180,7 @@ def send_test_delivery(endpoint):
         'type': 'webhook.test',
         'created_at': now.isoformat(),
         'data': {
-            'message': 'Test delivery from Society Speaks partner portal.',
+            'message': _('Test delivery from Society Speaks partner portal.'),
             'endpoint_id': endpoint.id,
         },
     }

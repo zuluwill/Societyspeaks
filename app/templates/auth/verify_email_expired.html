@@ -11,11 +11,11 @@
         </div>
 
         {% if expired %}
-        <h2 class="text-2xl font-bold text-gray-800">Verification Link Expired</h2>
-        <p class="text-gray-600">Your email verification link has expired. Verification links are valid for 24 hours.</p>
+        <h2 class="text-2xl font-bold text-gray-800">{{ _('Verification Link Expired') }}</h2>
+        <p class="text-gray-600">{{ _('Your email verification link has expired. Verification links are valid for 24 hours.') }}</p>
         {% else %}
-        <h2 class="text-2xl font-bold text-gray-800">Invalid Verification Link</h2>
-        <p class="text-gray-600">This verification link is not valid. It may have already been used.</p>
+        <h2 class="text-2xl font-bold text-gray-800">{{ _('Invalid Verification Link') }}</h2>
+        <p class="text-gray-600">{{ _('This verification link is not valid. It may have already been used.') }}</p>
         {% endif %}
 
         {% if email and expired %}
@@ -24,14 +24,14 @@
             <input type="hidden" name="email" value="{{ email }}">
             <button type="submit"
                     class="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition min-h-11">
-                Send a New Verification Link
+                {{ _('Send a New Verification Link') }}
             </button>
         </form>
         {% endif %}
 
         <p class="text-sm text-gray-500 mt-4">
-            Already verified?
-            <a href="{{ url_for('auth.login') }}" class="text-primary-600 hover:underline">Log in</a>
+            {{ _('Already verified?') }}
+            <a href="{{ url_for('auth.login') }}" class="text-primary-600 hover:underline">{{ _('Log in') }}</a>
         </p>
     </div>
 </div>

@@ -3,6 +3,7 @@ from wtforms import SelectField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, Optional, URL
 
 from app.discussions.forms import country_choices
+from flask_babel import lazy_gettext as _l
 
 PROGRAMME_VISIBILITY_CHOICES = [
     ('public', 'Public (listed)'),
@@ -13,53 +14,53 @@ PROGRAMME_VISIBILITY_CHOICES = [
 
 
 class ProgrammeForm(FlaskForm):
-    name = StringField('Programme Name', validators=[DataRequired(), Length(min=3, max=200)])
-    description = TextAreaField('Description', validators=[Optional(), Length(max=5000)])
+    name = StringField(_l('Programme Name'), validators=[DataRequired(), Length(min=3, max=200)])
+    description = TextAreaField(_l('Description'), validators=[Optional(), Length(max=5000)])
     geographic_scope = SelectField(
-        'Geographic Scope',
-        choices=[('global', 'Global'), ('country', 'Country')],
+        _l('Geographic Scope'),
+        choices=[('global', _l('Global')), ('country', _l('Country'))],
         validators=[DataRequired()]
     )
-    country = SelectField('Country', choices=country_choices, validators=[Optional()])
-    logo_url = StringField('Logo URL', validators=[Optional(), URL(), Length(max=255)])
+    country = SelectField(_l('Country'), choices=country_choices, validators=[Optional()])
+    logo_url = StringField(_l('Logo URL'), validators=[Optional(), URL(), Length(max=255)])
 
     themes_csv = TextAreaField(
-        'Themes (comma separated)',
+        _l('Themes (comma separated)'),
         validators=[Optional(), Length(max=2000)],
-        description='Example: Health, Prosperity, Security'
+        description=_l('Example: Health, Prosperity, Security')
     )
     phases_csv = TextAreaField(
-        'Phases (comma separated)',
+        _l('Phases (comma separated)'),
         validators=[Optional(), Length(max=2000)],
-        description='Example: Agenda-setting, Wave 1, Wave 2'
+        description=_l('Example: Agenda-setting, Wave 1, Wave 2')
     )
     cohorts_text = TextAreaField(
-        'Cohorts (one per line: slug|Label)',
+        _l('Cohorts (one per line: slug|Label)'),
         validators=[Optional(), Length(max=4000)],
-        description='Example line: pilot-informed|Pilot (informed)'
+        description=_l('Example line: pilot-informed|Pilot (informed)')
     )
 
     owner_type = SelectField(
-        'Owner',
-        choices=[('user', 'My account'), ('company', 'Organization')],
+        _l('Owner'),
+        choices=[('user', _l('My account')), ('company', _l('Organization'))],
         validators=[DataRequired()]
     )
-    company_profile_id = SelectField('Organization', coerce=int, validators=[Optional()])
+    company_profile_id = SelectField(_l('Organization'), coerce=int, validators=[Optional()])
     visibility = SelectField(
-        'Visibility',
+        _l('Visibility'),
         choices=PROGRAMME_VISIBILITY_CHOICES,
         validators=[DataRequired()],
         default='public'
     )
 
-    submit = SubmitField('Save Programme')
+    submit = SubmitField(_l('Save Programme'))
 
 
 class InviteStewardForm(FlaskForm):
-    email = StringField('Steward Email', validators=[DataRequired(), Email(), Length(max=150)])
-    submit = SubmitField('Invite Steward')
+    email = StringField(_l('Steward Email'), validators=[DataRequired(), Email(), Length(max=150)])
+    submit = SubmitField(_l('Invite Steward'))
 
 
 class InviteProgrammeAccessForm(FlaskForm):
-    email = StringField('Participant Email', validators=[DataRequired(), Email(), Length(max=150)])
-    submit = SubmitField('Grant access')
+    email = StringField(_l('Participant Email'), validators=[DataRequired(), Email(), Length(max=150)])
+    submit = SubmitField(_l('Grant access'))

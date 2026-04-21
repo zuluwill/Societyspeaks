@@ -1,47 +1,46 @@
 {% extends "layout.html" %}
 
-{% block title %}Rules of the Record - Society Speaks{% endblock %}
+{% block title %}{{ _('Rules of the Record - Society Speaks') }}{% endblock %}
 
-{% block meta_description %}Rules of the Record for Society Speaks partners. Clear guidance for publishers on embedding, attribution, and use of analysis results.{% endblock %}
+{% block meta_description %}{{ _('Rules of the Record for Society Speaks partners. Clear guidance for publishers on embedding, attribution, and use of analysis results.') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gradient-to-b from-blue-50 to-white">
   <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
     <header class="space-y-4">
       <nav class="text-sm text-gray-500">
-        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">For Publishers</a>
+        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">{{ _('For Publishers') }}</a>
         <span class="mx-2">/</span>
-        <span class="text-gray-900">Rules of the Record</span>
+        <span class="text-gray-900">{{ _('Rules of the Record') }}</span>
       </nav>
       <div class="grid gap-6 lg:grid-cols-12 lg:items-center">
         <div class="lg:col-span-8 space-y-4">
-          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">Rules of the Record</h1>
+          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">{{ _('Rules of the Record') }}</h1>
           <p class="text-lg text-gray-600">
-            The Society Speaks record is a canonical source of public reasoning. These rules ensure
-            consistent attribution, user safety, and trust in the data publishers rely on.
+            {{ _('The Society Speaks record is a canonical source of public reasoning. These rules ensure consistent attribution, user safety, and trust in the data publishers rely on.') }}
           </p>
         </div>
         <div class="lg:col-span-4">
           <div class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">Publisher summary</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">{{ _('Publisher summary') }}</p>
             <ul class="mt-3 space-y-2 text-sm text-gray-700">
               <li class="flex items-start">
                 <svg class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                Embed and link back to the canonical record
+                {{ _('Embed and link back to the canonical record') }}
               </li>
               <li class="flex items-start">
                 <svg class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                Do not rehost or alter analysis
+                {{ _('Do not rehost or alter analysis') }}
               </li>
               <li class="flex items-start">
                 <svg class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                Maintain attribution and “Powered by” labeling
+                {{ _('Maintain attribution and “Powered by” labeling') }}
               </li>
             </ul>
           </div>
@@ -54,16 +53,16 @@
 <div class="mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8">
   <div class="grid gap-6 lg:grid-cols-3 mb-8">
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">For legal & compliance</h3>
-      <p class="text-sm text-gray-600">Clear attribution, no rehosting, and a single canonical source.</p>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For legal & compliance') }}</h3>
+      <p class="text-sm text-gray-600">{{ _('Clear attribution, no rehosting, and a single canonical source.') }}</p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">For product teams</h3>
-      <p class="text-sm text-gray-600">Stable embed rules, clear API boundaries, and predictable portal controls for teams.</p>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For product teams') }}</h3>
+      <p class="text-sm text-gray-600">{{ _('Stable embed rules, clear API boundaries, and predictable portal controls for teams.') }}</p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">For editorial leaders</h3>
-      <p class="text-sm text-gray-600">Transparent citation practices and consistent public record.</p>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For editorial leaders') }}</h3>
+      <p class="text-sm text-gray-600">{{ _('Transparent citation practices and consistent public record.') }}</p>
     </div>
   </div>
 
@@ -71,8 +70,7 @@
     <!-- Core Principle -->
     <div class="bg-blue-50 border-l-4 border-primary-500 p-6 rounded-r-lg mb-8">
       <p class="text-blue-900 font-medium m-0">
-        <strong>The core invariant:</strong> There is exactly one canonical version of each discussion's analysis,
-        and it lives on societyspeaks.io.
+        {{ _("<strong>The core invariant:</strong> There is exactly one canonical version of each discussion's analysis, and it lives on societyspeaks.io.")|safe }}
       </p>
     </div>
 
@@ -84,7 +82,7 @@
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
         </span>
-        What Partners May Do
+        {{ _('What Partners May Do') }}
       </h2>
 
       <ul class="space-y-3">
@@ -92,55 +90,55 @@
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Embed</strong> the voting widget on your article pages using our iframe code</span>
+          <span>{{ _('<strong>Embed</strong> the voting widget on your article pages using our iframe code')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Display snapshots</strong> showing participation counts and a link to the full analysis</span>
+          <span>{{ _('<strong>Display snapshots</strong> showing participation counts and a link to the full analysis')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Quote short excerpts</strong> of consensus or bridge statement text with attribution and link to the canonical record</span>
+          <span>{{ _('<strong>Quote short excerpts</strong> of consensus or bridge statement text with attribution and link to the canonical record')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Link</strong> to discussions, consensus pages, and the Society Speaks homepage</span>
+          <span>{{ _('<strong>Link</strong> to discussions, consensus pages, and the Society Speaks homepage')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Customize</strong> embed colors and fonts to match your site's design using supported parameters</span>
+          <span>{{ _("<strong>Customize</strong> embed colors and fonts to match your site's design using supported parameters")|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Reference</strong> Society Speaks results in editorial content (e.g., "Society Speaks polling shows...")</span>
+          <span>{{ _('<strong>Reference</strong> Society Speaks results in editorial content (e.g., "Society Speaks polling shows...")')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Create discussions with either <code>article_url</code> or <code>external_id</code></strong> for article and non-article newsroom workflows</span>
+          <span>{{ _('<strong>Create discussions with either <code>article_url</code> or <code>external_id</code></strong> for article and non-article newsroom workflows')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Configure webhook callbacks and analytics export</strong> for operational sync and reporting</span>
+          <span>{{ _('<strong>Configure webhook callbacks and analytics export</strong> for operational sync and reporting')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Manage statements and teammate permissions</strong> from the Partner Portal (owner/admin controls)</span>
+          <span>{{ _('<strong>Manage statements and teammate permissions</strong> from the Partner Portal (owner/admin controls)')|safe }}</span>
         </li>
       </ul>
     </section>
@@ -153,7 +151,7 @@
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
         </span>
-        What Partners May NOT Do
+        {{ _('What Partners May NOT Do') }}
       </h2>
 
       <ul class="space-y-3">
@@ -161,37 +159,37 @@
           <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Rehost</strong> the full analysis dataset or clustering results on your own servers</span>
+          <span>{{ _('<strong>Rehost</strong> the full analysis dataset or clustering results on your own servers')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Fork or replicate</strong> the clustering methodology to create competing analysis</span>
+          <span>{{ _('<strong>Fork or replicate</strong> the clustering methodology to create competing analysis')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Present results without attribution</strong> to Society Speaks (the "Powered by" or link must remain visible)</span>
+          <span>{{ _('<strong>Present results without attribution</strong> to Society Speaks (the "Powered by" or link must remain visible)')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Wall off or paywall</strong> access to the canonical record on societyspeaks.io</span>
+          <span>{{ _('<strong>Wall off or paywall</strong> access to the canonical record on societyspeaks.io')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Modify or inject content</strong> into the embed via CSS/JS (no custom stylesheets loading in iframe)</span>
+          <span>{{ _('<strong>Modify or inject content</strong> into the embed via CSS/JS (no custom stylesheets loading in iframe)')|safe }}</span>
         </li>
         <li class="flex items-start">
           <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <span><strong>Misrepresent</strong> results, methodology, or the scope of participation</span>
+          <span>{{ _('<strong>Misrepresent</strong> results, methodology, or the scope of participation')|safe }}</span>
         </li>
       </ul>
     </section>
@@ -199,50 +197,48 @@
     <!-- Embed submission scope -->
     <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mb-8">
       <p class="text-amber-900 text-sm m-0">
-        <strong>Embed submissions are partner-controlled.</strong> By default, embeds are vote/report only. Owners and admins can enable inline reader statement submissions per discussion in the Partner Portal.
+        {{ _('<strong>Embed submissions are partner-controlled.</strong> By default, embeds are vote/report only. Owners and admins can enable inline reader statement submissions per discussion in the Partner Portal.')|safe }}
       </p>
     </div>
 
     <div class="bg-blue-50 border-l-4 border-primary-500 p-4 rounded-r-lg mb-8">
       <p class="text-blue-900 text-sm m-0">
-        <strong>Write operations are server-side only.</strong> Create/update partner endpoints must be called from your backend (not browser JavaScript) using a portal-issued API key.
+        {{ _('<strong>Write operations are server-side only.</strong> Create/update partner endpoints must be called from your backend (not browser JavaScript) using a portal-issued API key.')|safe }}
       </p>
     </div>
 
     <!-- Attribution Requirements -->
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Attribution Requirements</h2>
-      <p>When embedding or quoting Society Speaks:</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Attribution Requirements') }}</h2>
+      <p>{{ _('When embedding or quoting Society Speaks:') }}</p>
       <ul>
-        <li>The embed includes "Powered by Society Speaks" — this must remain visible</li>
-        <li>When quoting results in editorial: attribute as "Society Speaks analysis" or similar</li>
-        <li>Always link to the canonical consensus URL when referencing specific findings</li>
+        <li>{{ _('The embed includes "Powered by Society Speaks" — this must remain visible') }}</li>
+        <li>{{ _('When quoting results in editorial: attribute as "Society Speaks analysis" or similar') }}</li>
+        <li>{{ _('Always link to the canonical consensus URL when referencing specific findings') }}</li>
       </ul>
     </section>
 
     <!-- Enforcement -->
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Enforcement</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Enforcement') }}</h2>
       <p>
-        We reserve the right to revoke embed access (by removing your domain from our allowlist) if these rules are violated.
-        Violations will be addressed through:
+        {{ _('We reserve the right to revoke embed access (by removing your domain from our allowlist) if these rules are violated. Violations will be addressed through:') }}
       </p>
       <ol>
-        <li>Written notice of the violation</li>
-        <li>Reasonable time to correct (typically 48 hours)</li>
-        <li>If uncorrected, removal from allowlist (embeds stop loading)</li>
+        <li>{{ _('Written notice of the violation') }}</li>
+        <li>{{ _('Reasonable time to correct (typically 48 hours)') }}</li>
+        <li>{{ _('If uncorrected, removal from allowlist (embeds stop loading)') }}</li>
       </ol>
       <p>
-        We prefer to work collaboratively to resolve issues. Contact us if you're unsure whether something is permitted.
+        {{ _("We prefer to work collaboratively to resolve issues. Contact us if you're unsure whether something is permitted.") }}
       </p>
     </section>
 
     <!-- Questions -->
     <section class="bg-gray-50 rounded-lg p-6">
-      <h2 class="text-lg font-bold text-gray-900 mb-2">Questions?</h2>
+      <h2 class="text-lg font-bold text-gray-900 mb-2">{{ _('Questions?') }}</h2>
       <p class="text-gray-600 m-0">
-        Email <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">info@societyspeaks.io</a>
-        for clarification on any of these rules.
+        {{ _('Email %(email_link)s for clarification on any of these rules.', email_link='<a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">info@societyspeaks.io</a>')|safe }}
       </p>
     </section>
   </div>

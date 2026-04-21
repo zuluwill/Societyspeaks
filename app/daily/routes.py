@@ -24,6 +24,7 @@ import hashlib
 import re
 import secrets
 import uuid
+from flask_babel import gettext as _
 
 DAILY_CLIENT_COOKIE_NAME = 'daily_client_id'
 DAILY_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
@@ -405,7 +406,7 @@ def by_date(date_str):
     try:
         question_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        flash("Invalid date format. Please use YYYY-MM-DD.", "warning")
+        flash(_("Invalid date format. Please use YYYY-MM-DD."), "warning")
         return redirect(url_for('daily.today'))
     
     question = DailyQuestion.get_by_date(question_date)
@@ -451,11 +452,11 @@ def view_all_comments(date_str):
     try:
         question_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        return jsonify({'error': 'Invalid date format'}), 400
+        return jsonify({'error': _('Invalid date format')}), 400
 
     question = DailyQuestion.query.filter_by(question_date=question_date).first()
     if not question:
-        return jsonify({'error': 'Question not found'}), 404
+        return jsonify({'error': _('Question not found')}), 404
 
     # Get all public reasons
     all_reasons = get_public_reasons(question, get_all=True)
@@ -801,13 +802,13 @@ def subscribe():
     if request.method == 'POST':
         from app.lib.bot_protection import check_bot_submission
         if check_bot_submission():
-            flash('You have successfully subscribed to daily civic questions!', 'success')
+            flash(_('You have successfully subscribed to daily civic questions!'), 'success')
             return redirect(url_for('daily.subscribe_success'))
 
         email = request.form.get('email', '').strip().lower()
         
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            flash('Please enter a valid email address.', 'error')
+            flash(_('Please enter a valid email address.'), 'error')
             return redirect(url_for('daily.subscribe'))
 
         frequency = request.form.get('email_frequency', 'weekly')
@@ -869,7 +870,7 @@ def unsubscribe(token):
     subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
-        flash('Invalid unsubscribe link.', 'error')
+        flash(_('Invalid unsubscribe link.'), 'error')
         return redirect(url_for('daily.today'))
 
     # If already unsubscribed, just show confirmation
@@ -919,7 +920,7 @@ def unsubscribe(token):
     # Note: With Resend, unsubscribe is handled by List-Unsubscribe headers
     # and our database is the source of truth. No external API call needed.
 
-    flash('You have been unsubscribed from daily civic questions.', 'success')
+    flash(_('You have been unsubscribed from daily civic questions.'), 'success')
     return render_template('daily/unsubscribed.html', email=subscriber.email)
 
 
@@ -965,11 +966,11 @@ def manage_preferences():
                     )
 
     if not subscriber:
-        flash('Please use the link from your weekly digest email to manage preferences.', 'info')
+        flash(_('Please use the link from your weekly digest email to manage preferences.'), 'info')
         return redirect(url_for('daily.subscribe'))
 
     if not subscriber.is_active:
-        flash('Your subscription is currently inactive.', 'info')
+        flash(_('Your subscription is currently inactive.'), 'info')
         return redirect(url_for('daily.subscribe'))
 
     # Use model constants for DRY (valid frequencies and send days)
@@ -1061,11 +1062,11 @@ def manage_preferences():
                     f"send_hour={subscriber.preferred_send_hour}, "
                     f"timezone={subscriber.timezone}"
                 )
-                flash('Your preferences have been updated successfully.', 'success')
+                flash(_('Your preferences have been updated successfully.'), 'success')
             except Exception as e:
                 db.session.rollback()
                 current_app.logger.error(f"Error saving preferences: {e}")
-                flash('There was an error saving your preferences. Please try again.', 'error')
+                flash(_('There was an error saving your preferences. Please try again.'), 'error')
 
         return redirect(url_for('daily.manage_preferences', token=effective_token))
 
@@ -1109,7 +1110,7 @@ def weekly_batch():
         subscriber = DailyQuestionSubscriber.query.filter_by(user_id=current_user.id).first()
 
     if not subscriber:
-        flash('Please use the link from your weekly digest email to access this page.', 'info')
+        flash(_('Please use the link from your weekly digest email to access this page.'), 'info')
         return redirect(url_for('daily.subscribe'))
 
     # Log in if user has account
@@ -1158,7 +1159,7 @@ def weekly_batch():
         questions = select_questions_for_weekly_digest(days_back=7, count=5)
 
     if not questions:
-        flash('No questions available for this week yet.', 'info')
+        flash(_('No questions available for this week yet.'), 'info')
         return redirect(url_for('daily.today'))
 
     # Optimize: Eager load discussions to prevent N+1 queries
@@ -1301,11 +1302,11 @@ def weekly_batch_vote():
     # Get subscriber from session (session-based auth is sufficient for this endpoint)
     subscriber_id = session.get('daily_subscriber_id')
     if not subscriber_id:
-        return jsonify({'error': 'Not authenticated'}), 401
+        return jsonify({'error': _('Not authenticated')}), 401
 
     subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
     if not subscriber or not subscriber.is_active:
-        return jsonify({'error': 'Subscriber not found or inactive'}), 404
+        return jsonify({'error': _('Subscriber not found or inactive')}), 404
 
     # Log in if user has account
     if subscriber.user:
@@ -1322,7 +1323,7 @@ def weekly_batch_vote():
 
     # Parse request (expects JSON from AJAX)
     if not request.is_json:
-        return jsonify({'error': 'Content-Type must be application/json'}), 400
+        return jsonify({'error': _('Content-Type must be application/json')}), 400
     
     data = request.get_json()
     question_id = data.get('question_id')
@@ -1334,20 +1335,20 @@ def weekly_batch_vote():
     source_link_click_count = _parse_int(data.get('source_link_click_count'), default=0, min_value=0, max_value=20)
 
     if not question_id or not vote_choice:
-        return jsonify({'error': 'Missing question_id or vote'}), 400
+        return jsonify({'error': _('Missing question_id or vote')}), 400
 
     # Validate vote choice
     if vote_choice not in VOTE_MAP:
-        return jsonify({'error': 'Invalid vote'}), 400
+        return jsonify({'error': _('Invalid vote')}), 400
 
     # Get the question
     question = db.session.get(DailyQuestion,question_id)
     if not question:
-        return jsonify({'error': 'Question not found'}), 404
+        return jsonify({'error': _('Question not found')}), 404
 
     # Check if already voted
     if has_user_voted(question):
-        return jsonify({'error': 'Already voted', 'already_voted': True}), 400
+        return jsonify({'error': _('Already voted'), 'already_voted': True}), 400
 
     try:
         fingerprint = get_session_fingerprint()
@@ -1450,7 +1451,7 @@ def weekly_batch_vote():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error processing weekly batch vote: {e}", exc_info=True)
-        return jsonify({'error': 'Failed to record vote'}), 500
+        return jsonify({'error': _('Failed to record vote')}), 500
 
 
 @daily_bp.route('/daily/m/<token>')
@@ -1459,7 +1460,7 @@ def magic_link(token):
     subscriber = DailyQuestionSubscriber.verify_magic_token(token)
     
     if not subscriber:
-        flash('This link has expired or is invalid. Please subscribe again.', 'warning')
+        flash(_('This link has expired or is invalid. Please subscribe again.'), 'warning')
         return redirect(url_for('daily.subscribe'))
     
     session['daily_subscriber_id'] = subscriber.id
@@ -1497,7 +1498,7 @@ def one_click_vote(token, vote_choice):
 
     # Validate vote choice using constants
     if vote_choice not in VOTE_MAP:
-        flash('Invalid vote option.', 'error')
+        flash(_('Invalid vote option.'), 'error')
         return redirect(url_for('daily.today'))
 
     # Verify subscriber token and extract question_id (returns differentiated errors)
@@ -1534,23 +1535,23 @@ def one_click_vote(token, vote_choice):
     # Get the specific question this email was about
     question = db.session.get(DailyQuestion,email_question_id)
     if not question:
-        flash('This question is no longer available.', 'info')
+        flash(_('This question is no longer available.'), 'info')
         return redirect(url_for('daily.today'))
 
     # Check if question is in the future (shouldn't happen, but handle edge case)
     today = date.today()
     if question.question_date > today:
-        flash('This question isn\'t available yet. Please check back later.', 'info')
+        flash(_('This question isn\'t available yet. Please check back later.'), 'info')
         return redirect(url_for('daily.today'))
 
     # Check if question is still current (within grace period)
     if question.question_date < (today - timedelta(days=VOTE_GRACE_PERIOD_DAYS)):
-        flash(f'This question expired on {question.question_date}. Please check today\'s question!', 'info')
+        flash(_("This question expired on %(question_date)s. Please check today's question!", question_date=question.question_date), 'info')
         return redirect(url_for('daily.today'))
     
     # Check if already voted
     if has_user_voted(question):
-        flash('You have already voted on this question.', 'info')
+        flash(_('You have already voted on this question.'), 'info')
         # If from weekly digest, redirect to batch page to vote on remaining questions
         source = request.args.get('source', '')
         if source == 'weekly_digest':
@@ -1660,7 +1661,7 @@ def one_click_vote(token, vote_choice):
             f"{' with reason' if reason else ''}"
         )
 
-        flash('Vote recorded! Thanks for participating.', 'success')
+        flash(_('Vote recorded! Thanks for participating.'), 'success')
 
         # Check if user came from weekly digest - redirect to batch page to continue voting
         source = request.args.get('source', '')
@@ -1674,7 +1675,7 @@ def one_click_vote(token, vote_choice):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error processing one-click vote: {e}", exc_info=True)
-        flash('There was an error recording your vote. Please try again.', 'error')
+        flash(_('There was an error recording your vote. Please try again.'), 'error')
         return redirect(url_for('daily.today'))
 
 
@@ -1696,20 +1697,20 @@ def vote():
     user_agent = request.headers.get('User-Agent', '').lower()
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
     if any(indicator in user_agent for indicator in bot_indicators):
-        flash('Automated requests are not allowed.', 'error')
+        flash(_('Automated requests are not allowed.'), 'error')
         return redirect(url_for('daily.today'))
     
     question = DailyQuestion.get_today()
     
     if not question:
-        return jsonify({'success': False, 'error': 'No question available today'}), 400
+        return jsonify({'success': False, 'error': _('No question available today')}), 400
     
     if has_user_voted(question):
-        return jsonify({'success': False, 'error': 'You have already voted today'}), 400
+        return jsonify({'success': False, 'error': _('You have already voted today')}), 400
     
     vote_value = request.form.get('vote')
     if vote_value is None or vote_value == '':
-        flash('Please select a vote option.', 'error')
+        flash(_('Please select a vote option.'), 'error')
         return redirect(url_for('daily.today'))
     reason = request.form.get('reason', '').strip()
     reason_visibility = request.form.get('reason_visibility', DEFAULT_EMAIL_VOTE_VISIBILITY)
@@ -1728,7 +1729,7 @@ def vote():
     
     # Validate vote value using constants
     if vote_value not in VOTE_MAP:
-        return jsonify({'success': False, 'error': 'Invalid vote value'}), 400
+        return jsonify({'success': False, 'error': _('Invalid vote value')}), 400
     
     if reason and len(reason) > 500:
         reason = reason[:500]
@@ -1826,19 +1827,19 @@ def vote():
         # Validation errors (e.g., from track_participant)
         db.session.rollback()
         current_app.logger.warning(f"Validation error submitting daily vote: {e}")
-        return jsonify({'success': False, 'error': 'Invalid request data'}), 400
+        return jsonify({'success': False, 'error': _('Invalid request data')}), 400
 
     except db.exc.IntegrityError as e:
         # Database constraint violations (e.g., duplicate votes)
         db.session.rollback()
         current_app.logger.warning(f"Integrity error submitting daily vote: {e}")
-        return jsonify({'success': False, 'error': 'Duplicate vote detected'}), 409
+        return jsonify({'success': False, 'error': _('Duplicate vote detected')}), 409
 
     except Exception as e:
         # Catch-all for unexpected errors
         db.session.rollback()
         current_app.logger.error(f"Unexpected error submitting daily vote: {e}", exc_info=True)
-        return jsonify({'success': False, 'error': 'Failed to submit vote'}), 500
+        return jsonify({'success': False, 'error': _('Failed to submit vote')}), 500
 
 
 @daily_bp.route('/daily/report', methods=['POST'])
@@ -1850,7 +1851,7 @@ def report_response():
         
         # Handle missing JSON body
         if not data:
-            return jsonify({'success': False, 'message': 'Invalid request format'}), 400
+            return jsonify({'success': False, 'message': _('Invalid request format')}), 400
             
         response_id = data.get('response_id')
         reason = data.get('reason')
@@ -1858,24 +1859,24 @@ def report_response():
 
         # Validate inputs
         if not response_id or not reason:
-            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+            return jsonify({'success': False, 'message': _('Missing required fields')}), 400
 
         valid_reasons = ['spam', 'harassment', 'misinformation', 'other']
         if reason not in valid_reasons:
-            return jsonify({'success': False, 'message': 'Invalid reason'}), 400
+            return jsonify({'success': False, 'message': _('Invalid reason')}), 400
 
         # Check if response exists - use with_for_update() to prevent race conditions
         response = DailyQuestionResponse.query.filter_by(id=response_id).with_for_update().first()
         if not response:
-            return jsonify({'success': False, 'message': 'Response not found'}), 404
+            return jsonify({'success': False, 'message': _('Response not found')}), 404
 
         # Don't allow flagging responses that are already hidden
         if response.is_hidden:
-            return jsonify({'success': False, 'message': 'This response has already been reviewed'}), 400
+            return jsonify({'success': False, 'message': _('This response has already been reviewed')}), 400
 
         # Don't allow flagging your own response
         if current_user.is_authenticated and response.user_id == current_user.id:
-            return jsonify({'success': False, 'message': 'You cannot report your own response'}), 400
+            return jsonify({'success': False, 'message': _('You cannot report your own response')}), 400
 
         # Get fingerprint for anonymous flagging
         fingerprint = session.get('session_fingerprint')
@@ -1892,7 +1893,7 @@ def report_response():
         ).first()
 
         if existing_flag:
-            return jsonify({'success': False, 'message': 'You have already reported this response'}), 400
+            return jsonify({'success': False, 'message': _('You have already reported this response')}), 400
 
         # Create flag
         flag = DailyQuestionResponseFlag(
@@ -1919,14 +1920,14 @@ def report_response():
 
         return jsonify({
             'success': True,
-            'message': 'Report submitted successfully',
+            'message': _('Report submitted successfully'),
             'flag_count': response.flag_count
         })
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error submitting flag: {e}", exc_info=True)
-        return jsonify({'success': False, 'message': 'Failed to submit report'}), 500
+        return jsonify({'success': False, 'message': _('Failed to submit report')}), 500
 
 
 @daily_bp.route('/daily/track/click/<int:question_id>')

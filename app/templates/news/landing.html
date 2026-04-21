@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% from "components/pricing_card.html" import pricing_card, subscription_benefits, mission_callout %}
 
-{% block title %}News Transparency Dashboard - Society Speaks{% endblock %}
+{% block title %}{{ _('News Transparency Dashboard') }} - Society Speaks{% endblock %}
 
 {% block content %}
 <!-- Hero Section with CTA above the fold -->
@@ -11,31 +11,31 @@
             <!-- Left: Copy and CTA -->
             <div class="space-y-6">
                 <div class="inline-flex rounded-full bg-primary-700 px-3 py-1 text-sm font-semibold text-blue-100">
-                    Free to read, no sign-up required
+                    {{ _('Free to read, no sign-up required') }}
                 </div>
                 <h1 class="text-4xl lg:text-5xl font-bold leading-tight">
-                    News Transparency Dashboard
+                    {{ _('News Transparency Dashboard') }}
                 </h1>
                 <p class="text-xl text-blue-100">
-                    See today's news from 140+ sources organised by political leaning. Filter by source, compare coverage, and spot what your usual outlets aren't telling you.
+                    {{ _("See today's news from 140+ sources organised by political leaning. Filter by source, compare coverage, and spot what your usual outlets aren't telling you.") }}
                 </p>
-                
+
                 <!-- CTA - Go to Dashboard -->
                 <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
                     <p class="text-blue-100 text-sm mb-4">
-                        Full access to the dashboard. Get the Daily Brief delivered to stay informed.
+                        {{ _('Full access to the dashboard. Get the Daily Brief delivered to stay informed.') }}
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <a href="{{ url_for('news.dashboard') }}"
                            class="inline-flex items-center justify-center bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-800 transition-colors shadow-lg">
-                            View Dashboard
+                            {{ _('View Dashboard') }}
                             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </a>
                         <a href="{{ url_for('brief.today') }}"
                            class="inline-flex items-center justify-center border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-800 transition-colors">
-                            Read Today's Brief
+                            {{ _("Read Today's Brief") }}
                         </a>
                     </div>
                 </div>
@@ -46,21 +46,21 @@
                 <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
                     <!-- Mock Dashboard Header -->
                     <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-4">
-                        <p class="text-sm font-semibold">News Transparency Dashboard</p>
+                        <p class="text-sm font-semibold">{{ _('News Transparency Dashboard') }}</p>
                         <p class="text-xs text-blue-200">{{ now().strftime('%A, %d %B %Y') }}</p>
                     </div>
                     <!-- Coverage Balance -->
                     <div class="p-4 border-b">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Today's Coverage Balance</p>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{{ _("Today's Coverage Balance") }}</p>
                         <div class="flex w-full h-3 rounded-full overflow-hidden bg-gray-200 mb-2">
                             <div class="bg-blue-500" style="width: 28%"></div>
                             <div class="bg-purple-500" style="width: 44%"></div>
                             <div class="bg-red-500" style="width: 28%"></div>
                         </div>
                         <div class="flex justify-between text-xs">
-                            <span class="text-primary-600 font-medium">28% Left</span>
-                            <span class="text-purple-600 font-medium">44% Center</span>
-                            <span class="text-red-600 font-medium">28% Right</span>
+                            <span class="text-primary-600 font-medium">{{ _('28%% Left') }}</span>
+                            <span class="text-purple-600 font-medium">{{ _('44%% Center') }}</span>
+                            <span class="text-red-600 font-medium">{{ _('28%% Right') }}</span>
                         </div>
                     </div>
                     <!-- Mock Article Cards -->
@@ -108,7 +108,7 @@
                 <!-- Stats badge -->
                 <div class="absolute -bottom-4 -right-4 bg-emerald-500 text-white rounded-lg px-4 py-2 shadow-lg">
                     <p class="text-2xl font-bold">140+</p>
-                    <p class="text-xs">Sources monitored daily</p>
+                    <p class="text-xs">{{ _('Sources monitored daily') }}</p>
                 </div>
             </div>
         </div>
@@ -123,25 +123,25 @@
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                <span>Updated every hour</span>
+                <span>{{ _('Updated every hour') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                <span>Left, Centre, and Right sources</span>
+                <span>{{ _('Left, Centre, and Right sources') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                <span>AI-scored for sensationalism</span>
+                <span>{{ _('AI-scored for sensationalism') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                <span>Unsubscribe anytime</span>
+                <span>{{ _('Unsubscribe anytime') }}</span>
             </div>
         </div>
     </div>
@@ -150,9 +150,9 @@
 <!-- Features Grid -->
 <div class="max-w-6xl mx-auto px-4 py-16">
     <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Break Out of Your Echo Chamber</h2>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">{{ _('Break Out of Your Echo Chamber') }}</h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-            Most people only see news from outlets that confirm their existing views. Our dashboard shows you what every side is saying.
+            {{ _('Most people only see news from outlets that confirm their existing views. Our dashboard shows you what every side is saying.') }}
         </p>
     </div>
     
@@ -163,9 +163,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Coverage Balance</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ _('Coverage Balance') }}</h3>
             <p class="text-gray-600">
-                See at a glance how coverage splits across the political spectrum. Spot stories that only one side is covering.
+                {{ _('See at a glance how coverage splits across the political spectrum. Spot stories that only one side is covering.') }}
             </p>
         </div>
 
@@ -175,9 +175,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Filter by Source</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ _('Filter by Source') }}</h3>
             <p class="text-gray-600">
-                Choose which outlets to include. Compare mainstream media with independent sources. Separate news from podcasts.
+                {{ _('Choose which outlets to include. Compare mainstream media with independent sources. Separate news from podcasts.') }}
             </p>
         </div>
 
@@ -187,9 +187,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Quality Scores</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ _('Quality Scores') }}</h3>
             <p class="text-gray-600">
-                Each article is scored for sensationalism and civic relevance. Focus on substance, skip the clickbait.
+                {{ _('Each article is scored for sensationalism and civic relevance. Focus on substance, skip the clickbait.') }}
             </p>
         </div>
     </div>
@@ -200,9 +200,9 @@
     <div class="max-w-6xl mx-auto px-4">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">Everything Included Free</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">{{ _('Everything Included Free') }}</h2>
                 <p class="text-lg text-gray-600 mb-8">
-                    Your free account includes both the News Transparency Dashboard and the Daily Brief newsletter.
+                    {{ _('Your free account includes both the News Transparency Dashboard and the Daily Brief newsletter.') }}
                 </p>
                 
                 <!-- Subscription Benefits (shared component) -->
@@ -219,9 +219,9 @@
 <div class="bg-gradient-to-b from-gray-50 to-white py-16">
     <div class="max-w-6xl mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">More Than a News Dashboard</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">{{ _('More Than a News Dashboard') }}</h2>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Your subscription funds something bigger: open-source tools for nuanced public discussion.
+                {{ _('Your subscription funds something bigger: open-source tools for nuanced public discussion.') }}
             </p>
         </div>
         
@@ -233,12 +233,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Where We Started: Nuanced Discussion</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">{{ _('Where We Started: Nuanced Discussion') }}</h3>
                 <p class="text-gray-600 mb-4">
-                    Society Speaks was built to make disagreement useful again. We use machine learning to find where people actually agree, reveal bridge ideas that unite opposing groups, and surface genuine divisions worth addressing.
+                    {{ _('Society Speaks was built to make disagreement useful again. We use machine learning to find where people actually agree, reveal bridge ideas that unite opposing groups, and surface genuine divisions worth addressing.') }}
                 </p>
                 <p class="text-gray-600">
-                    The Daily Question, consensus clustering, and public deliberation tools are <strong>free for everyone</strong> because informed civic participation shouldn't have a paywall.
+                    {{ _('The Daily Question, consensus clustering, and public deliberation tools are <strong>free for everyone</strong> because informed civic participation shouldn\'t have a paywall.')|safe }}
                 </p>
             </div>
             
@@ -249,12 +249,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Open Source, Transparent, Non-Profit</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">{{ _('Open Source, Transparent, Non-Profit') }}</h3>
                 <p class="text-gray-600 mb-4">
-                    Our entire codebase is open source under the AGPL-3.0 license. Anyone can inspect, fork, or contribute to our consensus-building tools. No hidden algorithms, no black boxes.
+                    {{ _('Our entire codebase is open source under the AGPL-3.0 license. Anyone can inspect, fork, or contribute to our consensus-building tools. No hidden algorithms, no black boxes.') }}
                 </p>
                 <p class="text-gray-600">
-                    Your participation directly supports the infrastructure, development, and news analysis that keeps these tools running and improving.
+                    {{ _('Your participation directly supports the infrastructure, development, and news analysis that keeps these tools running and improving.') }}
                 </p>
             </div>
         </div>
@@ -262,7 +262,7 @@
         <!-- What's Included Free -->
         <div class="mt-12 bg-blue-50 rounded-2xl p-8 border border-blue-100">
             <div class="text-center mb-6">
-                <h3 class="text-xl font-bold text-blue-900">Everything Free, No Catch</h3>
+                <h3 class="text-xl font-bold text-blue-900">{{ _('Everything Free, No Catch') }}</h3>
             </div>
             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="text-center">
@@ -271,8 +271,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <p class="font-medium text-blue-900">Daily Question</p>
-                    <p class="text-sm text-primary-700">Free for all</p>
+                    <p class="font-medium text-blue-900">{{ _('Daily Question') }}</p>
+                    <p class="text-sm text-primary-700">{{ _('Free for all') }}</p>
                 </div>
                 <div class="text-center">
                     <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
@@ -280,8 +280,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
                     </div>
-                    <p class="font-medium text-blue-900">Consensus Analysis</p>
-                    <p class="text-sm text-primary-700">Free for all</p>
+                    <p class="font-medium text-blue-900">{{ _('Consensus Analysis') }}</p>
+                    <p class="text-sm text-primary-700">{{ _('Free for all') }}</p>
                 </div>
                 <div class="text-center">
                     <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
@@ -289,8 +289,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                         </svg>
                     </div>
-                    <p class="font-medium text-blue-900">Public Discussions</p>
-                    <p class="text-sm text-primary-700">Free for all</p>
+                    <p class="font-medium text-blue-900">{{ _('Public Discussions') }}</p>
+                    <p class="text-sm text-primary-700">{{ _('Free for all') }}</p>
                 </div>
                 <div class="text-center">
                     <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
@@ -298,12 +298,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                         </svg>
                     </div>
-                    <p class="font-medium text-blue-900">Open Source</p>
-                    <p class="text-sm text-primary-700">AGPL-3.0 License</p>
+                    <p class="font-medium text-blue-900">{{ _('Open Source') }}</p>
+                    <p class="text-sm text-primary-700">{{ _('AGPL-3.0 License') }}</p>
                 </div>
             </div>
             <p class="text-center text-primary-800 mt-6 text-sm">
-                Open source tools for better public discourse. Free for everyone.
+                {{ _('Open source tools for better public discourse. Free for everyone.') }}
             </p>
         </div>
     </div>
@@ -312,18 +312,18 @@
 <!-- Final CTA -->
 <div class="bg-gradient-to-r from-blue-600 to-blue-700 py-12">
     <div class="max-w-4xl mx-auto px-4 text-center">
-        <h2 class="text-3xl font-bold text-white mb-4">Ready to See the Full Picture?</h2>
+        <h2 class="text-3xl font-bold text-white mb-4">{{ _('Ready to See the Full Picture?') }}</h2>
         <p class="text-xl text-blue-100 mb-8">
-            Sign up free and see what balanced news looks like.
+            {{ _('Sign up free and see what balanced news looks like.') }}
         </p>
         <a href="{{ url_for('brief.subscribe') }}"
            class="inline-flex items-center bg-white text-primary-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg">
-            Sign Up Free
+            {{ _('Sign Up Free') }}
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
         </a>
-        <p class="text-blue-200 text-sm mt-4">Free forever. No account required to read.</p>
+        <p class="text-blue-200 text-sm mt-4">{{ _('Free forever. No account required to read.') }}</p>
     </div>
 </div>
 {% endblock %}

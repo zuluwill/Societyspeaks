@@ -1,31 +1,31 @@
 {% extends 'layout.html' %}
 
-{% block title %}Add API Key - Settings{% endblock %}
+{% block title %}{{ _('Add API Key - Settings') }}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8 max-w-3xl">
     <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-        <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+        <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
         <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        <a href="{{ url_for('settings.view_settings') }}" class="hover:text-gray-700">Settings</a>
+        <a href="{{ url_for('settings.view_settings') }}" class="hover:text-gray-700">{{ _('Settings') }}</a>
         <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        <a href="{{ url_for('api_keys.list_api_keys') }}" class="hover:text-gray-700">API Keys</a>
+        <a href="{{ url_for('api_keys.list_api_keys') }}" class="hover:text-gray-700">{{ _('API Keys') }}</a>
         <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-gray-900 font-medium">Add Key</span>
+        <span class="text-gray-900 font-medium">{{ _('Add Key') }}</span>
     </nav>
     <div class="mb-6">
-        <h1 class="text-3xl font-bold mb-2">Add API Key</h1>
-        <p class="text-gray-600">Enable optional AI features with your own API key</p>
+        <h1 class="text-3xl font-bold mb-2">{{ _('Add API Key') }}</h1>
+        <p class="text-gray-600">{{ _('Enable optional AI features with your own API key') }}</p>
     </div>
 
     <!-- Warning Banner -->
     <div class="bg-yellow-50 rounded-lg p-6 mb-6 border border-yellow-200">
-        <h3 class="font-semibold text-yellow-900 mb-2">⚠️ Important</h3>
+        <h3 class="font-semibold text-yellow-900 mb-2">{{ _('⚠️ Important') }}</h3>
         <ul class="text-yellow-800 space-y-1 text-sm">
-            <li>• Your API key will be encrypted before storage</li>
-            <li>• Keys are validated before saving</li>
-            <li>• You can disable or delete keys anytime</li>
-            <li>• Usage costs are charged by the provider (OpenAI/Anthropic)</li>
+            <li>{{ _('• Your API key will be encrypted before storage') }}</li>
+            <li>{{ _('• Keys are validated before saving') }}</li>
+            <li>{{ _('• You can disable or delete keys anytime') }}</li>
+            <li>{{ _('• Usage costs are charged by the provider (OpenAI/Anthropic)') }}</li>
         </ul>
     </div>
 
@@ -35,32 +35,32 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Provider Selection -->
             <div class="mb-6">
-                <label class="block text-gray-700 font-semibold mb-2">Provider</label>
+                <label class="block text-gray-700 font-semibold mb-2">{{ _('Provider') }}</label>
                 <select name="provider" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
-                    <option value="">Select a provider...</option>
-                    <option value="openai" {% if provider == 'openai' %}selected{% endif %}>OpenAI (GPT-4o-mini)</option>
-                    <option value="anthropic" {% if provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude Haiku)</option>
-                    <option value="mistral" {% if provider == 'mistral' %}selected{% endif %}>Mistral (Coming Soon)</option>
+                    <option value="">{{ _('Select a provider...') }}</option>
+                    <option value="openai" {% if provider == 'openai' %}selected{% endif %}>{{ _('OpenAI (GPT-4o-mini)') }}</option>
+                    <option value="anthropic" {% if provider == 'anthropic' %}selected{% endif %}>{{ _('Anthropic (Claude Haiku)') }}</option>
+                    <option value="mistral" {% if provider == 'mistral' %}selected{% endif %}>{{ _('Mistral (Coming Soon)') }}</option>
                 </select>
-                <p class="text-sm text-gray-500 mt-1">Choose which LLM provider you want to use</p>
+                <p class="text-sm text-gray-500 mt-1">{{ _('Choose which LLM provider you want to use') }}</p>
             </div>
 
             <!-- API Key Input -->
             <div class="mb-6">
-                <label class="block text-gray-700 font-semibold mb-2">API Key</label>
+                <label class="block text-gray-700 font-semibold mb-2">{{ _('API Key') }}</label>
                 <input type="password" name="api_key" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono" required placeholder="sk-...">
                 <p class="text-sm text-gray-500 mt-1">
-                    Your API key will be encrypted and validated before storage
+                    {{ _('Your API key will be encrypted and validated before storage') }}
                 </p>
             </div>
 
             <!-- Submit -->
             <div class="flex space-x-4">
                 <button type="submit" class="bg-primary-600 text-white px-8 py-3 rounded-lg hover:bg-primary-700 font-semibold">
-                    Validate & Save Key
+                    {{ _('Validate & Save Key') }}
                 </button>
                 <a href="{{ url_for('api_keys.list_api_keys') }}" class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block">
-                    Cancel
+                    {{ _('Cancel') }}
                 </a>
             </div>
         </form>
@@ -68,51 +68,50 @@
 
     <!-- How to Get Keys -->
     <div class="bg-white rounded-lg shadow p-6 mt-6">
-        <h2 class="text-xl font-semibold mb-4">How to Get an API Key</h2>
-        
+        <h2 class="text-xl font-semibold mb-4">{{ _('How to Get an API Key') }}</h2>
+
         <div class="space-y-4">
             <div class="border-l-4 border-primary-500 pl-4">
-                <h3 class="font-semibold text-blue-900 mb-2">OpenAI (Recommended for most users)</h3>
+                <h3 class="font-semibold text-blue-900 mb-2">{{ _('OpenAI (Recommended for most users)') }}</h3>
                 <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                    <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank" class="text-primary-600 hover:underline">platform.openai.com/api-keys</a></li>
-                    <li>Sign up or log in to your OpenAI account</li>
-                    <li>Click "Create new secret key"</li>
-                    <li>Copy the key (it starts with "sk-")</li>
-                    <li>Paste it above and save</li>
+                    <li>{{ _('Visit <a href="https://platform.openai.com/api-keys" target="_blank" class="text-primary-600 hover:underline">platform.openai.com/api-keys</a>')|safe }}</li>
+                    <li>{{ _('Sign up or log in to your OpenAI account') }}</li>
+                    <li>{{ _('Click "Create new secret key"') }}</li>
+                    <li>{{ _('Copy the key (it starts with "sk-")') }}</li>
+                    <li>{{ _('Paste it above and save') }}</li>
                 </ol>
-                <p class="text-xs text-gray-500 mt-2">Estimated cost: ~$0.01-0.05 per analysis</p>
+                <p class="text-xs text-gray-500 mt-2">{{ _('Estimated cost: ~$0.01-0.05 per analysis') }}</p>
             </div>
 
             <div class="border-l-4 border-orange-500 pl-4">
-                <h3 class="font-semibold text-orange-900 mb-2">Anthropic Claude</h3>
+                <h3 class="font-semibold text-orange-900 mb-2">{{ _('Anthropic Claude') }}</h3>
                 <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                    <li>Visit <a href="https://console.anthropic.com/" target="_blank" class="text-primary-600 hover:underline">console.anthropic.com</a></li>
-                    <li>Create an account or log in</li>
-                    <li>Go to "API Keys" section</li>
-                    <li>Generate a new API key</li>
-                    <li>Copy and paste it above</li>
+                    <li>{{ _('Visit <a href="https://console.anthropic.com/" target="_blank" class="text-primary-600 hover:underline">console.anthropic.com</a>')|safe }}</li>
+                    <li>{{ _('Create an account or log in') }}</li>
+                    <li>{{ _('Go to "API Keys" section') }}</li>
+                    <li>{{ _('Generate a new API key') }}</li>
+                    <li>{{ _('Copy and paste it above') }}</li>
                 </ol>
-                <p class="text-xs text-gray-500 mt-2">Estimated cost: ~$0.01-0.03 per analysis</p>
+                <p class="text-xs text-gray-500 mt-2">{{ _('Estimated cost: ~$0.01-0.03 per analysis') }}</p>
             </div>
 
             <div class="border-l-4 border-gray-300 pl-4">
-                <h3 class="font-semibold text-gray-900 mb-2">Mistral</h3>
-                <p class="text-sm text-gray-600">Support coming soon</p>
+                <h3 class="font-semibold text-gray-900 mb-2">{{ _('Mistral') }}</h3>
+                <p class="text-sm text-gray-600">{{ _('Support coming soon') }}</p>
             </div>
         </div>
     </div>
 
     <!-- Privacy Notice -->
     <div class="bg-gray-50 rounded-lg p-6 mt-6">
-        <h3 class="font-semibold text-gray-900 mb-2">🔒 Privacy & Security</h3>
+        <h3 class="font-semibold text-gray-900 mb-2">{{ _('🔒 Privacy & Security') }}</h3>
         <ul class="text-sm text-gray-700 space-y-1">
-            <li>• Keys are encrypted with Fernet (industry standard)</li>
-            <li>• Keys are never logged or transmitted in plain text</li>
-            <li>• Validation only checks if the key is active</li>
-            <li>• You can delete your key anytime</li>
-            <li>• Open source: <a href="https://github.com/societyspeaks" class="text-primary-600 hover:underline">view the encryption code</a></li>
+            <li>{{ _('• Keys are encrypted with Fernet (industry standard)') }}</li>
+            <li>{{ _('• Keys are never logged or transmitted in plain text') }}</li>
+            <li>{{ _('• Validation only checks if the key is active') }}</li>
+            <li>{{ _('• You can delete your key anytime') }}</li>
+            <li>{{ _('• Open source: <a href="https://github.com/societyspeaks" class="text-primary-600 hover:underline">view the encryption code</a>')|safe }}</li>
         </ul>
     </div>
 </div>
 {% endblock %}
-

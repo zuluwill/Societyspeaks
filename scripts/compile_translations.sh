@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # Compile gettext .po → .mo for Flask-Babel (run in CI and before production deploy).
-# When UI strings in scripts/generate_po_files.py change, run: python3 scripts/generate_po_files.py
+#
+# Full i18n workflow after adding new UI strings:
+#   1. pybabel extract -F babel.cfg -o messages.pot .
+#   2. pybabel update -d translations -i messages.pot
+#   3. ANTHROPIC_API_KEY=... python3 scripts/translate_po_with_haiku.py  # fill empty msgstrs
+#   4. ./scripts/compile_translations.sh  (this script)  # rebuild .mo files
+#   5. python3 scripts/i18n_check.py  # sanity check placeholders / bindings
+#
+# Deploy (scripts/build.sh) also runs step 4 automatically.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

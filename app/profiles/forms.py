@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, URLField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Optional, URL, Email
 from flask_wtf.file import FileField, FileAllowed
+from flask_babel import lazy_gettext as _l
 
 
 country_choices = [
@@ -202,39 +203,39 @@ country_choices = [
 
 
 class IndividualProfileForm(FlaskForm):
-    full_name = StringField('Full Name', validators=[DataRequired()])
-    bio = TextAreaField('Bio', validators=[Optional()])
-    city = StringField('City', validators=[DataRequired()])
-    country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
-    email = StringField('Email', validators=[Optional(), Email()])
-    website = URLField('Website', validators=[Optional(), URL()])
+    full_name = StringField(_l('Full Name'), validators=[DataRequired()])
+    bio = TextAreaField(_l('Bio'), validators=[Optional()])
+    city = StringField(_l('City'), validators=[DataRequired()])
+    country = SelectField(_l('Country'), choices=country_choices, validators=[DataRequired()])
+    email = StringField(_l('Email'), validators=[Optional(), Email()])
+    website = URLField(_l('Website'), validators=[Optional(), URL()])
     # Social Media Fields
-    linkedin_url = URLField('LinkedIn', validators=[Optional(), URL()])
-    twitter_url = URLField('Twitter', validators=[Optional(), URL()])
-    facebook_url = URLField('Facebook', validators=[Optional(), URL()])
-    instagram_url = URLField('Instagram', validators=[Optional(), URL()])
-    tiktok_url = URLField('TikTok', validators=[Optional(), URL()])
+    linkedin_url = URLField(_l('LinkedIn'), validators=[Optional(), URL()])
+    twitter_url = URLField(_l('Twitter'), validators=[Optional(), URL()])
+    facebook_url = URLField(_l('Facebook'), validators=[Optional(), URL()])
+    instagram_url = URLField(_l('Instagram'), validators=[Optional(), URL()])
+    tiktok_url = URLField(_l('TikTok'), validators=[Optional(), URL()])
     
-    profile_image = FileField('Profile Picture', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
-    banner_image = FileField('Banner Image', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
-    submit = SubmitField('Create Profile')
+    profile_image = FileField(_l('Profile Picture'), validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
+    banner_image = FileField(_l('Banner Image'), validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
+    submit = SubmitField(_l('Create Profile'))
 
 class CompanyProfileForm(FlaskForm):
-    company_name = StringField('Company Name', validators=[DataRequired()])
-    description = TextAreaField('Company Description', validators=[Optional()])
-    city = StringField('City', validators=[DataRequired()])
-    country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
-    email = StringField('Public contact email', validators=[Optional(), Email()])
-    website = URLField('Website', validators=[Optional(), URL()])
+    company_name = StringField(_l('Company Name'), validators=[DataRequired()])
+    description = TextAreaField(_l('Company Description'), validators=[Optional()])
+    city = StringField(_l('City'), validators=[DataRequired()])
+    country = SelectField(_l('Country'), choices=country_choices, validators=[DataRequired()])
+    email = StringField(_l('Public contact email'), validators=[Optional(), Email()])
+    website = URLField(_l('Website'), validators=[Optional(), URL()])
     # Social Media Fields
-    linkedin_url = URLField('LinkedIn', validators=[Optional(), URL()])
-    twitter_url = URLField('Twitter', validators=[Optional(), URL()])
-    facebook_url = URLField('Facebook', validators=[Optional(), URL()])
-    instagram_url = URLField('Instagram', validators=[Optional(), URL()])
-    tiktok_url = URLField('TikTok', validators=[Optional(), URL()])
+    linkedin_url = URLField(_l('LinkedIn'), validators=[Optional(), URL()])
+    twitter_url = URLField(_l('Twitter'), validators=[Optional(), URL()])
+    facebook_url = URLField(_l('Facebook'), validators=[Optional(), URL()])
+    instagram_url = URLField(_l('Instagram'), validators=[Optional(), URL()])
+    tiktok_url = URLField(_l('TikTok'), validators=[Optional(), URL()])
     
-    logo = FileField('Company Logo', validators=[Optional(), FileAllowed(['jpg','jpeg', 'png'], 'Images only!')])
-    banner_image = FileField('Banner Image', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
-    submit = SubmitField('Create Company Profile')
+    logo = FileField(_l('Company Logo'), validators=[Optional(), FileAllowed(['jpg','jpeg', 'png'], 'Images only!')])
+    banner_image = FileField(_l('Banner Image'), validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
+    submit = SubmitField(_l('Create Company Profile'))
 
 

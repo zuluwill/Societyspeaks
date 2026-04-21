@@ -1,17 +1,16 @@
-{% extends 'layout.html' %} {% block title %}Edit Response{% endblock %} {%
+{% extends 'layout.html' %} {% block title %}{{ _('Edit Response') }}{% endblock %} {%
 block content %}
 <div class="container mx-auto px-4 py-8 max-w-3xl">
   <!-- Header -->
   <div class="mb-6">
-    <h1 class="text-3xl font-bold mb-2">Edit Response</h1>
+    <h1 class="text-3xl font-bold mb-2">{{ _('Edit Response') }}</h1>
     <p class="text-gray-600">{{ response.statement.content[:100] }}...</p>
   </div>
 
   <!-- Edit Window Warning -->
   <div class="bg-yellow-50 rounded-lg p-4 mb-6 border border-yellow-200">
     <p class="text-yellow-800">
-      <strong>⏰ Edit Window:</strong> You have 10 minutes from posting to edit
-      your response.
+      {{ _('<strong>⏰ Edit Window:</strong> You have 10 minutes from posting to edit your response.') }}
     </p>
   </div>
 
@@ -48,7 +47,7 @@ block content %}
           href="{{ url_for('statements.view_response', response_id=response.id) }}"
           class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block"
         >
-          Cancel
+          {{ _('Cancel') }}
         </a>
       </div>
     </form>

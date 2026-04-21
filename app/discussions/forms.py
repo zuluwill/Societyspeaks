@@ -2,6 +2,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, HiddenField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Optional
+from flask_babel import lazy_gettext as _l, gettext as _
 
 
 
@@ -217,50 +218,50 @@ TOPICS = [
 
 
 class CreateDiscussionForm(FlaskForm):
-    title = StringField('Discussion Title', validators=[
+    title = StringField(_l('Discussion Title'), validators=[
         DataRequired(),
-        Length(min=10, max=200, message="Title must be between 10 and 200 characters")
+        Length(min=10, max=200, message=_l("Title must be between 10 and 200 characters"))
     ])
-    description = TextAreaField('Description', validators=[
+    description = TextAreaField(_l('Description'), validators=[
         DataRequired(),
-        Length(min=30, max=1000, message="Description must be between 30 and 1000 characters")
+        Length(min=30, max=1000, message=_l("Description must be between 30 and 1000 characters"))
     ])
-    topic = SelectField('Topic', choices=TOPICS, validators=[DataRequired()])
+    topic = SelectField(_l('Topic'), choices=TOPICS, validators=[DataRequired()])
 
     # Phase 1: Native Statement System
     use_native_statements = BooleanField(
-        'Use Native Statement System',
+        _l('Use Native Statement System'),
         default=True,
-        description='Enable the new pol.is-inspired debate system with voting and consensus clustering (recommended)'
+        description=_l('Enable the new pol.is-inspired debate system with voting and consensus clustering (recommended)')
     )
 
-    embed_code = HiddenField('Embed Code', validators=[Optional()])  # Now optional when using native statements
+    embed_code = HiddenField(_l('Embed Code'), validators=[Optional()])  # Now optional when using native statements
 
-    keywords = StringField('Keywords', validators=[Optional(), Length(max=200)])  # Retain or customize length as needed
+    keywords = StringField(_l('Keywords'), validators=[Optional(), Length(max=200)])  # Retain or customize length as needed
 
-    geographic_scope = SelectField('Geographic Scope', choices=[
-        ('global', 'Global'),
-        ('country', 'Country'),
-        ('city', 'City')
+    geographic_scope = SelectField(_l('Geographic Scope'), choices=[
+        ('global', _l('Global')),
+        ('country', _l('Country')),
+        ('city', _l('City'))
     ], validators=[DataRequired()])
 
-    country = SelectField('Country', validators=[Optional()], choices=country_choices)
-    city = StringField('City', validators=[Optional()])
-    programme_id = SelectField('Programme', coerce=int, validators=[Optional()], choices=[(0, 'No programme')])
-    programme_theme = SelectField('Programme Theme', validators=[Optional()], choices=[('', 'No theme')])
-    programme_phase = SelectField('Programme Phase', validators=[Optional()], choices=[('', 'No phase')])
-    information_title = StringField('Information Step Title', validators=[Optional(), Length(max=200)])
+    country = SelectField(_l('Country'), validators=[Optional()], choices=country_choices)
+    city = StringField(_l('City'), validators=[Optional()])
+    programme_id = SelectField(_l('Programme'), coerce=int, validators=[Optional()], choices=[(0, _l('No programme'))])
+    programme_theme = SelectField(_l('Programme Theme'), validators=[Optional()], choices=[('', _l('No theme'))])
+    programme_phase = SelectField(_l('Programme Phase'), validators=[Optional()], choices=[('', _l('No phase'))])
+    information_title = StringField(_l('Information Step Title'), validators=[Optional(), Length(max=200)])
     information_body = TextAreaField(
-        'Information Step Markdown',
+        _l('Information Step Markdown'),
         validators=[Optional(), Length(max=10000)],
-        description='Markdown only. Raw HTML is not supported.'
+        description=_l('Markdown only. Raw HTML is not supported.')
     )
     information_links = TextAreaField(
-        'Information Links (one per line: Label|https://url)',
+        _l('Information Links (one per line: Label|https://url)'),
         validators=[Optional(), Length(max=4000)]
     )
 
-    submit = SubmitField('Create Discussion')
+    submit = SubmitField(_l('Create Discussion'))
 
     def validate(self, **kwargs):
         if not super().validate(**kwargs):
@@ -268,71 +269,71 @@ class CreateDiscussionForm(FlaskForm):
 
         # Validate either native statements OR embed code is provided
         if not self.use_native_statements.data and not self.embed_code.data:
-            self.embed_code.errors.append('Either provide a pol.is embed code or enable native statements')
+            self.embed_code.errors.append(_('Either provide a pol.is embed code or enable native statements'))
             return False
 
         # Existing geographic validation
         if self.geographic_scope.data == 'country' and not self.country.data:
-            self.country.errors.append('Country is required for country-specific discussions')
+            self.country.errors.append(_('Country is required for country-specific discussions'))
             return False
 
         if self.geographic_scope.data == 'city' and not all([self.city.data, self.country.data]):
             if not self.city.data:
-                self.city.errors.append('City is required for city-specific discussions')
+                self.city.errors.append(_('City is required for city-specific discussions'))
             if not self.country.data:
-                self.country.errors.append('Country is required for city-specific discussions')
+                self.country.errors.append(_('Country is required for city-specific discussions'))
             return False
 
         return True
 
 
 class EditDiscussionForm(FlaskForm):
-    title = StringField('Discussion Title', validators=[
+    title = StringField(_l('Discussion Title'), validators=[
         DataRequired(),
-        Length(min=10, max=200, message="Title must be between 10 and 200 characters")
+        Length(min=10, max=200, message=_l("Title must be between 10 and 200 characters"))
     ])
-    description = TextAreaField('Description', validators=[
+    description = TextAreaField(_l('Description'), validators=[
         DataRequired(),
-        Length(min=30, max=1000, message="Description must be between 30 and 1000 characters")
+        Length(min=30, max=1000, message=_l("Description must be between 30 and 1000 characters"))
     ])
-    topic = SelectField('Topic', choices=TOPICS, validators=[DataRequired()])
-    keywords = StringField('Keywords', validators=[Optional(), Length(max=200)])
-    geographic_scope = SelectField('Geographic Scope', choices=[
-        ('global', 'Global'),
-        ('country', 'Country'),
-        ('city', 'City')
+    topic = SelectField(_l('Topic'), choices=TOPICS, validators=[DataRequired()])
+    keywords = StringField(_l('Keywords'), validators=[Optional(), Length(max=200)])
+    geographic_scope = SelectField(_l('Geographic Scope'), choices=[
+        ('global', _l('Global')),
+        ('country', _l('Country')),
+        ('city', _l('City'))
     ], validators=[DataRequired()])
-    country = SelectField('Country', validators=[Optional()], choices=country_choices)
-    city = StringField('City', validators=[Optional()])
-    embed_code = HiddenField('Embed Code', validators=[Optional()])
-    programme_id = SelectField('Programme', coerce=int, validators=[Optional()], choices=[(0, 'No programme')])
-    programme_theme = SelectField('Programme Theme', validators=[Optional()], choices=[('', 'No theme')])
-    programme_phase = SelectField('Programme Phase', validators=[Optional()], choices=[('', 'No phase')])
-    information_title = StringField('Information Step Title', validators=[Optional(), Length(max=200)])
+    country = SelectField(_l('Country'), validators=[Optional()], choices=country_choices)
+    city = StringField(_l('City'), validators=[Optional()])
+    embed_code = HiddenField(_l('Embed Code'), validators=[Optional()])
+    programme_id = SelectField(_l('Programme'), coerce=int, validators=[Optional()], choices=[(0, _l('No programme'))])
+    programme_theme = SelectField(_l('Programme Theme'), validators=[Optional()], choices=[('', _l('No theme'))])
+    programme_phase = SelectField(_l('Programme Phase'), validators=[Optional()], choices=[('', _l('No phase'))])
+    information_title = StringField(_l('Information Step Title'), validators=[Optional(), Length(max=200)])
     information_body = TextAreaField(
-        'Information Step (Markdown)',
+        _l('Information Step (Markdown)'),
         validators=[Optional(), Length(max=10000)],
-        description='Markdown only. Raw HTML is not supported.'
+        description=_l('Markdown only. Raw HTML is not supported.')
     )
     information_links = TextAreaField(
-        'Information Links (one per line: Label|https://url)',
+        _l('Information Links (one per line: Label|https://url)'),
         validators=[Optional(), Length(max=4000)]
     )
-    submit = SubmitField('Save changes')
+    submit = SubmitField(_l('Save changes'))
 
     def validate(self, **kwargs):
         if not super().validate(**kwargs):
             return False
 
         if self.geographic_scope.data == 'country' and not self.country.data:
-            self.country.errors.append('Country is required for country-specific discussions')
+            self.country.errors.append(_('Country is required for country-specific discussions'))
             return False
 
         if self.geographic_scope.data == 'city' and not all([self.city.data, self.country.data]):
             if not self.city.data:
-                self.city.errors.append('City is required for city-specific discussions')
+                self.city.errors.append(_('City is required for city-specific discussions'))
             if not self.country.data:
-                self.country.errors.append('Country is required for city-specific discussions')
+                self.country.errors.append(_('Country is required for city-specific discussions'))
             return False
 
         return True
@@ -340,25 +341,25 @@ class EditDiscussionForm(FlaskForm):
 
 class DiscussionUpdateForm(FlaskForm):
     update_type = SelectField(
-        'Update Type',
+        _l('Update Type'),
         choices=[
-            ('update', 'General update'),
-            ('outcome', 'Outcome'),
-            ('next_step', 'Next step'),
+            ('update', _l('General update')),
+            ('outcome', _l('Outcome')),
+            ('next_step', _l('Next step')),
         ],
         validators=[DataRequired()],
     )
     title = StringField(
-        'Title',
-        validators=[DataRequired(), Length(min=5, max=200, message="Title must be between 5 and 200 characters")],
+        _l('Title'),
+        validators=[DataRequired(), Length(min=5, max=200, message=_l("Title must be between 5 and 200 characters"))],
     )
     body = TextAreaField(
-        'Body',
-        validators=[DataRequired(), Length(min=20, max=10000, message="Body must be between 20 and 10000 characters")],
-        description='Markdown only. Raw HTML is not supported.',
+        _l('Body'),
+        validators=[DataRequired(), Length(min=20, max=10000, message=_l("Body must be between 20 and 10000 characters"))],
+        description=_l('Markdown only. Raw HTML is not supported.'),
     )
     links = TextAreaField(
-        'Related Links (one per line: Label|https://url)',
+        _l('Related Links (one per line: Label|https://url)'),
         validators=[Optional(), Length(max=4000)],
     )
-    submit = SubmitField('Save update')
+    submit = SubmitField(_l('Save update'))

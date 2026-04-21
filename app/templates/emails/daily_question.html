@@ -1,10 +1,10 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Daily Question #{{ question_number }} - Society Speaks{% endblock %}
+{% block title %}{{ _('Daily Question #%(number)s - Society Speaks', number=question_number) }}{% endblock %}
 
 {% block preheader %}{{ question_text[:100] }}...{% endblock %}
 
-{% block header_title %}Daily Question{% endblock %}
+{% block header_title %}{{ _('Daily Question') }}{% endblock %}
 
 {% block header_subtitle %}
 <tr>
@@ -60,7 +60,7 @@
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                             <tr>
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #1e3a8a; text-transform: uppercase; padding-bottom: 8px;">
-                                    Context
+                                    {{ _('Context') }}
                                 </td>
                             </tr>
                             <tr>
@@ -82,7 +82,7 @@
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #374151; padding-bottom: 12px;">
-                        Tap to vote:
+                                        {{ _('Tap to vote:') }}
                     </td>
                 </tr>
                 <!-- Desktop: Horizontal row (hidden on mobile) -->
@@ -92,17 +92,17 @@
                             <tr>
                                 <td style="padding: 0 6px;">
                                     <a href="{{ vote_agree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #2563eb; border-radius: 8px; white-space: nowrap;">
-                                        &#10003; Agree
+                                        &#10003; {{ _('Agree') }}
                                     </a>
                                 </td>
                                 <td style="padding: 0 6px;">
                                     <a href="{{ vote_disagree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #dc2626; border-radius: 8px; white-space: nowrap;">
-                                        &#10007; Disagree
+                                        &#10007; {{ _('Disagree') }}
                                     </a>
                                 </td>
                                 <td style="padding: 0 6px;">
                                     <a href="{{ vote_unsure_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #6b7280; border-radius: 8px; white-space: nowrap;">
-                                        ? Unsure
+                                        ? {{ _('Unsure') }}
                                     </a>
                                 </td>
                             </tr>
@@ -117,21 +117,21 @@
                             <tr>
                                 <td style="padding-bottom: 10px;">
                                     <a href="{{ vote_agree_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #2563eb; border-radius: 8px; text-align: center; white-space: nowrap;">
-                                        &#10003; Agree
+                                        &#10003; {{ _('Agree') }}
                                     </a>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="padding-bottom: 10px;">
                                     <a href="{{ vote_disagree_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #dc2626; border-radius: 8px; text-align: center; white-space: nowrap;">
-                                        &#10007; Disagree
+                                        &#10007; {{ _('Disagree') }}
                                     </a>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <a href="{{ vote_unsure_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #6b7280; border-radius: 8px; text-align: center; white-space: nowrap;">
-                                        ? Unsure
+                                        ? {{ _('Unsure') }}
                                     </a>
                                 </td>
                             </tr>
@@ -147,7 +147,8 @@
     <tr>
         <td align="center" style="padding-bottom: 24px;">
             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6b7280; margin: 0;">
-                Or <a href="{{ magic_link_url }}" style="color: #1e40af; text-decoration: underline;">vote on the website</a> to add your reasoning
+                {% set _vote_link = '<a href="' ~ magic_link_url ~ '" style="color: #1e40af; text-decoration: underline;">' ~ _('vote on the website') ~ '</a>' %}
+                {{ _('Or %(link)s to add your reasoning', link=_vote_link)|safe }}
             </p>
         </td>
     </tr>
@@ -161,7 +162,7 @@
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                             <tr>
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #a16207; text-transform: uppercase; padding-bottom: 8px;">
-                                    Why This Question?
+                                    {{ _('Why This Question?') }}
                                 </td>
                             </tr>
                             <tr>
@@ -183,7 +184,7 @@
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #6b7280; text-transform: uppercase; padding-bottom: 10px;">
-                        Source{% if source_articles|length > 1 %}s{% endif %}
+                        {% if source_articles|length > 1 %}{{ _('Sources') }}{% else %}{{ _('Source') }}{% endif %}
                     </td>
                 </tr>
                 {% for article in source_articles %}
@@ -210,7 +211,8 @@
     <tr>
         <td style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #9ca3af; margin: 0; text-align: center;">
-                Or visit <a href="{{ question_url }}" style="color: #1e40af;">{{ question_url }}</a>
+                {% set _qurl_link = '<a href="' ~ question_url ~ '" style="color: #1e40af;">' ~ question_url ~ '</a>' %}
+                {{ _('Or visit %(link)s', link=_qurl_link)|safe }}
             </p>
         </td>
     </tr>
@@ -224,12 +226,12 @@
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
                 <td align="center" style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #ffffff; padding-bottom: 12px;">
-                    Support Open Source Civic Tech
+                    {{ _('Support Open Source Civic Tech') }}
                 </td>
             </tr>
             <tr>
                 <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #bfdbfe; padding-bottom: 20px;">
-                    Love the Daily Question? Try <strong style="color: #ffffff;">Personal Briefs</strong> &mdash; create custom daily digests from the sources you trust. Politics, tech, climate, or your own research PDFs. Your subscription directly funds our free civic tools.
+                    {{ _('Love the Daily Question? Try <strong style="color: #ffffff;">Personal Briefs</strong> &mdash; create custom daily digests from the sources you trust. Politics, tech, climate, or your own research PDFs. Your subscription directly funds our free civic tools.')|safe }}
                 </td>
             </tr>
             <tr>
@@ -238,7 +240,7 @@
                         <tr>
                             <td align="center" style="background-color: #ffffff; border-radius: 6px;">
                                 <a href="{{ base_url }}/briefings/landing" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af; text-decoration: none; padding: 12px 24px;">
-                                    &#10084; Support Our Work
+                                    &#10084; {{ _('Support Our Work') }}
                                 </a>
                             </td>
                         </tr>
@@ -247,7 +249,7 @@
             </tr>
             <tr>
                 <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #93c5fd;">
-                    30-day free trial &bull; From £4.99/month &bull; Funds open source development
+                    {{ _('30-day free trial &bull; From £4.99/month &bull; Funds open source development')|safe }}
                 </td>
             </tr>
         </table>
@@ -258,7 +260,7 @@
 {% block footer_links %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569;">
-        <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">Unsubscribe</a>
+        <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">{{ _('Unsubscribe') }}</a>
     </td>
 </tr>
 {% endblock %}

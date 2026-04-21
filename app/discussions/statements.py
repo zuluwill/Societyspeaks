@@ -28,6 +28,7 @@ import json
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import validate_csrf, CSRFError
 from wtforms import ValidationError as WTFormsValidationError
+from flask_babel import gettext as _
 try:
     import posthog
 except ImportError:
@@ -281,7 +282,7 @@ def get_user_identifier():
             'session_fingerprint': None
         }
     else:
-        client_id, _ = get_or_create_statement_client_id()
+        client_id, __ = get_or_create_statement_client_id()
         fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
         
         if session.get('fingerprint') != fingerprint:
@@ -389,7 +390,7 @@ def create_statement(discussion_id):
         abort(403)
 
     if not discussion.has_native_statements:
-        flash("This discussion does not support native statements", "error")
+        flash(_("This discussion does not support native statements"), "error")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id, 
                               slug=discussion.slug))
@@ -415,7 +416,7 @@ def create_statement(discussion_id):
         ).count()
         if current_statement_count >= max_statements:
             flash(
-                "This discussion has reached the statement limit. New submissions are paused while moderation and analysis catch up.",
+                _("This discussion has reached the statement limit. New submissions are paused while moderation and analysis catch up."),
                 "warning"
             )
             return redirect(url_for(
@@ -431,7 +432,7 @@ def create_statement(discussion_id):
         ).first()
         
         if existing:
-            flash("This statement already exists in the discussion", "warning")
+            flash(_("This statement already exists in the discussion"), "warning")
             return redirect(url_for('statements.view_statement', statement_id=existing.id))
         
         # Phase 4.4: Semantic deduplication (optional, only for authenticated users with LLM)
@@ -472,7 +473,7 @@ def create_statement(discussion_id):
                             similar_stmt = s
                             break
                     if similar_stmt:
-                        flash(f"A similar statement already exists: '{similar_stmt.content}'. Consider voting on it instead.", "info")
+                        flash(_("A similar statement already exists: '%(content)s'. Consider voting on it instead.", content=similar_stmt.content), "info")
                         return redirect(url_for('statements.view_statement', statement_id=similar_stmt.id))
             
             except Exception as e:
@@ -515,11 +516,11 @@ def create_statement(discussion_id):
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
         
-        flash("Statement posted successfully!", "success")
+        flash(_("Statement posted successfully!"), "success")
         
         # For anonymous users, show upgrade prompt
         if not current_user.is_authenticated:
-            flash("💡 Create a free account to add detailed responses, link evidence, and track your contributions!", "info")
+            flash(_("💡 Create a free account to add detailed responses, link evidence, and track your contributions!"), "info")
         
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id, 
@@ -570,13 +571,13 @@ def create_statement_from_embed(discussion_id):
         return jsonify({
             'success': False,
             'error': 'invalid_content',
-            'message': 'Statement must be at least 10 characters.',
+            'message': _('Statement must be at least 10 characters.'),
         }), 400
     if len(content) > 500:
         return jsonify({
             'success': False,
             'error': 'invalid_content',
-            'message': 'Statement must be 500 characters or fewer.',
+            'message': _('Statement must be 500 characters or fewer.'),
         }), 400
 
     # Identifier mirrors vote handling so anonymous embeds remain deduplicated/rate-limited.
@@ -586,7 +587,7 @@ def create_statement_from_embed(discussion_id):
         embed_fingerprint = extract_embed_fingerprint_from_request() or get_statement_vote_fingerprint()
         identifier = {'user_id': None, 'session_fingerprint': embed_fingerprint}
 
-    allowed, _, rate_message = check_statement_rate_limit(identifier)
+    allowed, __, rate_message = check_statement_rate_limit(identifier)
     if not allowed:
         return jsonify({
             'success': False,
@@ -603,7 +604,7 @@ def create_statement_from_embed(discussion_id):
         return jsonify({
             'success': False,
             'error': 'statement_limit_reached',
-            'message': 'This discussion has reached its statement limit.',
+            'message': _('This discussion has reached its statement limit.'),
         }), 429
 
     existing = Statement.query.filter_by(
@@ -616,7 +617,7 @@ def create_statement_from_embed(discussion_id):
             'success': False,
             'error': 'duplicate_statement',
             'statement_id': existing.id,
-            'message': 'This statement already exists in the discussion.',
+            'message': _('This statement already exists in the discussion.'),
         }), 409
 
     statement = Statement(
@@ -635,7 +636,7 @@ def create_statement_from_embed(discussion_id):
         return jsonify({
             'success': False,
             'error': 'duplicate_statement',
-            'message': 'This statement already exists in the discussion.',
+            'message': _('This statement already exists in the discussion.'),
         }), 409
     except Exception:
         db.session.rollback()
@@ -643,7 +644,7 @@ def create_statement_from_embed(discussion_id):
         return jsonify({
             'success': False,
             'error': 'statement_create_failed',
-            'message': 'Could not submit statement at this time.',
+            'message': _('Could not submit statement at this time.'),
         }), 500
 
     from app.api.utils import invalidate_partner_snapshot_cache
@@ -656,7 +657,7 @@ def create_statement_from_embed(discussion_id):
     return jsonify({
         'success': True,
         'statement_id': statement.id,
-        'message': 'Statement submitted.',
+        'message': _('Statement submitted.'),
     }), 201
 
 
@@ -682,7 +683,7 @@ def get_statement_vote_fingerprint():
     
     The client ID is stored in a separate long-lived cookie that persists for 1 year.
     """
-    client_id, _ = get_or_create_statement_client_id()
+    client_id, __ = get_or_create_statement_client_id()
     fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
     
     if session.get('statement_vote_fingerprint') != fingerprint:
@@ -994,7 +995,7 @@ def vote_statement(statement_id):
             validate_csrf(csrf_token)
         except (CSRFError, WTFormsValidationError):
             if is_form_post:
-                flash('Your session has expired. Please refresh and try again.', 'error')
+                flash(_('Your session has expired. Please refresh and try again.'), 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'csrf_failed'}), 400
 
@@ -1002,20 +1003,20 @@ def vote_statement(statement_id):
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
     if any(indicator in user_agent for indicator in bot_indicators):
         if is_form_post:
-            flash('Automated requests are not allowed.', 'error')
+            flash(_('Automated requests are not allowed.'), 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
-        return jsonify({'error': 'Automated requests not allowed'}), 403
+        return jsonify({'error': _('Automated requests not allowed')}), 403
 
     statement = db.get_or_404(Statement, statement_id)
     discussion = statement.discussion
     if discussion and discussion.is_closed:
         if is_form_post:
-            flash('This discussion is closed and no longer accepts votes.', 'error')
+            flash(_('This discussion is closed and no longer accepts votes.'), 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'discussion_closed'}), 403
     if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
         if is_form_post:
-            flash('You do not have access to this programme discussion.', 'error')
+            flash(_('You do not have access to this programme discussion.'), 'error')
             return redirect(url_for('main.index'))
         return jsonify({'error': 'forbidden'}), 403
 
@@ -1045,16 +1046,16 @@ def vote_statement(statement_id):
         data = request.get_json()
         if data is None or 'vote' not in data:
             if is_form_post:
-                flash('Vote value is required.', 'error')
+                flash(_('Vote value is required.'), 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'bad_request', 'message': 'Vote value is required'}), 400
+            return jsonify({'error': 'bad_request', 'message': _('Vote value is required')}), 400
         try:
             vote_value = int(data.get('vote'))
         except (ValueError, TypeError):
             if is_form_post:
-                flash('Invalid vote value.', 'error')
+                flash(_('Invalid vote value.'), 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'bad_request', 'message': 'Invalid vote value format'}), 400
+            return jsonify({'error': 'bad_request', 'message': _('Invalid vote value format')}), 400
         confidence = data.get('confidence', 3)
         try:
             confidence = int(confidence) if confidence is not None else 3
@@ -1073,16 +1074,16 @@ def vote_statement(statement_id):
         vote_raw = request.form.get('vote')
         if vote_raw is None or vote_raw == '':
             if is_form_post:
-                flash('Vote value is required.', 'error')
+                flash(_('Vote value is required.'), 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'bad_request', 'message': 'Vote value is required'}), 400
+            return jsonify({'error': 'bad_request', 'message': _('Vote value is required')}), 400
         try:
             vote_value = int(vote_raw)
         except (ValueError, TypeError):
             if is_form_post:
-                flash('Invalid vote value.', 'error')
+                flash(_('Invalid vote value.'), 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'bad_request', 'message': 'Invalid vote value format'}), 400
+            return jsonify({'error': 'bad_request', 'message': _('Invalid vote value format')}), 400
         confidence_raw = request.form.get('confidence', 3)
         try:
             confidence = int(confidence_raw) if confidence_raw else 3
@@ -1105,15 +1106,15 @@ def vote_statement(statement_id):
     )
     if partner_ref and partner_ref_is_disabled(partner_ref):
         if is_form_post:
-            flash('Voting from this partner is currently unavailable.', 'error')
+            flash(_('Voting from this partner is currently unavailable.'), 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
-        return jsonify({'error': 'Embed and API access has been revoked for this partner.'}), 403
+        return jsonify({'error': _('Embed and API access has been revoked for this partner.')}), 403
 
     if vote_value not in [-1, 0, 1]:
         if is_form_post:
-            flash('Invalid vote value. Must be Agree, Disagree, or Unsure.', 'error')
+            flash(_('Invalid vote value. Must be Agree, Disagree, or Unsure.'), 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
-        return jsonify({'error': 'Invalid vote value. Must be -1, 0, or 1'}), 400
+        return jsonify({'error': _('Invalid vote value. Must be -1, 0, or 1')}), 400
 
     cohort_slug = validate_cohort_for_discussion(discussion, cohort_slug)
 
@@ -1138,7 +1139,7 @@ def vote_statement(statement_id):
             if prior.get('request_hash') != request_hash:
                 return jsonify({
                     'error': 'idempotency_key_reused',
-                    'message': 'This Idempotency-Key was already used with a different payload.'
+                    'message': _('This Idempotency-Key was already used with a different payload.')
                 }), 409
             response_payload = dict(prior.get('response', {}) or {})
             # Refresh volatile consensus progress fields so duplicate requests
@@ -1183,9 +1184,9 @@ def vote_statement(statement_id):
         except IntegrityError:
             db.session.rollback()
             if is_form_post:
-                flash('Vote could not be recorded due to a temporary conflict. Please try again.', 'error')
+                flash(_('Vote could not be recorded due to a temporary conflict. Please try again.'), 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'vote_conflict', 'message': 'Temporary conflict while saving vote'}), 409
+            return jsonify({'error': 'vote_conflict', 'message': _('Temporary conflict while saving vote')}), 409
 
     _record_vote_anomaly_signals(statement.discussion_id, session_fingerprint=session_fingerprint)
     from app.api.utils import invalidate_partner_snapshot_cache
@@ -1347,7 +1348,7 @@ def vote_statement(statement_id):
 
     # Form POST from view_statement page: redirect back so user sees updated page
     if is_form_post:
-        flash('Vote recorded.', 'success')
+        flash(_('Vote recorded.'), 'success')
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
 
     # Include fresh consensus-gate metrics so the voting UI can update
@@ -1446,12 +1447,12 @@ def edit_statement(statement_id):
     
     # Check ownership
     if statement.user_id != current_user.id:
-        flash("You can only edit your own statements", "error")
+        flash(_("You can only edit your own statements"), "error")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     # Check edit window (10 minutes like pol.is)
     if utcnow_naive() - statement.created_at > timedelta(minutes=10):
-        flash("Edit window expired (10 minutes)", "error")
+        flash(_("Edit window expired (10 minutes)"), "error")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     form = StatementForm(obj=statement)
@@ -1462,7 +1463,7 @@ def edit_statement(statement_id):
         statement.updated_at = utcnow_naive()
         db.session.commit()
         
-        flash("Statement updated successfully", "success")
+        flash(_("Statement updated successfully"), "success")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     return render_template('discussions/edit_statement.html', 
@@ -1479,7 +1480,7 @@ def delete_statement(statement_id):
     
     # Check ownership or admin
     if statement.user_id != current_user.id and not current_user.is_admin:
-        flash("You can only delete your own statements", "error")
+        flash(_("You can only delete your own statements"), "error")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     statement.is_deleted = True
@@ -1487,7 +1488,7 @@ def delete_statement(statement_id):
     from app.api.utils import invalidate_partner_snapshot_cache
     invalidate_partner_snapshot_cache(statement.discussion_id)
     
-    flash("Statement deleted", "success")
+    flash(_("Statement deleted"), "success")
     return redirect(url_for('discussions.view_discussion', 
                           discussion_id=statement.discussion_id, 
                           slug=statement.discussion.slug))
@@ -1508,7 +1509,7 @@ def flag_statement(statement_id):
     ).first()
     
     if existing_flag:
-        flash("You've already flagged this statement", "warning")
+        flash(_("You've already flagged this statement"), "warning")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     form = FlagStatementForm()
@@ -1523,7 +1524,7 @@ def flag_statement(statement_id):
         db.session.add(flag)
         db.session.commit()
         
-        flash("Statement flagged for review", "success")
+        flash(_("Statement flagged for review"), "success")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     return render_template('discussions/flag_statement.html', 
@@ -1633,7 +1634,7 @@ def quick_response(statement_id):
 
     # Defensive check for orphaned statement
     if not discussion:
-        flash("Discussion not found", "error")
+        flash(_("Discussion not found"), "error")
         return redirect(url_for('discussions.search_discussions'))
 
     _enforce_programme_visibility_for_discussion(discussion)
@@ -1677,13 +1678,13 @@ def quick_response(statement_id):
                 actor_user_id=current_user.id,
                 response_count=response_count,
             )
-            flash("Your thought has been added!", "success")
+            flash(_("Your thought has been added!"), "success")
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating quick response: {e}")
-            flash("Couldn't save your response. Try again?", "warning")
+            flash(_("Couldn't save your response. Try again?"), "warning")
     elif content and len(content) < min_length:
-        flash(f"Response must be at least {min_length} characters", "info")
+        flash(_('Response must be at least %(min_length)s characters', min_length=min_length), "info")
 
     # Redirect back to discussion with anchor to statement
     return redirect(url_for('discussions.view_discussion',
@@ -1740,13 +1741,13 @@ def create_response(statement_id):
                 response_count=response_count,
             )
             
-            flash("Response posted successfully!", "success")
+            flash(_("Response posted successfully!"), "success")
             return redirect(url_for('statements.view_statement', statement_id=statement.id))
         except ValueError as e:
             flash(str(e), "danger")
         except Exception as e:
             current_app.logger.error(f"Error creating response: {e}")
-            flash("An error occurred while posting your response", "danger")
+            flash(_("An error occurred while posting your response"), "danger")
     
     return render_template('discussions/create_response.html', 
                          statement=statement, 
@@ -1760,7 +1761,7 @@ def view_response(response_id):
     _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     if response.is_deleted:
-        flash("This response has been deleted", "info")
+        flash(_("This response has been deleted"), "info")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     # Get the full thread (parent responses up to the root)
@@ -1794,18 +1795,18 @@ def edit_response(response_id):
     
     # Check ownership
     if response.user_id != current_user.id:
-        flash("You can only edit your own responses", "danger")
+        flash(_("You can only edit your own responses"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     # Check if deleted
     if response.is_deleted:
-        flash("Cannot edit a deleted response", "danger")
+        flash(_("Cannot edit a deleted response"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     # Check 10-minute edit window
     edit_deadline = response.created_at + timedelta(minutes=10)
     if utcnow_naive() > edit_deadline:
-        flash("Edit window has expired (10 minutes)", "warning")
+        flash(_("Edit window has expired (10 minutes)"), "warning")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     form = ResponseForm(obj=response)
@@ -1817,7 +1818,7 @@ def edit_response(response_id):
             response.updated_at = utcnow_naive()
             db.session.commit()
             
-            flash("Response updated successfully!", "success")
+            flash(_("Response updated successfully!"), "success")
             return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
         except ValueError as e:
             flash(str(e), "danger")
@@ -1838,13 +1839,13 @@ def delete_response(response_id):
     
     # Check permissions
     if response.user_id != current_user.id and discussion.creator_id != current_user.id:
-        flash("You don't have permission to delete this response", "danger")
+        flash(_("You don't have permission to delete this response"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     response.is_deleted = True
     db.session.commit()
     
-    flash("Response deleted successfully", "success")
+    flash(_("Response deleted successfully"), "success")
     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
 
 
@@ -1975,7 +1976,7 @@ def add_evidence(response_id):
     
     # Check if user can add evidence (response author or discussion owner)
     if response.user_id != current_user.id and response.statement.discussion.creator_id != current_user.id:
-        flash("You don't have permission to add evidence to this response", "danger")
+        flash(_("You don't have permission to add evidence to this response"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     form = EvidenceForm()
@@ -2000,7 +2001,7 @@ def add_evidence(response_id):
                 file.seek(0)
                 
                 if file_size > 10 * 1024 * 1024:  # 10MB
-                    flash("File size must be under 10MB", "danger")
+                    flash(_("File size must be under 10MB"), "danger")
                     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
                 
                 # Upload to Replit Object Storage
@@ -2023,20 +2024,20 @@ def add_evidence(response_id):
                     
                 except Exception as e:
                     current_app.logger.error(f"Error uploading to Replit storage: {e}")
-                    flash("Error uploading file. Please try again.", "danger")
+                    flash(_("Error uploading file. Please try again."), "danger")
                     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
             
             db.session.add(evidence)
             db.session.commit()
             
-            flash("Evidence added successfully!", "success")
+            flash(_("Evidence added successfully!"), "success")
             return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
             
         except ValueError as e:
             flash(str(e), "danger")
         except Exception as e:
             current_app.logger.error(f"Error adding evidence: {e}")
-            flash("An error occurred while adding evidence", "danger")
+            flash(_("An error occurred while adding evidence"), "danger")
     
     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
 
@@ -2057,7 +2058,7 @@ def delete_evidence(evidence_id):
     
     # Check permissions
     if evidence.added_by_user_id != current_user.id and discussion.creator_id != current_user.id:
-        flash("You don't have permission to delete this evidence", "danger")
+        flash(_("You don't have permission to delete this evidence"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
     # Delete file from Replit Object Storage if exists
@@ -2073,7 +2074,7 @@ def delete_evidence(evidence_id):
     db.session.delete(evidence)
     db.session.commit()
     
-    flash("Evidence deleted successfully", "success")
+    flash(_("Evidence deleted successfully"), "success")
     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
 
 
@@ -2092,18 +2093,18 @@ def update_evidence_quality(evidence_id):
     
     # Check permissions (discussion owner only for now)
     if discussion.creator_id != current_user.id:
-        flash("Only the discussion owner can update evidence quality", "danger")
+        flash(_("Only the discussion owner can update evidence quality"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
     
     quality_status = request.form.get('quality_status')
     if quality_status not in ['pending', 'verified', 'disputed']:
-        flash("Invalid quality status", "danger")
+        flash(_("Invalid quality status"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
     
     evidence.quality_status = quality_status
     db.session.commit()
     
-    flash(f"Evidence marked as {quality_status}", "success")
+    flash(_('Evidence marked as %(quality_status)s', quality_status=quality_status), "success")
     return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
 
 
@@ -2120,7 +2121,7 @@ def download_evidence(evidence_id):
     _enforce_programme_visibility_for_discussion(evidence.response.statement.discussion)
     
     if not evidence.storage_key:
-        flash("No file attached to this evidence", "danger")
+        flash(_("No file attached to this evidence"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
     
     try:
@@ -2143,6 +2144,6 @@ def download_evidence(evidence_id):
         
     except Exception as e:
         current_app.logger.error(f"Error downloading evidence file: {e}")
-        flash("Error downloading file", "danger")
+        flash(_("Error downloading file"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
 

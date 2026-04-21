@@ -17,6 +17,7 @@ import time
 import io
 from pathlib import Path
 from app.lib.url_utils import safe_next_url as _safe_next_url
+from flask_babel import gettext as _
 
 
 profiles_bp = Blueprint('profiles', __name__, template_folder='../templates/profiles')
@@ -243,13 +244,13 @@ def create_individual_profile():
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
-            flash("Profile created! You're all set — start a discussion or create a programme from your dashboard.", "success")
+            flash(_("Profile created! You're all set — start a discussion or create a programme from your dashboard."), "success")
             return redirect(next_url or url_for('auth.dashboard'))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating profile: {str(e)}")
-            flash("Error creating profile. Please try again.", "error")
+            flash(_("Error creating profile. Please try again."), "error")
             return render_template('profiles/create_individual_profile.html', form=form, next_url=next_url)
 
     return render_template('profiles/create_individual_profile.html', form=form, next_url=next_url)
@@ -313,7 +314,7 @@ def create_company_profile():
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
-            flash("Profile created! You're all set — start a discussion or create a programme from your dashboard.", "success")
+            flash(_("Profile created! You're all set — start a discussion or create a programme from your dashboard."), "success")
             return redirect(next_url or url_for('auth.dashboard'))
 
         except Exception as e:
@@ -329,7 +330,7 @@ def create_company_profile():
                     delete_from_object_storage(banner_image)
                 except Exception:
                     pass
-            flash("Error creating company profile. Please try again.", "error")
+            flash(_("Error creating company profile. Please try again."), "error")
             return render_template('profiles/create_company_profile.html', form=form, next_url=next_url)
 
     return render_template('profiles/create_company_profile.html', form=form, next_url=next_url)
@@ -344,7 +345,7 @@ def create_company_profile():
 def edit_individual_profile(username):
     profile = IndividualProfile.query.filter_by(slug=username).first_or_404()
     if profile.user_id != current_user.id:
-        flash("You do not have permission to edit this profile.", "error")
+        flash(_("You do not have permission to edit this profile."), "error")
         return redirect(url_for('main.index'))
 
     form = IndividualProfileForm(obj=profile)
@@ -399,13 +400,13 @@ def edit_individual_profile(username):
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
-            flash("Profile updated successfully!", "success")
+            flash(_("Profile updated successfully!"), "success")
             return redirect(url_for('profiles.view_individual_profile', username=profile.slug))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error updating profile: {str(e)}")
-            flash("Error updating profile. Please try again.", "error")
+            flash(_("Error updating profile. Please try again."), "error")
 
     return render_template('profiles/edit_individual_profile.html', form=form, profile=profile)
 
@@ -415,7 +416,7 @@ def edit_individual_profile(username):
 def edit_company_profile(company_name):
     profile = CompanyProfile.query.filter_by(slug=company_name).first_or_404()
     if profile.user_id != current_user.id:
-        flash("You do not have permission to edit this profile.", "error")
+        flash(_("You do not have permission to edit this profile."), "error")
         return redirect(url_for('main.index'))
 
     form = CompanyProfileForm(obj=profile)
@@ -467,13 +468,13 @@ def edit_company_profile(company_name):
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
-            flash("Company profile updated successfully!", "success")
+            flash(_("Company profile updated successfully!"), "success")
             return redirect(url_for('profiles.view_company_profile', company_name=profile.slug))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error updating company profile: {str(e)}")
-            flash("Error updating profile. Please try again.", "error")
+            flash(_("Error updating profile. Please try again."), "error")
 
     return render_template('profiles/edit_company_profile.html', form=form, profile=profile)
 
@@ -519,6 +520,6 @@ def view_profile(username):
     if company:
         return redirect(url_for('profiles.view_company_profile', company_name=username))
 
-    flash("Profile not found.", "error")
+    flash(_("Profile not found."), "error")
     return redirect(url_for('main.index'))
 

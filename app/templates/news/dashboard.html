@@ -1,18 +1,17 @@
 {% extends "layout.html" %} {% from "components/email_capture.html" import
 email_capture_inline, email_capture_compact, paid_brief_crosssell %} {% block
-title %}News Transparency Dashboard - Society Speaks{% endblock %} {% block
+title %}{{ _('News Transparency Dashboard - Society Speaks') }}{% endblock %} {% block
 content %}
 <!-- Header -->
 <div class="bg-gradient-to-r from-blue-800 to-blue-600 text-white py-12 px-4">
   <div class="max-w-6xl mx-auto">
-    <h1 class="text-4xl font-bold mb-2">News Transparency Dashboard</h1>
+    <h1 class="text-4xl font-bold mb-2">{{ _('News Transparency Dashboard') }}</h1>
     <p class="text-xl text-blue-100">{{ today.strftime('%A, %B %d, %Y') }}</p>
     <p class="text-lg text-blue-200 mt-2">
-      {{ coverage.total }} articles from {{ left_sources|length +
-      center_sources|length + right_sources|length }} sources with content today
+      {{ _('%(total)d articles from %(sources)s sources with content today', total=coverage.total, sources=(left_sources|length + center_sources|length + right_sources|length)) }}
     </p>
     <p class="text-sm text-blue-300 mt-1">
-      We monitor 140+ sources daily across the political spectrum
+      {{ _('We monitor 140+ sources daily across the political spectrum') }}
     </p>
     {% if show_email_capture %}
     <div class="mt-6 max-w-md">
@@ -27,21 +26,21 @@ content %}
           <input
             type="email"
             name="email"
-            placeholder="Get the Daily Brief by email"
+            placeholder="{{ _('Get the Daily Brief by email') }}"
             required
             class="flex-1 px-4 py-2.5 rounded-lg border-0 text-gray-900 placeholder-gray-500 text-sm focus:ring-2 focus:ring-white"
-            aria-label="Email address"
+            aria-label="{{ _('Email address') }}"
           />
           <button
             type="submit"
             class="px-4 py-2.5 bg-white text-primary-600 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
           >
-            Subscribe Free
+            {{ _('Subscribe Free') }}
           </button>
         </div>
       </form>
       <p class="text-xs text-blue-200 mt-2">
-        <a href="{{ url_for('brief.subscribe') }}" class="underline hover:text-white">Choose time zone and delivery time</a> on the full sign-up page.
+        {{ _('<a href="%(url)s" class="underline hover:text-white">Choose time zone and delivery time</a> on the full sign-up page.', url=url_for('brief.subscribe'))|safe }}
       </p>
     </div>
     {% endif %}
@@ -52,7 +51,7 @@ content %}
 <div class="bg-white border-b py-4 px-4">
   <div class="max-w-6xl mx-auto">
     <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-      Today's Coverage Balance
+      {{ _("Today's Coverage Balance") }}
     </p>
     <div
       class="w-full h-4 rounded-full overflow-hidden mb-2"
@@ -74,13 +73,13 @@ content %}
     </div>
     <div class="flex justify-between text-sm">
       <span class="text-primary-600 font-medium"
-        >{{ coverage.left_pct }}% Left ({{ coverage.left_count }})</span
+        >{{ _('%(pct)s%% Left (%(count)d)', pct=coverage.left_pct, count=coverage.left_count) }}</span
       >
       <span class="text-purple-600 font-medium"
-        >{{ coverage.center_pct }}% Center ({{ coverage.center_count }})</span
+        >{{ _('%(pct)s%% Center (%(count)d)', pct=coverage.center_pct, count=coverage.center_count) }}</span
       >
       <span class="text-red-600 font-medium"
-        >{{ coverage.right_pct }}% Right ({{ coverage.right_count }})</span
+        >{{ _('%(pct)s%% Right (%(count)d)', pct=coverage.right_pct, count=coverage.right_count) }}</span
       >
     </div>
   </div>
@@ -98,7 +97,7 @@ content %}
             id="article-search"
             name="q"
             value="{{ search_term or '' }}"
-            placeholder="Search by headline, summary, or source..."
+            placeholder="{{ _('Search by headline, summary, or source...') }}"
             class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
           />
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,18 +107,18 @@ content %}
             id="article-search-clear"
             type="button"
             class="absolute inset-y-0 right-0 px-3 text-xs text-gray-500 hover:text-gray-700 {{ '' if search_term else 'hidden' }}"
-            aria-label="Clear search"
+            aria-label="{{ _('Clear search') }}"
           >
-            Clear
+            {{ _('Clear') }}
           </button>
         </div>
         <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
-          Search
+          {{ _('Search') }}
         </button>
       </form>
       {% if search_term %}
       <p class="mt-2 text-sm text-gray-600">
-        Found {{ coverage.total }} result{% if coverage.total != 1 %}s{% endif %} for "<strong>{{ search_term }}</strong>"
+        {{ _('Found %(count)d result(s) for "<strong>%(term)s</strong>"', count=coverage.total, term=search_term)|safe }}
       </p>
       {% endif %}
     </div>
@@ -130,25 +129,25 @@ content %}
           data-filter="all"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-primary-600 text-white"
         >
-          All
+          {{ _('All') }}
         </button>
         <button
           data-filter="left"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-blue-100"
         >
-          Left ({{ left_sources|length }})
+          {{ _('Left (%(count)d)', count=left_sources|length) }}
         </button>
         <button
           data-filter="center"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-purple-100"
         >
-          Center ({{ center_sources|length }})
+          {{ _('Center (%(count)d)', count=center_sources|length) }}
         </button>
         <button
           data-filter="right"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-red-100"
         >
-          Right ({{ right_sources|length }})
+          {{ _('Right (%(count)d)', count=right_sources|length) }}
         </button>
       </div>
 
@@ -158,19 +157,19 @@ content %}
           data-type="all"
           class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-800 text-white"
         >
-          All Content
+          {{ _('All Content') }}
         </button>
         <button
           data-type="news"
           class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
         >
-          News Only
+          {{ _('News Only') }}
         </button>
         <button
           data-type="podcast"
           class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
         >
-          Podcasts Only
+          {{ _('Podcasts Only') }}
         </button>
       </div>
 
@@ -193,7 +192,7 @@ content %}
               d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
             ></path>
           </svg>
-          Filter Sources
+          {{ _('Filter Sources') }}
           <span
             id="source-count-badge"
             class="hidden bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full"
@@ -206,26 +205,26 @@ content %}
         >
           <div class="p-3 border-b sticky top-0 bg-white">
             <div class="flex justify-between items-center mb-2">
-              <span class="font-medium text-gray-900">Select Sources</span>
+              <span class="font-medium text-gray-900">{{ _('Select Sources') }}</span>
               <div class="flex gap-2">
                 <button
                   id="select-all-sources-btn"
                   class="text-xs text-primary-600 hover:underline"
                 >
-                  All
+                  {{ _('All') }}
                 </button>
                 <button
                   id="clear-all-sources-btn"
                   class="text-xs text-gray-500 hover:underline"
                 >
-                  Clear
+                  {{ _('Clear') }}
                 </button>
               </div>
             </div>
             <input
               type="text"
               id="source-search"
-              placeholder="Search sources..."
+              placeholder="{{ _('Search sources...') }}"
               class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
@@ -233,7 +232,7 @@ content %}
           <!-- Left Sources -->
           <div class="p-2 source-section" data-leaning="left">
             <div class="text-xs font-bold text-primary-600 uppercase px-2 py-1">
-              Left-leaning
+              {{ _('Left-leaning') }}
             </div>
             {% for source in left_sources %}
             <label
@@ -255,7 +254,7 @@ content %}
           <!-- Center Sources -->
           <div class="p-2 source-section border-t" data-leaning="center">
             <div class="text-xs font-bold text-purple-600 uppercase px-2 py-1">
-              Center
+              {{ _('Center') }}
             </div>
             {% for source in center_sources %}
             <label
@@ -277,7 +276,7 @@ content %}
           <!-- Right Sources -->
           <div class="p-2 source-section border-t" data-leaning="right">
             <div class="text-xs font-bold text-red-600 uppercase px-2 py-1">
-              Right-leaning
+              {{ _('Right-leaning') }}
             </div>
             {% for source in right_sources %}
             <label
@@ -312,10 +311,10 @@ content %}
       >
         <h2 class="text-lg font-bold text-primary-800 flex items-center gap-2">
           <span class="w-3 h-3 bg-primary-600 rounded-full"></span>
-          Left-Leaning Sources
+          {{ _('Left-Leaning Sources') }}
         </h2>
         <p class="text-sm text-primary-600 mt-1">
-          {{ left_sources|length }} sources, {{ left_articles|length }} articles
+          {{ _('%(sources)s sources, %(articles)s articles', sources=left_sources|length, articles=left_articles|length) }}
         </p>
       </div>
 
@@ -340,7 +339,7 @@ content %}
             <span
               class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded"
             >
-              Podcast
+              {{ _('Podcast') }}
             </span>
             {% endif %}
             <span class="text-xs text-gray-400">
@@ -368,14 +367,14 @@ content %}
             <span
               class="text-xs px-2 py-0.5 rounded {% if sens_pct <= 30 %}bg-green-100 text-green-700{% elif sens_pct <= 60 %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}"
             >
-              Sensationalism: {{ sens_pct }}%
+              {{ _('Sensationalism: %(pct)s%%', pct=sens_pct) }}
             </span>
             {% endif %} {% if article.relevance_score is not none %} {% set
             rel_pct = (article.relevance_score * 100)|int %}
             <span
               class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-primary-700{% else %}bg-gray-100 text-gray-600{% endif %}"
             >
-              Civic Relevance: {{ rel_pct }}%
+              {{ _('Civic Relevance: %(pct)s%%', pct=rel_pct) }}
             </span>
             {% endif %}
           </div>
@@ -391,11 +390,10 @@ content %}
       >
         <h2 class="text-lg font-bold text-purple-800 flex items-center gap-2">
           <span class="w-3 h-3 bg-purple-600 rounded-full"></span>
-          Center Sources
+          {{ _('Center Sources') }}
         </h2>
         <p class="text-sm text-purple-600 mt-1">
-          {{ center_sources|length }} sources, {{ center_articles|length }}
-          articles
+          {{ _('%(sources)s sources, %(articles)s articles', sources=center_sources|length, articles=center_articles|length) }}
         </p>
       </div>
 
@@ -420,7 +418,7 @@ content %}
             <span
               class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded"
             >
-              Podcast
+              {{ _('Podcast') }}
             </span>
             {% endif %}
             <span class="text-xs text-gray-400">
@@ -448,14 +446,14 @@ content %}
             <span
               class="text-xs px-2 py-0.5 rounded {% if sens_pct <= 30 %}bg-green-100 text-green-700{% elif sens_pct <= 60 %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}"
             >
-              Sensationalism: {{ sens_pct }}%
+              {{ _('Sensationalism: %(pct)s%%', pct=sens_pct) }}
             </span>
             {% endif %} {% if article.relevance_score is not none %} {% set
             rel_pct = (article.relevance_score * 100)|int %}
             <span
               class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-primary-700{% else %}bg-gray-100 text-gray-600{% endif %}"
             >
-              Civic Relevance: {{ rel_pct }}%
+              {{ _('Civic Relevance: %(pct)s%%', pct=rel_pct) }}
             </span>
             {% endif %}
           </div>
@@ -471,11 +469,10 @@ content %}
       >
         <h2 class="text-lg font-bold text-red-800 flex items-center gap-2">
           <span class="w-3 h-3 bg-red-600 rounded-full"></span>
-          Right-Leaning Sources
+          {{ _('Right-Leaning Sources') }}
         </h2>
         <p class="text-sm text-red-600 mt-1">
-          {{ right_sources|length }} sources, {{ right_articles|length }}
-          articles
+          {{ _('%(sources)s sources, %(articles)s articles', sources=right_sources|length, articles=right_articles|length) }}
         </p>
       </div>
 
@@ -500,7 +497,7 @@ content %}
             <span
               class="inline-block bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded"
             >
-              Podcast
+              {{ _('Podcast') }}
             </span>
             {% endif %}
             <span class="text-xs text-gray-400">
@@ -528,14 +525,14 @@ content %}
             <span
               class="text-xs px-2 py-0.5 rounded {% if sens_pct <= 30 %}bg-green-100 text-green-700{% elif sens_pct <= 60 %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}"
             >
-              Sensationalism: {{ sens_pct }}%
+              {{ _('Sensationalism: %(pct)s%%', pct=sens_pct) }}
             </span>
             {% endif %} {% if article.relevance_score is not none %} {% set
             rel_pct = (article.relevance_score * 100)|int %}
             <span
               class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-primary-700{% else %}bg-gray-100 text-gray-600{% endif %}"
             >
-              Civic Relevance: {{ rel_pct }}%
+              {{ _('Civic Relevance: %(pct)s%%', pct=rel_pct) }}
             </span>
             {% endif %}
           </div>

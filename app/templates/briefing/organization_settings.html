@@ -1,49 +1,49 @@
 {% extends "layout.html" %}
-{% block title %}Organization Settings{% endblock %}
+{% block title %}{{ _('Organization Settings') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gray-50 min-h-screen">
   <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
     <div class="mb-8">
       <nav class="flex items-center text-sm text-gray-500 mb-4">
-        <a href="{{ url_for('briefing.list_briefings') }}" class="hover:text-gray-700">Briefings</a>
+        <a href="{{ url_for('briefing.list_briefings') }}" class="hover:text-gray-700">{{ _('Briefings') }}</a>
         <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
-        <span class="text-gray-900">Organization Settings</span>
+        <span class="text-gray-900">{{ _('Organization Settings') }}</span>
       </nav>
-      <h1 class="text-2xl font-bold text-gray-900">Organization Settings</h1>
-      <p class="text-gray-600 mt-1">Manage your team subscription and organization details.</p>
+      <h1 class="text-2xl font-bold text-gray-900">{{ _('Organization Settings') }}</h1>
+      <p class="text-gray-600 mt-1">{{ _('Manage your team subscription and organization details.') }}</p>
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Subscription</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Subscription') }}</h2>
       </div>
       <div class="px-6 py-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p class="text-sm text-gray-500">Plan</p>
+            <p class="text-sm text-gray-500">{{ _('Plan') }}</p>
             <p class="text-lg font-semibold text-gray-900">{{ plan.name }}</p>
           </div>
           <div>
-            <p class="text-sm text-gray-500">Status</p>
+            <p class="text-sm text-gray-500">{{ _('Status') }}</p>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if subscription.status == 'active' %}bg-green-100 text-green-800{% elif subscription.status == 'trialing' %}bg-blue-100 text-primary-800{% else %}bg-gray-100 text-gray-800{% endif %}">
               {{ subscription.status|capitalize }}
             </span>
           </div>
           <div>
-            <p class="text-sm text-gray-500">Editors</p>
-            <p class="text-lg font-semibold text-gray-900">{% if plan.max_editors == -1 %}Unlimited{% else %}{{ plan.max_editors }}{% endif %}</p>
+            <p class="text-sm text-gray-500">{{ _('Editors') }}</p>
+            <p class="text-lg font-semibold text-gray-900">{% if plan.max_editors == -1 %}{{ _('Unlimited') }}{% else %}{{ plan.max_editors }}{% endif %}</p>
           </div>
           <div>
-            <p class="text-sm text-gray-500">Recipients</p>
-            <p class="text-lg font-semibold text-gray-900">{% if plan.max_recipients == -1 %}Unlimited{% else %}{{ plan.max_recipients }}{% endif %}</p>
+            <p class="text-sm text-gray-500">{{ _('Recipients') }}</p>
+            <p class="text-lg font-semibold text-gray-900">{% if plan.max_recipients == -1 %}{{ _('Unlimited') }}{% else %}{{ plan.max_recipients }}{% endif %}</p>
           </div>
         </div>
         <div class="mt-4 pt-4 border-t border-gray-100">
           <a href="{{ url_for('billing.customer_portal') }}" class="text-sm font-medium text-primary-600 hover:text-primary-500">
-            Manage billing &rarr;
+            {{ _('Manage billing →') }}
           </a>
         </div>
       </div>
@@ -51,25 +51,25 @@
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Organization Details</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Organization Details') }}</h2>
       </div>
       <form action="{{ url_for('briefing.update_organization') }}" method="POST" class="px-6 py-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="space-y-4">
           <div>
-            <label for="company_name" class="block text-sm font-medium text-gray-700">Organization Name</label>
-            <input type="text" name="company_name" id="company_name" value="{{ org.company_name or '' }}" 
+            <label for="company_name" class="block text-sm font-medium text-gray-700">{{ _('Organization Name') }}</label>
+            <input type="text" name="company_name" id="company_name" value="{{ org.company_name or '' }}"
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                    required minlength="2" maxlength="150">
           </div>
           <div>
-            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <label for="description" class="block text-sm font-medium text-gray-700">{{ _('Description') }}</label>
             <textarea name="description" id="description" rows="3"
                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                      placeholder="Brief description of your organization">{{ org.description or '' }}</textarea>
+                      placeholder="{{ _('Brief description of your organization') }}">{{ org.description or '' }}</textarea>
           </div>
           <div>
-            <label for="website" class="block text-sm font-medium text-gray-700">Website</label>
+            <label for="website" class="block text-sm font-medium text-gray-700">{{ _('Website') }}</label>
             <input type="url" name="website" id="website" value="{{ org.website or '' }}"
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                    placeholder="https://example.com">
@@ -77,7 +77,7 @@
         </div>
         <div class="mt-4">
           <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-            Save Changes
+            {{ _('Save Changes') }}
           </button>
         </div>
       </form>
@@ -85,9 +85,9 @@
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-lg font-semibold text-gray-900">Team Members</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Team Members') }}</h2>
         <span class="text-sm text-gray-500">
-          {% if max_seats == -1 %}{{ current_seats }} members (unlimited){% else %}{{ current_seats }} / {{ max_seats }} seats{% endif %}
+          {% if max_seats == -1 %}{{ _('%(count)d members (unlimited)', count=current_seats) }}{% else %}{{ _('%(current)s / %(max)s seats', current=current_seats, max=max_seats) }}{% endif %}
         </span>
       </div>
       <div class="px-6 py-4">
@@ -108,32 +108,32 @@
                   <p class="text-xs text-gray-500">{{ member.user.email }}</p>
                 {% else %}
                   <p class="text-sm font-medium text-gray-500">{{ member.invite_email }}</p>
-                  <p class="text-xs text-yellow-600">Invitation pending</p>
+                  <p class="text-xs text-yellow-600">{{ _('Invitation pending') }}</p>
                 {% endif %}
               </div>
             </div>
             <div class="flex items-center space-x-2">
               {% if member.role == 'owner' %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                  Owner
+                  {{ _('Owner') }}
                 </span>
               {% elif member.role == 'admin' %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-primary-800">
-                  Admin
+                  {{ _('Admin') }}
                 </span>
               {% elif member.role == 'editor' %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                  Editor
+                  {{ _('Editor') }}
                 </span>
               {% else %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                  Viewer
+                  {{ _('Viewer') }}
                 </span>
               {% endif %}
 
               {% if member.status == 'pending' %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Pending
+                  {{ _('Pending') }}
                 </span>
               {% endif %}
 
@@ -142,14 +142,14 @@
                   <form action="{{ url_for('briefing.change_member_role', member_id=member.id) }}" method="POST" class="inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <select name="role" class="auto-submit-select text-xs border-gray-300 rounded py-1 px-2">
-                      <option value="admin" {% if member.role == 'admin' %}selected{% endif %}>Admin</option>
-                      <option value="editor" {% if member.role == 'editor' %}selected{% endif %}>Editor</option>
-                      <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                      <option value="admin" {% if member.role == 'admin' %}selected{% endif %}>{{ _('Admin') }}</option>
+                      <option value="editor" {% if member.role == 'editor' %}selected{% endif %}>{{ _('Editor') }}</option>
+                      <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>{{ _('Viewer') }}</option>
                     </select>
                   </form>
-                  <form action="{{ url_for('briefing.remove_member', member_id=member.id) }}" method="POST" class="inline" data-confirm="Are you sure you want to remove this team member?">
+                  <form action="{{ url_for('briefing.remove_member', member_id=member.id) }}" method="POST" class="inline" data-confirm="{{ _('Are you sure you want to remove this team member?') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Remove member">
+                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="{{ _('Remove member') }}">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                       </svg>
@@ -164,30 +164,29 @@
 
         {% if is_admin %}
         <div class="mt-6 pt-4 border-t border-gray-200">
-          <h3 class="text-sm font-medium text-gray-900 mb-3">Invite Team Member</h3>
+          <h3 class="text-sm font-medium text-gray-900 mb-3">{{ _('Invite Team Member') }}</h3>
           {% if can_add_member %}
           <form action="{{ url_for('briefing.invite_member') }}" method="POST" class="flex flex-col sm:flex-row gap-3">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="email" name="email" required placeholder="colleague@example.com"
                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
             <select name="role" class="rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
-              <option value="editor">Editor</option>
-              <option value="admin">Admin</option>
-              <option value="viewer">Viewer</option>
+              <option value="editor">{{ _('Editor') }}</option>
+              <option value="admin">{{ _('Admin') }}</option>
+              <option value="viewer">{{ _('Viewer') }}</option>
             </select>
             <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              Send Invite
+              {{ _('Send Invite') }}
             </button>
           </form>
-          <p class="text-xs text-gray-500 mt-2">They'll receive an email with a link to join your organization.</p>
+          <p class="text-xs text-gray-500 mt-2">{{ _("They'll receive an email with a link to join your organization.") }}</p>
           {% else %}
           <div class="bg-yellow-50 rounded-md p-3 border border-yellow-100">
             <p class="text-sm text-yellow-800">
-              You've reached the maximum of {{ max_seats }} team members on your {{ plan.name }} plan.
-              <a href="{{ url_for('billing.customer_portal') }}" class="font-medium underline">Upgrade your plan</a> to add more.
+              {{ _("You've reached the maximum of %(max)s team members on your %(plan)s plan. %(link_start)sUpgrade your plan%(link_end)s to add more.", max=max_seats, plan=plan.name, link_start='<a href="' + url_for('billing.customer_portal') + '" class="font-medium underline">', link_end='</a>')|safe }}
             </p>
           </div>
           {% endif %}
@@ -198,7 +197,7 @@
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Plan Features</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Plan Features') }}</h2>
       </div>
       <div class="px-6 py-4">
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -206,37 +205,37 @@
             <svg class="w-5 h-5 {% if plan.allow_document_uploads %}text-green-500{% else %}text-gray-300{% endif %} mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm {% if plan.allow_document_uploads %}text-gray-900{% else %}text-gray-400{% endif %}">Document Uploads</span>
+            <span class="text-sm {% if plan.allow_document_uploads %}text-gray-900{% else %}text-gray-400{% endif %}">{{ _('Document Uploads') }}</span>
           </div>
           <div class="flex items-center">
             <svg class="w-5 h-5 {% if plan.allow_custom_branding %}text-green-500{% else %}text-gray-300{% endif %} mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm {% if plan.allow_custom_branding %}text-gray-900{% else %}text-gray-400{% endif %}">Custom Branding</span>
+            <span class="text-sm {% if plan.allow_custom_branding %}text-gray-900{% else %}text-gray-400{% endif %}">{{ _('Custom Branding') }}</span>
           </div>
           <div class="flex items-center">
             <svg class="w-5 h-5 {% if plan.allow_approval_workflow %}text-green-500{% else %}text-gray-300{% endif %} mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm {% if plan.allow_approval_workflow %}text-gray-900{% else %}text-gray-400{% endif %}">Approval Workflow</span>
+            <span class="text-sm {% if plan.allow_approval_workflow %}text-gray-900{% else %}text-gray-400{% endif %}">{{ _('Approval Workflow') }}</span>
           </div>
           <div class="flex items-center">
             <svg class="w-5 h-5 {% if plan.allow_slack_integration %}text-green-500{% else %}text-gray-300{% endif %} mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm {% if plan.allow_slack_integration %}text-gray-900{% else %}text-gray-400{% endif %}">Slack Integration</span>
+            <span class="text-sm {% if plan.allow_slack_integration %}text-gray-900{% else %}text-gray-400{% endif %}">{{ _('Slack Integration') }}</span>
           </div>
           <div class="flex items-center">
             <svg class="w-5 h-5 {% if plan.allow_api_access %}text-green-500{% else %}text-gray-300{% endif %} mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm {% if plan.allow_api_access %}text-gray-900{% else %}text-gray-400{% endif %}">API Access</span>
+            <span class="text-sm {% if plan.allow_api_access %}text-gray-900{% else %}text-gray-400{% endif %}">{{ _('API Access') }}</span>
           </div>
           <div class="flex items-center">
             <svg class="w-5 h-5 {% if plan.priority_processing %}text-green-500{% else %}text-gray-300{% endif %} mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm {% if plan.priority_processing %}text-gray-900{% else %}text-gray-400{% endif %}">Priority Processing</span>
+            <span class="text-sm {% if plan.priority_processing %}text-gray-900{% else %}text-gray-400{% endif %}">{{ _('Priority Processing') }}</span>
           </div>
         </div>
       </div>

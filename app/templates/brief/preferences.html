@@ -1,15 +1,15 @@
 {% extends "layout.html" %}
 
-{% set cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief' %}
+{% set cadence_label = _('Weekly Brief') if subscriber.cadence == 'weekly' else _('Daily Brief') %}
 
-{% block title %}Manage Preferences - {{ cadence_label }}{% endblock %}
+{% block title %}{{ _('Manage Preferences - %(label)s', label=cadence_label) }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-lg mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Brief Preferences</h1>
-            <p class="text-gray-600 mt-2">Manage your {{ cadence_label }} subscription</p>
+            <h1 class="text-2xl font-bold text-gray-900">{{ _('Brief Preferences') }}</h1>
+            <p class="text-gray-600 mt-2">{{ _('Manage your %(label)s subscription', label=cadence_label) }}</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -41,12 +41,12 @@
                             {% if subscriber.status == 'active' %}
                             <span class="inline-flex items-center">
                                 <span class="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
-                                Active subscription
+                                {{ _('Active subscription') }}
                             </span>
                             {% else %}
                             <span class="inline-flex items-center">
                                 <span class="w-2 h-2 bg-gray-400 rounded-full mr-1.5"></span>
-                                Unsubscribed
+                                {{ _('Unsubscribed') }}
                             </span>
                             {% endif %}
                         </p>
@@ -59,101 +59,101 @@
                 {# Timezone Selection #}
                 <div>
                     <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">
-                        Your time zone
+                        {{ _('Your time zone') }}
                     </label>
                     {% from 'components/timezone_select.html' import timezone_select %}
                     {{ timezone_select(name='timezone', selected=subscriber.timezone or 'Europe/London', css_class='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500') }}
-                    <p class="mt-1 text-sm text-gray-500">We'll send your brief at the right time for your location.</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ _("We'll send your brief at the right time for your location.") }}</p>
                 </div>
 
                 {# Cadence Selection #}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        How Often?
+                        {{ _('How Often?') }}
                     </label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-amber-500 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-all">
                             <input type="radio" name="cadence" value="daily" class="sr-only" id="cadence-daily"
                                    {% if not subscriber.cadence or subscriber.cadence == 'daily' %}checked{% endif %}>
                             <span class="text-2xl mb-1">📰</span>
-                            <span class="text-sm font-semibold text-gray-900">Daily</span>
-                            <span class="text-xs text-gray-500 text-center mt-1">Every day</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ _('Daily') }}</span>
+                            <span class="text-xs text-gray-500 text-center mt-1">{{ _('Every day') }}</span>
                         </label>
                         <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-amber-500 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-all">
                             <input type="radio" name="cadence" value="weekly" class="sr-only" id="cadence-weekly"
                                    {% if subscriber.cadence == 'weekly' %}checked{% endif %}>
                             <span class="text-2xl mb-1">📬</span>
-                            <span class="text-sm font-semibold text-gray-900">Weekly</span>
-                            <span class="text-xs text-gray-500 text-center mt-1">Once a week</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ _('Weekly') }}</span>
+                            <span class="text-xs text-gray-500 text-center mt-1">{{ _('Once a week') }}</span>
                         </label>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">Weekly briefs summarise the top stories of the week in a single digest.</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ _('Weekly briefs summarise the top stories of the week in a single digest.') }}</p>
                 </div>
 
                 {# Weekly Day Selection (shown when weekly is selected) #}
                 <div id="weekly-day-options" class="{% if not subscriber.cadence or subscriber.cadence != 'weekly' %}hidden{% endif %}">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Weekly delivery day
+                        {{ _('Weekly delivery day') }}
                     </label>
                     <select name="preferred_weekly_day"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500">
                         {% set _pref_day = subscriber.preferred_weekly_day if subscriber.preferred_weekly_day is not none else 6 %}
-                        <option value="0" {% if _pref_day == 0 %}selected{% endif %}>Monday</option>
-                        <option value="1" {% if _pref_day == 1 %}selected{% endif %}>Tuesday</option>
-                        <option value="2" {% if _pref_day == 2 %}selected{% endif %}>Wednesday</option>
-                        <option value="3" {% if _pref_day == 3 %}selected{% endif %}>Thursday</option>
-                        <option value="4" {% if _pref_day == 4 %}selected{% endif %}>Friday</option>
-                        <option value="5" {% if _pref_day == 5 %}selected{% endif %}>Saturday</option>
-                        <option value="6" {% if _pref_day == 6 %}selected{% endif %}>Sunday</option>
+                        <option value="0" {% if _pref_day == 0 %}selected{% endif %}>{{ _('Monday') }}</option>
+                        <option value="1" {% if _pref_day == 1 %}selected{% endif %}>{{ _('Tuesday') }}</option>
+                        <option value="2" {% if _pref_day == 2 %}selected{% endif %}>{{ _('Wednesday') }}</option>
+                        <option value="3" {% if _pref_day == 3 %}selected{% endif %}>{{ _('Thursday') }}</option>
+                        <option value="4" {% if _pref_day == 4 %}selected{% endif %}>{{ _('Friday') }}</option>
+                        <option value="5" {% if _pref_day == 5 %}selected{% endif %}>{{ _('Saturday') }}</option>
+                        <option value="6" {% if _pref_day == 6 %}selected{% endif %}>{{ _('Sunday') }}</option>
                     </select>
                 </div>
 
                 {# Send Hour Selection #}
                 <div>
                     <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700 mb-2">
-                        Delivery time
+                        {{ _('Delivery time') }}
                     </label>
                     {% set _pref_hour = subscriber.preferred_send_hour if subscriber.preferred_send_hour is not none else 18 %}
                     <select id="preferred_send_hour" name="preferred_send_hour"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500">
-                        <optgroup label="Morning — includes yesterday's catch-up">
-                            <option value="6"  {% if _pref_hour == 6  %}selected{% endif %}>6:00 am — Early bird</option>
-                            <option value="7"  {% if _pref_hour == 7  %}selected{% endif %}>7:00 am</option>
-                            <option value="8"  {% if _pref_hour == 8  %}selected{% endif %}>8:00 am — With coffee</option>
-                            <option value="9"  {% if _pref_hour == 9  %}selected{% endif %}>9:00 am — Start of day</option>
+                        <optgroup label="{{ _("Morning — includes yesterday's catch-up") }}">
+                            <option value="6"  {% if _pref_hour == 6  %}selected{% endif %}>{{ _('6:00 am — Early bird') }}</option>
+                            <option value="7"  {% if _pref_hour == 7  %}selected{% endif %}>{{ _('7:00 am') }}</option>
+                            <option value="8"  {% if _pref_hour == 8  %}selected{% endif %}>{{ _('8:00 am — With coffee') }}</option>
+                            <option value="9"  {% if _pref_hour == 9  %}selected{% endif %}>{{ _('9:00 am — Start of day') }}</option>
                         </optgroup>
-                        <optgroup label="Midday">
-                            <option value="12" {% if _pref_hour == 12 %}selected{% endif %}>12:00 pm — Lunchtime</option>
+                        <optgroup label="{{ _('Midday') }}">
+                            <option value="12" {% if _pref_hour == 12 %}selected{% endif %}>{{ _('12:00 pm — Lunchtime') }}</option>
                         </optgroup>
-                        <optgroup label="Evening — freshest news, same day">
-                            <option value="17" {% if _pref_hour == 17 %}selected{% endif %}>5:00 pm</option>
-                            <option value="18" {% if _pref_hour == 18 %}selected{% endif %}>6:00 pm — Evening</option>
-                            <option value="19" {% if _pref_hour == 19 %}selected{% endif %}>7:00 pm</option>
-                            <option value="20" {% if _pref_hour == 20 %}selected{% endif %}>8:00 pm</option>
+                        <optgroup label="{{ _('Evening — freshest news, same day') }}">
+                            <option value="17" {% if _pref_hour == 17 %}selected{% endif %}>{{ _('5:00 pm') }}</option>
+                            <option value="18" {% if _pref_hour == 18 %}selected{% endif %}>{{ _('6:00 pm — Evening') }}</option>
+                            <option value="19" {% if _pref_hour == 19 %}selected{% endif %}>{{ _('7:00 pm') }}</option>
+                            <option value="20" {% if _pref_hour == 20 %}selected{% endif %}>{{ _('8:00 pm') }}</option>
                         </optgroup>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">Morning sends include yesterday's stories as catch-up; evening carries the day's freshest coverage.</p>
+                    <p class="mt-1 text-xs text-gray-500">{{ _("Morning sends include yesterday's stories as catch-up; evening carries the day's freshest coverage.") }}</p>
                 </div>
 
                 {# Save Button #}
-                <button type="submit" 
-                        class="w-full px-6 py-3 bg-amber-600 text-white font-semibold rounded-lg 
+                <button type="submit"
+                        class="w-full px-6 py-3 bg-amber-600 text-white font-semibold rounded-lg
                                hover:bg-amber-700 transition-colors duration-200 flex items-center justify-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Preferences
+                    {{ _('Save Preferences') }}
                 </button>
 
                 {# Resubscribe Option #}
                 {% if subscriber.status == 'unsubscribed' %}
                 <div class="pt-6 border-t border-gray-200">
                     <div class="bg-blue-50 rounded-lg p-4">
-                        <h3 class="font-medium text-blue-900 mb-2">Miss the {{ cadence_label }}?</h3>
-                        <p class="text-sm text-primary-700 mb-3">You previously unsubscribed. Click below to start receiving briefs again.</p>
+                        <h3 class="font-medium text-blue-900 mb-2">{{ _('Miss the %(label)s?', label=cadence_label) }}</h3>
+                        <p class="text-sm text-primary-700 mb-3">{{ _('You previously unsubscribed. Click below to start receiving briefs again.') }}</p>
                         <button type="submit" name="resubscribe" value="1"
                                 class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition">
-                            Resubscribe
+                            {{ _('Resubscribe') }}
                         </button>
                     </div>
                 </div>
@@ -164,10 +164,10 @@
             {% if subscriber.status == 'active' %}
             <div class="px-6 pb-6">
                 <div class="pt-6 border-t border-gray-200">
-                    <p class="text-sm text-gray-500 mb-3">Don't want to receive the {{ cadence_label }} anymore?</p>
-                    <a href="{{ url_for('brief.unsubscribe', token=token) }}" 
+                    <p class="text-sm text-gray-500 mb-3">{{ _("Don't want to receive the %(label)s anymore?", label=cadence_label) }}</p>
+                    <a href="{{ url_for('brief.unsubscribe', token=token) }}"
                        class="text-sm text-red-600 hover:text-red-800 hover:underline">
-                        Unsubscribe from {{ cadence_label }}
+                        {{ _('Unsubscribe from %(label)s', label=cadence_label) }}
                     </a>
                 </div>
             </div>
@@ -176,7 +176,7 @@
 
         <div class="mt-6 text-center">
             <a href="{{ url_for('brief.today') }}" class="text-amber-600 hover:text-amber-800 text-sm">
-                ← Back to Today's Brief
+                ← {{ _("Back to Today's Brief") }}
             </a>
         </div>
     </div>

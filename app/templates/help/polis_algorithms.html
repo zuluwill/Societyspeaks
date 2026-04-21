@@ -5,44 +5,42 @@
 <div class="max-w-4xl mx-auto p-6">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">Understanding Pol.is Algorithms</h1>
-        <p class="text-gray-600">Learn how Pol.is analyses and visualises participant opinions</p>
+        <h1 class="text-3xl font-bold mb-4">{{ _('Understanding Pol.is Algorithms') }}</h1>
+        <p class="text-gray-600">{{ _('Learn how Pol.is analyses and visualises participant opinions') }}</p>
     </div>
 
     <!-- Introduction -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Overview</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Overview') }}</h2>
         <p class="text-gray-700 mb-4">
-            Pol.is is an open-source platform that uses machine learning to facilitate large-scale, real-time conversations. 
-            Unlike many other platforms, Pol.is doesn't analyse text or use natural language processing. Instead, it focuses 
-            on analysing structured responses (agree, disagree, or pass) to create a mathematical understanding of opinions.
+            {{ _("Pol.is is an open-source platform that uses machine learning to facilitate large-scale, real-time conversations. Unlike many other platforms, Pol.is doesn't analyse text or use natural language processing. Instead, it focuses on analysing structured responses (agree, disagree, or pass) to create a mathematical understanding of opinions.") }}
         </p>
 
         <!-- Opinion Matrix Visual -->
         <div class="bg-gray-50 p-4 rounded-lg mb-6">
-            <h3 class="font-semibold mb-2">The Opinion Matrix</h3>
+            <h3 class="font-semibold mb-2">{{ _('The Opinion Matrix') }}</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-4 py-2">Participant</th>
-                            <th class="px-4 py-2">Comment 1</th>
-                            <th class="px-4 py-2">Comment 2</th>
-                            <th class="px-4 py-2">Comment 3</th>
+                            <th class="px-4 py-2">{{ _('Participant') }}</th>
+                            <th class="px-4 py-2">{{ _('Comment 1') }}</th>
+                            <th class="px-4 py-2">{{ _('Comment 2') }}</th>
+                            <th class="px-4 py-2">{{ _('Comment 3') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <tr>
-                            <td class="px-4 py-2">User A</td>
-                            <td class="px-4 py-2 text-primary-600">Agree</td>
-                            <td class="px-4 py-2 text-red-600">Disagree</td>
-                            <td class="px-4 py-2 text-gray-500">Pass</td>
+                            <td class="px-4 py-2">{{ _('User A') }}</td>
+                            <td class="px-4 py-2 text-primary-600">{{ _('Agree') }}</td>
+                            <td class="px-4 py-2 text-red-600">{{ _('Disagree') }}</td>
+                            <td class="px-4 py-2 text-gray-500">{{ _('Pass') }}</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-2">User B</td>
-                            <td class="px-4 py-2 text-primary-600">Agree</td>
-                            <td class="px-4 py-2 text-primary-600">Agree</td>
-                            <td class="px-4 py-2 text-red-600">Disagree</td>
+                            <td class="px-4 py-2">{{ _('User B') }}</td>
+                            <td class="px-4 py-2 text-primary-600">{{ _('Agree') }}</td>
+                            <td class="px-4 py-2 text-primary-600">{{ _('Agree') }}</td>
+                            <td class="px-4 py-2 text-red-600">{{ _('Disagree') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -52,17 +50,16 @@
 
     <!-- Key Algorithms -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Key Algorithms</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Key Algorithms') }}</h2>
 
         <!-- Dimensionality Reduction -->
         <div class="mb-8">
-            <h3 class="text-lg font-semibold mb-4">1. Dimensionality Reduction</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ _('1. Dimensionality Reduction') }}</h3>
 
             <div class="bg-blue-50 p-4 rounded-lg mb-4">
-                <h4 class="font-semibold mb-2">Principal Component Analysis (PCA)</h4>
+                <h4 class="font-semibold mb-2">{{ _('Principal Component Analysis (PCA)') }}</h4>
                 <p class="text-gray-700">
-                    PCA reduces the complexity of high-dimensional data by identifying the most important patterns 
-                    in participants' responses. Think of it as finding the "main themes" in how people vote.
+                    {{ _('PCA reduces the complexity of high-dimensional data by identifying the most important patterns in participants\' responses. Think of it as finding the "main themes" in how people vote.') }}
                 </p>
 
                 <!-- PCA Visualization -->
@@ -91,32 +88,29 @@
             </div>
 
             <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-semibold mb-2">UMAP (Uniform Manifold Approximation and Projection)</h4>
+                <h4 class="font-semibold mb-2">{{ _('UMAP (Uniform Manifold Approximation and Projection)') }}</h4>
                 <p class="text-gray-700">
-                    UMAP helps visualize complex relationships between opinions while preserving important structures 
-                    in the data. This creates the opinion group visualizations you see in Pol.is.
+                    {{ _('UMAP helps visualize complex relationships between opinions while preserving important structures in the data. This creates the opinion group visualizations you see in Pol.is.') }}
                 </p>
             </div>
         </div>
 
         <!-- Clustering -->
         <div>
-            <h3 class="text-lg font-semibold mb-4">2. Clustering Algorithms</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ _('2. Clustering Algorithms') }}</h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="bg-green-50 p-4 rounded-lg">
-                    <h4 class="font-semibold mb-2">K-Means Clustering</h4>
+                    <h4 class="font-semibold mb-2">{{ _('K-Means Clustering') }}</h4>
                     <p class="text-gray-700">
-                        Groups participants with similar voting patterns into distinct clusters, helping identify 
-                        major opinion groups.
+                        {{ _('Groups participants with similar voting patterns into distinct clusters, helping identify major opinion groups.') }}
                     </p>
                 </div>
 
                 <div class="bg-green-50 p-4 rounded-lg">
-                    <h4 class="font-semibold mb-2">Leiden Algorithm</h4>
+                    <h4 class="font-semibold mb-2">{{ _('Leiden Algorithm') }}</h4>
                     <p class="text-gray-700">
-                        A sophisticated method for finding communities within the network of participants based on 
-                        their voting patterns.
+                        {{ _('A sophisticated method for finding communities within the network of participants based on their voting patterns.') }}
                     </p>
                 </div>
             </div>
@@ -136,35 +130,35 @@
                 <circle cx="310" cy="90" r="3" fill="rgb(34, 197, 94)"/>
 
                 <!-- Labels -->
-                <text x="100" y="100" text-anchor="middle" fill="rgb(59, 130, 246)">Group A</text>
-                <text x="300" y="100" text-anchor="middle" fill="rgb(34, 197, 94)">Group B</text>
+                <text x="100" y="100" text-anchor="middle" fill="rgb(59, 130, 246)">{{ _('Group A') }}</text>
+                <text x="300" y="100" text-anchor="middle" fill="rgb(34, 197, 94)">{{ _('Group B') }}</text>
             </svg>
         </div>
     </div>
 
     <!-- Benefits and Limitations -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Benefits of This Approach</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Benefits of This Approach') }}</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Scalability</h3>
+                <h3 class="font-semibold mb-2">{{ _('Scalability') }}</h3>
                 <p class="text-gray-700">
-                    Can handle conversations with hundreds or thousands of participants effectively
+                    {{ _('Can handle conversations with hundreds or thousands of participants effectively') }}
                 </p>
             </div>
 
             <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Language Agnostic</h3>
+                <h3 class="font-semibold mb-2">{{ _('Language Agnostic') }}</h3>
                 <p class="text-gray-700">
-                    Works across any language since it analyses votes, not text
+                    {{ _('Works across any language since it analyses votes, not text') }}
                 </p>
             </div>
 
             <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Real-Time Analysis</h3>
+                <h3 class="font-semibold mb-2">{{ _('Real-Time Analysis') }}</h3>
                 <p class="text-gray-700">
-                    Provides immediate insights as participants engage
+                    {{ _('Provides immediate insights as participants engage') }}
                 </p>
             </div>
         </div>
@@ -172,29 +166,29 @@
 
     <!-- Practical Examples -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Understanding the Visualizations</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Understanding the Visualizations') }}</h2>
 
         <div class="space-y-6">
             <!-- Opinion Groups Example -->
             <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Reading Opinion Group Maps</h3>
+                <h3 class="font-semibold mb-2">{{ _('Reading Opinion Group Maps') }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <h4 class="font-medium mb-2">What You'll See</h4>
+                        <h4 class="font-medium mb-2">{{ _("What You'll See") }}</h4>
                         <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                            <li>Colored clusters representing different opinion groups</li>
-                            <li>Dots representing individual participants</li>
-                            <li>Distances between groups showing how different their opinions are</li>
-                            <li>Group sizes indicating how many participants share similar views</li>
+                            <li>{{ _('Colored clusters representing different opinion groups') }}</li>
+                            <li>{{ _('Dots representing individual participants') }}</li>
+                            <li>{{ _('Distances between groups showing how different their opinions are') }}</li>
+                            <li>{{ _('Group sizes indicating how many participants share similar views') }}</li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-medium mb-2">What It Means</h4>
+                        <h4 class="font-medium mb-2">{{ _('What It Means') }}</h4>
                         <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                            <li>Closer groups = more similar opinions</li>
-                            <li>Larger groups = more common viewpoints</li>
-                            <li>Scattered dots = unique or diverse perspectives</li>
-                            <li>Overlapping areas = potential consensus points</li>
+                            <li>{{ _('Closer groups = more similar opinions') }}</li>
+                            <li>{{ _('Larger groups = more common viewpoints') }}</li>
+                            <li>{{ _('Scattered dots = unique or diverse perspectives') }}</li>
+                            <li>{{ _('Overlapping areas = potential consensus points') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -202,19 +196,19 @@
 
             <!-- Common Patterns -->
             <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Common Patterns to Look For</h3>
+                <h3 class="font-semibold mb-2">{{ _('Common Patterns to Look For') }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-4 bg-white rounded-lg">
-                        <h4 class="font-medium mb-2">Consensus</h4>
-                        <p class="text-gray-700">When groups are close together or overlapping, it suggests shared views and potential for agreement</p>
+                        <h4 class="font-medium mb-2">{{ _('Consensus') }}</h4>
+                        <p class="text-gray-700">{{ _('When groups are close together or overlapping, it suggests shared views and potential for agreement') }}</p>
                     </div>
                     <div class="p-4 bg-white rounded-lg">
-                        <h4 class="font-medium mb-2">Polarization</h4>
-                        <p class="text-gray-700">Distinct, widely separated groups indicate strongly differing viewpoints on key issues</p>
+                        <h4 class="font-medium mb-2">{{ _('Polarization') }}</h4>
+                        <p class="text-gray-700">{{ _('Distinct, widely separated groups indicate strongly differing viewpoints on key issues') }}</p>
                     </div>
                     <div class="p-4 bg-white rounded-lg">
-                        <h4 class="font-medium mb-2">Bridging</h4>
-                        <p class="text-gray-700">Participants between groups often hold views that could help bridge differences</p>
+                        <h4 class="font-medium mb-2">{{ _('Bridging') }}</h4>
+                        <p class="text-gray-700">{{ _('Participants between groups often hold views that could help bridge differences') }}</p>
                     </div>
                 </div>
             </div>
@@ -223,39 +217,39 @@
 
     <!-- Making Use of Insights -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Making Use of These Insights</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Making Use of These Insights') }}</h2>
 
         <div class="space-y-6">
             <div class="bg-green-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Tips for Discussion Owners</h3>
+                <h3 class="font-semibold mb-2">{{ _('Tips for Discussion Owners') }}</h3>
                 <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                    <li>Monitor how opinion groups form and evolve over time</li>
-                    <li>Look for comments that receive broad agreement across groups</li>
-                    <li>Identify potential areas of consensus for further exploration</li>
-                    <li>Use insights to guide additional seed comments or discussion topics</li>
-                    <li>Pay attention to bridging opinions that connect different groups</li>
+                    <li>{{ _('Monitor how opinion groups form and evolve over time') }}</li>
+                    <li>{{ _('Look for comments that receive broad agreement across groups') }}</li>
+                    <li>{{ _('Identify potential areas of consensus for further exploration') }}</li>
+                    <li>{{ _('Use insights to guide additional seed comments or discussion topics') }}</li>
+                    <li>{{ _('Pay attention to bridging opinions that connect different groups') }}</li>
                 </ul>
             </div>
 
             <div class="bg-yellow-50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">What Makes a Good Discussion?</h3>
+                <h3 class="font-semibold mb-2">{{ _('What Makes a Good Discussion?') }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <h4 class="font-medium mb-2">Healthy Patterns</h4>
+                        <h4 class="font-medium mb-2">{{ _('Healthy Patterns') }}</h4>
                         <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                            <li>Multiple distinct but not extremely polarized groups</li>
-                            <li>Presence of bridging opinions</li>
-                            <li>Mix of consensus and divergent viewpoints</li>
-                            <li>Active participation across groups</li>
+                            <li>{{ _('Multiple distinct but not extremely polarized groups') }}</li>
+                            <li>{{ _('Presence of bridging opinions') }}</li>
+                            <li>{{ _('Mix of consensus and divergent viewpoints') }}</li>
+                            <li>{{ _('Active participation across groups') }}</li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-medium mb-2">Warning Signs</h4>
+                        <h4 class="font-medium mb-2">{{ _('Warning Signs') }}</h4>
                         <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                            <li>Extreme polarization with no bridging views</li>
-                            <li>One dominant group with minimal other participation</li>
-                            <li>No clear opinion patterns emerging</li>
-                            <li>Lack of engagement with different viewpoints</li>
+                            <li>{{ _('Extreme polarization with no bridging views') }}</li>
+                            <li>{{ _('One dominant group with minimal other participation') }}</li>
+                            <li>{{ _('No clear opinion patterns emerging') }}</li>
+                            <li>{{ _('Lack of engagement with different viewpoints') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -265,32 +259,27 @@
 
     <!-- FAQ Section -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Frequently Asked Questions</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Frequently Asked Questions') }}</h2>
 
         <div class="space-y-4">
             <div class="border-b border-gray-200 pb-4">
-                <h3 class="font-semibold mb-2">How many participants do I need for meaningful results?</h3>
+                <h3 class="font-semibold mb-2">{{ _('How many participants do I need for meaningful results?') }}</h3>
                 <p class="text-gray-700">
-                    While Pol.is can work with any number of participants, you typically need at least 15-20 active participants 
-                    to start seeing meaningful opinion patterns emerge. The more participants, the more reliable the patterns become.
+                    {{ _('While Pol.is can work with any number of participants, you typically need at least 15-20 active participants to start seeing meaningful opinion patterns emerge. The more participants, the more reliable the patterns become.') }}
                 </p>
             </div>
 
             <div class="border-b border-gray-200 pb-4">
-                <h3 class="font-semibold mb-2">How long should I run my discussion?</h3>
+                <h3 class="font-semibold mb-2">{{ _('How long should I run my discussion?') }}</h3>
                 <p class="text-gray-700">
-                    This depends on your goals, but most discussions benefit from running for at least a week to allow time for 
-                    different viewpoints to emerge and for participants to engage with various comments. Some discussions run for 
-                    months to capture evolving opinions.
+                    {{ _('This depends on your goals, but most discussions benefit from running for at least a week to allow time for different viewpoints to emerge and for participants to engage with various comments. Some discussions run for months to capture evolving opinions.') }}
                 </p>
             </div>
 
             <div class="border-b border-gray-200 pb-4">
-                <h3 class="font-semibold mb-2">What if no clear groups are forming?</h3>
+                <h3 class="font-semibold mb-2">{{ _('What if no clear groups are forming?') }}</h3>
                 <p class="text-gray-700">
-                    This might indicate that your seed comments aren't capturing the key points of disagreement, or that the topic 
-                    needs more specific focus. Consider adding new seed comments that address potential areas of disagreement or 
-                    refinining your discussion prompt.
+                    {{ _("This might indicate that your seed comments aren't capturing the key points of disagreement, or that the topic needs more specific focus. Consider adding new seed comments that address potential areas of disagreement or refinining your discussion prompt.") }}
                 </p>
             </div>
         </div>
@@ -298,16 +287,16 @@
 
     <!-- Resources -->
     <div class="bg-gray-50 rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">Additional Resources</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ _('Additional Resources') }}</h2>
         <ul class="space-y-2">
             <li>
                 <a href="https://compdemocracy.org/FAQ/" target="_blank" class="text-primary-600 hover:underline">
-                    Complete Pol.is Documentation →
+                    {{ _('Complete Pol.is Documentation →') }}
                 </a>
             </li>
             <li>
                 <a href="https://compdemocracy.org/Polis/" target="_blank" class="text-primary-600 hover:underline">
-                    Technical Overview of Pol.is →
+                    {{ _('Technical Overview of Pol.is →') }}
                 </a>
             </li>
         </ul>

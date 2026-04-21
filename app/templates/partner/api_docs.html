@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 
-{% block title %}API Reference - Society Speaks{% endblock %}
+{% block title %}{{ _('API Reference - Society Speaks') }}{% endblock %}
 
-{% block meta_description %}API documentation for Society Speaks partner integration. Lookup discussions by article URL, show participation snapshots, and embed voting widgets with developer-friendly endpoints and clear governance for publishers.{% endblock %}
+{% block meta_description %}{{ _('API documentation for Society Speaks partner integration. Lookup discussions by article URL, show participation snapshots, and embed voting widgets with developer-friendly endpoints and clear governance for publishers.') }}{% endblock %}
 
 {% block content %}
 {% if partner %}
@@ -13,72 +13,71 @@
     <header class="space-y-4">
       <nav class="text-sm text-gray-500">
         {% if partner %}
-        <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-primary-600">Partner Portal</a>
+        <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-primary-600">{{ _('Partner Portal') }}</a>
         {% else %}
-        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">For Publishers</a>
+        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">{{ _('For Publishers') }}</a>
         {% endif %}
         <span class="mx-2">/</span>
-        <span class="text-gray-900">API Reference</span>
+        <span class="text-gray-900">{{ _('API Reference') }}</span>
       </nav>
       <div class="grid gap-6 lg:grid-cols-12 lg:items-center">
         <div class="lg:col-span-8 space-y-4">
-          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">Partner API Reference</h1>
+          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">{{ _('Partner API Reference') }}</h1>
           <p class="text-lg text-gray-600">
-            Integrate Society Speaks programmatically. Power your embeds, snapshots, and editorial insights
-            with JSON APIs built for newsroom workflows and developer velocity.
+            {{ _('Integrate Society Speaks programmatically. Power your embeds, snapshots, and editorial insights with JSON APIs built for newsroom workflows and developer velocity.') }}
           </p>
           <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
-              Open API Playground
+              {{ _('Open API Playground') }}
             </a>
             <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              {{ 'Back to dashboard' if partner else 'Partner Portal' }}
+              {% if partner %}{{ _('Back to dashboard') }}{% else %}{{ _('Partner Portal') }}{% endif %}
             </a>
             <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              Embed Generator
+              {{ _('Embed Generator') }}
             </a>
             <a href="mailto:info@societyspeaks.io" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              Contact
+              {{ _('Contact') }}
             </a>
           </div>
         </div>
         <div class="lg:col-span-4">
           <div class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">Quick start</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">{{ _('Quick start') }}</p>
             <div class="code-block relative group mt-3">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
             </div>
-            <p class="text-xs text-gray-500 mt-2">Then embed with the returned <code>embed_url</code>.</p>
+            <p class="text-xs text-gray-500 mt-2">{{ _('Then embed with the returned <code>embed_url</code>.')|safe }}</p>
           </div>
         </div>
       </div>
 
       <div class="grid gap-6 lg:grid-cols-3 pt-4">
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">For developers</h3>
-          <p class="text-sm text-gray-600">Predictable endpoints, clear error codes, and copy/paste examples.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For developers') }}</h3>
+          <p class="text-sm text-gray-600">{{ _('Predictable endpoints, clear error codes, and copy/paste examples.') }}</p>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">For editorial leaders</h3>
-          <p class="text-sm text-gray-600">Reliable participation signals and a transparent, auditable methodology.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For editorial leaders') }}</h3>
+          <p class="text-sm text-gray-600">{{ _('Reliable participation signals and a transparent, auditable methodology.') }}</p>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">For governance</h3>
-          <p class="text-sm text-gray-600">Rate limits, attribution requirements, and a clear source of truth.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For governance') }}</h3>
+          <p class="text-sm text-gray-600">{{ _('Rate limits, attribution requirements, and a clear source of truth.') }}</p>
         </div>
       </div>
 
       <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
+        <h3 class="font-semibold text-blue-900 mb-2">{{ _('Testing the API') }}</h3>
         <ul class="text-primary-800 text-sm space-y-1">
-          <li><strong>Partner Portal:</strong> <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="underline font-medium">{{ 'Open your dashboard' if partner else 'Create a portal' }}</a> to get your test API key and DNS verification token.</li>
-          <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.</li>
-          <li><strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.</li>
-          <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
+          <li>{{ _('<strong>Partner Portal:</strong> %(link)s to get your test API key and DNS verification token.', link='<a href="' ~ (url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup')) ~ '" class="underline font-medium">' ~ (_('Open your dashboard') if partner else _('Create a portal')) ~ '</a>')|safe }}</li>
+          <li>{{ _('<strong>Interactive playground:</strong> %(link)s to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.', link='<a href="' ~ url_for('partner.api_playground') ~ '" class="underline font-medium">' ~ _('Open API Playground') ~ '</a>')|safe }}</li>
+          <li>{{ _('<strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.')|safe }}</li>
+          <li>{{ _('<strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.')|safe }}</li>
         </ul>
         <p class="text-xs text-primary-800 mt-2">
-          Newsroom workflow quick map: <code>external_id</code> for CMS mapping, webhook callbacks for system sync, and Partner Portal roles for access control.
+          {{ _('Newsroom workflow quick map: <code>external_id</code> for CMS mapping, webhook callbacks for system sync, and Partner Portal roles for access control.')|safe }}
         </p>
       </div>
     </header>
@@ -90,77 +89,72 @@
     <!-- Sidebar navigation (desktop: sticky, mobile: horizontal scroll) -->
     <nav id="docsSidebar" class="hidden lg:block lg:col-span-3">
       <div class="sticky top-6 space-y-1 text-sm">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">On this page</p>
-        <a href="#auth" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Authentication</a>
-        <a href="#client-libraries" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Client Libraries</a>
-        <a href="#base-url" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Base URL</a>
-        <a href="#workflows" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Common Workflows</a>
-        <a href="#lookup" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Lookup by Article URL</a>
-        <a href="#snapshot" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Discussion Snapshot</a>
-        <a href="#embed-url-parameters" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Embed URL Parameters</a>
-        <a href="#embed-sessions" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Session Tracking &amp; Privacy</a>
-        <a href="#postmessage" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">PostMessage Events</a>
-        <a href="#oembed" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">oEmbed Provider</a>
-        <a href="#create-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Create Discussion</a>
-        <a href="#update-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Update Discussion</a>
-        <a href="#cost-protection" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Cost &amp; Abuse Protection</a>
-        <a href="#rate-limits" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Rate Limits</a>
-        <a href="#error-format" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Error Format</a>
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ _('On this page') }}</p>
+        <a href="#auth" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Authentication') }}</a>
+        <a href="#client-libraries" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Client Libraries') }}</a>
+        <a href="#base-url" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Base URL') }}</a>
+        <a href="#workflows" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Common Workflows') }}</a>
+        <a href="#lookup" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Lookup by Article URL') }}</a>
+        <a href="#snapshot" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Discussion Snapshot') }}</a>
+        <a href="#embed-url-parameters" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Embed URL Parameters') }}</a>
+        <a href="#embed-sessions" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Session Tracking &amp; Privacy')|safe }}</a>
+        <a href="#postmessage" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('PostMessage Events') }}</a>
+        <a href="#oembed" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('oEmbed Provider') }}</a>
+        <a href="#create-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Create Discussion') }}</a>
+        <a href="#update-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Update Discussion') }}</a>
+        <a href="#cost-protection" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Cost &amp; Abuse Protection')|safe }}</a>
+        <a href="#rate-limits" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Rate Limits') }}</a>
+        <a href="#error-format" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Error Format') }}</a>
       </div>
     </nav>
     <!-- Mobile jump-to nav -->
     <div class="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto" style="-ms-overflow-style:none;scrollbar-width:none">
       <div class="flex gap-2 text-xs whitespace-nowrap pb-2">
-        <a href="#auth" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Auth</a>
-        <a href="#client-libraries" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Client Libraries</a>
-        <a href="#base-url" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Base URL</a>
-        <a href="#workflows" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Workflows</a>
-        <a href="#lookup" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Lookup</a>
-        <a href="#snapshot" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Snapshot</a>
-        <a href="#embed-url-parameters" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Embed Params</a>
-        <a href="#embed-sessions" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Sessions</a>
-        <a href="#postmessage" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">PostMessage</a>
-        <a href="#oembed" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">oEmbed</a>
-        <a href="#create-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Create</a>
-        <a href="#update-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Update</a>
-        <a href="#cost-protection" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Cost Protection</a>
-        <a href="#rate-limits" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Rate Limits</a>
-        <a href="#error-format" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Errors</a>
+        <a href="#auth" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Auth') }}</a>
+        <a href="#client-libraries" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Client Libraries') }}</a>
+        <a href="#base-url" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Base URL') }}</a>
+        <a href="#workflows" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Workflows') }}</a>
+        <a href="#lookup" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Lookup') }}</a>
+        <a href="#snapshot" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Snapshot') }}</a>
+        <a href="#embed-url-parameters" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Embed Params') }}</a>
+        <a href="#embed-sessions" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Sessions') }}</a>
+        <a href="#postmessage" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('PostMessage') }}</a>
+        <a href="#oembed" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('oEmbed') }}</a>
+        <a href="#create-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Create') }}</a>
+        <a href="#update-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Update') }}</a>
+        <a href="#cost-protection" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Cost Protection') }}</a>
+        <a href="#rate-limits" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Rate Limits') }}</a>
+        <a href="#error-format" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Errors') }}</a>
       </div>
     </div>
     <div class="lg:col-span-9 space-y-12">
     <section id="auth">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Authentication & Environments</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Authentication & Environments') }}</h2>
       <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <p class="text-sm text-gray-700 mb-3">
-          Use test keys for staging and live keys for production. Both run on the same base URL and are
-          isolated by key type. Keys are issued in the Partner Portal.
+          {{ _('Use test keys for staging and live keys for production. Both run on the same base URL and are isolated by key type. Keys are issued in the Partner Portal.') }}
         </p>
         <div class="grid gap-3 md:grid-cols-2 text-sm text-gray-700">
           <div class="bg-gray-50 rounded-lg p-3">
-            <strong>Test key:</strong> <code>sspk_test_...</code>
+            <strong>{{ _('Test key:') }}</strong> <code>sspk_test_...</code>
           </div>
           <div class="bg-gray-50 rounded-lg p-3">
-            <strong>Live key:</strong> <code>sspk_live_...</code> (activated after billing)
+            <strong>{{ _('Live key:') }}</strong> <code>sspk_live_...</code> {{ _('(activated after billing)') }}
           </div>
         </div>
         <p class="text-sm text-gray-600 mt-3">
-          Domains must be verified via DNS TXT to allow embeds.
+          {{ _('Domains must be verified via DNS TXT to allow embeds.') }}
         </p>
         <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <p class="text-sm font-semibold text-amber-900 mb-1">Server-to-server only for write operations</p>
+          <p class="text-sm font-semibold text-amber-900 mb-1">{{ _('Server-to-server only for write operations') }}</p>
           <p class="text-sm text-amber-800">
-            <strong>Create Discussion</strong> and partner management routes must be called from your server, not from client-side JavaScript
-            (requests with an <code>Origin</code> header are rejected with <code>403</code>).
-            Read-only endpoints (Lookup, Snapshot, oEmbed) work from browsers without an API key.
-            For authenticated requests from a web app, proxy through your backend so API keys stay secret.
+            {{ _('<strong>Create Discussion</strong> and partner management routes must be called from your server, not from client-side JavaScript (requests with an <code>Origin</code> header are rejected with <code>403</code>). Read-only endpoints (Lookup, Snapshot, oEmbed) work from browsers without an API key. For authenticated requests from a web app, proxy through your backend so API keys stay secret.')|safe }}
           </p>
         </div>
         <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p class="text-sm font-semibold text-blue-900 mb-1">HTTPS required</p>
+          <p class="text-sm font-semibold text-blue-900 mb-1">{{ _('HTTPS required') }}</p>
           <p class="text-sm text-primary-800">
-            All API requests must be made over HTTPS and enforced at your edge/proxy layer in production.
-            Never log your API key or include it in URLs — always send it in the <code>X-API-Key</code> header.
+            {{ _('All API requests must be made over HTTPS and enforced at your edge/proxy layer in production. Never log your API key or include it in URLs — always send it in the <code>X-API-Key</code> header.')|safe }}
           </p>
         </div>
       </div>
@@ -169,13 +163,11 @@
     <!-- Client Libraries -->
     <section id="client-libraries">
       <div class="flex items-start justify-between mb-1 gap-4">
-        <h2 class="text-xl font-bold text-gray-900">Client Libraries</h2>
+        <h2 class="text-xl font-bold text-gray-900">{{ _('Client Libraries') }}</h2>
         <span class="shrink-0 text-xs font-mono bg-gray-100 text-gray-500 rounded px-2 py-1 mt-0.5">v0.3.0</span>
       </div>
       <p class="text-gray-600 mb-6">
-        Drop-in helper clients for Python and Node.js. Each is a <strong>single self-contained file</strong> — no build step,
-        no transitive dependencies beyond <code class="bg-gray-100 px-1 rounded text-gray-800">requests</code> (Python only).
-        Server-side use only — never expose your API key in browser code.
+        {{ _('Drop-in helper clients for Python and Node.js. Each is a <strong>single self-contained file</strong> — no build step, no transitive dependencies beyond <code class="bg-gray-100 px-1 rounded text-gray-800">requests</code> (Python only). Server-side use only — never expose your API key in browser code.')|safe }}
       </p>
 
       <!-- Language selector -->
@@ -187,31 +179,31 @@
       <!-- Python panel -->
       <div class="sdk-lang-panel" data-sdklang="python">
         <div class="mb-8">
-          <h3 class="font-semibold text-gray-900 mb-2">1. Add to your project</h3>
-          <p class="text-gray-600 text-sm mb-3">Download the file and place it alongside your application code.</p>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('1. Add to your project') }}</h3>
+          <p class="text-gray-600 text-sm mb-3">{{ _('Download the file and place it alongside your application code.') }}</p>
           <a href="{{ url_for('partner.sdk_python') }}" class="inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors mb-4">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-            Download societyspeaks_partner.py
+            {{ _('Download societyspeaks_partner.py') }}
           </a>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"># Place societyspeaks_partner.py anywhere in your project, then:
 from societyspeaks_partner import SocietyspeaksPartnerClient, PartnerApiError</pre>
           </div>
         </div>
 
         <div class="mb-8">
-          <h3 class="font-semibold text-gray-900 mb-2">2. Install the one dependency</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('2. Install the one dependency') }}</h3>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">pip install requests</pre>
           </div>
         </div>
 
         <div class="mb-8">
-          <h3 class="font-semibold text-gray-900 mb-2">3. Initialise &amp; make your first call</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('3. Initialise &amp; make your first call')|safe }}</h3>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">from societyspeaks_partner import SocietyspeaksPartnerClient, PartnerApiError
 
 client = SocietyspeaksPartnerClient(
@@ -240,12 +232,12 @@ except PartnerApiError as e:
 
         <details class="group">
           <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-500 mb-3">
-            <span class="group-open:hidden">▶ View full source</span>
-            <span class="hidden group-open:inline">▼ Hide source</span>
+            <span class="group-open:hidden">{{ _('▶ View full source') }}</span>
+            <span class="hidden group-open:inline">{{ _('▼ Hide source') }}</span>
             <span class="text-xs font-mono text-gray-400 font-normal">societyspeaks_partner.py</span>
           </summary>
           <div class="code-block relative group mt-3">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto max-h-[32rem]">{{ python_sdk_source | e }}</pre>
           </div>
         </details>
@@ -254,31 +246,30 @@ except PartnerApiError as e:
       <!-- Node.js panel -->
       <div class="sdk-lang-panel hidden" data-sdklang="node">
         <div class="mb-8">
-          <h3 class="font-semibold text-gray-900 mb-2">1. Add to your project</h3>
-          <p class="text-gray-600 text-sm mb-3">Download the file and place it alongside your application code.</p>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('1. Add to your project') }}</h3>
+          <p class="text-gray-600 text-sm mb-3">{{ _('Download the file and place it alongside your application code.') }}</p>
           <a href="{{ url_for('partner.sdk_node') }}" class="inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors mb-4">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-            Download societyspeaks_partner.js
+            {{ _('Download societyspeaks_partner.js') }}
           </a>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">// Place societyspeaks_partner.js anywhere in your project, then:
 const { SocietyspeaksPartnerClient, PartnerApiError } = require('./societyspeaks_partner');</pre>
           </div>
         </div>
 
         <div class="mb-8">
-          <h3 class="font-semibold text-gray-900 mb-2">2. No dependencies required</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('2. No dependencies required') }}</h3>
           <p class="text-gray-600 text-sm">
-            Uses Node's built-in <code class="bg-gray-100 px-1 rounded text-gray-800">fetch</code> (Node 18+) and
-            <code class="bg-gray-100 px-1 rounded text-gray-800">crypto</code>. No <code class="bg-gray-100 px-1 rounded text-gray-800">npm install</code> needed.
+            {{ _("Uses Node's built-in <code class=\"bg-gray-100 px-1 rounded text-gray-800\">fetch</code> (Node 18+) and <code class=\"bg-gray-100 px-1 rounded text-gray-800\">crypto</code>. No <code class=\"bg-gray-100 px-1 rounded text-gray-800\">npm install</code> needed.")|safe }}
           </p>
         </div>
 
         <div class="mb-8">
-          <h3 class="font-semibold text-gray-900 mb-2">3. Initialise &amp; make your first call</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('3. Initialise &amp; make your first call')|safe }}</h3>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">const { SocietyspeaksPartnerClient, PartnerApiError } = require('./societyspeaks_partner');
 
 const client = new SocietyspeaksPartnerClient({
@@ -309,12 +300,12 @@ try {
 
         <details class="group">
           <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-500 mb-3">
-            <span class="group-open:hidden">▶ View full source</span>
-            <span class="hidden group-open:inline">▼ Hide source</span>
+            <span class="group-open:hidden">{{ _('▶ View full source') }}</span>
+            <span class="hidden group-open:inline">{{ _('▼ Hide source') }}</span>
             <span class="text-xs font-mono text-gray-400 font-normal">societyspeaks_partner.js</span>
           </summary>
           <div class="code-block relative group mt-3">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto max-h-[32rem]">{{ node_sdk_source | e }}</pre>
           </div>
         </details>
@@ -323,26 +314,26 @@ try {
 
     <!-- Base URL -->
     <section id="base-url">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Base URL</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Base URL') }}</h2>
       <div class="code-block relative group">
-        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
         <code class="block bg-gray-900 text-green-400 px-4 py-3 rounded-lg">{{ base_url }}/api</code>
       </div>
     </section>
 
     <!-- Common Workflows -->
     <section id="workflows">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Common Workflows</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Common Workflows') }}</h2>
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 class="font-semibold text-gray-900 mb-2">Programmatic embed (recommended)</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('Programmatic embed (recommended)') }}</h3>
           <ol class="text-sm text-gray-700 space-y-2">
-            <li>1) Lookup discussion by article URL</li>
-            <li>2) If none exists, create discussion</li>
-            <li>3) Store <code>discussion_id</code> and use <code>embed_url</code></li>
+            <li>{{ _('1) Lookup discussion by article URL') }}</li>
+            <li>{{ _('2) If none exists, create discussion') }}</li>
+            <li>{{ _('3) Store <code>discussion_id</code> and use <code>embed_url</code>')|safe }}</li>
           </ol>
           <div class="code-block relative group mt-4">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words"># 1) Lookup
 curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
   -H "X-API-Key: sspk_test_..."
@@ -355,14 +346,13 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
           </div>
         </div>
         <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 class="font-semibold text-gray-900 mb-2">Manual embed (quick start)</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('Manual embed (quick start)') }}</h3>
           <p class="text-sm text-gray-700">
-            Use the Embed Generator to create one-off iframes. It relies on the same
-            APIs and returns the same <code>discussion_id</code> and <code>embed_url</code>.
+            {{ _('Use the Embed Generator to create one-off iframes. It relies on the same APIs and returns the same <code>discussion_id</code> and <code>embed_url</code>.')|safe }}
           </p>
           <div class="mt-4">
             <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              Open embed generator
+              {{ _('Open embed generator') }}
             </a>
           </div>
         </div>
@@ -371,8 +361,8 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
 
     <!-- Lookup API -->
     <section id="lookup">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Lookup by Article URL</h2>
-      <p class="text-gray-600 mb-4">Find a discussion by the URL of your article.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Lookup by Article URL') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('Find a discussion by the URL of your article.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -383,27 +373,27 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
         </div>
         <div class="p-4 space-y-4">
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Query Parameters</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Query Parameters') }}</h4>
             <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table class="w-full text-sm min-w-[400px]">
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">url</td>
-                <td class="py-2 text-gray-500">required</td>
-                <td class="py-2 text-gray-600">The article URL (URL-encoded)</td>
+                <td class="py-2 text-gray-500">{{ _('required') }}</td>
+                <td class="py-2 text-gray-600">{{ _('The article URL (URL-encoded)') }}</td>
               </tr>
               <tr>
                 <td class="py-2 font-mono text-purple-600">ref</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Partner reference for analytics</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Partner reference for analytics') }}</td>
               </tr>
             </table>
             </div>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Example Request') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
                 <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
                   <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
@@ -430,9 +420,9 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Success Response (200)') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 123,
   "slug": "should-we-reform-housing-policy",
@@ -447,27 +437,27 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Error Responses</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Error Responses') }}</h4>
             <div class="space-y-2 text-sm">
               <div class="flex gap-4">
                 <code class="text-red-600">400</code>
-                <span class="text-gray-600"><code>missing_url</code> - URL parameter required</span>
+                <span class="text-gray-600">{{ _('<code>missing_url</code> - URL parameter required')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">400</code>
-                <span class="text-gray-600"><code>invalid_url</code> - URL could not be parsed</span>
+                <span class="text-gray-600">{{ _('<code>invalid_url</code> - URL could not be parsed')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">403</code>
-                <span class="text-gray-600"><code>partner_disabled</code> - Embed and API access revoked for this partner ref</span>
+                <span class="text-gray-600">{{ _('<code>partner_disabled</code> - Embed and API access revoked for this partner ref')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">404</code>
-                <span class="text-gray-600"><code>no_discussion</code> - No discussion for this URL</span>
+                <span class="text-gray-600">{{ _('<code>no_discussion</code> - No discussion for this URL')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">429</code>
-                <span class="text-gray-600"><code>rate_limited</code> - Too many requests; retry later</span>
+                <span class="text-gray-600">{{ _('<code>rate_limited</code> - Too many requests; retry later')|safe }}</span>
               </div>
             </div>
           </div>
@@ -477,8 +467,8 @@ const embedUrl = data.embed_url;</pre>
 
     <!-- Snapshot API -->
     <section id="snapshot">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Get Discussion Snapshot</h2>
-      <p class="text-gray-600 mb-4">Get participation counts and metadata. Does not include analysis content.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Get Discussion Snapshot') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('Get participation counts and metadata. Does not include analysis content.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -489,30 +479,30 @@ const embedUrl = data.embed_url;</pre>
         </div>
         <div class="p-4 space-y-4">
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Path Parameters</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Path Parameters') }}</h4>
             <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table class="w-full text-sm min-w-[400px]">
               <tr>
                 <td class="py-2 font-mono text-purple-600">discussion_id</td>
-                <td class="py-2 text-gray-500">required</td>
-                <td class="py-2 text-gray-600">The discussion ID</td>
+                <td class="py-2 text-gray-500">{{ _('required') }}</td>
+                <td class="py-2 text-gray-600">{{ _('The discussion ID') }}</td>
               </tr>
             </table>
             </div>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Example Request') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/123/snapshot"</pre>
             </div>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Success Response (200)') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 123,
   "discussion_title": "Should we reform housing policy?",
@@ -528,9 +518,9 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">When Analysis Not Ready</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('When Analysis Not Ready') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 123,
   "discussion_title": "Should we reform housing policy?",
@@ -543,23 +533,23 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Error Responses</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Error Responses') }}</h4>
             <div class="space-y-2 text-sm">
               <div class="flex gap-4">
                 <code class="text-red-600">403</code>
-                <span class="text-gray-600"><code>partner_disabled</code> - Embed and API access revoked for this partner ref</span>
+                <span class="text-gray-600">{{ _('<code>partner_disabled</code> - Embed and API access revoked for this partner ref')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">403</code>
-                <span class="text-gray-600"><code>forbidden</code> - Valid test API key required for test discussions</span>
+                <span class="text-gray-600">{{ _('<code>forbidden</code> - Valid test API key required for test discussions')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">404</code>
-                <span class="text-gray-600"><code>discussion_not_found</code> - Discussion does not exist</span>
+                <span class="text-gray-600">{{ _('<code>discussion_not_found</code> - Discussion does not exist')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">429</code>
-                <span class="text-gray-600"><code>rate_limited</code> - Too many requests; retry later</span>
+                <span class="text-gray-600">{{ _('<code>rate_limited</code> - Too many requests; retry later')|safe }}</span>
               </div>
             </div>
           </div>
@@ -569,9 +559,9 @@ const embedUrl = data.embed_url;</pre>
 
     <!-- Embed URL -->
     <section id="embed-url-parameters">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Embed URL Parameters</h2>
-      <p class="text-gray-600 mb-2">Customize the embed appearance with URL parameters.</p>
-      <p class="text-sm text-gray-500 mb-4">Embeds are available for Society Speaks native discussions.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Embed URL Parameters') }}</h2>
+      <p class="text-gray-600 mb-2">{{ _('Customize the embed appearance with URL parameters.') }}</p>
+      <p class="text-sm text-gray-500 mb-4">{{ _('Embeds are available for Society Speaks native discussions.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -582,35 +572,35 @@ const embedUrl = data.embed_url;</pre>
           <table class="w-full text-sm min-w-[500px]">
             <thead>
               <tr class="border-b">
-                <th class="py-2 text-left font-semibold text-gray-900">Parameter</th>
-                <th class="py-2 text-left font-semibold text-gray-900">Description</th>
-                <th class="py-2 text-left font-semibold text-gray-900">Example</th>
+                <th class="py-2 text-left font-semibold text-gray-900">{{ _('Parameter') }}</th>
+                <th class="py-2 text-left font-semibold text-gray-900">{{ _('Description') }}</th>
+                <th class="py-2 text-left font-semibold text-gray-900">{{ _('Example') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr class="border-b">
                 <td class="py-3 font-mono text-purple-600">theme</td>
-                <td class="py-3 text-gray-600">Preset theme: <code>default</code>, <code>dark</code>, <code>editorial</code>, <code>minimal</code>, <code>bold</code>, <code>muted</code></td>
+                <td class="py-3 text-gray-600">{{ _('Preset theme: <code>default</code>, <code>dark</code>, <code>editorial</code>, <code>minimal</code>, <code>bold</code>, <code>muted</code>')|safe }}</td>
                 <td class="py-3 font-mono text-gray-500">theme=editorial</td>
               </tr>
               <tr class="border-b">
                 <td class="py-3 font-mono text-purple-600">primary</td>
-                <td class="py-3 text-gray-600">Primary color (hex without #)</td>
+                <td class="py-3 text-gray-600">{{ _('Primary color (hex without #)') }}</td>
                 <td class="py-3 font-mono text-gray-500">primary=1e40af</td>
               </tr>
               <tr class="border-b">
                 <td class="py-3 font-mono text-purple-600">bg</td>
-                <td class="py-3 text-gray-600">Background color (hex without #)</td>
+                <td class="py-3 text-gray-600">{{ _('Background color (hex without #)') }}</td>
                 <td class="py-3 font-mono text-gray-500">bg=f9fafb</td>
               </tr>
               <tr class="border-b">
                 <td class="py-3 font-mono text-purple-600">font</td>
-                <td class="py-3 text-gray-600">Font family from allowlist</td>
+                <td class="py-3 text-gray-600">{{ _('Font family from allowlist') }}</td>
                 <td class="py-3 font-mono text-gray-500">font=Georgia</td>
               </tr>
               <tr>
                 <td class="py-3 font-mono text-purple-600">ref</td>
-                <td class="py-3 text-gray-600">Partner reference for analytics</td>
+                <td class="py-3 text-gray-600">{{ _('Partner reference for analytics') }}</td>
                 <td class="py-3 font-mono text-gray-500">ref=observer</td>
               </tr>
             </tbody>
@@ -619,7 +609,7 @@ const embedUrl = data.embed_url;</pre>
 
           <div class="mt-4 p-3 bg-blue-50 rounded-lg">
             <p class="text-sm text-primary-800">
-              <strong>Allowed fonts:</strong> system-ui, Georgia, Inter, Lato, Open Sans, Source Serif Pro
+              {{ _('<strong>Allowed fonts:</strong> system-ui, Georgia, Inter, Lato, Open Sans, Source Serif Pro')|safe }}
             </p>
           </div>
         </div>
@@ -628,27 +618,23 @@ const embedUrl = data.embed_url;</pre>
 
     <!-- Embed: Session Tracking & Privacy -->
     <section id="embed-sessions">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Embed: Session Tracking &amp; Privacy</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Embed: Session Tracking &amp; Privacy')|safe }}</h2>
       <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
         <p class="text-sm text-gray-700">
-          The embed uses a first-party cookie to deduplicate anonymous votes across page loads.
-          When the embed is loaded in a cross-domain iframe (the normal case for partner sites),
-          browsers with strict privacy settings may block this cookie as a third-party cookie.
+          {{ _('The embed uses a first-party cookie to deduplicate anonymous votes across page loads. When the embed is loaded in a cross-domain iframe (the normal case for partner sites), browsers with strict privacy settings may block this cookie as a third-party cookie.') }}
         </p>
         <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
           <p class="text-sm text-green-900">
-            <strong>No action required.</strong> The embed automatically falls back to a
-            <code>localStorage</code>-based session identifier (<code>embed_fingerprint</code>)
-            when cookies are unavailable. Vote deduplication works in both modes.
+            {{ _('<strong>No action required.</strong> The embed automatically falls back to a <code>localStorage</code>-based session identifier (<code>embed_fingerprint</code>) when cookies are unavailable. Vote deduplication works in both modes.')|safe }}
           </p>
         </div>
         <div class="text-sm text-gray-700 space-y-2">
-          <p><strong>How it works:</strong></p>
+          <p><strong>{{ _('How it works:') }}</strong></p>
           <ul class="list-disc list-inside space-y-1 text-gray-600">
-            <li>The embed generates a random participant ID and stores it in <code>localStorage</code> under the embed origin.</li>
-            <li>This ID is sent with each vote as <code>embed_fingerprint</code> for server-side deduplication.</li>
-            <li>If the user clears site data or uses private browsing, a new session starts (they can vote again).</li>
-            <li>Safari, Firefox, and Brave are fully supported via this fallback.</li>
+            <li>{{ _('The embed generates a random participant ID and stores it in <code>localStorage</code> under the embed origin.')|safe }}</li>
+            <li>{{ _('This ID is sent with each vote as <code>embed_fingerprint</code> for server-side deduplication.')|safe }}</li>
+            <li>{{ _('If the user clears site data or uses private browsing, a new session starts (they can vote again).') }}</li>
+            <li>{{ _('Safari, Firefox, and Brave are fully supported via this fallback.') }}</li>
           </ul>
         </div>
       </div>
@@ -656,15 +642,15 @@ const embedUrl = data.embed_url;</pre>
 
     <!-- PostMessage Events -->
     <section id="postmessage">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">PostMessage Events</h2>
-      <p class="text-gray-600 mb-4">The embed communicates with the parent frame via postMessage.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('PostMessage Events') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('The embed communicates with the parent frame via postMessage.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">societyspeaks:embed:loaded</h4>
-          <p class="text-gray-600 text-sm mb-2">Sent when the embed finishes loading.</p>
+          <p class="text-gray-600 text-sm mb-2">{{ _('Sent when the embed finishes loading.') }}</p>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "type": "societyspeaks:embed:loaded",
   "discussionId": 123,
@@ -675,9 +661,9 @@ const embedUrl = data.embed_url;</pre>
 
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">societyspeaks:embed:resize</h4>
-          <p class="text-gray-600 text-sm mb-2">Sent when the embed content height changes. Use to resize iframe.</p>
+          <p class="text-gray-600 text-sm mb-2">{{ _('Sent when the embed content height changes. Use to resize iframe.') }}</p>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "type": "societyspeaks:embed:resize",
   "discussionId": 123,
@@ -687,9 +673,9 @@ const embedUrl = data.embed_url;</pre>
         </div>
 
         <div>
-          <h4 class="font-semibold text-gray-900 mb-2">Example: Auto-resize iframe</h4>
+          <h4 class="font-semibold text-gray-900 mb-2">{{ _('Example: Auto-resize iframe') }}</h4>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">window.addEventListener('message', (event) => {
   if (event.data.type === 'societyspeaks:embed:resize') {
     const iframe = document.querySelector('iframe[src*="societyspeaks"]');
@@ -703,8 +689,8 @@ const embedUrl = data.embed_url;</pre>
 
     <!-- oEmbed -->
     <section id="oembed">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">oEmbed Provider</h2>
-      <p class="text-gray-600 mb-4">Enable automatic embedding of Society Speaks discussions in platforms that support oEmbed.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('oEmbed Provider') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('Enable automatic embedding of Society Speaks discussions in platforms that support oEmbed.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -715,45 +701,45 @@ const embedUrl = data.embed_url;</pre>
         </div>
         <div class="p-4 space-y-4">
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Query Parameters</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Query Parameters') }}</h4>
             <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table class="w-full text-sm min-w-[400px]">
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">url</td>
-                <td class="py-2 text-gray-500">required</td>
-                <td class="py-2 text-gray-600">Society Speaks discussion URL</td>
+                <td class="py-2 text-gray-500">{{ _('required') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Society Speaks discussion URL') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">maxwidth</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Maximum embed width</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Maximum embed width') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">maxheight</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Maximum embed height</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Maximum embed height') }}</td>
               </tr>
               <tr>
                 <td class="py-2 font-mono text-purple-600">format</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Response format (only "json" supported)</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Response format (only "json" supported)') }}</td>
               </tr>
             </table>
             </div>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Example Request') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">curl "{{ base_url }}/api/oembed?url={{ base_url }}/discussions/123/my-discussion"</pre>
             </div>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Success Response (200)') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "type": "rich",
   "version": "1.0",
@@ -770,7 +756,7 @@ const embedUrl = data.embed_url;</pre>
 
           <div class="p-3 bg-blue-50 rounded-lg">
             <p class="text-sm text-primary-800">
-              <strong>Auto-discovery:</strong> Discussion pages include a <code>&lt;link rel="alternate" type="application/json+oembed"&gt;</code> tag for automatic oEmbed discovery by compatible platforms.
+              {{ _('<strong>Auto-discovery:</strong> Discussion pages include a <code>&lt;link rel="alternate" type="application/json+oembed"&gt;</code> tag for automatic oEmbed discovery by compatible platforms.')|safe }}
             </p>
           </div>
         </div>
@@ -779,8 +765,8 @@ const embedUrl = data.embed_url;</pre>
 
     <!-- Create Discussion API -->
     <section id="create-discussion">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Create Discussion (Authenticated)</h2>
-      <p class="text-gray-600 mb-4">Create a discussion for a partner article or an internal CMS item. Requires API key.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Create Discussion (Authenticated)') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('Create a discussion for a partner article or an internal CMS item. Requires API key.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -791,17 +777,17 @@ const embedUrl = data.embed_url;</pre>
         </div>
         <div class="p-4 space-y-4">
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Headers</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Headers') }}</h4>
             <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table class="w-full text-sm min-w-[400px]">
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">X-API-Key</td>
-                <td class="py-2 text-gray-500">required</td>
-                <td class="py-2 text-gray-600">Your partner API key</td>
+                <td class="py-2 text-gray-500">{{ _('required') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Your partner API key') }}</td>
               </tr>
               <tr>
                 <td class="py-2 font-mono text-purple-600">Content-Type</td>
-                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-500">{{ _('required') }}</td>
                 <td class="py-2 text-gray-600">application/json</td>
               </tr>
             </table>
@@ -809,54 +795,54 @@ const embedUrl = data.embed_url;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Request Body</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Request Body') }}</h4>
             <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table class="w-full text-sm min-w-[400px]">
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">article_url</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Canonical article URL (normalized if provided)</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Canonical article URL (normalized if provided)') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">external_id</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Stable partner-defined ID (required if article_url is omitted)</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Stable partner-defined ID (required if article_url is omitted)') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">title</td>
-                <td class="py-2 text-gray-500">required</td>
-                <td class="py-2 text-gray-600">Discussion title (max 200 chars)</td>
+                <td class="py-2 text-gray-500">{{ _('required') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Discussion title (max 200 chars)') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">excerpt</td>
-                <td class="py-2 text-gray-500">conditional</td>
-                <td class="py-2 text-gray-600">Article excerpt for AI-generated statements</td>
+                <td class="py-2 text-gray-500">{{ _('conditional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Article excerpt for AI-generated statements') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">seed_statements</td>
-                <td class="py-2 text-gray-500">conditional</td>
-                <td class="py-2 text-gray-600">Array of {content, position} statements</td>
+                <td class="py-2 text-gray-500">{{ _('conditional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Array of {content, position} statements') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">source_name</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Your publication name for attribution</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Your publication name for attribution') }}</td>
               </tr>
               <tr>
                 <td class="py-2 font-mono text-purple-600">embed_statement_submissions_enabled</td>
-                <td class="py-2 text-gray-500">optional</td>
-                <td class="py-2 text-gray-600">Allow inline reader submissions in embed for this discussion (default false)</td>
+                <td class="py-2 text-gray-500">{{ _('optional') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Allow inline reader submissions in embed for this discussion (default false)') }}</td>
               </tr>
             </table>
             </div>
-            <p class="text-xs text-gray-500 mt-2">Notes: Provide at least one identifier (<code>article_url</code> or <code>external_id</code>) and either <code>excerpt</code> or <code>seed_statements</code>.</p>
-            <p class="text-xs text-gray-500 mt-1">Recommendation: keep <code>embed_statement_submissions_enabled</code> as <code>false</code> for most article pages, and enable it only for discussions where your team wants inline statement intake from the embed.</p>
+            <p class="text-xs text-gray-500 mt-2">{{ _('Notes: Provide at least one identifier (<code>article_url</code> or <code>external_id</code>) and either <code>excerpt</code> or <code>seed_statements</code>.')|safe }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ _('Recommendation: keep <code>embed_statement_submissions_enabled</code> as <code>false</code> for most article pages, and enable it only for discussions where your team wants inline statement intake from the embed.')|safe }}</p>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Example Request') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
                 <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
                   <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
@@ -911,9 +897,9 @@ const { discussion_id, embed_url } = data;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Success Response (201)</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Success Response (201)') }}</h4>
             <div class="code-block relative group">
-              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
               <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 456,
   "slug": "should-cities-ban-cars-from-downtown-areas",
@@ -932,19 +918,19 @@ const { discussion_id, embed_url } = data;</pre>
           </div>
 
           <div>
-            <h4 class="font-semibold text-gray-900 mb-2">Error Responses</h4>
+            <h4 class="font-semibold text-gray-900 mb-2">{{ _('Error Responses') }}</h4>
             <div class="space-y-2 text-sm">
               <div class="flex gap-4">
                 <code class="text-red-600">401</code>
-                <span class="text-gray-600"><code>invalid_api_key</code> - Missing or invalid API key</span>
+                <span class="text-gray-600">{{ _('<code>invalid_api_key</code> - Missing or invalid API key')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">400</code>
-                <span class="text-gray-600"><code>missing_identifier</code> or <code>missing_content</code> - Need (article_url or external_id) and excerpt/seed_statements</span>
+                <span class="text-gray-600">{{ _('<code>missing_identifier</code> or <code>missing_content</code> - Need (article_url or external_id) and excerpt/seed_statements')|safe }}</span>
               </div>
               <div class="flex gap-4">
                 <code class="text-red-600">409</code>
-                <span class="text-gray-600"><code>discussion_exists</code> - Discussion already exists for URL</span>
+                <span class="text-gray-600">{{ _('<code>discussion_exists</code> - Discussion already exists for URL')|safe }}</span>
               </div>
             </div>
           </div>
@@ -954,12 +940,12 @@ const { discussion_id, embed_url } = data;</pre>
 
     <!-- Update Discussion API -->
     <section id="update-discussion">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Update discussion policy (Authenticated)</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Update discussion policy (Authenticated)') }}</h2>
       <p class="text-gray-600 mb-3">
-        Use this to close/reopen discussions, toggle integrity mode, and control inline embed submissions.
+        {{ _('Use this to close/reopen discussions, toggle integrity mode, and control inline embed submissions.') }}
       </p>
       <div class="code-block relative group">
-        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
         <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl -X PATCH "{{ base_url }}/api/partner/discussions/456" \
   -H "X-API-Key: your_api_key" \
   -H "Content-Type: application/json" \
@@ -970,65 +956,60 @@ const { discussion_id, embed_url } = data;</pre>
   }'</pre>
       </div>
       <p class="text-xs text-gray-500 mt-2">
-        Recommended default for most article pages: <code>"embed_statement_submissions_enabled": false</code>.
-        Enable <code>true</code> for selected high-engagement discussions (for example, live blogs or campaign hubs).
+        {{ _('Recommended default for most article pages: <code>"embed_statement_submissions_enabled": false</code>. Enable <code>true</code> for selected high-engagement discussions (for example, live blogs or campaign hubs).')|safe }}
       </p>
     </section>
 
     <!-- Webhooks API -->
     <section id="webhooks-api">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Webhook callbacks (Authenticated)</h2>
-      <p class="text-gray-600 mb-4">Configure signed lifecycle callbacks to avoid polling. Use server-to-server calls with a portal-issued key.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Webhook callbacks (Authenticated)') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('Configure signed lifecycle callbacks to avoid polling. Use server-to-server calls with a portal-issued key.') }}</p>
       <div class="bg-white border border-gray-200 rounded-lg p-4 space-y-2 text-sm mb-4">
-        <p><code class="text-purple-700">GET /api/partner/webhooks</code> - list webhook endpoints</p>
-        <p><code class="text-purple-700">POST /api/partner/webhooks</code> - create endpoint and receive signing secret once</p>
-        <p><code class="text-purple-700">PATCH /api/partner/webhooks/{endpoint_id}</code> - pause/resume and update event subscriptions</p>
-        <p><code class="text-purple-700">POST /api/partner/webhooks/{endpoint_id}/rotate-secret</code> - rotate signing secret</p>
-        <p><code class="text-purple-700">DELETE /api/partner/webhooks/{endpoint_id}</code> - delete endpoint</p>
+        <p>{{ _('<code class="text-purple-700">GET /api/partner/webhooks</code> - list webhook endpoints')|safe }}</p>
+        <p>{{ _('<code class="text-purple-700">POST /api/partner/webhooks</code> - create endpoint and receive signing secret once')|safe }}</p>
+        <p>{{ _('<code class="text-purple-700">PATCH /api/partner/webhooks/{endpoint_id}</code> - pause/resume and update event subscriptions')|safe }}</p>
+        <p>{{ _('<code class="text-purple-700">POST /api/partner/webhooks/{endpoint_id}/rotate-secret</code> - rotate signing secret')|safe }}</p>
+        <p>{{ _('<code class="text-purple-700">DELETE /api/partner/webhooks/{endpoint_id}</code> - delete endpoint')|safe }}</p>
       </div>
 
       <!-- Webhook request headers -->
-      <h3 class="font-semibold text-gray-900 mb-2">Request headers</h3>
-      <p class="text-sm text-gray-600 mb-3">Every webhook delivery includes these headers:</p>
+      <h3 class="font-semibold text-gray-900 mb-2">{{ _('Request headers') }}</h3>
+      <p class="text-sm text-gray-600 mb-3">{{ _('Every webhook delivery includes these headers:') }}</p>
       <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-6">
         <table class="w-full text-sm min-w-[500px] border border-gray-200 rounded-lg">
           <thead class="bg-gray-50">
             <tr>
-              <th class="py-2 px-3 text-left font-semibold text-gray-900 border-b">Header</th>
-              <th class="py-2 px-3 text-left font-semibold text-gray-900 border-b">Description</th>
+              <th class="py-2 px-3 text-left font-semibold text-gray-900 border-b">{{ _('Header') }}</th>
+              <th class="py-2 px-3 text-left font-semibold text-gray-900 border-b">{{ _('Description') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Event</td><td class="py-2 px-3 text-gray-600">Event type, e.g. <code>discussion.created</code></td></tr>
-            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Event-Id</td><td class="py-2 px-3 text-gray-600">Unique event UUID — use for deduplication</td></tr>
-            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Timestamp</td><td class="py-2 px-3 text-gray-600">Unix seconds (UTC) when the event was sent</td></tr>
-            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Signature</td><td class="py-2 px-3 text-gray-600">HMAC-SHA256 signature — <strong>always verify this</strong></td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Event</td><td class="py-2 px-3 text-gray-600">{{ _('Event type, e.g. <code>discussion.created</code>')|safe }}</td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Event-Id</td><td class="py-2 px-3 text-gray-600">{{ _('Unique event UUID — use for deduplication') }}</td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Timestamp</td><td class="py-2 px-3 text-gray-600">{{ _('Unix seconds (UTC) when the event was sent') }}</td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Signature</td><td class="py-2 px-3 text-gray-600">{{ _('HMAC-SHA256 signature — <strong>always verify this</strong>')|safe }}</td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- Signature verification warning -->
       <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-        <p class="text-sm font-semibold text-red-900 mb-1">Always verify webhook signatures</p>
+        <p class="text-sm font-semibold text-red-900 mb-1">{{ _('Always verify webhook signatures') }}</p>
         <p class="text-sm text-red-800">
-          Without verification, any party that knows your endpoint URL can send forged events.
-          Read the raw body <em>before</em> parsing JSON, then verify the HMAC-SHA256 signature using your signing secret.
-          Reject requests with timestamps older than 5 minutes to prevent replay attacks.
+          {{ _('Without verification, any party that knows your endpoint URL can send forged events. Read the raw body <em>before</em> parsing JSON, then verify the HMAC-SHA256 signature using your signing secret. Reject requests with timestamps older than 5 minutes to prevent replay attacks.')|safe }}
         </p>
       </div>
 
       <!-- Signature format -->
-      <h3 class="font-semibold text-gray-900 mb-2">Signature format</h3>
+      <h3 class="font-semibold text-gray-900 mb-2">{{ _('Signature format') }}</h3>
       <p class="text-sm text-gray-600 mb-4">
-        The signed payload is <code class="bg-gray-100 px-1 rounded">{timestamp}.{raw_body}</code>
-        (Unix seconds, a literal dot, then the raw UTF-8 request body). The
-        <code>X-SocietySpeaks-Signature</code> header is <code>sha256=&lt;hex_digest&gt;</code>.
+        {{ _('The signed payload is <code class="bg-gray-100 px-1 rounded">{timestamp}.{raw_body}</code> (Unix seconds, a literal dot, then the raw UTF-8 request body). The <code>X-SocietySpeaks-Signature</code> header is <code>sha256=&lt;hex_digest&gt;</code>.')|safe }}
       </p>
 
       <!-- Verification code examples -->
-      <h3 class="font-semibold text-gray-900 mb-2">Verification example</h3>
+      <h3 class="font-semibold text-gray-900 mb-2">{{ _('Verification example') }}</h3>
       <div class="code-block relative group mb-6">
-        <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
         <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
           <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
             <button role="tab" aria-selected="true" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">Python</button>
@@ -1121,119 +1102,115 @@ app.post(
       </div>
 
       <!-- Manual verification steps -->
-      <h3 class="font-semibold text-gray-900 mb-2">Manual verification (without the SDK)</h3>
-      <p class="text-sm text-gray-600 mb-3">If you are not using our SDK, follow these steps exactly:</p>
+      <h3 class="font-semibold text-gray-900 mb-2">{{ _('Manual verification (without the SDK)') }}</h3>
+      <p class="text-sm text-gray-600 mb-3">{{ _('If you are not using our SDK, follow these steps exactly:') }}</p>
       <ol class="text-sm text-gray-700 space-y-2 list-decimal list-inside mb-4">
-        <li>Read the raw request body as bytes — before any JSON parsing.</li>
-        <li>Parse <code>X-SocietySpeaks-Timestamp</code> as an integer. If it is absent or more than 300 seconds in the past, reject with HTTP 400.</li>
-        <li>Build the signed payload: <code>{timestamp}</code> + <code>.</code> + raw body bytes.</li>
-        <li>Compute <code>HMAC-SHA256(key=signing_secret, msg=signed_payload)</code> and hex-encode it.</li>
-        <li>Prepend <code>sha256=</code> to form the expected signature string.</li>
-        <li>Compare with <code>X-SocietySpeaks-Signature</code> using a <strong>constant-time</strong> comparison — <code>hmac.compare_digest</code> in Python, <code>crypto.timingSafeEqual</code> in Node. A plain string equality check leaks timing information.</li>
+        <li>{{ _('Read the raw request body as bytes — before any JSON parsing.') }}</li>
+        <li>{{ _('Parse <code>X-SocietySpeaks-Timestamp</code> as an integer. If it is absent or more than 300 seconds in the past, reject with HTTP 400.')|safe }}</li>
+        <li>{{ _('Build the signed payload: <code>{timestamp}</code> + <code>.</code> + raw body bytes.')|safe }}</li>
+        <li>{{ _('Compute <code>HMAC-SHA256(key=signing_secret, msg=signed_payload)</code> and hex-encode it.')|safe }}</li>
+        <li>{{ _('Prepend <code>sha256=</code> to form the expected signature string.')|safe }}</li>
+        <li>{{ _('Compare with <code>X-SocietySpeaks-Signature</code> using a <strong>constant-time</strong> comparison — <code>hmac.compare_digest</code> in Python, <code>crypto.timingSafeEqual</code> in Node. A plain string equality check leaks timing information.')|safe }}</li>
       </ol>
 
       <!-- Secret management -->
-      <h3 class="font-semibold text-gray-900 mb-2">Secret management</h3>
+      <h3 class="font-semibold text-gray-900 mb-2">{{ _('Secret management') }}</h3>
       <p class="text-sm text-gray-600">
-        The signing secret is returned once when you create an endpoint — store it securely in an environment variable or secrets manager, never in source code.
-        It is never shown again in the portal. Use <code>POST /api/partner/webhooks/{endpoint_id}/rotate-secret</code>
-        to issue a new secret; briefly accept both the old and new signatures during the rollover period before decommissioning the old one.
+        {{ _('The signing secret is returned once when you create an endpoint — store it securely in an environment variable or secrets manager, never in source code. It is never shown again in the portal. Use <code>POST /api/partner/webhooks/{endpoint_id}/rotate-secret</code> to issue a new secret; briefly accept both the old and new signatures during the rollover period before decommissioning the old one.')|safe }}
       </p>
     </section>
 
     <!-- Analytics Export API -->
     <section id="analytics-export-api">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Analytics export (Authenticated)</h2>
-      <p class="text-gray-600 mb-3">Export usage events in JSON or CSV for BI pipelines.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Analytics export (Authenticated)') }}</h2>
+      <p class="text-gray-600 mb-3">{{ _('Export usage events in JSON or CSV for BI pipelines.') }}</p>
       <div class="code-block relative group">
-        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
         <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl "{{ base_url }}/api/partner/analytics/usage-export?days=30&env=all&format=json&page=1&per_page=100" \
   -H "X-API-Key: your_api_key"</pre>
       </div>
-      <p class="text-xs text-gray-500 mt-2">Use <code>format=csv</code> for direct file ingestion, or paginated <code>format=json</code> for API consumers.</p>
+      <p class="text-xs text-gray-500 mt-2">{{ _('Use <code>format=csv</code> for direct file ingestion, or paginated <code>format=json</code> for API consumers.')|safe }}</p>
     </section>
 
     <!-- Cost and abuse protection -->
     <section id="cost-protection">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Cost and Abuse Protection</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Cost and Abuse Protection') }}</h2>
       <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <p class="text-amber-900 text-sm mb-3">
-          <strong>Who pays for what:</strong> Lookup, snapshot, oEmbed, and the embed page do not use our LLM. They are rate-limited per IP (and optional <code>ref</code>) to prevent abuse. <strong>Create Discussion</strong> is the only endpoint that can trigger AI-generated seed statements (OpenAI/Anthropic); it uses <em>our</em> API keys, not yours.
+          {{ _('<strong>Who pays for what:</strong> Lookup, snapshot, oEmbed, and the embed page do not use our LLM. They are rate-limited per IP (and optional <code>ref</code>) to prevent abuse. <strong>Create Discussion</strong> is the only endpoint that can trigger AI-generated seed statements (OpenAI/Anthropic); it uses <em>our</em> API keys, not yours.')|safe }}
         </p>
         <p class="text-amber-900 text-sm mb-3">
-          <strong>Partners use keys we issue.</strong> Only requests with a valid <code>X-API-Key</code> (from our allowlist) can create discussions. We do not use partner-provided LLM keys for the create flow. If a key is abused, we revoke it.
+          {{ _('<strong>Partners use keys we issue.</strong> Only requests with a valid <code>X-API-Key</code> (from our allowlist) can create discussions. We do not use partner-provided LLM keys for the create flow. If a key is abused, we revoke it.')|safe }}
         </p>
         <p class="text-amber-900 text-sm">
-          <strong>Create Discussion</strong> is limited to <strong>30 requests per hour per API key</strong>. Combined with key control, this caps LLM and database cost from the create endpoint.
+          {{ _('<strong>Create Discussion</strong> is limited to <strong>30 requests per hour per API key</strong>. Combined with key control, this caps LLM and database cost from the create endpoint.')|safe }}
         </p>
       </div>
     </section>
 
     <!-- Rate Limits -->
     <section id="rate-limits">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Rate Limits</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Rate Limits') }}</h2>
       <div class="bg-white border border-gray-200 rounded-lg p-4">
         <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <table class="w-full text-sm min-w-[400px]">
           <thead>
             <tr class="border-b">
-              <th class="py-2 text-left font-semibold text-gray-900">Endpoint</th>
-              <th class="py-2 text-left font-semibold text-gray-900">Limit</th>
+              <th class="py-2 text-left font-semibold text-gray-900">{{ _('Endpoint') }}</th>
+              <th class="py-2 text-left font-semibold text-gray-900">{{ _('Limit') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Lookup by article URL</td>
-              <td class="py-3 font-mono text-gray-900">60 req / min / IP</td>
+              <td class="py-3 text-gray-600">{{ _('Lookup by article URL') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('60 req / min / IP') }}</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Get snapshot</td>
-              <td class="py-3 font-mono text-gray-900">120 req / min / IP</td>
+              <td class="py-3 text-gray-600">{{ _('Get snapshot') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('120 req / min / IP') }}</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Vote submission (default)</td>
-              <td class="py-3 font-mono text-gray-900">30 req / min / IP</td>
+              <td class="py-3 text-gray-600">{{ _('Vote submission (default)') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('30 req / min / IP') }}</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Vote submission (integrity mode)</td>
-              <td class="py-3 font-mono text-gray-900">10 req / min / discussion</td>
+              <td class="py-3 text-gray-600">{{ _('Vote submission (integrity mode)') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('10 req / min / discussion') }}</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Statement creation (authenticated)</td>
-              <td class="py-3 font-mono text-gray-900">10 per hour</td>
+              <td class="py-3 text-gray-600">{{ _('Statement creation (authenticated)') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('10 per hour') }}</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Statement creation (anonymous)</td>
-              <td class="py-3 font-mono text-gray-900">5 per hour</td>
+              <td class="py-3 text-gray-600">{{ _('Statement creation (anonymous)') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('5 per hour') }}</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Flag statement (from embed)</td>
-              <td class="py-3 font-mono text-gray-900">10 req / min / IP</td>
+              <td class="py-3 text-gray-600">{{ _('Flag statement (from embed)') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('10 req / min / IP') }}</td>
             </tr>
             <tr>
-              <td class="py-3 text-gray-600">Create discussion</td>
-              <td class="py-3 font-mono text-gray-900">30 req / hr / key</td>
+              <td class="py-3 text-gray-600">{{ _('Create discussion') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('30 req / hr / key') }}</td>
             </tr>
           </tbody>
         </table>
         </div>
         <p class="text-sm text-gray-500 mt-4">
-          Responses include a <code>429 Too Many Requests</code> with a <code>Retry-After</code> header indicating
-          seconds until the next request is allowed.
+          {{ _('Responses include a <code>429 Too Many Requests</code> with a <code>Retry-After</code> header indicating seconds until the next request is allowed.')|safe }}
         </p>
         <p class="text-sm text-gray-500 mt-2">
-          <strong>Integrity mode:</strong> Some discussions have stricter vote rate limits enabled for integrity protection.
-          The embed handles this transparently &mdash; users see a &ldquo;please slow down&rdquo; message.
+          {{ _('<strong>Integrity mode:</strong> Some discussions have stricter vote rate limits enabled for integrity protection. The embed handles this transparently &mdash; users see a &ldquo;please slow down&rdquo; message.')|safe }}
         </p>
       </div>
     </section>
 
     <!-- Error Format -->
     <section id="error-format">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Error Format</h2>
-      <p class="text-gray-600 mb-4">All errors return JSON with a consistent format.</p>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Error Format') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('All errors return JSON with a consistent format.') }}</p>
       <div class="code-block relative group">
-        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
         <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "error": "error_code",
   "message": "Human-readable description of the error"
@@ -1246,8 +1223,8 @@ app.post(
   <!-- Footer -->
   <div class="mt-12 pt-8 border-t border-gray-200">
     <p class="text-gray-500 text-sm">
-      Questions? <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">Contact us</a>
-      or visit the <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.hub') }}" class="text-primary-600 hover:underline">{{ 'Partner Dashboard' if partner else 'Partner Hub' }}</a>.
+      {{ _('Questions?') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">{{ _('Contact us') }}</a>
+      {{ _('or visit the %(link)s.', link='<a href="' ~ (url_for('partner.portal_dashboard') if partner else url_for('partner.hub')) ~ '" class="text-primary-600 hover:underline">' ~ (_('Partner Dashboard') if partner else _('Partner Hub')) ~ '</a>')|safe }}
     </p>
   </div>
 </div>

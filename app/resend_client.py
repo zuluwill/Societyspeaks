@@ -16,11 +16,34 @@ from datetime import datetime
 from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Any, Tuple
 from flask import render_template, current_app, url_for
+from flask_babel import force_locale, gettext
 import requests
 from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
 from app.briefing.link_tracker import wrap_links as _wrap_links
+from app.lib.locale_utils import resolve_user_locale
 
 logger = logging.getLogger(__name__)
+
+
+def _render_for_user(user, template, **ctx) -> str:
+    """Render an email template under the user's preferred locale.
+
+    Forces the Flask-Babel locale to `user.language` (or 'en' fallback) so every
+    `_()` call inside the template — including any loaded layout/partials — picks
+    up the right translations. Works outside request context too.
+    """
+    with force_locale(resolve_user_locale(user)):
+        return render_template(template, **ctx)
+
+
+def _subject_for_user(user, message: str, **variables) -> str:
+    """Translate an email subject under the user's preferred locale.
+
+    Mirrors `_render_for_user` but for the string we hand to Resend as subject.
+    Keeps substitution variables lazy so translators can rearrange placeholders.
+    """
+    with force_locale(resolve_user_locale(user)):
+        return gettext(message, **variables) if variables else gettext(message)
 
 
 
@@ -360,9 +383,10 @@ class ResendEmailClient:
             bool: Success status
         """
         reset_url = f"{self.base_url}/auth/reset-password/{token}"
-        
+
         try:
-            html = render_template(
+            html = _render_for_user(
+                user,
                 'emails/password_reset.html',
                 username=user.username or 'User',
                 reset_url=reset_url,
@@ -375,7 +399,7 @@ class ResendEmailClient:
         email_data = {
             'from': self.from_email,
             'to': [user.email],
-            'subject': 'Reset Your Password - Society Speaks',
+            'subject': _subject_for_user(user, 'Reset Your Password - Society Speaks'),
             'html': html
         }
 
@@ -400,7 +424,8 @@ class ResendEmailClient:
             bool: Success status
         """
         try:
-            html = render_template(
+            html = _render_for_user(
+                user,
                 'emails/welcome.html',
                 username=user.username or 'There',
                 verification_url=verification_url,
@@ -413,7 +438,7 @@ class ResendEmailClient:
         email_data = {
             'from': self.from_email,
             'to': [user.email],
-            'subject': 'Welcome to Society Speaks!',
+            'subject': _subject_for_user(user, 'Welcome to Society Speaks!'),
             'html': html
         }
 
@@ -438,7 +463,8 @@ class ResendEmailClient:
             bool: Success status
         """
         try:
-            html = render_template(
+            html = _render_for_user(
+                user,
                 'emails/verify_email.html',
                 username=user.username or 'there',
                 verification_url=verification_url,
@@ -451,7 +477,7 @@ class ResendEmailClient:
         email_data = {
             'from': self.from_email,
             'to': [user.email],
-            'subject': 'Verify your Society Speaks email address',
+            'subject': _subject_for_user(user, 'Verify your Society Speaks email address'),
             'html': html
         }
 
@@ -478,7 +504,8 @@ class ResendEmailClient:
         activation_url = f"{self.base_url}/auth/activate/{activation_token}"
         
         try:
-            html = render_template(
+            html = _render_for_user(
+                user,
                 'emails/account_activation.html',
                 username=user.username or 'User',
                 activation_url=activation_url,
@@ -491,7 +518,7 @@ class ResendEmailClient:
         email_data = {
             'from': self.from_email,
             'to': [user.email],
-            'subject': 'Activate Your Society Speaks Account',
+            'subject': _subject_for_user(user, 'Activate Your Society Speaks Account'),
             'html': html
         }
 
@@ -526,7 +553,8 @@ class ResendEmailClient:
             # Build preferences URL for managing frequency
             preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
             
-            html = render_template(
+            html = _render_for_user(
+                subscriber,
                 'emails/daily_question_welcome.html',
                 magic_link_url=magic_link_url,
                 daily_question_url=daily_question_url,
@@ -541,7 +569,7 @@ class ResendEmailClient:
         email_data = {
             'from': self.from_email_daily,
             'to': [subscriber.email],
-            'subject': "You're Subscribed to Daily Civic Questions!",
+            'subject': _subject_for_user(subscriber, "You're Subscribed to Daily Civic Questions!"),
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
@@ -610,7 +638,8 @@ class ResendEmailClient:
             source_articles = []
         
         try:
-            html = render_template(
+            html = _render_for_user(
+                subscriber,
                 'emails/daily_question.html',
                 question_number=question.question_number,
                 question_text=question.question_text,
@@ -644,7 +673,7 @@ class ResendEmailClient:
         email_data = {
             'from': self.from_email_daily,
             'to': [subscriber.email],
-            'subject': f"Daily Question #{question.question_number}: {question.topic_category or 'Civic'}",
+            'subject': _subject_for_user(subscriber, 'Daily Question #%(num)s: %(topic)s', num=question.question_number, topic=question.topic_category or _subject_for_user(subscriber, 'Civic')),
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
@@ -709,7 +738,8 @@ class ResendEmailClient:
         send_hour = subscriber.preferred_send_hour
 
         try:
-            html = render_template(
+            html = _render_for_user(
+                subscriber,
                 'emails/weekly_questions_digest.html',
                 questions=questions_data,
                 batch_url=batch_url,
@@ -735,7 +765,7 @@ class ResendEmailClient:
 
         # Build subject line
         first_question = questions[0].question_text[:50]
-        subject = f"5 Questions This Week: {first_question}..."
+        subject = _subject_for_user(subscriber, '5 Questions This Week: %(first)s...', first=first_question)
 
         email_data = {
             'from': self.from_email_daily,
@@ -802,7 +832,8 @@ class ResendEmailClient:
 
         try:
             # Reuse weekly digest template but with different title
-            html = render_template(
+            html = _render_for_user(
+                subscriber,
                 'emails/weekly_questions_digest.html',
                 questions=questions_data,
                 batch_url=batch_url,
@@ -829,7 +860,7 @@ class ResendEmailClient:
 
         # Build subject line
         first_question = questions[0].question_text[:50]
-        subject = f"10 Questions This Month: {first_question}..."
+        subject = _subject_for_user(subscriber, '10 Questions This Month: %(first)s...', first=first_question)
 
         email_data = {
             'from': self.from_email_daily,
@@ -892,7 +923,8 @@ class ResendEmailClient:
         except Exception:
             source_articles = []
         
-        html = render_template(
+        html = _render_for_user(
+            subscriber,
             'emails/daily_question.html',
             question_number=question.question_number,
             question_text=question.question_text,
@@ -913,7 +945,7 @@ class ResendEmailClient:
         return {
             'from': self.from_email_daily,
             'to': [subscriber.email],
-            'subject': f"Daily Question #{question.question_number}: {question.topic_category or 'Civic'}",
+            'subject': _subject_for_user(subscriber, 'Daily Question #%(num)s: %(topic)s', num=question.question_number, topic=question.topic_category or _subject_for_user(subscriber, 'Civic')),
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
@@ -1174,29 +1206,30 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
 
         is_host = user.id == discussion.creator_id
 
-        # Prepare notification-specific content (align with in-app copy in email_utils)
-        if notification_type == 'new_participant':
-            subject = "New participant in your discussion"
-            message = f"Someone new has joined your discussion '{discussion.title}'"
-        elif notification_type == 'new_response':
-            if is_host:
-                subject = "New activity in your discussion"
-                message = f"There's new activity in your discussion '{discussion.title}'"
+        # Prepare notification-specific content (align with in-app copy in email_utils).
+        # All subject/message strings are resolved under the user's locale below.
+        with force_locale(resolve_user_locale(user)):
+            if notification_type == 'new_participant':
+                subject = gettext("New participant in your discussion")
+                message = gettext("Someone new has joined your discussion '%(title)s'", title=discussion.title)
+            elif notification_type == 'new_response':
+                if is_host:
+                    subject = gettext("New activity in your discussion")
+                    message = gettext("There's new activity in your discussion '%(title)s'", title=discussion.title)
+                else:
+                    subject = gettext("New activity in a discussion you follow")
+                    message = gettext("There's new activity in a discussion you're following: '%(title)s'", title=discussion.title)
+            elif notification_type == 'discussion_update':
+                subject = gettext("Update: %(title)s", title=discussion.title)
+                message = gettext("A new update was posted to '%(title)s'", title=discussion.title)
             else:
-                subject = "New activity in a discussion you follow"
-                message = (
-                    f"There's new activity in a discussion you're following: '{discussion.title}'"
-                )
-        elif notification_type == 'discussion_update':
-            subject = f"Update: {discussion.title}"
-            message = f"A new update was posted to '{discussion.title}'"
-        else:
-            subject = "Activity in your discussion"
-            message = f"There's been activity in your discussion '{discussion.title}'"
+                subject = gettext("Activity in your discussion")
+                message = gettext("There's been activity in your discussion '%(title)s'", title=discussion.title)
 
         # Render using the standard base email template
         settings_url = f"{base_url}/settings"
-        html_content = render_template(
+        html_content = _render_for_user(
+            user,
             'emails/discussion_notification.html',
             username=user.username or 'there',
             subject=subject,
@@ -1251,7 +1284,16 @@ def send_org_invitation_email(email: str, org_name: str, inviter_name: str, invi
     try:
         client = get_resend_client()
         expiry_days = int(os.environ.get('PARTNER_INVITE_EXPIRY_DAYS', '7'))
-        html = render_template(
+        # Invitee may not have an account yet; best-effort locale by looking up
+        # any existing User with this email, else fall back to English.
+        invitee_user = None
+        try:
+            from app.models import User
+            invitee_user = User.query.filter_by(email=email).first()
+        except Exception:
+            invitee_user = None
+        html = _render_for_user(
+            invitee_user,
             'emails/org_member_invite.html',
             org_name=org_name,
             inviter_name=inviter_name,
@@ -1264,7 +1306,7 @@ def send_org_invitation_email(email: str, org_name: str, inviter_name: str, invi
         email_data = {
             'from': client.from_email,
             'to': [email],
-            'subject': f"You've been invited to join {org_name} on Society Speaks",
+            'subject': _subject_for_user(invitee_user, "You've been invited to join %(org)s on Society Speaks", org=org_name),
             'html': html,
         }
         success = client._send_with_retry(email_data, use_rate_limit=False)
@@ -1298,16 +1340,22 @@ def _send_user_transactional_email(
     username = getattr(user, 'username', None) or 'there'
     try:
         client = client or get_resend_client()
-        html = render_template(
+        html = _render_for_user(
+            user,
             template,
             username=username,
             base_url=client.base_url,
             **context,
         )
+        # `subject` is passed in already-translated by the caller (or as English
+        # fallback). If the caller passed a raw English string, translate it here
+        # under the user's locale so subjects localize even when callers haven't
+        # been updated.
+        localized_subject = _subject_for_user(user, subject) if isinstance(subject, str) else subject
         email_data = {
             'from': client.from_email,
             'to': [recipient],
-            'subject': subject,
+            'subject': localized_subject,
             'html': html,
         }
         success = client._send_with_retry(email_data, use_rate_limit=False)
@@ -1402,18 +1450,19 @@ def send_profile_completion_reminder_email(user, missing_fields: list, profile_u
     try:
         client = get_resend_client()
         
-        html = render_template(
+        html = _render_for_user(
+            user,
             'emails/profile_completion_reminder.html',
             username=user.username or 'there',
             missing_fields=missing_fields,
             profile_url=profile_url,
             base_url=client.base_url
         )
-        
+
         email_data = {
             'from': client.from_email,
             'to': [user.email],
-            'subject': 'Complete Your Society Speaks Profile',
+            'subject': _subject_for_user(user, 'Complete Your Society Speaks Profile'),
             'html': html
         }
         
@@ -1461,7 +1510,8 @@ def send_weekly_discussion_digest(user, digest_data: dict) -> bool:
         settings_url = f"{client.base_url}/settings"
         
         # Render template
-        html = render_template(
+        html = _render_for_user(
+            user,
             'emails/weekly_digest.html',
             username=user.username or 'there',
             discussions_with_activity=digest_data.get('discussions_with_activity', []),
@@ -1475,11 +1525,11 @@ def send_weekly_discussion_digest(user, digest_data: dict) -> bool:
             settings_url=settings_url,
             base_url=client.base_url
         )
-        
+
         email_data = {
             'from': client.from_email,
             'to': [user.email],
-            'subject': f'Your Weekly Discussion Digest - Society Speaks',
+            'subject': _subject_for_user(user, 'Your Weekly Discussion Digest - Society Speaks'),
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{settings_url}>',
@@ -1676,7 +1726,10 @@ def send_journey_reminder_email(
         except Exception:
             next_statement_count = 7
 
-        html = render_template(
+        # Resolve the journey subscriber's user for locale (anonymous → 'en')
+        _journey_user = subscription.user if subscription.user_id else None
+        html = _render_for_user(
+            _journey_user,
             'emails/journey_reminder.html',
             username=subscription.email.split('@')[0] if not subscription.user_id else (
                 subscription.user.username if subscription.user else subscription.email.split('@')[0]
@@ -1697,7 +1750,7 @@ def send_journey_reminder_email(
         email_data = {
             'from': client.from_email,
             'to': [subscription.email],
-            'subject': f"Continue your journey: {next_theme_name} — Society Speaks",
+            'subject': _subject_for_user(_journey_user, 'Continue your journey: %(theme)s — Society Speaks', theme=next_theme_name),
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',

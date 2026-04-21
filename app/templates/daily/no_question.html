@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Daily Question - Society Speaks{% endblock %}
+{% block title %}{{ _('Daily Question - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -10,7 +10,7 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Daily Question
+                {{ _('Daily Question') }}
             </div>
         </div>
 
@@ -22,21 +22,21 @@
             </div>
 
             {% if specific_date %}
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">No Question for {{ specific_date.strftime('%B %d, %Y') }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ _('No Question for %(date)s', date=specific_date.strftime('%B %d, %Y')) }}</h1>
             <p class="text-gray-600 mb-6">
-                There wasn't a daily question on this date. Check out today's question instead.
+                {{ _("There wasn't a daily question on this date. Check out today's question instead.") }}
             </p>
             <a href="{{ url_for('daily.today') }}" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
-                Today's Question
+                {{ _("Today's Question") }}
             </a>
             {% else %}
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">No Question Today</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ _('No Question Today') }}</h1>
             <p class="text-gray-600 mb-6">
-                Today's civic question hasn't been published yet. Check back soon!
+                {{ _("Today's civic question hasn't been published yet. Check back soon!") }}
             </p>
             <div class="space-y-3">
                 <a href="{{ url_for('discussions.news_feed') }}" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
-                    Explore Discussions
+                    {{ _('Explore Discussions') }}
                 </a>
             </div>
             {% endif %}
@@ -44,7 +44,7 @@
 
         <div class="mt-8 text-center">
             <p class="text-gray-500 text-sm">
-                Daily questions are published each morning. Subscribe to get notified.
+                {{ _('Daily questions are published each morning. Subscribe to get notified.') }}
             </p>
         </div>
     </div>

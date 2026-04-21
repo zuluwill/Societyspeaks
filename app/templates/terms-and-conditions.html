@@ -1,139 +1,141 @@
 {% extends "layout.html" %}
+{% block title %}{{ _('Terms and Conditions - Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('Society Speaks Terms and Conditions covering use of the platform, accounts, payments, and your rights and responsibilities.') }}{% endblock %}
 {% block content %}
 
 <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-12 mb-12">
-  <h1 class="text-4xl font-extrabold mb-8 text-center text-gray-800">Terms and Conditions</h1>
+  <h1 class="text-4xl font-extrabold mb-8 text-center text-gray-800">{{ _('Terms and Conditions') }}</h1>
 
   <div class="space-y-6 text-gray-600">
-    <p class="font-bold">Effective Date: November 2, 2024</p>
+    <p class="font-bold">{{ _('Effective Date: November 2, 2024') }}</p>
 
-    <p>SocietySpeaks.io ("we", "us", or "our") is operated by William Roberts Coaching and Advisory Ltd, a company incorporated in England (company number 15629688). Our platform provides community discussion and collective intelligence gathering powered by Pol.is technology. The platform is hosted on Replit using Google Cloud infrastructure. By using the Website, you agree to be bound by these Terms and Conditions (the "Terms"). If you do not agree with these Terms, you must not use the website.</p>
+    <p>{{ _('SocietySpeaks.io ("we", "us", or "our") is operated by William Roberts Coaching and Advisory Ltd, a company incorporated in England (company number 15629688). Our platform provides community discussion and collective intelligence gathering powered by Pol.is technology. The platform is hosted on Replit using Google Cloud infrastructure. By using the Website, you agree to be bound by these Terms and Conditions (the "Terms"). If you do not agree with these Terms, you must not use the website.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">1. Definitions</h2>
-
-    <ul class="list-disc pl-6 space-y-2">
-        <li>"Platform" means the SocietySpeaks.io website and all related services</li>
-        <li>"Discussion Platform" means the Pol.is-powered discussion and collective intelligence features</li>
-        <li>"Service" means all services provided through SocietySpeaks.io</li>
-        <li>"User", "you", or "your" means any person accessing or using the Platform</li>
-        <li>"Content" means any information, text, comments, votes, or other materials submitted to or generated through the Platform</li>
-        <li>"Discussion Data" means comments, votes, and interaction patterns within discussions</li>
-        <li>"Subscription" means any paid access to premium features of the Platform</li>
-    </ul>
-
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">2. Discussion Platform Use</h2>
-
-    <p>2.1 Our platform uses Pol.is technology to enable community discussions and collective intelligence gathering. By participating in discussions, you acknowledge and agree that:</p>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('1. Definitions') }}</h2>
 
     <ul class="list-disc pl-6 space-y-2">
-        <li>Your contributions will be publicly visible to other users</li>
-        <li>Your voting patterns contribute to collective analysis</li>
-        <li>Comments and votes cannot be retroactively removed from group analysis</li>
-        <li>Discussion data may be used to generate insights and patterns</li>
-        <li>Your participation is subject to both these Terms and the underlying Pol.is technology terms</li>
+        <li>{{ _('"Platform" means the SocietySpeaks.io website and all related services') }}</li>
+        <li>{{ _('"Discussion Platform" means the Pol.is-powered discussion and collective intelligence features') }}</li>
+        <li>{{ _('"Service" means all services provided through SocietySpeaks.io') }}</li>
+        <li>{{ _('"User", "you", or "your" means any person accessing or using the Platform') }}</li>
+        <li>{{ _('"Content" means any information, text, comments, votes, or other materials submitted to or generated through the Platform') }}</li>
+        <li>{{ _('"Discussion Data" means comments, votes, and interaction patterns within discussions') }}</li>
+        <li>{{ _('"Subscription" means any paid access to premium features of the Platform') }}</li>
     </ul>
 
-    <p>2.2 When participating in discussions, you agree not to:</p>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('2. Discussion Platform Use') }}</h2>
+
+    <p>{{ _('2.1 Our platform uses Pol.is technology to enable community discussions and collective intelligence gathering. By participating in discussions, you acknowledge and agree that:') }}</p>
+
     <ul class="list-disc pl-6 space-y-2">
-        <li>Post harmful, offensive, or inappropriate content</li>
-        <li>Attempt to manipulate or game the discussion system</li>
-        <li>Use automated means to submit comments or votes</li>
-        <li>Harass or intimidate other participants</li>
-        <li>Share misleading or false information</li>
+        <li>{{ _('Your contributions will be publicly visible to other users') }}</li>
+        <li>{{ _('Your voting patterns contribute to collective analysis') }}</li>
+        <li>{{ _('Comments and votes cannot be retroactively removed from group analysis') }}</li>
+        <li>{{ _('Discussion data may be used to generate insights and patterns') }}</li>
+        <li>{{ _('Your participation is subject to both these Terms and the underlying Pol.is technology terms') }}</li>
     </ul>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">3. Registration and Account</h2>
+    <p>{{ _('2.2 When participating in discussions, you agree not to:') }}</p>
+    <ul class="list-disc pl-6 space-y-2">
+        <li>{{ _('Post harmful, offensive, or inappropriate content') }}</li>
+        <li>{{ _('Attempt to manipulate or game the discussion system') }}</li>
+        <li>{{ _('Use automated means to submit comments or votes') }}</li>
+        <li>{{ _('Harass or intimidate other participants') }}</li>
+        <li>{{ _('Share misleading or false information') }}</li>
+    </ul>
 
-    <p>3.1 Eligibility: You must be at least 16 years old to register for an account.</p>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('3. Registration and Account') }}</h2>
 
-    <p>3.2 Account Information: You agree to provide accurate and complete information when creating an account and to keep this information up-to-date.</p>
+    <p>{{ _('3.1 Eligibility: You must be at least 16 years old to register for an account.') }}</p>
 
-    <p>3.3 Security: You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
+    <p>{{ _('3.2 Account Information: You agree to provide accurate and complete information when creating an account and to keep this information up-to-date.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">4. Intellectual Property</h2>
+    <p>{{ _('3.3 Security: You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.') }}</p>
 
-    <p>4.1 Our Intellectual Property: The platform, including all software, designs, text, and graphics, is owned by William Roberts Coaching and Advisory Ltd or our licensors.</p>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('4. Intellectual Property') }}</h2>
 
-    <p>4.2 Your Content: While you retain ownership of content you create, by submitting content to discussions you grant us and other users the right to view, analyze, and interact with that content as part of the collective discussion process.</p>
+    <p>{{ _('4.1 Our Intellectual Property: The platform, including all software, designs, text, and graphics, is owned by William Roberts Coaching and Advisory Ltd or our licensors.') }}</p>
 
-      <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">5. Donations and Payments</h2>
+    <p>{{ _('4.2 Your Content: While you retain ownership of content you create, by submitting content to discussions you grant us and other users the right to view, analyze, and interact with that content as part of the collective discussion process.') }}</p>
 
-      <p>5.1 Platform Support: SocietySpeaks.io is supported by donations from our community. Your contributions help us maintain and improve the platform for everyone.</p>
+      <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('5. Donations and Payments') }}</h2>
 
-      <p>5.2 Supporting the Platform: You can support us in two ways:</p>
+      <p>{{ _('5.1 Platform Support: SocietySpeaks.io is supported by donations from our community. Your contributions help us maintain and improve the platform for everyone.') }}</p>
+
+      <p>{{ _('5.2 Supporting the Platform: You can support us in two ways:') }}</p>
       <ul class="list-disc pl-6 space-y-2">
-          <li>One-time donations to help cover platform costs</li>
-          <li>Monthly or annual subscriptions</li>
+          <li>{{ _('One-time donations to help cover platform costs') }}</li>
+          <li>{{ _('Monthly or annual subscriptions') }}</li>
       </ul>
 
-      <p>5.3 Payment Processing:</p>
+      <p>{{ _('5.3 Payment Processing:') }}</p>
       <ul class="list-disc pl-6 space-y-2">
-          <li>All financial transactions are processed securely through Stripe</li>
-          <li>Payments are processed in Great British Pounds (GBP)</li>
-          <li>Subscriptions automatically renew unless cancelled</li>
+          <li>{{ _('All financial transactions are processed securely through Stripe') }}</li>
+          <li>{{ _('Payments are processed in Great British Pounds (GBP)') }}</li>
+          <li>{{ _('Subscriptions automatically renew unless cancelled') }}</li>
       </ul>
 
-      <p>5.4 Subscription Terms:</p>
+      <p>{{ _('5.4 Subscription Terms:') }}</p>
       <ul class="list-disc pl-6 space-y-2">
-          <li>You can cancel your subscription at any time through your account settings</li>
-          <li>Cancellation will take effect at the end of your current billing period</li>
+          <li>{{ _('You can cancel your subscription at any time through your account settings') }}</li>
+          <li>{{ _('Cancellation will take effect at the end of your current billing period') }}</li>
       </ul>
 
-      <p>5.5 Taxes and Fees: All displayed amounts exclude VAT and any applicable taxes. You are responsible for any applicable taxes or fees.</p>
+      <p>{{ _('5.5 Taxes and Fees: All displayed amounts exclude VAT and any applicable taxes. You are responsible for any applicable taxes or fees.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">6. Data Processing</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('6. Data Processing') }}</h2>
 
-    <p>6.1 Platform Infrastructure: Our service operates on the following infrastructure:</p>
+    <p>{{ _('6.1 Platform Infrastructure: Our service operates on the following infrastructure:') }}</p>
     <ul class="list-disc pl-6 space-y-2">
-        <li>Pol.is - Powers our discussion and collective intelligence features</li>
-        <li>Replit - Provides platform hosting</li>
-        <li>Google Cloud - Provides underlying infrastructure</li>
-        <li>Stripe - Processes payments</li>
-        <li>Resend - Handles email communications</li>
+        <li>{{ _('Pol.is - Powers our discussion and collective intelligence features') }}</li>
+        <li>{{ _('Replit - Provides platform hosting') }}</li>
+        <li>{{ _('Google Cloud - Provides underlying infrastructure') }}</li>
+        <li>{{ _('Stripe - Processes payments') }}</li>
+        <li>{{ _('Resend - Handles email communications') }}</li>
     </ul>
 
-    <p>6.2 Data Storage: Your data is primarily stored and processed in the United States through our service providers.</p>
+    <p>{{ _('6.2 Data Storage: Your data is primarily stored and processed in the United States through our service providers.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">7. Termination</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('7. Termination') }}</h2>
 
-    <p>7.1 By You: You may terminate your account at any time through your account settings.</p>
+    <p>{{ _('7.1 By You: You may terminate your account at any time through your account settings.') }}</p>
 
-    <p>7.2 By Us: We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason, including:</p>
+    <p>{{ _('7.2 By Us: We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason, including:') }}</p>
     <ul class="list-disc pl-6 space-y-2">
-        <li>Violation of these Terms</li>
-        <li>Abusive behavior in discussions</li>
-        <li>Failure to pay subscription fees</li>
-        <li>Fraudulent activity</li>
+        <li>{{ _('Violation of these Terms') }}</li>
+        <li>{{ _('Abusive behavior in discussions') }}</li>
+        <li>{{ _('Failure to pay subscription fees') }}</li>
+        <li>{{ _('Fraudulent activity') }}</li>
     </ul>
 
-    <p>7.3 Effect of Termination: Upon termination:</p>
+    <p>{{ _('7.3 Effect of Termination: Upon termination:') }}</p>
     <ul class="list-disc pl-6 space-y-2">
-        <li>Your access to paid features will end</li>
-        <li>Your personal account information will be deleted</li>
-        <li>Your discussion contributions will remain part of the collective dataset</li>
-        <li>You remain liable for any outstanding payments</li>
+        <li>{{ _('Your access to paid features will end') }}</li>
+        <li>{{ _('Your personal account information will be deleted') }}</li>
+        <li>{{ _('Your discussion contributions will remain part of the collective dataset') }}</li>
+        <li>{{ _('You remain liable for any outstanding payments') }}</li>
     </ul>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">8. Limitation of Liability</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('8. Limitation of Liability') }}</h2>
 
-    <p>8.1 Service Provided "As Is": The platform is provided on an "as is" and "as available" basis. We make no warranties of any kind, whether express or implied.</p>
+    <p>{{ _('8.1 Service Provided "As Is": The platform is provided on an "as is" and "as available" basis. We make no warranties of any kind, whether express or implied.') }}</p>
 
-    <p>8.2 Limitation: To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues.</p>
+    <p>{{ _('8.2 Limitation: To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">9. Changes to Terms</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('9. Changes to Terms') }}</h2>
 
-    <p>We reserve the right to modify these Terms at any time. We will notify you of any material changes by posting the new Terms on this page and updating the "Effective Date" at the top.</p>
+    <p>{{ _('We reserve the right to modify these Terms at any time. We will notify you of any material changes by posting the new Terms on this page and updating the "Effective Date" at the top.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">10. Governing Law</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('10. Governing Law') }}</h2>
 
-    <p>These Terms shall be governed by and construed in accordance with the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
+    <p>{{ _('These Terms shall be governed by and construed in accordance with the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales.') }}</p>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Contact Information</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('Contact Information') }}</h2>
 
-    <p>If you have any questions about these Terms, please contact us at:</p>
+    <p>{{ _('If you have any questions about these Terms, please contact us at:') }}</p>
     <div class="mt-4">
         <p>William Roberts Coaching and Advisory Ltd</p>
-        <p>Email: <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:text-primary-800">info@societyspeaks.io</a></p>
+        <p>{{ _('Email:') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:text-primary-800">info@societyspeaks.io</a></p>
     </div>
   </div>
 </div>

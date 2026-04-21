@@ -2,8 +2,8 @@
 {% from "components/source_logo.html" import source_logo %}
 
 {% block head %}
-    <title>Claim {{ source.name }} - SocietySpeaks</title>
-    <meta name="description" content="Request to claim {{ source.name }} as your organization's source profile on SocietySpeaks.">
+    <title>{{ _('Claim %(name)s - SocietySpeaks', name=source.name) }}</title>
+    <meta name="description" content="{{ _("Request to claim %(name)s as your organization's source profile on SocietySpeaks.", name=source.name) }}">
     <meta name="robots" content="noindex, nofollow">
 {% endblock %}
 
@@ -12,8 +12,8 @@
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-center">
-            <h1 class="text-2xl font-bold text-white">Claim Source Profile</h1>
-            <p class="mt-2 text-blue-100">Request ownership of {{ source.name }}</p>
+            <h1 class="text-2xl font-bold text-white">{{ _('Claim Source Profile') }}</h1>
+            <p class="mt-2 text-blue-100">{{ _('Request ownership of %(name)s', name=source.name) }}</p>
         </div>
 
         <div class="p-6">
@@ -26,7 +26,7 @@
                     <div class="ml-4 min-w-0">
                         <h2 class="text-lg font-semibold text-gray-900 truncate">{{ source.name }}</h2>
                         <p class="text-sm text-gray-500">
-                            {{ source.source_category|capitalize if source.source_category else 'News Source' }}
+                            {{ source.source_category|capitalize if source.source_category else _('News Source') }}
                             {% if source.country %} | {{ source.country }}{% endif %}
                         </p>
                     </div>
@@ -35,7 +35,7 @@
 
             <!-- Claiming As -->
             <div class="mb-6">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Claiming As</h3>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">{{ _('Claiming As') }}</h3>
                 <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <div class="flex items-center">
                         {% if company_profile.logo %}
@@ -49,7 +49,7 @@
                         {% endif %}
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">{{ company_profile.company_name }}</p>
-                            <p class="text-sm text-gray-500">Your organisation profile</p>
+                            <p class="text-sm text-gray-500">{{ _('Your organisation profile') }}</p>
                         </div>
                     </div>
                 </div>
@@ -57,31 +57,31 @@
 
             <!-- What Happens Next -->
             <div class="mb-6">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">What happens when you claim this source?</h3>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">{{ _('What happens when you claim this source?') }}</h3>
                 <ul class="space-y-2 text-sm text-gray-600">
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        Your claim will be reviewed by our admin team
+                        {{ _('Your claim will be reviewed by our admin team') }}
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        Once approved, your organisation profile branding will appear on this source page
+                        {{ _('Once approved, your organisation profile branding will appear on this source page') }}
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        A verified badge will be displayed on the source profile
+                        {{ _('A verified badge will be displayed on the source profile') }}
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        All discussions sourced from your content will be showcased
+                        {{ _('All discussions sourced from your content will be showcased') }}
                     </li>
                 </ul>
             </div>
@@ -93,8 +93,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                     <p class="text-sm text-yellow-700">
-                        By submitting this claim, you confirm that you are authorized to represent {{ source.name }}.
-                        False claims may result in account suspension.
+                        {{ _('By submitting this claim, you confirm that you are authorized to represent %(name)s. False claims may result in account suspension.', name=source.name) }}
                     </p>
                 </div>
             </div>
@@ -105,14 +104,14 @@
                 <div class="flex items-center justify-between">
                     <a href="{{ url_for('sources.view_source', slug=source.slug) }}"
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Cancel
+                        {{ _('Cancel') }}
                     </a>
                     <button type="submit"
                             class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
-                        Submit Claim Request
+                        {{ _('Submit Claim Request') }}
                     </button>
                 </div>
             </form>

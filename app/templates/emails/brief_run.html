@@ -33,7 +33,7 @@
                                 {% if briefing.logo_url or company_logo_url %}
                                 <tr>
                                     <td align="center" style="padding-bottom: 16px;">
-                                        <img src="{{ briefing.logo_url or company_logo_url }}" 
+                                        <img src="{{ briefing.logo_url or company_logo_url }}"
                                              alt="{{ briefing.name }}"
                                              style="max-width: 140px; max-height: 70px; height: auto; display: block;"
                                              onerror="this.style.display='none';">
@@ -54,7 +54,7 @@
                                 </tr>
                                 <tr>
                                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: rgba(255,255,255,0.75);">
-                                        {{ brief_run.scheduled_at.strftime('%A, %d %B %Y') if brief_run.scheduled_at else 'Today' }}
+                                        {{ brief_run.scheduled_at.strftime('%A, %d %B %Y') if brief_run.scheduled_at else _('Today') }}
                                     </td>
                                 </tr>
                             </table>
@@ -81,13 +81,13 @@
                                 <tr>
                                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.6;">
                                         <p style="margin: 0 0 8px 0;">
-                                            <a href="{{ view_url }}" target="_blank" style="color: {{ briefing.accent_color|default('#1e40af') }}; text-decoration: underline;">View in browser</a>
+                                            <a href="{{ view_url }}" target="_blank" style="color: {{ briefing.accent_color|default('#1e40af') }}; text-decoration: underline;">{{ _('View in browser') }}</a>
                                         </p>
                                         <p style="margin: 0 0 8px 0;">
-                                            <a href="{{ unsubscribe_url }}" target="_blank" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a>
+                                            <a href="{{ unsubscribe_url }}" target="_blank" style="color: #6b7280; text-decoration: underline;">{{ _('Unsubscribe') }}</a>
                                         </p>
                                         <p style="margin: 0; color: #9ca3af;">
-                                            Generated using Society Speaks' open, auditable sense-making engine.
+                                            {{ _("Generated using Society Speaks' open, auditable sense-making engine.") }}
                                         </p>
                                     </td>
                                 </tr>

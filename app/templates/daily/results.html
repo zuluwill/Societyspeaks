@@ -1,18 +1,18 @@
 {% extends "layout.html" %}
 {% from "components/share_button.html" import share_button %}
 
-{% block title %}Daily Question #{{ question.question_number }} Results - Society Speaks{% endblock %}
+{% block title %}{{ _('Daily Question #%(num)d Results - Society Speaks', num=question.question_number) }}{% endblock %}
 
-{% block meta_description %}Results for today's civic question: {{ question.question_text[:100] }}...{% endblock %}
+{% block meta_description %}{{ _("Results for today's civic question: %(text)s...", text=question.question_text[:100]) }}{% endblock %}
 
 {% set results_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
 {% set base_share_text = '"' ~ question.question_text[:150] ~ '"' %}
 
-{% block og_title %}{{ stats.agree }}% Agree: {{ question.question_text[:50] }}... - Daily Question Results{% endblock %}
-{% block og_description %}See how people voted: {{ stats.agree }}% Agree, {{ stats.disagree }}% Disagree, {{ stats.unsure }}% Unsure. Join the conversation at societyspeaks.io{% endblock %}
+{% block og_title %}{{ _('%(pct)s%% Agree: %(text)s... - Daily Question Results', pct=stats.agree, text=question.question_text[:50]) }}{% endblock %}
+{% block og_description %}{{ _('See how people voted: %(agree)s%% Agree, %(disagree)s%% Disagree, %(unsure)s%% Unsure. Join the conversation at societyspeaks.io', agree=stats.agree, disagree=stats.disagree, unsure=stats.unsure) }}{% endblock %}
 
-{% block twitter_title %}{{ stats.agree }}% Agree: {{ question.question_text[:50] }}... - Results{% endblock %}
-{% block twitter_description %}{{ stats.total }} responses: {{ stats.agree }}% Agree | {{ stats.disagree }}% Disagree | {{ stats.unsure }}% Unsure - powered by societyspeaks.io{% endblock %}
+{% block twitter_title %}{{ _('%(pct)s%% Agree: %(text)s... - Results', pct=stats.agree, text=question.question_text[:50]) }}{% endblock %}
+{% block twitter_description %}{{ _('%(total)d responses: %(agree)s%% Agree | %(disagree)s%% Disagree | %(unsure)s%% Unsure - powered by societyspeaks.io', total=stats.total, agree=stats.agree, disagree=stats.disagree, unsure=stats.unsure) }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -22,7 +22,7 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                {% if user_response %}Response Recorded{% else %}Question #{{ question.question_number }}{% endif %}
+                {% if user_response %}{{ _('Response Recorded') }}{% else %}{{ _('Question #%(num)d', num=question.question_number) }}{% endif %}
             </div>
             <p class="text-gray-500 text-sm">{{ question.question_date.strftime('%B %d, %Y') }}</p>
         </div>
@@ -41,7 +41,7 @@
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
                         </svg>
-                        Global
+                        {{ _('Global') }}
                     </span>
                     {% elif question.source_discussion.country %}
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -64,7 +64,7 @@
                 <div class="flex items-center">
                     <span class="text-3xl mr-3">{{ user_response.vote_emoji }}</span>
                     <div>
-                        <p class="text-sm text-gray-500">Your response</p>
+                        <p class="text-sm text-gray-500">{{ _('Your response') }}</p>
                         <p class="font-semibold text-gray-900">{{ user_response.vote_label }}</p>
                     </div>
                 </div>
@@ -80,12 +80,12 @@
                     <div class="flex items-center">
                         <span class="text-2xl mr-3">🔥</span>
                         <div>
-                            <p class="font-semibold text-gray-900">{{ streak_data.current_streak }}-day streak!</p>
+                            <p class="font-semibold text-gray-900">{{ _('%(days)s-day streak!', days=streak_data.current_streak) }}</p>
                             <p class="text-sm text-gray-600">
                                 {% if streak_data.current_streak >= streak_data.longest_streak %}
-                                    Your best streak yet
+                                    {{ _('Your best streak yet') }}
                                 {% else %}
-                                    Best: {{ streak_data.longest_streak }} days
+                                    {{ _('Best: %(days)s days', days=streak_data.longest_streak) }}
                                 {% endif %}
                             </p>
                         </div>
@@ -93,7 +93,7 @@
                     {% if streak_data.is_thoughtful_participant %}
                     <div class="flex items-center bg-white px-3 py-1 rounded-full border border-purple-200 self-start sm:self-auto">
                         <span class="text-sm mr-1">💭</span>
-                        <span class="text-xs font-medium text-purple-700">Thoughtful Participant</span>
+                        <span class="text-xs font-medium text-purple-700">{{ _('Thoughtful Participant') }}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -103,7 +103,7 @@
                 <div class="flex items-center">
                     <span class="text-xl mr-3">📊</span>
                     <div>
-                        <p class="text-sm text-gray-700">Start a new streak! Your best was <span class="font-semibold">{{ streak_data.longest_streak }} days</span>.</p>
+                        <p class="text-sm text-gray-700">{{ _('Start a new streak! Your best was %(days)s.', days='<span class="font-semibold">' ~ _('%(n)d days', n=streak_data.longest_streak) ~ '</span>')|safe }}</p>
                     </div>
                 </div>
             </div>
@@ -111,13 +111,13 @@
 
             <div class="mb-8">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                    {% if is_cold_start %}Early Signal{% else %}Consensus Level{% endif %}
+                    {% if is_cold_start %}{{ _('Early Signal') }}{% else %}{{ _('Consensus Level') }}{% endif %}
                 </h3>
-                
+
                 {% if is_cold_start %}
                 <div class="bg-blue-50 rounded-lg p-4 mb-4">
                     <p class="text-sm text-primary-800">{{ early_signal }}</p>
-                    <p class="text-xs text-primary-600 mt-2">Your response is helping shape the early signal.</p>
+                    <p class="text-xs text-primary-600 mt-2">{{ _('Your response is helping shape the early signal.') }}</p>
                 </div>
                 {% endif %}
 
@@ -126,7 +126,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-sm font-medium text-gray-700 flex items-center">
                                 <span class="w-4 h-4 bg-primary-600 rounded mr-2"></span>
-                                Agree
+                                {{ _('Agree') }}
                             </span>
                             <span class="text-sm font-semibold text-gray-900">{{ stats.agree }}%</span>
                         </div>
@@ -139,7 +139,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-sm font-medium text-gray-700 flex items-center">
                                 <span class="w-4 h-4 bg-red-600 rounded mr-2"></span>
-                                Disagree
+                                {{ _('Disagree') }}
                             </span>
                             <span class="text-sm font-semibold text-gray-900">{{ stats.disagree }}%</span>
                         </div>
@@ -152,7 +152,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-sm font-medium text-gray-700 flex items-center">
                                 <span class="w-4 h-4 bg-gray-500 rounded mr-2"></span>
-                                Unsure
+                                {{ _('Unsure') }}
                             </span>
                             <span class="text-sm font-semibold text-gray-900">{{ stats.unsure }}%</span>
                         </div>
@@ -163,7 +163,7 @@
                 </div>
 
                 <p class="text-sm text-gray-500 mt-4 text-center">
-                    {{ stats.total }} response{% if stats.total != 1 %}s{% endif %} recorded
+                    {{ _('%(count)d responses recorded', count=stats.total) }}
                 </p>
             </div>
 
@@ -173,21 +173,21 @@
                 <div class="flex items-center gap-2 mb-3">
                     <span class="text-amber-700 text-lg">🔍</span>
                     <span class="text-sm font-semibold text-amber-800 uppercase tracking-wide">
-                        Interesting Divergence
+                        {{ _('Interesting Divergence') }}
                     </span>
                 </div>
 
                 <div class="space-y-2 mb-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm text-slate-600">Our community</span>
+                        <span class="text-sm text-slate-600">{{ _('Our community') }}</span>
                         <span class="font-semibold text-slate-800">
-                            {{ (question.market_divergence.user_probability * 100)|round }}% expect yes
+                            {{ _('%(pct)s%% expect yes', pct=(question.market_divergence.user_probability * 100)|round) }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-sm text-slate-600">Prediction markets</span>
+                        <span class="text-sm text-slate-600">{{ _('Prediction markets') }}</span>
                         <span class="font-semibold text-slate-800">
-                            {{ (question.market_divergence.market_probability * 100)|round }}% probability
+                            {{ _('%(pct)s%% probability', pct=(question.market_divergence.market_probability * 100)|round) }}
                         </span>
                     </div>
                 </div>
@@ -195,14 +195,14 @@
                 <!-- Visual comparison -->
                 <div class="flex gap-2 mb-3">
                     <div class="flex-1">
-                        <div class="text-xs text-slate-500 mb-1">Community</div>
+                        <div class="text-xs text-slate-500 mb-1">{{ _('Community') }}</div>
                         <div class="h-3 bg-slate-200 rounded overflow-hidden">
                             <div class="h-full bg-blue-500"
                                  style="width: {{ (question.market_divergence.user_probability * 100)|round }}%"></div>
                         </div>
                     </div>
                     <div class="flex-1">
-                        <div class="text-xs text-slate-500 mb-1">Market</div>
+                        <div class="text-xs text-slate-500 mb-1">{{ _('Market') }}</div>
                         <div class="h-3 bg-slate-200 rounded overflow-hidden">
                             <div class="h-full bg-primary-500"
                                  style="width: {{ (question.market_divergence.market_probability * 100)|round }}%"></div>
@@ -212,13 +212,13 @@
 
                 <p class="text-sm text-amber-800">
                     {% if question.market_divergence.direction == 'higher' %}
-                    Our community is <strong>more optimistic</strong> than prediction markets on this outcome.
+                    {{ _('Our community is <strong>more optimistic</strong> than prediction markets on this outcome.')|safe }}
                     {% else %}
-                    Prediction markets are <strong>more confident</strong> than our community on this outcome.
+                    {{ _('Prediction markets are <strong>more confident</strong> than our community on this outcome.')|safe }}
                     {% endif %}
                     <a href="{{ question.market_divergence.market_url }}" target="_blank" rel="noopener"
                        class="text-amber-700 hover:text-amber-900 underline ml-1">
-                        View market →
+                        {{ _('View market') }} →
                     </a>
                 </p>
             </div>
@@ -228,16 +228,16 @@
             <div class="border-t pt-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-900">
-                        What Others Are Saying
+                        {{ _('What Others Are Saying') }}
                         {% if reasons_stats and reasons_stats.total_count > 0 %}
                         <span class="text-sm font-normal text-gray-500 ml-2">
-                            (Showing {{ public_reasons|length }} of {{ reasons_stats.total_count }})
+                            {{ _('(Showing %(shown)s of %(total)d)', shown=public_reasons|length, total=reasons_stats.total_count) }}
                         </span>
                         {% endif %}
                     </h3>
                     {% if reasons_stats and reasons_stats.total_count > public_reasons|length %}
                     <button id="open-comments-modal-btn" class="text-sm text-primary-600 hover:text-primary-800 font-medium transition flex items-center gap-1">
-                        View All {{ reasons_stats.total_count }}
+                        {{ _('View All %(count)d', count=reasons_stats.total_count) }}
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
@@ -249,15 +249,15 @@
                 <div class="flex flex-wrap gap-2 mb-4 text-xs">
                     <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-primary-700">
                         <span class="w-2 h-2 bg-primary-600 rounded-full mr-1"></span>
-                        {{ reasons_stats.agree_count }} Agree
+                        {{ _('%(count)d Agree', count=reasons_stats.agree_count) }}
                     </span>
                     <span class="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-600">
                         <span class="w-2 h-2 bg-red-600 rounded-full mr-1"></span>
-                        {{ reasons_stats.disagree_count }} Disagree
+                        {{ _('%(count)d Disagree', count=reasons_stats.disagree_count) }}
                     </span>
                     <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600">
                         <span class="w-2 h-2 bg-gray-500 rounded-full mr-1"></span>
-                        {{ reasons_stats.unsure_count }} Unsure
+                        {{ _('%(count)d Unsure', count=reasons_stats.unsure_count) }}
                     </span>
                 </div>
                 {% endif %}
@@ -274,9 +274,9 @@
                                 <div class="flex items-center justify-between mt-2">
                                     <p class="text-xs text-gray-400">
                                         {% if response.reason_visibility == 'public_named' and response.user %}
-                                            {{ response.user.display_name or 'Anonymous' }}
+                                            {{ response.user.display_name or _('Anonymous') }}
                                         {% else %}
-                                            Anonymous participant
+                                            {{ _('Anonymous participant') }}
                                         {% endif %}
                                     </p>
                                     <button data-response-id="{{ response.id }}"
@@ -284,7 +284,7 @@
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
                                         </svg>
-                                        Report
+                                        {{ _('Report') }}
                                     </button>
                                 </div>
                             </div>
@@ -309,9 +309,9 @@
                                         <div class="flex items-center justify-between mt-2">
                                             <p class="text-xs text-gray-400">
                                                 {% if response.reason_visibility == 'public_named' and response.user %}
-                                                    {{ response.user.display_name or 'Anonymous' }}
+                                                    {{ response.user.display_name or _('Anonymous') }}
                                                 {% else %}
-                                                    Anonymous participant
+                                                    {{ _('Anonymous participant') }}
                                                 {% endif %}
                                             </p>
                                             <button data-response-id="{{ response.id }}"
@@ -319,7 +319,7 @@
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
                                                 </svg>
-                                                Report
+                                                {{ _('Report') }}
                                             </button>
                                         </div>
                                     </div>
@@ -343,7 +343,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>
-                                Swipe for more
+                                {{ _('Swipe for more') }}
                             </div>
                         </div>
                     </div>
@@ -454,13 +454,13 @@
             {% endif %}
 
             <div class="border-t pt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Others to Participate</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Invite Others to Participate') }}</h3>
 
-                {% set results_share_text = base_share_text ~ ' - What do you think? ' ~ stats.total ~ ' people have weighed in. Add your voice at societyspeaks.io' %}
+                {% set results_share_text = _('%(base)s - What do you think? %(total)d people have weighed in. Add your voice at societyspeaks.io', base=base_share_text, total=stats.total) %}
 
                 <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
                     {{ share_button(
-                        title="Daily Civic Question - Society Speaks",
+                        title=_('Daily Civic Question - Society Speaks'),
                         url=results_url,
                         description=results_share_text,
                         button_style="secondary"
@@ -471,7 +471,7 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Download Share Card
+                        {{ _('Download Share Card') }}
                     </button>
                 </div>
             </div>
@@ -486,12 +486,12 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Learn More About This Topic</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ _('Learn More About This Topic') }}</h3>
                     <p class="text-sm text-gray-600 mt-1">
                         {% if voted_unsure %}
-                        Want to form a stronger opinion? Explore the evidence and do your own research.
+                        {{ _('Want to form a stronger opinion? Explore the evidence and do your own research.') }}
                         {% else %}
-                        Curious to learn more? Check out the sources and research tools below.
+                        {{ _('Curious to learn more? Check out the sources and research tools below.') }}
                         {% endif %}
                     </p>
                 </div>
@@ -499,7 +499,7 @@
 
             {% if source_articles and source_articles|length > 0 %}
             <div class="mb-5">
-                <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Source Articles</h4>
+                <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ _('Source Articles') }}</h4>
                 <div class="space-y-2">
                     {% for article in source_articles %}
                     <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" 
@@ -527,32 +527,32 @@
             {% endif %}
 
             <div>
-                <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Research Tools</h4>
-                <p class="text-xs text-gray-500 mb-3">Use AI assistants to explore different perspectives on this topic:</p>
+                <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ _('Research Tools') }}</h4>
+                <p class="text-xs text-gray-500 mb-3">{{ _('Use AI assistants to explore different perspectives on this topic:') }}</p>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" 
+                    <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer"
                        class="flex flex-col items-center p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <svg class="w-6 h-6 text-gray-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <span class="text-sm font-medium text-gray-900">Perplexity</span>
-                        <span class="text-xs text-gray-500">Web search</span>
+                        <span class="text-xs text-gray-500">{{ _('Web search') }}</span>
                     </a>
-                    <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer" 
+                    <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer"
                        class="flex flex-col items-center p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <svg class="w-6 h-6 text-gray-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                         </svg>
                         <span class="text-sm font-medium text-gray-900">ChatGPT</span>
-                        <span class="text-xs text-gray-500">Discuss</span>
+                        <span class="text-xs text-gray-500">{{ _('Discuss') }}</span>
                     </a>
-                    <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" 
+                    <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
                        class="flex flex-col items-center p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 transition text-center">
                         <svg class="w-6 h-6 text-gray-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                         <span class="text-sm font-medium text-gray-900">Claude</span>
-                        <span class="text-xs text-gray-500">Analyze</span>
+                        <span class="text-xs text-gray-500">{{ _('Analyze') }}</span>
                     </a>
                 </div>
             </div>
@@ -569,12 +569,13 @@
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900">Your Vote Counts</h3>
+                    <h3 class="text-lg font-bold text-gray-900">{{ _('Your Vote Counts') }}</h3>
+                    {% set _disc_title_html = '<strong>' ~ source_discussion.title[:40] ~ ('...' if source_discussion.title|length > 40 else '') ~ '</strong>' %}
                     <p class="text-sm text-gray-600">
-                        Your vote is now part of the <strong>{{ source_discussion.title[:40] }}{% if source_discussion.title|length > 40 %}...{% endif %}</strong> discussion
                         {% if participation.participant_count > 1 %}
-                        alongside {{ participation.participant_count - 1 }} other participant{% if participation.participant_count > 2 %}s{% endif %}.
-                        {% else %}.
+                        {{ _('Your vote is now part of the %(title)s discussion alongside %(count)d other participants.', title=_disc_title_html, count=participation.participant_count - 1)|safe }}
+                        {% else %}
+                        {{ _('Your vote is now part of the %(title)s discussion.', title=_disc_title_html)|safe }}
                         {% endif %}
                     </p>
                 </div>
@@ -586,25 +587,24 @@
                     <svg class="w-5 h-5 text-primary-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    <span class="font-semibold text-gray-900">Unlock Deeper Insights</span>
+                    <span class="font-semibold text-gray-900">{{ _('Unlock Deeper Insights') }}</span>
                 </div>
                 <p class="text-sm text-gray-600 mb-3">
-                    You've contributed <strong>{{ participation.vote_count }}</strong> of {{ participation.threshold }} votes needed to see the <em>Consensus Analysis</em> - 
-                    discover which opinion group you belong to and what brings people together.
+                    {{ _("You've contributed <strong>%(count)d</strong> of %(threshold)s votes needed to see the <em>Consensus Analysis</em> - discover which opinion group you belong to and what brings people together.", count=participation.vote_count, threshold=participation.threshold)|safe }}
                 </p>
                 <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
                     <div class="bg-primary-600 h-2 rounded-full transition-all duration-500"
                          style="width: {{ [(participation.vote_count / participation.threshold * 100), 100] | min }}%"></div>
                 </div>
-                <p class="text-xs text-gray-500">{{ participation.votes_needed }} more vote{% if participation.votes_needed != 1 %}s{% endif %} to unlock</p>
+                <p class="text-xs text-gray-500">{{ _('%(count)d more votes to unlock', count=participation.votes_needed) }}</p>
             </div>
-            
-            <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}" 
+
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}"
                class="w-full inline-flex items-center justify-center px-5 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-                Vote on {{ participation.votes_needed }} More Statement{% if participation.votes_needed != 1 %}s{% endif %}
+                {{ _('Vote on %(count)d More Statements', count=participation.votes_needed) }}
             </a>
             {% else %}
             <div class="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
@@ -612,36 +612,36 @@
                     <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                     </svg>
-                    <span class="font-semibold text-green-800">Consensus Analysis Unlocked!</span>
+                    <span class="font-semibold text-green-800">{{ _('Consensus Analysis Unlocked!') }}</span>
                 </div>
                 <p class="text-sm text-green-700">
-                    You've voted on {{ participation.vote_count }} statements. You can now see how your views compare to different opinion groups.
+                    {{ _("You've voted on %(count)d statements. You can now see how your views compare to different opinion groups.", count=participation.vote_count) }}
                 </p>
             </div>
-            
+
             <div class="flex flex-col sm:flex-row gap-3">
-                <a href="{{ url_for('consensus.view_results', discussion_id=source_discussion.id) }}" 
+                <a href="{{ url_for('consensus.view_results', discussion_id=source_discussion.id) }}"
                    class="flex-1 inline-flex items-center justify-center px-5 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                    View Consensus Analysis
+                    {{ _('View Consensus Analysis') }}
                 </a>
-                <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}" 
+                <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}"
                    class="flex-1 inline-flex items-center justify-center px-5 py-3 border-2 border-blue-600 text-primary-600 font-medium rounded-lg hover:bg-blue-50 transition">
-                    Continue Voting
+                    {{ _('Continue Voting') }}
                 </a>
             </div>
             {% endif %}
 
             <p class="text-xs text-gray-500 mt-4 text-center">
-                {{ participation.total_statements }} total statements in this discussion
+                {{ _('%(count)d total statements in this discussion', count=participation.total_statements) }}
             </p>
         </div>
         {% elif source_discussion %}
         <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Continue the Discussion</h3>
-            <p class="text-sm text-gray-600 mb-4">This question comes from a broader discussion. Dive deeper to explore more perspectives and share your thoughts on related statements.</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ _('Continue the Discussion') }}</h3>
+            <p class="text-sm text-gray-600 mb-4">{{ _('This question comes from a broader discussion. Dive deeper to explore more perspectives and share your thoughts on related statements.') }}</p>
             <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}" 
                class="inline-flex items-center px-5 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -654,8 +654,8 @@
 
         {% if related_discussions and related_discussions|length > 0 %}
         <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Explore More Discussions</h3>
-            <p class="text-sm text-gray-600 mb-4">Keep the conversation going with these related topics:</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ _('Explore More Discussions') }}</h3>
+            <p class="text-sm text-gray-600 mb-4">{{ _('Keep the conversation going with these related topics:') }}</p>
             <div class="space-y-3">
                 {% for discussion in related_discussions %}
                 <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
@@ -686,30 +686,30 @@
                 </svg>
             </div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                {% if is_past %}This question has ended{% else %}You're done for today{% endif %}
+                {% if is_past %}{{ _('This question has ended') }}{% else %}{{ _("You're done for today") }}{% endif %}
             </h3>
             <p class="text-gray-600">
                 {% if is_past %}
-                Check out today's question.
+                {{ _("Check out today's question.") }}
                 {% else %}
-                Come back tomorrow for a new question.
+                {{ _('Come back tomorrow for a new question.') }}
                 {% endif %}
             </p>
             {% if is_past %}
             <a href="{{ url_for('daily.today') }}" class="mt-4 inline-flex items-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
-                Today's Question
+                {{ _("Today's Question") }}
             </a>
             {% endif %}
         </div>
 
         <div class="mt-8 bg-blue-50 rounded-xl p-6 text-center">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Get daily questions in your inbox</h3>
-            <p class="text-gray-600 mb-4">No login required. Takes 2 minutes. Track your streak.</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Get daily questions in your inbox') }}</h3>
+            <p class="text-gray-600 mb-4">{{ _('No login required. Takes 2 minutes. Track your streak.') }}</p>
             <a href="{{ url_for('daily.subscribe') }}" class="inline-flex items-center px-6 py-3 border-2 border-blue-600 text-primary-600 font-medium rounded-lg hover:bg-blue-100 transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                Subscribe for Free
+                {{ _('Subscribe for Free') }}
             </a>
         </div>
     </div>
@@ -746,7 +746,7 @@
             })
             .catch(error => {
                 console.error('Error loading comments:', error);
-                alert('Failed to load comments. Please try again.');
+                alert({{ _('Failed to load comments. Please try again.')|tojson }});
             });
     }
 
@@ -780,7 +780,7 @@
 <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200 scale-95" id="report-modal-content">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-gray-900">Report Response</h3>
+            <h3 class="text-lg font-bold text-gray-900">{{ _('Report Response') }}</h3>
             <button class="close-report-modal-btn text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -788,7 +788,7 @@
             </button>
         </div>
 
-        <p class="text-sm text-gray-600 mb-4">Help us maintain a respectful community. Why are you reporting this response?</p>
+        <p class="text-sm text-gray-600 mb-4">{{ _('Help us maintain a respectful community. Why are you reporting this response?') }}</p>
 
         <form id="report-form" class="space-y-4">
             <input type="hidden" id="report-response-id" name="response_id">
@@ -797,53 +797,53 @@
                 <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
                     <input type="radio" name="reason" value="spam" class="mt-1 mr-3" required>
                     <div>
-                        <div class="font-medium text-gray-900">Spam</div>
-                        <div class="text-xs text-gray-500">Unwanted commercial content or repetitive posts</div>
+                        <div class="font-medium text-gray-900">{{ _('Spam') }}</div>
+                        <div class="text-xs text-gray-500">{{ _('Unwanted commercial content or repetitive posts') }}</div>
                     </div>
                 </label>
 
                 <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
                     <input type="radio" name="reason" value="harassment" class="mt-1 mr-3" required>
                     <div>
-                        <div class="font-medium text-gray-900">Harassment or Hate Speech</div>
-                        <div class="text-xs text-gray-500">Abusive, threatening, or discriminatory content</div>
+                        <div class="font-medium text-gray-900">{{ _('Harassment or Hate Speech') }}</div>
+                        <div class="text-xs text-gray-500">{{ _('Abusive, threatening, or discriminatory content') }}</div>
                     </div>
                 </label>
 
                 <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
                     <input type="radio" name="reason" value="misinformation" class="mt-1 mr-3" required>
                     <div>
-                        <div class="font-medium text-gray-900">Misinformation</div>
-                        <div class="text-xs text-gray-500">False or misleading information</div>
+                        <div class="font-medium text-gray-900">{{ _('Misinformation') }}</div>
+                        <div class="text-xs text-gray-500">{{ _('False or misleading information') }}</div>
                     </div>
                 </label>
 
                 <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
                     <input type="radio" name="reason" value="other" class="mt-1 mr-3" required>
                     <div>
-                        <div class="font-medium text-gray-900">Other</div>
-                        <div class="text-xs text-gray-500">Something else that violates community guidelines</div>
+                        <div class="font-medium text-gray-900">{{ _('Other') }}</div>
+                        <div class="text-xs text-gray-500">{{ _('Something else that violates community guidelines') }}</div>
                     </div>
                 </label>
             </div>
 
             <div>
                 <label for="report-details" class="block text-sm font-medium text-gray-700 mb-1">
-                    Additional details (optional)
+                    {{ _('Additional details (optional)') }}
                 </label>
                 <textarea id="report-details" name="details" rows="3" maxlength="500"
                           class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                          placeholder="Provide any additional context..."></textarea>
+                          placeholder="{{ _('Provide any additional context...') }}"></textarea>
             </div>
 
             <div class="flex gap-3">
                 <button type="button"
                         class="close-report-modal-btn flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
-                    Cancel
+                    {{ _('Cancel') }}
                 </button>
                 <button type="submit"
                         class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
-                    Submit Report
+                    {{ _('Submit Report') }}
                 </button>
             </div>
         </form>
@@ -854,10 +854,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h4 class="text-lg font-bold text-gray-900 mb-2">Report Submitted</h4>
-            <p class="text-sm text-gray-600 mb-4">Thank you for helping maintain our community standards. We'll review this report promptly.</p>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">{{ _('Report Submitted') }}</h4>
+            <p class="text-sm text-gray-600 mb-4">{{ _("Thank you for helping maintain our community standards. We'll review this report promptly.") }}</p>
             <button class="close-report-modal-btn px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium">
-                Close
+                {{ _('Close') }}
             </button>
         </div>
     </div>
@@ -921,12 +921,12 @@
                 reportForm.classList.add('hidden');
                 reportSuccess.classList.remove('hidden');
             } else {
-                alert(result.message || 'Failed to submit report. Please try again.');
+                alert(result.message || {{ _('Failed to submit report. Please try again.')|tojson }});
             }
         })
         .catch(error => {
             console.error('Error submitting report:', error);
-            alert('Failed to submit report. Please try again.');
+            alert({{ _('Failed to submit report. Please try again.')|tojson }});
         });
     });
 
@@ -975,7 +975,7 @@
             <!-- Header -->
             <div style="display: flex; align-items: center; margin-bottom: 16px;">
                 <div style="background: #2563eb; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                    Daily Civic Question #{{ question.question_number }}
+                    {{ _('Daily Civic Question #%(num)d', num=question.question_number) }}
                 </div>
             </div>
 
@@ -987,21 +987,21 @@
             <!-- Results bars — canonical colors: blue/red/gray -->
             <div style="margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">Agree</div>
+                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">{{ _('Agree') }}</div>
                     <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-right: 10px;">
                         <div style="height: 100%; background: #2563eb; width: {{ stats.agree }}%; border-radius: 12px;"></div>
                     </div>
                     <div style="font-size: 14px; font-weight: 700; color: #1f2937; width: 45px; text-align: right;">{{ stats.agree }}%</div>
                 </div>
                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">Disagree</div>
+                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">{{ _('Disagree') }}</div>
                     <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-right: 10px;">
                         <div style="height: 100%; background: #dc2626; width: {{ stats.disagree }}%; border-radius: 12px;"></div>
                     </div>
                     <div style="font-size: 14px; font-weight: 700; color: #1f2937; width: 45px; text-align: right;">{{ stats.disagree }}%</div>
                 </div>
                 <div style="display: flex; align-items: center;">
-                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">Unsure</div>
+                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">{{ _('Unsure') }}</div>
                     <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-right: 10px;">
                         <div style="height: 100%; background: #6b7280; width: {{ stats.unsure }}%; border-radius: 12px;"></div>
                     </div>
@@ -1011,7 +1011,7 @@
 
             <!-- Footer -->
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 12px; color: #6b7280;">{{ stats.total }} responses</div>
+                <div style="font-size: 12px; color: #6b7280;">{{ _('%(count)d responses', count=stats.total) }}</div>
                 <div style="display: flex; align-items: center;">
                     <span style="font-size: 14px; font-weight: 700; color: #2563eb;">societyspeaks.io</span>
                 </div>
@@ -1037,7 +1037,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Generating...
+            {{ _('Generating...') }}
         `;
 
         // Temporarily make visible for rendering
@@ -1067,7 +1067,7 @@
             btn.innerHTML = originalContent;
         }).catch(err => {
             console.error('Error generating share card:', err);
-            alert('Failed to generate share card. Please try again.');
+            alert({{ _('Failed to generate share card. Please try again.')|tojson }});
             container.style.position = 'absolute';
             container.style.left = '-9999px';
 

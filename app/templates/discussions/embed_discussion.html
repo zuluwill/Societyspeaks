@@ -886,7 +886,7 @@
       <h1 class="embed-title">{{ discussion_translation.title if discussion_translation else discussion.title }}</h1>
       <p class="embed-meta">
         {% set _stmt_total = total_statement_count|default(statements|length) %}
-        {{ ngettext('%(num)d statement to vote on', '%(num)d statements to vote on', _stmt_total) % {'num': _stmt_total} }}
+        {{ ngettext('%(num)d statement to vote on', '%(num)d statements to vote on', _stmt_total) }}
       </p>
     </header>
 
@@ -895,7 +895,7 @@
     <div id="voteProgress" class="vote-progress" role="status" aria-live="polite">
       <div class="vote-progress__label">
         <span>{{ _('Your progress') }}</span>
-        <span id="voteCount">{{ _('%(current)d / %(threshold)d votes') % {'current': 0, 'threshold': 5} }}</span>
+        <span id="voteCount">{{ _('%(current)d / %(threshold)d votes', current=0, threshold=5) }}</span>
       </div>
       <div class="vote-progress__bar">
         <div id="voteProgressFill" class="vote-progress__fill" style="width: 0%"></div>
@@ -1032,7 +1032,7 @@
 
     {% if statement_page and statement_page.pages > 1 %}
     <nav class="mb-4 flex items-center justify-between" aria-label="{{ _('Statement pages') }}">
-      <span class="embed-meta">{{ _('Page %(page)d of %(pages)d') % {'page': statement_page.page, 'pages': statement_page.pages} }}</span>
+      <span class="embed-meta">{{ _('Page %(page)d of %(pages)d', page=statement_page.page, pages=statement_page.pages) }}</span>
       <div style="display:flex; gap:8px;">
         {% if statement_page.has_prev %}
         <a
@@ -1077,7 +1077,7 @@
           {% if is_closed %}disabled{% endif %}
         ></textarea>
         <div class="embed-submit__controls">
-          <span id="embedStatementMeta" class="embed-submit__meta">{{ _('%(cur)d / %(max)d') % {'cur': 0, 'max': 500} }}</span>
+          <span id="embedStatementMeta" class="embed-submit__meta">{{ _('%(cur)d / %(max)d', cur=0, max=500) }}</span>
           <button id="embedStatementSubmitBtn" type="submit" class="embed-submit__btn" {% if is_closed %}disabled{% endif %}>
             {{ _('Submit statement') }}
           </button>
@@ -1183,37 +1183,37 @@
       isClosed: {{ 'true' if is_closed else 'false' }},
       embedStatementSubmissionsEnabled: {{ 'true' if discussion.embed_statement_submissions_enabled else 'false' }},
       i18n: {
-        discussionClosed: {{ _('This discussion is closed.')|tojson }},
-        viewFullRecord: {{ _('View full record')|tojson }},
-        thanksForParticipating: {{ _('Thanks for participating!')|tojson }},
-        viewFullAnalysis: {{ _('View Full Analysis')|tojson }},
-        analysisNotReadyWithCount: {{ _('Analysis is not ready yet (%(count)d participants so far).')|tojson }},
-        viewTheRecord: {{ _('View the record')|tojson }},
-        discussionClosedToast: {{ _('This discussion is closed. You can still view the full record.')|tojson }},
-        votesProgressFmt: {{ _('%(current)d / %(threshold)d votes')|tojson }},
-        voteUnlockOne: {{ _('Vote on 1 more statement to unlock analysis')|tojson }},
-        voteUnlockMany: {{ _('Vote on %(num)d more statements to unlock analysis')|tojson }},
-        retry: {{ _('Retry')|tojson }},
-        voteSavedOffline: {{ _('Vote saved offline. Will sync when connected.')|tojson }},
-        voteRecorded: {{ _('Vote recorded!')|tojson }},
-        votingTooFast: {{ _("You're voting too fast. Please wait a moment.")|tojson }},
-        couldntSaveVote: {{ _("Couldn't save vote.")|tojson }},
-        alreadyReported: {{ _('You have already reported this statement.')|tojson }},
-        submitting: {{ _('Submitting...')|tojson }},
-        thankYouReport: {{ _('Thank you for your report. We will review it.')|tojson }},
-        couldNotSubmitReport: {{ _('Could not submit report. Please try again.')|tojson }},
-        submitReport: {{ _('Submit Report')|tojson }},
-        reported: {{ _('Reported')|tojson }},
-        statementTooShort: {{ _('Statement must be at least 10 characters.')|tojson }},
-        statementTooLong: {{ _('Statement must be 500 characters or fewer.')|tojson }},
-        duplicateStatement: {{ _('That statement is already in this discussion.')|tojson }},
-        postingTooFast: {{ _("You're posting too quickly. Please wait a bit.")|tojson }},
-        couldNotSubmitStatement: {{ _('Could not submit statement right now.')|tojson }},
-        statementSubmitted: {{ _('Statement submitted. It will appear in the discussion shortly.')|tojson }},
-        networkErrorStatement: {{ _('Network error while submitting statement.')|tojson }},
-        charCountFmt: {{ _('%(cur)d / %(max)d')|tojson }},
-        totalVotesFmt: {{ _('%(n)s total votes')|tojson }},
-        agreementNoun: {{ _('agreement')|tojson }}
+        discussionClosed: {{ gettext_js('This discussion is closed.')|tojson }},
+        viewFullRecord: {{ gettext_js('View full record')|tojson }},
+        thanksForParticipating: {{ gettext_js('Thanks for participating!')|tojson }},
+        viewFullAnalysis: {{ gettext_js('View Full Analysis')|tojson }},
+        analysisNotReadyWithCount: {{ gettext_js('Analysis is not ready yet (%(count)d participants so far).')|tojson }},
+        viewTheRecord: {{ gettext_js('View the record')|tojson }},
+        discussionClosedToast: {{ gettext_js('This discussion is closed. You can still view the full record.')|tojson }},
+        votesProgressFmt: {{ gettext_js('%(current)d / %(threshold)d votes')|tojson }},
+        voteUnlockOne: {{ gettext_js('Vote on 1 more statement to unlock analysis')|tojson }},
+        voteUnlockMany: {{ gettext_js('Vote on %(num)d more statements to unlock analysis')|tojson }},
+        retry: {{ gettext_js('Retry')|tojson }},
+        voteSavedOffline: {{ gettext_js('Vote saved offline. Will sync when connected.')|tojson }},
+        voteRecorded: {{ gettext_js('Vote recorded!')|tojson }},
+        votingTooFast: {{ gettext_js("You're voting too fast. Please wait a moment.")|tojson }},
+        couldntSaveVote: {{ gettext_js("Couldn't save vote.")|tojson }},
+        alreadyReported: {{ gettext_js('You have already reported this statement.')|tojson }},
+        submitting: {{ gettext_js('Submitting...')|tojson }},
+        thankYouReport: {{ gettext_js('Thank you for your report. We will review it.')|tojson }},
+        couldNotSubmitReport: {{ gettext_js('Could not submit report. Please try again.')|tojson }},
+        submitReport: {{ gettext_js('Submit Report')|tojson }},
+        reported: {{ gettext_js('Reported')|tojson }},
+        statementTooShort: {{ gettext_js('Statement must be at least 10 characters.')|tojson }},
+        statementTooLong: {{ gettext_js('Statement must be 500 characters or fewer.')|tojson }},
+        duplicateStatement: {{ gettext_js('That statement is already in this discussion.')|tojson }},
+        postingTooFast: {{ gettext_js("You're posting too quickly. Please wait a bit.")|tojson }},
+        couldNotSubmitStatement: {{ gettext_js('Could not submit statement right now.')|tojson }},
+        statementSubmitted: {{ gettext_js('Statement submitted. It will appear in the discussion shortly.')|tojson }},
+        networkErrorStatement: {{ gettext_js('Network error while submitting statement.')|tojson }},
+        charCountFmt: {{ gettext_js('%(cur)d / %(max)d')|tojson }},
+        totalVotesFmt: {{ gettext_js('%(n)d total votes')|tojson }},
+        agreementNoun: {{ gettext_js('agreement')|tojson }}
       }
     };
 
@@ -1575,7 +1575,7 @@
             totalSpan.className = 'total-votes';
             totalSpan.textContent = total;
             statsEl.appendChild(totalSpan);
-            statsEl.appendChild(document.createTextNode(' ' + config.i18n.totalVotesFmt.replace('%(n)s', String(total))));
+            statsEl.appendChild(document.createTextNode(' ' + config.i18n.totalVotesFmt.replace('%(n)d', String(total))));
             if (total > 0) {
               statsEl.appendChild(document.createTextNode(' \u00B7 '));
               const pctSpan = document.createElement('span');

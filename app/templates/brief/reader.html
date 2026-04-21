@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ brief.title }} - Society Speaks {% if brief.brief_type == 'weekly' %}Weekly{% else %}Daily{% endif %} Brief</title>
+    <title>{{ brief.title }} - Society Speaks {% if brief.brief_type == 'weekly' %}{{ _('Weekly') }}{% else %}{{ _('Daily') }}{% endif %} {{ _('Brief') }}</title>
     <meta name="description" content="{{ (brief.intro_text or '')[:160] }}">
 
     <!-- Open Graph for reader apps -->
@@ -15,7 +15,7 @@
     <!-- Article metadata for reader apps -->
     <meta property="article:published_time" content="{{ brief.date.isoformat() }}">
     <meta property="article:author" content="Society Speaks">
-    <meta property="article:section" content="News">
+    <meta property="article:section" content="{{ _('News') }}">
 
     <!-- Shared reader styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
@@ -264,9 +264,9 @@
 </head>
 <body>
     <header>
-        <p class="publication">Society Speaks {% if brief.brief_type == 'weekly' %}Weekly{% else %}Daily{% endif %} Brief</p>
+        <p class="publication">Society Speaks {% if brief.brief_type == 'weekly' %}{{ _('Weekly') }}{% else %}{{ _('Daily') }}{% endif %} {{ _('Brief') }}</p>
         <h1>{{ brief.title }}</h1>
-        <p class="date">{{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; ~{{ brief.reading_time }} min read{% endif %}</p>
+        <p class="date">{{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}{% endif %}</p>
     </header>
 
     {% if brief.intro_text %}
@@ -277,9 +277,9 @@
         {% for item in items %}
         <article>
             {% if item.is_underreported %}
-            <span class="item-number under-radar">Under the Radar</span>
+            <span class="item-number under-radar">{{ _('Under the Radar') }}</span>
             {% else %}
-            <span class="item-number">Story {{ item.position }}</span>
+            <span class="item-number">{{ _('Story %(position)s', position=item.position) }}</span>
             {% endif %}
 
             <h2>{{ item.headline }}</h2>
@@ -294,41 +294,41 @@
 
             {% if item.personal_impact %}
             <div class="callout callout-impact">
-                <p class="callout-label">Why This Matters To You</p>
+                <p class="callout-label">{{ _('Why This Matters To You') }}</p>
                 <p>{{ item.personal_impact }}</p>
             </div>
             {% endif %}
 
             {% if item.so_what %}
             <div class="callout callout-why">
-                <p class="callout-label">Why It Matters</p>
+                <p class="callout-label">{{ _('Why It Matters') }}</p>
                 <p>{{ item.so_what|strip_so_what }}</p>
             </div>
             {% endif %}
 
             {% if item.deeper_context %}
             <div class="deeper-context">
-                <h3>More Context</h3>
+                <h3>{{ _('More Context') }}</h3>
                 <p>{{ item.deeper_context }}</p>
             </div>
             {% endif %}
 
             {% if item.perspectives %}
             <div class="perspectives">
-                <h3>How It's Being Framed</h3>
+                <h3>{{ _("How It's Being Framed") }}</h3>
                 {% if item.perspectives.get('left') %}
                 <p class="perspective">
-                    <span class="perspective-label left">Left:</span> {{ item.perspectives.get('left') }}
+                    <span class="perspective-label left">{{ _('Left:') }}</span> {{ item.perspectives.get('left') }}
                 </p>
                 {% endif %}
                 {% if item.perspectives.get('center') %}
                 <p class="perspective">
-                    <span class="perspective-label center">Centre:</span> {{ item.perspectives.get('center') }}
+                    <span class="perspective-label center">{{ _('Centre:') }}</span> {{ item.perspectives.get('center') }}
                 </p>
                 {% endif %}
                 {% if item.perspectives.get('right') %}
                 <p class="perspective">
-                    <span class="perspective-label right">Right:</span> {{ item.perspectives.get('right') }}
+                    <span class="perspective-label right">{{ _('Right:') }}</span> {{ item.perspectives.get('right') }}
                 </p>
                 {% endif %}
             </div>
@@ -339,14 +339,14 @@
             {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
             {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
             <p class="coverage">
-                Coverage: {{ left_pct }}% left | {{ center_pct }}% centre | {{ right_pct }}% right
-                {% if item.source_count %}({{ item.source_count }} sources){% endif %}
+                {{ _('Coverage: %(left)s%% left | %(center)s%% centre | %(right)s%% right', left=left_pct, center=center_pct, right=right_pct) }}
+                {% if item.source_count %}{{ _('(%(count)d sources)', count=item.source_count) }}{% endif %}
             </p>
             {% endif %}
 
             {% if item.verification_links %}
             <div class="sources">
-                <h3>Verify It Yourself</h3>
+                <h3>{{ _('Verify It Yourself') }}</h3>
                 <ul>
                     {% for link in item.verification_links %}
                     <li><a href="{{ link.url }}" rel="noopener">{{ link.description }}</a></li>
@@ -359,7 +359,7 @@
 
         {% if brief.world_events %}
         <section class="world-events">
-            <h2>What the World is Watching</h2>
+            <h2>{{ _('What the World is Watching') }}</h2>
             <div class="world-events-grid">
                 {% for market in brief.world_events %}
                 <div class="world-event-card">
@@ -376,22 +376,22 @@
                     </div>
                     <p class="world-event-stats">
                         {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
-                        <span class="{% if market.change_24h > 0 %}change-up{% elif market.change_24h < 0 %}change-down{% endif %}">{{ market.change_24h_formatted }}</span> today &middot;
+                        <span class="{% if market.change_24h > 0 %}change-up{% elif market.change_24h < 0 %}change-down{% endif %}">{{ market.change_24h_formatted }}</span> {{ _('today') }} &middot;
                         {% endif %}
-                        ${{ "{:,.0f}".format(market.volume_24h or 0) }} volume
-                        {% if market.trader_count %}&middot; {{ "{:,.0f}".format(market.trader_count) }} traders{% endif %}
-                        &middot; <a href="{{ market.url }}" rel="noopener">View market &rarr;</a>
+                        {{ _('$%(amount)s volume', amount="{:,.0f}".format(market.volume_24h or 0)) }}
+                        {% if market.trader_count %}&middot; {{ _('%(count)s traders', count="{:,.0f}".format(market.trader_count)) }}{% endif %}
+                        &middot; <a href="{{ market.url }}" rel="noopener">{{ _('View market') }} &rarr;</a>
                     </p>
                 </div>
                 {% endfor %}
             </div>
-            <p class="world-events-disclaimer">Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment — they are not forecasts.</p>
+            <p class="world-events-disclaimer">{{ _('Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment — they are not forecasts.') }}</p>
         </section>
         {% endif %}
 
         {% if brief.lens_check %}
         <section class="lens-check">
-            <h2>Same Story, Different Lens</h2>
+            <h2>{{ _('Same Story, Different Lens') }}</h2>
 
             {% if brief.lens_check.story_summary %}
             <p class="lens-story">{{ brief.lens_check.story_summary }}</p>
@@ -400,27 +400,27 @@
             <div class="lens-perspectives">
                 {% if brief.lens_check.perspectives.left %}
                 <div class="lens-perspective lens-left">
-                    <h4>Left ({{ brief.lens_check.perspectives.left.source_count }} sources)</h4>
+                    <h4>{{ _('Left (%(count)d sources)', count=brief.lens_check.perspectives.left.source_count) }}</h4>
                     {% if brief.lens_check.perspectives.left.emphasis %}
-                    <p><strong>Emphasis:</strong> {{ brief.lens_check.perspectives.left.emphasis }}</p>
+                    <p><strong>{{ _('Emphasis:') }}</strong> {{ brief.lens_check.perspectives.left.emphasis }}</p>
                     {% endif %}
                 </div>
                 {% endif %}
 
                 {% if brief.lens_check.perspectives.centre %}
                 <div class="lens-perspective lens-center">
-                    <h4>Centre ({{ brief.lens_check.perspectives.centre.source_count }} sources)</h4>
+                    <h4>{{ _('Centre (%(count)d sources)', count=brief.lens_check.perspectives.centre.source_count) }}</h4>
                     {% if brief.lens_check.perspectives.centre.emphasis %}
-                    <p><strong>Emphasis:</strong> {{ brief.lens_check.perspectives.centre.emphasis }}</p>
+                    <p><strong>{{ _('Emphasis:') }}</strong> {{ brief.lens_check.perspectives.centre.emphasis }}</p>
                     {% endif %}
                 </div>
                 {% endif %}
 
                 {% if brief.lens_check.perspectives.right %}
                 <div class="lens-perspective lens-right">
-                    <h4>Right ({{ brief.lens_check.perspectives.right.source_count }} sources)</h4>
+                    <h4>{{ _('Right (%(count)d sources)', count=brief.lens_check.perspectives.right.source_count) }}</h4>
                     {% if brief.lens_check.perspectives.right.emphasis %}
-                    <p><strong>Emphasis:</strong> {{ brief.lens_check.perspectives.right.emphasis }}</p>
+                    <p><strong>{{ _('Emphasis:') }}</strong> {{ brief.lens_check.perspectives.right.emphasis }}</p>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -428,7 +428,7 @@
 
             {% if brief.lens_check.contrast_analysis %}
             <div class="contrast-analysis">
-                <p><strong>The Contrast:</strong> {{ brief.lens_check.contrast_analysis }}</p>
+                <p><strong>{{ _('The Contrast:') }}</strong> {{ brief.lens_check.contrast_analysis }}</p>
             </div>
             {% endif %}
         </section>
@@ -436,10 +436,11 @@
     </main>
 
     <footer>
-        <p>Published {{ brief.date.strftime('%B %d, %Y') }} by <a href="{{ url_for('main.index', _external=True) }}">Society Speaks</a></p>
+        {% set _ss_link = '<a href="' ~ url_for('main.index', _external=True) ~ '">Society Speaks</a>' %}
+        <p>{{ _('Published %(date)s by %(link)s', date=brief.date.strftime('%B %d, %Y'), link=_ss_link)|safe }}</p>
         <p>
-            <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">View full version</a>
-            | <a href="{{ url_for('brief.methodology', _external=True) }}">Our methodology</a>
+            <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">{{ _('View full version') }}</a>
+            | <a href="{{ url_for('brief.methodology', _external=True) }}">{{ _('Our methodology') }}</a>
         </p>
     </footer>
 </body>

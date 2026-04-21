@@ -1,27 +1,27 @@
-{% extends 'layout.html' %} {% block title %}Moderation Queue - {{
+{% extends 'layout.html' %} {% block title %}{{ _('Moderation Queue') }} - {{
 discussion.title }}{% endblock %} {% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="mb-6">
-    <h1 class="text-3xl font-bold mb-2">Moderation Queue</h1>
+    <h1 class="text-3xl font-bold mb-2">{{ _('Moderation Queue') }}</h1>
     <p class="text-gray-600">{{ discussion.title }}</p>
   </div>
 
   <!-- Statistics Cards -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-      <div class="text-yellow-800 text-sm font-semibold">Pending Flags</div>
+      <div class="text-yellow-800 text-sm font-semibold">{{ _('Pending Flags') }}</div>
       <div class="text-3xl font-bold text-yellow-900">{{ stats.pending }}</div>
     </div>
     <div class="bg-green-50 rounded-lg p-4 border border-green-200">
-      <div class="text-green-800 text-sm font-semibold">Approved</div>
+      <div class="text-green-800 text-sm font-semibold">{{ _('Approved') }}</div>
       <div class="text-3xl font-bold text-green-900">{{ stats.approved }}</div>
     </div>
     <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-      <div class="text-primary-800 text-sm font-semibold">Rejected</div>
+      <div class="text-primary-800 text-sm font-semibold">{{ _('Rejected') }}</div>
       <div class="text-3xl font-bold text-blue-900">{{ stats.rejected }}</div>
     </div>
     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-      <div class="text-gray-800 text-sm font-semibold">Total Statements</div>
+      <div class="text-gray-800 text-sm font-semibold">{{ _('Total Statements') }}</div>
       <div class="text-3xl font-bold text-gray-900">
         {{ stats.total_statements }}
       </div>
@@ -31,7 +31,7 @@ discussion.title }}{% endblock %} {% block content %}
   <!-- Flags by Reason -->
   {% if flags_by_reason %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Flags by Reason</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('Flags by Reason') }}</h2>
     <div class="flex flex-wrap gap-2">
       {% for reason, count in flags_by_reason.items() %}
       <span class="bg-gray-100 px-3 py-1 rounded">
@@ -46,7 +46,7 @@ discussion.title }}{% endblock %} {% block content %}
   {% if pending_flags %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
     <h2 class="text-xl font-semibold mb-4">
-      Pending Flags ({{ pending_flags|length }})
+      {{ _('Pending Flags (%(count)d)', count=pending_flags|length) }}
     </h2>
 
     <form
@@ -61,14 +61,14 @@ discussion.title }}{% endblock %} {% block content %}
           id="select-all-btn"
           class="text-sm text-primary-600 hover:underline"
         >
-          Select All
+          {{ _('Select All') }}
         </button>
         <button
           type="button"
           id="select-none-btn"
           class="text-sm text-primary-600 hover:underline"
         >
-          Select None
+          {{ _('Select None') }}
         </button>
       </div>
 
@@ -85,14 +85,11 @@ discussion.title }}{% endblock %} {% block content %}
             <!-- Statement Content -->
             <div class="bg-gray-50 p-3 rounded mb-3">
               <div class="text-sm text-gray-600 mb-1">
-                Statement by {% if flag.statement.user %}{{
-                flag.statement.user.username }}{% else %}Anonymous{% endif %}:
+                {% if flag.statement.user %}{{ _('Statement by %(username)s:', username=flag.statement.user.username) }}{% else %}{{ _('Statement by Anonymous:') }}{% endif %}
               </div>
               <div class="text-gray-900">{{ flag.statement.content }}</div>
               <div class="text-sm text-gray-500 mt-2">
-                {{ flag.statement.vote_count_agree }} agree · {{
-                flag.statement.vote_count_disagree }} disagree · {{
-                flag.statement.vote_count_unsure }} unsure
+                {{ _('%(agree)s agree · %(disagree)s disagree · %(unsure)s unsure', agree=flag.statement.vote_count_agree, disagree=flag.statement.vote_count_disagree, unsure=flag.statement.vote_count_unsure) }}
               </div>
             </div>
 
@@ -104,16 +101,14 @@ discussion.title }}{% endblock %} {% block content %}
                 {{ flag.flag_reason }}
               </span>
               <span class="text-gray-600 text-sm">
-                Flagged by {% if flag.flagger %}{{
-                flag.flagger.username }}{% else %}Unknown{% endif %} on {{
-                flag.created_at.strftime('%b %d, %Y') }}
+                {% if flag.flagger %}{{ _('Flagged by %(username)s on %(date)s', username=flag.flagger.username, date=flag.created_at.strftime('%b %d, %Y')) }}{% else %}{{ _('Flagged by Unknown on %(date)s', date=flag.created_at.strftime('%b %d, %Y')) }}{% endif %}
               </span>
             </div>
 
             {% if flag.additional_context %}
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3">
               <div class="text-sm font-semibold text-yellow-800 mb-1">
-                Context:
+                {{ _('Context:') }}
               </div>
               <div class="text-gray-700">{{ flag.additional_context }}</div>
             </div>
@@ -136,7 +131,7 @@ discussion.title }}{% endblock %} {% block content %}
                   type="submit"
                   class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
                 >
-                  Approve Flag & Hide Statement
+                  {{ _('Approve Flag & Hide Statement') }}
                 </button>
               </form>
               <form
@@ -154,14 +149,14 @@ discussion.title }}{% endblock %} {% block content %}
                   type="submit"
                   class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
                 >
-                  Reject Flag & Keep Statement
+                  {{ _('Reject Flag & Keep Statement') }}
                 </button>
               </form>
               <a
                 href="{{ url_for('statements.view_statement', statement_id=flag.statement_id) }}"
                 class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm"
               >
-                View Full Statement
+                {{ _('View Full Statement') }}
               </a>
             </div>
           </div>
@@ -171,7 +166,7 @@ discussion.title }}{% endblock %} {% block content %}
 
       <!-- Bulk Actions -->
       <div class="bg-gray-50 p-4 rounded-lg mt-6">
-        <h3 class="font-semibold mb-3">Bulk Actions</h3>
+        <h3 class="font-semibold mb-3">{{ _('Bulk Actions') }}</h3>
         <div class="flex space-x-2">
           <button
             type="submit"
@@ -179,7 +174,7 @@ discussion.title }}{% endblock %} {% block content %}
             value="approve_all"
             class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
-            Approve All Selected
+            {{ _('Approve All Selected') }}
           </button>
           <button
             type="submit"
@@ -187,7 +182,7 @@ discussion.title }}{% endblock %} {% block content %}
             value="reject_all"
             class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
-            Reject All Selected
+            {{ _('Reject All Selected') }}
           </button>
         </div>
       </div>
@@ -208,9 +203,9 @@ discussion.title }}{% endblock %} {% block content %}
         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
-    <h3 class="text-xl font-semibold text-green-900 mb-2">No Pending Flags</h3>
+    <h3 class="text-xl font-semibold text-green-900 mb-2">{{ _('No Pending Flags') }}</h3>
     <p class="text-green-700">
-      Your discussion is clean! All flags have been reviewed.
+      {{ _('Your discussion is clean! All flags have been reviewed.') }}
     </p>
   </div>
   {% endif %}
@@ -221,7 +216,7 @@ discussion.title }}{% endblock %} {% block content %}
       href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
       class="text-primary-600 hover:underline"
     >
-      ← Back to Discussion
+      {{ _('← Back to Discussion') }}
     </a>
   </div>
 </div>

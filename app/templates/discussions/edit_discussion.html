@@ -7,11 +7,11 @@
 
 <div class="max-w-4xl mx-auto py-8 px-4">
   <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="hover:text-gray-700 truncate max-w-xs">{{ discussion.title }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">Edit</span>
+    <span class="text-gray-900 font-medium">{{ _('Edit') }}</span>
   </nav>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -30,7 +30,7 @@
   {% endwith %}
 
   <div class="bg-white rounded-lg shadow-lg p-6">
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">Edit discussion</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ _('Edit discussion') }}</h1>
     <p class="text-sm text-gray-500 mb-6">{{ discussion.title }}</p>
 
     <form method="POST" action="{{ url_for('discussions.edit_discussion', discussion_id=discussion.id) }}" class="space-y-6">
@@ -43,7 +43,7 @@
       <div class="space-y-4">
         <div>
           {{ form.title.label(class="block text-sm font-medium text-gray-700") }}
-          {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="Enter a descriptive title for your discussion") }}
+          {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder=_('Enter a descriptive title for your discussion')) }}
           {% if form.title.errors %}{% for error in form.title.errors %}
           <p class="mt-1 text-sm text-red-600">{{ error }}</p>
           {% endfor %}{% endif %}
@@ -51,7 +51,7 @@
 
         <div>
           {{ form.description.label(class="block text-sm font-medium text-gray-700") }}
-          {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Provide context about what you want to discuss") }}
+          {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder=_('Provide context about what you want to discuss')) }}
           {% if form.description.errors %}{% for error in form.description.errors %}
           <p class="mt-1 text-sm text-red-600">{{ error }}</p>
           {% endfor %}{% endif %}
@@ -67,7 +67,7 @@
           </div>
           <div>
             {{ form.keywords.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.keywords(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="e.g. climate, energy, policy") }}
+            {{ form.keywords(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder=_('e.g. climate, energy, policy')) }}
             {% if form.keywords.errors %}{% for error in form.keywords.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -99,7 +99,7 @@
             {% if selected_city %}
             <option value="{{ selected_city }}" selected>{{ selected_city }}</option>
             {% else %}
-            <option value="">Select a city</option>
+            <option value="">{{ _('Select a city') }}</option>
             {% endif %}
           </select>
           {% if form.city.errors %}{% for error in form.city.errors %}
@@ -110,13 +110,13 @@
 
       <!-- Programme Section -->
       <div class="border-t border-gray-200 pt-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-1">Programme <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Programme') }} <span class="text-sm font-normal text-gray-500">{{ _('(Optional)') }}</span></h3>
         <p class="text-sm text-gray-500 mb-4">
-          Link this discussion to a Programme to group it with related discussions for combined analysis and reporting.
+          {{ _('Link this discussion to a Programme to group it with related discussions for combined analysis and reporting.') }}
           {% if not programme_meta %}
-          <span class="block mt-2">You don't have any active programmes.
-            <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline font-medium">Create a programme →</a>
-            (opens in a new tab)
+          <span class="block mt-2">{{ _("You don't have any active programmes.") }}
+            <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline font-medium">{{ _('Create a programme →') }}</a>
+            {{ _('(opens in a new tab)') }}
           </span>
           {% endif %}
         </p>
@@ -131,7 +131,7 @@
           <div>
             {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
             {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
-            <p class="mt-1 text-xs text-gray-400" id="theme_hint">{% if not discussion.programme %}Select a programme first{% endif %}</p>
+            <p class="mt-1 text-xs text-gray-400" id="theme_hint">{% if not discussion.programme %}{{ _('Select a programme first') }}{% endif %}</p>
             {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -139,7 +139,7 @@
           <div>
             {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
             {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
-            <p class="mt-1 text-xs text-gray-400" id="phase_hint">{% if not discussion.programme %}Select a programme first{% endif %}</p>
+            <p class="mt-1 text-xs text-gray-400" id="phase_hint">{% if not discussion.programme %}{{ _('Select a programme first') }}{% endif %}</p>
             {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -149,29 +149,29 @@
 
       <!-- Information Before Participation Section -->
       <div class="border-t border-gray-200 pt-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-1">Information Before Participation <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Information Before Participation') }} <span class="text-sm font-normal text-gray-500">{{ _('(Optional)') }}</span></h3>
         <p class="text-sm text-gray-500 mb-4">
-          Context shown to participants before they start voting. Supports Markdown in the body.
+          {{ _('Context shown to participants before they start voting. Supports Markdown in the body.') }}
         </p>
         <div class="space-y-4">
           <div>
             {{ form.information_title.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="Why this discussion matters") }}
+            {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder=_('Why this discussion matters')) }}
             {% if form.information_title.errors %}{% for error in form.information_title.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div>
             {{ form.information_body.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
+            {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="6", placeholder=_('Use Markdown. Example: **Important** context and [source](https://example.com)')) }}
             {% if form.information_body.errors %}{% for error in form.information_body.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div>
             {{ form.information_links.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
-            <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>. Only http/https links are kept.</p>
+            {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder=_('Watch explainer|https://example.com/video')) }}
+            <p class="mt-1 text-xs text-gray-500">{{ _('One per line in format <code>Label|https://url</code>. Only http/https links are kept.') }}</p>
             {% if form.information_links.errors %}{% for error in form.information_links.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -182,7 +182,7 @@
       <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-gray-200">
         <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
            class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
-          Cancel
+          {{ _('Cancel') }}
         </a>
         {{ form.submit(class="px-6 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700") }}
       </div>
@@ -270,10 +270,10 @@
 
     if (themeHint) {
       if (!programme) {
-        themeHint.textContent = "Select a programme first";
+        themeHint.textContent = "{{ _('Select a programme first') }}";
         themeHint.classList.remove("hidden");
       } else if (!programme.themes || programme.themes.length === 0) {
-        themeHint.textContent = "This programme has no themes defined";
+        themeHint.textContent = "{{ _('This programme has no themes defined') }}";
         themeHint.classList.remove("hidden");
       } else {
         themeHint.classList.add("hidden");
@@ -281,10 +281,10 @@
     }
     if (phaseHint) {
       if (!programme) {
-        phaseHint.textContent = "Select a programme first";
+        phaseHint.textContent = "{{ _('Select a programme first') }}";
         phaseHint.classList.remove("hidden");
       } else if (!programme.phases || programme.phases.length === 0) {
-        phaseHint.textContent = "This programme has no phases defined";
+        phaseHint.textContent = "{{ _('This programme has no phases defined') }}";
         phaseHint.classList.remove("hidden");
       } else {
         phaseHint.classList.add("hidden");

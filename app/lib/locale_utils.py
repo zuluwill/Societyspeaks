@@ -78,6 +78,22 @@ def resolve_locale() -> str:
     return 'en'
 
 
+def resolve_user_locale(user=None) -> str:
+    """
+    Resolve the locale to use when rendering for a specific user *outside* a
+    request context — e.g. email sends, background jobs, scheduled digests.
+
+    Uses user.language if present + supported, else falls back to 'en'.
+    Never touches request / cookies (those don't exist in these contexts).
+    """
+    if user is None:
+        return 'en'
+    lang = getattr(user, 'language', None)
+    if lang and lang in SUPPORTED_LANGUAGES:
+        return lang
+    return 'en'
+
+
 def language_preference_cookie_params():
     """
     Keyword arguments for Flask Response.set_cookie('ss_lang', ...).

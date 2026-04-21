@@ -4,9 +4,9 @@
 {% from "components/profile_pagination.html" import pagination %}
 
 {% block head %}
-    <title>{{ profile.full_name }} - Profile on SocietySpeaks</title>
-    <meta name="description" content="Explore the profile of {{ profile.full_name }}, who is actively shaping public discourse on SocietySpeaks. Join {{ profile.full_name }} in discussions on important societal issues.">
-    <meta name="keywords" content="public discourse, {{ profile.full_name }}, SocietySpeaks{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
+    <title>{{ _('%(name)s - Profile on SocietySpeaks', name=profile.full_name) }}</title>
+    <meta name="description" content="{{ _('Explore the profile of %(name)s, who is actively shaping public discourse on SocietySpeaks. Join %(name)s in discussions on important societal issues.', name=profile.full_name) }}">
+    <meta name="keywords" content="{{ _('public discourse, %(name)s, SocietySpeaks', name=profile.full_name) }}{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
     <link rel="canonical" href="{{ url_for('profiles.view_individual_profile', username=profile.slug, _external=True) }}">
 
     <!-- Structured Data for SEO -->
@@ -15,7 +15,7 @@
       "@context": "https://schema.org",
       "@type": "Person",
       "name": "{{ profile.full_name }}",
-      "description": "{{ profile.bio | default('Member on SocietySpeaks contributing to public discourse.') }}",
+      "description": "{{ profile.bio | default(_('Member on SocietySpeaks contributing to public discourse.')) }}",
       "url": "{{ url_for('profiles.view_individual_profile', username=profile.slug, _external=True) }}",
       "image": "{{ url_for('profiles.get_image', filename=profile.profile_image, _external=True) }}",
       {% if profile.city and profile.country %}
@@ -42,7 +42,7 @@
     <div class="relative h-60 bg-gray-200 rounded-xl overflow-hidden">
         <img
             src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}"
-            alt="{{ profile.full_name }} banner"
+            alt="{{ _('%(name)s banner', name=profile.full_name) }}"
             class="w-full h-full object-cover"
             onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-banner.png') }}';"
         >
@@ -56,7 +56,7 @@
             <div class="w-32 h-32 md:w-40 md:h-40 bg-white rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
                 <img
                     src="{{ url_for('profiles.get_image', filename=profile.profile_image) if profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
-                    alt="{{ profile.full_name }} profile photo"
+                    alt="{{ _('%(name)s profile photo', name=profile.full_name) }}"
                     class="w-full h-full object-cover"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';"
                 >
@@ -71,19 +71,19 @@
                         <div class="flex items-center gap-2 flex-shrink-0">
                             {% if current_user.is_authenticated and current_user.profile_type == 'individual' and current_user.individual_profile and current_user.individual_profile.id == profile.id %}
                             <a href="{{ url_for('profiles.edit_individual_profile', username=profile.slug) }}"
-                               aria-label="Edit individual profile"
+                               aria-label="{{ _('Edit individual profile') }}"
                                class="inline-flex items-center px-3 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
                                 <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                                <span class="hidden md:inline">Edit Profile</span>
+                                <span class="hidden md:inline">{{ _('Edit Profile') }}</span>
                             </a>
                             {% endif %}
                             {% from "components/share_button.html" import share_button %}
                             {{ share_button(
-                                title=profile.full_name + " is shaping the future of public discourse on SocietySpeaks",
+                                title=_('%(name)s is shaping the future of public discourse on SocietySpeaks', name=profile.full_name),
                                 url=url_for('profiles.view_individual_profile', username=profile.slug, _external=True),
-                                description="Join " + profile.full_name + " in tackling society's biggest challenges through nuanced debate and real policy solutions on SocietySpeaks.io. Your voice matters!",
+                                description=_("Join %(name)s in tackling society's biggest challenges through nuanced debate and real policy solutions on SocietySpeaks.io. Your voice matters!", name=profile.full_name),
                                 button_style="primary"
                             ) }}
                         </div>
@@ -96,7 +96,7 @@
                         <button data-read-more-btn aria-expanded="false" aria-controls="profile-description"
                                 type="button"
                                 class="read-more-toggle md:hidden text-primary-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded">
-                            Read more
+                            {{ _('Read more') }}
                         </button>
                     </div>
                     {% endif %}
@@ -118,7 +118,7 @@
     <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-900">Contact Information</h3>
+                <h3 class="text-lg font-semibold text-gray-900">{{ _('Contact Information') }}</h3>
                 <div class="flex items-center text-gray-600">
                     <svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -126,7 +126,7 @@
                     {% if profile.email %}
                         <a href="mailto:{{ profile.email }}" class="hover:text-primary-600 break-all">{{ profile.email }}</a>
                     {% else %}
-                        <span class="text-gray-400">No email provided</span>
+                        <span class="text-gray-400">{{ _('No email provided') }}</span>
                     {% endif %}
                 </div>
                 <div class="flex items-center text-gray-600">
@@ -135,15 +135,15 @@
                     </svg>
                     {% if profile.website %}
                         <a href="{{ profile.website }}" target="_blank" rel="noopener noreferrer"
-                           class="hover:text-primary-600">Visit Website</a>
+                           class="hover:text-primary-600">{{ _('Visit Website') }}</a>
                     {% else %}
-                        <span class="text-gray-400">No website provided</span>
+                        <span class="text-gray-400">{{ _('No website provided') }}</span>
                     {% endif %}
                 </div>
             </div>
 
             <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-900">Social Media</h3>
+                <h3 class="text-lg font-semibold text-gray-900">{{ _('Social Media') }}</h3>
                 {{ social_links(profile) }}
             </div>
         </div>
@@ -151,7 +151,7 @@
 
     <!-- User's Discussions -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Discussions Started</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ _('Discussions Started') }}</h2>
         {% if discussions.items %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for discussion in discussions.items %}
@@ -160,7 +160,7 @@
             </div>
             {{ pagination(discussions) }}
         {% else %}
-            <p class="text-gray-600">No discussions started yet.</p>
+            <p class="text-gray-600">{{ _('No discussions started yet.') }}</p>
         {% endif %}
     </div>
 </div>

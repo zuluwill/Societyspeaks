@@ -2,34 +2,34 @@
 {% extends "layout.html" %}
 
 {% block head %}
-<title>Managing Discussions - Society Speaks Help | Monitor and Engage</title>
-<meta name="description" content="Learn how to monitor and maintain engaging discussions on Society Speaks. Track participation, promote engagement, and understand consensus visualizations.">
+<title>{{ _('Managing Discussions - Society Speaks Help | Monitor and Engage') }}</title>
+<meta name="description" content="{{ _('Learn how to monitor and maintain engaging discussions on Society Speaks. Track participation, promote engagement, and understand consensus visualizations.') }}">
 <link rel="canonical" href="{{ url_for('help.managing_discussions', _external=True) }}">
 
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "Managing Discussions on Society Speaks",
-  "description": "Learn how to monitor and maintain engaging discussions",
+  "name": _('Managing Discussions on Society Speaks'),
+  "description": _('Learn how to monitor and maintain engaging discussions'),
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Monitor Participation",
-      "text": "Track participant count, engagement levels, and review new comments regularly."
+      "name": _('Monitor Participation'),
+      "text": _('Track participant count, engagement levels, and review new comments regularly.')
     },
     {
       "@type": "HowToStep",
-      "name": "Promote Engagement",
-      "text": "Share on relevant platforms, engage with participants, and add new seed comments."
+      "name": _('Promote Engagement'),
+      "text": _('Share on relevant platforms, engage with participants, and add new seed comments.')
     },
     {
       "@type": "HowToStep",
-      "name": "Understand Results",
-      "text": "Interpret opinion groups, consensus statements, and visualizations to derive insights."
+      "name": _('Understand Results'),
+      "text": _('Interpret opinion groups, consensus statements, and visualizations to derive insights.')
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -37,74 +37,74 @@
 <div class="max-w-4xl mx-auto p-6">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">Managing Discussions</h1>
-        <p class="text-gray-600">Learn how to monitor and maintain engaging discussions</p>
+        <h1 class="text-3xl font-bold mb-4">{{ _('Managing Discussions') }}</h1>
+        <p class="text-gray-600">{{ _('Learn how to monitor and maintain engaging discussions') }}</p>
     </div>
 
     <!-- Main Content -->
     <div class="space-y-8">
         <!-- Monitoring Participation -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Monitoring Participation</h2>
+            <h2 class="text-xl font-semibold mb-4">{{ _('Monitoring Participation') }}</h2>
 
             <div class="space-y-4">
-                <p class="text-gray-700">Keep track of your discussion's health and engagement:</p>
+                <p class="text-gray-700">{{ _("Keep track of your discussion's health and engagement:") }}</p>
                 <ul class="list-disc pl-5 text-gray-700">
-                    <li>Monitor participant count and engagement levels</li>
-                    <li>Review new comments regularly</li>
-                    <li>Observe opinion groups forming</li>
-                    <li>Look for areas of consensus and division</li>
+                    <li>{{ _('Monitor participant count and engagement levels') }}</li>
+                    <li>{{ _('Review new comments regularly') }}</li>
+                    <li>{{ _('Observe opinion groups forming') }}</li>
+                    <li>{{ _('Look for areas of consensus and division') }}</li>
                 </ul>
             </div>
         </div>
 
         <!-- Promoting Engagement -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Promoting Engagement</h2>
+            <h2 class="text-xl font-semibold mb-4">{{ _('Promoting Engagement') }}</h2>
 
             <div class="space-y-4">
-                <h3 class="font-semibold">Tips for Maintaining Active Discussions:</h3>
+                <h3 class="font-semibold">{{ _('Tips for Maintaining Active Discussions:') }}</h3>
                 <ul class="list-disc pl-5 text-gray-700">
-                    <li>Share your discussion on relevant platforms</li>
-                    <li>Engage with participants' comments</li>
-                    <li>Add new seed comments to explore emerging themes</li>
-                    <li>Keep the conversation focused and constructive</li>
+                    <li>{{ _('Share your discussion on relevant platforms') }}</li>
+                    <li>{{ _("Engage with participants' comments") }}</li>
+                    <li>{{ _('Add new seed comments to explore emerging themes') }}</li>
+                    <li>{{ _('Keep the conversation focused and constructive') }}</li>
                 </ul>
             </div>
         </div>
 
         <!-- Understanding Results -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Understanding Results</h2>
+            <h2 class="text-xl font-semibold mb-4">{{ _('Understanding Results') }}</h2>
 
             <div class="space-y-4">
-                <h3 class="font-semibold">Interpreting Pol.is Visualizations:</h3>
+                <h3 class="font-semibold">{{ _('Interpreting Pol.is Visualizations:') }}</h3>
                 <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-semibold mb-2">Opinion Groups</h4>
+                    <h4 class="font-semibold mb-2">{{ _('Opinion Groups') }}</h4>
                     <ul class="list-disc pl-5 text-gray-700">
-                        <li>Groups are formed automatically based on voting patterns</li>
-                        <li>Each color represents a distinct opinion group</li>
-                        <li>Size of groups indicates number of participants</li>
-                        <li>Distance between groups shows opinion difference</li>
+                        <li>{{ _('Groups are formed automatically based on voting patterns') }}</li>
+                        <li>{{ _('Each color represents a distinct opinion group') }}</li>
+                        <li>{{ _('Size of groups indicates number of participants') }}</li>
+                        <li>{{ _('Distance between groups shows opinion difference') }}</li>
                     </ul>
                 </div>
 
                 <div class="bg-green-50 p-4 rounded-lg">
-                    <h4 class="font-semibold mb-2">Consensus Statements</h4>
+                    <h4 class="font-semibold mb-2">{{ _('Consensus Statements') }}</h4>
                     <ul class="list-disc pl-5 text-gray-700">
-                        <li>Statements that most groups agree or disagree with</li>
-                        <li>Useful for finding common ground</li>
-                        <li>Can help bridge divides between groups</li>
+                        <li>{{ _('Statements that most groups agree or disagree with') }}</li>
+                        <li>{{ _('Useful for finding common ground') }}</li>
+                        <li>{{ _('Can help bridge divides between groups') }}</li>
                     </ul>
                 </div>
 
                 <div class="bg-yellow-50 p-4 rounded-lg">
-                    <h4 class="font-semibold mb-2">Participation Stats</h4>
+                    <h4 class="font-semibold mb-2">{{ _('Participation Stats') }}</h4>
                     <ul class="list-disc pl-5 text-gray-700">
-                        <li>Total number of participants</li>
-                        <li>Number of votes cast</li>
-                        <li>Number of comments submitted</li>
-                        <li>Participation rates over time</li>
+                        <li>{{ _('Total number of participants') }}</li>
+                        <li>{{ _('Number of votes cast') }}</li>
+                        <li>{{ _('Number of comments submitted') }}</li>
+                        <li>{{ _('Participation rates over time') }}</li>
                     </ul>
                 </div>
             </div>
@@ -112,26 +112,26 @@
 
         <!-- Moderation Best Practices -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Moderation Best Practices</h2>
+            <h2 class="text-xl font-semibold mb-4">{{ _('Moderation Best Practices') }}</h2>
 
             <div class="space-y-4">
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">Key Moderation Tasks:</h3>
+                    <h3 class="font-semibold mb-2">{{ _('Key Moderation Tasks:') }}</h3>
                     <ul class="list-disc pl-5 text-gray-700">
-                        <li>Regularly review and moderate new comments</li>
-                        <li>Maintain a respectful and constructive environment</li>
-                        <li>Remove inappropriate or off-topic comments</li>
-                        <li>Encourage balanced participation across groups</li>
+                        <li>{{ _('Regularly review and moderate new comments') }}</li>
+                        <li>{{ _('Maintain a respectful and constructive environment') }}</li>
+                        <li>{{ _('Remove inappropriate or off-topic comments') }}</li>
+                        <li>{{ _('Encourage balanced participation across groups') }}</li>
                     </ul>
                 </div>
 
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">Setting Ground Rules:</h3>
+                    <h3 class="font-semibold mb-2">{{ _('Setting Ground Rules:') }}</h3>
                     <ul class="list-disc pl-5 text-gray-700">
-                        <li>Clear guidelines for participation</li>
-                        <li>Expectations for comment quality</li>
-                        <li>Consequences for rule violations</li>
-                        <li>Process for appealing moderation decisions</li>
+                        <li>{{ _('Clear guidelines for participation') }}</li>
+                        <li>{{ _('Expectations for comment quality') }}</li>
+                        <li>{{ _('Consequences for rule violations') }}</li>
+                        <li>{{ _('Process for appealing moderation decisions') }}</li>
                     </ul>
                 </div>
             </div>
@@ -139,14 +139,14 @@
 
         <!-- Additional Resources -->
         <div class="bg-gray-50 rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Additional Resources</h2>
+            <h2 class="text-xl font-semibold mb-4">{{ _('Additional Resources') }}</h2>
             <div class="space-y-3">
                 <a href="https://compdemocracy.org/FAQ/" target="_blank" class="block text-primary-600 hover:underline">
-                    Complete Pol.is Documentation →
+                    {{ _('Complete Pol.is Documentation →') }}
                 </a>
-            
+
                 <a href="{{ url_for('help.seed_comments') }}" class="block text-primary-600 hover:underline">
-                    Guide to Seed Comments →
+                    {{ _('Guide to Seed Comments →') }}
                 </a>
             </div>
         </div>
@@ -155,9 +155,9 @@
     <!-- Help Footer -->
     <div class="mt-8 text-center">
         <p class="text-gray-600">
-            Still need help? 
+            {{ _('Still need help?') }}
             <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-primary-600 hover:underline">
-                Send us feedback
+                {{ _('Send us feedback') }}
             </a>
         </p>
     </div>

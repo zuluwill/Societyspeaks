@@ -17,7 +17,9 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 {% endmacro %}
 
-{% macro init_choices_dropdown(select_id, search_placeholder='Search...', select_placeholder='Select...') %}
+{% macro init_choices_dropdown(select_id, search_placeholder=None, select_placeholder=None) %}
+{% set search_placeholder = search_placeholder or _('Search...') %}
+{% set select_placeholder = select_placeholder or _('Select...') %}
 // Initialize Choices.js for searchable dropdown: {{ select_id }}
 const {{ select_id }}Select = document.getElementById('{{ select_id }}');
 if ({{ select_id }}Select) {

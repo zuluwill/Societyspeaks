@@ -38,6 +38,7 @@ from app.decorators import admin_required
 from app.brief.subscription import process_subscription
 from app.lib.partner_portal_session import sync_partner_portal_session_for_email
 from app.brief.constants import VALID_SEND_HOURS, DEFAULT_SEND_HOUR, WEEKLY_DAY_NAMES
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +185,7 @@ def view_date(date_str):
     try:
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        flash('Invalid date format. Use YYYY-MM-DD.', 'error')
+        flash(_('Invalid date format. Use YYYY-MM-DD.'), 'error')
         return redirect(url_for('brief.today'))
 
     brief = DailyBrief.get_by_date(brief_date)
@@ -231,7 +232,7 @@ def reader_view(date_str):
     try:
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        flash('Invalid date format. Use YYYY-MM-DD.', 'error')
+        flash(_('Invalid date format. Use YYYY-MM-DD.'), 'error')
         return redirect(url_for('brief.today'))
 
     brief = DailyBrief.get_by_date(brief_date)
@@ -290,7 +291,7 @@ def weekly_latest():
     ).order_by(DailyBrief.date.desc()).first()
 
     if not brief:
-        flash('No weekly brief available yet. Check back on Sunday!', 'info')
+        flash(_('No weekly brief available yet. Check back on Sunday!'), 'info')
         return redirect(url_for('brief.today'))
 
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
@@ -315,7 +316,7 @@ def weekly_by_date(date_str):
     try:
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        flash('Invalid date format. Use YYYY-MM-DD.', 'error')
+        flash(_('Invalid date format. Use YYYY-MM-DD.'), 'error')
         return redirect(url_for('brief.weekly_latest'))
 
     subscriber, is_subscriber = get_subscriber_status()
@@ -402,7 +403,7 @@ def subscribe():
     if request.method == 'POST':
         from app.lib.bot_protection import check_bot_submission
         if check_bot_submission():
-            flash('You have successfully subscribed!', 'success')
+            flash(_('You have successfully subscribed!'), 'success')
             return redirect(
                 url_for('brief.subscribe_success', cadence='daily', weekly_day=6)
             )
@@ -415,7 +416,7 @@ def subscribe():
 
         # Validate email
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            flash('Please enter a valid email address.', 'error')
+            flash(_('Please enter a valid email address.'), 'error')
             return redirect(url_for('brief.subscribe'))
 
         # Validate timezone
@@ -487,8 +488,8 @@ def subscribe_inline():
     if check_bot_submission():
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-            return jsonify({'success': True, 'message': "You're subscribed! Check your inbox."})
-        flash('You have successfully subscribed!', 'success')
+            return jsonify({'success': True, 'message': _("You're subscribed! Check your inbox.")})
+        flash(_('You have successfully subscribed!'), 'success')
         return redirect(request.referrer or url_for('brief.today'))
 
     email = request.form.get('email', '').strip().lower()
@@ -498,8 +499,8 @@ def subscribe_inline():
     # Validate email
     if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
         if is_ajax:
-            return jsonify({'success': False, 'error': 'Please enter a valid email address.'}), 400
-        flash('Please enter a valid email address.', 'error')
+            return jsonify({'success': False, 'error': _('Please enter a valid email address.')}), 400
+        flash(_('Please enter a valid email address.'), 'error')
         return redirect(request.referrer or url_for('brief.today'))
 
     # Process subscription using shared helper
@@ -517,26 +518,26 @@ def subscribe_inline():
     # Handle result with inline-specific messages and responses
     if result['status'] == 'already_active':
         if is_ajax:
-            return jsonify({'success': True, 'message': "You're already subscribed!"})
-        flash("You're already subscribed to the Daily Brief!", 'info')
+            return jsonify({'success': True, 'message': _("You're already subscribed!")})
+        flash(_("You're already subscribed to the Daily Brief!"), 'info')
         return redirect(request.referrer or url_for('brief.today'))
 
     elif result['status'] == 'reactivated':
         if is_ajax:
-            return jsonify({'success': True, 'message': 'Welcome back! Check your inbox.'})
-        flash('Welcome back! Your subscription has been reactivated.', 'success')
+            return jsonify({'success': True, 'message': _('Welcome back! Check your inbox.')})
+        flash(_('Welcome back! Your subscription has been reactivated.'), 'success')
         return redirect(request.referrer or url_for('brief.today'))
 
     elif result['status'] == 'created':
         if is_ajax:
-            return jsonify({'success': True, 'message': "You're subscribed! Check your inbox."})
-        flash("You're subscribed! Check your inbox for the welcome email.", 'success')
+            return jsonify({'success': True, 'message': _("You're subscribed! Check your inbox.")})
+        flash(_("You're subscribed! Check your inbox for the welcome email."), 'success')
         return redirect(request.referrer or url_for('brief.today'))
 
     else:  # error
         if is_ajax:
-            return jsonify({'success': False, 'error': 'Something went wrong. Please try again.'}), 500
-        flash('Something went wrong. Please try again.', 'error')
+            return jsonify({'success': False, 'error': _('Something went wrong. Please try again.')}), 500
+        flash(_('Something went wrong. Please try again.'), 'error')
         return redirect(request.referrer or url_for('brief.today'))
 
 
@@ -546,7 +547,7 @@ def unsubscribe(token):
     subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
-        flash('Invalid unsubscribe link.', 'error')
+        flash(_('Invalid unsubscribe link.'), 'error')
         return redirect(url_for('brief.today'))
 
     # Track whether they were on daily (to offer weekly as alternative)
@@ -576,7 +577,7 @@ def unsubscribe(token):
 
     logger.info(f"Brief unsubscribe: {subscriber.email}")
 
-    flash('You have been unsubscribed from the daily brief.', 'success')
+    flash(_('You have been unsubscribed from the daily brief.'), 'success')
     return render_template(
         'brief/unsubscribed.html',
         email=subscriber.email,
@@ -592,16 +593,16 @@ def switch_to_weekly(token):
     subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
-        flash('Invalid link.', 'error')
+        flash(_('Invalid link.'), 'error')
         return redirect(url_for('brief.today'))
 
     # Guard: only allow switching from unsubscribed state
     if subscriber.status == 'active':
-        flash("You're already subscribed!", 'info')
+        flash(_("You're already subscribed!"), 'info')
         return redirect(url_for('brief.today'))
 
     if subscriber.status != 'unsubscribed':
-        flash('Invalid request.', 'error')
+        flash(_('Invalid request.'), 'error')
         return redirect(url_for('brief.today'))
 
     # Reactivate with weekly cadence
@@ -624,7 +625,7 @@ def switch_to_weekly(token):
         logger.warning(f"PostHog tracking error: {e}")
 
     logger.info(f"Brief switched to weekly: {subscriber.email}")
-    flash('You\'ve switched to the Weekly Brief! You\'ll receive a digest every Sunday.', 'success')
+    flash(_('You\'ve switched to the Weekly Brief! You\'ll receive a digest every Sunday.'), 'success')
     return redirect(url_for('brief.today'))
 
 
@@ -659,10 +660,10 @@ def magic_link(token):
                             _ph.flush()
                     except Exception:
                         pass
-                flash(f'Welcome back! Signed in as {expired_sub.email}', 'success')
+                flash(_('Welcome back! Signed in as %(email)s', email=expired_sub.email), 'success')
                 return redirect(url_for('brief.today'))
 
-        flash('This link has expired or is invalid. Please subscribe again.', 'warning')
+        flash(_('This link has expired or is invalid. Please subscribe again.'), 'warning')
         return redirect(url_for('brief.subscribe'))
 
     session['brief_subscriber_id'] = subscriber.id
@@ -682,7 +683,7 @@ def magic_link(token):
         except Exception:
             pass
 
-    flash(f'Welcome back! Signed in as {subscriber.email}', 'success')
+    flash(_('Welcome back! Signed in as %(email)s', email=subscriber.email), 'success')
     return redirect(url_for('brief.today'))
 
 
@@ -693,7 +694,7 @@ def manage_preferences(token):
     subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
-        flash('Invalid preferences link. Please use the link from your email.', 'error')
+        flash(_('Invalid preferences link. Please use the link from your email.'), 'error')
         return redirect(url_for('brief.subscribe'))
     
     # Check token expiration for security (but allow unsubscribed users to manage preferences)
@@ -702,7 +703,7 @@ def manage_preferences(token):
         if subscriber.status == 'active':
             subscriber.generate_magic_token(expires_hours=PREFERENCES_TOKEN_EXPIRE_HOURS)
             db.session.commit()
-        flash('Your link has expired. Please check your latest email for a new link.', 'warning')
+        flash(_('Your link has expired. Please check your latest email for a new link.'), 'warning')
         return redirect(url_for('brief.today'))
 
     if request.method == 'POST':
@@ -746,10 +747,10 @@ def manage_preferences(token):
             subscriber.status = 'active'
             subscriber.unsubscribed_at = None
             cadence_label = 'Weekly' if subscriber.cadence == 'weekly' else 'Daily'
-            flash(f'Welcome back! You have been resubscribed to the {cadence_label} Brief.', 'success')
+            flash(_('Welcome back! You have been resubscribed to the %(cadence_label)s Brief.', cadence_label=cadence_label), 'success')
         
         db.session.commit()
-        flash('Your preferences have been updated.', 'success')
+        flash(_('Your preferences have been updated.'), 'success')
         return redirect(url_for('brief.manage_preferences', token=token))
 
     return render_template(
@@ -775,7 +776,7 @@ def generate_brief_audio(brief_id):
     """
     db.get_or_404(DailyBrief, brief_id)
     return jsonify({
-        'error': 'Audio generation is disabled',
+        'error': _('Audio generation is disabled'),
         'code': 'AUDIO_DISABLED'
     }), 410
 
@@ -800,7 +801,7 @@ def serve_audio(filename):
     
     # Security: validate filename to prevent path traversal
     if not filename or '..' in filename or '/' in filename or '\\' in filename:
-        return jsonify({'error': 'Invalid filename'}), 400
+        return jsonify({'error': _('Invalid filename')}), 400
     
     # Additional validation: ensure filename matches expected pattern
     # Format: brief_{brief_id}_item_{item_id}_{timestamp}_{hash}.wav
@@ -809,13 +810,13 @@ def serve_audio(filename):
     expected_pattern = r'^brief(_run)?_\d+_item_\d+_\d{8}_\d{6}_[a-f0-9]{8}\.(wav|mp3)$'
     if not re.match(expected_pattern, filename):
         logger.warning(f"Suspicious filename pattern rejected: {filename}")
-        return jsonify({'error': 'Audio not found'}), 404
+        return jsonify({'error': _('Audio not found')}), 404
     
     try:
         audio_data = audio_storage.get(filename)
         
         if not audio_data:
-            return jsonify({'error': 'Audio not found'}), 404
+            return jsonify({'error': _('Audio not found')}), 404
         
         # Determine content type from extension
         if filename.endswith('.wav'):
@@ -836,7 +837,7 @@ def serve_audio(filename):
         
     except Exception as e:
         logger.error(f"Failed to serve audio: {e}")
-        return jsonify({'error': 'Failed to serve audio'}), 500
+        return jsonify({'error': _('Failed to serve audio')}), 500
 
 
 @brief_bp.route('/brief/underreported')
@@ -859,15 +860,15 @@ def api_latest():
 
     if not subscriber or subscriber.status != 'active':
         return jsonify({
-            'error': 'Subscription required',
-            'message': 'Subscribe to access the full Daily Brief API.',
+            'error': _('Subscription required'),
+            'message': _('Subscribe to access the full Daily Brief API.'),
             'subscribe_url': '/brief/subscribe'
         }), 401
 
     brief = DailyBrief.get_today()
 
     if not brief:
-        return jsonify({'error': 'No brief available'}), 404
+        return jsonify({'error': _('No brief available')}), 404
 
     return jsonify(brief.to_dict())
 
@@ -882,20 +883,20 @@ def api_brief_by_date(date_str):
 
     if not subscriber or subscriber.status != 'active':
         return jsonify({
-            'error': 'Subscription required',
-            'message': 'Subscribe to access the full Daily Brief API.',
+            'error': _('Subscription required'),
+            'message': _('Subscribe to access the full Daily Brief API.'),
             'subscribe_url': '/brief/subscribe'
         }), 401
 
     try:
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        return jsonify({'error': 'Invalid date format'}), 400
+        return jsonify({'error': _('Invalid date format')}), 400
 
     brief = DailyBrief.get_by_date(brief_date)
 
     if not brief:
-        return jsonify({'error': 'No brief found'}), 404
+        return jsonify({'error': _('No brief found')}), 404
 
     return jsonify(brief.to_dict())
 
@@ -910,7 +911,7 @@ def admin_test_send():
     email = data.get('email')
 
     if not email:
-        return jsonify({'error': 'Email required'}), 400
+        return jsonify({'error': _('Email required')}), 400
 
     # Get or create the subscriber
     subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
@@ -1003,11 +1004,11 @@ def admin_test_send():
         if success:
             return jsonify({
                 'success': True,
-                'message': f'Test brief sent to {email}',
+                'message': _('Test brief sent to %(email)s', email=email),
                 'brief_title': brief.title
             })
         else:
-            return jsonify({'error': 'Failed to send email'}), 500
+            return jsonify({'error': _('Failed to send email')}), 500
 
     except Exception as e:
         logger.error(f"Test send failed: {e}")
@@ -1051,12 +1052,12 @@ def resend_webhook():
 
             if not all([svix_id, svix_timestamp, svix_signature]):
                 logger.warning("Missing webhook signature headers")
-                return jsonify({'error': 'Missing signature headers'}), 401
+                return jsonify({'error': _('Missing signature headers')}), 401
 
             # Guard against empty string headers
             if not svix_signature.strip():
                 logger.warning("Empty webhook signature header")
-                return jsonify({'error': 'Empty signature header'}), 401
+                return jsonify({'error': _('Empty signature header')}), 401
 
             # Verify signature using HMAC-SHA256
             payload_bytes = request.get_data()
@@ -1088,7 +1089,7 @@ def resend_webhook():
             
             if not valid:
                 logger.warning(f"Invalid webhook signature")
-                return jsonify({'error': 'Invalid signature'}), 401
+                return jsonify({'error': _('Invalid signature')}), 401
         
         # Get webhook payload
         payload = request.get_json()

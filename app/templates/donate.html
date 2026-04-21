@@ -1,20 +1,20 @@
 {% extends "layout.html" %}
-{% block title %}Donate | Society Speaks{% endblock %}
-{% block meta_description %}Support Society Speaks with a one-time donation. Your support funds open civic infrastructure and independent public-interest work.{% endblock %}
+{% block title %}{{ _('Donate | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('Support Society Speaks with a one-time donation. Your support funds open civic infrastructure and independent public-interest work.') }}{% endblock %}
 
 {% block content %}
 <section class="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
   <div class="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-    <h1 class="text-3xl font-bold text-slate-900">Support Society Speaks</h1>
+    <h1 class="text-3xl font-bold text-slate-900">{{ _('Support Society Speaks') }}</h1>
     <p class="mt-3 text-slate-600">
-      Your donation helps keep Society Speaks independent, open source, and focused on civic value.
+      {{ _('Your donation helps keep Society Speaks independent, open source, and focused on civic value.') }}
     </p>
 
     <form action="{{ url_for('billing.donate_checkout') }}" method="POST" class="mt-8 space-y-6">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div>
-        <p class="text-sm font-semibold text-slate-900">Choose an amount</p>
+        <p class="text-sm font-semibold text-slate-900">{{ _('Choose an amount') }}</p>
         <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <label class="preset-label cursor-pointer rounded-lg border border-slate-200 p-3 text-center hover:border-primary-400">
             <input class="donation-preset sr-only" type="radio" name="amount_pence" value="500">
@@ -33,20 +33,20 @@
             <span class="font-semibold text-slate-900">£50</span>
           </label>
         </div>
-        <p class="mt-3 text-sm text-slate-500">Or enter a custom amount in GBP:</p>
+        <p class="mt-3 text-sm text-slate-500">{{ _('Or enter a custom amount in GBP:') }}</p>
         <input
           id="amount-gbp"
           name="amount_gbp"
           type="text"
           inputmode="decimal"
-          placeholder="e.g. 12.50"
+          placeholder="{{ _('e.g. 12.50') }}"
           class="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         >
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
-          <label for="donor-name" class="block text-sm font-medium text-slate-900">Name (optional)</label>
+          <label for="donor-name" class="block text-sm font-medium text-slate-900">{{ _('Name (optional)') }}</label>
           <input
             id="donor-name"
             name="donor_name"
@@ -56,7 +56,7 @@
           >
         </div>
         <div>
-          <label for="donor-email" class="block text-sm font-medium text-slate-900">Email (optional)</label>
+          <label for="donor-email" class="block text-sm font-medium text-slate-900">{{ _('Email (optional)') }}</label>
           <input
             id="donor-email"
             name="donor_email"
@@ -68,7 +68,7 @@
       </div>
 
       <div>
-        <label for="donor-message" class="block text-sm font-medium text-slate-900">Message (optional)</label>
+        <label for="donor-message" class="block text-sm font-medium text-slate-900">{{ _('Message (optional)') }}</label>
         <textarea
           id="donor-message"
           name="donor_message"
@@ -80,19 +80,19 @@
 
       <label class="inline-flex items-center gap-2 text-sm text-slate-700">
         <input type="checkbox" name="is_anonymous" class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-        Make this donation anonymous
+        {{ _('Make this donation anonymous') }}
       </label>
 
       <button
         type="submit"
         class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-500"
       >
-        Donate securely with Stripe
+        {{ _('Donate securely with Stripe') }}
       </button>
     </form>
 
     <p class="mt-5 text-xs text-slate-500">
-      Donations are processed securely by Stripe. Minimum donation is £1.
+      {{ _('Donations are processed securely by Stripe. Minimum donation is £1.') }}
     </p>
   </div>
 </section>

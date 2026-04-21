@@ -1,56 +1,55 @@
 {% extends "layout.html" %}
 
-{% block title %}Embed Code Generator - Society Speaks{% endblock %}
+{% block title %}{{ _('Embed Code Generator - Society Speaks') }}{% endblock %}
 
-{% block meta_description %}Generate embed code for Society Speaks. Publishers can add a clean voting widget to articles, with developer-friendly customization and clear audience insight for editors.{% endblock %}
+{% block meta_description %}{{ _('Generate embed code for Society Speaks. Publishers can add a clean voting widget to articles, with developer-friendly customization and clear audience insight for editors.') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gradient-to-b from-blue-50 to-white">
   <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
     <header class="space-y-4">
       <nav class="text-sm text-gray-500">
-        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">For Publishers</a>
+        <a href="{{ url_for('partner.hub') }}" class="hover:text-primary-600">{{ _('For Publishers') }}</a>
         <span class="mx-2">/</span>
-        <span class="text-gray-900">Embed Generator</span>
+        <span class="text-gray-900">{{ _('Embed Generator') }}</span>
       </nav>
       <div class="grid gap-6 lg:grid-cols-12 lg:items-center">
         <div class="lg:col-span-7 space-y-4">
-          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">Embed Code Generator</h1>
+          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">{{ _('Embed Code Generator') }}</h1>
           <p class="text-lg text-gray-600">
-            Add a Society Speaks voting widget to your article in minutes. Developers get a clean iframe
-            and customization controls. Editors get structured insight, not comment noise.
+            {{ _('Add a Society Speaks voting widget to your article in minutes. Developers get a clean iframe and customization controls. Editors get structured insight, not comment noise.') }}
           </p>
           <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              API Reference
+              {{ _('API Reference') }}
             </a>
             <a href="mailto:info@societyspeaks.io" class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
-              Contact
+              {{ _('Contact') }}
             </a>
           </div>
-          <p class="text-sm text-gray-500">Embeds are available for Society Speaks native discussions.</p>
+          <p class="text-sm text-gray-500">{{ _('Embeds are available for Society Speaks native discussions.') }}</p>
         </div>
         <div class="lg:col-span-5">
           <div class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">Implementation checklist</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">{{ _('Implementation checklist') }}</p>
             <ul class="mt-3 space-y-2 text-sm text-gray-700">
               <li class="flex items-start">
                 <svg class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                Confirm your domain is allowlisted
+                {{ _('Confirm your domain is allowlisted') }}
               </li>
               <li class="flex items-start">
                 <svg class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                Generate the iframe below
+                {{ _('Generate the iframe below') }}
               </li>
               <li class="flex items-start">
                 <svg class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                Add auto-resize for a seamless UX
+                {{ _('Add auto-resize for a seamless UX') }}
               </li>
             </ul>
           </div>
@@ -62,47 +61,45 @@
 
 <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
   <div class="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900 mb-8">
-    <p class="font-semibold mb-1">Use the Partner Portal for production onboarding</p>
+    <p class="font-semibold mb-1">{{ _('Use the Partner Portal for production onboarding') }}</p>
     <p>
-      Create your test keys, verify domains, and activate live keys from the
-      <a href="{{ url_for('partner.portal_signup') }}" class="underline">Partner Portal</a>. For scale,
-      use the API to create discussions and store the returned <strong>discussion ID</strong> in your CMS.
-      See the <a href="{{ url_for('partner.api_docs') }}" class="underline">API Reference</a> for the
-      programmatic workflow.
+      {{ _('Create your test keys, verify domains, and activate live keys from the %(portal_link)s. For scale, use the API to create discussions and store the returned <strong>discussion ID</strong> in your CMS. See the %(api_link)s for the programmatic workflow.',
+            portal_link='<a href="' ~ url_for('partner.portal_signup') ~ '" class="underline">' ~ _('Partner Portal') ~ '</a>',
+            api_link='<a href="' ~ url_for('partner.api_docs') ~ '" class="underline">' ~ _('API Reference') ~ '</a>')|safe }}
     </p>
   </div>
   <div class="grid gap-6 md:grid-cols-3">
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">For developers</h3>
-      <p class="text-sm text-gray-600">A lightweight iframe, predictable params, and postMessage resize hooks.</p>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For developers') }}</h3>
+      <p class="text-sm text-gray-600">{{ _('A lightweight iframe, predictable params, and postMessage resize hooks.') }}</p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">For editors</h3>
-      <p class="text-sm text-gray-600">Structured participation, clear consensus signals, and auditable methodology.</p>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For editors') }}</h3>
+      <p class="text-sm text-gray-600">{{ _('Structured participation, clear consensus signals, and auditable methodology.') }}</p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">For audiences</h3>
-      <p class="text-sm text-gray-600">Vote in seconds, see where the public aligns, and explore deeper analysis.</p>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For audiences') }}</h3>
+      <p class="text-sm text-gray-600">{{ _('Vote in seconds, see where the public aligns, and explore deeper analysis.') }}</p>
     </div>
   </div>
 
   <div class="grid gap-6 md:grid-cols-3 mt-8">
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">At-scale flow</h3>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('At-scale flow') }}</h3>
       <p class="text-sm text-gray-600">
-        1) Lookup by article URL, 2) create if missing, 3) store discussion ID.
+        {{ _('1) Lookup by article URL, 2) create if missing, 3) store discussion ID.') }}
       </p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">What is a discussion ID?</h3>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('What is a discussion ID?') }}</h3>
       <p class="text-sm text-gray-600">
-        A unique identifier returned by the API when a discussion is created or found.
+        {{ _('A unique identifier returned by the API when a discussion is created or found.') }}
       </p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">No discussion yet?</h3>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('No discussion yet?') }}</h3>
       <p class="text-sm text-gray-600">
-        Call <code>POST /api/partner/discussions</code> to create one, then embed immediately.
+        {{ _('Call <code>POST /api/partner/discussions</code> to create one, then embed immediately.')|safe }}
       </p>
     </div>
   </div>
@@ -112,11 +109,11 @@
     <div class="space-y-6">
       <!-- Article URL Lookup -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 class="font-semibold text-gray-900 mb-4">1. Find Your Discussion</h2>
+        <h2 class="font-semibold text-gray-900 mb-4">{{ _('1. Find Your Discussion') }}</h2>
 
         <div class="space-y-4">
           <div>
-            <label for="articleUrl" class="block text-sm font-medium text-gray-700 mb-1">Article URL</label>
+            <label for="articleUrl" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Article URL') }}</label>
             <div class="flex flex-col sm:flex-row gap-2">
               <input
                 type="url"
@@ -126,41 +123,41 @@
               >
               <button
                 type="button"
-                
+
                 id="lookupBtn"
                 class="w-full sm:w-auto px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
               >
-                Look Up
+                {{ _('Look Up') }}
               </button>
             </div>
             <p id="lookupStatus" class="text-sm mt-2 hidden"></p>
           </div>
 
-          <div class="text-center text-gray-400 text-sm">or</div>
+          <div class="text-center text-gray-400 text-sm">{{ _('or') }}</div>
 
           <div>
-            <label for="discussionId" class="block text-sm font-medium text-gray-700 mb-1">Discussion ID</label>
+            <label for="discussionId" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Discussion ID') }}</label>
             <input
               type="number"
               id="discussionId"
-              placeholder="e.g., 123"
+              placeholder="{{ _('e.g., 123') }}"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              
+
             >
-            <p class="text-xs text-gray-500 mt-1">Returned by the API when a discussion is created or found.</p>
+            <p class="text-xs text-gray-500 mt-1">{{ _('Returned by the API when a discussion is created or found.') }}</p>
           </div>
         </div>
 
         <!-- Discussion Preview -->
         <div id="discussionPreview" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
-          <p class="text-sm text-gray-500 mb-1">Discussion found:</p>
+          <p class="text-sm text-gray-500 mb-1">{{ _('Discussion found:') }}</p>
           <p id="discussionTitle" class="font-semibold text-gray-900"></p>
         </div>
       </div>
 
       <!-- Theme Selection -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 class="font-semibold text-gray-900 mb-4">2. Choose a Theme</h2>
+        <h2 class="font-semibold text-gray-900 mb-4">{{ _('2. Choose a Theme') }}</h2>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {% for theme in themes %}
@@ -193,35 +190,35 @@
 
         <!-- Custom Colors (shown when custom selected or always) -->
         <div id="customTheme" class="space-y-3 pt-4 border-t border-gray-200">
-          <p class="text-sm text-gray-600">Or customize colors:</p>
+          <p class="text-sm text-gray-600">{{ _('Or customize colors:') }}</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label for="primaryColor" class="block text-xs font-medium text-gray-500 mb-1">Primary Color</label>
+              <label for="primaryColor" class="block text-xs font-medium text-gray-500 mb-1">{{ _('Primary Color') }}</label>
               <input
                 type="color"
                 id="primaryColor"
                 value="#1e40af"
                 class="w-full h-10 rounded border border-gray-200 cursor-pointer"
-                
+
               >
             </div>
             <div>
-              <label for="bgColor" class="block text-xs font-medium text-gray-500 mb-1">Background</label>
+              <label for="bgColor" class="block text-xs font-medium text-gray-500 mb-1">{{ _('Background') }}</label>
               <input
                 type="color"
                 id="bgColor"
                 value="#ffffff"
                 class="w-full h-10 rounded border border-gray-200 cursor-pointer"
-                
+
               >
             </div>
           </div>
           <div>
-            <label for="fontSelect" class="block text-xs font-medium text-gray-500 mb-1">Font</label>
+            <label for="fontSelect" class="block text-xs font-medium text-gray-500 mb-1">{{ _('Font') }}</label>
             <select
               id="fontSelect"
               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-              
+
             >
               {% for font in fonts %}
               <option value="{{ font }}">{{ font }}</option>
@@ -233,17 +230,17 @@
 
       <!-- Partner Ref -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 class="font-semibold text-gray-900 mb-4">3. Add Your Reference (Optional)</h2>
+        <h2 class="font-semibold text-gray-900 mb-4">{{ _('3. Add Your Reference (Optional)') }}</h2>
         <div>
-          <label for="partnerRef" class="block text-sm font-medium text-gray-700 mb-1">Partner Ref</label>
+          <label for="partnerRef" class="block text-sm font-medium text-gray-700 mb-1">{{ _('Partner Ref') }}</label>
           <input
             type="text"
             id="partnerRef"
-            placeholder="e.g., observer, time, mysite"
+            placeholder="{{ _('e.g., observer, time, mysite') }}"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            
+
           >
-          <p class="text-xs text-gray-500 mt-1">Used for analytics. Lowercase, no spaces.</p>
+          <p class="text-xs text-gray-500 mt-1">{{ _('Used for analytics. Lowercase, no spaces.') }}</p>
         </div>
       </div>
     </div>
@@ -252,14 +249,14 @@
     <div class="space-y-6">
       <!-- Live Preview -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 class="font-semibold text-gray-900 mb-4">Preview</h2>
+        <h2 class="font-semibold text-gray-900 mb-4">{{ _('Preview') }}</h2>
         <div id="previewContainer" class="bg-gray-100 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
-          <p class="text-gray-400 text-sm" id="previewPlaceholder">Enter a discussion ID or look up an article URL to see preview</p>
+          <p class="text-gray-400 text-sm" id="previewPlaceholder">{{ _('Enter a discussion ID or look up an article URL to see preview') }}</p>
           <iframe
             id="previewFrame"
             class="w-full hidden"
             style="height: 400px; border: none; border-radius: 8px;"
-            title="Embed preview"
+            title="{{ _('Embed preview') }}"
           ></iframe>
         </div>
       </div>
@@ -267,36 +264,36 @@
       <!-- Generated Code -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-semibold text-gray-900">Embed Code</h2>
+          <h2 class="font-semibold text-gray-900">{{ _('Embed Code') }}</h2>
           <button
             type="button"
-            
+
             id="copyBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
-            Copy
+            {{ _('Copy') }}
           </button>
         </div>
-        <pre id="embedCode" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;!-- Enter a discussion ID to generate embed code --&gt;</code></pre>
+        <pre id="embedCode" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;!-- {{ _('Enter a discussion ID to generate embed code') }} --&gt;</code></pre>
       </div>
 
       <!-- Auto-resize Snippet -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-semibold text-gray-900">Auto-resize Snippet</h2>
+          <h2 class="font-semibold text-gray-900">{{ _('Auto-resize Snippet') }}</h2>
           <button
             type="button"
-            
+
             id="copyResizeBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
-            Copy
+            {{ _('Copy') }}
           </button>
         </div>
         <pre id="resizeSnippet" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;script&gt;
@@ -312,17 +309,17 @@ window.addEventListener('message', (event) =&gt; {
       <!-- Performance Hints -->
       <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-semibold text-gray-900">Performance Hints</h2>
+          <h2 class="font-semibold text-gray-900">{{ _('Performance Hints') }}</h2>
           <button
             type="button"
-            
+
             id="copyPreconnectBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
-            Copy
+            {{ _('Copy') }}
           </button>
         </div>
         <pre id="preconnectSnippet" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;link rel="preconnect" href="{{ base_url }}"&gt;
@@ -331,14 +328,14 @@ window.addEventListener('message', (event) =&gt; {
 
       <!-- Tips -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 class="font-semibold text-blue-900 mb-2">Tips</h3>
+        <h3 class="font-semibold text-blue-900 mb-2">{{ _('Tips') }}</h3>
         <ul class="text-primary-800 text-sm space-y-1">
-          <li>Set iframe width to 100% for responsive embeds</li>
-          <li>Default height is 600px; adjust based on statement count</li>
-          <li>Add <code class="bg-blue-100 px-1 rounded">ref</code> to track participation from your site</li>
-          <li>The embed posts its height via postMessage for dynamic sizing</li>
-          <li>Add the auto-resize snippet to avoid scrollbars</li>
-          <li>Use preconnect hints to speed up first paint</li>
+          <li>{{ _('Set iframe width to 100%% for responsive embeds') }}</li>
+          <li>{{ _('Default height is 600px; adjust based on statement count') }}</li>
+          <li>{{ _('Add <code class="bg-blue-100 px-1 rounded">ref</code> to track participation from your site')|safe }}</li>
+          <li>{{ _('The embed posts its height via postMessage for dynamic sizing') }}</li>
+          <li>{{ _('Add the auto-resize snippet to avoid scrollbars') }}</li>
+          <li>{{ _('Use preconnect hints to speed up first paint') }}</li>
         </ul>
       </div>
     </div>
@@ -347,6 +344,16 @@ window.addEventListener('message', (event) =&gt; {
 
 <script nonce="{{ csp_nonce() }}">
   const BASE_URL = '{{ base_url }}';
+  const I18N = {
+    enterUrl: {{ _('Please enter an article URL')|tojson }},
+    lookingUp: {{ _('Looking up...')|tojson }},
+    searching: {{ _('Searching...')|tojson }},
+    found: {{ _('Discussion found!')|tojson }},
+    noDiscussion: {{ _('No discussion found for this URL')|tojson }},
+    errorLookup: {{ _('Error looking up article. Please try again.')|tojson }},
+    lookUp: {{ _('Look Up')|tojson }},
+    copied: {{ _('Copied!')|tojson }},
+  };
 
   // Look up article URL via API
   async function lookupArticle() {
@@ -355,13 +362,13 @@ window.addEventListener('message', (event) =&gt; {
     const lookupBtn = document.getElementById('lookupBtn');
 
     if (!url) {
-      showStatus('Please enter an article URL', 'error');
+      showStatus(I18N.enterUrl, 'error');
       return;
     }
 
     lookupBtn.disabled = true;
-    lookupBtn.textContent = 'Looking up...';
-    showStatus('Searching...', 'info');
+    lookupBtn.textContent = I18N.lookingUp;
+    showStatus(I18N.searching, 'info');
 
     try {
       const response = await fetch(`/api/discussions/by-article-url?url=${encodeURIComponent(url)}`);
@@ -371,17 +378,17 @@ window.addEventListener('message', (event) =&gt; {
         document.getElementById('discussionId').value = data.discussion_id;
         document.getElementById('discussionTitle').textContent = data.title;
         document.getElementById('discussionPreview').classList.remove('hidden');
-        showStatus('Discussion found!', 'success');
+        showStatus(I18N.found, 'success');
         updatePreview();
       } else {
-        showStatus(data.message || 'No discussion found for this URL', 'error');
+        showStatus(data.message || I18N.noDiscussion, 'error');
         document.getElementById('discussionPreview').classList.add('hidden');
       }
     } catch (error) {
-      showStatus('Error looking up article. Please try again.', 'error');
+      showStatus(I18N.errorLookup, 'error');
     } finally {
       lookupBtn.disabled = false;
-      lookupBtn.textContent = 'Look Up';
+      lookupBtn.textContent = I18N.lookUp;
     }
   }
 
@@ -465,7 +472,7 @@ window.addEventListener('message', (event) =&gt; {
     if (!discussionId) {
       previewFrame.classList.add('hidden');
       placeholder.classList.remove('hidden');
-      codeEl.textContent = '<!-- Enter a discussion ID to generate embed code -->';
+      codeEl.textContent = '<!-- ' + {{ _('Enter a discussion ID to generate embed code')|tojson }} + ' -->';
       return;
     }
 
@@ -477,13 +484,14 @@ window.addEventListener('message', (event) =&gt; {
     placeholder.classList.add('hidden');
 
     // Update code snippet
+    const iframeTitle = {{ _('Society Speaks discussion')|tojson }};
     const iframeCode = `<iframe
   id="societyspeaks-embed"
   src="${embedUrl}"
   width="100%"
   height="600"
   frameborder="0"
-  title="Society Speaks discussion"
+  title="${iframeTitle}"
   loading="lazy"
 ></iframe>`;
 
@@ -500,7 +508,7 @@ window.addEventListener('message', (event) =&gt; {
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        Copied!
+        ${I18N.copied}
       `;
       copyBtn.classList.add('bg-green-100', 'text-green-700');
       copyBtn.classList.remove('bg-gray-100', 'text-gray-700');

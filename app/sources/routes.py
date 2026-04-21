@@ -17,6 +17,7 @@ from app.sources.utils import (
     get_unique_countries,
     get_unique_categories
 )
+from flask_babel import gettext as _
 
 
 @sources_bp.route('/')
@@ -116,19 +117,19 @@ def claim_source(slug):
 
     # Check if user has a company profile
     if not current_user.company_profile:
-        flash('You need a company profile to claim a source. Please create one first.', 'warning')
+        flash(_('You need a company profile to claim a source. Please create one first.'), 'warning')
         return redirect(url_for('profiles.create_company_profile'))
 
     # Check if source is already claimed or has pending claim
     if source.claim_status == 'approved':
-        flash('This source has already been claimed.', 'error')
+        flash(_('This source has already been claimed.'), 'error')
         return redirect(url_for('sources.view_source', slug=slug))
 
     if source.claim_status == 'pending':
         if source.claim_requested_by_id == current_user.id:
-            flash('You have already requested to claim this source. Please wait for admin approval.', 'info')
+            flash(_('You have already requested to claim this source. Please wait for admin approval.'), 'info')
         else:
-            flash('Another user has already requested to claim this source.', 'error')
+            flash(_('Another user has already requested to claim this source.'), 'error')
         return redirect(url_for('sources.view_source', slug=slug))
 
     # Note: 'rejected' status is allowed - users can re-apply for rejected sources
@@ -145,14 +146,14 @@ def claim_source(slug):
                 f'Source claim requested: {source.name} by user {current_user.id}'
             )
             flash(
-                'Your claim request has been submitted. An admin will review it shortly.',
+                _('Your claim request has been submitted. An admin will review it shortly.'),
                 'success'
             )
             return redirect(url_for('sources.view_source', slug=slug))
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f'Error submitting claim request: {str(e)}')
-            flash('An error occurred. Please try again.', 'error')
+            flash(_('An error occurred. Please try again.'), 'error')
 
     return render_template(
         'sources/claim.html',

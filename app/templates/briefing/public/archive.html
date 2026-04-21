@@ -10,9 +10,9 @@
             <p class="mt-4 text-xl text-gray-600">{{ briefing.description }}</p>
             {% endif %}
             <div class="mt-4 text-sm text-gray-500">
-                <span class="capitalize">{{ briefing.cadence }}</span> briefing
+                {{ _('%(cadence)s briefing', cadence='<span class="capitalize">' + briefing.cadence + '</span>')|safe }}
                 &bull;
-                {{ runs|length }} edition{% if runs|length != 1 %}s{% endif %}
+                {% if runs|length == 1 %}{{ _('1 edition') }}{% else %}{{ _('%(count)d editions', count=runs|length) }}{% endif %}
             </div>
         </div>
 
@@ -25,15 +25,15 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">
-                            {{ run.scheduled_at.strftime('%B %d, %Y') if run.scheduled_at else 'Edition' }}
+                            {{ run.scheduled_at.strftime('%B %d, %Y') if run.scheduled_at else _('Edition') }}
                         </h2>
                         <p class="mt-1 text-sm text-gray-500">
-                            {{ run.items|length }} topic{% if run.items|length != 1 %}s{% endif %} covered
+                            {% if run.items|length == 1 %}{{ _('1 topic covered') }}{% else %}{{ _('%(count)d topics covered', count=run.items|length) }}{% endif %}
                         </p>
                     </div>
                     <div class="text-sm text-gray-400">
                         {% if run.sent_at %}
-                        Published {{ run.sent_at.strftime('%b %d, %Y at %H:%M') }}
+                        {{ _('Published %(date)s', date=run.sent_at.strftime('%b %d, %Y at %H:%M')) }}
                         {% endif %}
                     </div>
                 </div>
@@ -44,7 +44,7 @@
                         <li class="truncate">{{ item.headline }}</li>
                         {% endfor %}
                         {% if run.items|length > 3 %}
-                        <li class="text-gray-400">...and {{ run.items|length - 3 }} more</li>
+                        <li class="text-gray-400">{{ _('...and %(count)d more', count=run.items|length - 3) }}</li>
                         {% endif %}
                     </ul>
                 </div>
@@ -57,8 +57,8 @@
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No editions yet</h3>
-            <p class="mt-1 text-sm text-gray-500">Check back soon for the first edition of this briefing.</p>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">{{ _('No editions yet') }}</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ _('Check back soon for the first edition of this briefing.') }}</p>
         </div>
         {% endif %}
     </div>

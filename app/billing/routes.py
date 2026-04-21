@@ -27,6 +27,7 @@ try:
 except ImportError:
     posthog = None
 from app.lib.posthog_utils import safe_posthog_capture
+from flask_babel import gettext as _
 
 
 def _track_posthog(event, user_id, properties=None):
@@ -111,11 +112,11 @@ def donate_checkout():
         return redirect(url_for('main.donate'))
     except stripe.error.StripeError as e:
         current_app.logger.error(f"Stripe error in donation checkout: {e}")
-        flash("Payment system error. Please try again.", 'error')
+        flash(_("Payment system error. Please try again."), 'error')
         return redirect(url_for('main.donate'))
     except Exception as e:
         current_app.logger.error(f"Unexpected donation checkout error: {type(e).__name__}: {e}", exc_info=True)
-        flash("Payment system error. Please try again.", 'error')
+        flash(_("Payment system error. Please try again."), 'error')
         return redirect(url_for('main.donate'))
 
 
@@ -128,14 +129,14 @@ def checkout():
     plan_code = request.form.get('plan', 'starter')
     billing_interval = _normalize_billing_interval(request.form.get('interval', 'month'))
     if not billing_interval:
-        flash('Invalid billing interval selected.', 'error')
+        flash(_('Invalid billing interval selected.'), 'error')
         return redirect(url_for('briefing.landing'))
     
     current_app.logger.info(f"Plan: {plan_code}, Interval: {billing_interval}")
 
     target_plan = PricingPlan.query.filter_by(code=plan_code).first()
     if not target_plan:
-        flash('Invalid plan selected.', 'error')
+        flash(_('Invalid plan selected.'), 'error')
         return redirect(url_for('briefing.landing'))
 
     existing_sub = get_active_subscription(current_user)
@@ -151,7 +152,7 @@ def checkout():
             )
             manual_sub_to_supersede = existing_sub  # Mark for later superseding
             flash(
-                f'Your free {existing_sub.plan.name} access will be replaced once you complete payment.',
+                _('Your free %(name)s access will be replaced once you complete payment.', name=existing_sub.plan.name),
                 'info'
             )
             # Continue to checkout - will supersede manual sub only after checkout session created
@@ -176,11 +177,11 @@ def checkout():
                     )
                 except stripe.error.StripeError as e:
                     current_app.logger.error(f"Failed to cancel existing subscription for upgrade: {e}")
-                    flash('Unable to process upgrade. Please contact support.', 'error')
+                    flash(_('Unable to process upgrade. Please contact support.'), 'error')
                     return redirect(url_for('briefing.list_briefings'))
             else:
                 # Same tier or downgrade - use customer portal
-                flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
+                flash(_('You already have an active subscription. Use "Manage Billing" to change your plan.'), 'info')
                 return redirect(url_for('billing.customer_portal'))
 
     try:
@@ -201,7 +202,7 @@ def checkout():
             )
         
         if not checkout_session.url:
-            flash('Payment session error. Please try again.', 'error')
+            flash(_('Payment session error. Please try again.'), 'error')
             return redirect(url_for('briefing.landing'))
         _track_posthog('checkout_started', current_user.id, {
             'plan_code': plan_code,
@@ -214,11 +215,11 @@ def checkout():
         return redirect(url_for('briefing.landing'))
     except stripe.error.StripeError as e:
         current_app.logger.error(f"Stripe error in checkout (user={current_user.id}, plan={plan_code}): {e}")
-        flash('Payment system error. Please try again.', 'error')
+        flash(_('Payment system error. Please try again.'), 'error')
         return redirect(url_for('briefing.landing'))
     except Exception as e:
         current_app.logger.error(f"Unexpected error in checkout (user={current_user.id}, plan={plan_code}): {type(e).__name__}: {e}", exc_info=True)
-        flash('Payment system error. Please try again.', 'error')
+        flash(_('Payment system error. Please try again.'), 'error')
         return redirect(url_for('briefing.landing'))
 
 
@@ -242,7 +243,7 @@ def checkout_success():
                         f"Checkout session customer mismatch: session={checkout_session.customer}, "
                         f"user={current_user.id} has customer_id={current_user.stripe_customer_id}"
                     )
-                    flash('Invalid checkout session.', 'error')
+                    flash(_('Invalid checkout session.'), 'error')
                     return redirect(url_for('briefing.landing'))
 
             if checkout_session.subscription:
@@ -277,7 +278,7 @@ def checkout_success():
     if sub or sync_success:
         if is_org_plan:
             session.pop('post_checkout_template_id', None)
-            flash('Welcome! Your team subscription is now active. You can invite team members from your organization settings.', 'success')
+            flash(_('Welcome! Your team subscription is now active. You can invite team members from your organization settings.'), 'success')
             return redirect(url_for('briefing.organization_settings'))
         else:
             msg = 'Welcome! Your subscription is now active.'
@@ -304,7 +305,7 @@ def checkout_success():
         # Clear the template redirect so it doesn't fire on a future checkout.
         session.pop('post_checkout_template_id', None)
         session['pending_subscription_activation'] = True
-        flash('Welcome! Your subscription is being activated. This usually takes just a few seconds - you\'ll be able to create briefs momentarily.', 'info')
+        flash(_('Welcome! Your subscription is being activated. This usually takes just a few seconds - you\'ll be able to create briefs momentarily.'), 'info')
         return redirect(url_for('briefing.list_briefings'))
 
 
@@ -320,7 +321,7 @@ def customer_portal():
         return redirect(url_for('briefing.list_briefings'))
     except stripe.error.StripeError as e:
         current_app.logger.error(f"Stripe portal error: {e}")
-        flash('Unable to access billing portal. Please try again.', 'error')
+        flash(_('Unable to access billing portal. Please try again.'), 'error')
         return redirect(url_for('briefing.list_briefings'))
 
 
@@ -392,16 +393,16 @@ def webhook():
     
     if not webhook_secret:
         current_app.logger.error("STRIPE_WEBHOOK_SECRET not configured")
-        return jsonify({'error': 'Webhook not configured'}), 500
+        return jsonify({'error': _('Webhook not configured')}), 500
     
     try:
         event = s.Webhook.construct_event(payload, sig_header, webhook_secret)
     except ValueError:
         current_app.logger.error("Invalid webhook payload")
-        return jsonify({'error': 'Invalid payload'}), 400
+        return jsonify({'error': _('Invalid payload')}), 400
     except s.error.SignatureVerificationError:
         current_app.logger.error("Invalid webhook signature")
-        return jsonify({'error': 'Invalid signature'}), 400
+        return jsonify({'error': _('Invalid signature')}), 400
     
     event_id = event.get('id')
     if event_id:
@@ -866,12 +867,12 @@ def pending_checkout():
     plan_code = request.args.get('plan', 'starter')
     billing_interval = _normalize_billing_interval(request.args.get('interval', 'month'))
     if not billing_interval:
-        flash('Invalid billing interval selected.', 'error')
+        flash(_('Invalid billing interval selected.'), 'error')
         return redirect(url_for('briefing.landing'))
 
     target_plan = PricingPlan.query.filter_by(code=plan_code).first()
     if not target_plan:
-        flash('Invalid plan selected.', 'error')
+        flash(_('Invalid plan selected.'), 'error')
         return redirect(url_for('briefing.landing'))
 
     existing_sub = get_active_subscription(current_user)
@@ -886,7 +887,7 @@ def pending_checkout():
             )
             manual_sub_to_supersede = existing_sub
             flash(
-                f'Your free {existing_sub.plan.name} access will be replaced once you complete payment.',
+                _('Your free %(name)s access will be replaced once you complete payment.', name=existing_sub.plan.name),
                 'info'
             )
         else:
@@ -907,11 +908,11 @@ def pending_checkout():
                     )
                 except stripe.error.StripeError as e:
                     current_app.logger.error(f"Failed to cancel existing subscription for upgrade: {e}")
-                    flash('Unable to process upgrade. Please contact support.', 'error')
+                    flash(_('Unable to process upgrade. Please contact support.'), 'error')
                     return redirect(url_for('briefing.list_briefings'))
             else:
                 # Same tier or downgrade — send to customer portal
-                flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
+                flash(_('You already have an active subscription. Use "Manage Billing" to change your plan.'), 'info')
                 return redirect(url_for('billing.customer_portal'))
 
     try:
@@ -930,7 +931,7 @@ def pending_checkout():
             )
 
         if not checkout_session.url:
-            flash('Payment session error. Please try again.', 'error')
+            flash(_('Payment session error. Please try again.'), 'error')
             return redirect(url_for('briefing.landing'))
 
         _track_posthog('checkout_started', current_user.id, {
@@ -945,11 +946,11 @@ def pending_checkout():
         return redirect(url_for('briefing.landing'))
     except stripe.error.StripeError as e:
         current_app.logger.error(f"Stripe error in pending checkout: {e}")
-        flash('Payment system error. Please try again.', 'error')
+        flash(_('Payment system error. Please try again.'), 'error')
         return redirect(url_for('briefing.landing'))
     except Exception as e:
         current_app.logger.error(f"Unexpected error in pending checkout (user={current_user.id}, plan={plan_code}): {type(e).__name__}: {e}", exc_info=True)
-        flash('Payment system error. Please try again.', 'error')
+        flash(_('Payment system error. Please try again.'), 'error')
         return redirect(url_for('briefing.landing'))
 
 

@@ -69,6 +69,7 @@ from app.lib.partner_portal_session import (
     record_partner_login_failure,
 )
 from app.partner.webhooks import generate_webhook_secret, emit_partner_event, send_test_delivery
+from flask_babel import gettext as _
 
 
 @partner_bp.route('/')
@@ -478,11 +479,11 @@ def partner_login_required(f):
     def decorated(*args, **kwargs):
         partner = _current_partner()
         if not partner:
-            flash('Please sign in to the Partner Portal.', 'warning')
+            flash(_('Please sign in to the Partner Portal.'), 'warning')
             return redirect(url_for('partner.portal_login', next=request.full_path))
         if session.get('partner_admin_preview') and not _has_valid_admin_preview(partner):
             _clear_partner_session()
-            flash('Your admin preview session expired. Please re-open it from Admin.', 'warning')
+            flash(_('Your admin preview session expired. Please re-open it from Admin.'), 'warning')
             return redirect(url_for('partner.portal_login'))
 
         if _is_admin_preview(partner) and request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
@@ -490,7 +491,7 @@ def partner_login_required(f):
                 'path': request.path,
                 'method': request.method,
             })
-            flash('Read-only preview mode: write actions are disabled.', 'warning')
+            flash(_('Read-only preview mode: write actions are disabled.'), 'warning')
             return redirect(url_for('partner.portal_dashboard'))
         member_id = session.get('partner_member_id')
         if member_id:
@@ -499,7 +500,7 @@ def partner_login_required(f):
             ).first()
             if not active_member:
                 _clear_partner_session()
-                flash('Your team access is no longer active. Please sign in again.', 'warning')
+                flash(_('Your team access is no longer active. Please sign in again.'), 'warning')
                 return redirect(url_for('partner.portal_login'))
         else:
             owner_member = get_or_create_owner_member(partner)
@@ -592,7 +593,7 @@ def portal_signup():
         _signup_ctx = dict(name_value=name, email_value=email, domain_value=domain)
 
         if not name or not email or not password:
-            flash('Name, email, and password are required.', 'danger')
+            flash(_('Name, email, and password are required.'), 'danger')
             return render_template('partner/portal/signup.html', **_signup_ctx)
 
         email_ok, email_err = validate_email_format(email)
@@ -606,13 +607,13 @@ def portal_signup():
             return render_template('partner/portal/signup.html', **_signup_ctx)
 
         if Partner.query.filter_by(contact_email=email).first():
-            flash('An account with this email already exists. Please sign in.', 'warning')
+            flash(_('An account with this email already exists. Please sign in.'), 'warning')
             return redirect(url_for('partner.portal_login'))
 
         # PartnerMember.email is globally unique across all partners.
         # Check before insert to avoid integrity errors when a user was invited already.
         if PartnerMember.query.filter_by(email=email).first():
-            flash('An account with this email already exists. Please sign in.', 'warning')
+            flash(_('An account with this email already exists. Please sign in.'), 'warning')
             return redirect(url_for('partner.portal_login'))
 
         slug_base = generate_slug(name) or generate_slug(email.split('@')[0]) or 'partner'
@@ -622,7 +623,7 @@ def portal_signup():
             counter += 1
             slug = f"{slug_base}-{counter}"
             if counter > 100:
-                flash('Could not generate a unique account identifier. Please try a different name.', 'danger')
+                flash(_('Could not generate a unique account identifier. Please try a different name.'), 'danger')
                 return render_template('partner/portal/signup.html', **_signup_ctx)
 
         try:
@@ -652,18 +653,18 @@ def portal_signup():
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            flash('An account with this email already exists. Please sign in.', 'warning')
+            flash(_('An account with this email already exists. Please sign in.'), 'warning')
             return redirect(url_for('partner.portal_login'))
         except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to create partner account")
-            flash('An error occurred creating your account. Please try again.', 'danger')
+            flash(_('An error occurred creating your account. Please try again.'), 'danger')
             return render_template('partner/portal/signup.html', **_signup_ctx)
 
         session['partner_portal_id'] = partner.id
         session['partner_member_id'] = owner_member.id
         session['partner_new_key'] = full_key
-        flash('Your Partner Portal is ready. Your test key is shown once below.', 'success')
+        flash(_('Your Partner Portal is ready. Your test key is shown once below.'), 'success')
         return redirect(url_for('partner.portal_dashboard'))
 
     return render_template('partner/portal/signup.html')
@@ -678,10 +679,10 @@ def portal_login():
 
         remaining = get_partner_login_lockout(email)
         if remaining > 0:
-            flash(f'Too many failed attempts. Please try again in {remaining} seconds.', 'danger')
+            flash(_('Too many failed attempts. Please try again in %(remaining)s seconds.', remaining=remaining), 'danger')
             return render_template('partner/portal/login.html', email_value=email)
 
-        _, partner, member, valid_login = authenticate_partner_credentials(
+        __, partner, member, valid_login = authenticate_partner_credentials(
             email, password
         )
 
@@ -689,19 +690,19 @@ def portal_login():
             fail_count, remaining = record_partner_login_failure(email)
             if remaining > 0:
                 current_app.logger.warning(f"Partner login lockout triggered for {email} after {fail_count} failures")
-                flash('Too many failed attempts. Please try again in 5 minutes.', 'danger')
+                flash(_('Too many failed attempts. Please try again in 5 minutes.'), 'danger')
             else:
-                flash('Invalid email or password.', 'danger')
+                flash(_('Invalid email or password.'), 'danger')
             return render_template('partner/portal/login.html', email_value=email)
 
         if partner.status != 'active':
-            flash('This account has been deactivated. Please contact support.', 'danger')
+            flash(_('This account has been deactivated. Please contact support.'), 'danger')
             return render_template('partner/portal/login.html', email_value=email)
 
         # Capture redirect target before clearing the session.
         next_url = request.form.get('next') or request.args.get('next')
         finalize_partner_portal_login(partner, member)
-        flash('Welcome back.', 'success')
+        flash(_('Welcome back.'), 'success')
         return redirect(_safe_portal_next_url(next_url))
 
     return render_template('partner/portal/login.html', next_url=request.args.get('next'))
@@ -737,7 +738,7 @@ def portal_reset_password(token):
     """Reset a partner's password using a valid token."""
     partner = Partner.verify_reset_token(token)
     if not partner:
-        flash('This reset link is invalid or has expired. Please request a new one.', 'danger')
+        flash(_('This reset link is invalid or has expired. Please request a new one.'), 'danger')
         return redirect(url_for('partner.portal_forgot_password'))
 
     if request.method == 'POST':
@@ -757,27 +758,32 @@ def portal_reset_password(token):
         except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to reset partner password")
-            flash('An error occurred. Please try again.', 'danger')
+            flash(_('An error occurred. Please try again.'), 'danger')
             return render_template('partner/portal/reset_password.html', token=token)
 
         session['partner_portal_id'] = partner.id
         session['partner_member_id'] = owner_member.id
-        flash('Your password has been reset. You are now signed in.', 'success')
+        flash(_('Your password has been reset. You are now signed in.'), 'success')
         return redirect(url_for('partner.portal_dashboard'))
 
     return render_template('partner/portal/reset_password.html', token=token)
 
 
 def _send_partner_reset_email(partner, reset_url):
-    """Send a password-reset email via the existing Resend infrastructure."""
-    from app.resend_client import get_resend_client
+    """Send a password-reset email via the existing Resend infrastructure.
+
+    Partner is not a User (no .language attribute); locale falls back to 'en'
+    via resolve_user_locale. If a member-level language preference is ever
+    added, pass the member here instead of the partner.
+    """
+    from app.resend_client import get_resend_client, _render_for_user, _subject_for_user
     client = get_resend_client()
     email_data = {
         'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
         'to': [partner.contact_email],
-        'subject': 'Reset your Society Speaks Partner Portal password',
-        'html': render_template('emails/partner_password_reset.html',
-                                partner=partner, reset_url=reset_url),
+        'subject': _subject_for_user(None, 'Reset your Society Speaks Partner Portal password'),
+        'html': _render_for_user(None, 'emails/partner_password_reset.html',
+                                 partner=partner, reset_url=reset_url),
     }
     return client._send_with_retry(email_data)
 
@@ -785,7 +791,7 @@ def _send_partner_reset_email(partner, reset_url):
 @partner_bp.route('/portal/logout')
 def portal_logout():
     _clear_partner_session()
-    flash('Signed out.', 'success')
+    flash(_('Signed out.'), 'success')
     return redirect(url_for('partner.portal_login'))
 
 
@@ -983,11 +989,11 @@ def portal_create_discussion():
     member = _current_partner_member(partner)
 
     if not _member_can_manage_discussions(member):
-        flash('You do not have permission to create discussions.', 'error')
+        flash(_('You do not have permission to create discussions.'), 'error')
         return redirect(url_for('partner.portal_discussions'))
 
     if _is_admin_preview(partner):
-        flash('Admin preview mode: create actions are disabled.', 'warning')
+        flash(_('Admin preview mode: create actions are disabled.'), 'warning')
         return redirect(url_for('partner.portal_discussions'))
 
     title = (request.form.get('title') or '').strip()
@@ -1005,20 +1011,20 @@ def portal_create_discussion():
     _form_url = url_for('partner.portal_discussions') + '#new-discussion-form'
 
     if not title:
-        flash('Title is required.', 'error')
+        flash(_('Title is required.'), 'error')
         return redirect(_form_url)
 
     max_title_len = (getattr(Discussion.__table__.c.title.type, 'length', None) or 200)
     if len(title) > max_title_len:
-        flash(f'Title must be {max_title_len} characters or fewer.', 'error')
+        flash(_('Title must be %(max_title_len)s characters or fewer.', max_title_len=max_title_len), 'error')
         return redirect(_form_url)
 
     if not article_url and not external_id:
-        flash('Either an article URL or an external ID is required.', 'error')
+        flash(_('Either an article URL or an external ID is required.'), 'error')
         return redirect(_form_url)
 
     if env == 'live' and partner.billing_status != 'active':
-        flash('An active subscription is required to create live discussions.', 'error')
+        flash(_('An active subscription is required to create live discussions.'), 'error')
         return redirect(_form_url)
 
     if topic and topic not in Discussion.TOPICS:
@@ -1034,13 +1040,13 @@ def portal_create_discussion():
     normalized_url = None
     if article_url:
         if len(article_url) > 2048:
-            flash('Article URL must be 2048 characters or fewer.', 'error')
+            flash(_('Article URL must be 2048 characters or fewer.'), 'error')
             return redirect(_form_url)
         try:
             from app.lib.url_normalizer import normalize_url
             normalized_url = normalize_url(article_url)
         except Exception:
-            flash('Invalid article URL — please check and try again.', 'error')
+            flash(_('Invalid article URL — please check and try again.'), 'error')
             return redirect(_form_url)
 
         existing = Discussion.query.filter_by(
@@ -1049,7 +1055,7 @@ def portal_create_discussion():
             partner_fk_id=partner.id,
         ).first()
         if existing:
-            flash(f'A discussion already exists for that article URL (ID {existing.id}).', 'warning')
+            flash(_('A discussion already exists for that article URL (ID %(id)s).', id=existing.id), 'warning')
             return redirect(_form_url)
 
     # External ID uniqueness
@@ -1058,7 +1064,7 @@ def portal_create_discussion():
             getattr(Discussion.__table__.c.partner_external_id.type, 'length', None) or 128
         )
         if len(external_id) > max_external_id_len:
-            flash(f'External ID must be {max_external_id_len} characters or fewer.', 'error')
+            flash(_('External ID must be %(max_external_id_len)s characters or fewer.', max_external_id_len=max_external_id_len), 'error')
             return redirect(_form_url)
         existing = Discussion.query.filter_by(
             partner_external_id=external_id,
@@ -1066,7 +1072,7 @@ def portal_create_discussion():
             partner_env=env,
         ).first()
         if existing:
-            flash(f'A discussion with that external ID already exists (ID {existing.id}).', 'warning')
+            flash(_('A discussion with that external ID already exists (ID %(id)s).', id=existing.id), 'warning')
             return redirect(_form_url)
 
     # Best active key for audit trail
@@ -1123,10 +1129,10 @@ def portal_create_discussion():
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        flash('Could not create the discussion — a duplicate may already exist.', 'error')
+        flash(_('Could not create the discussion — a duplicate may already exist.'), 'error')
         return redirect(_form_url)
 
-    flash(f'Discussion "{title}" created successfully (ID {discussion.id}).', 'success')
+    flash(_('Discussion "%(title)s" created successfully (ID %(id)s).', title=title, id=discussion.id), 'success')
     return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion.id))
 
 
@@ -1136,11 +1142,11 @@ def portal_toggle_discussion_closed(discussion_id):
     """Allow admin/owner to open or close a discussion from the portal."""
     partner = _current_partner()
     if not _member_can_manage_discussions(_current_partner_member(partner)):
-        flash('You do not have permission to open or close discussions.', 'warning')
+        flash(_('You do not have permission to open or close discussions.'), 'warning')
         return redirect(url_for('partner.portal_discussions'))
 
     if _is_admin_preview(partner):
-        flash('Admin preview is read-only.', 'warning')
+        flash(_('Admin preview is read-only.'), 'warning')
         return redirect(url_for('partner.portal_discussions'))
 
     discussion = Discussion.query.filter(
@@ -1161,11 +1167,11 @@ def portal_toggle_discussion_closed(discussion_id):
             )
         except Exception:
             current_app.logger.exception("Failed to emit discussion.updated from portal toggle")
-        flash(f'Discussion #{discussion_id} {action}.', 'success')
+        flash(_('Discussion #%(discussion_id)s %(action)s.', discussion_id=discussion_id, action=action), 'success')
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to toggle discussion closed state")
-        flash('An error occurred. Please try again.', 'danger')
+        flash(_('An error occurred. Please try again.'), 'danger')
 
     return redirect(url_for('partner.portal_discussions',
                             env=request.args.get('env', 'all'),
@@ -1238,11 +1244,11 @@ def portal_set_embed_statement_submissions(discussion_id):
     """Enable/disable reader statement submissions directly from the embed."""
     partner = _current_partner()
     if not _member_can_manage_discussions(_current_partner_member(partner)):
-        flash('You do not have permission to change embed submission settings.', 'warning')
+        flash(_('You do not have permission to change embed submission settings.'), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     if _is_admin_preview(partner):
-        flash('Admin preview mode: write actions are disabled.', 'warning')
+        flash(_('Admin preview mode: write actions are disabled.'), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     discussion = Discussion.query.filter(
@@ -1251,18 +1257,18 @@ def portal_set_embed_statement_submissions(discussion_id):
     ).first_or_404()
 
     if discussion.is_closed:
-        flash('Reopen the discussion before changing embed submission settings.', 'warning')
+        flash(_('Reopen the discussion before changing embed submission settings.'), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     discussion.embed_statement_submissions_enabled = _form_bool('embed_statement_submissions_enabled')
     try:
         db.session.commit()
         state = 'enabled' if discussion.embed_statement_submissions_enabled else 'disabled'
-        flash(f'Embed statement submissions {state}.', 'success')
+        flash(_('Embed statement submissions %(state)s.', state=state), 'success')
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to update embed submission policy")
-        flash('Could not update embed submission settings.', 'danger')
+        flash(_('Could not update embed submission settings.'), 'danger')
 
     return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
@@ -1274,11 +1280,11 @@ def portal_add_statement(discussion_id):
     partner = _current_partner()
 
     if not _member_can_manage_discussions(_current_partner_member(partner)):
-        flash('You do not have permission to add statements.', 'error')
+        flash(_('You do not have permission to add statements.'), 'error')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     if _is_admin_preview(partner):
-        flash('Admin preview mode: write actions are disabled.', 'warning')
+        flash(_('Admin preview mode: write actions are disabled.'), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     discussion = Discussion.query.filter(
@@ -1287,20 +1293,20 @@ def portal_add_statement(discussion_id):
     ).first_or_404()
 
     if discussion.is_closed:
-        flash('This discussion is closed. Reopen it before adding statements.', 'warning')
+        flash(_('This discussion is closed. Reopen it before adding statements.'), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     content = (request.form.get('content') or '').strip()
     stance = (request.form.get('stance') or '').strip()
 
     if not content:
-        flash('Statement content is required.', 'error')
+        flash(_('Statement content is required.'), 'error')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
     if len(content) < 10:
-        flash('Statement must be at least 10 characters.', 'error')
+        flash(_('Statement must be at least 10 characters.'), 'error')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
     if len(content) > 500:
-        flash('Statement must be 500 characters or fewer.', 'error')
+        flash(_('Statement must be 500 characters or fewer.'), 'error')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
     if stance and stance not in ('pro', 'con', 'neutral'):
         stance = ''
@@ -1308,14 +1314,14 @@ def portal_add_statement(discussion_id):
     max_st = current_app.config.get('MAX_STATEMENTS_PER_DISCUSSION', 5000)
     current_count = Statement.query.filter_by(discussion_id=discussion_id, is_deleted=False).count()
     if current_count >= max_st:
-        flash(f'This discussion has reached the maximum of {max_st} statements.', 'warning')
+        flash(_('This discussion has reached the maximum of %(max_st)s statements.', max_st=max_st), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     existing = Statement.query.filter_by(
         discussion_id=discussion_id, content=content, is_deleted=False
     ).first()
     if existing:
-        flash('An identical statement already exists in this discussion.', 'warning')
+        flash(_('An identical statement already exists in this discussion.'), 'warning')
         return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
     stmt = Statement(
@@ -1334,11 +1340,11 @@ def portal_add_statement(discussion_id):
     try:
         db.session.commit()
         invalidate_partner_snapshot_cache(discussion_id)
-        flash('Statement added.', 'success')
+        flash(_('Statement added.'), 'success')
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to add statement from portal")
-        flash('Failed to add statement — please try again.', 'error')
+        flash(_('Failed to add statement — please try again.'), 'error')
 
     return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
@@ -1392,7 +1398,7 @@ def portal_getting_started_success():
 @partner_login_required
 def portal_health_check():
     partner = _current_partner()
-    domains, keys, _, _, _ = _build_partner_portal_context(partner)
+    domains, keys, __, __, __ = _build_partner_portal_context(partner)
 
     since = utcnow_naive() - timedelta(days=30)
     usage_rows = PartnerUsageEvent.query.filter(
@@ -1407,7 +1413,7 @@ def portal_health_check():
     session['partner_last_health_check'] = utcnow_naive().isoformat()
     session['partner_last_health_result'] = health
     session.modified = True
-    flash('Integration health check updated.', 'success')
+    flash(_('Integration health check updated.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1420,7 +1426,7 @@ def portal_usage_csv():
 
     partner = _current_partner()
     if not _member_can_view_analytics(_current_partner_member(partner)):
-        flash('You do not have permission to export analytics.', 'warning')
+        flash(_('You do not have permission to export analytics.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     since = utcnow_naive() - timedelta(days=90)
     rows = PartnerUsageEvent.query.filter(
@@ -1469,7 +1475,7 @@ def portal_invite_member():
     partner = _current_partner()
     current_member = _current_partner_member(partner)
     if not _member_can_manage_team(current_member):
-        flash('Only owners and admins can invite team members.', 'danger')
+        flash(_('Only owners and admins can invite team members.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     email = normalize_email(request.form.get('email'))
@@ -1483,15 +1489,15 @@ def portal_invite_member():
         flash(email_err, 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     if email == partner.contact_email:
-        flash('The owner email already has access.', 'warning')
+        flash(_('The owner email already has access.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     existing = PartnerMember.query.filter_by(email=email).first()
     if existing and existing.partner_id != partner.id:
-        flash('That email is already linked to another partner account.', 'danger')
+        flash(_('That email is already linked to another partner account.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     if existing and existing.status == 'active':
-        flash('That team member already has access.', 'info')
+        flash(_('That team member already has access.'), 'info')
         return redirect(url_for('partner.portal_dashboard'))
 
     token = PartnerMember.generate_invite_token()
@@ -1519,7 +1525,7 @@ def portal_invite_member():
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to save partner invite")
-        flash('Could not create invite. Please try again.', 'danger')
+        flash(_('Could not create invite. Please try again.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     invite_url = url_for('partner.portal_accept_invite', token=token, _external=True)
@@ -1532,10 +1538,10 @@ def portal_invite_member():
         )
     except Exception:
         current_app.logger.exception("Failed to send partner member invite email")
-        flash('Invite saved, but email delivery failed. Copy the invite link from logs or retry.', 'warning')
+        flash(_('Invite saved, but email delivery failed. Copy the invite link from logs or retry.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
-    flash(f'Invite sent to {email}.', 'success')
+    flash(_('Invite sent to %(email)s.', email=email), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1544,11 +1550,11 @@ def portal_invite_member():
 def portal_accept_invite(token):
     member = PartnerMember.query.filter_by(invite_token=token, status='pending').first()
     if not member or _is_partner_invite_expired(member):
-        flash('This invite link is invalid or expired.', 'danger')
+        flash(_('This invite link is invalid or expired.'), 'danger')
         return redirect(url_for('partner.portal_login'))
     partner = db.session.get(Partner, member.partner_id)
     if not partner or partner.status != 'active':
-        flash('This partner account is not active.', 'danger')
+        flash(_('This partner account is not active.'), 'danger')
         return redirect(url_for('partner.portal_login'))
 
     if request.method == 'POST':
@@ -1570,12 +1576,12 @@ def portal_accept_invite(token):
         except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to accept partner invite")
-            flash('Could not accept invite. Please try again.', 'danger')
+            flash(_('Could not accept invite. Please try again.'), 'danger')
             return render_template('partner/portal/accept_invite.html', member=member, partner=partner, token=token)
 
         session['partner_portal_id'] = partner.id
         session['partner_member_id'] = member.id
-        flash('Welcome to the partner portal.', 'success')
+        flash(_('Welcome to the partner portal.'), 'success')
         return redirect(url_for('partner.portal_dashboard'))
 
     return render_template('partner/portal/accept_invite.html', member=member, partner=partner, token=token)
@@ -1587,15 +1593,15 @@ def portal_update_member_status(member_id):
     partner = _current_partner()
     current_member = _current_partner_member(partner)
     if not _member_can_manage_team(current_member):
-        flash('Only owners and admins can update team members.', 'danger')
+        flash(_('Only owners and admins can update team members.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     member = PartnerMember.query.filter_by(id=member_id, partner_id=partner.id).first_or_404()
     if member.role == 'owner':
-        flash('Owner access cannot be changed.', 'warning')
+        flash(_('Owner access cannot be changed.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     if current_member and current_member.id == member.id:
-        flash('You cannot disable your own access.', 'warning')
+        flash(_('You cannot disable your own access.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     action = request.form.get('action')
@@ -1604,7 +1610,7 @@ def portal_update_member_status(member_id):
     elif action == 'enable':
         member.status = 'active'
     else:
-        flash('Unsupported action.', 'danger')
+        flash(_('Unsupported action.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     try:
@@ -1612,9 +1618,9 @@ def portal_update_member_status(member_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to update partner member status")
-        flash('Could not update member status.', 'danger')
+        flash(_('Could not update member status.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Member updated.', 'success')
+    flash(_('Member updated.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1624,17 +1630,17 @@ def portal_update_member_role(member_id):
     partner = _current_partner()
     current_member = _current_partner_member(partner)
     if not _member_can_manage_team(current_member):
-        flash('Only owners and admins can update roles.', 'danger')
+        flash(_('Only owners and admins can update roles.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     member = PartnerMember.query.filter_by(id=member_id, partner_id=partner.id).first_or_404()
     if member.role == 'owner':
-        flash('Owner role cannot be changed.', 'warning')
+        flash(_('Owner role cannot be changed.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     role = request.form.get('role', 'member')
     if role not in ('admin', 'member'):
-        flash('Invalid role.', 'danger')
+        flash(_('Invalid role.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     member.role = role
@@ -1645,9 +1651,9 @@ def portal_update_member_role(member_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to update partner member role")
-        flash('Could not update role.', 'danger')
+        flash(_('Could not update role.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Role updated.', 'success')
+    flash(_('Role updated.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1657,15 +1663,15 @@ def portal_update_member_permissions(member_id):
     partner = _current_partner()
     current_member = _current_partner_member(partner)
     if not _member_can_manage_team(current_member):
-        flash('Only members with team permissions can update member permissions.', 'danger')
+        flash(_('Only members with team permissions can update member permissions.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     member = PartnerMember.query.filter_by(id=member_id, partner_id=partner.id).first_or_404()
     if member.role == 'owner':
-        flash('Owner permissions cannot be changed.', 'warning')
+        flash(_('Owner permissions cannot be changed.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     if current_member and current_member.id == member.id and not request.form.get(PERM_TEAM_MANAGE):
-        flash('You cannot remove your own team-management permission.', 'warning')
+        flash(_('You cannot remove your own team-management permission.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     member.permissions_json = _permissions_from_form()
@@ -1674,9 +1680,9 @@ def portal_update_member_permissions(member_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to update member permissions")
-        flash('Could not update member permissions.', 'danger')
+        flash(_('Could not update member permissions.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Member permissions updated.', 'success')
+    flash(_('Member permissions updated.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1686,16 +1692,16 @@ def portal_update_member_permissions(member_id):
 def portal_add_domain():
     partner = _current_partner()
     if not _member_can_manage_domains(_current_partner_member(partner)):
-        flash('You do not have permission to manage domains.', 'warning')
+        flash(_('You do not have permission to manage domains.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     domain = _normalize_domain(request.form.get('domain', ''))
     env = _validate_env(request.form.get('env', 'test'))
     if not domain:
-        flash('Please enter a valid domain.', 'danger')
+        flash(_('Please enter a valid domain.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     if PartnerDomain.query.filter_by(partner_id=partner.id, domain=domain, env=env).first():
-        flash('That domain already exists.', 'warning')
+        flash(_('That domain already exists.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     # Prevent another partner from claiming a domain already verified elsewhere
@@ -1705,7 +1711,7 @@ def portal_add_domain():
         PartnerDomain.verified_at.isnot(None)
     ).first()
     if existing_verified:
-        flash('This domain is already verified by another partner.', 'danger')
+        flash(_('This domain is already verified by another partner.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     token = secrets.token_hex(16)
@@ -1721,9 +1727,9 @@ def portal_add_domain():
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to add partner domain")
-        flash('An error occurred adding the domain. Please try again.', 'danger')
+        flash(_('An error occurred adding the domain. Please try again.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Domain added. Verify DNS to activate.', 'success')
+    flash(_('Domain added. Verify DNS to activate.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1732,7 +1738,7 @@ def portal_add_domain():
 def portal_toggle_domain(domain_id):
     partner = _current_partner()
     if not _member_can_manage_domains(_current_partner_member(partner)):
-        flash('You do not have permission to manage domains.', 'warning')
+        flash(_('You do not have permission to manage domains.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
     domain.is_active = not bool(domain.is_active)
@@ -1744,12 +1750,12 @@ def portal_toggle_domain(domain_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to toggle domain status")
-        flash('Could not update domain status.', 'danger')
+        flash(_('Could not update domain status.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     if domain.is_active:
-        flash('Domain activated. Re-verify DNS TXT before embed requests are allowed.', 'success')
+        flash(_('Domain activated. Re-verify DNS TXT before embed requests are allowed.'), 'success')
     else:
-        flash('Domain deactivated.', 'success')
+        flash(_('Domain deactivated.'), 'success')
     try:
         emit_partner_event(
             partner_id=partner.id,
@@ -1766,7 +1772,7 @@ def portal_toggle_domain(domain_id):
 def portal_remove_domain(domain_id):
     partner = _current_partner()
     if not _member_can_manage_domains(_current_partner_member(partner)):
-        flash('You do not have permission to manage domains.', 'warning')
+        flash(_('You do not have permission to manage domains.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
     payload = serialize_domain_payload(domain)
@@ -1777,7 +1783,7 @@ def portal_remove_domain(domain_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to remove partner domain")
-        flash('Could not remove domain.', 'danger')
+        flash(_('Could not remove domain.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     try:
         emit_partner_event(
@@ -1787,7 +1793,7 @@ def portal_remove_domain(domain_id):
         )
     except Exception:
         current_app.logger.exception("Failed to emit domain.verification_changed on delete")
-    flash('Domain removed.', 'success')
+    flash(_('Domain removed.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1796,14 +1802,14 @@ def portal_remove_domain(domain_id):
 def portal_verify_domain(domain_id):
     partner = _current_partner()
     if not _member_can_manage_domains(_current_partner_member(partner)):
-        flash('You do not have permission to manage domains.', 'warning')
+        flash(_('You do not have permission to manage domains.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
     if not domain.is_active:
-        flash('Activate this domain before verifying.', 'warning')
+        flash(_('Activate this domain before verifying.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     if domain.is_verified():
-        flash('Domain already verified.', 'info')
+        flash(_('Domain already verified.'), 'info')
         return redirect(url_for('partner.portal_dashboard'))
 
     # Cooldown: at most one verification attempt per domain every 30 seconds
@@ -1814,7 +1820,7 @@ def portal_verify_domain(domain_id):
             prev_dt = datetime.fromisoformat(prev_check['checked_at'])
             cooldown_seconds = 30
             if (utcnow_naive() - prev_dt).total_seconds() < cooldown_seconds:
-                flash('Please wait 30 seconds between verification attempts.', 'warning')
+                flash(_('Please wait 30 seconds between verification attempts.'), 'warning')
                 return redirect(url_for('partner.portal_dashboard'))
         except (ValueError, TypeError):
             pass  # Malformed date in session, allow the check
@@ -1839,16 +1845,16 @@ def portal_verify_domain(domain_id):
         domain.verified_at = utcnow_naive()
         try:
             db.session.commit()
-            flash('Domain verified successfully.', 'success')
+            flash(_('Domain verified successfully.'), 'success')
         except Exception:
             db.session.rollback()
             current_app.logger.exception('portal_verify_domain: failed to save verified_at')
-            flash('Domain check passed but could not be saved. Please try again.', 'danger')
+            flash(_('Domain check passed but could not be saved. Please try again.'), 'danger')
     else:
         if details.get('error'):
-            flash('Verification failed. DNS lookup error; check your DNS provider and try again.', 'danger')
+            flash(_('Verification failed. DNS lookup error; check your DNS provider and try again.'), 'danger')
         else:
-            flash('Verification failed. TXT record not found yet. Check the expected value and try again.', 'danger')
+            flash(_('Verification failed. TXT record not found yet. Check the expected value and try again.'), 'danger')
 
     # Domain verification state can drive downstream allowlists.
     try:
@@ -1867,25 +1873,25 @@ def portal_verify_domain(domain_id):
 def portal_create_webhook():
     partner = _current_partner()
     if not _member_can_manage_webhooks(_current_partner_member(partner)):
-        flash('You do not have permission to manage webhooks.', 'warning')
+        flash(_('You do not have permission to manage webhooks.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint_url = (request.form.get('url') or '').strip()
     parsed = urlparse(endpoint_url)
     if not endpoint_url or parsed.scheme not in ('https',):
-        flash('Webhook URL must be a valid HTTPS URL.', 'danger')
+        flash(_('Webhook URL must be a valid HTTPS URL.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     event_types = [e for e in request.form.getlist('event_types') if e in ALL_PARTNER_EVENTS]
     if not event_types:
-        flash('Select at least one webhook event type.', 'danger')
+        flash(_('Select at least one webhook event type.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     try:
         plain_secret, encrypted_secret, secret_last4 = generate_webhook_secret()
     except Exception as exc:
         current_app.logger.exception("Failed to generate webhook secret")
-        flash(f'Could not create webhook secret ({exc}). Check ENCRYPTION_KEY.', 'danger')
+        flash(_('Could not create webhook secret (%(exc)s). Check ENCRYPTION_KEY.', exc=exc), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint = PartnerWebhookEndpoint(
@@ -1902,11 +1908,11 @@ def portal_create_webhook():
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to create partner webhook endpoint")
-        flash('Could not create webhook endpoint.', 'danger')
+        flash(_('Could not create webhook endpoint.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     session['partner_new_webhook_secret'] = plain_secret
-    flash('Webhook endpoint created. Copy the signing secret now; it will not be shown again.', 'success')
+    flash(_('Webhook endpoint created. Copy the signing secret now; it will not be shown again.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1915,7 +1921,7 @@ def portal_create_webhook():
 def portal_update_webhook(endpoint_id):
     partner = _current_partner()
     if not _member_can_manage_webhooks(_current_partner_member(partner)):
-        flash('You do not have permission to manage webhooks.', 'warning')
+        flash(_('You do not have permission to manage webhooks.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
@@ -1924,7 +1930,7 @@ def portal_update_webhook(endpoint_id):
         status = endpoint.status
     event_types = [e for e in request.form.getlist('event_types') if e in ALL_PARTNER_EVENTS]
     if not event_types:
-        flash('Select at least one webhook event type.', 'danger')
+        flash(_('Select at least one webhook event type.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint.status = status
@@ -1934,9 +1940,9 @@ def portal_update_webhook(endpoint_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to update webhook endpoint")
-        flash('Could not update webhook endpoint.', 'danger')
+        flash(_('Could not update webhook endpoint.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Webhook endpoint updated.', 'success')
+    flash(_('Webhook endpoint updated.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1945,7 +1951,7 @@ def portal_update_webhook(endpoint_id):
 def portal_rotate_webhook_secret(endpoint_id):
     partner = _current_partner()
     if not _member_can_manage_webhooks(_current_partner_member(partner)):
-        flash('You do not have permission to manage webhooks.', 'warning')
+        flash(_('You do not have permission to manage webhooks.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
@@ -1953,7 +1959,7 @@ def portal_rotate_webhook_secret(endpoint_id):
         plain_secret, encrypted_secret, secret_last4 = generate_webhook_secret()
     except Exception as exc:
         current_app.logger.exception("Failed to rotate webhook secret")
-        flash(f'Could not rotate webhook secret ({exc}). Check ENCRYPTION_KEY.', 'danger')
+        flash(_('Could not rotate webhook secret (%(exc)s). Check ENCRYPTION_KEY.', exc=exc), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint.encrypted_signing_secret = encrypted_secret
@@ -1963,11 +1969,11 @@ def portal_rotate_webhook_secret(endpoint_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to save rotated webhook secret")
-        flash('Could not rotate webhook secret.', 'danger')
+        flash(_('Could not rotate webhook secret.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     session['partner_new_webhook_secret'] = plain_secret
-    flash('Webhook secret rotated. Copy the new secret now.', 'success')
+    flash(_('Webhook secret rotated. Copy the new secret now.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1976,7 +1982,7 @@ def portal_rotate_webhook_secret(endpoint_id):
 def portal_delete_webhook(endpoint_id):
     partner = _current_partner()
     if not _member_can_manage_webhooks(_current_partner_member(partner)):
-        flash('You do not have permission to manage webhooks.', 'warning')
+        flash(_('You do not have permission to manage webhooks.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
@@ -1987,9 +1993,9 @@ def portal_delete_webhook(endpoint_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to delete webhook endpoint")
-        flash('Could not delete webhook endpoint.', 'danger')
+        flash(_('Could not delete webhook endpoint.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Webhook endpoint deleted.', 'success')
+    flash(_('Webhook endpoint deleted.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1998,24 +2004,24 @@ def portal_delete_webhook(endpoint_id):
 def portal_send_test_webhook(endpoint_id):
     partner = _current_partner()
     if not _member_can_manage_webhooks(_current_partner_member(partner)):
-        flash('You do not have permission to manage webhooks.', 'warning')
+        flash(_('You do not have permission to manage webhooks.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
     if endpoint.status != 'active':
-        flash('Webhook endpoint must be active to send test events.', 'warning')
+        flash(_('Webhook endpoint must be active to send test events.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     try:
         delivery = send_test_delivery(endpoint)
     except Exception:
         current_app.logger.exception("Failed to send test webhook")
-        flash('Could not send test webhook.', 'danger')
+        flash(_('Could not send test webhook.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     if delivery.status == 'delivered':
-        flash('Test webhook delivered successfully.', 'success')
+        flash(_('Test webhook delivered successfully.'), 'success')
     else:
-        flash('Test webhook queued — delivery pending. Check your receiver logs shortly.', 'info')
+        flash(_('Test webhook queued — delivery pending. Check your receiver logs shortly.'), 'info')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -2024,19 +2030,19 @@ def portal_send_test_webhook(endpoint_id):
 def portal_create_key():
     partner = _current_partner()
     if not _member_can_manage_keys(_current_partner_member(partner)):
-        flash('Only owners and admins can create API keys.', 'warning')
+        flash(_('Only owners and admins can create API keys.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     env = _validate_env(request.form.get('env', 'test'))
 
     if env == 'live' and partner.billing_status != 'active':
-        flash('Live keys require an active subscription.', 'warning')
+        flash(_('Live keys require an active subscription.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     active_key_count = PartnerApiKey.query.filter_by(
         partner_id=partner.id, env=env, status='active'
     ).count()
     if active_key_count >= 10:
-        flash(f'Maximum of 10 active {env} keys reached. Revoke unused keys first.', 'warning')
+        flash(_('Maximum of 10 active %(env)s keys reached. Revoke unused keys first.', env=env), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     try:
@@ -2045,11 +2051,11 @@ def portal_create_key():
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to create API key")
-        flash('An error occurred creating the API key. Please try again.', 'danger')
+        flash(_('An error occurred creating the API key. Please try again.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     session['partner_new_key'] = full_key
-    flash('New API key created. Copy it now; it will not be shown again.', 'success')
+    flash(_('New API key created. Copy it now; it will not be shown again.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -2058,7 +2064,7 @@ def portal_create_key():
 def portal_revoke_key(key_id):
     partner = _current_partner()
     if not _member_can_manage_keys(_current_partner_member(partner)):
-        flash('Only owners and admins can revoke API keys.', 'warning')
+        flash(_('Only owners and admins can revoke API keys.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     key = PartnerApiKey.query.filter_by(id=key_id, partner_id=partner.id).first_or_404()
     key.status = 'revoked'
@@ -2067,7 +2073,7 @@ def portal_revoke_key(key_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to revoke API key")
-        flash('An error occurred. Please try again.', 'danger')
+        flash(_('An error occurred. Please try again.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     try:
         emit_partner_event(
@@ -2077,7 +2083,7 @@ def portal_revoke_key(key_id):
         )
     except Exception:
         current_app.logger.exception("Failed to emit key.revoked webhook event")
-    flash('API key revoked.', 'success')
+    flash(_('API key revoked.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -2086,16 +2092,16 @@ def portal_revoke_key(key_id):
 def portal_rotate_key(key_id):
     partner = _current_partner()
     if not _member_can_manage_keys(_current_partner_member(partner)):
-        flash('Only owners and admins can rotate API keys.', 'warning')
+        flash(_('Only owners and admins can rotate API keys.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     key = PartnerApiKey.query.filter_by(id=key_id, partner_id=partner.id).first_or_404()
     if key.status != 'active':
-        flash('Only active keys can be rotated.', 'warning')
+        flash(_('Only active keys can be rotated.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     env = key.env
     if env == 'live' and partner.billing_status != 'active':
-        flash('Live keys require an active subscription.', 'warning')
+        flash(_('Live keys require an active subscription.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
 
     # Revoke old key and create replacement in one transaction
@@ -2106,7 +2112,7 @@ def portal_rotate_key(key_id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Failed to rotate API key")
-        flash('An error occurred rotating the key. Please try again.', 'danger')
+        flash(_('An error occurred rotating the key. Please try again.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
     try:
         emit_partner_event(
@@ -2118,7 +2124,7 @@ def portal_rotate_key(key_id):
         current_app.logger.exception("Failed to emit key.revoked for rotated key")
 
     session['partner_new_key'] = full_key
-    flash('API key rotated. Copy the new key now; it will not be shown again.', 'success')
+    flash(_('API key rotated. Copy the new key now; it will not be shown again.'), 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -2127,21 +2133,21 @@ def portal_rotate_key(key_id):
 def portal_start_billing():
     partner = _current_partner()
     if not _member_can_manage_billing(_current_partner_member(partner)):
-        flash('You do not have permission to manage billing.', 'warning')
+        flash(_('You do not have permission to manage billing.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     if partner.billing_status == 'active':
-        flash('You already have an active subscription. Use Manage Billing to change plans.', 'info')
+        flash(_('You already have an active subscription. Use Manage Billing to change plans.'), 'info')
         return redirect(url_for('partner.portal_dashboard'))
     tier = _validate_tier(request.form.get('tier', 'starter'))
     try:
         checkout_session = create_partner_checkout_session(partner, tier=tier)
         if not checkout_session.url:
-            flash('Payment session error. Please try again.', 'danger')
+            flash(_('Payment session error. Please try again.'), 'danger')
             return redirect(url_for('partner.portal_dashboard'))
         return redirect(checkout_session.url, code=303)
     except Exception as e:
         current_app.logger.error(f"Partner checkout error: {e}")
-        flash('Unable to start billing. Please try again.', 'danger')
+        flash(_('Unable to start billing. Please try again.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -2150,14 +2156,14 @@ def portal_start_billing():
 def portal_billing_portal():
     partner = _current_partner()
     if not _member_can_manage_billing(_current_partner_member(partner)):
-        flash('You do not have permission to manage billing.', 'warning')
+        flash(_('You do not have permission to manage billing.'), 'warning')
         return redirect(url_for('partner.portal_dashboard'))
     try:
         portal_session = create_partner_portal_session(partner)
         return redirect(portal_session.url, code=303)
     except Exception as e:
         current_app.logger.error(f"Partner portal error: {e}")
-        flash('Unable to access billing portal.', 'danger')
+        flash(_('Unable to access billing portal.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -2167,7 +2173,7 @@ def portal_billing_success():
     partner = _current_partner()
     session_id = request.args.get('session_id')
     if not session_id:
-        flash('Missing checkout session.', 'danger')
+        flash(_('Missing checkout session.'), 'danger')
         return redirect(url_for('partner.portal_dashboard'))
 
     try:
@@ -2178,15 +2184,15 @@ def portal_billing_success():
         if meta_partner_id:
             try:
                 if int(meta_partner_id) != partner.id:
-                    flash('Invalid checkout session.', 'danger')
+                    flash(_('Invalid checkout session.'), 'danger')
                     return redirect(url_for('partner.portal_dashboard'))
             except (TypeError, ValueError):
-                flash('Invalid checkout session.', 'danger')
+                flash(_('Invalid checkout session.'), 'danger')
                 return redirect(url_for('partner.portal_dashboard'))
 
         customer_id = checkout_session.customer if not isinstance(checkout_session, dict) else checkout_session.get('customer')
         if partner.stripe_customer_id and customer_id and customer_id != partner.stripe_customer_id:
-            flash('Invalid checkout session.', 'danger')
+            flash(_('Invalid checkout session.'), 'danger')
             return redirect(url_for('partner.portal_dashboard'))
         if not partner.stripe_customer_id and customer_id:
             partner.stripe_customer_id = customer_id
@@ -2213,11 +2219,11 @@ def portal_billing_success():
                 partner.tier = 'free'
 
             db.session.commit()
-            flash('Subscription active. You can now create live keys.', 'success')
+            flash(_('Subscription active. You can now create live keys.'), 'success')
         else:
-            flash('Subscription is still being confirmed.', 'info')
+            flash(_('Subscription is still being confirmed.'), 'info')
     except Exception as e:
         current_app.logger.error(f"Partner billing success error: {e}")
-        flash('Unable to confirm subscription. Please refresh later.', 'danger')
+        flash(_('Unable to confirm subscription. Please refresh later.'), 'danger')
 
     return redirect(url_for('partner.portal_dashboard'))

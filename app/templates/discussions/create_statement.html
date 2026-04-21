@@ -1,4 +1,4 @@
-{% extends 'layout.html' %} {% block title %}Add Statement - {{ discussion.title
+{% extends 'layout.html' %} {% block title %}{{ _('Add Statement') }} - {{ discussion.title
 }}{% endblock %} {% block content %}
 <div class="container mx-auto px-4 py-8 max-w-3xl">
   <!-- Breadcrumb -->
@@ -7,7 +7,7 @@
       <a
         href="{{ url_for('discussions.search_discussions') }}"
         class="text-primary-600 hover:underline"
-        >Discussions</a
+        >{{ _('Discussions') }}</a
       >
       <span class="mx-2">/</span>
       <a
@@ -16,34 +16,32 @@
         >{{ discussion.title }}</a
       >
       <span class="mx-2">/</span>
-      <span class="text-gray-600">Add Statement</span>
+      <span class="text-gray-600">{{ _('Add Statement') }}</span>
     </nav>
   </div>
 
   <!-- Page Header -->
   <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-    <h1 class="text-3xl font-bold mb-2">Add a Statement</h1>
+    <h1 class="text-3xl font-bold mb-2">{{ _('Add a Statement') }}</h1>
     <p class="text-gray-600">
-      Contribute to the discussion: {{ discussion.title }}
+      {{ _('Contribute to the discussion: %(title)s', title=discussion.title) }}
     </p>
   </div>
 
   <!-- Guidelines -->
   <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
-    <h3 class="font-semibold text-blue-900 mb-3">✍️ Statement Guidelines</h3>
+    <h3 class="font-semibold text-blue-900 mb-3">{{ _('✍️ Statement Guidelines') }}</h3>
     <ul class="text-primary-800 space-y-2 text-sm">
-      <li>• <strong>Be clear and concise:</strong> 10-500 characters</li>
+      <li>{{ _('• <strong>Be clear and concise:</strong> 10-500 characters') }}</li>
       <li>
-        • <strong>Make one point:</strong> Each statement should focus on a
-        single idea
+        {{ _('• <strong>Make one point:</strong> Each statement should focus on a single idea') }}
       </li>
-      <li>• <strong>Be specific:</strong> Avoid vague or ambiguous wording</li>
+      <li>{{ _('• <strong>Be specific:</strong> Avoid vague or ambiguous wording') }}</li>
       <li>
-        • <strong>Be respectful:</strong> No personal attacks or inflammatory
-        language
+        {{ _('• <strong>Be respectful:</strong> No personal attacks or inflammatory language') }}
       </li>
       <li>
-        • <strong>Claim or Question:</strong> State a position or ask for input
+        {{ _('• <strong>Claim or Question:</strong> State a position or ask for input') }}
       </li>
     </ul>
   </div>
@@ -72,8 +70,8 @@
           <p class="text-red-600 text-sm mt-2">{{ form.statement_type.errors[0] }}</p>
         {% endif %}
         <p class="text-sm text-gray-500 mt-1">
-          <strong>Claim:</strong> "We should invest more in renewable energy"<br />
-          <strong>Question:</strong> "What's the most effective climate policy?"
+          {{ _('<strong>Claim:</strong> "We should invest more in renewable energy"') }}<br />
+          {{ _('<strong>Question:</strong> "What\'s the most effective climate policy?"') }}
         </p>
       </div>
 
@@ -82,7 +80,7 @@
         {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
         {{ form.content(class="w-full border border-gray-300 rounded-lg px-4
         py-3 focus:outline-none focus:ring-2 focus:ring-primary-500", rows="4",
-        placeholder="Enter your statement (10-500 characters)...",
+        placeholder=_('Enter your statement (10-500 characters)...'),
         maxlength="500") }}
 
         <!-- Character Counter -->
@@ -90,7 +88,7 @@
           <div class="text-sm text-gray-500">
             {% if form.content.errors %}
             <span class="text-red-600">{{ form.content.errors[0] }}</span>
-            {% else %} Min: 10 characters | Max: 500 characters {% endif %}
+            {% else %} {{ _('Min: 10 characters | Max: 500 characters') }} {% endif %}
           </div>
           <div id="charCount" class="text-sm text-gray-500">
             <span id="currentCount">0</span> / 500
@@ -105,7 +103,7 @@
           href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
           class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors inline-block min-h-11 min-w-11"
         >
-          Cancel
+          {{ _('Cancel') }}
         </a>
       </div>
     </form>
@@ -113,13 +111,13 @@
 
   <!-- Preview Section -->
   <div class="bg-gray-50 rounded-lg p-6 mt-6 border border-gray-200">
-    <h3 class="font-semibold text-gray-800 mb-3">Preview:</h3>
+    <h3 class="font-semibold text-gray-800 mb-3">{{ _('Preview:') }}</h3>
     <div
       id="preview"
       class="bg-white rounded-lg p-4 border border-gray-200 min-h-[60px]"
     >
       <p class="text-gray-400 italic" id="previewText">
-        Your statement will appear here as you type...
+        {{ _('Your statement will appear here as you type...') }}
       </p>
     </div>
   </div>
@@ -153,7 +151,7 @@
           previewText.className = "text-gray-900";
         } else {
           previewText.textContent =
-            "Your statement will appear here as you type...";
+            "{{ _('Your statement will appear here as you type...') }}";
           previewText.className = "text-gray-400 italic";
         }
       });

@@ -28,6 +28,7 @@ from app.brief.coverage_analyzer import CoverageAnalyzer
 from app import limiter, cache
 import logging
 import json
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -324,7 +325,7 @@ def load_perspectives(topic_id):
     """
     # Verify this is an AJAX request (basic CSRF protection)
     if not request.is_json and not request.headers.get('X-Requested-With'):
-        return jsonify({'error': 'Invalid request'}), 400
+        return jsonify({'error': _('Invalid request')}), 400
 
     # Verify subscription
     subscriber = None
@@ -335,8 +336,8 @@ def load_perspectives(topic_id):
 
     if not (subscriber and subscriber.is_subscribed_eligible()) and not is_admin:
         return jsonify({
-            'error': 'Subscription required',
-            'message': 'Subscribe to access full analysis.',
+            'error': _('Subscription required'),
+            'message': _('Subscribe to access full analysis.'),
             'subscribe_url': '/brief/subscribe'
         }), 401
 
@@ -345,8 +346,8 @@ def load_perspectives(topic_id):
 
     if topic.status != 'published':
         return jsonify({
-            'error': 'Topic not available',
-            'message': 'This topic is not published.'
+            'error': _('Topic not available'),
+            'message': _('This topic is not published.')
         }), 404
 
     # Check if topic is from today (only show current topics)
@@ -357,8 +358,8 @@ def load_perspectives(topic_id):
 
     if not topic.published_at or topic.published_at < cutoff:
         return jsonify({
-            'error': 'Topic not available',
-            'message': 'This topic is no longer available for perspective analysis.'
+            'error': _('Topic not available'),
+            'message': _('This topic is no longer available for perspective analysis.')
         }), 404
 
     try:
@@ -417,8 +418,8 @@ def load_perspectives(topic_id):
     except Exception as e:
         logger.error(f"Error loading perspectives for topic {topic_id}: {e}", exc_info=True)
         return jsonify({
-            'error': 'Generation failed',
-            'message': 'Failed to generate perspective analysis. Please try again.'
+            'error': _('Generation failed'),
+            'message': _('Failed to generate perspective analysis. Please try again.')
         }), 500
 
 

@@ -1,16 +1,17 @@
 {% extends "layout.html" %}
+{% block title %}{{ _('Account Settings') }} — Society Speaks{% endblock %}
 {% block content %}
 
 {# Hero Section with Gradient Background #}
 <div class="bg-gradient-to-r from-primary-600 to-purple-600 pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <nav class="flex items-center gap-1.5 text-sm text-primary-100 mb-3">
-            <a href="{{ url_for('auth.dashboard') }}" class="hover:text-white">Dashboard</a>
+            <a href="{{ url_for('auth.dashboard') }}" class="hover:text-white">{{ _('Dashboard') }}</a>
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="text-white font-medium">Settings</span>
+            <span class="text-white font-medium">{{ _('Settings') }}</span>
         </nav>
-        <h1 class="text-3xl font-bold text-white">Account Settings</h1>
-        <p class="mt-2 text-blue-100">Manage your account preferences and security</p>
+        <h1 class="text-3xl font-bold text-white">{{ _('Account Settings') }}</h1>
+        <p class="mt-2 text-blue-100">{{ _('Manage your account preferences and security') }}</p>
     </div>
 </div>
 
@@ -33,8 +34,8 @@
 
         {# Language Preference Section #}
         <div class="mb-8 pb-8 border-b border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900 mb-1">Language Preference</h3>
-            <p class="text-gray-600 text-sm mb-4">Choose your preferred language for the site. Your votes are always counted on the same canonical statements regardless of language.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ _('Language Preference') }}</h3>
+            <p class="text-gray-600 text-sm mb-4">{{ _('Choose your preferred language for the site. Your votes are always counted on the same canonical statements regardless of language.') }}</p>
             <form action="{{ url_for('settings.update_language') }}" method="POST" class="flex items-center gap-4">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <select name="language" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
@@ -45,14 +46,14 @@
                     {% endfor %}
                 </select>
                 <button type="submit" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700">
-                    Save Language
+                    {{ _('Save Language') }}
                 </button>
             </form>
         </div>
 
         {# Password Change Section #}
         <div class="mb-8">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">Change Password</h3>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Change Password') }}</h3>
             <form action="{{ url_for('settings.change_password') }}" method="POST">
                 {{ form.hidden_tag() }}
 
@@ -104,18 +105,18 @@
                 <button type="submit"
                         class="w-full sm:w-auto px-6 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors duration-200 flex items-center justify-center min-h-11">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
-                    Update Password
+                    {{ _('Update Password') }}
                 </button>
             </form>
         </div>
 
         {# Email Notification Preferences Section #}
         <div class="mt-12 pt-8 border-t border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Email Notifications</h3>
-            <p class="text-gray-600 mb-6">Choose which email notifications you'd like to receive.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ _('Email Notifications') }}</h3>
+            <p class="text-gray-600 mb-6">{{ _("Choose which email notifications you'd like to receive.") }}</p>
             
             <form action="{{ url_for('settings.view_settings') }}" method="POST">
                 {{ notif_form.hidden_tag() }}
@@ -133,8 +134,8 @@
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                         </div>
                         <div class="ml-3">
-                            <span class="text-sm font-medium text-gray-900">Enable email notifications</span>
-                            <p class="text-sm text-gray-500">Master toggle for all email notifications</p>
+                            <span class="text-sm font-medium text-gray-900">{{ _('Enable email notifications') }}</span>
+                            <p class="text-sm text-gray-500">{{ _('Master toggle for all email notifications') }}</p>
                         </div>
                     </label>
 
@@ -142,56 +143,56 @@
                         {# Discussion participant notifications #}
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        name="{{ notif_form.discussion_participant_notifications.name }}"
                                        {% if notif_form.discussion_participant_notifications.data %}checked{% endif %}
                                        class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
-                                <span class="text-sm font-medium text-gray-700">New participants</span>
-                                <p class="text-sm text-gray-500">Get notified when someone joins your discussion</p>
+                                <span class="text-sm font-medium text-gray-700">{{ _('New participants') }}</span>
+                                <p class="text-sm text-gray-500">{{ _('Get notified when someone joins your discussion') }}</p>
                             </div>
                         </label>
 
                         {# Discussion activity (statements, replies, votes) #}
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        name="{{ notif_form.discussion_response_notifications.name }}"
                                        {% if notif_form.discussion_response_notifications.data %}checked{% endif %}
                                        class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
-                                <span class="text-sm font-medium text-gray-700">Discussion activity</span>
-                                <p class="text-sm text-gray-500">New statements, replies, and votes in discussions you host or follow</p>
+                                <span class="text-sm font-medium text-gray-700">{{ _('Discussion activity') }}</span>
+                                <p class="text-sm text-gray-500">{{ _('New statements, replies, and votes in discussions you host or follow') }}</p>
                             </div>
                         </label>
 
                         {# Organiser / steward outcome updates #}
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        name="{{ notif_form.discussion_update_notifications.name }}"
                                        {% if notif_form.discussion_update_notifications.data %}checked{% endif %}
                                        class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
-                                <span class="text-sm font-medium text-gray-700">Discussion updates</span>
-                                <p class="text-sm text-gray-500">When an organiser posts a &quot;what happened next&quot; update to a discussion you follow</p>
+                                <span class="text-sm font-medium text-gray-700">{{ _('Discussion updates') }}</span>
+                                <p class="text-sm text-gray-500">{{ _('When an organiser posts a &quot;what happened next&quot; update to a discussion you follow')|safe }}</p>
                             </div>
                         </label>
 
                         {# Weekly digest #}
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        name="{{ notif_form.weekly_digest_enabled.name }}"
                                        {% if notif_form.weekly_digest_enabled.data %}checked{% endif %}
                                        class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
-                                <span class="text-sm font-medium text-gray-700">Weekly digest</span>
-                                <p class="text-sm text-gray-500">Receive a weekly summary of discussions you're involved in</p>
+                                <span class="text-sm font-medium text-gray-700">{{ _('Weekly digest') }}</span>
+                                <p class="text-sm text-gray-500">{{ _("Receive a weekly summary of discussions you're involved in") }}</p>
                             </div>
                         </label>
                     </div>
@@ -201,10 +202,10 @@
                         class="mt-6 w-full sm:w-auto px-6 py-2 bg-primary-600 text-white font-semibold rounded-lg
                                hover:bg-primary-700 transition-colors duration-200 flex items-center justify-center min-h-11">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Notification Preferences
+                    {{ _('Save Notification Preferences') }}
                 </button>
             </form>
         </div>
@@ -212,28 +213,28 @@
         {# Billing & Subscription Section — only shown to paid subscribers #}
         {% if active_subscription %}
         <div class="mt-12 pt-8 border-t border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Billing & Subscription</h3>
-            <p class="text-gray-600 mb-6">Your current plan and billing details.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ _('Billing & Subscription') }}</h3>
+            <p class="text-gray-600 mb-6">{{ _('Your current plan and billing details.') }}</p>
 
             <div class="bg-gray-50 rounded-lg p-5 mb-5 border border-gray-200">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     {% if active_subscription.plan %}
                     <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Plan</p>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{{ _('Plan') }}</p>
                         <p class="font-semibold text-gray-900">{{ active_subscription.plan.name }}</p>
                     </div>
                     {% endif %}
                     <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Status</p>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{{ _('Status') }}</p>
                         <p class="font-semibold
                             {% if active_subscription.status == 'trialing' %}text-amber-600
                             {% elif active_subscription.cancel_at_period_end %}text-amber-600
                             {% elif active_subscription.status == 'active' %}text-green-600
                             {% else %}text-gray-700{% endif %}">
                             {% if active_subscription.cancel_at_period_end %}
-                                Cancels at period end
+                                {{ _('Cancels at period end') }}
                             {% elif active_subscription.status == 'trialing' %}
-                                Free Trial
+                                {{ _('Free Trial') }}
                             {% else %}
                                 {{ active_subscription.status | capitalize }}
                             {% endif %}
@@ -241,25 +242,25 @@
                     </div>
                     {% if active_subscription.billing_interval %}
                     <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Billing</p>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{{ _('Billing') }}</p>
                         <p class="font-semibold text-gray-900">
-                            {{ 'Annual' if active_subscription.billing_interval == 'year' else 'Monthly' }}
+                            {{ _('Annual') if active_subscription.billing_interval == 'year' else _('Monthly') }}
                         </p>
                     </div>
                     {% endif %}
                     {% if active_subscription.status == 'trialing' and active_subscription.trial_end %}
                     <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Trial ends</p>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{{ _('Trial ends') }}</p>
                         <p class="font-semibold text-amber-600">{{ active_subscription.trial_end.strftime('%d %B %Y') }}</p>
                     </div>
                     {% elif active_subscription.cancel_at_period_end and active_subscription.current_period_end %}
                     <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Access until</p>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{{ _('Access until') }}</p>
                         <p class="font-semibold text-amber-600">{{ active_subscription.current_period_end.strftime('%d %B %Y') }}</p>
                     </div>
                     {% elif active_subscription.current_period_end %}
                     <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Next renewal</p>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{{ _('Next renewal') }}</p>
                         <p class="font-semibold text-gray-900">{{ active_subscription.current_period_end.strftime('%d %B %Y') }}</p>
                     </div>
                     {% endif %}
@@ -272,28 +273,28 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                 </svg>
-                Manage Billing
+                {{ _('Manage Billing') }}
             </a>
-            <p class="mt-2 text-xs text-gray-400">Update payment method, download invoices, or cancel your subscription.</p>
+            <p class="mt-2 text-xs text-gray-400">{{ _('Update payment method, download invoices, or cancel your subscription.') }}</p>
             {% endif %}
         </div>
         {% endif %}
 
         {# Account Deletion Section #}
         <div class="mt-12 pt-8 border-t border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">Delete Account</h3>
-            <p class="text-gray-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Delete Account') }}</h3>
+            <p class="text-gray-600 mb-4">{{ _('Once you delete your account, there is no going back. Please be certain.') }}</p>
             <form id="delete-account-form" action="{{ url_for('settings.delete_account') }}" method="POST" class="hidden">
                 {{ delete_form.hidden_tag() }}
             </form>
             <button id="confirm-delete-btn"
-                    class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg 
+                    class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg
                            hover:bg-red-700 transition-colors duration-200 flex items-center min-h-11">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Delete Account
+                {{ _('Delete Account') }}
             </button>
         </div>
     </div>
@@ -301,7 +302,7 @@
 
 <script nonce="{{ csp_nonce() }}">
 document.getElementById('confirm-delete-btn')?.addEventListener('click', function() {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (confirm({{ _('Are you sure you want to delete your account? This action cannot be undone.')|tojson }})) {
         document.getElementById('delete-account-form').submit();
     }
 });

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Underreported Stories - Society Speaks{% endblock %}
+{% block title %}{{ _('Underreported Stories - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -10,10 +10,10 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                Media Blindspot Detector
+                {{ _('Media Blindspot Detector') }}
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Underreported Stories</h1>
-            <p class="text-gray-600">High civic importance, low media coverage</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ _('Underreported Stories') }}</h1>
+            <p class="text-gray-600">{{ _('High civic importance, low media coverage') }}</p>
         </div>
 
         {% if stories %}
@@ -35,10 +35,10 @@
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
                                 </svg>
-                                Civic Score: {{ (story.civic_score * 100)|int }}%
+                                {{ _('Civic Score: %(pct)s%%', pct=(story.civic_score * 100)|int) }}
                             </span>
                             <span class="text-gray-500">
-                                {{ story.source_count }} source{% if story.source_count != 1 %}s{% endif %}
+                                {{ _('%(count)d sources', count=story.source_count) }}
                             </span>
                         </div>
                     </div>
@@ -48,8 +48,8 @@
         </div>
         {% else %}
         <div class="bg-white rounded-xl shadow-md p-8 text-center">
-            <p class="text-gray-600">No underreported stories detected in the past week.</p>
-            <p class="text-gray-500 text-sm mt-2">This is actually good news - it means important stories are getting coverage.</p>
+            <p class="text-gray-600">{{ _('No underreported stories detected in the past week.') }}</p>
+            <p class="text-gray-500 text-sm mt-2">{{ _('This is actually good news - it means important stories are getting coverage.') }}</p>
         </div>
         {% endif %}
 
@@ -58,7 +58,7 @@
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Back to Today's Brief
+                {{ _("Back to Today's Brief") }}
             </a>
         </div>
     </div>

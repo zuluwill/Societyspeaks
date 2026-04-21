@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Confirm Your Vote - Daily Question #{{ question.question_number }}{% endblock %}
+{% block title %}{{ _('Confirm Your Vote - Daily Question #%(num)d', num=question.question_number) }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -12,26 +12,26 @@
             </div>
             
             <h1 class="text-2xl font-bold text-gray-900 mb-4 text-center">
-                Confirm Your Vote
+                {{ _('Confirm Your Vote') }}
             </h1>
-            
+
             <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                <p class="text-sm text-gray-500 mb-2 text-center">Daily Question #{{ question.question_number }}</p>
+                <p class="text-sm text-gray-500 mb-2 text-center">{{ _('Daily Question #%(num)d', num=question.question_number) }}</p>
                 <p class="text-gray-900 font-medium text-center">{{ question.question_text }}</p>
                 {% if question.context %}
                 <p class="text-xs text-gray-600 mt-3 text-left">
-                    <span class="font-semibold">Context:</span> {{ question.context[:220] }}{% if question.context|length > 220 %}...{% endif %}
+                    <span class="font-semibold">{{ _('Context:') }}</span> {{ question.context[:220] }}{% if question.context|length > 220 %}...{% endif %}
                 </p>
                 {% endif %}
                 {% if question.why_this_question %}
                 <p class="text-xs text-gray-600 mt-2 text-left">
-                    <span class="font-semibold">Why this question:</span> {{ question.why_this_question }}
+                    <span class="font-semibold">{{ _('Why this question:') }}</span> {{ question.why_this_question }}
                 </p>
                 {% endif %}
                 {% if source_articles and source_articles|length > 0 %}
                 <div class="mt-3 pt-3 border-t border-gray-200 text-left">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                        Source{% if source_articles|length > 1 %}s{% endif %}
+                        {% if source_articles|length > 1 %}{{ _('Sources') }}{% else %}{{ _('Source') }}{% endif %}
                     </p>
                     <div class="space-y-2">
                         {% for article in source_articles %}
@@ -61,7 +61,7 @@
             </div>
             
             <p class="text-gray-600 mb-6 text-center">
-                You selected <span class="font-semibold text-gray-900">{{ vote_label }}</span>
+                {{ _('You selected %(choice)s', choice='<span class="font-semibold text-gray-900">' ~ vote_label ~ '</span>')|safe }}
             </p>
             
             {# PRIMARY ACTION: Quick submit without reason #}
@@ -74,7 +74,7 @@
                     <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Submit My Vote
+                    {{ _('Submit My Vote') }}
                 </button>
             </form>
             
@@ -85,7 +85,7 @@
                     <svg id="toggleIcon" class="w-5 h-5 mr-2 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    Add a reason (optional)
+                    {{ _('Add a reason (optional)') }}
                 </button>
                 
                 {# Collapsible reason form #}
@@ -97,83 +97,83 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                             <div>
                                 <label for="confidence_level" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Confidence (optional)
+                                    {{ _('Confidence (optional)') }}
                                 </label>
                                 <select id="confidence_level" name="confidence_level"
                                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
-                                    <option value="">Select confidence</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
+                                    <option value="">{{ _('Select confidence') }}</option>
+                                    <option value="low">{{ _('Low') }}</option>
+                                    <option value="medium">{{ _('Medium') }}</option>
+                                    <option value="high">{{ _('High') }}</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="reason_tag" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Main reason (optional)
+                                    {{ _('Main reason (optional)') }}
                                 </label>
                                 <select id="reason_tag" name="reason_tag"
                                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
-                                    <option value="">Select category</option>
-                                    <option value="evidence">Evidence</option>
-                                    <option value="fairness">Fairness</option>
-                                    <option value="cost">Cost</option>
-                                    <option value="feasibility">Feasibility</option>
-                                    <option value="rights">Rights</option>
-                                    <option value="safety">Safety</option>
-                                    <option value="trust">Trust</option>
-                                    <option value="long_term_impact">Long-term impact</option>
-                                    <option value="other">Other</option>
+                                    <option value="">{{ _('Select category') }}</option>
+                                    <option value="evidence">{{ _('Evidence') }}</option>
+                                    <option value="fairness">{{ _('Fairness') }}</option>
+                                    <option value="cost">{{ _('Cost') }}</option>
+                                    <option value="feasibility">{{ _('Feasibility') }}</option>
+                                    <option value="rights">{{ _('Rights') }}</option>
+                                    <option value="safety">{{ _('Safety') }}</option>
+                                    <option value="trust">{{ _('Trust') }}</option>
+                                    <option value="long_term_impact">{{ _('Long-term impact') }}</option>
+                                    <option value="other">{{ _('Other') }}</option>
                                 </select>
                             </div>
                         </div>
                         <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-                            Share why you feel this way
+                            {{ _('Share why you feel this way') }}
                         </label>
                         <textarea id="reason" name="reason" rows="3" maxlength="500"
                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                                  placeholder="Your perspective helps others understand different viewpoints..."></textarea>
+                                  placeholder="{{ _('Your perspective helps others understand different viewpoints...') }}"></textarea>
                         <p class="text-sm text-gray-500 mt-1">
-                            <span id="charCount">0</span>/500 characters
+                            <span id="charCount">0</span>{{ _('/500 characters') }}
                         </p>
-                        
+
                         {# Visibility options - shown when user types #}
                         <div id="visibilitySection" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
                             <label class="block text-sm font-medium text-gray-700 mb-3">
-                                How should your reason be shared?
+                                {{ _('How should your reason be shared?') }}
                             </label>
                             <div class="space-y-2">
                                 {% if current_user.is_authenticated %}
                                 <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 cursor-pointer transition">
                                     <input type="radio" name="reason_visibility" value="public_named" class="mt-0.5 mr-3 text-primary-600" checked>
                                     <div>
-                                        <span class="text-sm font-medium text-gray-900">Public (with my name)</span>
-                                        <p class="text-xs text-gray-500">Others can see your reason with your display name</p>
+                                        <span class="text-sm font-medium text-gray-900">{{ _('Public (with my name)') }}</span>
+                                        <p class="text-xs text-gray-500">{{ _('Others can see your reason with your display name') }}</p>
                                     </div>
                                 </label>
                                 {% endif %}
                                 <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-blue-50 cursor-pointer transition">
                                     <input type="radio" name="reason_visibility" value="public_anonymous" class="mt-0.5 mr-3 text-primary-600" {% if not current_user.is_authenticated %}checked{% endif %}>
                                     <div>
-                                        <span class="text-sm font-medium text-gray-900">Public (anonymous)</span>
-                                        <p class="text-xs text-gray-500">Others can see your reason, but not who wrote it</p>
+                                        <span class="text-sm font-medium text-gray-900">{{ _('Public (anonymous)') }}</span>
+                                        <p class="text-xs text-gray-500">{{ _('Others can see your reason, but not who wrote it') }}</p>
                                     </div>
                                 </label>
                                 <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition">
                                     <input type="radio" name="reason_visibility" value="private" class="mt-0.5 mr-3 text-gray-600">
                                     <div>
-                                        <span class="text-sm font-medium text-gray-900">Private</span>
-                                        <p class="text-xs text-gray-500">Only you can see your reason</p>
+                                        <span class="text-sm font-medium text-gray-900">{{ _('Private') }}</span>
+                                        <p class="text-xs text-gray-500">{{ _('Only you can see your reason') }}</p>
                                     </div>
                                 </label>
                             </div>
                         </div>
-                        
-                        <button type="submit" 
+
+                        <button type="submit"
                                 class="mt-4 w-full py-3 px-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            Submit with Reason
+                            {{ _('Submit with Reason') }}
                         </button>
                     </form>
                 </div>
@@ -182,11 +182,11 @@
             <div class="text-center mt-6">
                 {% if source == 'weekly_digest' %}
                 <a href="{{ url_for('daily.weekly_batch', token=token) }}" class="text-sm text-gray-500 hover:text-gray-700">
-                    Back to all 5 questions
+                    {{ _('Back to all 5 questions') }}
                 </a>
                 {% else %}
                 <a href="{{ url_for('daily.today') }}" class="text-sm text-gray-500 hover:text-gray-700">
-                    Or vote on the full page instead
+                    {{ _('Or vote on the full page instead') }}
                 </a>
                 {% endif %}
             </div>

@@ -2,34 +2,34 @@
 {% from "components/ui_tokens.html" import btn_primary_sm, btn_secondary_sm %}
 
 {% block head %}
-<title>Getting Started - Society Speaks Help | How to Participate in Discussions</title>
-<meta name="description" content="Learn how to use Society Speaks. Discover how to join discussions, vote on statements, add your perspective, and participate in meaningful public dialogue.">
+<title>{{ _('Getting Started - Society Speaks Help | How to Participate in Discussions') }}</title>
+<meta name="description" content="{{ _('Learn how to use Society Speaks. Discover how to join discussions, vote on statements, add your perspective, and participate in meaningful public dialogue.') }}">
 <link rel="canonical" href="{{ url_for('help.getting_started', _external=True) }}">
 
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "Getting Started with Society Speaks",
-  "description": "Learn how to participate in meaningful public discussions on Society Speaks",
+  "name": _('Getting Started with Society Speaks'),
+  "description": _('Learn how to participate in meaningful public discussions on Society Speaks'),
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Join a Discussion",
-      "text": "Browse available discussions on the homepage, filter by country, city, or topic, and click on any discussion to participate."
+      "name": _('Join a Discussion'),
+      "text": _('Browse available discussions on the homepage, filter by country, city, or topic, and click on any discussion to participate.')
     },
     {
       "@type": "HowToStep",
-      "name": "Vote on Comments",
-      "text": "For each comment, you can Agree, Disagree, or Pass if unsure or the comment is not relevant to you."
+      "name": _('Vote on Comments'),
+      "text": _('For each comment, you can Agree, Disagree, or Pass if unsure or the comment is not relevant to you.')
     },
     {
       "@type": "HowToStep",
-      "name": "Add Your Perspective",
-      "text": "Submit your own statements to add to the discussion and help build consensus."
+      "name": _('Add Your Perspective'),
+      "text": _('Submit your own statements to add to the discussion and help build consensus.')
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -37,10 +37,9 @@
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-4">Getting Started with Society Speaks</h1>
+    <h1 class="text-3xl font-bold mb-4">{{ _('Getting Started with Society Speaks') }}</h1>
     <p class="text-gray-600">
-      Welcome to Society Speaks! Learn how to participate in meaningful
-      discussions.
+      {{ _('Welcome to Society Speaks! Learn how to participate in meaningful discussions.') }}
     </p>
   </div>
 
@@ -48,38 +47,35 @@
   <div class="space-y-8">
     <!-- Overview -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">What is Society Speaks?</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('What is Society Speaks?') }}</h2>
       <p class="text-gray-700 mb-4">
-        Society Speaks is a platform that enables meaningful public dialogue
-        using two powerful systems:
+        {{ _('Society Speaks is a platform that enables meaningful public dialogue using two powerful systems:') }}
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div class="bg-blue-50 p-4 rounded-lg">
           <h3 class="font-semibold text-blue-900 mb-2">
-            ✨ Native Debate System (NEW!)
+            {{ _('✨ Native Debate System (NEW!)') }}
           </h3>
           <p class="text-sm text-gray-700">
-            Our advanced system with real-time voting, threaded responses,
-            evidence linking, and consensus visualization.
+            {{ _('Our advanced system with real-time voting, threaded responses, evidence linking, and consensus visualization.') }}
           </p>
           <a
             href="{{ url_for('help.native_system') }}"
             class="text-primary-600 hover:underline text-sm mt-2 inline-block"
           >
-            Learn more →
+            {{ _('Learn more →') }}
           </a>
         </div>
         <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-gray-900 mb-2">🌐 Pol.is Embed</h3>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('🌐 Pol.is Embed') }}</h3>
           <p class="text-sm text-gray-700">
-            Proven technology for large-scale opinion polling with powerful
-            visualization.
+            {{ _('Proven technology for large-scale opinion polling with powerful visualization.') }}
           </p>
           <a
             href="{{ url_for('help.polis_algorithms') }}"
             class="text-primary-600 hover:underline text-sm mt-2 inline-block"
           >
-            Learn more →
+            {{ _('Learn more →') }}
           </a>
         </div>
       </div>
@@ -87,34 +83,34 @@
 
     <!-- How to Participate -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">How to Participate</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('How to Participate') }}</h2>
 
       <div class="space-y-4">
         <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">1. Join a Discussion</h3>
+          <h3 class="font-semibold mb-2">{{ _('1. Join a Discussion') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Browse available discussions on the homepage</li>
-            <li>Filter by country, city, or topic</li>
-            <li>Click on any discussion to participate</li>
+            <li>{{ _('Browse available discussions on the homepage') }}</li>
+            <li>{{ _('Filter by country, city, or topic') }}</li>
+            <li>{{ _('Click on any discussion to participate') }}</li>
           </ul>
         </div>
 
         <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">2. Vote on Comments</h3>
+          <h3 class="font-semibold mb-2">{{ _('2. Vote on Comments') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>For each comment, you can:</li>
-            <li>👍 Agree</li>
-            <li>👎 Disagree</li>
-            <li>⏭️ Pass (if unsure or the comment isn't relevant to you)</li>
+            <li>{{ _('For each comment, you can:') }}</li>
+            <li>{{ _('👍 Agree') }}</li>
+            <li>{{ _('👎 Disagree') }}</li>
+            <li>{{ _("⏭️ Pass (if unsure or the comment isn't relevant to you)") }}</li>
           </ul>
         </div>
 
         <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">3. Submit Comments</h3>
+          <h3 class="font-semibold mb-2">{{ _('3. Submit Comments') }}</h3>
           <ul class="list-disc pl-5 text-gray-700">
-            <li>Share your own perspective (keep it under 140 characters)</li>
-            <li>Focus on one point per comment</li>
-            <li>Be respectful and constructive</li>
+            <li>{{ _('Share your own perspective (keep it under 140 characters)') }}</li>
+            <li>{{ _('Focus on one point per comment') }}</li>
+            <li>{{ _('Be respectful and constructive') }}</li>
           </ul>
         </div>
       </div>
@@ -122,78 +118,75 @@
 
     <!-- Creating an Account -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Creating an Account</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Creating an Account') }}</h2>
       <p class="text-gray-700 mb-4">
-        While you can browse discussions without an account, creating one allows
-        you to:
+        {{ _('While you can browse discussions without an account, creating one allows you to:') }}
       </p>
       <ul class="list-disc pl-5 text-gray-700">
-        <li>Create your own discussions</li>
-        <li>Track your participation</li>
-        <li>Build a profile</li>
-        <li>Receive updates on discussions you're interested in</li>
+        <li>{{ _('Create your own discussions') }}</li>
+        <li>{{ _('Track your participation') }}</li>
+        <li>{{ _('Build a profile') }}</li>
+        <li>{{ _("Receive updates on discussions you're interested in") }}</li>
       </ul>
       <div class="mt-4">
         <a
           href="{{ url_for('auth.register') }}"
           class="{{ btn_primary_sm() }}"
         >
-          Create an Account
+          {{ _('Create an Account') }}
         </a>
       </div>
     </div>
 
     <!-- See a Live Example -->
     <div class="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg p-6 border border-emerald-200">
-      <h2 class="text-xl font-semibold mb-3">See a Live Example</h2>
+      <h2 class="text-xl font-semibold mb-3">{{ _('See a Live Example') }}</h2>
       <p class="text-gray-700 mb-4">
-        The best way to understand Society Speaks is to try it. Explore our demo discussion on
-        climate action, vote on statements, and then see how the consensus analysis reveals
-        opinion groups and areas of agreement.
+        {{ _('The best way to understand Society Speaks is to try it. Explore our demo discussion on climate action, vote on statements, and then see how the consensus analysis reveals opinion groups and areas of agreement.') }}
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <a
           href="/discussions/25/climate-action-finding-common-ground"
           class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-emerald-100"
         >
-          <h3 class="font-semibold text-emerald-700">Explore the Discussion →</h3>
+          <h3 class="font-semibold text-emerald-700">{{ _('Explore the Discussion →') }}</h3>
           <p class="text-sm text-gray-600">
-            Vote on statements about climate action
+            {{ _('Vote on statements about climate action') }}
           </p>
         </a>
         <a
           href="/discussions/25/consensus"
           class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-emerald-100"
         >
-          <h3 class="font-semibold text-purple-700">View Consensus Analysis →</h3>
+          <h3 class="font-semibold text-purple-700">{{ _('View Consensus Analysis →') }}</h3>
           <p class="text-sm text-gray-600">
-            See opinion groups, bridges, and areas of agreement
+            {{ _('See opinion groups, bridges, and areas of agreement') }}
           </p>
         </a>
       </div>
-      <p class="text-xs text-gray-500 mt-3">Vote on 5 statements to unlock the full consensus analysis.</p>
+      <p class="text-xs text-gray-500 mt-3">{{ _('Vote on 5 statements to unlock the full consensus analysis.') }}</p>
     </div>
 
     <!-- Next Steps -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Next Steps</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Next Steps') }}</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <a
           href="{{ url_for('help.creating_discussions') }}"
           class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
         >
-          <h3 class="font-semibold">Creating Discussions →</h3>
+          <h3 class="font-semibold">{{ _('Creating Discussions →') }}</h3>
           <p class="text-sm text-gray-600">
-            Learn how to start your own discussions
+            {{ _('Learn how to start your own discussions') }}
           </p>
         </a>
         <a
           href="{{ url_for('help.seed_comments') }}"
           class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
         >
-          <h3 class="font-semibold">Understanding Seed Comments →</h3>
+          <h3 class="font-semibold">{{ _('Understanding Seed Comments →') }}</h3>
           <p class="text-sm text-gray-600">
-            Tips for starting effective discussions
+            {{ _('Tips for starting effective discussions') }}
           </p>
         </a>
       </div>
@@ -203,13 +196,13 @@
   <!-- Help Footer -->
   <div class="mt-8 text-center">
     <p class="text-gray-600">
-      Still need help?
+      {{ _('Still need help?') }}
       <a
         href="https://forms.gle/g3BQVhJgFLiGjmSP6"
         target="_blank"
         class="text-primary-600 hover:underline"
       >
-        Send us feedback
+        {{ _('Send us feedback') }}
       </a>
     </p>
   </div>

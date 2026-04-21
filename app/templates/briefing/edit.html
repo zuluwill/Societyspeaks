@@ -7,14 +7,14 @@
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{ breadcrumb([
-            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': _('My Briefings'), 'url': url_for('briefing.list_briefings')},
             {'label': briefing.name, 'url': url_for('briefing.detail', briefing_id=briefing.id)},
-            {'label': 'Edit', 'url': '#'}
+            {'label': _('Edit'), 'url': '#'}
         ]) }}
-        
+
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Edit Briefing</h1>
-            <p class="mt-2 text-gray-600">Update your briefing configuration</p>
+            <h1 class="text-3xl font-bold text-gray-900">{{ _('Edit Briefing') }}</h1>
+            <p class="mt-2 text-gray-600">{{ _('Update your briefing configuration') }}</p>
         </div>
 
         <div class="bg-white shadow rounded-lg">
@@ -22,55 +22,55 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- Name -->
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Briefing Name *</label>
+                    <label for="name" class="block text-sm font-medium text-gray-700">{{ _('Briefing Name *') }}</label>
                     <input type="text" name="name" id="name" required value="{{ briefing.name }}"
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                 </div>
 
                 <!-- Description -->
                 <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <label for="description" class="block text-sm font-medium text-gray-700">{{ _('Description') }}</label>
                     <textarea name="description" id="description" rows="3"
                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">{{ briefing.description or '' }}</textarea>
                 </div>
 
                 <!-- Cadence -->
                 <div>
-                    <label for="cadence" class="block text-sm font-medium text-gray-700">Frequency</label>
+                    <label for="cadence" class="block text-sm font-medium text-gray-700">{{ _('Frequency') }}</label>
                     <select name="cadence" id="cadence"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <option value="daily" {% if briefing.cadence == 'daily' %}selected{% endif %}>Daily</option>
-                        <option value="weekly" {% if briefing.cadence == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="daily" {% if briefing.cadence == 'daily' %}selected{% endif %}>{{ _('Daily') }}</option>
+                        <option value="weekly" {% if briefing.cadence == 'weekly' %}selected{% endif %}>{{ _('Weekly') }}</option>
                     </select>
                 </div>
 
                 <!-- Timezone -->
                 <div>
-                    <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
+                    <label for="timezone" class="block text-sm font-medium text-gray-700">{{ _('Timezone') }}</label>
                     <select name="timezone" id="timezone"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                         {% for tz in all_timezones %}
                         <option value="{{ tz }}" {% if briefing.timezone == tz %}selected{% endif %}>{{ tz }}</option>
                         {% endfor %}
                     </select>
-                    <p class="mt-1 text-sm text-gray-500">Select your timezone for accurate scheduling</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ _('Select your timezone for accurate scheduling') }}</p>
                 </div>
 
                 <!-- Send Time -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700">Send Hour</label>
+                        <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700">{{ _('Send Hour') }}</label>
                         <select name="preferred_send_hour" id="preferred_send_hour"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             {% for hour in range(0, 24) %}
                             <option value="{{ hour }}" {% if briefing.preferred_send_hour == hour %}selected{% endif %}>
-                                {{ "%02d:00"|format(hour) }} {% if hour < 12 %}AM{% else %}PM{% endif %}
+                                {{ "%02d:00"|format(hour) }} {% if hour < 12 %}{{ _('AM') }}{% else %}{{ _('PM') }}{% endif %}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
                     <div>
-                        <label for="preferred_send_minute" class="block text-sm font-medium text-gray-700">Send Minute</label>
+                        <label for="preferred_send_minute" class="block text-sm font-medium text-gray-700">{{ _('Send Minute') }}</label>
                         <select name="preferred_send_minute" id="preferred_send_minute"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             {% for minute in range(0, 60, 5) %}
@@ -79,60 +79,60 @@
                         </select>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500">Choose the time (hour and minute) when briefs should be sent in your selected timezone</p>
+                <p class="text-sm text-gray-500">{{ _('Choose the time (hour and minute) when briefs should be sent in your selected timezone') }}</p>
 
                 <!-- Mode -->
                 <div>
-                    <label for="mode" class="block text-sm font-medium text-gray-700">Approval Mode</label>
+                    <label for="mode" class="block text-sm font-medium text-gray-700">{{ _('Approval Mode') }}</label>
                     <select name="mode" id="mode"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <option value="auto_send" {% if briefing.mode == 'auto_send' %}selected{% endif %}>Auto-send</option>
-                        <option value="approval_required" {% if briefing.mode == 'approval_required' %}selected{% endif %}>Require approval</option>
+                        <option value="auto_send" {% if briefing.mode == 'auto_send' %}selected{% endif %}>{{ _('Auto-send') }}</option>
+                        <option value="approval_required" {% if briefing.mode == 'approval_required' %}selected{% endif %}>{{ _('Require approval') }}</option>
                     </select>
                 </div>
 
                 <!-- Visibility -->
                 <div>
-                    <label for="visibility" class="block text-sm font-medium text-gray-700">Visibility</label>
+                    <label for="visibility" class="block text-sm font-medium text-gray-700">{{ _('Visibility') }}</label>
                     <select name="visibility" id="visibility"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <option value="private" {% if briefing.visibility == 'private' %}selected{% endif %}>Private</option>
-                        <option value="org_only" {% if briefing.visibility == 'org_only' %}selected{% endif %}>Organisation only</option>
-                        <option value="public" {% if briefing.visibility == 'public' %}selected{% endif %}>Public</option>
+                        <option value="private" {% if briefing.visibility == 'private' %}selected{% endif %}>{{ _('Private') }}</option>
+                        <option value="org_only" {% if briefing.visibility == 'org_only' %}selected{% endif %}>{{ _('Organisation only') }}</option>
+                        <option value="public" {% if briefing.visibility == 'public' %}selected{% endif %}>{{ _('Public') }}</option>
                     </select>
                 </div>
 
                 <!-- Status -->
                 <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <label for="status" class="block text-sm font-medium text-gray-700">{{ _('Status') }}</label>
                     <select name="status" id="status"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <option value="active" {% if briefing.status == 'active' %}selected{% endif %}>Active</option>
-                        <option value="paused" {% if briefing.status == 'paused' %}selected{% endif %}>Paused</option>
+                        <option value="active" {% if briefing.status == 'active' %}selected{% endif %}>{{ _('Active') }}</option>
+                        <option value="paused" {% if briefing.status == 'paused' %}selected{% endif %}>{{ _('Paused') }}</option>
                     </select>
                 </div>
 
                 <!-- Content Preferences Section -->
                 <div id="content-preferences" class="pt-6 border-t border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Content Preferences</h3>
-                    <p class="text-sm text-gray-500 mb-4">Customise which topics and content you want to see more or less of.</p>
-                    
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ _('Content Preferences') }}</h3>
+                    <p class="text-sm text-gray-500 mb-4">{{ _('Customise which topics and content you want to see more or less of.') }}</p>
+
                     <div class="space-y-4">
                         <!-- Topic Priorities -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Topic Priorities</label>
-                            <p class="text-sm text-gray-500 mb-3">Add topics you want to prioritise. Higher priority topics will appear more often.</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ _('Topic Priorities') }}</label>
+                            <p class="text-sm text-gray-500 mb-3">{{ _('Add topics you want to prioritise. Higher priority topics will appear more often.') }}</p>
                             <div id="topic-priorities-container" class="space-y-2">
                                 {% set topic_prefs = briefing.topic_preferences or {} %}
                                 {% for topic, weight in topic_prefs.items() %}
                                 <div class="flex items-center space-x-2 topic-row">
-                                    <input type="text" name="topic_names[]" value="{{ topic }}" 
+                                    <input type="text" name="topic_names[]" value="{{ topic }}"
                                            class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                           placeholder="e.g., Football, Technology, Politics">
+                                           placeholder="{{ _('e.g., Football, Technology, Politics') }}">
                                     <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                        <option value="1" {% if weight == 1 %}selected{% endif %}>Low</option>
-                                        <option value="2" {% if weight == 2 %}selected{% endif %}>Medium</option>
-                                        <option value="3" {% if weight == 3 %}selected{% endif %}>High</option>
+                                        <option value="1" {% if weight == 1 %}selected{% endif %}>{{ _('Low') }}</option>
+                                        <option value="2" {% if weight == 2 %}selected{% endif %}>{{ _('Medium') }}</option>
+                                        <option value="3" {% if weight == 3 %}selected{% endif %}>{{ _('High') }}</option>
                                     </select>
                                     <button type="button" class="remove-topic-row-btn text-red-500 hover:text-red-700">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,118 +143,119 @@
                                 {% endfor %}
                             </div>
                             <button type="button" class="add-topic-row-btn mt-2 text-sm text-primary-600 hover:text-primary-800">
-                                + Add topic priority
+                                {{ _('+ Add topic priority') }}
                             </button>
                         </div>
-                        
+
                         <!-- Include Keywords -->
                         <div>
-                            <label for="include_keywords" class="block text-sm font-medium text-gray-700">Include Keywords</label>
+                            <label for="include_keywords" class="block text-sm font-medium text-gray-700">{{ _('Include Keywords') }}</label>
                             {% set filters = briefing.filters_json or {} %}
                             <input type="text" name="include_keywords" id="include_keywords"
                                    value="{{ (filters.get('include_keywords', []) or [])|join(', ') }}"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                   placeholder="e.g., Premier League, Champions League, World Cup">
-                            <p class="mt-1 text-sm text-gray-500">Comma-separated keywords. Stories containing these will be prioritised.</p>
+                                   placeholder="{{ _('e.g., Premier League, Champions League, World Cup') }}">
+                            <p class="mt-1 text-sm text-gray-500">{{ _('Comma-separated keywords. Stories containing these will be prioritised.') }}</p>
                         </div>
-                        
+
                         <!-- Exclude Keywords -->
                         <div>
-                            <label for="exclude_keywords" class="block text-sm font-medium text-gray-700">Exclude Keywords</label>
+                            <label for="exclude_keywords" class="block text-sm font-medium text-gray-700">{{ _('Exclude Keywords') }}</label>
                             <input type="text" name="exclude_keywords" id="exclude_keywords"
                                    value="{{ (filters.get('exclude_keywords', []) or [])|join(', ') }}"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                   placeholder="e.g., betting, gambling, sponsored">
-                            <p class="mt-1 text-sm text-gray-500">Comma-separated keywords. Stories containing these will be excluded.</p>
+                                   placeholder="{{ _('e.g., betting, gambling, sponsored') }}">
+                            <p class="mt-1 text-sm text-gray-500">{{ _('Comma-separated keywords. Stories containing these will be excluded.') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- AI Settings Section -->
                 <div id="ai-settings" class="pt-6 border-t border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">AI Settings</h3>
-                    <p class="text-sm text-gray-500 mb-4">Customise how your brief content is generated.</p>
-                    
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ _('AI Settings') }}</h3>
+                    <p class="text-sm text-gray-500 mb-4">{{ _('Customise how your brief content is generated.') }}</p>
+
                     <div class="space-y-4">
                         <!-- Tone -->
                         <div>
-                            <label for="tone" class="block text-sm font-medium text-gray-700">Writing Tone</label>
+                            <label for="tone" class="block text-sm font-medium text-gray-700">{{ _('Writing Tone') }}</label>
                             <select name="tone" id="tone"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                <option value="calm_neutral" {% if (briefing.tone or 'calm_neutral') == 'calm_neutral' %}selected{% endif %}>Calm & Neutral</option>
-                                <option value="formal" {% if briefing.tone == 'formal' %}selected{% endif %}>Formal & Professional</option>
-                                <option value="conversational" {% if briefing.tone == 'conversational' %}selected{% endif %}>Conversational & Friendly</option>
+                                <option value="calm_neutral" {% if (briefing.tone or 'calm_neutral') == 'calm_neutral' %}selected{% endif %}>{{ _('Calm & Neutral') }}</option>
+                                <option value="formal" {% if briefing.tone == 'formal' %}selected{% endif %}>{{ _('Formal & Professional') }}</option>
+                                <option value="conversational" {% if briefing.tone == 'conversational' %}selected{% endif %}>{{ _('Conversational & Friendly') }}</option>
                             </select>
-                            <p class="mt-1 text-sm text-gray-500">The writing style for your generated briefs</p>
+                            <p class="mt-1 text-sm text-gray-500">{{ _('The writing style for your generated briefs') }}</p>
                         </div>
-                        
+
                         <!-- Max Items -->
                         <div>
-                            <label for="max_items" class="block text-sm font-medium text-gray-700">Maximum Stories</label>
+                            <label for="max_items" class="block text-sm font-medium text-gray-700">{{ _('Maximum Stories') }}</label>
                             <select name="max_items" id="max_items"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 {% for num in [5, 7, 10, 15, 20] %}
-                                <option value="{{ num }}" {% if (briefing.max_items|default(10)) == num %}selected{% endif %}>{{ num }} stories</option>
+                                <option value="{{ num }}" {% if (briefing.max_items|default(10)) == num %}selected{% endif %}>{{ _('%(num)d stories', num=num) }}</option>
                                 {% endfor %}
                             </select>
-                            <p class="mt-1 text-sm text-gray-500">Maximum number of stories to include per brief</p>
+                            <p class="mt-1 text-sm text-gray-500">{{ _('Maximum number of stories to include per brief') }}</p>
                         </div>
-                        
+
                         <!-- Custom Prompt -->
                         <div>
-                            <label for="custom_prompt" class="block text-sm font-medium text-gray-700">Custom AI Instructions</label>
+                            <label for="custom_prompt" class="block text-sm font-medium text-gray-700">{{ _('Custom AI Instructions') }}</label>
+                            {% set _custom_prompt_placeholder = _("Add custom instructions for the AI, e.g., 'Focus on transfer news and match analysis' or 'Highlight underdog stories and upsets'") %}
                             <textarea name="custom_prompt" id="custom_prompt" rows="4"
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                      placeholder="Add custom instructions for the AI, e.g., 'Focus on transfer news and match analysis' or 'Highlight underdog stories and upsets'">{{ briefing.custom_prompt or '' }}</textarea>
-                            <p class="mt-1 text-sm text-gray-500">Tell the AI how to write and what to focus on. This shapes the tone and content of your briefs.</p>
+                                      placeholder="{{ _custom_prompt_placeholder }}">{{ briefing.custom_prompt or '' }}</textarea>
+                            <p class="mt-1 text-sm text-gray-500">{{ _('Tell the AI how to write and what to focus on. This shapes the tone and content of your briefs.') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Visual Branding Section -->
                 <div id="branding" class="pt-6 border-t border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Visual Branding</h3>
-                    <p class="text-sm text-gray-500 mb-4">Customise the look and feel of your briefs.</p>
-                    
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ _('Visual Branding') }}</h3>
+                    <p class="text-sm text-gray-500 mb-4">{{ _('Customise the look and feel of your briefs.') }}</p>
+
                     <div class="space-y-4">
                         <!-- Logo URL -->
                         <div>
-                            <label for="logo_url" class="block text-sm font-medium text-gray-700">Logo URL</label>
+                            <label for="logo_url" class="block text-sm font-medium text-gray-700">{{ _('Logo URL') }}</label>
                             <input type="url" name="logo_url" id="logo_url"
                                    value="{{ briefing.logo_url or '' }}"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                    placeholder="https://example.com/logo.png">
-                            <p class="mt-1 text-sm text-gray-500">URL to your logo image (PNG, JPG, SVG)</p>
+                            <p class="mt-1 text-sm text-gray-500">{{ _('URL to your logo image (PNG, JPG, SVG)') }}</p>
                             {% if briefing.logo_url %}
                             <div class="mt-2">
-                                <img src="{{ briefing.logo_url }}" alt="Current logo" class="h-12 w-auto object-contain border rounded p-1">
+                                <img src="{{ briefing.logo_url }}" alt="{{ _('Current logo') }}" class="h-12 w-auto object-contain border rounded p-1">
                             </div>
                             {% endif %}
                         </div>
-                        
+
                         <!-- Accent Colour -->
                         <div>
-                            <label for="accent_color" class="block text-sm font-medium text-gray-700">Accent Colour</label>
+                            <label for="accent_color" class="block text-sm font-medium text-gray-700">{{ _('Accent Colour') }}</label>
                             <div class="mt-1 flex items-center space-x-3">
                                 <input type="color" name="accent_color" id="accent_color"
                                        value="{{ briefing.accent_color or '#3B82F6' }}"
                                        class="h-10 w-14 border-gray-300 rounded cursor-pointer">
-                                <input type="text" id="accent_color_hex" 
+                                <input type="text" id="accent_color_hex"
                                        value="{{ briefing.accent_color or '#3B82F6' }}"
                                        class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                        placeholder="#3B82F6" pattern="^#[0-9A-Fa-f]{6}$">
                             </div>
-                            <p class="mt-1 text-sm text-gray-500">Color used for headers, links, and accents</p>
+                            <p class="mt-1 text-sm text-gray-500">{{ _('Color used for headers, links, and accents') }}</p>
                         </div>
                         
                         <!-- Header Text -->
                         <div>
-                            <label for="header_text" class="block text-sm font-medium text-gray-700">Custom Header Text</label>
+                            <label for="header_text" class="block text-sm font-medium text-gray-700">{{ _('Custom Header Text') }}</label>
                             <input type="text" name="header_text" id="header_text"
                                    value="{{ briefing.header_text or '' }}"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                   placeholder="e.g., Your Daily Industry Update">
-                            <p class="mt-1 text-sm text-gray-500">Custom text shown at the top of each brief (optional)</p>
+                                   placeholder="{{ _('e.g., Your Daily Industry Update') }}">
+                            <p class="mt-1 text-sm text-gray-500">{{ _('Custom text shown at the top of each brief (optional)') }}</p>
                         </div>
                     </div>
                 </div>
@@ -262,49 +263,49 @@
                 <!-- Email Branding (for org briefings) -->
                 {% if briefing.owner_type == 'org' %}
                 <div class="pt-4 border-t border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Email Branding</h3>
-                    
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ _('Email Branding') }}</h3>
+
                     <!-- Sending Domain -->
                     <div class="mb-4">
-                        <label for="sending_domain_id" class="block text-sm font-medium text-gray-700">Sending Domain</label>
+                        <label for="sending_domain_id" class="block text-sm font-medium text-gray-700">{{ _('Sending Domain') }}</label>
                         <select name="sending_domain_id" id="sending_domain_id"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <option value="">Use default (societyspeaks.io)</option>
+                            <option value="">{{ _('Use default (societyspeaks.io)') }}</option>
                             {% for domain in available_domains %}
-                            <option value="{{ domain.id }}" 
+                            <option value="{{ domain.id }}"
                                     {% if briefing.sending_domain_id == domain.id %}selected{% endif %}>
-                                {{ domain.domain }} 
-                                {% if domain.status == 'verified' %}(Verified){% elif domain.status == 'pending_verification' %}(Pending){% else %}(Failed){% endif %}
+                                {{ domain.domain }}
+                                {% if domain.status == 'verified' %}{{ _('(Verified)') }}{% elif domain.status == 'pending_verification' %}{{ _('(Pending)') }}{% else %}{{ _('(Failed)') }}{% endif %}
                             </option>
                             {% endfor %}
                         </select>
                         <p class="mt-1 text-sm text-gray-500">
-                            <a href="{{ url_for('briefing.list_domains') }}" class="text-primary-600 hover:text-primary-800">Manage domains</a>
+                            <a href="{{ url_for('briefing.list_domains') }}" class="text-primary-600 hover:text-primary-800">{{ _('Manage domains') }}</a>
                         </p>
                     </div>
-                    
+
                     <!-- From Name -->
                     <div class="mb-4">
-                        <label for="from_name" class="block text-sm font-medium text-gray-700">Sender Name</label>
-                        <input type="text" name="from_name" id="from_name" 
+                        <label for="from_name" class="block text-sm font-medium text-gray-700">{{ _('Sender Name') }}</label>
+                        <input type="text" name="from_name" id="from_name"
                                value="{{ briefing.from_name or '' }}"
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                               placeholder="e.g., Acme Corp Briefings">
-                        <p class="mt-1 text-sm text-gray-500">Name shown as email sender (defaults to briefing name)</p>
+                               placeholder="{{ _('e.g., Acme Corp Briefings') }}">
+                        <p class="mt-1 text-sm text-gray-500">{{ _('Name shown as email sender (defaults to briefing name)') }}</p>
                     </div>
-                    
+
                     <!-- From Email -->
                     <div class="mb-4">
                         <label for="from_email" class="block text-sm font-medium text-gray-700">
-                            Sender Email
+                            {{ _('Sender Email') }}
                             <span id="email-required-indicator" class="text-red-500" style="display: none;">*</span>
                         </label>
-                        <input type="email" name="from_email" id="from_email" 
+                        <input type="email" name="from_email" id="from_email"
                                value="{{ briefing.from_email or '' }}"
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                placeholder="briefings@yourdomain.com">
                         <p class="mt-1 text-sm text-gray-500" id="email-help-text">
-                            Must match selected domain. Leave empty to use default.
+                            {{ _('Must match selected domain. Leave empty to use default.') }}
                         </p>
                         <p class="mt-1 text-sm text-red-600 hidden" id="email-error-text"></p>
                     </div>
@@ -315,11 +316,11 @@
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-200">
                     <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}"
                        class="w-full sm:w-auto text-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Cancel
+                        {{ _('Cancel') }}
                     </a>
                     <button type="submit"
                             class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Save Changes
+                        {{ _('Save Changes') }}
                     </button>
                 </div>
             </form>
@@ -330,7 +331,7 @@
 <script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Choices.js for timezone dropdown (DRY - using reusable macro)
-    {{ init_choices_dropdown('timezone', 'Search timezones...', 'Select a timezone...') }}
+    {{ init_choices_dropdown('timezone', _('Search timezones...'), _('Select a timezone...')) }}
     
     // Auto-suggest email when domain selected and validate
     const domainSelect = document.getElementById('sending_domain_id');
@@ -369,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     emailRequiredIndicator.style.display = 'inline';
                 }
                 if (emailHelpText) {
-                    emailHelpText.textContent = `Required. Must match selected domain: ${domainMatch[1]}`;
+                    emailHelpText.textContent = '{{ _("Required. Must match selected domain:") }} ' + domainMatch[1];
                     emailHelpText.classList.remove('text-gray-500');
                     emailHelpText.classList.add('text-primary-600');
                 }
@@ -381,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     emailRequiredIndicator.style.display = 'none';
                 }
                 if (emailHelpText) {
-                    emailHelpText.textContent = 'Must match selected domain. Leave empty to use default.';
+                    emailHelpText.textContent = '{{ _("Must match selected domain. Leave empty to use default.") }}';
                     emailHelpText.classList.remove('text-primary-600');
                     emailHelpText.classList.add('text-gray-500');
                 }
@@ -419,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const emailValue = emailInput.value.trim();
         
         if (!emailValue) {
-            emailErrorText.textContent = 'Email is required when a domain is selected.';
+            emailErrorText.textContent = '{{ _("Email is required when a domain is selected.") }}';
             emailErrorText.classList.remove('hidden');
             emailInput.classList.add('border-red-300');
             emailInput.classList.remove('border-gray-300');
@@ -428,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const emailDomain = emailValue.split('@')[1];
         if (emailDomain !== expectedDomain) {
-            emailErrorText.textContent = `Email must be from domain: ${expectedDomain}`;
+            emailErrorText.textContent = '{{ _("Email must be from domain:") }} ' + expectedDomain;
             emailErrorText.classList.remove('hidden');
             emailInput.classList.add('border-red-300');
             emailInput.classList.remove('border-gray-300');
@@ -445,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             if (domainSelect && domainSelect.value && emailInput && !emailInput.value.trim()) {
                 e.preventDefault();
-                emailErrorText.textContent = 'Email is required when a domain is selected.';
+                emailErrorText.textContent = '{{ _("Email is required when a domain is selected.") }}';
                 emailErrorText.classList.remove('hidden');
                 emailInput.focus();
                 emailInput.classList.add('border-red-300');
@@ -460,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const emailDomain = emailInput.value.trim().split('@')[1];
                     if (emailDomain !== expectedDomain) {
                         e.preventDefault();
-                        emailErrorText.textContent = `Email must be from domain: ${expectedDomain}`;
+                        emailErrorText.textContent = '{{ _("Email must be from domain:") }} ' + expectedDomain;
                         emailErrorText.classList.remove('hidden');
                         emailInput.focus();
                         emailInput.classList.add('border-red-300');
@@ -511,13 +512,13 @@ function addTopicRow() {
     const row = document.createElement('div');
     row.className = 'flex items-center space-x-2 topic-row';
     row.innerHTML = `
-        <input type="text" name="topic_names[]" value="" 
+        <input type="text" name="topic_names[]" value=""
                class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-               placeholder="e.g., Football, Technology, Politics">
+               placeholder="{{ _('e.g., Football, Technology, Politics') }}">
         <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-            <option value="1">Low</option>
-            <option value="2">Medium</option>
-            <option value="3" selected>High</option>
+            <option value="1">{{ _('Low') }}</option>
+            <option value="2">{{ _('Medium') }}</option>
+            <option value="3" selected>{{ _('High') }}</option>
         </select>
         <button type="button" class="remove-topic-row-btn text-red-500 hover:text-red-700">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

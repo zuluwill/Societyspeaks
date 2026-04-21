@@ -1,31 +1,32 @@
 {% extends "layout.html" %}
 
-{% block title %}How We Create the Daily Brief - Society Speaks{% endblock %}
+{% block title %}{{ _('How We Create the Daily Brief - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Our Methodology</h1>
-            <p class="text-gray-600">How AI helps us create the Daily Sense-Making Brief</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ _('Our Methodology') }}</h1>
+            <p class="text-gray-600">{{ _('How AI helps us create the Daily Sense-Making Brief') }}</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl p-8 space-y-8">
             <section>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">1</span>
-                    Trusted Source Gathering
+                    {{ _('Trusted Source Gathering') }}
                 </h2>
+                {% set _allsides_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="text-amber-600 hover:underline">' ~ _('AllSides methodology') ~ '</a>' %}
                 <p class="text-gray-700 mb-4">
-                    We continuously monitor <strong>140+ carefully selected news sources</strong>, including quality journalism outlets, policy publications, think tanks, investigative journalism, and intellectual podcasts. Each source is rated for political leaning using <a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="text-amber-600 hover:underline">AllSides methodology</a>.
+                    {{ _('We continuously monitor <strong>140+ carefully selected news sources</strong>, including quality journalism outlets, policy publications, think tanks, investigative journalism, and intellectual podcasts. Each source is rated for political leaning using %(allsides_link)s.', allsides_link=_allsides_link)|safe }}
                 </p>
-                
+
                 <div class="ml-11 mb-6">
-                    <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">News & Analysis Sources</h4>
-                    
+                    <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">{{ _('News & Analysis Sources') }}</h4>
+
                     <!-- Left -->
                     <div class="mb-4">
-                        <p class="text-xs font-semibold text-primary-800 uppercase tracking-wide mb-2">Left</p>
+                        <p class="text-xs font-semibold text-primary-800 uppercase tracking-wide mb-2">{{ _('Left') }}</p>
                         <div class="flex flex-wrap gap-2">
                             <span class="text-xs px-2 py-1 rounded bg-blue-200 text-primary-800">The Guardian</span>
                             <span class="text-xs px-2 py-1 rounded bg-blue-200 text-primary-800">The New Yorker</span>
@@ -40,7 +41,7 @@
                     
                     <!-- Centre-Left -->
                     <div class="mb-4">
-                        <p class="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-2">Centre-Left</p>
+                        <p class="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-2">{{ _('Centre-Left') }}</p>
                         <div class="flex flex-wrap gap-2">
                             <span class="text-xs px-2 py-1 rounded bg-blue-100 text-primary-700">ProPublica</span>
                             <span class="text-xs px-2 py-1 rounded bg-blue-100 text-primary-700">Slow Boring</span>
@@ -51,7 +52,7 @@
                     
                     <!-- Centre -->
                     <div class="mb-4">
-                        <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2">Centre</p>
+                        <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2">{{ _('Centre') }}</p>
                         <div class="flex flex-wrap gap-2">
                             <span class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-700">BBC News</span>
                             <span class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-700">Financial Times</span>
@@ -80,7 +81,7 @@
                     
                     <!-- Centre-Right -->
                     <div class="mb-4">
-                        <p class="text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">Centre-Right</p>
+                        <p class="text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">{{ _('Centre-Right') }}</p>
                         <div class="flex flex-wrap gap-2">
                             <span class="text-xs px-2 py-1 rounded bg-red-100 text-red-700">UnHerd</span>
                             <span class="text-xs px-2 py-1 rounded bg-red-100 text-red-700">The Dispatch</span>
@@ -95,7 +96,7 @@
                     
                     <!-- Right -->
                     <div class="mb-4">
-                        <p class="text-xs font-semibold text-red-800 uppercase tracking-wide mb-2">Right</p>
+                        <p class="text-xs font-semibold text-red-800 uppercase tracking-wide mb-2">{{ _('Right') }}</p>
                         <div class="flex flex-wrap gap-2">
                             <span class="text-xs px-2 py-1 rounded bg-red-200 text-red-800">The Telegraph</span>
                             <span class="text-xs px-2 py-1 rounded bg-red-200 text-red-800">The Spectator</span>
@@ -111,7 +112,7 @@
                 </div>
 
                 <div class="ml-11">
-                    <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Podcasts</h4>
+                    <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">{{ _('Podcasts') }}</h4>
                     <div class="flex flex-wrap gap-2">
                         <span class="text-xs px-2 py-1 rounded bg-blue-200 text-primary-800">The News Agents</span>
                         <span class="text-xs px-2 py-1 rounded bg-blue-200 text-primary-800">The Ezra Klein Show</span>
@@ -128,31 +129,31 @@
                 </div>
 
                 <p class="text-gray-500 text-sm mt-4 ml-11">
-                    Political leanings are based on AllSides ratings where available, with manual assessment for podcasts and newer publications. We update ratings monthly and add new sources regularly.
+                    {{ _('Political leanings are based on AllSides ratings where available, with manual assessment for podcasts and newer publications. We update ratings monthly and add new sources regularly.') }}
                 </p>
             </section>
 
             <section>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">2</span>
-                    AI-Powered Relevance Scoring
+                    {{ _('AI-Powered Relevance Scoring') }}
                 </h2>
                 <p class="text-gray-700 mb-4">
-                    Each article is analysed by AI to assess two key metrics:
+                    {{ _('Each article is analysed by AI to assess two key metrics:') }}
                 </p>
                 <ul class="space-y-3 text-gray-600 ml-11">
                     <li class="flex items-start">
                         <span class="text-amber-600 mr-2 mt-1">•</span>
                         <div>
-                            <strong class="text-gray-800">Civic Relevance (0-100%)</strong>
-                            <p class="text-sm mt-1">How valuable is this for public understanding? We prioritise policy, institutions, rights, and long-term societal impact over celebrity news and product reviews.</p>
+                            <strong class="text-gray-800">{{ _('Civic Relevance (0-100%%)') }}</strong>
+                            <p class="text-sm mt-1">{{ _('How valuable is this for public understanding? We prioritise policy, institutions, rights, and long-term societal impact over celebrity news and product reviews.') }}</p>
                         </div>
                     </li>
                     <li class="flex items-start">
                         <span class="text-amber-600 mr-2 mt-1">•</span>
                         <div>
-                            <strong class="text-gray-800">Clickbait Risk (Low/Medium/High)</strong>
-                            <p class="text-sm mt-1">We filter out sensationalised content. Articles with high clickbait scores are deprioritised.</p>
+                            <strong class="text-gray-800">{{ _('Clickbait Risk (Low/Medium/High)') }}</strong>
+                            <p class="text-sm mt-1">{{ _('We filter out sensationalised content. Articles with high clickbait scores are deprioritised.') }}</p>
                         </div>
                     </li>
                 </ul>
@@ -161,14 +162,14 @@
             <section>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">3</span>
-                    Intelligent Topic Clustering
+                    {{ _('Intelligent Topic Clustering') }}
                 </h2>
                 <p class="text-gray-700 mb-4 ml-11">
-                    Using AI embeddings, we group related articles from different sources into unified topics. This means when multiple outlets cover the same story, they're clustered together so you can see how different sources frame the same event.
+                    {{ _("Using AI embeddings, we group related articles from different sources into unified topics. This means when multiple outlets cover the same story, they're clustered together so you can see how different sources frame the same event.") }}
                 </p>
                 <div class="ml-11 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r">
                     <p class="text-primary-800 text-sm">
-                        <strong>Why this matters:</strong> Rather than reading the same story 5 times from 5 outlets, you see one consolidated story with multi-source coverage analysis.
+                        {{ _('<strong>Why this matters:</strong> Rather than reading the same story 5 times from 5 outlets, you see one consolidated story with multi-source coverage analysis.')|safe }}
                     </p>
                 </div>
             </section>
@@ -176,14 +177,14 @@
             <section>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">4</span>
-                    Coverage Balance Analysis
+                    {{ _('Coverage Balance Analysis') }}
                 </h2>
                 <p class="text-gray-700 mb-4">
-                    For each story, we show which outlets are covering it and from what political perspective:
+                    {{ _('For each story, we show which outlets are covering it and from what political perspective:') }}
                 </p>
                 <div class="bg-gray-50 rounded-lg p-4 ml-11">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-600">Example coverage distribution</span>
+                        <span class="text-sm font-medium text-gray-600">{{ _('Example coverage distribution') }}</span>
                     </div>
                     <div class="flex h-4 rounded-full overflow-hidden" style="background-color: #e5e7eb;">
                         <div style="width: 25%; background-color: #3b82f6;"></div>
@@ -191,40 +192,41 @@
                         <div style="width: 25%; background-color: #ef4444;"></div>
                     </div>
                     <div class="flex justify-between text-xs text-gray-500 mt-1">
-                        <span class="text-primary-600">Left-leaning</span>
-                        <span class="text-purple-600">Centre</span>
-                        <span class="text-red-600">Right-leaning</span>
+                        <span class="text-primary-600">{{ _('Left-leaning') }}</span>
+                        <span class="text-purple-600">{{ _('Centre') }}</span>
+                        <span class="text-red-600">{{ _('Right-leaning') }}</span>
                     </div>
                 </div>
+                {% set _allsides_ratings_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="text-amber-600 hover:underline">' ~ _('AllSides Media Bias Ratings') ~ '</a>' %}
                 <p class="text-gray-600 mt-4 ml-11">
-                    Source ratings come from <a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="text-amber-600 hover:underline">AllSides Media Bias Ratings</a>. We show the balance not to say who's "right," but to help you see blind spots in coverage.
+                    {{ _('Source ratings come from %(allsides_link)s. We show the balance not to say who\'s "right," but to help you see blind spots in coverage.', allsides_link=_allsides_ratings_link)|safe }}
                 </p>
             </section>
 
             <section>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">5</span>
-                    AI-Generated Summaries & Perspectives
+                    {{ _('AI-Generated Summaries & Perspectives') }}
                 </h2>
                 <p class="text-gray-700 mb-4 ml-11">
-                    For each selected story, AI generates:
+                    {{ _('For each selected story, AI generates:') }}
                 </p>
                 <ul class="space-y-2 text-gray-600 ml-11">
                     <li class="flex items-start">
                         <span class="text-amber-600 mr-2">•</span>
-                        <span><strong>Key bullet points</strong> - The essential facts in 3-4 sentences</span>
+                        <span>{{ _('<strong>Key bullet points</strong> - The essential facts in 3-4 sentences')|safe }}</span>
                     </li>
                     <li class="flex items-start">
                         <span class="text-amber-600 mr-2">•</span>
-                        <span><strong>"Why This Matters To You"</strong> - Personal relevance and impact</span>
+                        <span>{{ _('<strong>"Why This Matters To You"</strong> - Personal relevance and impact')|safe }}</span>
                     </li>
                     <li class="flex items-start">
                         <span class="text-amber-600 mr-2">•</span>
-                        <span><strong>Left/Centre/Right perspectives</strong> - How different viewpoints frame the story</span>
+                        <span>{{ _('<strong>Left/Centre/Right perspectives</strong> - How different viewpoints frame the story')|safe }}</span>
                     </li>
                     <li class="flex items-start">
                         <span class="text-amber-600 mr-2">•</span>
-                        <span><strong>Blindspot analysis</strong> - When coverage is skewed, we explain what might be missing</span>
+                        <span>{{ _('<strong>Blindspot analysis</strong> - When coverage is skewed, we explain what might be missing')|safe }}</span>
                     </li>
                 </ul>
             </section>
@@ -232,61 +234,61 @@
             <section>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">6</span>
-                    Automated Daily Publication
+                    {{ _('Automated Daily Publication') }}
                 </h2>
                 <p class="text-gray-700 ml-11">
-                    The Daily Brief is generated and published automatically each evening at 6pm UK time. This allows for same-day coverage of developing stories while ensuring you have time to digest the news before the next day.
+                    {{ _('The Daily Brief is generated and published automatically each evening at 6pm UK time. This allows for same-day coverage of developing stories while ensuring you have time to digest the news before the next day.') }}
                 </p>
                 <div class="ml-11 mt-4 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r">
                     <p class="text-amber-800 text-sm">
-                        <strong>Transparency note:</strong> This is an AI-first product. While we've designed the system to prioritise accuracy and balance, AI can make mistakes. We always link to original sources so you can verify for yourself.
+                        {{ _("<strong>Transparency note:</strong> This is an AI-first product. While we've designed the system to prioritise accuracy and balance, AI can make mistakes. We always link to original sources so you can verify for yourself.")|safe }}
                     </p>
                 </div>
             </section>
 
             <section class="bg-amber-50 rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">What We Don't Do</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">{{ _("What We Don't Do") }}</h2>
                 <ul class="space-y-2 text-gray-700">
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Sensationalise headlines for clicks</span>
+                        <span>{{ _('Sensationalise headlines for clicks') }}</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Tell you what to think</span>
+                        <span>{{ _('Tell you what to think') }}</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Pretend to be objective (we show you the perspectives instead)</span>
+                        <span>{{ _('Pretend to be objective (we show you the perspectives instead)') }}</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Cover everything (we focus on what matters for civic sense-making)</span>
+                        <span>{{ _('Cover everything (we focus on what matters for civic sense-making)') }}</span>
                     </li>
                     <li class="flex items-start">
                         <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Hide our AI use (we're transparent about how this works)</span>
+                        <span>{{ _("Hide our AI use (we're transparent about how this works)") }}</span>
                     </li>
                 </ul>
             </section>
 
             <section class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-2">Transparency</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-2">{{ _('Transparency') }}</h2>
                 <p class="text-gray-700">
-                    Society Speaks is built with transparency in mind. Our code is publicly available under the AGPL-3.0 license, which means you can inspect exactly how our AI systems work and suggest improvements. We believe civic technology should be accountable.
+                    {{ _('Society Speaks is built with transparency in mind. Our code is publicly available under the AGPL-3.0 license, which means you can inspect exactly how our AI systems work and suggest improvements. We believe civic technology should be accountable.') }}
                 </p>
                 <a href="https://github.com/societyspeaks" target="_blank" class="inline-flex items-center mt-3 text-primary-600 hover:text-primary-800 font-medium text-sm">
-                    View Source Code
+                    {{ _('View Source Code') }}
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -296,7 +298,7 @@
 
         <div class="mt-8 text-center">
             <a href="{{ url_for('brief.today') }}" class="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
-                Read Today's Brief
+                {{ _("Read Today's Brief") }}
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>

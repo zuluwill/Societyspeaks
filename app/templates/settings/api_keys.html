@@ -1,35 +1,35 @@
-{% extends 'layout.html' %} {% block title %}API Keys - Settings{% endblock %}
+{% extends 'layout.html' %} {% block title %}{{ _('API Keys - Settings') }}{% endblock %}
 {% block content %}
 <div class="container mx-auto px-4 py-8 max-w-4xl">
   <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <a href="{{ url_for('settings.view_settings') }}" class="hover:text-gray-700">Settings</a>
+    <a href="{{ url_for('settings.view_settings') }}" class="hover:text-gray-700">{{ _('Settings') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">API Keys</span>
+    <span class="text-gray-900 font-medium">{{ _('API Keys') }}</span>
   </nav>
   <div class="mb-6">
-    <h1 class="text-3xl font-bold mb-2">API Keys</h1>
+    <h1 class="text-3xl font-bold mb-2">{{ _('API Keys') }}</h1>
     <p class="text-gray-600">
-      Manage your LLM API keys for optional AI features
+      {{ _('Manage your LLM API keys for optional AI features') }}
     </p>
   </div>
 
   <!-- Info Banner -->
   <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
-    <h3 class="font-semibold text-blue-900 mb-2">🔐 Your Keys, Your Control</h3>
+    <h3 class="font-semibold text-blue-900 mb-2">{{ _('🔐 Your Keys, Your Control') }}</h3>
     <ul class="text-primary-800 space-y-1 text-sm">
-      <li>• API keys are encrypted before storage</li>
-      <li>• You control when AI features are used</li>
-      <li>• Keys are never shared with Society Speaks servers</li>
-      <li>• Estimated cost: $0.01-0.05 per analysis</li>
+      <li>{{ _('• API keys are encrypted before storage') }}</li>
+      <li>{{ _('• You control when AI features are used') }}</li>
+      <li>{{ _('• Keys are never shared with Society Speaks servers') }}</li>
+      <li>{{ _('• Estimated cost: $0.01-0.05 per analysis') }}</li>
     </ul>
   </div>
 
   <!-- Existing Keys -->
   {% if keys %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Your API Keys</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('Your API Keys') }}</h2>
     <div class="space-y-4">
       {% for key in keys %}
       <div class="border rounded-lg p-4 flex items-center justify-between">
@@ -39,17 +39,17 @@
             {% if key.is_active %}
             <span
               class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold"
-              >Active</span
+              >{{ _('Active') }}</span
             >
             {% else %}
             <span
               class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold"
-              >Inactive</span
+              >{{ _('Inactive') }}</span
             >
             {% endif %}
           </div>
           <div class="text-sm text-gray-600 mt-1">
-            Key: ••••••••••••••• {% if key.last_validated %} · Last validated:
+            {{ _('Key: •••••••••••••••') }} {% if key.last_validated %} · {{ _('Last validated:') }}
             {{ key.last_validated.strftime('%b %d, %Y') }} {% endif %}
           </div>
         </div>
@@ -61,7 +61,7 @@
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-primary-600 hover:underline text-sm">
-              Revalidate
+              {{ _('Revalidate') }}
             </button>
           </form>
           <span class="text-gray-300">|</span>
@@ -72,7 +72,7 @@
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-gray-600 hover:underline text-sm">
-              {{ 'Disable' if key.is_active else 'Enable' }}
+              {{ _('Disable') if key.is_active else _('Enable') }}
             </button>
           </form>
           <span class="text-gray-300">|</span>
@@ -83,7 +83,7 @@
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-red-600 hover:underline text-sm">
-              Delete
+              {{ _('Delete') }}
             </button>
           </form>
         </div>
@@ -106,44 +106,44 @@
         d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
       />
     </svg>
-    <h3 class="text-xl font-semibold text-gray-700 mb-2">No API Keys Yet</h3>
+    <h3 class="text-xl font-semibold text-gray-700 mb-2">{{ _('No API Keys Yet') }}</h3>
     <p class="text-gray-600 mb-4">
-      Add an API key to unlock optional AI features
+      {{ _('Add an API key to unlock optional AI features') }}
     </p>
   </div>
   {% endif %}
 
   <!-- Add New Key -->
   <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold mb-4">Add New API Key</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('Add New API Key') }}</h2>
     <a
       href="{{ url_for('api_keys.add_api_key') }}"
       class="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 font-semibold inline-block"
     >
-      Add API Key
+      {{ _('Add API Key') }}
     </a>
   </div>
 
   <!-- Features -->
   <div class="bg-white rounded-lg shadow p-6 mt-6">
-    <h2 class="text-xl font-semibold mb-4">AI Features (Optional)</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('AI Features (Optional)') }}</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="border rounded-lg p-4">
-        <h3 class="font-semibold text-gray-900 mb-2">📝 AI Summaries</h3>
+        <h3 class="font-semibold text-gray-900 mb-2">{{ _('📝 AI Summaries') }}</h3>
         <p class="text-sm text-gray-600">
-          Generate human-readable summaries of consensus analysis results
+          {{ _('Generate human-readable summaries of consensus analysis results') }}
         </p>
       </div>
       <div class="border rounded-lg p-4">
-        <h3 class="font-semibold text-gray-900 mb-2">🏷️ Cluster Labels</h3>
+        <h3 class="font-semibold text-gray-900 mb-2">{{ _('🏷️ Cluster Labels') }}</h3>
         <p class="text-sm text-gray-600">
-          Automatically name opinion groups based on their shared beliefs
+          {{ _('Automatically name opinion groups based on their shared beliefs') }}
         </p>
       </div>
       <div class="border rounded-lg p-4">
-        <h3 class="font-semibold text-gray-900 mb-2">🔍 Smart Deduplication</h3>
+        <h3 class="font-semibold text-gray-900 mb-2">{{ _('🔍 Smart Deduplication') }}</h3>
         <p class="text-sm text-gray-600">
-          Prevent similar statements using semantic analysis
+          {{ _('Prevent similar statements using semantic analysis') }}
         </p>
       </div>
     </div>
@@ -155,14 +155,14 @@
       href="{{ url_for('settings.view_settings') }}"
       class="text-primary-600 hover:underline"
     >
-      ← Back to Settings
+      {{ _('← Back to Settings') }}
     </a>
   </div>
 </div>
 <script nonce="{{ csp_nonce() }}">
   document.addEventListener('submit', function(e) {
     var form = e.target.closest('.api-key-delete-form');
-    if (form && !confirm('Delete this API key?')) e.preventDefault();
+    if (form && !confirm({{ _('Delete this API key?')|tojson }})) e.preventDefault();
   });
 </script>
 {% endblock %}

@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
-{% block title %}Consensus Report - {{ discussion.title }}{% endblock %}
+{% block title %}{{ _('Consensus Report') }} - {{ discussion.title }}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8 {% if for_print %}print:p-0{% endif %}">
   <div class="mb-6 flex justify-between items-start">
     <div>
-      <h1 class="text-3xl font-bold mb-2">Consensus Report</h1>
+      <h1 class="text-3xl font-bold mb-2">{{ _('Consensus Report') }}</h1>
       <p class="text-gray-600">{{ discussion.title }}</p>
     </div>
     <div class="flex gap-2 print:hidden">
@@ -13,48 +13,48 @@
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
         </svg>
-        Print
+        {{ _('Print') }}
       </button>
       <a href="{{ url_for('consensus.view_results', discussion_id=discussion.id) }}" class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
-        Back to Analysis
+        {{ _('Back to Analysis') }}
       </a>
     </div>
   </div>
 
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Report Summary</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ _('Report Summary') }}</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
       <div class="text-center p-3 bg-gray-50 rounded">
         <div class="text-2xl font-bold text-primary-600">{{ analysis.num_clusters }}</div>
-        <div class="text-sm text-gray-600">Opinion Groups</div>
+        <div class="text-sm text-gray-600">{{ _('Opinion Groups') }}</div>
       </div>
       <div class="text-center p-3 bg-gray-50 rounded">
         <div class="text-2xl font-bold">{{ analysis.participants_count }}</div>
-        <div class="text-sm text-gray-600">Participants</div>
+        <div class="text-sm text-gray-600">{{ _('Participants') }}</div>
       </div>
       <div class="text-center p-3 bg-gray-50 rounded">
         <div class="text-2xl font-bold">{{ analysis.statements_count }}</div>
-        <div class="text-sm text-gray-600">Statements</div>
+        <div class="text-sm text-gray-600">{{ _('Statements') }}</div>
       </div>
       <div class="text-center p-3 bg-gray-50 rounded">
         <div class="text-2xl font-bold {% if analysis.silhouette_score > 0.5 %}text-green-600{% elif analysis.silhouette_score > 0.3 %}text-yellow-600{% else %}text-red-600{% endif %}">{{ "%.2f"|format(analysis.silhouette_score) }}</div>
-        <div class="text-sm text-gray-600">Cluster Quality</div>
+        <div class="text-sm text-gray-600">{{ _('Cluster Quality') }}</div>
       </div>
     </div>
-    <p class="text-sm text-gray-500">Generated: {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+    <p class="text-sm text-gray-500">{{ _('Generated: %(date)s', date=analysis.created_at.strftime('%B %d, %Y at %I:%M %p')) }}</p>
   </div>
 
   {% if analysis.cluster_data.get('ai_summary') %}
   <div class="bg-purple-50 rounded-lg shadow p-6 mb-6 border border-purple-200">
-    <h2 class="text-xl font-semibold mb-3 text-purple-900">AI Summary</h2>
+    <h2 class="text-xl font-semibold mb-3 text-purple-900">{{ _('AI Summary') }}</h2>
     <div class="text-gray-800 leading-relaxed">{{ analysis.cluster_data.ai_summary }}</div>
   </div>
   {% endif %}
 
   {% if consensus_statements %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4 text-green-700">Areas of Consensus</h2>
-    <p class="text-gray-600 mb-4">Statements where most participants agree, regardless of their opinion group.</p>
+    <h2 class="text-xl font-semibold mb-4 text-green-700">{{ _('Areas of Consensus') }}</h2>
+    <p class="text-gray-600 mb-4">{{ _('Statements where most participants agree, regardless of their opinion group.') }}</p>
     <div class="space-y-3">
       {% for stmt in consensus_statements %}
       <div class="p-4 bg-green-50 rounded-lg border border-green-200">
@@ -62,7 +62,7 @@
         {% set stmt_data = analysis.cluster_data.get('consensus_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
         {% if stmt_data %}
         <div class="mt-2 text-sm text-green-700">
-          {{ "%.0f"|format(stmt_data.get('agreement_rate', 0) * 100) }}% agreement
+          {{ _('%(pct)s%% agreement', pct="%.0f"|format(stmt_data.get('agreement_rate', 0) * 100)) }}
         </div>
         {% endif %}
       </div>
@@ -73,8 +73,8 @@
 
   {% if bridge_statements %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4 text-primary-700">Bridge Statements</h2>
-    <p class="text-gray-600 mb-4">Statements that find common ground between different opinion groups.</p>
+    <h2 class="text-xl font-semibold mb-4 text-primary-700">{{ _('Bridge Statements') }}</h2>
+    <p class="text-gray-600 mb-4">{{ _('Statements that find common ground between different opinion groups.') }}</p>
     <div class="space-y-3">
       {% for stmt in bridge_statements %}
       <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -82,7 +82,7 @@
         {% set stmt_data = analysis.cluster_data.get('bridge_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
         {% if stmt_data %}
         <div class="mt-2 text-sm text-primary-700">
-          Bridge score: {{ "%.2f"|format(stmt_data.get('bridge_score', 0)) }}
+          {{ _('Bridge score: %(score)s', score="%.2f"|format(stmt_data.get('bridge_score', 0))) }}
         </div>
         {% endif %}
       </div>
@@ -93,8 +93,8 @@
 
   {% if divisive_statements %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4 text-red-700">Points of Division</h2>
-    <p class="text-gray-600 mb-4">Statements where opinion groups disagree most strongly.</p>
+    <h2 class="text-xl font-semibold mb-4 text-red-700">{{ _('Points of Division') }}</h2>
+    <p class="text-gray-600 mb-4">{{ _('Statements where opinion groups disagree most strongly.') }}</p>
     <div class="space-y-3">
       {% for stmt in divisive_statements %}
       <div class="p-4 bg-red-50 rounded-lg border border-red-200">
@@ -102,7 +102,7 @@
         {% set stmt_data = analysis.cluster_data.get('divisive_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
         {% if stmt_data %}
         <div class="mt-2 text-sm text-red-700">
-          Division score: {{ "%.2f"|format(stmt_data.get('division_score', 0)) }}
+          {{ _('Division score: %(score)s', score="%.2f"|format(stmt_data.get('division_score', 0))) }}
         </div>
         {% endif %}
       </div>
@@ -113,13 +113,13 @@
 
   {% if not consensus_statements and not bridge_statements and not divisive_statements %}
   <div class="bg-yellow-50 rounded-lg shadow p-6 mb-6 border border-yellow-200">
-    <h2 class="text-xl font-semibold mb-2 text-yellow-800">No Statement Analysis Available</h2>
-    <p class="text-gray-700">This analysis doesn't have detailed statement breakdowns. Try re-running the analysis to generate fresh data.</p>
+    <h2 class="text-xl font-semibold mb-2 text-yellow-800">{{ _('No Statement Analysis Available') }}</h2>
+    <p class="text-gray-700">{{ _("This analysis doesn't have detailed statement breakdowns. Try re-running the analysis to generate fresh data.") }}</p>
   </div>
   {% endif %}
 
   <div class="bg-gray-50 rounded-lg p-6 text-center text-sm text-gray-500 print:mt-8">
-    <p>Report generated by Society Speaks</p>
+    <p>{{ _('Report generated by Society Speaks') }}</p>
     <p>{{ discussion.title }} - {{ analysis.created_at.strftime('%B %d, %Y') }}</p>
   </div>
 </div>

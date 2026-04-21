@@ -42,6 +42,7 @@ from app.partner.events import (
     serialize_discussion_payload,
 )
 from app.partner.webhooks import generate_webhook_secret
+from flask_babel import gettext as _
 
 
 partner_bp = Blueprint('partner_api', __name__)
@@ -76,7 +77,7 @@ def lookup_by_article_url():
     # Optional API key context (test/live)
     api_key = request.headers.get('X-API-Key')
     if api_key:
-        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        is_valid, partner_slug, key_env, partner, __ = _validate_api_key()
         if not is_valid:
             return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
         # Apply account-level kill switches even on read endpoints.
@@ -208,7 +209,7 @@ def get_snapshot(discussion_id):
     # apply the same partner.status / embed_disabled gates as lookup.
     api_key = request.headers.get('X-API-Key')
     if discussion.partner_env == 'test':
-        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        is_valid, partner_slug, key_env, partner, __ = _validate_api_key()
         if not is_valid or key_env != 'test' or partner_slug != discussion.partner_id:
             return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
         if partner and partner.status != 'active':
@@ -216,7 +217,7 @@ def get_snapshot(discussion_id):
         if partner and partner.embed_disabled:
             return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
     elif api_key:
-        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        is_valid, partner_slug, key_env, partner, __ = _validate_api_key()
         if not is_valid:
             return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
         if partner and partner.status != 'active':
@@ -534,7 +535,7 @@ def list_partner_discussions():
 
     Query: env=test|live|all (default all), page (default 1), per_page (default 30, max 100)
     """
-    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    err, partner_slug, key_env, partner, __ = _require_partner_api_auth()
     if err:
         return err
 
@@ -609,7 +610,7 @@ def list_partner_discussions():
 @limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
 def lookup_partner_discussion_by_external_id():
     """Look up a partner-owned discussion by external_id."""
-    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    err, partner_slug, key_env, partner, __ = _require_partner_api_auth()
     if err:
         return err
 
@@ -655,7 +656,7 @@ def lookup_partner_discussion_by_external_id():
 @limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
 def partner_usage_export():
     """Export partner usage events for BI/reporting (JSON or CSV)."""
-    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    err, partner_slug, key_env, partner, __ = _require_partner_api_auth()
     if err:
         return err
 
@@ -750,7 +751,7 @@ def partner_usage_export():
 @partner_bp.route('/partner/webhooks', methods=['GET'])
 @limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
 def list_partner_webhooks():
-    err, _, _, partner, _ = _require_partner_api_auth()
+    err, __, __, partner, __ = _require_partner_api_auth()
     if err:
         return err
     if not partner:
@@ -776,7 +777,7 @@ def list_partner_webhooks():
 @partner_bp.route('/partner/webhooks', methods=['POST'])
 @limiter.limit("30 per hour", key_func=_get_api_key_rate_limit_key)
 def create_partner_webhook():
-    err, _, _, partner, _ = _require_partner_api_auth()
+    err, __, __, partner, __ = _require_partner_api_auth()
     if err:
         return err
     if not partner:
@@ -829,7 +830,7 @@ def create_partner_webhook():
 @partner_bp.route('/partner/webhooks/<int:endpoint_id>', methods=['PATCH'])
 @limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
 def patch_partner_webhook(endpoint_id):
-    err, _, _, partner, _ = _require_partner_api_auth()
+    err, __, __, partner, __ = _require_partner_api_auth()
     if err:
         return err
     if not partner:
@@ -872,7 +873,7 @@ def patch_partner_webhook(endpoint_id):
 @partner_bp.route('/partner/webhooks/<int:endpoint_id>/rotate-secret', methods=['POST'])
 @limiter.limit("20 per hour", key_func=_get_api_key_rate_limit_key)
 def rotate_partner_webhook_secret(endpoint_id):
-    err, _, _, partner, _ = _require_partner_api_auth()
+    err, __, __, partner, __ = _require_partner_api_auth()
     if err:
         return err
     if not partner:
@@ -903,7 +904,7 @@ def rotate_partner_webhook_secret(endpoint_id):
 @partner_bp.route('/partner/webhooks/<int:endpoint_id>', methods=['DELETE'])
 @limiter.limit("20 per hour", key_func=_get_api_key_rate_limit_key)
 def delete_partner_webhook(endpoint_id):
-    err, _, _, partner, _ = _require_partner_api_auth()
+    err, __, __, partner, __ = _require_partner_api_auth()
     if err:
         return err
     if not partner:
@@ -931,7 +932,7 @@ def patch_partner_discussion(discussion_id):
     billing_status is inactive — partners can still close/reopen discussions after a
     billing lapse. Only new discussion creation requires active billing.
     """
-    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    err, partner_slug, key_env, partner, __ = _require_partner_api_auth()
     if err:
         return err
 
@@ -1018,7 +1019,7 @@ def add_partner_discussion_statements(discussion_id):
     allowed even when billing_status is inactive — partners can seed content they
     already own. Only new discussion creation requires active billing.
     """
-    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    err, partner_slug, key_env, partner, __ = _require_partner_api_auth()
     if err:
         return err
 
@@ -1090,7 +1091,7 @@ def add_partner_discussion_statements(discussion_id):
 @limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
 def list_partner_discussion_flags(discussion_id):
     """List moderation flags for statements in this discussion (partner inbox)."""
-    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    err, partner_slug, key_env, partner, __ = _require_partner_api_auth()
     if err:
         return err
 
@@ -1800,4 +1801,4 @@ def flag_statement_from_embed():
         current_app.logger.error(f"Failed to create flag: {e}")
         return api_error('flag_failed', 'Failed to record flag. Please try again.', 500)
 
-    return jsonify({'success': True, 'message': 'Flag recorded successfully'}), 201
+    return jsonify({'success': True, 'message': _('Flag recorded successfully')}), 201

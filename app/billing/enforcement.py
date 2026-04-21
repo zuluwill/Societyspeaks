@@ -7,6 +7,7 @@ from flask import flash, redirect, url_for, jsonify, request
 from flask_login import current_user
 from app.billing.service import get_active_subscription, get_user_plan, get_user_organization
 from app.models import Briefing, OrganizationMember
+from flask_babel import gettext as _
 
 
 def require_subscription(f):
@@ -14,7 +15,7 @@ def require_subscription(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            flash('Please log in to access this feature.', 'error')
+            flash(_('Please log in to access this feature.'), 'error')
             return redirect(url_for('auth.login'))
         
         # Admin users bypass subscription requirements
@@ -23,7 +24,7 @@ def require_subscription(f):
         
         sub = get_active_subscription(current_user)
         if not sub:
-            flash('You need an active subscription to access this feature. Start your free trial today!', 'info')
+            flash(_('You need an active subscription to access this feature. Start your free trial today!'), 'info')
             return redirect(url_for('briefing.landing'))
         
         return f(*args, **kwargs)
@@ -36,7 +37,7 @@ def require_feature(feature_name):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                flash('Please log in to access this feature.', 'error')
+                flash(_('Please log in to access this feature.'), 'error')
                 return redirect(url_for('auth.login'))
             
             # Admin users bypass feature requirements
@@ -45,12 +46,12 @@ def require_feature(feature_name):
             
             sub = get_active_subscription(current_user)
             if not sub:
-                flash('You need an active subscription to access this feature.', 'info')
+                flash(_('You need an active subscription to access this feature.'), 'info')
                 return redirect(url_for('briefing.landing'))
             
             if not sub.can_use_feature(feature_name):
                 feature_display = feature_name.replace('_', ' ').title()
-                flash(f'{feature_display} is not available on your current plan. Please upgrade to access this feature.', 'info')
+                flash(_('%(feature_display)s is not available on your current plan. Please upgrade to access this feature.', feature_display=feature_display), 'info')
                 return redirect(url_for('briefing.landing'))
             
             return f(*args, **kwargs)

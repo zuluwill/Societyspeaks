@@ -25,6 +25,7 @@ from app.lib.locale_utils import language_preference_cookie_params
 import io
 import mimetypes
 import os
+from flask_babel import gettext as _
 
 main_bp = Blueprint('main', __name__)
 asset_client = Client() if Client is not None else None
@@ -240,7 +241,7 @@ def donate_success():
 
     session_id = request.args.get('session_id', '')
     if not session_id or not session_id.startswith('cs_'):
-        flash("No valid donation session found.", 'error')
+        flash(_("No valid donation session found."), 'error')
         return redirect(url_for('main.donate'))
 
     # Confirm with Stripe that this is a completed donation — do not trust the URL alone.
@@ -253,19 +254,19 @@ def donate_success():
         metadata = getattr(checkout_session, 'metadata', None) or {}
         payment_status = getattr(checkout_session, 'payment_status', None)
         if metadata.get('purpose') != 'donation' or payment_status != 'paid':
-            flash("Your donation is being confirmed. Please check back in a moment.", 'info')
+            flash(_("Your donation is being confirmed. Please check back in a moment."), 'info')
             return redirect(url_for('main.donate'))
     except stripe.error.InvalidRequestError:
         # Unknown or test session ID — don't leak detail to the user.
-        flash("No valid donation session found.", 'error')
+        flash(_("No valid donation session found."), 'error')
         return redirect(url_for('main.donate'))
     except stripe.error.StripeError as e:
         current_app.logger.warning(f"Stripe verification failed for donation success session {session_id}: {e}")
-        flash("We could not verify your donation yet. Please check back in a moment.", 'info')
+        flash(_("We could not verify your donation yet. Please check back in a moment."), 'info')
         return redirect(url_for('main.donate'))
     except Exception as e:
         current_app.logger.warning(f"Unexpected donation success verification error for session {session_id}: {e}")
-        flash("We could not verify your donation yet. Please check back in a moment.", 'info')
+        flash(_("We could not verify your donation yet. Please check back in a moment."), 'info')
         return redirect(url_for('main.donate'))
 
     return render_template('donate_success.html')
@@ -322,7 +323,7 @@ def _serve_object_storage_asset(filename):
         current_app.logger.info(f"Asset not found in storage: {storage_path}")
         abort(404)
 
-    mime_type, _ = mimetypes.guess_type(filename)
+    mime_type, __ = mimetypes.guess_type(filename)
     if not mime_type:
         mime_type = 'application/octet-stream'
 

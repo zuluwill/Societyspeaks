@@ -27,8 +27,8 @@
 
                 {% block form_content %}
                 <!-- Images -->
-                {{ render_image_upload(form.banner_image, 'banner-preview', 'Choose Banner Image') }}
-                {{ render_image_upload(form.profile_image, 'profile-preview', 'Choose Profile Picture') }}
+                {{ render_image_upload(form.banner_image, 'banner-preview', _('Choose Banner Image')) }}
+                {{ render_image_upload(form.profile_image, 'profile-preview', _('Choose Profile Picture')) }}
 
                 <!-- Basic Info -->
                 {{ render_field_with_errors(form.full_name) }}
@@ -40,7 +40,7 @@
 
                 <!-- Social Links -->
                 <div class="mb-8">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Social Links</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ _('Social Links') }}</h3>
                     <div class="space-y-4">
                         {{ render_field_with_errors(form.linkedin_url) }}
                         {{ render_field_with_errors(form.twitter_url) }}
@@ -55,7 +55,7 @@
                 <!-- Submit Button -->
                 <div class="flex justify-end">
                     <button type="submit" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Create Profile
+                        {{ _('Create Profile') }}
                     </button>
                 </div>
                 {% endblock %}
@@ -70,7 +70,7 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
     const fullName = document.querySelector('input[name="full_name"]');
     if (!fullName.value.trim()) {
         e.preventDefault();
-        alert('Please enter your full name');
+        alert({{ _('Please enter your full name')|tojson }});
     }
 });
 </script>

@@ -8,17 +8,17 @@
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{ breadcrumb([
-            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': _('My Briefings'), 'url': url_for('briefing.list_briefings')},
             {'label': briefing.name, 'url': url_for('briefing.detail', briefing_id=briefing.id)},
-            {'label': 'Run View', 'url': '#'}
+            {'label': _('Run View'), 'url': '#'}
         ]) }}
-        
+
         <div class="mb-8">
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">{{ briefing.name }}</h1>
                     <p class="mt-2 text-gray-600">
-                        {{ brief_run.scheduled_at.strftime('%B %d, %Y at %I:%M %p') if brief_run.scheduled_at else 'Draft' }}
+                        {{ brief_run.scheduled_at.strftime('%B %d, %Y at %I:%M %p') if brief_run.scheduled_at else _('Draft') }}
                     </p>
                 </div>
                 <div class="flex space-x-3">
@@ -32,7 +32,7 @@
                     {% if brief_run.status in ['generated_draft', 'awaiting_approval'] %}
                     <a href="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Edit & Approve
+                        {{ _('Edit & Approve') }}
                     </a>
                     {% endif %}
                 </div>
@@ -44,8 +44,8 @@
         <div class="bg-gradient-to-r from-purple-50 to-primary-50 rounded-xl border border-purple-200 p-6 mb-8">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Listen to the Brief</h3>
-                    <p class="text-sm text-gray-600">Generate audio for all stories in this brief</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Listen to the Brief') }}</h3>
+                    <p class="text-sm text-gray-600">{{ _('Generate audio for all stories in this brief') }}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     {{ voice_selector('voice-select-run', 'text-sm border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 bg-white min-h-[44px] sm:min-h-0') }}
@@ -55,7 +55,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                         </svg>
-                        <span>Generate All Audio</span>
+                        <span>{{ _('Generate All Audio') }}</span>
                     </button>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                         </div>
                         <span id="audio-progress-text-run" class="text-sm font-medium text-gray-700 min-w-[3rem] text-right">0%</span>
                     </div>
-                    <p id="audio-status-message-run" class="text-sm text-gray-600">Preparing...</p>
+                    <p id="audio-status-message-run" class="text-sm text-gray-600">{{ _('Preparing...') }}</p>
                 </div>
             </div>
         </div>
@@ -84,18 +84,18 @@
                 {{ brief_run.draft_html|safe }}
             </div>
             {% else %}
-            <p class="text-gray-500">No content available.</p>
+            <p class="text-gray-500">{{ _('No content available.') }}</p>
             {% endif %}
         </div>
 
         <!-- Items Detail -->
         {% if items %}
         <div class="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Items ({{ items|length }})</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Items (%(count)d)', count=items|length) }}</h2>
             <div class="space-y-6">
                 {% for item in items %}
                 <article class="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ item.headline or 'Item ' ~ item.position }}</h3>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ item.headline or _('Item %(position)s', position=item.position) }}</h3>
                     
                     {% if item.summary_bullets %}
                     <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
@@ -120,7 +120,7 @@
                             <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
-                            <span>Want a bit more detail?</span>
+                            <span>{{ _('Want a bit more detail?') }}</span>
                         </button>
                         <div id="deeper-context-run-{{ item.id }}" 
                              class="hidden mt-4 p-5 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg">
@@ -145,7 +145,7 @@
                     <div class="mt-4 pt-4 border-t border-gray-100">
                         <a href="{{ item.source_url }}" target="_blank" rel="noopener"
                            class="text-sm text-primary-600 hover:text-primary-800">
-                            Read original source &rarr;
+                            {{ _('Read original source →') }}
                         </a>
                     </div>
                     {% endif %}
@@ -158,16 +158,16 @@
         <!-- Actions -->
         {% if brief_run.status == 'approved' %}
         <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Send Brief</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Send Brief') }}</h2>
             <p class="text-sm text-gray-600 mb-4">
-                This brief is approved and ready to send to {{ briefing.recipient_count }} active recipients.
+                {{ _('This brief is approved and ready to send to %(count)d active recipients.', count=briefing.recipient_count) }}
             </p>
             <form method="POST" action="{{ url_for('briefing.send_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
-                  data-confirm="Send this brief to all recipients?">
+                  data-confirm="{{ _('Send this brief to all recipients?') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit"
                         class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">
-                    Send Now
+                    {{ _('Send Now') }}
                 </button>
             </form>
         </div>
@@ -175,28 +175,28 @@
 
         <!-- Metadata -->
         <div class="mt-6 bg-white shadow rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Details') }}</h2>
             <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <dt class="text-sm font-medium text-gray-500">Generated</dt>
+                    <dt class="text-sm font-medium text-gray-500">{{ _('Generated') }}</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                        {{ brief_run.generated_at.strftime('%B %d, %Y at %I:%M %p') if brief_run.generated_at else 'Not generated' }}
+                        {{ brief_run.generated_at.strftime('%B %d, %Y at %I:%M %p') if brief_run.generated_at else _('Not generated') }}
                     </dd>
                 </div>
                 {% if brief_run.approved_at %}
                 <div>
-                    <dt class="text-sm font-medium text-gray-500">Approved</dt>
+                    <dt class="text-sm font-medium text-gray-500">{{ _('Approved') }}</dt>
                     <dd class="mt-1 text-sm text-gray-900">
                         {{ brief_run.approved_at.strftime('%B %d, %Y at %I:%M %p') }}
                         {% if brief_run.approved_by %}
-                        by {{ brief_run.approved_by.username }}
+                        {{ _('by %(name)s', name=brief_run.approved_by.username) }}
                         {% endif %}
                     </dd>
                 </div>
                 {% endif %}
                 {% if brief_run.sent_at %}
                 <div>
-                    <dt class="text-sm font-medium text-gray-500">Sent</dt>
+                    <dt class="text-sm font-medium text-gray-500">{{ _('Sent') }}</dt>
                     <dd class="mt-1 text-sm text-gray-900">
                         {{ brief_run.sent_at.strftime('%B %d, %Y at %I:%M %p') }}
                     </dd>

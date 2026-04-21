@@ -1,5 +1,5 @@
 {% macro breadcrumb(items) %}
-<nav class="mb-6" aria-label="Breadcrumb">
+<nav class="mb-6" aria-label="{{ _('Breadcrumb') }}">
     <ol class="flex items-center space-x-2 text-sm">
         {% for item in items %}
             {% if not loop.last %}

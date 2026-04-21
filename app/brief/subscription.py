@@ -12,6 +12,7 @@ from flask import session, request
 from app import db
 from app.models import DailyBriefSubscriber, User
 from app.brief.email_client import ResendClient
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ def process_subscription(
             return {
                 'status': 'already_active',
                 'subscriber': existing,
-                'message': 'This email is already subscribed to the daily brief.',
+                'message': _('This email is already subscribed to the daily brief.'),
             }
 
         # Reactivate
@@ -99,7 +100,7 @@ def process_subscription(
             return {
                 'status': 'error',
                 'subscriber': None,
-                'message': 'An error occurred. Please try again.',
+                'message': _('An error occurred. Please try again.'),
                 'error': str(e),
             }
 
@@ -115,7 +116,7 @@ def process_subscription(
         return {
             'status': 'reactivated',
             'subscriber': existing,
-            'message': 'Welcome back! Your subscription has been reactivated.',
+            'message': _('Welcome back! Your subscription has been reactivated.'),
         }
 
     # New subscriber
@@ -173,7 +174,7 @@ def process_subscription(
         return {
             'status': 'created',
             'subscriber': subscriber,
-            'message': 'Successfully subscribed! Check your email for the first brief.',
+            'message': _('Successfully subscribed! Check your email for the first brief.'),
         }
 
     except Exception as e:
@@ -182,6 +183,6 @@ def process_subscription(
         return {
             'status': 'error',
             'subscriber': None,
-            'message': 'An error occurred. Please try again.',
+            'message': _('An error occurred. Please try again.'),
             'error': str(e),
         }

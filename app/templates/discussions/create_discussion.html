@@ -9,13 +9,13 @@
 
 <div class="max-w-4xl mx-auto py-8 px-4">
   <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">New Discussion</span>
+    <span class="text-gray-900 font-medium">{{ _('New Discussion') }}</span>
   </nav>
   <div class="bg-white rounded-lg shadow-lg p-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-6">
-      Create a New Discussion
+      {{ _('Create a New Discussion') }}
     </h1>
 
     <!-- Progress Steps -->
@@ -33,7 +33,7 @@
           >
             1
           </div>
-          <span class="mt-2 text-sm font-medium">Configure</span>
+          <span class="mt-2 text-sm font-medium">{{ _('Configure') }}</span>
         </div>
         <div
           id="step2Indicator"
@@ -44,7 +44,7 @@
           >
             2
           </div>
-          <span class="mt-2 text-sm font-medium">Embed</span>
+          <span class="mt-2 text-sm font-medium">{{ _('Embed') }}</span>
         </div>
         <div
           id="step3Indicator"
@@ -55,7 +55,7 @@
           >
             3
           </div>
-          <span class="mt-2 text-sm font-medium">Details</span>
+          <span class="mt-2 text-sm font-medium">{{ _('Details') }}</span>
         </div>
         <div
           id="step4Indicator"
@@ -66,7 +66,7 @@
           >
             4
           </div>
-          <span class="mt-2 text-sm font-medium">Seed</span>
+          <span class="mt-2 text-sm font-medium">{{ _('Seed') }}</span>
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@
       <!-- Step 1: Configure -->
       <div id="step1" class="space-y-4">
         <h2 class="text-xl font-semibold text-gray-800">
-          Choose Discussion Type
+          {{ _('Choose Discussion Type') }}
         </h2>
 
         <!-- Phase 1: Native Statement System Option -->
@@ -93,16 +93,16 @@
                 for="useNativeStatementsCheckbox"
                 class="font-medium text-green-900 text-lg cursor-pointer"
               >
-                ✨ Use Native Statement System (Recommended)
+                {{ _('✨ Use Native Statement System (Recommended)') }}
               </label>
               <p class="mt-2 text-green-800">
-                Our new pol.is-inspired debate system with:
+                {{ _('Our new pol.is-inspired debate system with:') }}
               </p>
               <ul class="mt-2 space-y-1 text-green-700 text-sm">
-                <li>✓ Built-in voting (Agree/Disagree/Unsure)</li>
-                <li>✓ Consensus clustering and visualization</li>
-                <li>✓ Threaded responses and evidence linking</li>
-                <li>✓ No external account required</li>
+                <li>{{ _('✓ Built-in voting (Agree/Disagree/Unsure)') }}</li>
+                <li>{{ _('✓ Consensus clustering and visualization') }}</li>
+                <li>{{ _('✓ Threaded responses and evidence linking') }}</li>
+                <li>{{ _('✓ No external account required') }}</li>
               </ul>
             </div>
           </div>
@@ -114,18 +114,17 @@
           class="bg-blue-50 border border-blue-200 rounded-lg p-6"
         >
           <h3 class="text-lg font-medium text-primary-800 mb-3">
-            Or use Pol.is (Traditional)
+            {{ _('Or use Pol.is (Traditional)') }}
           </h3>
           <ol class="list-decimal list-inside space-y-2 text-primary-700 text-sm">
-            <li>Click the button below to open Pol.is in a new tab</li>
-            <li>Sign in or create a Pol.is account</li>
-            <li>Create and configure your discussion</li>
+            <li>{{ _('Click the button below to open Pol.is in a new tab') }}</li>
+            <li>{{ _('Sign in or create a Pol.is account') }}</li>
+            <li>{{ _('Create and configure your discussion') }}</li>
             <li>
-              Pol.is will ask you for "seed comments". A good trick to do this
-              quickly is to use Chat GPT or similar
+              {{ _('Pol.is will ask you for "seed comments". A good trick to do this quickly is to use Chat GPT or similar') }}
             </li>
-            <li>Copy the embed code or URL from your new discussion</li>
-            <li>Return to this tab and click "Next" to continue</li>
+            <li>{{ _('Copy the embed code or URL from your new discussion') }}</li>
+            <li>{{ _('Return to this tab and click "Next" to continue') }}</li>
           </ol>
           <div class="mt-4">
             <a
@@ -134,7 +133,7 @@
               rel="noopener noreferrer"
               class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm"
             >
-              Open Pol.is Configuration
+              {{ _('Open Pol.is Configuration') }}
             </a>
           </div>
         </div>
@@ -143,17 +142,16 @@
       <!-- Step 2: Embed -->
       <div id="step2" class="hidden space-y-4">
         <h2 class="text-xl font-semibold text-gray-800">
-          Add Your Pol.is Discussion
+          {{ _('Add Your Pol.is Discussion') }}
         </h2>
         <p class="text-gray-600 mb-4">
-          Paste in the Pol.is embed code. You will find this in the "Distribute"
-          section of your polis discussion directly under the URL.
+          {{ _('Paste in the Pol.is embed code. You will find this in the "Distribute" section of your polis discussion directly under the URL.') }}
         </p>
         <div class="space-y-2">
           <textarea
             id="embedCode"
             class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-primary-500"
-            placeholder="Enter embed code or Pol.is URL"
+            placeholder="{{ _('Enter embed code or Pol.is URL') }}"
           ></textarea>
           <div id="embedWarning" class="hidden">
             <p class="text-sm text-red-600 flex items-center">
@@ -170,9 +168,7 @@
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Please enter a valid Pol.is embed code. You will find this in the
-              "Distribute" section of your polis discussion directly under the
-              URL.
+              {{ _('Please enter a valid Pol.is embed code. You will find this in the "Distribute" section of your polis discussion directly under the URL.') }}
             </p>
           </div>
         </div>
@@ -196,18 +192,18 @@
           />
 
           <h2 class="text-xl font-semibold text-gray-800 mb-6">
-            Add Discussion Details
+            {{ _('Add Discussion Details') }}
           </h2>
 
           <!-- Form Fields -->
           <div class="grid gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Title</label
+                >{{ _('Title') }}</label
               >
               {{ form.title(class="block w-full rounded-md border-gray-300
               shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
-              placeholder="Enter a descriptive title for your discussion") }} {%
+              placeholder=_('Enter a descriptive title for your discussion')) }} {%
               if form.title.errors %} {% for error in form.title.errors %}
               <p class="mt-1 text-sm text-red-600">{{ error }}</p>
               {% endfor %} {% endif %}
@@ -215,12 +211,11 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Description</label
+                >{{ _('Description') }}</label
               >
               {{ form.description(class="block w-full rounded-md border-gray-300
               shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
-              rows="4", placeholder="Provide context about what you want to
-              discuss") }} {% if form.description.errors %} {% for error in
+              rows="4", placeholder=_('Provide context about what you want to discuss')) }} {% if form.description.errors %} {% for error in
               form.description.errors %}
               <p class="mt-1 text-sm text-red-600">{{ error }}</p>
               {% endfor %} {% endif %}
@@ -232,7 +227,7 @@
                 {{ form.topic.label(class="block text-sm font-medium
                 text-gray-700 required") }}
                 <p class="text-xs text-gray-500 mb-1">
-                  Select the main topic of discussion
+                  {{ _('Select the main topic of discussion') }}
                 </p>
                 {{ form.topic(class="mt-1 block w-full px-3 py-2 border
                 border-gray-300 rounded-md shadow-sm focus:outline-none
@@ -245,7 +240,7 @@
                 {{ form.geographic_scope.label(class="block text-sm font-medium
                 text-gray-700 required") }}
                 <p class="text-xs text-gray-500 mb-1">
-                  Choose the geographical reach of your discussion
+                  {{ _('Choose the geographical reach of your discussion') }}
                 </p>
                 {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2
                 border border-gray-300 rounded-md shadow-sm focus:outline-none
@@ -278,7 +273,7 @@
                   name="city"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                 >
-                  <option value="">Select a city</option>
+                  <option value="">{{ _('Select a city') }}</option>
                 </select>
                 {% if form.city.errors %} {% for error in form.city.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -288,13 +283,13 @@
 
             <!-- Programme Section -->
             <div class="border-t border-gray-200 pt-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-1">Programme <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Programme') }} <span class="text-sm font-normal text-gray-500">{{ _('(Optional)') }}</span></h3>
               <p class="text-sm text-gray-500 mb-4">
-                A <strong>Programme</strong> is a structured dialogue — for example, a national consultation, a research project, or a multi-discussion public engagement campaign. Linking this discussion to a Programme lets organisers export a combined analysis across all discussions in the programme, and group discussions by theme or phase.
+                {{ _('A <strong>Programme</strong> is a structured dialogue — for example, a national consultation, a research project, or a multi-discussion public engagement campaign. Linking this discussion to a Programme lets organisers export a combined analysis across all discussions in the programme, and group discussions by theme or phase.') }}
                 {% if not programme_meta %}
-                <span class="block mt-2">You don't have any programmes yet.
-                  <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline font-medium">Create a programme →</a>
-                  (opens in a new tab — come back here to continue.)
+                <span class="block mt-2">{{ _("You don't have any programmes yet.") }}
+                  <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline font-medium">{{ _('Create a programme →') }}</a>
+                  {{ _('(opens in a new tab — come back here to continue.)') }}
                 </span>
                 {% endif %}
               </p>
@@ -309,7 +304,7 @@
                 <div id="programme_theme_wrapper">
                   {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
                   {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
-                  <p class="mt-1 text-xs text-gray-400" id="theme_hint">Select a programme first</p>
+                  <p class="mt-1 text-xs text-gray-400" id="theme_hint">{{ _('Select a programme first') }}</p>
                   {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
@@ -317,7 +312,7 @@
                 <div id="programme_phase_wrapper">
                   {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
                   {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50") }}
-                  <p class="mt-1 text-xs text-gray-400" id="phase_hint">Select a programme first</p>
+                  <p class="mt-1 text-xs text-gray-400" id="phase_hint">{{ _('Select a programme first') }}</p>
                   {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
@@ -327,29 +322,29 @@
 
             <!-- Information Step Section -->
             <div class="border-t border-gray-200 pt-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">Information Before Participation (Optional)</h3>
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ _('Information Before Participation (Optional)') }}</h3>
               <p class="text-sm text-gray-500 mb-4">
-                Add optional context participants see before voting. Use Markdown only for body text.
+                {{ _('Add optional context participants see before voting. Use Markdown only for body text.') }}
               </p>
               <div class="space-y-4">
                 <div>
                   {{ form.information_title.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder="Why this discussion matters") }}
+                  {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", placeholder=_('Why this discussion matters')) }}
                   {% if form.information_title.errors %}{% for error in form.information_title.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
                 <div>
                   {{ form.information_body.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
+                  {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="6", placeholder=_('Use Markdown. Example: **Important** context and [source](https://example.com)')) }}
                   {% if form.information_body.errors %}{% for error in form.information_body.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
                 <div>
                   {{ form.information_links.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
-                  <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>. Only http/https links are kept.</p>
+                  {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder=_('Watch explainer|https://example.com/video')) }}
+                  <p class="mt-1 text-xs text-gray-500">{{ _('One per line in format <code>Label|https://url</code>. Only http/https links are kept.') }}</p>
                   {% if form.information_links.errors %}{% for error in form.information_links.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
@@ -363,10 +358,10 @@
       <!-- Step 4: Seed Statements (Native Only) -->
       <div id="step4" class="hidden space-y-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-2">
-          Seed Your Discussion with Statements
+          {{ _('Seed Your Discussion with Statements') }}
         </h2>
         <p class="text-gray-600 mb-4">
-          Add 3-10 initial statements to frame the discussion and encourage participation. These are the statements people will vote on.
+          {{ _('Add 3-10 initial statements to frame the discussion and encourage participation. These are the statements people will vote on.') }}
         </p>
 
         <!-- Research Tools Help Section -->
@@ -376,8 +371,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div class="flex-1">
-              <h3 class="text-sm font-semibold text-blue-900 mb-2">💡 Need Help Writing Statements?</h3>
-              <p class="text-sm text-primary-800 mb-3">Use these AI tools to quickly generate diverse perspectives on your topic:</p>
+              <h3 class="text-sm font-semibold text-blue-900 mb-2">{{ _('💡 Need Help Writing Statements?') }}</h3>
+              <p class="text-sm text-primary-800 mb-3">{{ _('Use these AI tools to quickly generate diverse perspectives on your topic:') }}</p>
               <div class="flex flex-wrap gap-2">
                 <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-primary-700 hover:bg-blue-50 transition-colors">
                   <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,7 +393,7 @@
                   Perplexity
                 </a>
               </div>
-              <p class="text-xs text-primary-700 mt-2">💬 Try asking: "Generate 5-7 diverse viewpoint statements about [your topic]"</p>
+              <p class="text-xs text-primary-700 mt-2">{{ _('💬 Try asking: "Generate 5-7 diverse viewpoint statements about [your topic]"') }}</p>
             </div>
           </div>
         </div>
@@ -407,7 +402,7 @@
         <div id="statementInputSection" class="space-y-4">
           <div class="flex items-center justify-between">
             <label class="block text-sm font-medium text-gray-700">
-              Add Statements (3-10 required)
+              {{ _('Add Statements (3-10 required)') }}
             </label>
             <span id="statementCount" class="text-sm text-gray-500">0 / 10</span>
           </div>
@@ -417,7 +412,7 @@
             <input
               type="text"
               id="newStatementInput"
-              placeholder="Enter a statement for people to vote on..."
+              placeholder="{{ _('Enter a statement for people to vote on...') }}"
               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               maxlength="280"
             />
@@ -426,10 +421,10 @@
               id="addStatementBtn"
               class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
-              Add
+              {{ _('Add') }}
             </button>
           </div>
-          <p class="text-xs text-gray-500">Keep statements clear and concise (max 280 characters)</p>
+          <p class="text-xs text-gray-500">{{ _('Keep statements clear and concise (max 280 characters)') }}</p>
 
           <!-- Statement List Preview -->
           <div id="statementsList" class="space-y-2 mt-4">
@@ -437,7 +432,7 @@
           </div>
 
           <div id="seedStatementsError" class="hidden text-sm text-red-600 mt-2">
-            Please add at least 3 statements to seed your discussion.
+            {{ _('Please add at least 3 statements to seed your discussion.') }}
           </div>
         </div>
       </div>
@@ -462,7 +457,7 @@
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back
+        {{ _('Back') }}
       </button>
 
       <div class="ml-auto flex gap-4">
@@ -470,7 +465,7 @@
           id="nextButton"
           class="inline-flex items-center px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
         >
-          Next
+          {{ _('Next') }}
           <svg
             class="w-4 h-4 ml-2"
             fill="none"
@@ -490,7 +485,7 @@
           id="submitButton"
           class="hidden px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
         >
-          Publish Discussion
+          {{ _('Publish Discussion') }}
         </button>
       </div>
     </div>
@@ -600,10 +595,10 @@
     // Update hint text
     if (themeHint) {
       if (!programme) {
-        themeHint.textContent = "Select a programme first";
+        themeHint.textContent = "{{ _('Select a programme first') }}";
         themeHint.classList.remove("hidden");
       } else if (!programme.themes || programme.themes.length === 0) {
-        themeHint.textContent = "This programme has no themes defined";
+        themeHint.textContent = "{{ _('This programme has no themes defined') }}";
         themeHint.classList.remove("hidden");
       } else {
         themeHint.classList.add("hidden");
@@ -611,10 +606,10 @@
     }
     if (phaseHint) {
       if (!programme) {
-        phaseHint.textContent = "Select a programme first";
+        phaseHint.textContent = "{{ _('Select a programme first') }}";
         phaseHint.classList.remove("hidden");
       } else if (!programme.phases || programme.phases.length === 0) {
-        phaseHint.textContent = "This programme has no phases defined";
+        phaseHint.textContent = "{{ _('This programme has no phases defined') }}";
         phaseHint.classList.remove("hidden");
       } else {
         phaseHint.classList.add("hidden");
@@ -801,7 +796,7 @@
     if (!statement) return;
     
     if (seedStatements.length >= 10) {
-      alert("Maximum 10 statements allowed");
+      alert("{{ _('Maximum 10 statements allowed') }}");
       return;
     }
     
@@ -834,7 +829,7 @@
           type="button"
           data-remove-index="${i}"
           class="remove-statement-btn text-red-600 hover:text-red-800 flex-shrink-0"
-          title="Remove statement"
+          title="{{ _('Remove statement') }}"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

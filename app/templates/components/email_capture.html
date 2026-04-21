@@ -8,48 +8,49 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
         </div>
-        <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Get This Delivered</h3>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{{ _('Get This Delivered') }}</h3>
         <p class="text-gray-600 mb-6">
             {% if context == 'brief' %}
-            Most readers get the Daily Brief by email so they don't miss it.
+            {{ _("Most readers get the Daily Brief by email so they don't miss it.") }}
             {% else %}
-            Get the Daily Brief delivered when it matters — without the noise.
+            {{ _('Get the Daily Brief delivered when it matters — without the noise.') }}
             {% endif %}
         </p>
-        
+
         <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="source" value="{{ context }}" />
             {{ bot_fields() }}
             <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-                <input type="email" 
-                       name="email" 
-                       placeholder="Enter your email" 
+                <input type="email"
+                       name="email"
+                       placeholder="{{ _('Enter your email') }}"
                        required
                        class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
-                       aria-label="Email address">
-                <button type="submit" 
+                       aria-label="{{ _('Email address') }}">
+                <button type="submit"
                         class="{{ btn_primary_md() }} shadow-md whitespace-nowrap">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    Subscribe Free
+                    {{ _('Subscribe Free') }}
                 </button>
             </div>
             <p class="text-xs text-gray-500 mt-3">
-                Free forever. Unsubscribe anytime. We respect your inbox.
+                {{ _('Free forever. Unsubscribe anytime. We respect your inbox.') }}
             </p>
+            {% set _tz_link = '<a href="' ~ url_for('brief.subscribe') ~ '" class="' ~ link_primary() ~ '">' ~ _('Choose time zone and delivery time') ~ '</a>' %}
             <p class="text-xs text-gray-500 mt-2">
-                <a href="{{ url_for('brief.subscribe') }}" class="{{ link_primary() }}">Choose time zone and delivery time</a> on the full sign-up page (this quick box uses sensible defaults).
+                {{ _('%(link)s on the full sign-up page (this quick box uses sensible defaults).', link=_tz_link)|safe }}
             </p>
         </form>
-        
+
         <div class="email-capture-success hidden mt-4">
             <div class="inline-flex items-center gap-2 text-emerald-600 font-medium">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                You're subscribed! Check your inbox for confirmation.
+                {{ _("You're subscribed! Check your inbox for confirmation.") }}
             </div>
         </div>
     </div>
@@ -62,26 +63,26 @@
 <div class="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center gap-4">
         <div class="flex-1">
-            <h4 class="font-semibold text-gray-900 mb-1">Get this delivered to your inbox</h4>
-            <p class="text-sm text-gray-600">Daily at your preferred time</p>
+            <h4 class="font-semibold text-gray-900 mb-1">{{ _('Get this delivered to your inbox') }}</h4>
+            <p class="text-sm text-gray-600">{{ _('Daily at your preferred time') }}</p>
         </div>
         <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form flex flex-col sm:flex-row gap-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="source" value="compact" />
             {{ bot_fields() }}
-            <input type="email" 
-                   name="email" 
-                   placeholder="Your email" 
+            <input type="email"
+                   name="email"
+                   placeholder="{{ _('Your email') }}"
                    required
                    class="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm w-full sm:w-48"
-                   aria-label="Email address">
-            <button type="submit" 
+                   aria-label="{{ _('Email address') }}">
+            <button type="submit"
                     class="{{ btn_primary_sm() }} whitespace-nowrap">
-                Subscribe
+                {{ _('Subscribe') }}
             </button>
         </form>
         <p class="text-xs text-gray-500 mt-2 sm:text-right">
-            <a href="{{ url_for('brief.subscribe') }}" class="{{ link_primary() }}">Time zone and send time</a>
+            <a href="{{ url_for('brief.subscribe') }}" class="{{ link_primary() }}">{{ _('Time zone and send time') }}</a>
         </p>
     </div>
 </div>

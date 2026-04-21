@@ -19,7 +19,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
           <span class="bg-gray-100 px-2 py-1 rounded font-semibold">{{ statement.statement_type|upper }}</span>
-          <span>Posted by {% if statement.user %}{{ statement.user.username }}{% else %}<span class="text-gray-400">Anonymous</span>{% endif %}</span>
+          <span>{% if statement.user %}{{ _('Posted by %(username)s', username=statement.user.username) }}{% else %}{{ _('Posted by') }} <span class="text-gray-400">{{ _('Anonymous') }}</span>{% endif %}</span>
         </div>
         <p class="text-lg text-gray-900 leading-relaxed break-words">{{ statement.content }}</p>
       </div>
@@ -29,10 +29,10 @@
     <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
       {% set tv = statement.total_votes %}
       {% if tv > 0 %}
-        <span class="font-semibold text-slate-900">{{ tv }}</span> total vote{% if tv != 1 %}s{% endif %} on this claim.
-        <span class="text-slate-500">Open the discussion to add your view.</span>
+        {{ ngettext('<span class="font-semibold text-slate-900">%(num)d</span> total vote on this claim.', '<span class="font-semibold text-slate-900">%(num)d</span> total votes on this claim.', tv) }}
+        <span class="text-slate-500">{{ _('Open the discussion to add your view.') }}</span>
       {% else %}
-        <span class="text-slate-600">No votes yet — open the discussion to participate.</span>
+        <span class="text-slate-600">{{ _('No votes yet — open the discussion to participate.') }}</span>
       {% endif %}
     </div>
 
@@ -41,13 +41,13 @@
         href="{{ url_for('statements.view_statement', statement_id=statement.id) }}"
         class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700"
       >
-        View statement
+        {{ _('View statement') }}
       </a>
       <a
         href="{{ url_for('discussions.view_discussion', discussion_id=statement.discussion.id, slug=statement.discussion.slug) }}#statement-{{ statement.id }}"
         class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
       >
-        Open in discussion
+        {{ _('Open in discussion') }}
       </a>
     </div>
   </div>

@@ -2,51 +2,51 @@
 {% from "components/ui_tokens.html" import btn_primary_sm, btn_secondary_sm %}
 
 {% block head %}
-<title>Help Center - Society Speaks | Learn How to Participate in Public Discussions</title>
-<meta name="description" content="Get help using Society Speaks. Learn how to create discussions, participate in debates, use our native debate system, and understand consensus-building tools.">
+<title>{{ _('Help Center - Society Speaks | Learn How to Participate in Public Discussions') }}</title>
+<meta name="description" content="{{ _('Get help using Society Speaks. Learn how to create discussions, participate in debates, use our native debate system, and understand consensus-building tools.') }}">
 <link rel="canonical" href="{{ url_for('help.help', _external=True) }}">
 
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "name": "Society Speaks Help Centre",
-  "description": "Help resources for using Society Speaks — the civic deliberation platform",
+  "name": _('Society Speaks Help Centre'),
+  "description": _('Help resources for using Society Speaks — the civic deliberation platform'),
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "How do I get started with Society Speaks?",
+      "name": _('How do I get started with Society Speaks?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "You can browse discussions, read the Daily Brief, and explore the News Transparency Dashboard without an account. To vote on statements, track your progress in the Big Questions Journey, or create your own discussions, sign up for a free account."
+        "text": _('You can browse discussions, read the Daily Brief, and explore the News Transparency Dashboard without an account. To vote on statements, track your progress in the Big Questions Journey, or create your own discussions, sign up for a free account.')
       }
     },
     {
       "@type": "Question",
-      "name": "How do I create a discussion?",
+      "name": _('How do I create a discussion?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sign in, click 'Start a Discussion', give it a title and description, add your seed statements, choose your visibility setting (public, unlisted, invite-only, or private), and publish. You can share via link or leave it open for anyone to join."
+        "text": _("Sign in, click 'Start a Discussion', give it a title and description, add your seed statements, choose your visibility setting (public, unlisted, invite-only, or private), and publish. You can share via link or leave it open for anyone to join.")
       }
     },
     {
       "@type": "Question",
-      "name": "What is the Big Questions Journey?",
+      "name": _('What is the Big Questions Journey?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Big Questions Journey is a guided civic experience with at least 56 policy statements across 8 themes — climate, AI, economy, health, war and security, democracy, society, and education. Country-specific editions are available. After voting, you see where you stand compared to others and discover consensus, bridge ideas, and genuine divisions."
+        "text": _('The Big Questions Journey is a guided civic experience with at least 56 policy statements across 8 themes — climate, AI, economy, health, war and security, democracy, society, and education. Country-specific editions are available. After voting, you see where you stand compared to others and discover consensus, bridge ideas, and genuine divisions.')
       }
     },
     {
       "@type": "Question",
-      "name": "What is a programme?",
+      "name": _('What is a programme?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A programme is a structured collection of related discussions organised into themes and phases. Programmes are designed for organisations, governments, researchers, and media outlets running structured consultation or deliberation over time. They support multiple stewards, visibility controls, and data export."
+        "text": _('A programme is a structured collection of related discussions organised into themes and phases. Programmes are designed for organisations, governments, researchers, and media outlets running structured consultation or deliberation over time. They support multiple stewards, visibility controls, and data export.')
       }
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -54,9 +54,9 @@
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="text-center mb-8">
-    <h1 class="text-3xl font-bold mb-4">Help Center</h1>
+    <h1 class="text-3xl font-bold mb-4">{{ _('Help Center') }}</h1>
     <p class="text-gray-600">
-      Get help with using Society Speaks and creating meaningful discussions
+      {{ _('Get help with using Society Speaks and creating meaningful discussions') }}
     </p>
   </div>
 
@@ -134,37 +134,37 @@
       <a
         href="{{ url_for('help.getting_started') }}"
         class="text-primary-600 hover:underline"
-        >Learn more →</a
+        >{{ _('Learn more →') }}</a
       >
       {% elif key == 'creating-discussions' %}
       <a
         href="{{ url_for('help.creating_discussions') }}"
         class="text-primary-600 hover:underline"
-        >Learn more →</a
+        >{{ _('Learn more →') }}</a
       >
       {% elif key == 'native-system' %}
       <a
         href="{{ url_for('help.native_system') }}"
         class="text-primary-600 hover:underline"
-        >Learn more →</a
+        >{{ _('Learn more →') }}</a
       >
       {% elif key == 'managing-discussions' %}
       <a
         href="{{ url_for('help.managing_discussions') }}"
         class="text-primary-600 hover:underline"
-        >Learn more →</a
+        >{{ _('Learn more →') }}</a
       >
       {% elif key == 'news-feed' %}
       <a
         href="{{ url_for('help.news_feed') }}"
         class="text-primary-600 hover:underline"
-        >Learn more →</a
+        >{{ _('Learn more →') }}</a
       >
       {% elif key == 'programmes' %}
       <a
         href="{{ url_for('help.programmes') }}"
         class="text-primary-600 hover:underline"
-        >Learn more →</a
+        >{{ _('Learn more →') }}</a
       >
       {% endif %}
     </div>
@@ -174,13 +174,11 @@
   <!-- Live Demo Example -->
   <div class="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg p-6 mb-6 border-2 border-emerald-200">
     <div class="flex items-center mb-3">
-      <span class="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded">LIVE DEMO</span>
-      <h2 class="text-2xl font-bold ml-3">See How It Works</h2>
+      <span class="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded">{{ _('LIVE DEMO') }}</span>
+      <h2 class="text-2xl font-bold ml-3">{{ _('See How It Works') }}</h2>
     </div>
     <p class="text-gray-700 mb-4">
-      Want to see what a discussion and its consensus analysis look like in practice?
-      Explore our demo discussion on climate action &mdash; vote on statements and see how the
-      system reveals opinion groups, areas of agreement, and bridge ideas.
+      {{ _('Want to see what a discussion and its consensus analysis look like in practice? Explore our demo discussion on climate action — vote on statements and see how the system reveals opinion groups, areas of agreement, and bridge ideas.') }}
     </p>
     <div class="flex flex-wrap gap-3">
       <a
@@ -190,7 +188,7 @@
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-        View Discussion Demo
+        {{ _('View Discussion Demo') }}
       </a>
       <a
         href="/discussions/25/consensus"
@@ -199,10 +197,10 @@
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        View Consensus Analysis
+        {{ _('View Consensus Analysis') }}
       </a>
     </div>
-    <p class="text-xs text-gray-500 mt-3">Vote on 5 statements to unlock the full consensus analysis.</p>
+    <p class="text-xs text-gray-500 mt-3">{{ _('Vote on 5 statements to unlock the full consensus analysis.') }}</p>
   </div>
 
   <!-- Featured: Native System -->
@@ -210,23 +208,23 @@
     class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6 border-2 border-blue-200"
   >
     <div class="flex items-center mb-3">
-      <h2 class="text-2xl font-bold">Structured Deliberation System</h2>
+      <h2 class="text-2xl font-bold">{{ _('Structured Deliberation System') }}</h2>
     </div>
     <p class="text-gray-700 mb-4">
-      Our native deliberation system features real-time voting, consensus analysis using machine learning, optional threaded responses, and interactive visualisations — all built directly into Society Speaks.
+      {{ _('Our native deliberation system features real-time voting, consensus analysis using machine learning, optional threaded responses, and interactive visualisations — all built directly into Society Speaks.') }}
     </p>
     <div class="flex space-x-4">
       <a
         href="{{ url_for('help.native_system') }}"
         class="{{ btn_primary_sm() }} min-h-11"
       >
-        Learn More
+        {{ _('Learn More') }}
       </a>
       <a
         href="{{ url_for('discussions.create_discussion') }}"
         class="{{ btn_secondary_sm() }} min-h-11"
       >
-        Create Native Discussion →
+        {{ _('Create Native Discussion →') }}
       </a>
     </div>
   </div>
@@ -234,16 +232,16 @@
   <!-- Grid of Resources -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-xl font-bold mb-3">🔬 Understanding Pol.is</h3>
+      <h3 class="text-xl font-bold mb-3">{{ _('🔬 Understanding Pol.is') }}</h3>
       <p class="text-gray-700 mb-4 text-sm">
-        Learn about the algorithms and visualizations that power Pol.is.
+        {{ _('Learn about the algorithms and visualizations that power Pol.is.') }}
       </p>
       <div class="flex space-x-3">
         <a
           href="{{ url_for('help.polis_algorithms') }}"
           class="text-primary-600 hover:underline text-sm"
         >
-          Explore Tech →
+          {{ _('Explore Tech →') }}
         </a>
         <span class="text-gray-300">|</span>
         <a
@@ -251,21 +249,21 @@
           target="_blank"
           class="text-primary-600 hover:underline text-sm"
         >
-          Official Docs →
+          {{ _('Official Docs →') }}
         </a>
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-xl font-bold mb-3">📰 The Daily Brief</h3>
+      <h3 class="text-xl font-bold mb-3">{{ _('📰 The Daily Brief') }}</h3>
       <p class="text-gray-700 mb-4 text-sm">
-        Subscribe to our email newsletter for curated news with coverage analysis.
+        {{ _('Subscribe to our email newsletter for curated news with coverage analysis.') }}
       </p>
       <a
         href="{{ url_for('brief.today') }}"
         class="text-primary-600 hover:underline text-sm"
       >
-        Learn More →
+        {{ _('Learn More →') }}
       </a>
     </div>
   </div>
@@ -273,13 +271,13 @@
   <!-- Help Footer -->
   <div class="text-center">
     <p class="text-gray-600">
-      Still need help?
+      {{ _('Still need help?') }}
       <a
         href="https://forms.gle/g3BQVhJgFLiGjmSP6"
         target="_blank"
         class="text-primary-600 hover:underline"
       >
-        Send us feedback
+        {{ _('Send us feedback') }}
       </a>
     </p>
   </div>

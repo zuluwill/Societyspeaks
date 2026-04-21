@@ -5,16 +5,16 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-            <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+            <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
             <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             {% if current_user.individual_profile %}
-            <a href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}" class="hover:text-gray-700">Profile</a>
+            <a href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}" class="hover:text-gray-700">{{ _('Profile') }}</a>
             <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             {% endif %}
-            <span class="text-gray-900 font-medium">Edit Profile</span>
+            <span class="text-gray-900 font-medium">{{ _('Edit Profile') }}</span>
         </nav>
         <div class="bg-white shadow-lg rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ _('Edit Profile') }}</h1>
 
             <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 {{ form.hidden_tag() }}
@@ -24,8 +24,8 @@
                     <!-- Profile Picture Upload -->
                     <div class="mb-8">
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Profile Picture</label>
-                            <span class="text-xs text-gray-500">Recommended: 400x400px</span>
+                            <label class="block text-sm font-medium text-gray-700">{{ _('Profile Picture') }}</label>
+                            <span class="text-xs text-gray-500">{{ _('Recommended: 400x400px') }}</span>
                         </div>
                         <div class="mt-1 relative">
                             {{ form.profile_image(class="hidden", id=form.profile_image.id, accept="image/*") }}
@@ -34,21 +34,21 @@
                                 <img id="profile-preview" 
                                      class="w-full h-full object-cover" 
                                      src="{{ url_for('profiles.get_image', filename=profile.profile_image) if profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}" 
-                                     alt="Profile Picture">
+                                     alt="{{ _('Profile Picture') }}">
                                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span class="text-white text-xs">Click to change</span>
+                                    <span class="text-white text-xs">{{ _('Click to change') }}</span>
                                 </div>
                             </div>
 
-                            <p class="mt-2 text-xs text-gray-500">Click to upload a new profile picture</p>
+                            <p class="mt-2 text-xs text-gray-500">{{ _('Click to upload a new profile picture') }}</p>
                         </div>
                     </div>
 
                     <!-- Banner Image Upload -->
                     <div class="mb-8">
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Banner Image</label>
-                            <span class="text-xs text-gray-500">Recommended: 1200x400px</span>
+                            <label class="block text-sm font-medium text-gray-700">{{ _('Banner Image') }}</label>
+                            <span class="text-xs text-gray-500">{{ _('Recommended: 1200x400px') }}</span>
                         </div>
                         <div class="mt-1 relative">
                             {{ form.banner_image(class="hidden", id=form.banner_image.id, accept="image/*") }}
@@ -57,13 +57,13 @@
                                 <img id="banner-preview" 
                                      class="w-full h-full object-cover" 
                                      src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}" 
-                                     alt="Banner Image">
+                                     alt="{{ _('Banner Image') }}">
                                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span class="text-white text-sm">Click to change</span>
+                                    <span class="text-white text-sm">{{ _('Click to change') }}</span>
                                 </div>
                             </div>
 
-                            <p class="mt-2 text-xs text-gray-500">Click to upload a new banner image</p>
+                            <p class="mt-2 text-xs text-gray-500">{{ _('Click to upload a new banner image') }}</p>
                         </div>
                     </div>
                 </div>
@@ -90,14 +90,14 @@
 
                 <!-- Contact Information -->
                 <div class="space-y-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ _('Contact Information') }}</h2>
                     {{ render_field_with_errors(form.email, input_class="bg-white") }}
                     {{ render_field_with_errors(form.website, input_class="bg-white") }}
                 </div>
 
                 <!-- Social Media Links -->
                 <div class="space-y-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Social Media</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ _('Social Media') }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{ render_field_with_errors(form.linkedin_url, input_class="bg-white") }}
                         {{ render_field_with_errors(form.twitter_url, input_class="bg-white") }}
@@ -111,7 +111,7 @@
                 <div class="flex justify-end space-x-4 mt-8">
                     <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) }}" 
                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-11 flex items-center">
-                        Cancel
+                        {{ _('Cancel') }}
                     </a>
                     {{ form.submit(class="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 min-h-11 cursor-pointer") }}
                 </div>

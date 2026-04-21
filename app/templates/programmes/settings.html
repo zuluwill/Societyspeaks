@@ -1,28 +1,29 @@
 {% extends "layout.html" %}
+{% block title %}{{ _('Programme settings') }} — Society Speaks{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto py-8 px-4 space-y-6">
   <nav class="flex items-center gap-1.5 text-sm text-gray-500">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <a href="{{ url_for('programmes.workspace_programmes') }}" class="hover:text-gray-700">Workspace</a>
+    <a href="{{ url_for('programmes.workspace_programmes') }}" class="hover:text-gray-700">{{ _('Workspace') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="hover:text-gray-700">{{ programme.name }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">Settings</span>
+    <span class="text-gray-900 font-medium">{{ _('Settings') }}</span>
   </nav>
   <div class="bg-white rounded-lg shadow p-6">
-    <h1 class="text-2xl font-bold text-gray-900">Programme settings</h1>
-    <p class="text-sm text-gray-500">{{ programme.name }} · Status: {{ programme.status }} · Visibility: {{ programme.visibility|replace('_', ' ')|title }}</p>
+    <h1 class="text-2xl font-bold text-gray-900">{{ _('Programme settings') }}</h1>
+    <p class="text-sm text-gray-500">{{ programme.name }} · {{ _('Status:') }} {{ programme.status }} · {{ _('Visibility:') }} {{ programme.visibility|replace('_', ' ')|title }}</p>
     <div class="mt-4">
       {% if programme.status == 'active' %}
       <form method="POST" action="{{ url_for('programmes.archive_programme', slug=programme.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="px-3 py-2 text-sm bg-yellow-600 text-white rounded-md hover:bg-yellow-700">Archive programme</button>
+        <button type="submit" class="px-3 py-2 text-sm bg-yellow-600 text-white rounded-md hover:bg-yellow-700">{{ _('Archive programme') }}</button>
       </form>
       {% else %}
       <form method="POST" action="{{ url_for('programmes.unarchive_programme', slug=programme.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">Restore programme</button>
+        <button type="submit" class="px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">{{ _('Restore programme') }}</button>
       </form>
       {% endif %}
     </div>
@@ -31,11 +32,11 @@
   {# Programme metadata summary — useful for stewards generating cohort invite links #}
   {% if programme.themes or programme.phases or programme.cohorts %}
   <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Programme structure</h2>
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Programme structure') }}</h2>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
       {% if programme.themes %}
       <div>
-        <p class="font-medium text-gray-700 mb-2">Themes</p>
+        <p class="font-medium text-gray-700 mb-2">{{ _('Themes') }}</p>
         <ul class="space-y-1">
           {% for theme in programme.themes %}
           <li class="px-2 py-0.5 bg-blue-50 text-primary-700 rounded text-xs inline-block mr-1 mb-1">{{ theme }}</li>
@@ -45,7 +46,7 @@
       {% endif %}
       {% if programme.phases %}
       <div>
-        <p class="font-medium text-gray-700 mb-2">Phases</p>
+        <p class="font-medium text-gray-700 mb-2">{{ _('Phases') }}</p>
         <ul class="space-y-1">
           {% for phase in programme.phases %}
           <li class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs inline-block mr-1 mb-1">{{ phase }}</li>
@@ -55,8 +56,8 @@
       {% endif %}
       {% if programme.cohorts %}
       <div>
-        <p class="font-medium text-gray-700 mb-2">Cohorts</p>
-        <p class="text-xs text-gray-400 mb-2">Append <code>?cohort=slug</code> to discussion links to track groups. Note: cohort assignment relies on link-sharing and cannot prevent participants from modifying the parameter.</p>
+        <p class="font-medium text-gray-700 mb-2">{{ _('Cohorts') }}</p>
+        <p class="text-xs text-gray-400 mb-2">{{ _('Append <code>?cohort=slug</code> to discussion links to track groups. Note: cohort assignment relies on link-sharing and cannot prevent participants from modifying the parameter.')|safe }}</p>
         <ul class="space-y-1">
           {% for cohort in programme.cohorts %}
           <li class="text-xs text-gray-700"><code class="bg-gray-100 px-1 rounded">{{ cohort.slug }}</code> — {{ cohort.label }}</li>
@@ -69,7 +70,7 @@
   {% endif %}
 
   <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Stewards</h2>
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Stewards') }}</h2>
     {% if stewards %}
     <div class="space-y-2 mb-6">
       {% for steward in stewards %}
@@ -78,21 +79,21 @@
           {% if steward.user %}
             {{ steward.user.username }}
           {% elif steward.pending_email %}
-            {{ steward.pending_email }} <span class="ml-1 text-xs text-yellow-600 font-medium">Pending registration</span>
+            {{ steward.pending_email }} <span class="ml-1 text-xs text-yellow-600 font-medium">{{ _('Pending registration') }}</span>
           {% else %}
-            User #{{ steward.user_id }}
+            {{ _('User #%(id)s', id=steward.user_id) }}
           {% endif %}
           <span class="ml-1 text-xs text-gray-400">{{ steward.status }}</span>
         </div>
-        <form method="POST" action="{{ url_for('programmes.remove_steward', slug=programme.slug, steward_id=steward.id) }}" data-confirm="Remove this steward?">
+        <form method="POST" action="{{ url_for('programmes.remove_steward', slug=programme.slug, steward_id=steward.id) }}" data-confirm="{{ _('Remove this steward?') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Remove</button>
+          <button type="submit" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">{{ _('Remove') }}</button>
         </form>
       </div>
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-sm text-gray-600 mb-6">No stewards yet.</p>
+    <p class="text-sm text-gray-600 mb-6">{{ _('No stewards yet.') }}</p>
     {% endif %}
 
     <form method="POST" action="{{ url_for('programmes.invite_steward', slug=programme.slug) }}" class="space-y-3">
@@ -108,13 +109,13 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-1">Participant access</h2>
+    <h2 class="text-xl font-semibold text-gray-900 mb-1">{{ _('Participant access') }}</h2>
     <p class="text-sm text-gray-500 mb-4">
-      Use this for <strong>Invite-only</strong> programmes. Users must already have an account.
+      {{ _('Use this for <strong>Invite-only</strong> programmes. Users must already have an account.')|safe }}
     </p>
     {% if programme.visibility == 'private' %}
     <div class="mb-4 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-      This programme is <strong>Private</strong>, so participant invites are disabled. Invite users as stewards or switch visibility to <strong>Invite-only</strong>.
+      {{ _('This programme is <strong>Private</strong>, so participant invites are disabled. Invite users as stewards or switch visibility to <strong>Invite-only</strong>.')|safe }}
     </div>
     {% endif %}
 
@@ -123,12 +124,12 @@
       {% for grant in access_grants %}
       <div class="flex items-center justify-between border rounded p-3 gap-3">
         <div class="text-sm text-gray-700">
-          {{ grant.user.username if grant.user else ('User #' ~ grant.user_id) }}
+          {{ grant.user.username if grant.user else _('User #%(id)s', id=grant.user_id) }}
           {% if grant.user and grant.user.email %}<span class="text-gray-500">· {{ grant.user.email }}</span>{% endif %}
         </div>
         <form method="POST" action="{{ url_for('programmes.revoke_programme_access', slug=programme.slug, grant_id=grant.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Revoke</button>
+          <button type="submit" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">{{ _('Revoke') }}</button>
         </form>
       </div>
       {% endfor %}
@@ -136,16 +137,16 @@
     {% if access_grants_pagination and access_grants_pagination.pages > 1 %}
     <div class="mb-6 flex items-center justify-center gap-2">
       {% if access_grants_pagination.has_prev %}
-      <a href="{{ url_for('programmes.programme_settings', slug=programme.slug, access_page=access_grants_pagination.prev_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
+      <a href="{{ url_for('programmes.programme_settings', slug=programme.slug, access_page=access_grants_pagination.prev_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">{{ _('Previous') }}</a>
       {% endif %}
-      <span class="px-3 py-2 text-sm text-gray-600">Page {{ access_grants_pagination.page }} of {{ access_grants_pagination.pages }}</span>
+      <span class="px-3 py-2 text-sm text-gray-600">{{ _('Page %(page)d of %(pages)d', page=access_grants_pagination.page, pages=access_grants_pagination.pages) }}</span>
       {% if access_grants_pagination.has_next %}
-      <a href="{{ url_for('programmes.programme_settings', slug=programme.slug, access_page=access_grants_pagination.next_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
+      <a href="{{ url_for('programmes.programme_settings', slug=programme.slug, access_page=access_grants_pagination.next_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">{{ _('Next') }}</a>
       {% endif %}
     </div>
     {% endif %}
     {% else %}
-    <p class="text-sm text-gray-600 mb-6">No participant access grants yet.</p>
+    <p class="text-sm text-gray-600 mb-6">{{ _('No participant access grants yet.') }}</p>
     {% endif %}
 
     <form method="POST" action="{{ url_for('programmes.invite_programme_access', slug=programme.slug) }}" class="space-y-3">

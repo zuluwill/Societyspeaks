@@ -2,116 +2,116 @@
 {% from "components/discussion_card.html" import discussion_card %}
 {% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_primary_sm, btn_secondary_lg, btn_secondary_md, link_primary, link_primary_semibold %}
 
-{% block title %}Making Disagreement Useful Again — Society Speaks{% endblock %}
+{% block title %}{{ _('Making Disagreement Useful Again — Society Speaks') }}{% endblock %}
 
-{% block meta_description %}Society Speaks is a civic technology platform that uses machine learning to find where people genuinely agree, reveal bridge ideas that unite opposing groups, and surface real divisions worth addressing. Vote on the big questions. See what society actually thinks.{% endblock %}
+{% block meta_description %}{{ _('Society Speaks is a civic technology platform that uses machine learning to find where people genuinely agree, reveal bridge ideas that unite opposing groups, and surface real divisions worth addressing. Vote on the big questions. See what society actually thinks.') }}{% endblock %}
 
-{% block og_title %}Making Disagreement Useful Again — Society Speaks{% endblock %}
-{% block og_description %}Vote on the questions defining our era. Society Speaks uses machine learning to reveal consensus, bridge ideas, and genuine divisions across thousands of participants — globally.{% endblock %}
+{% block og_title %}{{ _('Making Disagreement Useful Again — Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('Vote on the questions defining our era. Society Speaks uses machine learning to reveal consensus, bridge ideas, and genuine divisions across thousands of participants — globally.') }}{% endblock %}
 
-{% block twitter_title %}Making Disagreement Useful Again — Society Speaks{% endblock %}
-{% block twitter_description %}Vote on the big questions. See where society agrees, where it divides, and what ideas can bridge the gap. Free, open source, ad-free civic technology.{% endblock %}
+{% block twitter_title %}{{ _('Making Disagreement Useful Again — Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('Vote on the big questions. See where society agrees, where it divides, and what ideas can bridge the gap. Free, open source, ad-free civic technology.') }}{% endblock %}
 
 {% block extra_head %}
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What is Society Speaks?",
+      "name": _('What is Society Speaks?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Society Speaks is a civic technology platform that uses machine learning to turn public participation into structured insight. It groups participants by how they vote — not by who they are — to surface consensus statements, bridge ideas that unite opposing groups, and genuine divisions worth addressing."
+        "text": _('Society Speaks is a civic technology platform that uses machine learning to turn public participation into structured insight. It groups participants by how they vote — not by who they are — to surface consensus statements, bridge ideas that unite opposing groups, and genuine divisions worth addressing.')
       }
     },
     {
       "@type": "Question",
-      "name": "What is a bridge idea on Society Speaks?",
+      "name": _('What is a bridge idea on Society Speaks?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A bridge idea is a statement that resonates strongly across different opinion clusters — groups that otherwise disagree. Bridge ideas represent rare common ground between opposing viewpoints and are identified through machine learning analysis of voting patterns."
+        "text": _('A bridge idea is a statement that resonates strongly across different opinion clusters — groups that otherwise disagree. Bridge ideas represent rare common ground between opposing viewpoints and are identified through machine learning analysis of voting patterns.')
       }
     },
     {
       "@type": "Question",
-      "name": "What is the Big Questions Journey?",
+      "name": _('What is the Big Questions Journey?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Big Questions Journey is a guided civic experience featuring at least 56 policy statements across 8 themes — climate and planet, AI and technology, economy and work, health and care, war, peace and security, democracy and institutions, society and cohesion, and education and future skills. Each theme begins with 7 expert-curated seed statements; participants can also submit their own, so the total grows with the community. Country-specific editions are available for the UK, US, Germany, France, Netherlands, Ireland, Canada, Singapore, Japan, and China."
+        "text": _('The Big Questions Journey is a guided civic experience featuring at least 56 policy statements across 8 themes — climate and planet, AI and technology, economy and work, health and care, war, peace and security, democracy and institutions, society and cohesion, and education and future skills. Each theme begins with 7 expert-curated seed statements; participants can also submit their own, so the total grows with the community. Country-specific editions are available for the UK, US, Germany, France, Netherlands, Ireland, Canada, Singapore, Japan, and China.')
       }
     },
     {
       "@type": "Question",
-      "name": "Is Society Speaks free to use?",
+      "name": _('Is Society Speaks free to use?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. All core features of Society Speaks are free — including voting on discussions, the Big Questions Journey, the Daily Question, the Daily Brief, and the News Transparency Dashboard. A paid Personal Briefs subscription is available and funds the open source platform."
+        "text": _('Yes. All core features of Society Speaks are free — including voting on discussions, the Big Questions Journey, the Daily Question, the Daily Brief, and the News Transparency Dashboard. A paid Personal Briefs subscription is available and funds the open source platform.')
       }
     },
     {
       "@type": "Question",
-      "name": "How does Society Speaks work?",
+      "name": _('How does Society Speaks work?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Participants join a discussion or the Big Questions Journey, vote Agree, Disagree, or Unsure on structured statements, and optionally explain their reasoning. Machine learning then groups participants by their voting patterns to identify consensus statements, bridge ideas, and genuine divisions — producing insight that goes beyond simple vote counting."
+        "text": _('Participants join a discussion or the Big Questions Journey, vote Agree, Disagree, or Unsure on structured statements, and optionally explain their reasoning. Machine learning then groups participants by their voting patterns to identify consensus statements, bridge ideas, and genuine divisions — producing insight that goes beyond simple vote counting.')
       }
     },
     {
       "@type": "Question",
-      "name": "Who is Society Speaks for?",
+      "name": _('Who is Society Speaks for?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Society Speaks is for individuals who want to understand public opinion, organisations and NGOs that want to consult their communities, governments and policymakers seeking evidence-based civic insight, publishers and media outlets that want to embed structured discussion, and researchers studying public opinion."
+        "text": _('Society Speaks is for individuals who want to understand public opinion, organisations and NGOs that want to consult their communities, governments and policymakers seeking evidence-based civic insight, publishers and media outlets that want to embed structured discussion, and researchers studying public opinion.')
       }
     },
     {
       "@type": "Question",
-      "name": "What is the Daily Question on Society Speaks?",
+      "name": _('What is the Daily Question on Society Speaks?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Daily Question is one carefully chosen civic question published each day. Participants vote and optionally share their reasoning, then see how others responded. Over time this creates a longitudinal view of how public opinion evolves. Questions are available by email — weekly by default."
+        "text": _('The Daily Question is one carefully chosen civic question published each day. Participants vote and optionally share their reasoning, then see how others responded. Over time this creates a longitudinal view of how public opinion evolves. Questions are available by email — weekly by default.')
       }
     },
     {
       "@type": "Question",
-      "name": "What is the Society Speaks Daily Brief?",
+      "name": _('What is the Society Speaks Daily Brief?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Daily Brief is a free, ad-free daily news digest covering 3–5 stories vetted for civic impact. It draws from 140+ sources across the political spectrum — left, centre, and right — and includes a left/centre/right political breakdown, context for why each story matters, and under-reported stories others miss."
+        "text": _('The Daily Brief is a free, ad-free daily news digest covering 3–5 stories vetted for civic impact. It draws from 140+ sources across the political spectrum — left, centre, and right — and includes a left/centre/right political breakdown, context for why each story matters, and under-reported stories others miss.')
       }
     }
   ]
-}
+} | tojson }}
 </script>
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "How to participate in Society Speaks",
-  "description": "Participate in structured civic deliberation and see what society actually thinks.",
+  "name": _('How to participate in Society Speaks'),
+  "description": _('Participate in structured civic deliberation and see what society actually thinks.'),
   "step": [
     {
       "@type": "HowToStep",
       "position": 1,
-      "name": "Join a discussion or journey",
-      "text": "Browse discussions on news topics, or take the Big Questions Journey — at least 56 statements across 8 themes, growing as participants contribute their own."
+      "name": _('Join a discussion or journey'),
+      "text": _('Browse discussions on news topics, or take the Big Questions Journey — at least 56 statements across 8 themes, growing as participants contribute their own.')
     },
     {
       "@type": "HowToStep",
       "position": 2,
-      "name": "Vote on statements",
-      "text": "Vote Agree, Disagree, or Unsure on each statement. Add your reasoning if you wish. Participation is respectful by design and anonymous if you prefer."
+      "name": _('Vote on statements'),
+      "text": _('Vote Agree, Disagree, or Unsure on each statement. Add your reasoning if you wish. Participation is respectful by design and anonymous if you prefer.')
     },
     {
       "@type": "HowToStep",
       "position": 3,
-      "name": "Discover insights and share them",
-      "text": "See consensus statements, bridge ideas that cross political lines, and genuine divisions. Share the results with communities, organisations, or policymakers who need to hear them."
+      "name": _('Discover insights and share them'),
+      "text": _('See consensus statements, bridge ideas that cross political lines, and genuine divisions. Share the results with communities, organisations, or policymakers who need to hear them.')
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -127,21 +127,21 @@
             <div class="lg:col-span-6">
                 <div class="space-y-6">
                     <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-                        Making Disagreement Useful Again
+                        {{ _('Making Disagreement Useful Again') }}
                     </h1>
                     <p class="text-lg text-gray-600 max-w-lg">
-                        Democracy works better when we understand each other. Vote on the questions defining our era — then see where people genuinely agree, where they divide, and which ideas can bridge the gap and inform better decisions.
+                        {{ _('Democracy works better when we understand each other. Vote on the questions defining our era — then see where people genuinely agree, where they divide, and which ideas can bridge the gap and inform better decisions.') }}
                     </p>
                     {% set journey_url = url_for('programmes.view_programme', slug=guided_journey_programme.slug) if guided_journey_programme else url_for('programmes.list_programmes') %}
                     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                         <!-- Primary CTA: Big Questions Journey -->
                         <a href="{{ journey_url }}"
-                           aria-label="Take the Big Questions Journey — opens your recommended edition"
+                           aria-label="{{ _('Take the Big Questions Journey — opens your recommended edition') }}"
                            class="{{ btn_primary_lg() }}">
                             <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
-                            Take the Big Questions Journey
+                            {{ _('Take the Big Questions Journey') }}
                         </a>
                         <!-- Secondary CTA: Daily Brief -->
                         <a href="{{ url_for('brief.today') }}"
@@ -149,16 +149,14 @@
                             <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            Read Today's Brief
+                            {{ _("Read Today's Brief") }}
                         </a>
                     </div>
+                    {% set _signup_link = '<a href="' ~ url_for('auth.register') ~ '" class="' ~ link_primary() ~ '">' ~ _('Sign up free') ~ '</a>' %}
+                    {% set _login_link = '<a href="' ~ url_for('auth.login') ~ '" class="' ~ link_primary() ~ '">' ~ _('sign in') ~ '</a>' %}
                     <p class="text-sm text-gray-500 max-w-lg">
-                        Browse freely without an account.
-                        <a href="{{ url_for('auth.register') }}" class="{{ link_primary() }}">Sign up free</a>
-                        or
-                        <a href="{{ url_for('auth.login') }}" class="{{ link_primary() }}">sign in</a>
-                        to save your Big Questions progress, votes, and personalised recap.
-                        <span class="text-gray-400"> · Trusted by individuals, organisations and governments globally</span>
+                        {{ _('Browse freely without an account. %(signup)s or %(login)s to save your Big Questions progress, votes, and personalised recap.', signup=_signup_link, login=_login_link)|safe }}
+                        <span class="text-gray-400"> {{ _('· Trusted by individuals, organisations and governments globally') }}</span>
                     </p>
                 </div>
             </div>
@@ -166,7 +164,7 @@
             <div class="lg:col-span-6">
                 <div class="relative rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 shadow-xl overflow-hidden aspect-[16/10]">
                     <img src="{{ url_for('main.serve_asset', filename='images/hero-optimized.jpg') }}"
-                         alt="Discussion visualisation showing opinion clusters and consensus"
+                         alt="{{ _('Discussion visualisation showing opinion clusters and consensus') }}"
                          class="absolute inset-0 w-full h-full object-cover"
                          loading="eager"/>
                 </div>
@@ -183,23 +181,23 @@
         <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-gray-500">
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
-                <strong class="font-semibold text-gray-900">140+</strong> news sources curated
+                {{ _('<strong class="font-semibold text-gray-900">140+</strong> news sources curated')|safe }}
             </span>
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <strong class="font-semibold text-gray-900">{{ total_discussion_count_display or '1,000+' }}</strong> discussions
+                {{ _('<strong class="font-semibold text-gray-900">%(count)s</strong> discussions', count=(total_discussion_count_display or '1,000+'))|safe }}
             </span>
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                Global community
+                {{ _('Global community') }}
             </span>
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                No ads · No tracking
+                {{ _('No ads · No tracking') }}
             </span>
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                Open source
+                {{ _('Open source') }}
             </span>
         </div>
     </div>
@@ -223,13 +221,13 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Guided civic journey
+        {{ _('Guided civic journey') }}
       </div>
       <h2 id="journey-section-heading" class="text-3xl sm:text-4xl font-bold text-white leading-tight">
-        What do you actually believe?
+        {{ _('What do you actually believe?') }}
       </h2>
       <p class="mt-4 text-lg text-blue-100 max-w-2xl mx-auto">
-        8 themes. At least 56 policy statements to start — more added as participants contribute. Vote on the issues that define our era, then see where humanity agrees, where it divides, and what might bridge the gap.{% if journey_personalisation != 'fallback' and guided_journey_programme and guided_journey_programme.country %} Questions anchored in <strong class="text-white">{{ guided_journey_programme.country }}</strong>.{% endif %}
+        {{ _('8 themes. At least 56 policy statements to start — more added as participants contribute. Vote on the issues that define our era, then see where humanity agrees, where it divides, and what might bridge the gap.') }}{% if journey_personalisation != 'fallback' and guided_journey_programme and guided_journey_programme.country %} {{ _('Questions anchored in <strong class="text-white">%(country)s</strong>.', country=guided_journey_programme.country)|safe }}{% endif %}
       </p>
     </div>
 
@@ -237,15 +235,15 @@
     <div class="grid grid-cols-3 gap-3 sm:gap-6 max-w-lg mx-auto mb-12">
       <div class="bg-white/10 rounded-xl p-4 sm:p-5 text-center">
         <div class="text-2xl sm:text-3xl font-bold text-white">8</div>
-        <div class="text-blue-100 text-xs sm:text-sm mt-1">Big themes</div>
+        <div class="text-blue-100 text-xs sm:text-sm mt-1">{{ _('Big themes') }}</div>
       </div>
       <div class="bg-white/10 rounded-xl p-4 sm:p-5 text-center">
         <div class="text-2xl sm:text-3xl font-bold text-white">56+</div>
-        <div class="text-blue-100 text-xs sm:text-sm mt-1">Statements</div>
+        <div class="text-blue-100 text-xs sm:text-sm mt-1">{{ _('Statements') }}</div>
       </div>
       <div class="bg-white/10 rounded-xl p-4 sm:p-5 text-center">
         <div class="text-2xl sm:text-3xl font-bold text-white">{{ all_journey_programmes | length }}</div>
-        <div class="text-blue-100 text-xs sm:text-sm mt-1">Editions</div>
+        <div class="text-blue-100 text-xs sm:text-sm mt-1">{{ _('Editions') }}</div>
       </div>
     </div>
 
@@ -253,23 +251,23 @@
     {% if guided_journey_programme %}
     <div class="flex justify-center mb-8">
       <a href="{{ url_for('programmes.view_programme', slug=guided_journey_programme.slug) }}"
-         aria-label="Start the {{ guided_journey_programme.country or 'global' }} Big Questions journey edition"
+         aria-label="{{ _('Start the %(country)s Big Questions journey edition', country=(guided_journey_programme.country or _('global'))) }}"
          class="group inline-flex items-center gap-3 rounded-xl bg-white px-6 py-4 text-slate-900 shadow-lg hover:bg-blue-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
         <span class="text-2xl leading-none" aria-hidden="true">
           {{ country_flags.get(guided_journey_programme.country, '🌍') if guided_journey_programme.country else '🌍' }}
         </span>
         <div class="text-left">
           {% if journey_personalisation == 'profile' %}
-          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">Recommended for you</div>
+          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">{{ _('Recommended for you') }}</div>
           {% elif journey_personalisation == 'chosen' %}
-          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">Your pick</div>
+          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">{{ _('Your pick') }}</div>
           {% elif journey_personalisation == 'language' and guided_journey_programme.country %}
-          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">Edition for {{ guided_journey_programme.country }}</div>
+          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">{{ _('Edition for %(country)s', country=guided_journey_programme.country) }}</div>
           {% else %}
-          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">Global edition</div>
+          <div class="text-xs font-semibold text-primary-600 uppercase tracking-wide">{{ _('Global edition') }}</div>
           {% endif %}
           <div class="text-base sm:text-lg font-bold leading-snug">
-            {{ guided_journey_programme.country or 'Global' }} — Start the journey
+            {{ _('%(country)s — Start the journey', country=(guided_journey_programme.country or _('Global'))) }}
           </div>
         </div>
         <svg class="w-5 h-5 text-primary-500 group-hover:text-primary-700 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -281,7 +279,7 @@
 
     {% if all_journey_programmes | length > 1 %}
     <p class="text-center text-sm text-blue-200 max-w-sm mx-auto mt-2 mb-1">
-      Not the right edition? Choose yours below.
+      {{ _('Not the right edition? Choose yours below.') }}
     </p>
     {% endif %}
 
@@ -290,17 +288,17 @@
     {% if other_journeys %}
     <div>
       <p id="journey-country-picker-label" class="text-center text-xs font-semibold text-blue-200 uppercase tracking-widest mb-4">
-        Or choose an edition
+        {{ _('Or choose an edition') }}
       </p>
       <nav aria-labelledby="journey-country-picker-label">
         <ul class="flex flex-wrap justify-center gap-2 sm:gap-3 list-none p-0 m-0">
           {% for jp in other_journeys %}
           <li>
             <a href="{{ url_for('programmes.view_programme', slug=jp.slug) }}"
-               aria-label="Open the {{ jp.country or 'global' }} Big Questions journey edition"
+               aria-label="{{ _('Open the %(country)s Big Questions journey edition', country=(jp.country or _('global'))) }}"
                class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 sm:px-4 py-2 text-sm text-white hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
               <span class="text-base leading-none" aria-hidden="true">{{ country_flags.get(jp.country, '🌍') if jp.country else '🌍' }}</span>
-              <span class="font-medium">{{ jp.country or 'Global' }}</span>
+              <span class="font-medium">{{ jp.country or _('Global') }}</span>
             </a>
           </li>
           {% endfor %}
@@ -311,12 +309,12 @@
 
     <!-- Themes preview -->
     <ul class="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto list-none p-0"
-        aria-label="Journey themes">
+        aria-label="{{ _('Journey themes') }}">
       {% for theme_name, theme_icon in [
-        ('Climate & planet', '🌍'), ('AI & technology', '🤖'),
-        ('Economy & work', '💼'), ('Health & care', '🏥'),
-        ('War & security', '🕊'), ('Democracy', '🏛'),
-        ('Society', '🤝'), ('Education', '🎓')
+        (_('Climate & planet'), '🌍'), (_('AI & technology'), '🤖'),
+        (_('Economy & work'), '💼'), (_('Health & care'), '🏥'),
+        (_('War & security'), '🕊'), (_('Democracy'), '🏛'),
+        (_('Society'), '🤝'), (_('Education'), '🎓')
       ] %}
       <li class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2.5">
         <span class="text-lg leading-none" aria-hidden="true">{{ theme_icon }}</span>
@@ -339,13 +337,13 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                What voting reveals
+                {{ _('What voting reveals') }}
             </div>
             <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                We group people by how they vote, not who they are
+                {{ _('We group people by how they vote, not who they are') }}
             </h2>
             <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-                Our machine learning finds patterns across thousands of votes — surfacing three kinds of insight you won't find anywhere else.
+                {{ _("Our machine learning finds patterns across thousands of votes — surfacing three kinds of insight you won't find anywhere else.") }}
             </p>
         </div>
 
@@ -360,23 +358,23 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Consensus</div>
-                        <div class="text-xs text-emerald-600">Where society broadly agrees</div>
+                        <div class="text-xs font-bold text-emerald-700 uppercase tracking-wide">{{ _('Consensus') }}</div>
+                        <div class="text-xs text-emerald-600">{{ _('Where society broadly agrees') }}</div>
                     </div>
                 </div>
                 <blockquote class="text-gray-900 font-medium text-base leading-snug mb-4">
-                    "Access to reliable, unbiased news is essential for a functioning democracy."
+                    {{ _('"Access to reliable, unbiased news is essential for a functioning democracy."') }}
                 </blockquote>
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between text-xs text-gray-600">
-                        <span>Agreement across all groups</span>
+                        <span>{{ _('Agreement across all groups') }}</span>
                         <span class="font-bold text-emerald-700">84%</span>
                     </div>
                     <div class="h-2.5 w-full rounded-full bg-emerald-100 overflow-hidden">
                         <div class="h-full rounded-full bg-emerald-500" style="width: 84%"></div>
                     </div>
                 </div>
-                <p class="mt-3 text-xs text-emerald-700">This statement was agreed by participants across all political clusters.</p>
+                <p class="mt-3 text-xs text-emerald-700">{{ _('This statement was agreed by participants across all political clusters.') }}</p>
             </div>
 
             <!-- Bridge idea card (violet — distinct from brand primary blue) -->
@@ -388,29 +386,29 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-xs font-bold text-violet-800 uppercase tracking-wide">Bridge Idea</div>
-                        <div class="text-xs text-violet-700">Unites opposing groups</div>
+                        <div class="text-xs font-bold text-violet-800 uppercase tracking-wide">{{ _('Bridge Idea') }}</div>
+                        <div class="text-xs text-violet-700">{{ _('Unites opposing groups') }}</div>
                     </div>
                 </div>
                 <blockquote class="text-gray-900 font-medium text-base leading-snug mb-4">
-                    "Politicians of all parties have failed to honestly explain the trade-offs of their policies to voters."
+                    {{ _('"Politicians of all parties have failed to honestly explain the trade-offs of their policies to voters."') }}
                 </blockquote>
                 <div class="flex gap-2 mt-4">
                     <div class="flex-1 rounded-lg bg-blue-100 p-2.5 text-center">
-                        <div class="text-xs font-bold text-primary-800">Left cluster</div>
+                        <div class="text-xs font-bold text-primary-800">{{ _('Left cluster') }}</div>
                         <div class="text-lg font-bold text-primary-700 mt-0.5">76%</div>
-                        <div class="text-xs text-primary-600">agree</div>
+                        <div class="text-xs text-primary-600">{{ _('agree') }}</div>
                     </div>
                     <div class="flex items-center justify-center text-violet-300 px-1">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4M4 17h12"/></svg>
                     </div>
                     <div class="flex-1 rounded-lg bg-red-100 p-2.5 text-center">
-                        <div class="text-xs font-bold text-red-800">Right cluster</div>
+                        <div class="text-xs font-bold text-red-800">{{ _('Right cluster') }}</div>
                         <div class="text-lg font-bold text-red-700 mt-0.5">79%</div>
-                        <div class="text-xs text-red-600">agree</div>
+                        <div class="text-xs text-red-600">{{ _('agree') }}</div>
                     </div>
                 </div>
-                <p class="mt-3 text-xs text-violet-800">Bridge ideas resonate strongly across groups that otherwise disagree — rare common ground.</p>
+                <p class="mt-3 text-xs text-violet-800">{{ _('Bridge ideas resonate strongly across groups that otherwise disagree — rare common ground.') }}</p>
             </div>
 
             <!-- Genuine division card -->
@@ -422,28 +420,28 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-xs font-bold text-amber-700 uppercase tracking-wide">Genuine Division</div>
-                        <div class="text-xs text-amber-600">A real fault line worth addressing</div>
+                        <div class="text-xs font-bold text-amber-700 uppercase tracking-wide">{{ _('Genuine Division') }}</div>
+                        <div class="text-xs text-amber-600">{{ _('A real fault line worth addressing') }}</div>
                     </div>
                 </div>
                 <blockquote class="text-gray-900 font-medium text-base leading-snug mb-4">
-                    "The state should guarantee a minimum income for every citizen, regardless of employment status."
+                    {{ _('"The state should guarantee a minimum income for every citizen, regardless of employment status."') }}
                 </blockquote>
                 <div class="mt-4 h-3 w-full rounded-full overflow-hidden flex">
                     <div class="bg-blue-500 h-full transition-all" style="width: 62%"></div>
                     <div class="bg-red-400 h-full transition-all" style="width: 38%"></div>
                 </div>
                 <div class="flex justify-between text-xs mt-1.5">
-                    <span class="text-primary-700 font-medium">62% agree</span>
-                    <span class="text-red-600 font-medium">38% disagree</span>
+                    <span class="text-primary-700 font-medium">{{ _('62%% agree') }}</span>
+                    <span class="text-red-600 font-medium">{{ _('38%% disagree') }}</span>
                 </div>
-                <p class="mt-3 text-xs text-amber-700">Genuine divisions show where deeper democratic deliberation is needed — not just counting votes.</p>
+                <p class="mt-3 text-xs text-amber-700">{{ _('Genuine divisions show where deeper democratic deliberation is needed — not just counting votes.') }}</p>
             </div>
         </div>
 
         <p class="text-center text-sm text-gray-500 mt-8">
-            Examples from real discussions on this platform. Your vote changes what society sees.
-            <a href="/discussions/search" class="{{ link_primary() }} underline ml-1">Explore all discussions →</a>
+            {{ _('Examples from real discussions on this platform. Your vote changes what society sees.') }}
+            <a href="/discussions/search" class="{{ link_primary() }} underline ml-1">{{ _('Explore all discussions →') }}</a>
         </p>
     </div>
 </div>
@@ -454,8 +452,8 @@
 <div class="bg-blue-50 border-y border-blue-100 py-14">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-10">
-            <h2 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">How it works</h2>
-            <p class="mt-2 text-gray-600">Three steps. Takes under five minutes to start.</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ _('How it works') }}</h2>
+            <p class="mt-2 text-gray-600">{{ _('Three steps. Takes under five minutes to start.') }}</p>
         </div>
         <div class="relative">
             <!-- Connecting line (desktop) -->
@@ -464,20 +462,20 @@
                 <!-- Step 1 -->
                 <div class="flex flex-col items-center text-center">
                     <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-white text-xl font-bold shadow-md z-10">1</div>
-                    <h3 class="mt-5 text-lg font-semibold text-gray-900">Join a discussion or journey</h3>
-                    <p class="mt-2 text-sm text-gray-600 max-w-xs">Browse discussions on news topics, or take the Big Questions Journey — at least 56 statements across 8 themes, growing as participants contribute their own.</p>
+                    <h3 class="mt-5 text-lg font-semibold text-gray-900">{{ _('Join a discussion or journey') }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 max-w-xs">{{ _('Browse discussions on news topics, or take the Big Questions Journey — at least 56 statements across 8 themes, growing as participants contribute their own.') }}</p>
                 </div>
                 <!-- Step 2 -->
                 <div class="flex flex-col items-center text-center">
                     <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-white text-xl font-bold shadow-md z-10">2</div>
-                    <h3 class="mt-5 text-lg font-semibold text-gray-900">Vote on statements</h3>
-                    <p class="mt-2 text-sm text-gray-600 max-w-xs">Agree, Disagree, or Unsure on each statement. Add your reasoning if you want. Respectful by design — and anonymous if you prefer.</p>
+                    <h3 class="mt-5 text-lg font-semibold text-gray-900">{{ _('Vote on statements') }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 max-w-xs">{{ _('Agree, Disagree, or Unsure on each statement. Add your reasoning if you want. Respectful by design — and anonymous if you prefer.') }}</p>
                 </div>
                 <!-- Step 3 -->
                 <div class="flex flex-col items-center text-center">
                     <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-white text-xl font-bold shadow-md z-10">3</div>
-                    <h3 class="mt-5 text-lg font-semibold text-gray-900">Discover insights — and share them</h3>
-                    <p class="mt-2 text-sm text-gray-600 max-w-xs">See consensus, bridge ideas and genuine divisions. Then share the results with the communities, organisations, or policymakers who need to hear them.</p>
+                    <h3 class="mt-5 text-lg font-semibold text-gray-900">{{ _('Discover insights — and share them') }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 max-w-xs">{{ _('See consensus, bridge ideas and genuine divisions. Then share the results with the communities, organisations, or policymakers who need to hear them.') }}</p>
                 </div>
             </div>
         </div>
@@ -490,8 +488,8 @@
 <div class="bg-gray-50 border-y border-gray-200 py-16">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-10">
-            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Two ways to stay informed daily</h2>
-            <p class="mt-3 text-lg text-gray-600">One for your opinions on the world. One for the world explained to you.</p>
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Two ways to stay informed daily') }}</h2>
+            <p class="mt-3 text-lg text-gray-600">{{ _('One for your opinions on the world. One for the world explained to you.') }}</p>
         </div>
 
         <div class="grid gap-8 lg:grid-cols-2">
@@ -505,47 +503,47 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-primary-700 mb-1">2 minutes a day</div>
-                        <h3 class="text-xl font-bold text-gray-900">The Daily Question</h3>
+                        <div class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-primary-700 mb-1">{{ _('2 minutes a day') }}</div>
+                        <h3 class="text-xl font-bold text-gray-900">{{ _('The Daily Question') }}</h3>
                     </div>
                 </div>
                 <p class="text-gray-600 mb-5 flex-grow">
-                    One carefully chosen question every day. Vote, share your reasoning, then see how others responded. Over time, this creates a longitudinal view of how public opinion evolves.
+                    {{ _('One carefully chosen question every day. Vote, share your reasoning, then see how others responded. Over time, this creates a longitudinal view of how public opinion evolves.') }}
                 </p>
                 {% if daily_question %}
                 <div class="bg-blue-50 rounded-xl p-4 mb-5 border border-blue-100">
-                    <div class="text-xs font-semibold text-primary-600 mb-2">Today's question</div>
+                    <div class="text-xs font-semibold text-primary-600 mb-2">{{ _("Today's question") }}</div>
                     <p class="text-sm font-medium text-gray-900 leading-snug mb-3">"{{ daily_question.question_text }}"</p>
                     <div class="grid grid-cols-3 gap-2" aria-hidden="true">
                         <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-700 font-semibold text-xs pointer-events-none select-none gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            Agree
+                            {{ _('Agree') }}
                         </div>
                         <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-red-300 bg-white text-red-600 font-semibold text-xs pointer-events-none select-none gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                            Disagree
+                            {{ _('Disagree') }}
                         </div>
                         <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-amber-300 bg-white text-amber-600 font-semibold text-xs pointer-events-none select-none gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Unsure
+                            {{ _('Unsure') }}
                         </div>
                     </div>
                 </div>
                 {% else %}
                 <div class="bg-blue-50 rounded-xl p-4 mb-5 border border-blue-100">
-                    <div class="text-xs font-semibold text-primary-600 mb-3">How you vote</div>
+                    <div class="text-xs font-semibold text-primary-600 mb-3">{{ _('How you vote') }}</div>
                     <div class="grid grid-cols-3 gap-2" aria-hidden="true">
                         <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-700 font-semibold text-xs pointer-events-none select-none gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            Agree
+                            {{ _('Agree') }}
                         </div>
                         <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-red-300 bg-white text-red-600 font-semibold text-xs pointer-events-none select-none gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                            Disagree
+                            {{ _('Disagree') }}
                         </div>
                         <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-amber-300 bg-white text-amber-600 font-semibold text-xs pointer-events-none select-none gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Unsure
+                            {{ _('Unsure') }}
                         </div>
                     </div>
                 </div>
@@ -553,16 +551,16 @@
                 <div class="flex flex-wrap gap-3 mt-auto">
                     <a href="{{ url_for('daily.today') }}"
                        class="{{ btn_primary_md() }}">
-                        Answer Today's Question
+                        {{ _("Answer Today's Question") }}
                         <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                     <a href="{{ url_for('daily.subscribe') }}"
                        class="{{ btn_secondary_md() }}">
                         <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        Get by Email
+                        {{ _('Get by Email') }}
                     </a>
                 </div>
-                <p class="text-xs text-gray-500 mt-3">5 questions weekly by default · Adjust frequency anytime</p>
+                <p class="text-xs text-gray-500 mt-3">{{ _('5 questions weekly by default · Adjust frequency anytime') }}</p>
             </div>
 
             <!-- Daily Brief -->
@@ -574,17 +572,17 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 mb-1">The news you need. Zero noise.</div>
-                        <h3 class="text-xl font-bold text-gray-900">The Daily Brief</h3>
+                        <div class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 mb-1">{{ _('The news you need. Zero noise.') }}</div>
+                        <h3 class="text-xl font-bold text-gray-900">{{ _('The Daily Brief') }}</h3>
                     </div>
                 </div>
                 <p class="text-gray-600 mb-5 flex-grow">
-                    3–5 stories daily, vetted for civic impact, analysed for partisan spin, and explained in plain language. Multi-source coverage with left/centre/right breakdown. No ads. No outrage.
+                    {{ _('3–5 stories daily, vetted for civic impact, analysed for partisan spin, and explained in plain language. Multi-source coverage with left/centre/right breakdown. No ads. No outrage.') }}
                 </p>
                 {% if daily_brief and brief_items %}
                 <div class="bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100">
                     <div class="text-xs font-semibold text-slate-600 mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <span>Today's brief</span>
+                        <span>{{ _("Today's brief") }}</span>
                         {% if daily_brief.date %}
                         <span class="font-normal text-slate-500">{{ daily_brief.date.strftime('%d %b %Y') }}</span>
                         {% endif %}
@@ -595,7 +593,7 @@
                         <div class="border-l-4 pl-3 py-2.5 pr-2 rounded-r-lg {% if stripe == 0 %}border-primary-500 bg-blue-50/80{% elif stripe == 1 %}border-violet-500 bg-violet-50/80{% else %}border-teal-500 bg-teal-50/80{% endif %}">
                             <div class="flex flex-wrap items-center gap-2 mb-1.5">
                                 {% if item.is_underreported %}
-                                <span class="text-[10px] font-bold uppercase tracking-wide text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Under the radar</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">{{ _('Under the radar') }}</span>
                                 {% endif %}
                                 {% if item.section_display_name %}
                                 <span class="text-[10px] font-bold uppercase tracking-wide {% if stripe == 0 %}text-primary-700{% elif stripe == 1 %}text-violet-800{% else %}text-teal-800{% endif %}">{{ item.section_display_name }}</span>
@@ -603,7 +601,7 @@
                                 <span class="text-[10px] font-bold uppercase tracking-wide text-slate-600">{{ item.trending_topic.primary_topic | replace('_', ' ') }}</span>
                                 {% endif %}
                                 {% if item.source_count %}
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-white {% if stripe == 0 %}bg-blue-800{% elif stripe == 1 %}bg-violet-800{% else %}bg-teal-800{% endif %}">{{ item.source_count }} sources</span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-white {% if stripe == 0 %}bg-blue-800{% elif stripe == 1 %}bg-violet-800{% else %}bg-teal-800{% endif %}">{{ _('%(count)d sources', count=item.source_count) }}</span>
                                 {% endif %}
                             </div>
                             <p class="text-sm font-semibold text-gray-900 leading-snug">{{ item.headline }}</p>
@@ -613,7 +611,7 @@
                         </div>
                         {% if loop.first and item.personal_impact %}
                         <div class="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2">
-                            <p class="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-0.5">Why this matters</p>
+                            <p class="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-0.5">{{ _('Why this matters') }}</p>
                             <p class="text-xs text-amber-950 leading-snug line-clamp-3">{{ item.personal_impact }}</p>
                         </div>
                         {% endif %}
@@ -621,37 +619,37 @@
                     </div>
                     <p class="text-center mt-3">
                         <a href="{{ url_for('brief.today') }}" class="text-xs {{ link_primary_semibold() }} inline-flex items-center gap-0.5">
-                            Read full brief
+                            {{ _('Read full brief') }}
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </a>
                     </p>
                 </div>
                 {% else %}
                 <div class="bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100">
-                    <div class="text-xs font-semibold text-slate-600 mb-3">What you get every day</div>
+                    <div class="text-xs font-semibold text-slate-600 mb-3">{{ _('What you get every day') }}</div>
                     <div class="space-y-2">
                         <div class="h-2.5 bg-slate-200 rounded-full w-full"></div>
                         <div class="h-2.5 bg-slate-200 rounded-full w-4/5"></div>
                         <div class="h-2.5 bg-slate-200 rounded-full w-3/5"></div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-3">3–5 stories · left/centre/right breakdown · Why it matters</p>
+                    <p class="text-xs text-slate-500 mt-3">{{ _('3–5 stories · left/centre/right breakdown · Why it matters') }}</p>
                 </div>
                 {% endif %}
                 <div class="flex flex-wrap gap-3 mt-auto">
                     <a href="{{ url_for('brief.today') }}"
                        class="inline-flex items-center rounded-lg bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-600 transition-colors">
-                        Read Today's Brief
+                        {{ _("Read Today's Brief") }}
                         <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                     <a href="{{ url_for('brief.subscribe') }}"
                        class="{{ btn_secondary_md() }}">
                         <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        Get by Email
+                        {{ _('Get by Email') }}
                     </a>
                 </div>
                 <p class="text-xs text-gray-500 mt-3">
-                    Free to read ·
-                    <a href="{{ url_for('news.dashboard') }}" class="{{ link_primary() }}">140+ sources across the spectrum →</a>
+                    {{ _('Free to read ·') }}
+                    <a href="{{ url_for('news.dashboard') }}" class="{{ link_primary() }}">{{ _('140+ sources across the spectrum →') }}</a>
                 </p>
             </div>
         </div>
@@ -660,17 +658,17 @@
         <div class="mt-12 pt-10 border-t border-gray-200" aria-labelledby="homepage-sources-heading">
             <div class="text-center mb-8">
                 <h3 id="homepage-sources-heading" class="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mb-2">
-                    We draw from 140+ trusted sources across the spectrum
+                    {{ _('We draw from 140+ trusted sources across the spectrum') }}
                 </h3>
                 <p class="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
-                    News, analysis, think tanks, and podcasts—curated for quality journalism
+                    {{ _('News, analysis, think tanks, and podcasts—curated for quality journalism') }}
                 </p>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div class="bg-blue-50 rounded-xl p-5 border border-blue-100">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-3 h-3 rounded-full bg-blue-500 shrink-0" aria-hidden="true"></span>
-                        <span class="text-sm font-semibold text-blue-900">Left &amp; Centre-Left</span>
+                        <span class="text-sm font-semibold text-blue-900">{{ _('Left & Centre-Left') }}</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <span class="px-2.5 py-1 bg-white rounded-md text-xs text-gray-800 border border-gray-200">The Guardian</span>
@@ -687,7 +685,7 @@
                 <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-3 h-3 rounded-full bg-purple-500 shrink-0" aria-hidden="true"></span>
-                        <span class="text-sm font-semibold text-gray-900">Centre</span>
+                        <span class="text-sm font-semibold text-gray-900">{{ _('Centre') }}</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <span class="px-2.5 py-1 bg-white rounded-md text-xs text-gray-800 border border-gray-200">BBC News</span>
@@ -707,7 +705,7 @@
                 <div class="bg-red-50 rounded-xl p-5 border border-red-100">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-3 h-3 rounded-full bg-red-500 shrink-0" aria-hidden="true"></span>
-                        <span class="text-sm font-semibold text-red-900">Centre-Right &amp; Right</span>
+                        <span class="text-sm font-semibold text-red-900">{{ _('Centre-Right & Right') }}</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <span class="px-2.5 py-1 bg-white rounded-md text-xs text-gray-800 border border-gray-200">The Dispatch</span>
@@ -724,14 +722,15 @@
                 </div>
             </div>
             <p class="text-center text-xs text-gray-500 mt-6 flex flex-wrap items-center justify-center gap-x-1 gap-y-2">
-                <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gray-400 shrink-0" aria-hidden="true"></span> News/Analysis</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gray-400 shrink-0" aria-hidden="true"></span> {{ _('News/Analysis') }}</span>
                 <span class="hidden sm:inline text-gray-300 mx-1" aria-hidden="true">·</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 shrink-0" aria-hidden="true"></span> Podcast</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 shrink-0" aria-hidden="true"></span> {{ _('Podcast') }}</span>
                 <span class="hidden sm:inline text-gray-300 mx-2" aria-hidden="true">|</span>
+                {% set _allsides_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" rel="noopener noreferrer" class="' ~ link_primary() ~ '">AllSides</a>' %}
                 <span class="basis-full sm:basis-auto text-center sm:text-left">
-                    Bias ratings from <a href="https://www.allsides.com/media-bias/ratings" target="_blank" rel="noopener noreferrer" class="{{ link_primary() }}">AllSides</a>
+                    {{ _('Bias ratings from %(allsides)s', allsides=_allsides_link)|safe }}
                     <span class="text-gray-300 mx-1">|</span>
-                    <a href="{{ url_for('help.news_feed') }}" class="{{ link_primary() }}">See all 140+ sources</a>
+                    <a href="{{ url_for('help.news_feed') }}" class="{{ link_primary() }}">{{ _('See all 140+ sources') }}</a>
                 </span>
             </p>
         </div>
@@ -744,7 +743,7 @@
 <div class="bg-white py-12 lg:py-16">
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Voices that inspired this</h2>
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest">{{ _('Voices that inspired this') }}</h2>
         </div>
         <div class="grid gap-6 md:grid-cols-2">
 
@@ -756,15 +755,15 @@
                     </svg>
                 </div>
                 <blockquote class="text-gray-700 mt-4 text-base leading-relaxed">
-                    "The peculiar evil of silencing the expression of an opinion is that it is robbing the human race — those who dissent from the opinion, still more than those who hold it."
+                    {{ _('"The peculiar evil of silencing the expression of an opinion is that it is robbing the human race — those who dissent from the opinion, still more than those who hold it."') }}
                 </blockquote>
                 <div class="mt-6 flex items-center">
                     <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                        <img src="{{ url_for('main.serve_asset', filename='images/speakers/John_Stuart_Mill.jpg') }}" alt="Portrait of John Stuart Mill, philosopher and author of On Liberty" class="h-full w-full object-cover" onerror="this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}'">
+                        <img src="{{ url_for('main.serve_asset', filename='images/speakers/John_Stuart_Mill.jpg') }}" alt="{{ _('Portrait of John Stuart Mill, philosopher and author of On Liberty') }}" class="h-full w-full object-cover" onerror="this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}'">
                     </div>
                     <div class="ml-4">
                         <cite class="font-semibold text-gray-900 not-italic">John Stuart Mill</cite>
-                        <p class="text-sm text-gray-600">Philosopher, On Liberty, 1859</p>
+                        <p class="text-sm text-gray-600">{{ _('Philosopher, On Liberty, 1859') }}</p>
                     </div>
                 </div>
             </div>
@@ -777,15 +776,15 @@
                     </svg>
                 </div>
                 <blockquote class="text-gray-700 mt-4 text-base leading-relaxed">
-                    "Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it's the only thing that ever has."
+                    {{ _('"Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it\'s the only thing that ever has."') }}
                 </blockquote>
                 <div class="mt-6 flex items-center">
                     <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                        <img src="{{ url_for('main.serve_asset', filename='images/speakers/Margaret_Mead.jpg') }}" alt="Portrait of Margaret Mead, cultural anthropologist" class="h-full w-full object-cover" onerror="this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}'">
+                        <img src="{{ url_for('main.serve_asset', filename='images/speakers/Margaret_Mead.jpg') }}" alt="{{ _('Portrait of Margaret Mead, cultural anthropologist') }}" class="h-full w-full object-cover" onerror="this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}'">
                     </div>
                     <div class="ml-4">
                         <cite class="font-semibold text-gray-900 not-italic">Margaret Mead</cite>
-                        <p class="text-sm text-gray-600">Cultural Anthropologist</p>
+                        <p class="text-sm text-gray-600">{{ _('Cultural Anthropologist') }}</p>
                     </div>
                 </div>
             </div>
@@ -800,16 +799,16 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 gap-4">
             <div>
-                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Join the conversation</h2>
-                <p class="mt-2 text-lg text-gray-600">Real discussions happening right now.</p>
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Join the conversation') }}</h2>
+                <p class="mt-2 text-lg text-gray-600">{{ _('Real discussions happening right now.') }}</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
                 <a href="{{ url_for('discussions.news_feed') }}" class="inline-flex items-center text-sm font-semibold text-gray-600 hover:text-gray-900 whitespace-nowrap">
                     <svg class="mr-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
-                    News discussions
+                    {{ _('News discussions') }}
                 </a>
                 <a href="/discussions/search" class="inline-flex items-center text-sm {{ link_primary_semibold() }} whitespace-nowrap">
-                    See all discussions
+                    {{ _('See all discussions') }}
                     <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
             </div>
@@ -824,17 +823,17 @@
 
         <!-- Start your own CTA -->
         <div class="mt-8 rounded-2xl border-2 border-dashed border-primary-200 bg-primary-50/50 p-8 text-center">
-            <p class="text-gray-900 font-semibold text-lg mb-1">Have a question society should answer?</p>
-            <p class="text-sm text-gray-600 mb-5">Start a discussion and see where people actually stand — or run a structured programme for your community.</p>
+            <p class="text-gray-900 font-semibold text-lg mb-1">{{ _('Have a question society should answer?') }}</p>
+            <p class="text-sm text-gray-600 mb-5">{{ _('Start a discussion and see where people actually stand — or run a structured programme for your community.') }}</p>
             <div class="flex flex-wrap justify-center gap-3">
                 <a href="{{ url_for('discussions.create_discussion') if current_user.is_authenticated else url_for('auth.register') }}"
                    class="{{ btn_primary_md() }}">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    Start a Discussion
+                    {{ _('Start a Discussion') }}
                 </a>
                 <a href="{{ url_for('programmes.list_programmes') }}"
                    class="{{ btn_secondary_md() }}">
-                    Browse Programmes
+                    {{ _('Browse Programmes') }}
                     <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
             </div>
@@ -849,12 +848,12 @@
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row lg:items-center gap-10">
             <div class="lg:w-1/2">
-                <div class="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white mb-4">Fund the mission</div>
+                <div class="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white mb-4">{{ _('Fund the mission') }}</div>
                 <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">
-                    Everything is free. It stays that way because of our subscribers.
+                    {{ _('Everything is free. It stays that way because of our subscribers.') }}
                 </h2>
                 <p class="text-primary-100 text-base">
-                    A Personal Brief subscription funds our open source civic platform — and gives you a custom daily digest from your own sources in return.
+                    {{ _('A Personal Brief subscription funds our open source civic platform — and gives you a custom daily digest from your own sources in return.') }}
                 </p>
             </div>
             <div class="lg:w-1/2">
@@ -862,23 +861,23 @@
                     <div class="space-y-3 mb-6">
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <p class="text-white text-sm">Choose your own sources — RSS, Substack, PDFs</p>
+                            <p class="text-white text-sm">{{ _('Choose your own sources — RSS, Substack, PDFs') }}</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <p class="text-white text-sm">AI synthesis from multiple sources, on your schedule</p>
+                            <p class="text-white text-sm">{{ _('AI synthesis from multiple sources, on your schedule') }}</p>
                         </div>
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <p class="text-white text-sm">Your subscription directly funds free civic participation for all</p>
+                            <p class="text-white text-sm">{{ _('Your subscription directly funds free civic participation for all') }}</p>
                         </div>
                     </div>
                     <a href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
                        class="inline-flex w-full items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-primary-700 shadow-sm hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 transition-colors">
-                        Start 30-Day Free Trial
+                        {{ _('Start 30-Day Free Trial') }}
                         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
-                    <p class="text-center text-primary-200 text-xs mt-3">From £4.99/month · No credit card required to trial</p>
+                    <p class="text-center text-primary-200 text-xs mt-3">{{ _('From £4.99/month · No credit card required to trial') }}</p>
                 </div>
             </div>
         </div>
@@ -892,13 +891,13 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="rounded-2xl bg-gray-50 border border-gray-200 p-6 sm:px-8 sm:py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">For organisations</p>
-                <h2 class="text-gray-900 font-semibold text-lg">Publisher, NGO, government, or researcher?</h2>
-                <p class="text-gray-600 text-sm mt-1">Society Speaks powers structured deliberation, citizen consultation, and civic journalism for organisations across the globe. Embed discussions, commission programmes, and connect your audience to what they actually believe.</p>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{{ _('For organisations') }}</p>
+                <h2 class="text-gray-900 font-semibold text-lg">{{ _('Publisher, NGO, government, or researcher?') }}</h2>
+                <p class="text-gray-600 text-sm mt-1">{{ _('Society Speaks powers structured deliberation, citizen consultation, and civic journalism for organisations across the globe. Embed discussions, commission programmes, and connect your audience to what they actually believe.') }}</p>
             </div>
             <a href="{{ url_for('partner.hub') }}"
                class="flex-shrink-0 {{ btn_primary_md() }} whitespace-nowrap">
-                See how it works
+                {{ _('See how it works') }}
                 <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
         </div>

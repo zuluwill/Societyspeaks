@@ -1,25 +1,25 @@
 {% extends "layout.html" %}
-{% block title %}Your Participation{% endblock %}
+{% block title %}{{ _('Your Participation') }}{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto py-6 px-4 sm:py-8 sm:px-6 lg:px-8">
   <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">{{ _('Dashboard') }}</a>
     <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">Your Participation</span>
+    <span class="text-gray-900 font-medium">{{ _('Your Participation') }}</span>
   </nav>
 
   <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Your Participation</h1>
-    <p class="text-sm text-gray-500 mt-1">Track the discussions you have joined and the arguments you have added.</p>
+    <h1 class="text-2xl font-bold text-gray-900">{{ _('Your Participation') }}</h1>
+    <p class="text-sm text-gray-500 mt-1">{{ _('Track the discussions you have joined and the arguments you have added.') }}</p>
   </div>
 
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
     <section class="bg-white rounded-lg shadow p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h2 class="text-lg font-semibold text-gray-900">Participating Discussions</h2>
-          <p class="text-xs text-gray-400 mt-0.5">Recent discussions where you voted or contributed</p>
+          <h2 class="text-lg font-semibold text-gray-900">{{ _('Participating Discussions') }}</h2>
+          <p class="text-xs text-gray-400 mt-0.5">{{ _('Recent discussions where you voted or contributed') }}</p>
         </div>
       </div>
       {% if participating_discussions %}
@@ -30,29 +30,29 @@
             <div class="flex items-start justify-between gap-3">
               <div>
                 <h3 class="text-sm font-semibold text-gray-900">{{ item.discussion.title }}</h3>
-                <p class="mt-1 text-xs text-gray-500">Last active {{ item.last_activity.strftime('%d %b %Y') if item.last_activity else 'recently' }}</p>
+                <p class="mt-1 text-xs text-gray-500">{{ _('Last active %(when)s', when=item.last_activity.strftime('%d %b %Y') if item.last_activity else _('recently')) }}</p>
               </div>
-              <div class="text-xs text-gray-400 whitespace-nowrap">{{ item.discussion.topic or 'Discussion' }}</div>
+              <div class="text-xs text-gray-400 whitespace-nowrap">{{ item.discussion.topic or _('Discussion') }}</div>
             </div>
             <div class="mt-3 flex flex-wrap gap-2">
-              {% if 'voted' in item.activity_types %}<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-primary-700">Voted</span>{% endif %}
-              {% if 'statement' in item.activity_types %}<span class="inline-flex rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">Statement</span>{% endif %}
-              {% if 'response' in item.activity_types %}<span class="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">Response</span>{% endif %}
+              {% if 'voted' in item.activity_types %}<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-primary-700">{{ _('Voted') }}</span>{% endif %}
+              {% if 'statement' in item.activity_types %}<span class="inline-flex rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">{{ _('Statement') }}</span>{% endif %}
+              {% if 'response' in item.activity_types %}<span class="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">{{ _('Response') }}</span>{% endif %}
             </div>
           </a>
           {% endfor %}
         </div>
       {% else %}
         <div class="text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg p-4">
-          You have not joined any discussions yet.
+          {{ _('You have not joined any discussions yet.') }}
         </div>
       {% endif %}
     </section>
 
     <section class="bg-white rounded-lg shadow p-6">
       <div class="mb-4">
-        <h2 class="text-lg font-semibold text-gray-900">Recent Contributions</h2>
-        <p class="text-xs text-gray-400 mt-0.5">Statements and responses you have written</p>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Recent Contributions') }}</h2>
+        <p class="text-xs text-gray-400 mt-0.5">{{ _('Statements and responses you have written') }}</p>
       </div>
       {% if recent_contributions %}
         <div class="space-y-4">
@@ -71,7 +71,7 @@
         </div>
       {% else %}
         <div class="text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg p-4">
-          When you post statements or arguments, they will show up here.
+          {{ _('When you post statements or arguments, they will show up here.') }}
         </div>
       {% endif %}
     </section>

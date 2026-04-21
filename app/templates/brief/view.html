@@ -5,7 +5,7 @@
 {% from "components/email_capture.html" import email_capture_inline, email_capture_compact, paid_brief_crosssell %}
 {% from "components/listen_with.html" import listen_with %}
 
-{% block title %}{{ brief.title }} - Society Speaks{% endblock %}
+{% block title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
 
 {% block meta_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
 
@@ -15,18 +15,18 @@
         <div class="max-w-3xl mx-auto text-center">
             <p class="text-blue-300 text-xs font-semibold tracking-widest uppercase mb-3">Society Speaks</p>
             <h1 class="text-white text-3xl sm:text-4xl font-bold mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif;">
-                {% if brief.brief_type == 'weekly' %}The Weekly Brief{% else %}The Daily Brief{% endif %}
+                {% if brief.brief_type == 'weekly' %}{{ _('The Weekly Brief') }}{% else %}{{ _('The Daily Brief') }}{% endif %}
             </h1>
             <p class="text-blue-200 text-sm">
                 {% if brief.brief_type == 'weekly' and brief.week_start_date and brief.week_end_date %}
-                Week of {{ brief.week_start_date.strftime('%d %B') }} – {{ brief.week_end_date.strftime('%d %B %Y') }}
+                {{ _('Week of %(start)s – %(end)s', start=brief.week_start_date.strftime('%d %B'), end=brief.week_end_date.strftime('%d %B %Y')) }}
                 {% else %}
-                {{ brief.date.strftime('%A, %d %B %Y') }} Edition
+                {{ _('%(date)s Edition', date=brief.date.strftime('%A, %d %B %Y')) }}
                 {% endif %}
-                {% if brief.reading_time %}<span class="mx-1">&middot;</span> ~{{ brief.reading_time }} min read{% endif %}
+                {% if brief.reading_time %}<span class="mx-1">&middot;</span> {{ _('~%(min)s min read', min=brief.reading_time) }}{% endif %}
             </p>
             {% if brief.brief_type != 'weekly' %}
-            <p class="text-blue-100 text-xs mt-2">Updated daily at 6pm UTC — today's edition publishes this evening</p>
+            <p class="text-blue-100 text-xs mt-2">{{ _("Updated daily at 6pm UTC — today's edition publishes this evening") }}</p>
             {% endif %}
         </div>
     </header>
@@ -35,18 +35,18 @@
         {% if latest_weekly is defined and latest_weekly and brief.brief_type != 'weekly' %}
         <a href="{{ url_for('brief.weekly_latest') }}" class="block mb-6 rounded-xl border border-indigo-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
             <div class="bg-indigo-600 px-4 py-2">
-                <p class="text-white font-semibold text-sm tracking-wide">📋 Weekly Brief Available</p>
+                <p class="text-white font-semibold text-sm tracking-wide">📋 {{ _('Weekly Brief Available') }}</p>
             </div>
             <div class="px-4 py-3 flex items-center justify-between">
                 <p class="text-slate-600 text-sm">
                     {% if latest_weekly.week_start_date and latest_weekly.week_end_date %}
-                    Week of {{ latest_weekly.week_start_date.strftime('%d %b') }} – {{ latest_weekly.week_end_date.strftime('%d %b %Y') }}
+                    {{ _('Week of %(start)s – %(end)s', start=latest_weekly.week_start_date.strftime('%d %b'), end=latest_weekly.week_end_date.strftime('%d %b %Y')) }}
                     {% else %}
                     {{ latest_weekly.date.strftime('%d %B %Y') }}
                     {% endif %}
-                    <span class="text-slate-400 mx-1">&middot;</span> ~{{ latest_weekly.reading_time or 6 }} min read
+                    <span class="text-slate-400 mx-1">&middot;</span> {{ _('~%(min)s min read', min=latest_weekly.reading_time or 6) }}
                 </p>
-                <span class="text-indigo-500 group-hover:text-indigo-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4">Read &rarr;</span>
+                <span class="text-indigo-500 group-hover:text-indigo-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4">{{ _('Read') }} &rarr;</span>
             </div>
         </a>
         {% endif %}
@@ -56,9 +56,9 @@
             <div class="px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="text-lg">📰</span>
-                    <p class="text-slate-600 text-sm font-medium">Back to today's Daily Brief</p>
+                    <p class="text-slate-600 text-sm font-medium">{{ _("Back to today's Daily Brief") }}</p>
                 </div>
-                <span class="text-primary-500 group-hover:text-primary-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4">&larr; Daily Brief</span>
+                <span class="text-primary-500 group-hover:text-primary-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4">&larr; {{ _('Daily Brief') }}</span>
             </div>
         </a>
         {% endif %}
@@ -89,19 +89,19 @@
         <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6 mb-8">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Listen to the Brief</h3>
-                    <p class="text-sm text-gray-600">Generate audio for all stories in this brief</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Listen to the Brief') }}</h3>
+                    <p class="text-sm text-gray-600">{{ _('Generate audio for all stories in this brief') }}</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     {{ voice_selector('voice-select', 'text-sm border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 bg-white min-h-[44px] sm:min-h-0 flex-1 sm:flex-none') }}
                     <button data-brief-id="{{ brief.id }}"
                             id="generate-all-audio-btn"
                             class="inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors min-h-[44px] sm:min-h-0 w-full sm:w-auto"
-                            aria-label="Generate audio for all items in this brief">
+                            aria-label="{{ _('Generate audio for all items in this brief') }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                         </svg>
-                        <span>Generate All Audio</span>
+                        <span>{{ _('Generate All Audio') }}</span>
                     </button>
                 </div>
             </div>
@@ -113,7 +113,7 @@
                         </div>
                         <span id="audio-progress-text" class="text-sm font-medium text-gray-700 min-w-[3rem] text-right">0%</span>
                     </div>
-                    <p id="audio-status-message" class="text-sm text-gray-600">Preparing...</p>
+                    <p id="audio-status-message" class="text-sm text-gray-600">{{ _('Preparing...') }}</p>
                 </div>
             </div>
         </div>
@@ -134,7 +134,7 @@
                 {% set sec = SECTIONS.get(section_key, {}) %}
                 <div class="px-6 pt-5 pb-3 border-b border-gray-100">
                     <h2 class="text-sm font-bold tracking-widest uppercase {{ sec.get('web_color_class', 'text-slate-500') }}">
-                        🌍 {{ sec.get('display_name', 'Around the World') }}
+                        🌍 {{ sec.get('display_name') or _('Around the World') }}
                     </h2>
                     {% if sec.get('description') %}
                     <p class="text-xs text-gray-500 mt-1">{{ sec.description }}</p>
@@ -155,14 +155,14 @@
                                 <p class="text-gray-600 text-sm mt-1.5 leading-relaxed">{{ item.quick_summary }}</p>
                                 {% endif %}
                                 {% if item.source_count %}
-                                <span class="text-xs text-gray-400 mt-1 inline-block">{{ item.source_count }} sources</span>
+                                <span class="text-xs text-gray-400 mt-1 inline-block">{{ _('%(count)d sources', count=item.source_count) }}</span>
                                 {% endif %}
 
                                 {# Quick sources (match email quick depth richness) #}
                                 {% set quick_topic_articles = (topic_articles_by_topic_id.get(item.trending_topic.id, [])[:2] if topic_articles_by_topic_id is defined and item.trending_topic else (item.trending_topic.articles.all()[:2] if item.trending_topic else [])) %}
                                 {% if quick_topic_articles %}
                                 <div class="mt-3">
-                                    <p class="text-[11px] font-bold tracking-wide uppercase text-gray-500 mb-1">📰 Sources</p>
+                                    <p class="text-[11px] font-bold tracking-wide uppercase text-gray-500 mb-1">📰 {{ _('Sources') }}</p>
                                     <div class="space-y-1">
                                         {% for topic_article in quick_topic_articles %}
                                         {% if topic_article.article and topic_article.article.url %}
@@ -178,7 +178,7 @@
                                 {# Quick verification links #}
                                 {% if item.verification_links %}
                                 <div class="mt-3">
-                                    <p class="text-[11px] font-bold tracking-wide uppercase text-gray-500 mb-1">🔗 Verify</p>
+                                    <p class="text-[11px] font-bold tracking-wide uppercase text-gray-500 mb-1">🔗 {{ _('Verify') }}</p>
                                     <div class="space-y-1">
                                         {% for link in item.verification_links[:2] %}
                                         <a href="{{ link.url }}" target="_blank" rel="noopener" class="block text-sm text-primary-700 hover:text-primary-800 hover:underline">
@@ -196,11 +196,11 @@
                                 {% set quick_right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
                                 <div class="mt-3">
                                     <p class="text-[11px] text-gray-500">
-                                        <span class="text-primary-600">{{ quick_left_pct }}% Left</span>
+                                        <span class="text-primary-600">{{ _('%(pct)s%% Left', pct=quick_left_pct) }}</span>
                                         &nbsp;&bull;&nbsp;
-                                        <span class="text-purple-600">{{ quick_center_pct }}% Centre</span>
+                                        <span class="text-purple-600">{{ _('%(pct)s%% Centre', pct=quick_center_pct) }}</span>
                                         &nbsp;&bull;&nbsp;
-                                        <span class="text-red-600">{{ quick_right_pct }}% Right</span>
+                                        <span class="text-red-600">{{ _('%(pct)s%% Right', pct=quick_right_pct) }}</span>
                                     </p>
                                     <div class="mt-1 h-1.5 w-full rounded-full overflow-hidden bg-gray-200 flex">
                                         {% if quick_left_pct > 0 %}<div class="h-full bg-blue-500" style="width: {{ quick_left_pct }}%;"></div>{% endif %}
@@ -278,9 +278,9 @@
                     {% if item.is_underreported %}
                     <div class="mb-5">
                         <span class="inline-flex items-center px-3 py-1.5 rounded-md bg-amber-500 text-white text-xs font-bold uppercase tracking-wider">
-                            📭 Under the Radar
+                            📭 {{ _('Under the Radar') }}
                         </span>
-                        <p class="text-amber-800 text-xs mt-2 font-medium">High civic importance, low media coverage</p>
+                        <p class="text-amber-800 text-xs mt-2 font-medium">{{ _('High civic importance, low media coverage') }}</p>
                     </div>
                     {% endif %}
 
@@ -301,7 +301,7 @@
                             <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                             </svg>
-                            {{ item.source_count }} sources
+                            {{ _('%(count)d sources', count=item.source_count) }}
                         </span>
                         {% endif %}
 
@@ -315,7 +315,7 @@
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             {% endif %}
-                            <span>{{ item.sensationalism_label|capitalize }} sensationalism</span>
+                            <span>{{ _('%(label)s sensationalism', label=item.sensationalism_label|capitalize) }}</span>
                         </span>
                         {% endif %}
 
@@ -329,14 +329,14 @@
                             <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
-                            Blindspot: {{ left_pct }}% left coverage
+                            {{ _('Blindspot: %(pct)s%% left coverage', pct=left_pct) }}
                         </span>
                         {% elif has_coverage and right_pct < 15 and left_pct > 30 %}
                         <span class="inline-flex items-center px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-primary-700 text-xs font-semibold">
                             <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
-                            Blindspot: {{ right_pct }}% right coverage
+                            {{ _('Blindspot: %(pct)s%% right coverage', pct=right_pct) }}
                         </span>
                         {% endif %}
                         {% endif %}
@@ -369,7 +369,7 @@
                             <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
-                            <span>Want a bit more detail?</span>
+                            <span>{{ _('Want a bit more detail?') }}</span>
                         </button>
                         <div id="deeper-context-{{ item.id }}" 
                              class="hidden mt-4 p-5 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg">
@@ -382,38 +382,38 @@
 
                     {% if item.personal_impact %}
                     <div class="bg-blue-50 border-l-4 border-primary-500 rounded-r-lg p-5 mb-6">
-                        <p class="text-xs font-bold text-primary-700 uppercase tracking-wide mb-2">💡 Why This Matters To You</p>
+                        <p class="text-xs font-bold text-primary-700 uppercase tracking-wide mb-2">💡 {{ _('Why This Matters To You') }}</p>
                         <p class="text-blue-900 leading-relaxed font-medium">{{ item.personal_impact }}</p>
                     </div>
                     {% endif %}
 
                     {% if item.so_what %}
                     <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">
-                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Why It Matters</p>
+                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">{{ _('Why It Matters') }}</p>
                         <p class="text-amber-900 leading-relaxed">{{ item.so_what|strip_so_what }}</p>
                     </div>
                     {% endif %}
 
                     {% if item.perspectives and (item.perspectives.get('left') or item.perspectives.get('center') or item.perspectives.get('right')) %}
                     <div class="bg-slate-50 rounded-xl p-5 mb-6">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">How It's Being Framed</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">{{ _("How It's Being Framed") }}</p>
                         <div class="space-y-3">
                             {% if item.perspectives.get('left') %}
                             <div class="flex items-start gap-3">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-primary-600 text-xs font-bold flex-shrink-0">L</span>
-                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-primary-600">Left:</span> {{ item.perspectives.get('left') }}</p>
+                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-primary-600">{{ _('Left:') }}</span> {{ item.perspectives.get('left') }}</p>
                             </div>
                             {% endif %}
                             {% if item.perspectives.get('center') %}
                             <div class="flex items-start gap-3">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs font-bold flex-shrink-0">C</span>
-                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-purple-600">Centre:</span> {{ item.perspectives.get('center') }}</p>
+                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-purple-600">{{ _('Centre:') }}</span> {{ item.perspectives.get('center') }}</p>
                             </div>
                             {% endif %}
                             {% if item.perspectives.get('right') %}
                             <div class="flex items-start gap-3">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-bold flex-shrink-0">R</span>
-                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-red-600">Right:</span> {{ item.perspectives.get('right') }}</p>
+                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-red-600">{{ _('Right:') }}</span> {{ item.perspectives.get('right') }}</p>
                             </div>
                             {% endif %}
                         </div>
@@ -425,11 +425,11 @@
                     <div class="mt-4 bg-slate-50 border-l-4 border-indigo-500 rounded-r-lg p-4">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
-                                📊 Market Signal
+                                📊 {{ _('Market Signal') }}
                             </span>
                             {% if item.market_signal.quality_tier == 'high' %}
                             <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                                High Volume
+                                {{ _('High Volume') }}
                             </span>
                             {% endif %}
                         </div>
@@ -454,29 +454,28 @@
                         <div class="flex items-center gap-3 text-sm text-slate-500 mb-3">
                             {% if item.market_signal.change_24h_formatted and item.market_signal.change_24h_formatted != '—' %}
                             <span class="{% if item.market_signal.change_24h > 0 %}text-green-600{% elif item.market_signal.change_24h < 0 %}text-red-600{% endif %}">
-                                {{ item.market_signal.change_24h_formatted }} today
+                                {{ _('%(change)s today', change=item.market_signal.change_24h_formatted) }}
                             </span>
                             <span>·</span>
                             {% endif %}
-                            <span>${{ "{:,.0f}".format(item.market_signal.volume_24h or 0) }} volume</span>
+                            <span>{{ _('$%(amount)s volume', amount="{:,.0f}".format(item.market_signal.volume_24h or 0)) }}</span>
                             <span>·</span>
                             <a href="{{ item.market_signal.url }}" target="_blank" rel="noopener"
                                class="text-indigo-600 hover:text-indigo-700">
-                                View market →
+                                {{ _('View market') }} →
                             </a>
                         </div>
 
                         <!-- Disclaimer -->
                         <p class="text-xs text-slate-400 italic border-t border-slate-200 pt-3">
-                            Markets reflect collective expectations, not certainty.
-                            Prices move on new information, rumours, and sentiment.
+                            {{ _('Markets reflect collective expectations, not certainty. Prices move on new information, rumours, and sentiment.') }}
                         </p>
                     </div>
                     {% endif %}
 
                     {% if item.blindspot_explanation %}
                     <div class="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-5 mb-6">
-                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🔍 Coverage Gap Analysis</p>
+                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🔍 {{ _('Coverage Gap Analysis') }}</p>
                         <p class="text-amber-900 leading-relaxed italic">{{ item.blindspot_explanation }}</p>
                     </div>
                     {% endif %}
@@ -497,7 +496,7 @@
                     {# Only show coverage bar if we have actual sources to back it up #}
                     {% if cov_total > 0 and has_any_sources %}
                     <div class="mb-6">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Coverage Balance</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">{{ _('Coverage Balance') }}</p>
 
                         <!-- Coverage Bar with proper colors -->
                         <div class="w-full h-3 rounded-full overflow-hidden mb-3" style="display: flex; background-color: #e5e7eb;">
@@ -514,13 +513,13 @@
 
                         <div class="flex justify-between text-xs">
                             <span class="text-primary-600 font-medium">
-                                {% if left_sources|length > 0 %}{{ cov_left_pct }}% Left ({{ left_sources|length }}){% else %}<span class="text-gray-400">No left coverage</span>{% endif %}
+                                {% if left_sources|length > 0 %}{{ _('%(pct)s%% Left (%(count)d)', pct=cov_left_pct, count=left_sources|length) }}{% else %}<span class="text-gray-400">{{ _('No left coverage') }}</span>{% endif %}
                             </span>
                             <span class="text-purple-600 font-medium">
-                                {% if center_sources|length > 0 %}{{ cov_center_pct }}% Centre ({{ center_sources|length }}){% else %}<span class="text-gray-400">No centre coverage</span>{% endif %}
+                                {% if center_sources|length > 0 %}{{ _('%(pct)s%% Centre (%(count)d)', pct=cov_center_pct, count=center_sources|length) }}{% else %}<span class="text-gray-400">{{ _('No centre coverage') }}</span>{% endif %}
                             </span>
                             <span class="text-red-600 font-medium">
-                                {% if right_sources|length > 0 %}{{ cov_right_pct }}% Right ({{ right_sources|length }}){% else %}<span class="text-gray-400">No right coverage</span>{% endif %}
+                                {% if right_sources|length > 0 %}{{ _('%(pct)s%% Right (%(count)d)', pct=cov_right_pct, count=right_sources|length) }}{% else %}<span class="text-gray-400">{{ _('No right coverage') }}</span>{% endif %}
                             </span>
                         </div>
 
@@ -529,13 +528,13 @@
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                                 {% if left_sources|length > 0 %}
-                                <span><span class="text-primary-600 font-medium">Left:</span> {{ left_sources|join(', ') }}</span>
+                                <span><span class="text-primary-600 font-medium">{{ _('Left:') }}</span> {{ left_sources|join(', ') }}</span>
                                 {% endif %}
                                 {% if center_sources|length > 0 %}
-                                <span><span class="text-purple-600 font-medium">Centre:</span> {{ center_sources|join(', ') }}</span>
+                                <span><span class="text-purple-600 font-medium">{{ _('Centre:') }}</span> {{ center_sources|join(', ') }}</span>
                                 {% endif %}
                                 {% if right_sources|length > 0 %}
-                                <span><span class="text-red-600 font-medium">Right:</span> {{ right_sources|join(', ') }}</span>
+                                <span><span class="text-red-600 font-medium">{{ _('Right:') }}</span> {{ right_sources|join(', ') }}</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -545,11 +544,11 @@
                         {% if left_sources|length == 0 or right_sources|length == 0 %}
                         <p class="text-xs text-gray-400 mt-2 italic">
                             {% if left_sources|length == 0 and right_sources|length == 0 %}
-                            Only centre sources covered this story.
+                            {{ _('Only centre sources covered this story.') }}
                             {% elif left_sources|length == 0 %}
-                            Left-leaning outlets did not cover this story in our source roster.
+                            {{ _('Left-leaning outlets did not cover this story in our source roster.') }}
                             {% elif right_sources|length == 0 %}
-                            Right-leaning outlets did not cover this story in our source roster.
+                            {{ _('Right-leaning outlets did not cover this story in our source roster.') }}
                             {% endif %}
                         </p>
                         {% endif %}
@@ -574,7 +573,7 @@
                     {% endfor %}
                     {% if unique_sources %}
                     <div class="mb-6">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">📰 Read the Original Sources</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">📰 {{ _('Read the Original Sources') }}</p>
                         <div class="space-y-2">
                             {% for topic_article in unique_sources %}
                             <a href="{{ topic_article.article.url }}" target="_blank" rel="noopener" 
@@ -594,7 +593,7 @@
 
                     {% if item.verification_links %}
                     <div class="mb-6">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">🔗 Verify It Yourself</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">🔗 {{ _('Verify It Yourself') }}</p>
                         <div class="space-y-2">
                             {% for link in item.verification_links %}
                             <a href="{{ link.url }}" target="_blank" rel="noopener" 
@@ -619,7 +618,7 @@
                                         <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
                                         </svg>
-                                        Paywall
+                                        {{ _('Paywall') }}
                                     </span>
                                     {% endif %}
                                 </div>
@@ -639,7 +638,7 @@
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                             </svg>
-                            {{ item.cta_text or 'Join the Discussion' }}
+                            {{ item.cta_text or _('Join the Discussion') }}
                         </a>
                     </div>
                     {% endif %}
@@ -656,8 +655,8 @@
                 <div class="flex items-center gap-3 mb-5">
                     <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-violet-600 text-white text-lg">📅</span>
                     <div>
-                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">The Week Ahead</h2>
-                        <p class="text-sm text-violet-700">Key dates and events to watch</p>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">{{ _('The Week Ahead') }}</h2>
+                        <p class="text-sm text-violet-700">{{ _('Key dates and events to watch') }}</p>
                     </div>
                 </div>
                 <div class="space-y-3">
@@ -672,7 +671,7 @@
                             <p class="text-gray-600 text-xs mt-1">{{ event.description }}</p>
                             {% endif %}
                             {% if event.source_url %}
-                            <a href="{{ event.source_url }}" target="_blank" rel="noopener" class="text-xs text-violet-600 hover:underline mt-1 inline-block">More info &rarr;</a>
+                            <a href="{{ event.source_url }}" target="_blank" rel="noopener" class="text-xs text-violet-600 hover:underline mt-1 inline-block">{{ _('More info') }} &rarr;</a>
                             {% endif %}
                         </div>
                         {% if event.category %}
@@ -692,8 +691,8 @@
                 <div class="flex items-center gap-3 mb-5">
                     <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-sky-500 text-white text-lg">🌍</span>
                     <div>
-                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">What the World is Watching</h2>
-                        <p class="text-sm text-sky-700">Where prediction markets see the biggest stakes</p>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">{{ _('What the World is Watching') }}</h2>
+                        <p class="text-sm text-sky-700">{{ _('Where prediction markets see the biggest stakes') }}</p>
                     </div>
                 </div>
                 <div class="space-y-4">
@@ -717,23 +716,23 @@
                         <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
                             {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
                             <span class="font-semibold {% if market.change_24h > 0 %}text-green-600{% elif market.change_24h < 0 %}text-red-600{% endif %}">
-                                {{ market.change_24h_formatted }} today
+                                {{ _('%(change)s today', change=market.change_24h_formatted) }}
                             </span>
                             <span>&middot;</span>
                             {% endif %}
-                            <span>${{ "{:,.0f}".format(market.volume_24h or 0) }} volume</span>
+                            <span>{{ _('$%(amount)s volume', amount="{:,.0f}".format(market.volume_24h or 0)) }}</span>
                             {% if market.trader_count %}
                             <span>&middot;</span>
-                            <span>{{ "{:,.0f}".format(market.trader_count) }} traders</span>
+                            <span>{{ _('%(count)s traders', count="{:,.0f}".format(market.trader_count)) }}</span>
                             {% endif %}
                             <span>&middot;</span>
-                            <a href="{{ market.url }}" target="_blank" rel="noopener" class="text-sky-600 hover:text-sky-700 font-medium">View market &rarr;</a>
+                            <a href="{{ market.url }}" target="_blank" rel="noopener" class="text-sky-600 hover:text-sky-700 font-medium">{{ _('View market') }} &rarr;</a>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 <p class="text-xs text-gray-400 italic mt-4 text-center">
-                    Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment — they are not forecasts.
+                    {{ _('Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment — they are not forecasts.') }}
                 </p>
             </div>
         </div>
@@ -746,8 +745,8 @@
                 <div class="flex items-center gap-3 mb-5">
                     <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white text-lg">📊</span>
                     <div>
-                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Market Pulse</h2>
-                        <p class="text-sm text-indigo-700">What prediction markets are pricing in</p>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">{{ _('Market Pulse') }}</h2>
+                        <p class="text-sm text-indigo-700">{{ _('What prediction markets are pricing in') }}</p>
                     </div>
                 </div>
                 <div class="space-y-4">
@@ -766,22 +765,22 @@
                         <div class="flex items-center gap-3 text-sm text-slate-500">
                             {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
                             <span class="{% if market.change_24h > 0 %}text-green-600{% elif market.change_24h < 0 %}text-red-600{% endif %}">
-                                {{ market.change_24h_formatted }} today
+                                {{ _('%(change)s today', change=market.change_24h_formatted) }}
                             </span>
                             <span>&middot;</span>
                             {% endif %}
-                            <span>${{ "{:,.0f}".format(market.volume_24h or 0) }} volume</span>
+                            <span>{{ _('$%(amount)s volume', amount="{:,.0f}".format(market.volume_24h or 0)) }}</span>
                             <span>&middot;</span>
-                            <a href="{{ market.url }}" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700">View market &rarr;</a>
+                            <a href="{{ market.url }}" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700">{{ _('View market') }} &rarr;</a>
                         </div>
                         {% if market.matched_topic %}
-                        <p class="text-xs text-gray-400 mt-2">Related to: {{ market.matched_topic }}</p>
+                        <p class="text-xs text-gray-400 mt-2">{{ _('Related to: %(topic)s', topic=market.matched_topic) }}</p>
                         {% endif %}
                     </div>
                     {% endfor %}
                 </div>
                 <p class="text-xs text-gray-400 italic mt-4 text-center">
-                    Markets reflect collective expectations, not certainty. Prices move on new information, rumours, and sentiment.
+                    {{ _('Markets reflect collective expectations, not certainty. Prices move on new information, rumours, and sentiment.') }}
                 </p>
             </div>
         </div>
@@ -800,19 +799,22 @@
                         </svg>
                     </span>
                     <div>
-                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Same Story, Different Lens</h2>
-                        <p class="text-sm text-purple-700">How outlets across the spectrum frame the same news</p>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">{{ _('Same Story, Different Lens') }}</h2>
+                        <p class="text-sm text-purple-700">{{ _('How outlets across the spectrum frame the same news') }}</p>
                     </div>
                 </div>
 
                 <!-- Story Summary -->
                 <div class="bg-white rounded-xl p-5 mb-6 border border-purple-100">
-                    <p class="text-xs font-bold text-purple-600 uppercase tracking-wide mb-2">The Story</p>
+                    <p class="text-xs font-bold text-purple-600 uppercase tracking-wide mb-2">{{ _('The Story') }}</p>
                     <p class="text-gray-800 font-medium leading-relaxed">{{ brief.lens_check.story_summary }}</p>
                     {% if brief.lens_check.selection_criteria %}
                     <p class="text-xs text-gray-500 mt-3">
-                        Based on {{ brief.lens_check.selection_criteria.total_sources }} sources 
-                        ({{ brief.lens_check.selection_criteria.left_sources }}L / {{ brief.lens_check.selection_criteria.centre_sources }}C / {{ brief.lens_check.selection_criteria.right_sources }}R)
+                        {{ _('Based on %(total)d sources (%(left)sL / %(centre)sC / %(right)sR)',
+                              total=brief.lens_check.selection_criteria.total_sources,
+                              left=brief.lens_check.selection_criteria.left_sources,
+                              centre=brief.lens_check.selection_criteria.centre_sources,
+                              right=brief.lens_check.selection_criteria.right_sources) }}
                     </p>
                     {% endif %}
                 </div>
@@ -824,12 +826,12 @@
                     <div class="bg-white rounded-xl p-5 border-t-4 border-primary-500">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-primary-700 text-sm font-bold flex-shrink-0">L</span>
-                            <span class="text-sm font-bold text-primary-700 uppercase tracking-wide">Left</span>
-                            <span class="text-xs text-gray-500">({{ brief.lens_check.perspectives.left.source_count }} sources)</span>
+                            <span class="text-sm font-bold text-primary-700 uppercase tracking-wide">{{ _('Left') }}</span>
+                            <span class="text-xs text-gray-500">{{ _('(%(count)d sources)', count=brief.lens_check.perspectives.left.source_count) }}</span>
                         </div>
                         {% if brief.lens_check.perspectives.left.emphasis %}
                         <p class="text-xs text-gray-600 mb-3">
-                            <span class="font-semibold">Emphasis:</span> {{ brief.lens_check.perspectives.left.emphasis }}
+                            <span class="font-semibold">{{ _('Emphasis:') }}</span> {{ brief.lens_check.perspectives.left.emphasis }}
                         </p>
                         {% endif %}
                         <div class="space-y-3">
@@ -848,12 +850,12 @@
                     <div class="bg-white rounded-xl p-5 border-t-4 border-purple-500">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex-shrink-0">C</span>
-                            <span class="text-sm font-bold text-purple-700 uppercase tracking-wide">Centre</span>
-                            <span class="text-xs text-gray-500">({{ brief.lens_check.perspectives.centre.source_count }} sources)</span>
+                            <span class="text-sm font-bold text-purple-700 uppercase tracking-wide">{{ _('Centre') }}</span>
+                            <span class="text-xs text-gray-500">{{ _('(%(count)d sources)', count=brief.lens_check.perspectives.centre.source_count) }}</span>
                         </div>
                         {% if brief.lens_check.perspectives.centre.emphasis %}
                         <p class="text-xs text-gray-600 mb-3">
-                            <span class="font-semibold">Emphasis:</span> {{ brief.lens_check.perspectives.centre.emphasis }}
+                            <span class="font-semibold">{{ _('Emphasis:') }}</span> {{ brief.lens_check.perspectives.centre.emphasis }}
                         </p>
                         {% endif %}
                         <div class="space-y-3">
@@ -872,12 +874,12 @@
                     <div class="bg-white rounded-xl p-5 border-t-4 border-red-500">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-100 text-red-700 text-sm font-bold flex-shrink-0">R</span>
-                            <span class="text-sm font-bold text-red-700 uppercase tracking-wide">Right</span>
-                            <span class="text-xs text-gray-500">({{ brief.lens_check.perspectives.right.source_count }} sources)</span>
+                            <span class="text-sm font-bold text-red-700 uppercase tracking-wide">{{ _('Right') }}</span>
+                            <span class="text-xs text-gray-500">{{ _('(%(count)d sources)', count=brief.lens_check.perspectives.right.source_count) }}</span>
                         </div>
                         {% if brief.lens_check.perspectives.right.emphasis %}
                         <p class="text-xs text-gray-600 mb-3">
-                            <span class="font-semibold">Emphasis:</span> {{ brief.lens_check.perspectives.right.emphasis }}
+                            <span class="font-semibold">{{ _('Emphasis:') }}</span> {{ brief.lens_check.perspectives.right.emphasis }}
                         </p>
                         {% endif %}
                         <div class="space-y-3">
@@ -895,7 +897,7 @@
                 <!-- Contrast Analysis -->
                 {% if brief.lens_check.contrast_analysis %}
                 <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-4">
-                    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">💡 The Contrast</p>
+                    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">💡 {{ _('The Contrast') }}</p>
                     <p class="text-amber-900 leading-relaxed">{{ brief.lens_check.contrast_analysis }}</p>
                 </div>
                 {% endif %}
@@ -903,16 +905,17 @@
                 <!-- Omissions -->
                 {% if brief.lens_check.omissions %}
                 <div class="bg-slate-50 border-l-4 border-slate-400 rounded-r-lg p-5 mb-4">
-                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">🔍 What's Missing</p>
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">🔍 {{ _("What's Missing") }}</p>
                     <p class="text-slate-700 leading-relaxed">{{ brief.lens_check.omissions }}</p>
                 </div>
                 {% endif %}
 
                 <!-- Methodology Note -->
+                {% set _allsides_bias_link = '<a href="https://allsides.com/media-bias" target="_blank" rel="noopener" class="text-purple-600 hover:underline">' ~ _('AllSides media bias ratings') ~ '</a>' %}
+                {% set _methodology_link = '<a href="' ~ url_for('brief.methodology') ~ '" class="text-purple-600 hover:underline ml-1">' ~ _('Learn more about our methodology') ~ '</a>' %}
                 <div class="text-center pt-4 border-t border-purple-100">
                     <p class="text-xs text-gray-500">
-                        Source classifications based on <a href="https://allsides.com/media-bias" target="_blank" rel="noopener" class="text-purple-600 hover:underline">AllSides media bias ratings</a>.
-                        <a href="{{ url_for('brief.methodology') }}" class="text-purple-600 hover:underline ml-1">Learn more about our methodology</a>.
+                        {{ _('Source classifications based on %(allsides_link)s. %(methodology_link)s.', allsides_link=_allsides_bias_link, methodology_link=_methodology_link)|safe }}
                     </p>
                 </div>
             </div>
@@ -931,23 +934,23 @@
         <!-- Conversion CTA for free daily brief subscribers -->
         <div class="bg-gradient-to-br from-blue-800 to-indigo-900 rounded-2xl shadow-xl p-8 mt-8 text-center">
             <div class="max-w-xl mx-auto">
-                <h3 class="text-xl font-bold text-white mb-3">Like this brief? Get one tailored to you.</h3>
+                <h3 class="text-xl font-bold text-white mb-3">{{ _('Like this brief? Get one tailored to you.') }}</h3>
                 <p class="text-blue-200 mb-6 leading-relaxed">
-                    Create a brief like this one, with your own sources, topics, and schedule. Paid briefs fund the open source technology that keeps Society Speaks free for everyone.
+                    {{ _('Create a brief like this one, with your own sources, topics, and schedule. Paid briefs fund the open source technology that keeps Society Speaks free for everyone.') }}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
                     <a href="{{ url_for('briefing.landing') }}" class="inline-flex items-center justify-center px-6 py-3 bg-white text-primary-800 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Get Your Own Brief
+                        {{ _('Get Your Own Brief') }}
                     </a>
                     <button id="brief-share-btn"
                             class="inline-flex items-center justify-center px-6 py-3 bg-primary-700 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                         </svg>
-                        Share This Brief
+                        {{ _('Share This Brief') }}
                     </button>
                 </div>
             </div>
@@ -955,9 +958,9 @@
         {% endif %}
 
         <div class="text-center text-sm text-gray-500 pb-8">
-            <a href="{{ url_for('brief.archive') }}" class="hover:text-gray-700">View Archive</a>
+            <a href="{{ url_for('brief.archive') }}" class="hover:text-gray-700">{{ _('View Archive') }}</a>
             <span class="mx-2">|</span>
-            <a href="{{ url_for('brief.methodology') }}" class="hover:text-gray-700">How We Select Stories</a>
+            <a href="{{ url_for('brief.methodology') }}" class="hover:text-gray-700">{{ _('How We Select Stories') }}</a>
         </div>
     </div>
 </div>
@@ -1009,7 +1012,7 @@
     if (navigator.share) {
       navigator.share({title: '{{ brief.title|e }}', url: window.location.href});
     } else {
-      navigator.clipboard.writeText(window.location.href).then(function() { alert('Link copied!'); });
+      navigator.clipboard.writeText(window.location.href).then(function() { alert({{ _('Link copied!')|tojson }}); });
     }
   });
 </script>

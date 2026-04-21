@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 
 {% set cadence = cadence|default('daily') %}
-{% set cadence_label = 'Weekly Brief' if cadence == 'weekly' else 'Daily Brief' %}
+{% set cadence_label = _('Weekly Brief') if cadence == 'weekly' else _('Daily Brief') %}
 
-{% block title %}Subscription Confirmed - Society Speaks{% endblock %}
+{% block title %}{{ _('Subscription Confirmed - Society Speaks') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -14,23 +14,23 @@
             </svg>
         </div>
         
-        <h1 class="text-2xl font-bold text-gray-900 mb-4">You're Subscribed!</h1>
-        <p class="text-gray-600 mb-8">Welcome to the {{ cadence_label }}. You'll receive your first email at your preferred time.</p>
-        
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ _("You're Subscribed!") }}</h1>
+        <p class="text-gray-600 mb-8">{{ _("Welcome to the %(label)s. You'll receive your first email at your preferred time.", label=cadence_label) }}</p>
+
         <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h3 class="font-semibold text-gray-900 mb-3">What happens next?</h3>
+            <h3 class="font-semibold text-gray-900 mb-3">{{ _('What happens next?') }}</h3>
             <ul class="space-y-3 text-left text-sm text-gray-600">
                 <li class="flex items-start">
                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">1</span>
-                    <span>Check your inbox for a welcome email with your magic link</span>
+                    <span>{{ _('Check your inbox for a welcome email with your magic link') }}</span>
                 </li>
                 <li class="flex items-start">
                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">2</span>
-                    <span>Use the magic link to access your personalised brief anytime</span>
+                    <span>{{ _('Use the magic link to access your personalised brief anytime') }}</span>
                 </li>
                 <li class="flex items-start">
                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">3</span>
-                    <span>Receive {% if cadence == 'weekly' %}weekly digests every {{ weekly_day_name | default('Sunday') }}{% else %}daily briefs{% endif %} at your preferred time</span>
+                    <span>{% if cadence == 'weekly' %}{{ _('Receive weekly digests every %(day)s at your preferred time', day=(weekly_day_name | default(_('Sunday')))) }}{% else %}{{ _('Receive daily briefs at your preferred time') }}{% endif %}</span>
                 </li>
             </ul>
         </div>
@@ -41,19 +41,19 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div>
-                    <h4 class="font-semibold text-amber-800 text-sm mb-2">Don't miss your emails!</h4>
-                    <p class="text-sm text-amber-700 mb-2">Our emails sometimes land in spam or promotions folders. To make sure you receive every brief:</p>
+                    <h4 class="font-semibold text-amber-800 text-sm mb-2">{{ _("Don't miss your emails!") }}</h4>
+                    <p class="text-sm text-amber-700 mb-2">{{ _('Our emails sometimes land in spam or promotions folders. To make sure you receive every brief:') }}</p>
                     <ul class="text-sm text-amber-700 space-y-1">
-                        <li>1. Check your spam/junk folder for the welcome email</li>
-                        <li>2. Add <strong>hello@brief.societyspeaks.io</strong> to your contacts</li>
-                        <li>3. If you find our email in spam, mark it as "Not Spam"</li>
+                        <li>{{ _('1. Check your spam/junk folder for the welcome email') }}</li>
+                        <li>{{ _('2. Add <strong>hello@brief.societyspeaks.io</strong> to your contacts')|safe }}</li>
+                        <li>{{ _('3. If you find our email in spam, mark it as "Not Spam"') }}</li>
                     </ul>
                 </div>
             </div>
         </div>
-        
+
         <a href="{{ url_for('brief.today') }}" class="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
-            View Today's Brief
+            {{ _("View Today's Brief") }}
             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>

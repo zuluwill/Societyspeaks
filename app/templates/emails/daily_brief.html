@@ -142,13 +142,8 @@
                   color: #64748b;
                 "
               >
-                Having trouble viewing this email?
-                <a
-                  href="{{ magic_link_url }}"
-                  target="_blank"
-                  style="color: #1e40af; text-decoration: underline"
-                  >View in your browser</a
-                >
+                {% set _view_browser_link = '<a href="' ~ magic_link_url ~ '" target="_blank" style="color: #1e40af; text-decoration: underline">' ~ _('View in your browser') ~ '</a>' %}
+                {{ _('Having trouble viewing this email? %(link)s', link=_view_browser_link)|safe }}
               </td>
             </tr>
           </table>
@@ -214,7 +209,7 @@
                         padding-bottom: 8px;
                       "
                     >
-                      {% if brief.brief_type == 'weekly' %}The Weekly Brief{% else %}The Daily Brief{% endif %}
+                      {% if brief.brief_type == 'weekly' %}{{ _('The Weekly Brief') }}{% else %}{{ _('The Daily Brief') }}{% endif %}
                     </td>
                   </tr>
                   <tr>
@@ -229,7 +224,7 @@
                         color: #bfdbfe;
                       "
                     >
-                      {{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; ~{{ brief.reading_time }} min read{% endif %}
+                      {{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}{% endif %}
                     </td>
                   </tr>
                 </table>
@@ -306,7 +301,7 @@
                         padding-bottom: 12px;
                       "
                     >
-                      {% if brief.brief_type == 'weekly' %}This Week's Headlines{% else %}Today's Headlines{% endif %}
+                      {% if brief.brief_type == 'weekly' %}{{ _("This Week's Headlines") }}{% else %}{{ _("Today's Headlines") }}{% endif %}
                     </td>
                   </tr>
                   {% for item in sorted_items %}
@@ -331,7 +326,7 @@
                       >
                         <span style="color: #94a3b8; font-weight: 600; font-size: 13px;">{{ loop.index }}.</span>
                         {{ item.headline }}
-                        {% if item.is_underreported %}<span style="color: #d97706; font-size: 11px; font-weight: 600;"> UNDER THE RADAR</span>{% endif %}
+                        {% if item.is_underreported %}<span style="color: #d97706; font-size: 11px; font-weight: 600;"> {{ _('UNDER THE RADAR') }}</span>{% endif %}
                       </a>
                     </td>
                   </tr>
@@ -349,7 +344,7 @@
                         padding-top: 8px;
                       "
                     >
-                      ~{{ brief.reading_time }} min read
+                      {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}
                     </td>
                   </tr>
                   {% endif %}
@@ -421,7 +416,7 @@
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                         <tr>
                           <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase; padding-bottom: 4px;">
-                            📰 Sources
+                            📰 {{ _('Sources') }}
                           </td>
                         </tr>
                         {% for topic_article in item.trending_topic.articles[:2] %}
@@ -445,7 +440,7 @@
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                         <tr>
                           <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase; padding-bottom: 4px;">
-                            🔗 Verify
+                            🔗 {{ _('Verify') }}
                           </td>
                         </tr>
                         {% for link in item.verification_links[:2] %}
@@ -470,11 +465,11 @@
                             {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
                             {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
                             {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
-                            <span style="color: #2563eb">{{ left_pct }}% Left</span>
+                            <span style="color: #2563eb">{{ _('%(pct)s%% Left', pct=left_pct) }}</span>
                             &nbsp;&bull;&nbsp;
-                            <span style="color: #7c3aed">{{ center_pct }}% Centre</span>
+                            <span style="color: #7c3aed">{{ _('%(pct)s%% Centre', pct=center_pct) }}</span>
                             &nbsp;&bull;&nbsp;
-                            <span style="color: #dc2626">{{ right_pct }}% Right</span>
+                            <span style="color: #dc2626">{{ _('%(pct)s%% Right', pct=right_pct) }}</span>
                           </td>
                         </tr>
                         <tr>
@@ -571,7 +566,7 @@
                                 text-transform: uppercase;
                                 letter-spacing: 0.5px;
                               "
-                              >📭 Under the Radar</span
+                              >📭 {{ _('Under the Radar') }}</span
                             >
                           </td>
                         </tr>
@@ -666,7 +661,7 @@
                                       font-weight: 600;
                                       color: #ffffff;
                                     "
-                                    >{{ item.source_count }} sources</span
+                                    >{{ _('%(count)d sources', count=item.source_count) }}</span
                                   >
                                 </td>
                               </tr>
@@ -707,8 +702,7 @@
                                       font-weight: 600;
                                       color: #b91c1c;
                                     "
-                                    >🔍 Blindspot: {{ left_pct }}% left
-                                    coverage</span
+                                    >🔍 {{ _('Blindspot: %(pct)s%% left coverage', pct=left_pct) }}</span
                                   >
                                 </td>
                               </tr>
@@ -742,8 +736,7 @@
                                       font-weight: 600;
                                       color: #1d4ed8;
                                     "
-                                    >🔍 Blindspot: {{ right_pct }}% right
-                                    coverage</span
+                                    >🔍 {{ _('Blindspot: %(pct)s%% right coverage', pct=right_pct) }}</span
                                   >
                                 </td>
                               </tr>
@@ -845,7 +838,7 @@
                                     padding-bottom: 8px;
                                   "
                                 >
-                                  Why It Matters
+                                  {{ _('Why It Matters') }}
                                 </td>
                               </tr>
                               <tr>
@@ -909,7 +902,7 @@
                                     padding-bottom: 12px;
                                   "
                                 >
-                                  How It's Being Framed
+                                  {{ _("How It's Being Framed") }}
                                 </td>
                               </tr>
                               {% if item.perspectives.get('left') %}
@@ -928,7 +921,7 @@
                                   "
                                 >
                                   <span style="color: #2563eb; font-weight: 600"
-                                    >Left:</span
+                                    >{{ _('Left:') }}</span
                                   >
                                   {{ item.perspectives.get('left') }}
                                 </td>
@@ -950,7 +943,7 @@
                                   "
                                 >
                                   <span style="color: #7c3aed; font-weight: 600"
-                                    >Centre:</span
+                                    >{{ _('Centre:') }}</span
                                   >
                                   {{ item.perspectives.get('center') }}
                                 </td>
@@ -971,7 +964,7 @@
                                   "
                                 >
                                   <span style="color: #dc2626; font-weight: 600"
-                                    >Right:</span
+                                    >{{ _('Right:') }}</span
                                   >
                                   {{ item.perspectives.get('right') }}
                                 </td>
@@ -1015,7 +1008,7 @@
                                     padding-bottom: 12px;
                                   "
                                 >
-                                  📊 MARKET SIGNAL
+                                  📊 {{ _('MARKET SIGNAL') }}
                                 </td>
                               </tr>
                             </table>
@@ -1074,9 +1067,9 @@
                                     {{ item.market_signal.change_24h_formatted
                                     }}
                                   </span>
-                                  today · {% endif %} ${{
+                                  {{ _('today') }} · {% endif %} ${{
                                   "{:,.0f}".format(item.market_signal.volume_24h
-                                  or 0) }} volume ·
+                                  or 0) }} {{ _('volume') }} ·
                                   <a
                                     href="{{ item.market_signal.url }}"
                                     style="
@@ -1084,7 +1077,7 @@
                                       text-decoration: none;
                                     "
                                   >
-                                    View market →
+                                    {{ _('View market') }} →
                                   </a>
                                 </td>
                               </tr>
@@ -1102,9 +1095,7 @@
                                     padding-top: 12px;
                                   "
                                 >
-                                  Markets reflect collective expectations, not
-                                  certainty. Prices move on new information,
-                                  rumours, and sentiment.
+                                  {{ _('Markets reflect collective expectations, not certainty. Prices move on new information, rumours, and sentiment.') }}
                                 </td>
                               </tr>
                             </table>
@@ -1156,7 +1147,7 @@
                                     padding-bottom: 6px;
                                   "
                                 >
-                                  🔍 Coverage Gap Analysis
+                                  🔍 {{ _('Coverage Gap Analysis') }}
                                 </td>
                               </tr>
                               <tr>
@@ -1224,7 +1215,7 @@
                               padding-bottom: 10px;
                             "
                           >
-                            📰 Read the Original Sources
+                            📰 {{ _('Read the Original Sources') }}
                           </td>
                         </tr>
                         {% for topic_article in unique_sources %}
@@ -1322,7 +1313,7 @@
                               padding-bottom: 8px;
                             "
                           >
-                            🔗 Verify
+                            🔗 {{ _('Verify') }}
                           </td>
                         </tr>
                         {% for link in item.verification_links[:3] %}
@@ -1343,7 +1334,7 @@
                             >
                               {{ link.description }}{% if link.is_paywalled %}
                               <span style="color: #94a3b8; font-size: 11px"
-                                >(paywall)</span
+                                >({{ _('paywall') }})</span
                               >{% endif %} &rarr;
                             </a>
                           </td>
@@ -1385,15 +1376,15 @@
                             (item.coverage_distribution.get('right', 0) *
                             100)|int %}
                             <span style="color: #2563eb"
-                              >{{ left_pct }}% Left</span
+                              >{{ _('%(pct)s%% Left', pct=left_pct) }}</span
                             >
                             &nbsp;&bull;&nbsp;
                             <span style="color: #7c3aed"
-                              >{{ center_pct }}% Centre</span
+                              >{{ _('%(pct)s%% Centre', pct=center_pct) }}</span
                             >
                             &nbsp;&bull;&nbsp;
                             <span style="color: #dc2626"
-                              >{{ right_pct }}% Right</span
+                              >{{ _('%(pct)s%% Right', pct=right_pct) }}</span
                             >
                           </td>
                         </tr>
@@ -1475,7 +1466,7 @@
                                 padding: 10px 20px;
                               "
                             >
-                              🎧 Listen to this story
+                              🎧 {{ _('Listen to this story') }}
                             </a>
                           </td>
                         </tr>
@@ -1494,7 +1485,7 @@
                           margin-bottom: 0;
                         "
                       >
-                        Voice: {{ item.audio_voice_id|title }}
+                        {{ _('Voice: %(voice)s', voice=item.audio_voice_id|title) }}
                       </p>
                       {% endif %}
                     </td>
@@ -1535,7 +1526,7 @@
                                 padding: 14px 28px;
                               "
                             >
-                              Join the Discussion &rarr;
+                              {{ _('Join the Discussion') }} &rarr;
                             </a>
                           </td>
                         </tr>
@@ -1571,10 +1562,10 @@
                           </td>
                           <td style="padding-left: 12px">
                             <p class="mobile-section-header" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
-                              The Week Ahead
+                              {{ _('The Week Ahead') }}
                             </p>
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6d28d9; margin: 4px 0 0 0;">
-                              Key dates and events to watch
+                              {{ _('Key dates and events to watch') }}
                             </p>
                           </td>
                         </tr>
@@ -1638,10 +1629,10 @@
                           </td>
                           <td style="padding-left: 12px">
                             <p class="mobile-section-header" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
-                              What the World is Watching
+                              {{ _('What the World is Watching') }}
                             </p>
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #0ea5e9; margin: 4px 0 0 0;">
-                              Where prediction markets see the biggest stakes
+                              {{ _('Where prediction markets see the biggest stakes') }}
                             </p>
                           </td>
                         </tr>
@@ -1701,14 +1692,14 @@
                               {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
                               <span style="font-weight: 600; {% if market.change_24h > 0 %}color: #16a34a;{% elif market.change_24h < 0 %}color: #dc2626;{% endif %}">
                                 {{ market.change_24h_formatted }}
-                              </span> today &bull;
+                              </span> {{ _('today') }} &bull;
                               {% endif %}
-                              ${{ "{:,.0f}".format(market.volume_24h or 0) }} volume
+                              ${{ "{:,.0f}".format(market.volume_24h or 0) }} {{ _('volume') }}
                               {% if market.trader_count %}
-                              &bull; {{ "{:,.0f}".format(market.trader_count) }} traders
+                              &bull; {{ _('%(count)s traders', count="{:,.0f}".format(market.trader_count)) }}
                               {% endif %}
                               &bull;
-                              <a href="{{ market.url }}" style="color: #0ea5e9; text-decoration: none;">View market &rarr;</a>
+                              <a href="{{ market.url }}" style="color: #0ea5e9; text-decoration: none;">{{ _('View market') }} &rarr;</a>
                             </p>
                           </td>
                         </tr>
@@ -1719,7 +1710,7 @@
                   <tr>
                     <td align="center" style="padding-top: 4px">
                       <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #94a3b8; font-style: italic; margin: 0;">
-                        Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment.
+                        {{ _('Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment.') }}
                       </p>
                     </td>
                   </tr>
@@ -1750,10 +1741,10 @@
                           </td>
                           <td style="padding-left: 12px">
                             <p class="mobile-section-header" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
-                              Market Pulse
+                              {{ _('Market Pulse') }}
                             </p>
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6366f1; margin: 4px 0 0 0;">
-                              What prediction markets are pricing in
+                              {{ _('What prediction markets are pricing in') }}
                             </p>
                           </td>
                         </tr>
@@ -1800,10 +1791,10 @@
                               {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
                               <span style="{% if market.change_24h > 0 %}color: #16a34a;{% elif market.change_24h < 0 %}color: #dc2626;{% endif %}">
                                 {{ market.change_24h_formatted }}
-                              </span> today &bull;
+                              </span> {{ _('today') }} &bull;
                               {% endif %}
-                              ${{ "{:,.0f}".format(market.volume_24h or 0) }} volume &bull;
-                              <a href="{{ market.url }}" style="color: #6366f1; text-decoration: none;">View market &rarr;</a>
+                              ${{ "{:,.0f}".format(market.volume_24h or 0) }} {{ _('volume') }} &bull;
+                              <a href="{{ market.url }}" style="color: #6366f1; text-decoration: none;">{{ _('View market') }} &rarr;</a>
                             </p>
                           </td>
                         </tr>
@@ -1814,7 +1805,7 @@
                   <tr>
                     <td align="center" style="padding-top: 4px">
                       <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #94a3b8; font-style: italic; margin: 0;">
-                        Markets reflect collective expectations, not certainty.
+                        {{ _('Markets reflect collective expectations, not certainty.') }}
                       </p>
                     </td>
                   </tr>
@@ -1875,7 +1866,7 @@
                                 margin: 0;
                               "
                             >
-                              Same Story, Different Lens
+                              {{ _('Same Story, Different Lens') }}
                             </p>
                             <p
                               style="
@@ -1888,8 +1879,7 @@
                                 margin: 4px 0 0 0;
                               "
                             >
-                              How outlets across the spectrum frame the same
-                              news
+                              {{ _('How outlets across the spectrum frame the same news') }}
                             </p>
                           </td>
                         </tr>
@@ -1928,7 +1918,7 @@
                                 margin: 0 0 8px 0;
                               "
                             >
-                              THE STORY
+                              {{ _('THE STORY') }}
                             </p>
                             <p
                               style="
@@ -1957,15 +1947,7 @@
                                 margin: 10px 0 0 0;
                               "
                             >
-                              Based on {{
-                              brief.lens_check.selection_criteria.total_sources
-                              }} sources ({{
-                              brief.lens_check.selection_criteria.left_sources
-                              }}L / {{
-                              brief.lens_check.selection_criteria.centre_sources
-                              }}C / {{
-                              brief.lens_check.selection_criteria.right_sources
-                              }}R)
+                              {{ _('Based on %(total)d sources (%(left)sL / %(centre)sC / %(right)sR)', total=brief.lens_check.selection_criteria.total_sources, left=brief.lens_check.selection_criteria.left_sources, centre=brief.lens_check.selection_criteria.centre_sources, right=brief.lens_check.selection_criteria.right_sources) }}
                             </p>
                             {% endif %}
                           </td>
@@ -2043,7 +2025,7 @@
                                           letter-spacing: 0.5px;
                                         "
                                       >
-                                        LEFT
+                                        {{ _('LEFT') }}
                                       </td>
                                       <td
                                         style="
@@ -2057,9 +2039,7 @@
                                           color: #6b7280;
                                         "
                                       >
-                                        ({{
-                                        brief.lens_check.perspectives.left.source_count
-                                        }} sources)
+                                        ({{ _('%(count)d sources', count=brief.lens_check.perspectives.left.source_count) }})
                                       </td>
                                     </tr>
                                   </table>
@@ -2081,7 +2061,7 @@
                                   "
                                 >
                                   <span style="font-weight: 600"
-                                    >Emphasis:</span
+                                    >{{ _('Emphasis:') }}</span
                                   >
                                   {{ brief.lens_check.perspectives.left.emphasis
                                   }}
@@ -2211,7 +2191,7 @@
                                           letter-spacing: 0.5px;
                                         "
                                       >
-                                        CENTRE
+                                        {{ _('CENTRE') }}
                                       </td>
                                       <td
                                         style="
@@ -2225,9 +2205,7 @@
                                           color: #6b7280;
                                         "
                                       >
-                                        ({{
-                                        brief.lens_check.perspectives.centre.source_count
-                                        }} sources)
+                                        ({{ _('%(count)d sources', count=brief.lens_check.perspectives.centre.source_count) }})
                                       </td>
                                     </tr>
                                   </table>
@@ -2249,7 +2227,7 @@
                                   "
                                 >
                                   <span style="font-weight: 600"
-                                    >Emphasis:</span
+                                    >{{ _('Emphasis:') }}</span
                                   >
                                   {{
                                   brief.lens_check.perspectives.centre.emphasis
@@ -2380,7 +2358,7 @@
                                           letter-spacing: 0.5px;
                                         "
                                       >
-                                        RIGHT
+                                        {{ _('RIGHT') }}
                                       </td>
                                       <td
                                         style="
@@ -2394,9 +2372,7 @@
                                           color: #6b7280;
                                         "
                                       >
-                                        ({{
-                                        brief.lens_check.perspectives.right.source_count
-                                        }} sources)
+                                        ({{ _('%(count)d sources', count=brief.lens_check.perspectives.right.source_count) }})
                                       </td>
                                     </tr>
                                   </table>
@@ -2418,7 +2394,7 @@
                                   "
                                 >
                                   <span style="font-weight: 600"
-                                    >Emphasis:</span
+                                    >{{ _('Emphasis:') }}</span
                                   >
                                   {{
                                   brief.lens_check.perspectives.right.emphasis
@@ -2512,7 +2488,7 @@
                                 margin: 0 0 6px 0;
                               "
                             >
-                              💡 THE CONTRAST
+                              💡 {{ _('THE CONTRAST') }}
                             </p>
                             <p
                               style="
@@ -2567,7 +2543,7 @@
                                 margin: 0 0 6px 0;
                               "
                             >
-                              🔍 WHAT'S MISSING
+                              🔍 {{ _("WHAT'S MISSING") }}
                             </p>
                             <p
                               style="
@@ -2604,19 +2580,9 @@
                           margin: 0;
                         "
                       >
-                        Source classifications based on
-                        <a
-                          href="https://allsides.com/media-bias"
-                          target="_blank"
-                          style="color: #7c3aed; text-decoration: underline"
-                          >AllSides media bias ratings</a
-                        >.
-                        <a
-                          href="{{ base_url }}/brief/methodology"
-                          target="_blank"
-                          style="color: #7c3aed; text-decoration: underline"
-                          >Our methodology</a
-                        >.
+                        {% set _allsides_link = '<a href="https://allsides.com/media-bias" target="_blank" style="color: #7c3aed; text-decoration: underline">' ~ _('AllSides media bias ratings') ~ '</a>' %}
+                        {% set _method_link = '<a href="' ~ base_url ~ '/brief/methodology" target="_blank" style="color: #7c3aed; text-decoration: underline">' ~ _('Our methodology') ~ '</a>' %}
+                        {{ _('Source classifications based on %(allsides)s. %(methodology)s.', allsides=_allsides_link, methodology=_method_link)|safe }}
                       </p>
                     </td>
                   </tr>
@@ -2652,7 +2618,7 @@
                         padding-bottom: 12px;
                       "
                     >
-                      &#10084; Thank You for Being Part of Our Community
+                      &#10084; {{ _('Thank You for Being Part of Our Community') }}
                     </td>
                   </tr>
                   <tr>
@@ -2669,11 +2635,7 @@
                         padding-bottom: 12px;
                       "
                     >
-                      Your participation keeps Society Speaks running. We build
-                      open source tools for transparent, nuanced journalism
-                      &mdash; from our AI that surfaces stories across the
-                      political spectrum, to the infrastructure that powers The
-                      Daily Brief and Daily Question.
+                      {{ _('Your participation keeps Society Speaks running. We build open source tools for transparent, nuanced journalism &mdash; from our AI that surfaces stories across the political spectrum, to the infrastructure that powers The Daily Brief and Daily Question.')|safe }}
                     </td>
                   </tr>
                   <tr>
@@ -2688,8 +2650,7 @@
                         color: #93c5fd;
                       "
                     >
-                      You're helping bring nuance back to news. We couldn't do
-                      this without you.
+                      {{ _("You're helping bring nuance back to news. We couldn't do this without you.") }}
                     </td>
                   </tr>
                 </table>
@@ -2726,7 +2687,7 @@
                         padding-bottom: 8px;
                       "
                     >
-                      &#128236; Want briefs tailored to YOUR sources?
+                      &#128236; {{ _('Want briefs tailored to YOUR sources?') }}
                     </td>
                   </tr>
                   <tr>
@@ -2743,9 +2704,7 @@
                         padding-bottom: 16px;
                       "
                     >
-                      Personal Briefs lets you create custom daily digests from
-                      the publications, Substacks, and PDFs you choose. Your
-                      subscription funds our open source civic platform.
+                      {{ _('Personal Briefs lets you create custom daily digests from the publications, Substacks, and PDFs you choose. Your subscription funds our open source civic platform.') }}
                     </td>
                   </tr>
                   <tr>
@@ -2768,7 +2727,7 @@
                           border-radius: 6px;
                         "
                       >
-                        Create your own brief &rarr;
+                        {{ _('Create your own brief') }} &rarr;
                       </a>
                     </td>
                   </tr>
@@ -2785,7 +2744,7 @@
                         padding-top: 12px;
                       "
                     >
-                      30-day free trial
+                      {{ _('30-day free trial') }}
                     </td>
                   </tr>
                 </table>
@@ -2835,7 +2794,7 @@
                         padding-bottom: 24px;
                       "
                     >
-                      Sense-making, not sensationalism
+                      {{ _('Sense-making, not sensationalism') }}
                     </td>
                   </tr>
 
@@ -2862,7 +2821,7 @@
                                 color: #94a3b8;
                                 text-decoration: none;
                               "
-                              >Archive</a
+                              >{{ _('Archive') }}</a
                             >
                           </td>
                           <td style="padding: 0 12px">
@@ -2878,7 +2837,7 @@
                                 color: #94a3b8;
                                 text-decoration: none;
                               "
-                              >How We Work</a
+                              >{{ _('How We Work') }}</a
                             >
                           </td>
                           <td style="padding: 0 12px">
@@ -2894,7 +2853,7 @@
                                 color: #94a3b8;
                                 text-decoration: none;
                               "
-                              >Preferences</a
+                              >{{ _('Preferences') }}</a
                             >
                           </td>
                         </tr>
@@ -2919,14 +2878,14 @@
                         href="{{ unsubscribe_url }}"
                         target="_blank"
                         style="color: #64748b; text-decoration: underline"
-                        >Unsubscribe</a
+                        >{{ _('Unsubscribe') }}</a
                       >
                       &nbsp;&nbsp;|&nbsp;&nbsp;
                       <a
                         href="{{ preferences_url }}"
                         target="_blank"
                         style="color: #64748b; text-decoration: underline"
-                        >Manage preferences</a
+                        >{{ _('Manage preferences') }}</a
                       >
                     </td>
                   </tr>

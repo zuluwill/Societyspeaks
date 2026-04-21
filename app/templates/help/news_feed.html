@@ -2,16 +2,16 @@
 {% extends "layout.html" %}
 
 {% block head %}
-<title>How Our News Feed Works - Society Speaks | Curated News Discussions</title>
-<meta name="description" content="Learn how Society Speaks sources and selects trending news topics for structured public debate. We transform polarising issues into nuanced, meaningful discussions.">
+<title>{{ _('How Our News Feed Works - Society Speaks | Curated News Discussions') }}</title>
+<meta name="description" content="{{ _('Learn how Society Speaks sources and selects trending news topics for structured public debate. We transform polarising issues into nuanced, meaningful discussions.') }}">
 <link rel="canonical" href="{{ url_for('help.news_feed', _external=True) }}">
 
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "How Our News Feed Works",
-  "description": "Understanding how Society Speaks surfaces trending topics for nuanced public debate",
+  "headline": _('How Our News Feed Works'),
+  "description": _('Understanding how Society Speaks surfaces trending topics for nuanced public debate'),
   "author": {
     "@type": "Organization",
     "name": "Society Speaks"
@@ -22,9 +22,9 @@
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "{{ url_for('help.news_feed', _external=True) }}"
+    "@id": url_for('help.news_feed', _external=True)
   }
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -32,232 +32,227 @@
 <div class="max-w-4xl mx-auto p-6">
   <div class="mb-8">
     <a href="{{ url_for('help.help') }}" class="text-primary-600 hover:underline mb-4 inline-block">
-      &larr; Back to Help
+      {{ _('← Back to Help') }}
     </a>
-    <h1 class="text-3xl font-bold mb-4">How Our News Feed Works</h1>
+    <h1 class="text-3xl font-bold mb-4">{{ _('How Our News Feed Works') }}</h1>
     <p class="text-gray-600">
-      Understanding how we surface trending topics for nuanced public debate.
+      {{ _('Understanding how we surface trending topics for nuanced public debate.') }}
     </p>
   </div>
 
   <div class="space-y-8">
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Our Philosophy</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Our Philosophy') }}</h2>
       <p class="text-gray-700 mb-4">
-        The news is full of polarising debates where people talk past each other. 
-        Society Speaks takes these hot-button issues and creates a space for 
-        <strong>nuanced, structured discussion</strong> where you can disagree agreeably.
+        {{ _('The news is full of polarising debates where people talk past each other. Society Speaks takes these hot-button issues and creates a space for <strong>nuanced, structured discussion</strong> where you can disagree agreeably.')|safe }}
       </p>
       <div class="bg-blue-50 p-4 rounded-lg">
         <p class="text-blue-900 font-medium">
-          We don't shy away from controversial topics - we believe they deserve better debate.
+          {{ _("We don't shy away from controversial topics - we believe they deserve better debate.") }}
         </p>
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Where We Source Topics</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Where We Source Topics') }}</h2>
       <p class="text-gray-700 mb-4">
-        We monitor <strong>140+ quality news sources</strong> across the political spectrum to find topics worth debating. Our sources include mainstream news, policy analysis, investigative journalism, think tanks, data organizations, and intellectual podcasts.
+        {{ _('We monitor <strong>140+ quality news sources</strong> across the political spectrum to find topics worth debating. Our sources include mainstream news, policy analysis, investigative journalism, think tanks, data organizations, and intellectual podcasts.')|safe }}
       </p>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div class="space-y-4">
           <div class="bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-900 mb-2">News & Analysis</h3>
-            <p class="text-xs text-gray-500 mb-3">Articles from these outlets become discussions:</p>
+            <h3 class="font-semibold text-gray-900 mb-2">{{ _('News & Analysis') }}</h3>
+            <p class="text-xs text-gray-500 mb-3">{{ _('Articles from these outlets become discussions:') }}</p>
             <div class="space-y-3">
               <div>
-                <span class="text-xs font-medium text-primary-800 uppercase tracking-wide">Left</span>
+                <span class="text-xs font-medium text-primary-800 uppercase tracking-wide">{{ _('Left') }}</span>
                 <p class="text-sm text-gray-700">The Guardian, The New Yorker, The Atlantic, The Independent, The Intercept, New Statesman, Ezra Klein, The News Agents, Matt Taibbi, Freddie deBoer, Vox</p>
               </div>
               <div>
-                <span class="text-xs font-medium text-primary-600 uppercase tracking-wide">Centre-Left</span>
+                <span class="text-xs font-medium text-primary-600 uppercase tracking-wide">{{ _('Centre-Left') }}</span>
                 <p class="text-sm text-gray-700">ProPublica, Slow Boring, Noahpinion, Commonweal, The New York Times, Politico, Yascha Mounk, Anne Applebaum, Jonathan Rauch, Zeynep Tufekci, Cory Doctorow, Chartbook</p>
               </div>
               <div>
-                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">Centre</span>
-                <p class="text-sm text-gray-700">BBC News, BBC World Service, Financial Times, The Economist, Bloomberg, Axios, Reuters, Associated Press, Foreign Affairs, Foreign Policy, Politico EU, Stratechery, Semafor, Rest of World, The Conversation, TechCrunch, Al Jazeera English, Lawfare, MIT Technology Review, Carbon Brief, South China Morning Post, Ars Technica, Brookings Institution, War on the Rocks, Farnam Street, Deutsche Welle, France24, Nikkei Asia, Channel NewsAsia, Straits Times, The National, Al Monitor, Africa Confidential, AllAfrica, Americas Quarterly, and many more</p>
+                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">{{ _('Centre') }}</span>
+                <p class="text-sm text-gray-700">BBC News, BBC World Service, Financial Times, The Economist, Bloomberg, Axios, Reuters, Associated Press, Foreign Affairs, Foreign Policy, Politico EU, Stratechery, Semafor, Rest of World, The Conversation, TechCrunch, Al Jazeera English, Lawfare, MIT Technology Review, Carbon Brief, South China Morning Post, Ars Technica, Brookings Institution, War on the Rocks, Farnam Street, Deutsche Welle, France24, Nikkei Asia, Channel NewsAsia, Straits Times, The National, Al Monitor, Africa Confidential, AllAfrica, Americas Quarterly, {{ _('and many more') }}</p>
               </div>
               <div>
-                <span class="text-xs font-medium text-red-600 uppercase tracking-wide">Centre-Right</span>
+                <span class="text-xs font-medium text-red-600 uppercase tracking-wide">{{ _('Centre-Right') }}</span>
                 <p class="text-sm text-gray-700">UnHerd, The Dispatch, The Free Press, Reason, The Critic, Marginal Revolution, Cato Institute, Andrew Sullivan, Triggernometry, All-In Podcast, Wall Street Journal</p>
               </div>
               <div>
-                <span class="text-xs font-medium text-red-800 uppercase tracking-wide">Right</span>
+                <span class="text-xs font-medium text-red-800 uppercase tracking-wide">{{ _('Right') }}</span>
                 <p class="text-sm text-gray-700">The Telegraph, The Spectator, National Review, The American Conservative, City Journal, Manhattan Institute, The Commentary Magazine, First Things, Christianity Today, The Times</p>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="space-y-4">
           <div class="bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-900 mb-2">Think Tanks & Data Sources</h3>
-            <p class="text-xs text-gray-500 mb-3">Policy research and official data:</p>
+            <h3 class="font-semibold text-gray-900 mb-2">{{ _('Think Tanks & Data Sources') }}</h3>
+            <p class="text-xs text-gray-500 mb-3">{{ _('Policy research and official data:') }}</p>
             <div class="space-y-3">
               <div>
-                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">Think Tanks</span>
+                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">{{ _('Think Tanks') }}</span>
                 <p class="text-sm text-gray-700">Brookings Institution, RAND Corporation, Chatham House, CSIS, Carnegie Endowment, International Crisis Group, Institute for Government, Institute for Fiscal Studies, Resolution Foundation, OECD, World Bank, IMF, World Economic Forum</p>
               </div>
               <div>
-                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">Data & Statistics</span>
+                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">{{ _('Data & Statistics') }}</span>
                 <p class="text-sm text-gray-700">Our World in Data, Pew Research Center, Office for National Statistics, Office for Budget Responsibility, US Census Bureau, Eurostat, UN News, IEA, WHO</p>
               </div>
             </div>
           </div>
-          
+
           <div class="bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-900 mb-2">Podcasts We Monitor</h3>
-            <p class="text-xs text-gray-500 mb-3">Topics these shows cover help us prioritise:</p>
+            <h3 class="font-semibold text-gray-900 mb-2">{{ _('Podcasts We Monitor') }}</h3>
+            <p class="text-xs text-gray-500 mb-3">{{ _('Topics these shows cover help us prioritise:') }}</p>
             <div class="space-y-3">
               <div>
-                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">Centre</span>
+                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">{{ _('Centre') }}</span>
                 <p class="text-sm text-gray-700">The Rest Is Politics, Diary of a CEO, Modern Wisdom, The Tim Ferriss Show, Acquired Podcast</p>
               </div>
             </div>
           </div>
-          
+
           <div class="bg-amber-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-900 mb-2">Why This Balance Matters</h3>
+            <h3 class="font-semibold text-gray-900 mb-2">{{ _('Why This Balance Matters') }}</h3>
             <p class="text-sm text-gray-700">
-              We deliberately include sources from <strong>Left to Right</strong> so our Coverage Centre can show you how different outlets frame each story. This isn't about finding "truth" in the middle—it's about seeing the full picture.
+              {{ _('We deliberately include sources from <strong>Left to Right</strong> so our Coverage Centre can show you how different outlets frame each story. This isn\'t about finding "truth" in the middle—it\'s about seeing the full picture.')|safe }}
             </p>
           </div>
         </div>
       </div>
-      
+
       <div class="bg-blue-50 p-4 rounded-lg mt-4">
+        {% set _allsides_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="underline">' ~ _('AllSides methodology') ~ '</a>' %}
         <p class="text-sm text-blue-900">
-          <strong>Source ratings</strong> are based on <a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="underline">AllSides methodology</a> where available, with manual assessment for podcasts and newer publications. We update ratings monthly.
+          {{ _('<strong>Source ratings</strong> are based on %(allsides_link)s where available, with manual assessment for podcasts and newer publications. We update ratings monthly.', allsides_link=_allsides_link)|safe }}
         </p>
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">How We Select Topics</h2>
-      
+      <h2 class="text-xl font-semibold mb-4">{{ _('How We Select Topics') }}</h2>
+
       <div class="space-y-4">
         <div class="border-l-4 border-green-500 pl-4">
-          <h3 class="font-semibold text-green-800">Topics We Include</h3>
+          <h3 class="font-semibold text-green-800">{{ _('Topics We Include') }}</h3>
           <ul class="text-gray-700 mt-2 space-y-1">
-            <li>Policy debates (economy, healthcare, education, housing)</li>
-            <li>Political controversies and elections</li>
-            <li>Social issues generating public discussion</li>
-            <li>Technology and AI ethics</li>
-            <li>Climate and environment policy</li>
-            <li>International affairs and geopolitics</li>
-            <li>Topics trending in quality publications and podcasts</li>
+            <li>{{ _('Policy debates (economy, healthcare, education, housing)') }}</li>
+            <li>{{ _('Political controversies and elections') }}</li>
+            <li>{{ _('Social issues generating public discussion') }}</li>
+            <li>{{ _('Technology and AI ethics') }}</li>
+            <li>{{ _('Climate and environment policy') }}</li>
+            <li>{{ _('International affairs and geopolitics') }}</li>
+            <li>{{ _('Topics trending in quality publications and podcasts') }}</li>
           </ul>
         </div>
-        
+
         <div class="border-l-4 border-red-500 pl-4">
-          <h3 class="font-semibold text-red-800">Topics We Filter Out</h3>
+          <h3 class="font-semibold text-red-800">{{ _('Topics We Filter Out') }}</h3>
           <ul class="text-gray-700 mt-2 space-y-1">
-            <li>Celebrity gossip and entertainment news</li>
-            <li>Reality TV and influencer content</li>
-            <li>Shopping guides and lifestyle fluff</li>
-            <li>Horoscopes and trivial content</li>
+            <li>{{ _('Celebrity gossip and entertainment news') }}</li>
+            <li>{{ _('Reality TV and influencer content') }}</li>
+            <li>{{ _('Shopping guides and lifestyle fluff') }}</li>
+            <li>{{ _('Horoscopes and trivial content') }}</li>
           </ul>
         </div>
       </div>
-      
+
       <div class="bg-yellow-50 p-4 rounded-lg mt-4">
         <p class="text-yellow-800 text-sm">
-          <strong>Note:</strong> We intentionally keep topics that are "sensationalist" in the media - 
-          these indicate issues people care deeply about. Our goal is to bring nuance and 
-          balance to debates that are often polarised elsewhere.
+          {{ _('<strong>Note:</strong> We intentionally keep topics that are "sensationalist" in the media - these indicate issues people care deeply about. Our goal is to bring nuance and balance to debates that are often polarised elsewhere.')|safe }}
         </p>
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">How Topics Become Discussions</h2>
-      
+      <h2 class="text-xl font-semibold mb-4">{{ _('How Topics Become Discussions') }}</h2>
+
       <div class="space-y-4">
         <div class="flex items-start gap-4">
           <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</div>
           <div>
-            <h3 class="font-semibold">Article Collection</h3>
-            <p class="text-gray-600 text-sm">We gather articles from our sources 4 times daily to catch major news cycles.</p>
+            <h3 class="font-semibold">{{ _('Article Collection') }}</h3>
+            <p class="text-gray-600 text-sm">{{ _('We gather articles from our sources 4 times daily to catch major news cycles.') }}</p>
           </div>
         </div>
-        
+
         <div class="flex items-start gap-4">
           <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
           <div>
-            <h3 class="font-semibold">Topic Filtering</h3>
-            <p class="text-gray-600 text-sm">Articles are filtered to find debate-worthy civic topics while removing celebrity/lifestyle content.</p>
+            <h3 class="font-semibold">{{ _('Topic Filtering') }}</h3>
+            <p class="text-gray-600 text-sm">{{ _('Articles are filtered to find debate-worthy civic topics while removing celebrity/lifestyle content.') }}</p>
           </div>
         </div>
-        
+
         <div class="flex items-start gap-4">
           <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
           <div>
-            <h3 class="font-semibold">AI Scoring</h3>
-            <p class="text-gray-600 text-sm">Topics are scored for debate potential and civic relevance using AI.</p>
+            <h3 class="font-semibold">{{ _('AI Scoring') }}</h3>
+            <p class="text-gray-600 text-sm">{{ _('Topics are scored for debate potential and civic relevance using AI.') }}</p>
           </div>
         </div>
-        
+
         <div class="flex items-start gap-4">
           <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</div>
           <div>
-            <h3 class="font-semibold">Clustering</h3>
-            <p class="text-gray-600 text-sm">Similar articles from different sources are grouped into single topics.</p>
+            <h3 class="font-semibold">{{ _('Clustering') }}</h3>
+            <p class="text-gray-600 text-sm">{{ _('Similar articles from different sources are grouped into single topics.') }}</p>
           </div>
         </div>
-        
+
         <div class="flex items-start gap-4">
           <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
           <div>
-            <h3 class="font-semibold">Discussion Creation</h3>
-            <p class="text-gray-600 text-sm">A neutral discussion title and balanced seed statements are generated to frame the debate fairly.</p>
+            <h3 class="font-semibold">{{ _('Discussion Creation') }}</h3>
+            <p class="text-gray-600 text-sm">{{ _('A neutral discussion title and balanced seed statements are generated to frame the debate fairly.') }}</p>
           </div>
         </div>
-        
+
         <div class="flex items-start gap-4">
           <div class="bg-blue-100 text-primary-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">6</div>
           <div>
-            <h3 class="font-semibold">Quality Checks</h3>
-            <p class="text-gray-600 text-sm">Automated checks ensure topics meet quality thresholds before going live.</p>
+            <h3 class="font-semibold">{{ _('Quality Checks') }}</h3>
+            <p class="text-gray-600 text-sm">{{ _('Automated checks ensure topics meet quality thresholds before going live.') }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Source Transparency</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Source Transparency') }}</h2>
       <p class="text-gray-700 mb-4">
-        Every news discussion shows which publications covered the story. 
-        You can see the original sources and read the full articles to get complete context.
+        {{ _('Every news discussion shows which publications covered the story. You can see the original sources and read the full articles to get complete context.') }}
       </p>
       <p class="text-gray-700">
-        We believe in transparency - you should know where topics come from and 
-        be able to verify information yourself.
+        {{ _('We believe in transparency - you should know where topics come from and be able to verify information yourself.') }}
       </p>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">The Daily Brief</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('The Daily Brief') }}</h2>
+      {% set _brief_link = '<a href="' ~ url_for('brief.today') ~ '" class="text-primary-600 hover:underline">' ~ _('The Daily Brief') ~ '</a>' %}
       <p class="text-gray-700 mb-4">
-        Prefer to receive a curated summary? Subscribe to <a href="{{ url_for('brief.today') }}" class="text-primary-600 hover:underline">The Daily Brief</a> —
-        our email newsletter that delivers the day's top stories with coverage analysis from multiple perspectives.
+        {{ _("Prefer to receive a curated summary? Subscribe to %(brief_link)s — our email newsletter that delivers the day's top stories with coverage analysis from multiple perspectives.", brief_link=_brief_link)|safe }}
       </p>
       <div class="bg-gray-50 p-4 rounded-lg">
         <ul class="text-sm text-gray-700 space-y-2">
-          <li><strong>Coverage balance:</strong> See which outlets covered each story and their political leanings</li>
-          <li><strong>Flexible delivery:</strong> Choose morning (6am/8am) or evening (6pm) in your time zone</li>
-          <li><strong>Verification links:</strong> Direct links to original sources so you can verify claims</li>
+          <li>{{ _('<strong>Coverage balance:</strong> See which outlets covered each story and their political leanings')|safe }}</li>
+          <li>{{ _('<strong>Flexible delivery:</strong> Choose morning (6am/8am) or evening (6pm) in your time zone')|safe }}</li>
+          <li>{{ _('<strong>Verification links:</strong> Direct links to original sources so you can verify claims')|safe }}</li>
         </ul>
       </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Follow Us on Social Media</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Follow Us on Social Media') }}</h2>
       <p class="text-gray-700 mb-4">
-        New discussions are shared on Bluesky throughout the day. Follow us to catch trending topics as they emerge:
+        {{ _('New discussions are shared on Bluesky throughout the day. Follow us to catch trending topics as they emerge:') }}
       </p>
-      <a href="https://bsky.app/profile/societyspeaks.bsky.social" target="_blank" rel="noopener noreferrer" 
+      <a href="https://bsky.app/profile/societyspeaks.bsky.social" target="_blank" rel="noopener noreferrer"
          class="inline-flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 6.5c-.28 0-.5.22-.5.5v6c0 .28.22.5.5.5s.5-.22.5-.5V9c0-.28-.22-.5-.5-.5zm-9 0c-.28 0-.5.22-.5.5v6c0 .28.22.5.5.5s.5-.22.5-.5V9c0-.28-.22-.5-.5-.5zm4.5 0c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
@@ -267,13 +262,12 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Feedback Welcome</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Feedback Welcome') }}</h2>
       <p class="text-gray-700 mb-4">
-        This system is always evolving. If you think we're missing important topics, 
-        including too much noise, or could improve our selection process, we'd love to hear from you.
+        {{ _("This system is always evolving. If you think we're missing important topics, including too much noise, or could improve our selection process, we'd love to hear from you.") }}
       </p>
       <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="inline-flex items-center justify-center bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors">
-        Send Feedback
+        {{ _('Send Feedback') }}
       </a>
     </div>
   </div>

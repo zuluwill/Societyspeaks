@@ -6,6 +6,7 @@ from sqlalchemy import func
 from app.lib.auth_utils import normalize_email
 from app.lib.time import utcnow_naive
 from app.models import Partner, PartnerMember
+from flask_babel import gettext as _
 
 PARTNER_LOGIN_LOCKOUT_ATTEMPTS = 5
 PARTNER_LOGIN_LOCKOUT_WINDOW = timedelta(minutes=5)
@@ -230,7 +231,7 @@ def attempt_partner_only_login(email, password):
         remaining = get_partner_login_lockout(email)
         if remaining > 0:
             flash(
-                f"Too many failed attempts. Please try again in {remaining} seconds.",
+                _('Too many failed attempts. Please try again in %(remaining)s seconds.', remaining=remaining),
                 "error",
             )
             return redirect(url_for("auth.login"))
@@ -253,14 +254,14 @@ def attempt_partner_only_login(email, password):
         # not record a failure (mirrors the dedicated portal login behaviour).
         if partner.status != "active":
             flash(
-                "This account has been deactivated. Please contact support.",
+                _("This account has been deactivated. Please contact support."),
                 "error",
             )
             return redirect(url_for("auth.login"))
 
         finalize_partner_portal_login(partner, active_member)
 
-        flash("Welcome back.", "success")
+        flash(_("Welcome back."), "success")
         return redirect(url_for("partner.portal_dashboard"))
 
     except Exception as exc:

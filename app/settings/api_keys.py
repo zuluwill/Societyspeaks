@@ -13,6 +13,7 @@ from app.lib.llm_utils import encrypt_api_key, validate_api_key
 from datetime import datetime
 from app.lib.time import utcnow_naive
 import logging
+from flask_babel import gettext as _
 
 api_keys_bp = Blueprint('api_keys', __name__)
 logger = logging.getLogger(__name__)
@@ -42,11 +43,11 @@ def add_api_key():
         api_key = request.form.get('api_key')
         
         if not provider or not api_key:
-            flash("Provider and API key are required", "danger")
+            flash(_("Provider and API key are required"), "danger")
             return render_template('settings/add_api_key.html')
         
         if provider not in ['openai', 'anthropic', 'mistral']:
-            flash("Invalid provider", "danger")
+            flash(_("Invalid provider"), "danger")
             return render_template('settings/add_api_key.html')
         
         # Check if user already has a key for this provider
@@ -56,7 +57,7 @@ def add_api_key():
         ).first()
         
         if existing:
-            flash(f"You already have an API key for {provider}. Delete the old one first.", "warning")
+            flash(_('You already have an API key for %(provider)s. Delete the old one first.', provider=provider), "warning")
             return redirect(url_for('api_keys.list_api_keys'))
         
         # Validate the API key
@@ -64,7 +65,7 @@ def add_api_key():
         is_valid, message = validate_api_key(provider, api_key)
         
         if not is_valid:
-            flash(f"API key validation failed: {message}", "danger")
+            flash(_('API key validation failed: %(message)s', message=message), "danger")
             return render_template('settings/add_api_key.html', 
                                  provider=provider)
         
@@ -88,7 +89,7 @@ def add_api_key():
         
         except Exception as e:
             logger.error(f"Error storing API key: {e}")
-            flash("Error storing API key. Please try again.", "danger")
+            flash(_("Error storing API key. Please try again."), "danger")
             return render_template('settings/add_api_key.html')
     
     return render_template('settings/add_api_key.html')
@@ -104,7 +105,7 @@ def delete_api_key(key_id):
     
     # Check ownership
     if api_key.user_id != current_user.id:
-        flash("You can only delete your own API keys", "danger")
+        flash(_("You can only delete your own API keys"), "danger")
         return redirect(url_for('api_keys.list_api_keys'))
     
     provider = api_key.provider
@@ -125,14 +126,14 @@ def toggle_api_key(key_id):
     
     # Check ownership
     if api_key.user_id != current_user.id:
-        flash("You can only modify your own API keys", "danger")
+        flash(_("You can only modify your own API keys"), "danger")
         return redirect(url_for('api_keys.list_api_keys'))
     
     api_key.is_active = not api_key.is_active
     db.session.commit()
     
     status = "activated" if api_key.is_active else "deactivated"
-    flash(f"API key {status}", "success")
+    flash(_('API key %(status)s', status=status), "success")
     return redirect(url_for('api_keys.list_api_keys'))
 
 
@@ -147,7 +148,7 @@ def revalidate_api_key(key_id):
     
     # Check ownership
     if api_key_record.user_id != current_user.id:
-        flash("You can only validate your own API keys", "danger")
+        flash(_("You can only validate your own API keys"), "danger")
         return redirect(url_for('api_keys.list_api_keys'))
     
     try:
@@ -161,15 +162,15 @@ def revalidate_api_key(key_id):
             api_key_record.last_validated = utcnow_naive()
             api_key_record.is_active = True
             db.session.commit()
-            flash("API key is valid and active", "success")
+            flash(_("API key is valid and active"), "success")
         else:
             api_key_record.is_active = False
             db.session.commit()
-            flash(f"API key is invalid: {message}", "danger")
+            flash(_('API key is invalid: %(message)s', message=message), "danger")
     
     except Exception as e:
         logger.error(f"Error revalidating API key: {e}")
-        flash("Error validating API key", "danger")
+        flash(_("Error validating API key"), "danger")
     
     return redirect(url_for('api_keys.list_api_keys'))
 

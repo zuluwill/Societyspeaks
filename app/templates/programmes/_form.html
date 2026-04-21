@@ -5,14 +5,14 @@
   <div class="space-y-5">
     <div>
       {{ form.name.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-      {{ form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", placeholder="e.g. National Citizens' Dialogue on Climate") }}
+      {{ form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", placeholder=_("e.g. National Citizens' Dialogue on Climate")) }}
       {% if form.name.errors %}{% for error in form.name.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
 
     <div>
       {{ form.description.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-      <p class="text-xs text-gray-500 mb-1.5">A short summary shown on the programme page. Helps participants and organisers understand the purpose.</p>
-      {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="Describe the purpose and goals of this programme.") }}
+      <p class="text-xs text-gray-500 mb-1.5">{{ _('A short summary shown on the programme page. Helps participants and organisers understand the purpose.') }}</p>
+      {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder=_('Describe the purpose and goals of this programme.')) }}
       {% if form.description.errors %}{% for error in form.description.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
   </div>
@@ -21,12 +21,12 @@
 
   <!-- Location & Access -->
   <div class="space-y-5">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Location &amp; Access</h2>
+    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ _('Location &amp; Access') }}</h2>
 
     <!-- Geographic Scope — segmented toggle -->
     <div>
-      <p class="block text-sm font-semibold text-gray-700 mb-1">Geographic Scope</p>
-      <p class="text-xs text-gray-500 mb-2">Where is this programme focused? Choose Country to narrow it to a specific location — this helps people find it.</p>
+      <p class="block text-sm font-semibold text-gray-700 mb-1">{{ _('Geographic Scope') }}</p>
+      <p class="text-xs text-gray-500 mb-2">{{ _('Where is this programme focused? Choose Country to narrow it to a specific location — this helps people find it.') }}</p>
       <div class="flex rounded-md border border-gray-300 overflow-hidden" role="group">
         {% for value, label in form.geographic_scope.choices %}
         <label class="flex-1 {% if not loop.last %}border-r border-gray-300{% endif %}">
@@ -54,14 +54,14 @@
 
     <!-- Visibility — radio cards -->
     {% set visibility_descriptions = {
-      'public':      'Anyone can find and join via search and the programme catalogue.',
-      'unlisted':    'Hidden from search — only people with the direct link can access it.',
-      'invite_only': 'Hidden from search — only people you have explicitly invited can participate.',
-      'private':     'Only the programme team (owners and managers) can see this. Use while setting up.'
+      'public':      _('Anyone can find and join via search and the programme catalogue.'),
+      'unlisted':    _('Hidden from search — only people with the direct link can access it.'),
+      'invite_only': _('Hidden from search — only people you have explicitly invited can participate.'),
+      'private':     _('Only the programme team (owners and managers) can see this. Use while setting up.')
     } %}
     <div>
-      <p class="block text-sm font-semibold text-gray-700 mb-1">Visibility</p>
-      <p class="text-xs text-gray-500 mb-2">Controls who can find and access this programme.</p>
+      <p class="block text-sm font-semibold text-gray-700 mb-1">{{ _('Visibility') }}</p>
+      <p class="text-xs text-gray-500 mb-2">{{ _('Controls who can find and access this programme.') }}</p>
       <div class="space-y-2">
         {% for value, label in form.visibility.choices %}
         <label class="block cursor-pointer">
@@ -86,12 +86,12 @@
 
   <!-- Ownership -->
   <div class="space-y-5">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ownership</h2>
+    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ _('Ownership') }}</h2>
 
     <!-- Owner type — segmented toggle -->
     <div>
-      <p class="block text-sm font-semibold text-gray-700 mb-1">Owner</p>
-      <p class="text-xs text-gray-500 mb-2">Who owns this programme — your personal account or an organisation.</p>
+      <p class="block text-sm font-semibold text-gray-700 mb-1">{{ _('Owner') }}</p>
+      <p class="text-xs text-gray-500 mb-2">{{ _('Who owns this programme — your personal account or an organisation.') }}</p>
       <div class="flex rounded-md border border-gray-300 overflow-hidden" role="group">
         {% for value, label in form.owner_type.choices %}
         <label class="flex-1 {% if not loop.last %}border-r border-gray-300{% endif %}">
@@ -121,40 +121,40 @@
 
   <!-- Advanced (all optional) -->
   <div class="space-y-5">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Advanced <span class="font-normal normal-case">— all optional</span></h2>
+    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ _('Advanced') }} <span class="font-normal normal-case">{{ _('— all optional') }}</span></h2>
 
     <div>
       {{ form.logo_url.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-      <p class="text-xs text-gray-500 mb-1.5">A public URL for the programme logo or banner image.</p>
+      <p class="text-xs text-gray-500 mb-1.5">{{ _('A public URL for the programme logo or banner image.') }}</p>
       {{ form.logo_url(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", placeholder="https://example.com/logo.png") }}
       {% if form.logo_url.errors %}{% for error in form.logo_url.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
 
     <div>
-      <p class="block text-sm font-semibold text-gray-700 mb-1">Themes <span class="font-normal text-gray-400">(optional)</span></p>
-      <p class="text-xs text-gray-500 mb-1.5">Tag discussions by topic so participants can filter by theme. Enter as a comma-separated list, e.g. <code class="bg-gray-100 px-1 rounded">Health, Prosperity, Security</code></p>
-      {{ form.themes_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="2", placeholder="Health, Prosperity, Security, Environment") }}
+      <p class="block text-sm font-semibold text-gray-700 mb-1">{{ _('Themes') }} <span class="font-normal text-gray-400">{{ _('(optional)') }}</span></p>
+      <p class="text-xs text-gray-500 mb-1.5">{{ _('Tag discussions by topic so participants can filter by theme. Enter as a comma-separated list, e.g. <code class="bg-gray-100 px-1 rounded">Health, Prosperity, Security</code>')|safe }}</p>
+      {{ form.themes_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="2", placeholder=_("Health, Prosperity, Security, Environment")) }}
       {% if form.themes_csv.errors %}{% for error in form.themes_csv.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
 
     <div>
-      <p class="block text-sm font-semibold text-gray-700 mb-1">Phases <span class="font-normal text-gray-400">(optional)</span></p>
-      <p class="text-xs text-gray-500 mb-1.5">Break the programme into time-based stages, e.g. a consultation period followed by a deliberation wave. Enter as a comma-separated list, e.g. <code class="bg-gray-100 px-1 rounded">Agenda-setting, Wave 1, Wave 2</code></p>
-      {{ form.phases_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="2", placeholder="Agenda-setting, Wave 1, Wave 2") }}
+      <p class="block text-sm font-semibold text-gray-700 mb-1">{{ _('Phases') }} <span class="font-normal text-gray-400">{{ _('(optional)') }}</span></p>
+      <p class="text-xs text-gray-500 mb-1.5">{{ _('Break the programme into time-based stages, e.g. a consultation period followed by a deliberation wave. Enter as a comma-separated list, e.g. <code class="bg-gray-100 px-1 rounded">Agenda-setting, Wave 1, Wave 2</code>')|safe }}</p>
+      {{ form.phases_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="2", placeholder=_("Agenda-setting, Wave 1, Wave 2")) }}
       {% if form.phases_csv.errors %}{% for error in form.phases_csv.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
 
     <div>
-      <p class="block text-sm font-semibold text-gray-700 mb-1">Participant Groups <span class="font-normal text-gray-400">(optional)</span></p>
-      <p class="text-xs text-gray-500 mb-1.5">Use this to track separate groups of participants — for example, a public survey group and an expert panel. Add one group per line.</p>
+      <p class="block text-sm font-semibold text-gray-700 mb-1">{{ _('Participant Groups') }} <span class="font-normal text-gray-400">{{ _('(optional)') }}</span></p>
+      <p class="text-xs text-gray-500 mb-1.5">{{ _('Use this to track separate groups of participants — for example, a public survey group and an expert panel. Add one group per line.') }}</p>
       <div class="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 mb-2 text-xs text-gray-600 space-y-1">
-        <p class="font-medium text-gray-500 uppercase tracking-wide text-[10px] mb-1">Format: <code class="font-mono">short-code|Display Name</code></p>
+        <p class="font-medium text-gray-500 uppercase tracking-wide text-[10px] mb-1">{{ _('Format:') }} <code class="font-mono">short-code|Display Name</code></p>
         <p class="font-mono">open|Open online</p>
         <p class="font-mono">pilot-informed|Pilot (informed)</p>
         <p class="font-mono">expert-panel|Expert Panel</p>
       </div>
       {{ form.cohorts_text(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm font-mono py-2.5 px-3 focus:ring-primary-500 focus:border-primary-500", rows="4", placeholder="open|Open online") }}
-      <p class="mt-1 text-xs text-gray-400">The short code is used internally (no spaces). The display name is shown to participants.</p>
+      <p class="mt-1 text-xs text-gray-400">{{ _('The short code is used internally (no spaces). The display name is shown to participants.') }}</p>
       {% if form.cohorts_text.errors %}{% for error in form.cohorts_text.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
   </div>

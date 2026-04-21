@@ -2,42 +2,42 @@
 {% extends "layout.html" %}
 
 {% block head %}
-<title>Programmes - Society Speaks Help | Run Structured Deliberation Campaigns</title>
-<meta name="description" content="Learn how Programmes on Society Speaks let organisations and researchers run structured deliberation campaigns — grouping multiple discussions together with shared themes, phases, and participant access controls.">
+<title>{{ _('Programmes - Society Speaks Help | Run Structured Deliberation Campaigns') }}</title>
+<meta name="description" content="{{ _('Learn how Programmes on Society Speaks let organisations and researchers run structured deliberation campaigns — grouping multiple discussions together with shared themes, phases, and participant access controls.') }}">
 <link rel="canonical" href="{{ url_for('help.programmes', _external=True) }}">
 
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "name": "Programmes - Society Speaks Help",
+  "name": _('Programmes - Society Speaks Help'),
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What is a Programme on Society Speaks?",
+      "name": _('What is a Programme on Society Speaks?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A Programme is a structured container that groups multiple related discussions together under a single campaign, project, or initiative. It lets you run deliberation at scale with shared themes, phases, and controlled participant access."
+        "text": _('A Programme is a structured container that groups multiple related discussions together under a single campaign, project, or initiative. It lets you run deliberation at scale with shared themes, phases, and controlled participant access.')
       }
     },
     {
       "@type": "Question",
-      "name": "Who can create a Programme?",
+      "name": _('Who can create a Programme?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Any registered user can create a Programme. Organisations can assign a programme to their organisation profile so that any editor of that organisation can manage it."
+        "text": _('Any registered user can create a Programme. Organisations can assign a programme to their organisation profile so that any editor of that organisation can manage it.')
       }
     },
     {
       "@type": "Question",
-      "name": "What is the difference between Public, Unlisted, Invite-only, and Private visibility?",
+      "name": _('What is the difference between Public, Unlisted, Invite-only, and Private visibility?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Public programmes appear in the public catalogue and are accessible to everyone. Unlisted programmes do not appear in the catalogue but are accessible to anyone with the direct link. Invite-only programmes are hidden and only accessible to users you explicitly invite. Private programmes are only accessible to the owner and stewards."
+        "text": _('Public programmes appear in the public catalogue and are accessible to everyone. Unlisted programmes do not appear in the catalogue but are accessible to anyone with the direct link. Invite-only programmes are hidden and only accessible to users you explicitly invite. Private programmes are only accessible to the owner and stewards.')
       }
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 
@@ -46,59 +46,59 @@
 
   <!-- Header -->
   <div class="mb-8">
-    <a href="{{ url_for('help.help') }}" class="text-sm text-primary-600 hover:underline">← Help Center</a>
-    <h1 class="text-3xl font-bold mt-3 mb-3">Programmes</h1>
-    <p class="text-gray-600 text-lg">Run structured deliberation campaigns — group multiple discussions under one project with shared themes, phases, and access controls.</p>
+    <a href="{{ url_for('help.help') }}" class="text-sm text-primary-600 hover:underline">{{ _('← Help Center') }}</a>
+    <h1 class="text-3xl font-bold mt-3 mb-3">{{ _('Programmes') }}</h1>
+    <p class="text-gray-600 text-lg">{{ _('Run structured deliberation campaigns — group multiple discussions under one project with shared themes, phases, and access controls.') }}</p>
   </div>
 
   <div class="space-y-8">
 
     <!-- What is a Programme -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">What is a Programme?</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('What is a Programme?') }}</h2>
       <p class="text-gray-700 mb-4">
-        A <strong>Programme</strong> is a structured campaign or project that contains one or more related discussions. It gives you a single home for everything belonging to a deliberation initiative — whether that is a national policy consultation, an academic research project, a community engagement campaign, or an organisation's internal strategy process.
+        {{ _("A <strong>Programme</strong> is a structured campaign or project that contains one or more related discussions. It gives you a single home for everything belonging to a deliberation initiative — whether that is a national policy consultation, an academic research project, a community engagement campaign, or an organisation's internal strategy process.")|safe }}
       </p>
       <p class="text-gray-700 mb-4">
-        Instead of managing each discussion in isolation, a Programme lets you:
+        {{ _('Instead of managing each discussion in isolation, a Programme lets you:') }}
       </p>
       <ul class="list-disc pl-5 text-gray-700 space-y-1">
-        <li>Group discussions by shared <strong>themes</strong> (e.g. Housing, Education, Health)</li>
-        <li>Organise discussions into sequential <strong>phases</strong> (e.g. Phase 1 — Listening, Phase 2 — Deliberation)</li>
-        <li>Divide participants into <strong>cohorts</strong> so you can compare views across groups</li>
-        <li>Control who can see and participate via <strong>visibility settings</strong></li>
-        <li>Export all discussion data in one go for analysis</li>
-        <li>Track aggregate participant counts across all discussions at a glance</li>
+        <li>{{ _('Group discussions by shared <strong>themes</strong> (e.g. Housing, Education, Health)')|safe }}</li>
+        <li>{{ _('Organise discussions into sequential <strong>phases</strong> (e.g. Phase 1 — Listening, Phase 2 — Deliberation)')|safe }}</li>
+        <li>{{ _('Divide participants into <strong>cohorts</strong> so you can compare views across groups')|safe }}</li>
+        <li>{{ _('Control who can see and participate via <strong>visibility settings</strong>')|safe }}</li>
+        <li>{{ _('Export all discussion data in one go for analysis') }}</li>
+        <li>{{ _('Track aggregate participant counts across all discussions at a glance') }}</li>
       </ul>
     </div>
 
     <!-- Who it is for -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Who is it for?</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Who is it for?') }}</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-blue-900 mb-2">Organisations &amp; institutions</h3>
-          <p class="text-sm text-gray-700">Local councils, NGOs, think tanks, and companies running public or internal consultations across multiple topics or departments.</p>
+          <h3 class="font-semibold text-blue-900 mb-2">{{ _('Organisations &amp; institutions')|safe }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Local councils, NGOs, think tanks, and companies running public or internal consultations across multiple topics or departments.') }}</p>
         </div>
         <div class="bg-purple-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-purple-900 mb-2">Researchers &amp; academics</h3>
-          <p class="text-sm text-gray-700">Teams running structured deliberative polls or citizen assemblies, needing controlled access and per-cohort data exports.</p>
+          <h3 class="font-semibold text-purple-900 mb-2">{{ _('Researchers &amp; academics')|safe }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Teams running structured deliberative polls or citizen assemblies, needing controlled access and per-cohort data exports.') }}</p>
         </div>
         <div class="bg-green-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-green-900 mb-2">Media &amp; journalism</h3>
-          <p class="text-sm text-gray-700">Publishers running reader engagement campaigns around a news series, with discussions linked to specific articles or themes.</p>
+          <h3 class="font-semibold text-green-900 mb-2">{{ _('Media &amp; journalism')|safe }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Publishers running reader engagement campaigns around a news series, with discussions linked to specific articles or themes.') }}</p>
         </div>
         <div class="bg-yellow-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-yellow-900 mb-2">Community groups</h3>
-          <p class="text-sm text-gray-700">Neighbourhood associations, campaign groups, or online communities wanting a shared deliberation space with optional public visibility.</p>
+          <h3 class="font-semibold text-yellow-900 mb-2">{{ _('Community groups') }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Neighbourhood associations, campaign groups, or online communities wanting a shared deliberation space with optional public visibility.') }}</p>
         </div>
       </div>
     </div>
 
     <!-- Visibility modes -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-1">Visibility modes</h2>
-      <p class="text-gray-600 text-sm mb-5">Choose who can discover and access your programme. This setting also applies to all discussions inside it — a restricted programme keeps its discussions restricted, even if someone finds a direct link.</p>
+      <h2 class="text-xl font-semibold mb-1">{{ _('Visibility modes') }}</h2>
+      <p class="text-gray-600 text-sm mb-5">{{ _('Choose who can discover and access your programme. This setting also applies to all discussions inside it — a restricted programme keeps its discussions restricted, even if someone finds a direct link.') }}</p>
 
       <div class="space-y-4">
         <div class="flex gap-4 p-4 border rounded-lg">
@@ -106,9 +106,10 @@
             <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900">Public</h3>
-            <p class="text-sm text-gray-700 mt-1">Your programme appears in the <a href="{{ url_for('programmes.list_programmes') }}" class="text-primary-600 hover:underline">public catalogue</a>. Anyone can browse and participate — no account required to read, an account is needed to vote or submit statements.</p>
-            <p class="text-sm text-gray-500 mt-1">Best for: open public consultations, transparent policy debates.</p>
+            <h3 class="font-semibold text-gray-900">{{ _('Public') }}</h3>
+            {% set _catalogue_link = '<a href="' ~ url_for('programmes.list_programmes') ~ '" class="text-primary-600 hover:underline">' ~ _('public catalogue') ~ '</a>' %}
+            <p class="text-sm text-gray-700 mt-1">{{ _('Your programme appears in the %(catalogue_link)s. Anyone can browse and participate — no account required to read, an account is needed to vote or submit statements.', catalogue_link=_catalogue_link)|safe }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ _('Best for: open public consultations, transparent policy debates.') }}</p>
           </div>
         </div>
 
@@ -117,9 +118,9 @@
             <span class="inline-block w-3 h-3 rounded-full bg-blue-400"></span>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900">Unlisted</h3>
-            <p class="text-sm text-gray-700 mt-1">Your programme does <em>not</em> appear in the public catalogue but is accessible to anyone who has the direct URL. Useful for sharing with a defined audience without advertising it publicly.</p>
-            <p class="text-sm text-gray-500 mt-1">Best for: partner organisations, soft launches, sharing with a specific mailing list.</p>
+            <h3 class="font-semibold text-gray-900">{{ _('Unlisted') }}</h3>
+            <p class="text-sm text-gray-700 mt-1">{{ _('Your programme does <em>not</em> appear in the public catalogue but is accessible to anyone who has the direct URL. Useful for sharing with a defined audience without advertising it publicly.')|safe }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ _('Best for: partner organisations, soft launches, sharing with a specific mailing list.') }}</p>
           </div>
         </div>
 
@@ -128,9 +129,9 @@
             <span class="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900">Invite-only</h3>
-            <p class="text-sm text-gray-700 mt-1">Only users you explicitly invite can access the programme. Outsiders and unauthenticated visitors see a 404 — no information is revealed. You manage the participant list in Programme Settings.</p>
-            <p class="text-sm text-gray-500 mt-1">Best for: citizen assemblies, closed research cohorts, internal team consultations.</p>
+            <h3 class="font-semibold text-gray-900">{{ _('Invite-only') }}</h3>
+            <p class="text-sm text-gray-700 mt-1">{{ _('Only users you explicitly invite can access the programme. Outsiders and unauthenticated visitors see a 404 — no information is revealed. You manage the participant list in Programme Settings.') }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ _('Best for: citizen assemblies, closed research cohorts, internal team consultations.') }}</p>
           </div>
         </div>
 
@@ -139,9 +140,9 @@
             <span class="inline-block w-3 h-3 rounded-full bg-gray-500"></span>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900">Private</h3>
-            <p class="text-sm text-gray-700 mt-1">Only the programme owner and its stewards can access it. No one else — even with a direct link — can see the programme or its discussions.</p>
-            <p class="text-sm text-gray-500 mt-1">Best for: draft programmes being prepared before launch, internal reviews.</p>
+            <h3 class="font-semibold text-gray-900">{{ _('Private') }}</h3>
+            <p class="text-sm text-gray-700 mt-1">{{ _('Only the programme owner and its stewards can access it. No one else — even with a direct link — can see the programme or its discussions.') }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ _('Best for: draft programmes being prepared before launch, internal reviews.') }}</p>
           </div>
         </div>
       </div>
@@ -149,141 +150,142 @@
 
     <!-- Roles -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Roles &amp; permissions</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Roles &amp; permissions')|safe }}</h2>
       <div class="space-y-3">
         <div class="p-4 bg-gray-50 rounded-lg">
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wide bg-blue-100 text-primary-800 px-2 py-0.5 rounded">Owner / Editor</span>
+            <span class="text-xs font-bold uppercase tracking-wide bg-blue-100 text-primary-800 px-2 py-0.5 rounded">{{ _('Owner / Editor') }}</span>
           </div>
-          <p class="text-sm text-gray-700">Creates and manages the programme. Can edit settings, invite or remove stewards and participants, archive the programme, and export all data. If the programme belongs to an organisation, any editor of that organisation shares these permissions.</p>
+          <p class="text-sm text-gray-700">{{ _('Creates and manages the programme. Can edit settings, invite or remove stewards and participants, archive the programme, and export all data. If the programme belongs to an organisation, any editor of that organisation shares these permissions.') }}</p>
         </div>
         <div class="p-4 bg-gray-50 rounded-lg">
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wide bg-purple-100 text-purple-800 px-2 py-0.5 rounded">Steward</span>
+            <span class="text-xs font-bold uppercase tracking-wide bg-purple-100 text-purple-800 px-2 py-0.5 rounded">{{ _('Steward') }}</span>
           </div>
-          <p class="text-sm text-gray-700">Can view and export programme data (including restricted and invite-only programmes). Useful for researchers, co-facilitators, or oversight bodies who need read access and export rights but should not change programme settings.</p>
+          <p class="text-sm text-gray-700">{{ _('Can view and export programme data (including restricted and invite-only programmes). Useful for researchers, co-facilitators, or oversight bodies who need read access and export rights but should not change programme settings.') }}</p>
         </div>
         <div class="p-4 bg-gray-50 rounded-lg">
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wide bg-green-100 text-green-800 px-2 py-0.5 rounded">Invited participant</span>
+            <span class="text-xs font-bold uppercase tracking-wide bg-green-100 text-green-800 px-2 py-0.5 rounded">{{ _('Invited participant') }}</span>
           </div>
-          <p class="text-sm text-gray-700">Can access an invite-only programme and participate in its discussions. Access is granted by the owner by email address (the user must already have a Society Speaks account). Access can be revoked at any time — once revoked, the user immediately loses access.</p>
+          <p class="text-sm text-gray-700">{{ _('Can access an invite-only programme and participate in its discussions. Access is granted by the owner by email address (the user must already have a Society Speaks account). Access can be revoked at any time — once revoked, the user immediately loses access.') }}</p>
         </div>
       </div>
     </div>
 
     <!-- How to create a programme -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Creating a programme</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Creating a programme') }}</h2>
       <ol class="space-y-3 text-gray-700">
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">1</span>
-          <div><strong>Go to Programmes → New programme</strong> from the navigation menu, or visit <a href="{{ url_for('programmes.create_programme') }}" class="text-primary-600 hover:underline">/programmes/new</a>.</div>
+          {% set _new_prog_link = '<a href="' ~ url_for('programmes.create_programme') ~ '" class="text-primary-600 hover:underline">/programmes/new</a>' %}
+          <div>{{ _('<strong>Go to Programmes → New programme</strong> from the navigation menu, or visit %(link)s.', link=_new_prog_link)|safe }}</div>
         </li>
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">2</span>
-          <div><strong>Name and describe it.</strong> Give it a clear name that participants will recognise. The description appears on the public programme page.</div>
+          <div>{{ _('<strong>Name and describe it.</strong> Give it a clear name that participants will recognise. The description appears on the public programme page.')|safe }}</div>
         </li>
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">3</span>
-          <div><strong>Set visibility.</strong> Choose Public, Unlisted, Invite-only, or Private depending on your audience and privacy needs.</div>
+          <div>{{ _('<strong>Set visibility.</strong> Choose Public, Unlisted, Invite-only, or Private depending on your audience and privacy needs.')|safe }}</div>
         </li>
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">4</span>
-          <div><strong>Add themes and phases (optional).</strong> These become selectable tags when creating discussions inside the programme, letting you filter and group discussions later.</div>
+          <div>{{ _('<strong>Add themes and phases (optional).</strong> These become selectable tags when creating discussions inside the programme, letting you filter and group discussions later.')|safe }}</div>
         </li>
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">5</span>
-          <div><strong>Add discussions.</strong> Create new discussions and assign them to this programme via the discussion's edit page. Each discussion inherits the programme's access restrictions.</div>
+          <div>{{ _("<strong>Add discussions.</strong> Create new discussions and assign them to this programme via the discussion's edit page. Each discussion inherits the programme's access restrictions.")|safe }}</div>
         </li>
       </ol>
     </div>
 
     <!-- Managing access -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Managing access</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Managing access') }}</h2>
 
       <div class="space-y-5">
         <div>
-          <h3 class="font-semibold text-gray-900 mb-2">Inviting participants (Invite-only programmes)</h3>
-          <p class="text-sm text-gray-700 mb-2">In <strong>Programme Settings</strong>, enter the email address of a registered Society Speaks user and click <em>Grant access</em>. Access is granted immediately; if email delivery succeeds, they will also receive an invite notification.</p>
-          <p class="text-sm text-gray-500">The invited user must already have a Society Speaks account. If they do not, ask them to register first, then invite them.</p>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('Inviting participants (Invite-only programmes)') }}</h3>
+          <p class="text-sm text-gray-700 mb-2">{{ _('In <strong>Programme Settings</strong>, enter the email address of a registered Society Speaks user and click <em>Grant access</em>. Access is granted immediately; if email delivery succeeds, they will also receive an invite notification.')|safe }}</p>
+          <p class="text-sm text-gray-500">{{ _('The invited user must already have a Society Speaks account. If they do not, ask them to register first, then invite them.') }}</p>
         </div>
 
         <div>
-          <h3 class="font-semibold text-gray-900 mb-2">Revoking access</h3>
-          <p class="text-sm text-gray-700">In Programme Settings, find the user in the participant list and click <em>Revoke</em>. Their access is removed immediately — they will see a 404 if they try to visit the programme.</p>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('Revoking access') }}</h3>
+          <p class="text-sm text-gray-700">{{ _('In Programme Settings, find the user in the participant list and click <em>Revoke</em>. Their access is removed immediately — they will see a 404 if they try to visit the programme.')|safe }}</p>
         </div>
 
         <div>
-          <h3 class="font-semibold text-gray-900 mb-2">Inviting stewards</h3>
-          <p class="text-sm text-gray-700">Stewards are invited by email and must accept via a link sent to them. They can access private/invite-only programmes regardless of visibility, and can export all data but cannot change programme settings.</p>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ _('Inviting stewards') }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Stewards are invited by email and must accept via a link sent to them. They can access private/invite-only programmes regardless of visibility, and can export all data but cannot change programme settings.') }}</p>
         </div>
       </div>
     </div>
 
     <!-- Themes, phases and cohorts -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Themes, phases &amp; cohorts</h2>
-      <p class="text-gray-700 mb-4">These three optional structures let you organise and analyse your programme's data more precisely.</p>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Themes, phases &amp; cohorts')|safe }}</h2>
+      <p class="text-gray-700 mb-4">{{ _("These three optional structures let you organise and analyse your programme's data more precisely.") }}</p>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="p-4 bg-blue-50 rounded-lg">
-          <h3 class="font-semibold text-blue-900 mb-2">Themes</h3>
-          <p class="text-sm text-gray-700">Topic categories for discussions within the programme — e.g. <em>Housing</em>, <em>Transport</em>, <em>Environment</em>. Participants and owners can filter the programme page by theme.</p>
+          <h3 class="font-semibold text-blue-900 mb-2">{{ _('Themes') }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Topic categories for discussions within the programme — e.g. <em>Housing</em>, <em>Transport</em>, <em>Environment</em>. Participants and owners can filter the programme page by theme.')|safe }}</p>
         </div>
         <div class="p-4 bg-purple-50 rounded-lg">
-          <h3 class="font-semibold text-purple-900 mb-2">Phases</h3>
-          <p class="text-sm text-gray-700">Sequential stages of a deliberation — e.g. <em>Phase 1: Listening</em>, <em>Phase 2: Deliberation</em>, <em>Phase 3: Recommendations</em>. Helps structure a multi-round engagement.</p>
+          <h3 class="font-semibold text-purple-900 mb-2">{{ _('Phases') }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Sequential stages of a deliberation — e.g. <em>Phase 1: Listening</em>, <em>Phase 2: Deliberation</em>, <em>Phase 3: Recommendations</em>. Helps structure a multi-round engagement.')|safe }}</p>
         </div>
         <div class="p-4 bg-green-50 rounded-lg">
-          <h3 class="font-semibold text-green-900 mb-2">Cohorts</h3>
-          <p class="text-sm text-gray-700">Named participant groups — e.g. <em>Pilot group</em>, <em>Regional A</em>. Cohort labels are included in vote data exports so you can compare results between groups.</p>
+          <h3 class="font-semibold text-green-900 mb-2">{{ _('Cohorts') }}</h3>
+          <p class="text-sm text-gray-700">{{ _('Named participant groups — e.g. <em>Pilot group</em>, <em>Regional A</em>. Cohort labels are included in vote data exports so you can compare results between groups.')|safe }}</p>
         </div>
       </div>
     </div>
 
     <!-- Data export -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Exporting your data</h2>
-      <p class="text-gray-700 mb-3">Owners and stewards can export all voting and statement data for a programme as a CSV file (default download format). Exports include:</p>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Exporting your data') }}</h2>
+      <p class="text-gray-700 mb-3">{{ _('Owners and stewards can export all voting and statement data for a programme as a CSV file (default download format). Exports include:') }}</p>
       <ul class="list-disc pl-5 text-gray-700 space-y-1 mb-4">
-        <li>All statements and their vote counts (agree / disagree / unsure)</li>
-        <li>Individual votes with participant identifiers (anonymised where applicable)</li>
-        <li>Cohort labels, discussion themes and phases</li>
-        <li>Timestamps for analysis over time</li>
+        <li>{{ _('All statements and their vote counts (agree / disagree / unsure)') }}</li>
+        <li>{{ _('Individual votes with participant identifiers (anonymised where applicable)') }}</li>
+        <li>{{ _('Cohort labels, discussion themes and phases') }}</li>
+        <li>{{ _('Timestamps for analysis over time') }}</li>
       </ul>
-      <p class="text-sm text-gray-500">You can also filter exports by cohort — useful when you want to compare results between sub-groups without exporting the entire dataset. For technical workflows, JSON export is also available via the <code>?format=json</code> query parameter.</p>
+      <p class="text-sm text-gray-500">{{ _('You can also filter exports by cohort — useful when you want to compare results between sub-groups without exporting the entire dataset. For technical workflows, JSON export is also available via the <code>?format=json</code> query parameter.')|safe }}</p>
     </div>
 
     <!-- FAQ -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Frequently asked questions</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Frequently asked questions') }}</h2>
       <div class="space-y-5">
 
         <div>
-          <h3 class="font-semibold text-gray-900">Can I add an existing discussion to a programme after creating it?</h3>
-          <p class="text-sm text-gray-700 mt-1">Yes. Open the discussion, click <em>Edit discussion</em>, and select the programme from the Programme field. The discussion will immediately inherit the programme's access restrictions.</p>
+          <h3 class="font-semibold text-gray-900">{{ _('Can I add an existing discussion to a programme after creating it?') }}</h3>
+          <p class="text-sm text-gray-700 mt-1">{{ _("Yes. Open the discussion, click <em>Edit discussion</em>, and select the programme from the Programme field. The discussion will immediately inherit the programme's access restrictions.")|safe }}</p>
         </div>
 
         <div>
-          <h3 class="font-semibold text-gray-900">What happens to discussions when I archive a programme?</h3>
-          <p class="text-sm text-gray-700 mt-1">Archiving marks the programme as inactive and removes it from the public catalogue, but the discussions and all data are preserved. Owners and stewards can still access archived programmes from their workspace.</p>
+          <h3 class="font-semibold text-gray-900">{{ _('What happens to discussions when I archive a programme?') }}</h3>
+          <p class="text-sm text-gray-700 mt-1">{{ _('Archiving marks the programme as inactive and removes it from the public catalogue, but the discussions and all data are preserved. Owners and stewards can still access archived programmes from their workspace.') }}</p>
         </div>
 
         <div>
-          <h3 class="font-semibold text-gray-900">Do I need an organisation account to create a programme?</h3>
-          <p class="text-sm text-gray-700 mt-1">No. Any registered user can create a programme under their personal account. Assigning a programme to an organisation is optional — it lets other editors in that organisation share management access.</p>
+          <h3 class="font-semibold text-gray-900">{{ _('Do I need an organisation account to create a programme?') }}</h3>
+          <p class="text-sm text-gray-700 mt-1">{{ _('No. Any registered user can create a programme under their personal account. Assigning a programme to an organisation is optional — it lets other editors in that organisation share management access.') }}</p>
         </div>
 
         <div>
-          <h3 class="font-semibold text-gray-900">Can an invited participant see other participants' names?</h3>
-          <p class="text-sm text-gray-700 mt-1">No. Participants see discussions and statements but not who else has been invited to the programme. Only owners and stewards can see the participant list in Programme Settings.</p>
+          <h3 class="font-semibold text-gray-900">{{ _("Can an invited participant see other participants' names?") }}</h3>
+          <p class="text-sm text-gray-700 mt-1">{{ _('No. Participants see discussions and statements but not who else has been invited to the programme. Only owners and stewards can see the participant list in Programme Settings.') }}</p>
         </div>
 
         <div>
-          <h3 class="font-semibold text-gray-900">Can anonymous users participate in a programme discussion?</h3>
-          <p class="text-sm text-gray-700 mt-1">For <strong>Public</strong> and <strong>Unlisted</strong> programmes, yes — anonymous voting is allowed on discussions that permit it. For <strong>Invite-only</strong> and <strong>Private</strong> programmes, participants must be logged in so their access grant can be verified.</p>
+          <h3 class="font-semibold text-gray-900">{{ _('Can anonymous users participate in a programme discussion?') }}</h3>
+          <p class="text-sm text-gray-700 mt-1">{{ _('For <strong>Public</strong> and <strong>Unlisted</strong> programmes, yes — anonymous voting is allowed on discussions that permit it. For <strong>Invite-only</strong> and <strong>Private</strong> programmes, participants must be logged in so their access grant can be verified.')|safe }}</p>
         </div>
 
       </div>
@@ -291,23 +293,23 @@
 
     <!-- Next steps -->
     <div class="bg-gray-50 rounded-lg p-6">
-      <h2 class="text-xl font-semibold mb-4">Next steps</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Next steps') }}</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <a href="{{ url_for('programmes.create_programme') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
-          <h3 class="font-semibold text-primary-700">Create a Programme →</h3>
-          <p class="text-sm text-gray-600 mt-1">Start a new programme from scratch</p>
+          <h3 class="font-semibold text-primary-700">{{ _('Create a Programme →') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ _('Start a new programme from scratch') }}</p>
         </a>
         <a href="{{ url_for('programmes.list_programmes') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
-          <h3 class="font-semibold text-primary-700">Browse Public Programmes →</h3>
-          <p class="text-sm text-gray-600 mt-1">See what programmes are currently live</p>
+          <h3 class="font-semibold text-primary-700">{{ _('Browse Public Programmes →') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ _('See what programmes are currently live') }}</p>
         </a>
         <a href="{{ url_for('help.creating_discussions') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
-          <h3 class="font-semibold">Creating Discussions →</h3>
-          <p class="text-sm text-gray-600 mt-1">Learn how to add discussions to your programme</p>
+          <h3 class="font-semibold">{{ _('Creating Discussions →') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ _('Learn how to add discussions to your programme') }}</p>
         </a>
         <a href="{{ url_for('help.native_system') }}" class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-gray-200">
-          <h3 class="font-semibold">Native Debate System →</h3>
-          <p class="text-sm text-gray-600 mt-1">Understand how voting, statements and consensus analysis work</p>
+          <h3 class="font-semibold">{{ _('Native Debate System →') }}</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ _('Understand how voting, statements and consensus analysis work') }}</p>
         </a>
       </div>
     </div>
@@ -317,9 +319,9 @@
   <!-- Help Footer -->
   <div class="mt-8 text-center">
     <p class="text-gray-600">
-      Still need help?
+      {{ _('Still need help?') }}
       <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-primary-600 hover:underline">
-        Send us feedback
+        {{ _('Send us feedback') }}
       </a>
     </p>
   </div>

@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 
-{% block title %}Subscribe to Daily Brief - Society Speaks{% endblock %}
+{% block title %}{{ _('Subscribe to Daily Brief - Society Speaks') }}{% endblock %}
 
-{% block meta_description %}Sign up free. Get 3-5 curated news stories daily with multi-perspective coverage analysis.{% endblock %}
+{% block meta_description %}{{ _('Sign up free. Get 3-5 curated news stories daily with multi-perspective coverage analysis.') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gradient-to-b from-blue-50 to-white">
@@ -13,110 +13,109 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                100% Free
+                {{ _('100%% Free') }}
             </div>
-            <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-4">Your Daily Sense-Making Brief</h1>
+            <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-4">{{ _('Your Daily Sense-Making Brief') }}</h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                3-5 curated stories with coverage analysis, delivered when you want it. 
-                No clickbait. No sensationalism. Just the news that matters.
+                {{ _('3-5 curated stories with coverage analysis, delivered when you want it. No clickbait. No sensationalism. Just the news that matters.') }}
             </p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-8 items-start max-w-5xl mx-auto">
             
             <div class="bg-white rounded-xl shadow-xl border border-gray-100 p-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Sign Up Free</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-6">{{ _('Sign Up Free') }}</h2>
                 
                 <form method="POST" class="space-y-6">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% from 'components/bot_protection.html' import bot_fields %}
                     {{ bot_fields() }}
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">{{ _('Email address') }}</label>
                         {% if current_user.is_authenticated and current_user.email %}
                         <input type="email" id="email" name="email" required
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                value="{{ current_user.email }}"
                                readonly>
-                        <p class="text-xs text-gray-500 mt-1">Using your account email</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ _('Using your account email') }}</p>
                         {% else %}
                         <input type="email" id="email" name="email" required
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                               placeholder="you@example.com">
+                               placeholder="{{ _('you@example.com') }}">
                         {% endif %}
                     </div>
 
                     <div>
-                        <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Your time zone</label>
+                        <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">{{ _('Your time zone') }}</label>
                         {% from 'components/timezone_select.html' import timezone_select %}
                         {{ timezone_select(name='timezone', selected='Europe/London', css_class='w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500') }}
                     </div>
 
                     {# Cadence selection #}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">How often?</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ _('How often?') }}</label>
                         <div class="grid grid-cols-2 gap-3">
                             <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-primary-500 has-[:checked]:border-primary-500 has-[:checked]:bg-blue-50 transition-all">
                                 <input type="radio" name="cadence" value="daily" class="sr-only" checked id="sub-cadence-daily">
                                 <span class="text-2xl mb-1">📰</span>
-                                <span class="text-sm font-bold text-gray-900">Daily</span>
-                                <span class="text-xs text-gray-500 text-center">Every day</span>
+                                <span class="text-sm font-bold text-gray-900">{{ _('Daily') }}</span>
+                                <span class="text-xs text-gray-500 text-center">{{ _('Every day') }}</span>
                             </label>
                             <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-primary-500 has-[:checked]:border-primary-500 has-[:checked]:bg-blue-50 transition-all">
                                 <input type="radio" name="cadence" value="weekly" class="sr-only" id="sub-cadence-weekly">
                                 <span class="text-2xl mb-1">📬</span>
-                                <span class="text-sm font-bold text-gray-900">Weekly</span>
-                                <span class="text-xs text-gray-500 text-center">Sunday digest</span>
+                                <span class="text-sm font-bold text-gray-900">{{ _('Weekly') }}</span>
+                                <span class="text-xs text-gray-500 text-center">{{ _('Sunday digest') }}</span>
                             </label>
                         </div>
                     </div>
 
                     {# Weekly day selection (hidden by default) #}
                     <div id="signup-weekly-day" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery day</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ _('Delivery day') }}</label>
                         <select name="preferred_weekly_day"
                                 class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            <option value="6" selected>Sunday</option>
-                            <option value="0">Monday</option>
-                            <option value="1">Tuesday</option>
-                            <option value="2">Wednesday</option>
-                            <option value="3">Thursday</option>
-                            <option value="4">Friday</option>
-                            <option value="5">Saturday</option>
+                            <option value="6" selected>{{ _('Sunday') }}</option>
+                            <option value="0">{{ _('Monday') }}</option>
+                            <option value="1">{{ _('Tuesday') }}</option>
+                            <option value="2">{{ _('Wednesday') }}</option>
+                            <option value="3">{{ _('Thursday') }}</option>
+                            <option value="4">{{ _('Friday') }}</option>
+                            <option value="5">{{ _('Saturday') }}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label for="preferred_hour" class="block text-sm font-medium text-gray-700 mb-2">When should we deliver?</label>
+                        <label for="preferred_hour" class="block text-sm font-medium text-gray-700 mb-2">{{ _('When should we deliver?') }}</label>
                         <select id="preferred_hour" name="preferred_hour"
                                 class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            <optgroup label="Morning — includes yesterday's catch-up">
-                                <option value="6">6:00 am — Early bird</option>
-                                <option value="7">7:00 am</option>
-                                <option value="8">8:00 am — With coffee</option>
-                                <option value="9">9:00 am — Start of day</option>
+                            <optgroup label="{{ _("Morning — includes yesterday's catch-up") }}">
+                                <option value="6">{{ _('6:00 am — Early bird') }}</option>
+                                <option value="7">{{ _('7:00 am') }}</option>
+                                <option value="8">{{ _('8:00 am — With coffee') }}</option>
+                                <option value="9">{{ _('9:00 am — Start of day') }}</option>
                             </optgroup>
-                            <optgroup label="Midday">
-                                <option value="12">12:00 pm — Lunchtime</option>
+                            <optgroup label="{{ _('Midday') }}">
+                                <option value="12">{{ _('12:00 pm — Lunchtime') }}</option>
                             </optgroup>
-                            <optgroup label="Evening — freshest news, same day">
-                                <option value="17">5:00 pm</option>
-                                <option value="18" selected>6:00 pm — Evening</option>
-                                <option value="19">7:00 pm</option>
-                                <option value="20">8:00 pm</option>
+                            <optgroup label="{{ _('Evening — freshest news, same day') }}">
+                                <option value="17">{{ _('5:00 pm') }}</option>
+                                <option value="18" selected>{{ _('6:00 pm — Evening') }}</option>
+                                <option value="19">{{ _('7:00 pm') }}</option>
+                                <option value="20">{{ _('8:00 pm') }}</option>
                             </optgroup>
                         </select>
-                        <p class="text-xs text-gray-500 mt-2">Morning sends include yesterday's stories as a catch-up; evening sends carry the day's freshest coverage.</p>
+                        <p class="text-xs text-gray-500 mt-2">{{ _("Morning sends include yesterday's stories as a catch-up; evening sends carry the day's freshest coverage.") }}</p>
                     </div>
 
-                    <button type="submit" 
+                    <button type="submit"
                             class="w-full py-4 px-6 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 transition-colors shadow-lg">
-                        Sign Up Free
+                        {{ _('Sign Up Free') }}
                     </button>
                 </form>
 
                 <p class="text-center text-sm text-gray-500 mt-4">
-                    No credit card required. Unsubscribe anytime with one click.
+                    {{ _('No credit card required. Unsubscribe anytime with one click.') }}
                 </p>
             </div>
 
@@ -128,7 +127,7 @@
                         <!-- Email header -->
                         <div class="bg-blue-800 px-5 py-3">
                             <p class="text-blue-300 text-xs font-semibold tracking-wide uppercase">Society Speaks</p>
-                            <h3 class="text-white text-lg font-bold mt-0.5" style="font-family: Georgia, 'Times New Roman', serif;">The Daily Brief</h3>
+                            <h3 class="text-white text-lg font-bold mt-0.5" style="font-family: Georgia, 'Times New Roman', serif;">{{ _('The Daily Brief') }}</h3>
                         </div>
 
                         <!-- Brief content preview -->
@@ -136,9 +135,9 @@
                             <!-- Story 1 -->
                             <div class="border-l-4 border-primary-500 pl-3 bg-blue-50 py-2 pr-3 rounded-r-lg">
                                 <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                                    <span class="text-xs font-bold tracking-wide uppercase text-primary-600">POLICY</span>
+                                    <span class="text-xs font-bold tracking-wide uppercase text-primary-600">{{ _('POLICY') }}</span>
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-800 text-white text-xs font-semibold">
-                                        12 sources
+                                        {{ _('%(count)d sources', count=12) }}
                                     </span>
                                 </div>
                                 <!-- Coverage breakdown -->
@@ -154,22 +153,22 @@
                                     <div class="bg-purple-500" style="width: 40%"></div>
                                     <div class="bg-red-500" style="width: 25%"></div>
                                 </div>
-                                <h4 class="font-bold text-gray-900 text-sm" style="font-family: Georgia, 'Times New Roman', serif;">UK Announces New AI Safety Framework</h4>
+                                <h4 class="font-bold text-gray-900 text-sm" style="font-family: Georgia, 'Times New Roman', serif;">{{ _('UK Announces New AI Safety Framework') }}</h4>
                             </div>
 
                             <!-- Why This Matters box -->
                             <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg px-3 py-2">
-                                <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-0.5">💡 Why This Matters</p>
-                                <p class="text-xs text-amber-900 leading-relaxed">Sets precedent for how democracies balance innovation with safety</p>
+                                <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-0.5">💡 {{ _('Why This Matters') }}</p>
+                                <p class="text-xs text-amber-900 leading-relaxed">{{ _('Sets precedent for how democracies balance innovation with safety') }}</p>
                             </div>
 
                             <!-- Story 2 with Under the Radar -->
                             <div class="bg-amber-100 border-l-4 border-amber-500 pl-3 py-2 pr-3 rounded-r-lg">
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-600 text-white text-xs font-bold uppercase tracking-wide mb-1">
-                                    📭 Under the Radar
+                                    📭 {{ _('Under the Radar') }}
                                 </span>
-                                <h4 class="font-bold text-gray-900 text-sm" style="font-family: Georgia, 'Times New Roman', serif;">Infrastructure Bill Advances</h4>
-                                <p class="text-xs text-amber-800 mt-0.5">High civic impact, low media coverage</p>
+                                <h4 class="font-bold text-gray-900 text-sm" style="font-family: Georgia, 'Times New Roman', serif;">{{ _('Infrastructure Bill Advances') }}</h4>
+                                <p class="text-xs text-amber-800 mt-0.5">{{ _('High civic impact, low media coverage') }}</p>
                             </div>
                         </div>
                     </div>
@@ -181,19 +180,19 @@
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Multi-source
+                        {{ _('Multi-source') }}
                     </span>
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Context included
+                        {{ _('Context included') }}
                     </span>
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-primary-700 text-xs font-semibold">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
-                        L/C/R breakdown
+                        {{ _('L/C/R breakdown') }}
                     </span>
                 </div>
 
@@ -206,13 +205,13 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">Also Included</p>
-                            <h4 class="font-bold text-gray-900 mb-1">News Transparency Dashboard</h4>
+                            <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">{{ _('Also Included') }}</p>
+                            <h4 class="font-bold text-gray-900 mb-1">{{ _('News Transparency Dashboard') }}</h4>
                             <p class="text-sm text-gray-600">
-                                See today's news from <strong>140+ sources</strong> organised by political leaning. Filter by outlet, compare coverage, and spot what your usual sources aren't telling you.
+                                {{ _("See today's news from <strong>140+ sources</strong> organised by political leaning. Filter by outlet, compare coverage, and spot what your usual sources aren't telling you.")|safe }}
                             </p>
                             <a href="{{ url_for('news.dashboard') }}" class="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mt-2">
-                                Learn more
+                                {{ _('Learn more') }}
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
@@ -226,44 +225,44 @@
                         <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
-                        What you get
+                        {{ _('What you get') }}
                     </h3>
                     <ul class="space-y-3 text-gray-600">
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span><strong>3-5 curated stories</strong> selected for civic importance</span>
+                            <span>{{ _('<strong>3-5 curated stories</strong> selected for civic importance')|safe }}</span>
                         </li>
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span><strong>Coverage analysis</strong> showing left/centre/right perspectives</span>
+                            <span>{{ _('<strong>Coverage analysis</strong> showing left/centre/right perspectives')|safe }}</span>
                         </li>
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span><strong>News Transparency Dashboard</strong> with 140+ sources by political leaning</span>
+                            <span>{{ _('<strong>News Transparency Dashboard</strong> with 140+ sources by political leaning')|safe }}</span>
                         </li>
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span><strong>Verification links</strong> to primary sources and documents</span>
+                            <span>{{ _('<strong>Verification links</strong> to primary sources and documents')|safe }}</span>
                         </li>
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span><strong>Full archive access</strong> to past briefs</span>
+                            <span>{{ _('<strong>Full archive access</strong> to past briefs')|safe }}</span>
                         </li>
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span><strong>Discussion links</strong> to join community deliberation</span>
+                            <span>{{ _('<strong>Discussion links</strong> to join community deliberation')|safe }}</span>
                         </li>
                     </ul>
                 </div>
@@ -273,32 +272,32 @@
                         <svg class="w-5 h-5 text-primary-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                        Open-Source Democracy
+                        {{ _('Open-Source Democracy') }}
                     </h3>
                     <p class="text-gray-700 text-sm mb-3">
-                        Society Speaks is <strong>100% open source</strong> and free to use. Everything is built in the open:
+                        {{ _('Society Speaks is <strong>100%% open source</strong> and free to use. Everything is built in the open:')|safe }}
                     </p>
                     <ul class="text-sm text-gray-600 space-y-1 mb-3">
                         <li class="flex items-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2"></span>
-                            The consensus analysis engine
+                            {{ _('The consensus analysis engine') }}
                         </li>
                         <li class="flex items-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2"></span>
-                            Daily civic questions
+                            {{ _('Daily civic questions') }}
                         </li>
                         <li class="flex items-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2"></span>
-                            News-to-deliberation pipeline
+                            {{ _('News-to-deliberation pipeline') }}
                         </li>
                         <li class="flex items-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2"></span>
-                            Tools for healthier public discourse
+                            {{ _('Tools for healthier public discourse') }}
                         </li>
                     </ul>
-                    <a href="https://github.com/zuluwill/Societyspeaks" target="_blank" rel="noopener" 
+                    <a href="https://github.com/zuluwill/Societyspeaks" target="_blank" rel="noopener"
                        class="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-                        View on GitHub
+                        {{ _('View on GitHub') }}
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
@@ -309,7 +308,7 @@
 
         <div class="mt-12 text-center">
             <a href="{{ url_for('brief.today') }}" class="text-primary-600 hover:text-primary-700 font-medium">
-                &larr; Back to Daily Brief
+                &larr; {{ _('Back to Daily Brief') }}
             </a>
         </div>
     </div>
@@ -318,12 +317,12 @@
   document.getElementById('sub-cadence-daily')?.addEventListener('change', function() {
     document.getElementById('signup-weekly-day').classList.add('hidden');
     const lbl = document.getElementById('signup-delivery-label');
-    if (lbl) lbl.textContent = 'When should we deliver?';
+    if (lbl) lbl.textContent = {{ _('When should we deliver?')|tojson }};
   });
   document.getElementById('sub-cadence-weekly')?.addEventListener('change', function() {
     document.getElementById('signup-weekly-day').classList.remove('hidden');
     const lbl = document.getElementById('signup-delivery-label');
-    if (lbl) lbl.textContent = 'What time on delivery day?';
+    if (lbl) lbl.textContent = {{ _('What time on delivery day?')|tojson }};
   });
 </script>
 {% endblock %}

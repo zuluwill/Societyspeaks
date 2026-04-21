@@ -58,7 +58,7 @@
     {% if source_count %}
     <p style="margin: 0 0 12px 0;">
         <span style="display: inline-block; background-color: {{ topic_color or '#1e40af' }}; border-radius: 4px; padding: 3px 10px; font-family: {{ font_body }}; font-size: 12px; font-weight: 600; color: #ffffff;">
-            {{ source_count }} sources
+            {{ _('%(count)d sources', count=source_count) }}
         </span>
     </p>
     {% endif %}
@@ -70,7 +70,7 @@
     {% if why_matters %}
     <div style="background-color: #eff6ff; border-left: 4px solid {{ topic_color or '#3b82f6' }}; border-radius: 0 6px 6px 0; padding: 14px 16px; margin-bottom: 14px;">
         <p style="margin: 0 0 4px 0; font-family: {{ font_body }}; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #1e3a8a; text-transform: uppercase;">
-            Why This Matters
+            {{ _('Why This Matters') }}
         </p>
         <p style="margin: 0; font-family: {{ font_body }}; font-size: 14px; line-height: 1.6; color: #1e40af;">
             {{ why_matters }}
@@ -79,7 +79,7 @@
     {% endif %}
     
     <p style="margin: 0; font-family: {{ font_body }}; font-size: 13px; color: {{ color_text_light }};">
-        Source: {{ source }}
+        {{ _('Source: %(source)s', source=source) }}
     </p>
 </div>
 {% endmacro %}
@@ -107,7 +107,7 @@
 {% macro key_takeaways(items, accent_color) %}
 <div style="background-color: {{ color_bg_light }}; border: 1px solid {{ color_border }}; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
     <p style="margin: 0 0 12px 0; font-family: {{ font_body }}; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ accent_color or '#1e40af' }};">
-        Key Takeaways
+        {{ _('Key Takeaways') }}
     </p>
     {{ bullet_list(items, accent_color) }}
 </div>
@@ -147,7 +147,7 @@
 {% macro what_to_watch(items, accent_color) %}
 <div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
     <p style="margin: 0 0 12px 0; font-family: {{ font_body }}; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #92400e;">
-        What to Watch
+        {{ _('What to Watch') }}
     </p>
     {{ bullet_list(items, '#b45309') }}
 </div>
@@ -159,7 +159,7 @@
     
     <div class="text-center px-6 py-8" style="background-color: {{ accent_color or '#1e40af' }};">
         <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.8); text-transform: uppercase;">
-            SOCIETY SPEAKS
+            {{ _('SOCIETY SPEAKS') }}
         </p>
         <h3 style="margin: 0 0 8px 0; font-family: {{ font_heading }}; font-size: 26px; font-weight: 700; color: #ffffff; line-height: 1.2;">
             {{ template_name }}
@@ -183,12 +183,12 @@
     
     <div style="background-color: {{ color_bg_light }}; padding: 20px 24px; border-top: 1px solid {{ color_border }}; text-align: center;">
         <p style="margin: 0 0 8px 0; font-size: 12px; color: {{ color_text_muted }};">
-            <a href="#" style="color: {{ accent_color or '#1e40af' }}; text-decoration: underline;">View in browser</a>
+            <a href="#" style="color: {{ accent_color or '#1e40af' }}; text-decoration: underline;">{{ _('View in browser') }}</a>
             &nbsp;&nbsp;|&nbsp;&nbsp;
-            <a href="#" style="color: {{ color_text_muted }}; text-decoration: underline;">Unsubscribe</a>
+            <a href="#" style="color: {{ color_text_muted }}; text-decoration: underline;">{{ _('Unsubscribe') }}</a>
         </p>
         <p style="margin: 0; font-size: 11px; color: {{ color_text_light }};">
-            Generated using Society Speaks' open, auditable sense-making engine.
+            {{ _("Generated using Society Speaks' open, auditable sense-making engine.") }}
         </p>
     </div>
 </div>

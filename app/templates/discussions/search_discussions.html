@@ -59,8 +59,8 @@
                 <button id="discussion-search-clear"
                         type="button"
                         class="absolute inset-y-0 right-0 px-3 text-xs text-gray-500 hover:text-gray-700 hidden"
-                        aria-label="Clear search">
-                    Clear
+                        aria-label="{{ _('Clear search') }}">
+                    {{ _('Clear') }}
                 </button>
             </div>
 
@@ -132,7 +132,7 @@
         <!-- Pagination -->
         {% if discussions.pages > 1 %}
             <div class="mt-8 flex justify-center">
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="{{ _('Pagination') }}">
                     {% if discussions.has_prev %}
                         <a href="{{ url_for('discussions.search_discussions', page=discussions.prev_num, q=search_term, topic=request.args.get('topic'), country=request.args.get('country'), keywords=request.args.get('keywords'), sort=request.args.get('sort'), programme_id=request.args.get('programme_id')) }}" 
                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">

@@ -51,7 +51,7 @@
     {% endif %}
 
     {% if not profile.linkedin_url and not profile.twitter_url and not profile.facebook_url and not profile.instagram_url and not profile.tiktok_url %}
-    <p class="text-gray-400 italic">No social media links provided</p>
+    <p class="text-gray-400 italic">{{ _('No social media links provided') }}</p>
     {% endif %}
 </div>
 {% endmacro %}

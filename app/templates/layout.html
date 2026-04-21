@@ -11,11 +11,11 @@
     <!-- Enhanced SEO Meta Tags -->
     <meta
       name="description"
-      content="{% block meta_description %}Society Speaks is a sense-making system that turns disagreement into understanding. Using machine learning inspired by Pol.is, we reveal opinion clusters, bridge statements, and genuine consensus from structured public participation.{% endblock %}"
+      content="{% block meta_description %}{{ _('Society Speaks is a sense-making system that turns disagreement into understanding. Using machine learning inspired by Pol.is, we reveal opinion clusters, bridge statements, and genuine consensus from structured public participation.') }}{% endblock %}"
     />
     <meta
       name="keywords"
-      content="{% block meta_keywords %}consensus building, public opinion analysis, bridge statements, opinion clustering, civic technology, Pol.is, democratic deliberation, structured dialogue, policy insights, nuanced debate, sense-making, public discourse, civic engagement{% endblock %}"
+      content="{% block meta_keywords %}{{ _('consensus building, public opinion analysis, bridge statements, opinion clustering, civic technology, Pol.is, democratic deliberation, structured dialogue, policy insights, nuanced debate, sense-making, public discourse, civic engagement') }}{% endblock %}"
     />
     <meta
       name="robots"
@@ -55,11 +55,11 @@
     <!-- Open Graph Meta Tags for Social Media Sharing -->
     <meta
       property="og:title"
-      content="{% block og_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}"
+      content="{% block og_title %}{{ _('Society Speaks - Making Disagreement Useful Again') }}{% endblock %}"
     />
     <meta
       property="og:description"
-      content="{% block og_description %}A sense-making system that turns disagreement into understanding. Discover where society agrees, where it divides, and which ideas can bridge the gap.{% endblock %}"
+      content="{% block og_description %}{{ _('A sense-making system that turns disagreement into understanding. Discover where society agrees, where it divides, and which ideas can bridge the gap.') }}{% endblock %}"
     />
     <meta
       property="og:image"
@@ -73,11 +73,11 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="{% block twitter_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}"
+      content="{% block twitter_title %}{{ _('Society Speaks - Making Disagreement Useful Again') }}{% endblock %}"
     />
     <meta
       name="twitter:description"
-      content="{% block twitter_description %}A sense-making system that helps people disagree agreeably. Reveal consensus, find bridge ideas, and understand public opinion with nuance intact.{% endblock %}"
+      content="{% block twitter_description %}{{ _('A sense-making system that helps people disagree agreeably. Reveal consensus, find bridge ideas, and understand public opinion with nuance intact.') }}{% endblock %}"
     />
     <meta
       name="twitter:image"
@@ -406,7 +406,7 @@
     <header
       class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
     >
-      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="{{ _('Top') }}">
         <div class="flex w-full items-center justify-between py-6">
           <!-- Logo and Brand -->
           <div class="flex items-center">
@@ -1312,7 +1312,7 @@
               <div>
                 <iframe
                   src="https://github.com/sponsors/zuluwill/button"
-                  title="Sponsor zuluwill"
+                  title="{{ _('Sponsor zuluwill') }}"
                   height="32"
                   width="114"
                   style="border: 0; border-radius: 6px"

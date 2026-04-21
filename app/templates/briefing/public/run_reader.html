@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ briefing.name }} - {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Brief' }}</title>
-    <meta name="description" content="{{ briefing.name }} brief from {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Society Speaks' }}">
+    <title>{{ briefing.name }} - {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else _('Brief') }}</title>
+    <meta name="description" content="{{ _('%(name)s brief from %(date)s', name=briefing.name, date=(brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Society Speaks')) }}">
 
     <!-- Open Graph for reader apps -->
     <meta property="og:title" content="{{ briefing.name }}">
-    <meta property="og:description" content="Brief from {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Society Speaks' }}">
+    <meta property="og:description" content="{{ _('Brief from %(date)s', date=(brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Society Speaks')) }}">
     <meta property="og:type" content="article">
     <meta property="og:url" content="{{ request.url }}">
 
@@ -86,9 +86,9 @@
 <body>
     <header>
         <p class="publication">{{ briefing.name }}</p>
-        <h1>{{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Brief' }}</h1>
+        <h1>{{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else _('Brief') }}</h1>
         {% if brief_run.sent_at %}
-        <p class="date">Published {{ brief_run.sent_at.strftime('%B %d, %Y at %H:%M UTC') }}</p>
+        <p class="date">{{ _('Published %(date)s', date=brief_run.sent_at.strftime('%B %d, %Y at %H:%M UTC')) }}</p>
         {% endif %}
     </header>
 
@@ -116,7 +116,7 @@
 
             {% if item.deeper_context %}
             <div class="deeper-context">
-                <h3>More Context</h3>
+                <h3>{{ _('More Context') }}</h3>
                 <p>{{ item.deeper_context }}</p>
             </div>
             {% endif %}
@@ -129,7 +129,7 @@
 
             {% if item.ingested_item and item.ingested_item.url %}
             <div class="source-link">
-                <a href="{{ item.ingested_item.url }}" rel="noopener">Read original source &rarr;</a>
+                <a href="{{ item.ingested_item.url }}" rel="noopener">{{ _('Read original source →') }}</a>
             </div>
             {% endif %}
         </article>
@@ -138,9 +138,9 @@
     </main>
 
     <footer>
-        <p>Published by <a href="{{ url_for('briefing.public_briefing', briefing_id=briefing.id, _external=True) }}">{{ briefing.name }}</a></p>
-        <p>Powered by <a href="{{ url_for('main.index', _external=True) }}">Society Speaks</a></p>
-        <p><a href="{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=brief_run.id, _external=True) }}">View full version</a></p>
+        <p>{{ _('Published by %(link_start)s%(name)s%(link_end)s', link_start='<a href="' + url_for('briefing.public_briefing', briefing_id=briefing.id, _external=True) + '">', name=briefing.name, link_end='</a>')|safe }}</p>
+        <p>{{ _('Powered by %(link_start)sSociety Speaks%(link_end)s', link_start='<a href="' + url_for('main.index', _external=True) + '">', link_end='</a>')|safe }}</p>
+        <p><a href="{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=brief_run.id, _external=True) }}">{{ _('View full version') }}</a></p>
     </footer>
 </body>
 </html>

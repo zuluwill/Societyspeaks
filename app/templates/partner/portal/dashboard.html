@@ -1,106 +1,106 @@
 {% extends "layout.html" %}
 
-{% block title %}Partner Portal - Society Speaks{% endblock %}
+{% block title %}{{ _('Partner Portal - Society Speaks') }}{% endblock %}
 
 {% block content %}
 {% include 'partner/portal/_portal_nav.html' %}
 <div class="bg-gray-50">
   <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-      <p class="text-gray-500 text-sm mt-1">Integration health, API activity, and account settings.</p>
+      <h1 class="text-2xl font-bold text-gray-900">{{ _('Dashboard') }}</h1>
+      <p class="text-gray-500 text-sm mt-1">{{ _('Integration health, API activity, and account settings.') }}</p>
     </div>
 
     {% if new_key %}
     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 mb-6">
-      <p class="font-semibold text-emerald-900 mb-2">Your new API key (shown once)</p>
+      <p class="font-semibold text-emerald-900 mb-2">{{ _('Your new API key (shown once)') }}</p>
       <div class="code-block relative group bg-white border border-emerald-200 rounded-lg p-3">
-        <button class="copy-btn absolute top-2 right-2 rounded bg-emerald-700 px-2 py-1 text-xs text-white opacity-100 hover:bg-emerald-600">Copy</button>
+        <button class="copy-btn absolute top-2 right-2 rounded bg-emerald-700 px-2 py-1 text-xs text-white opacity-100 hover:bg-emerald-600">{{ _('Copy') }}</button>
         <pre class="font-mono text-sm break-all whitespace-pre-wrap pr-14">{{ new_key }}</pre>
       </div>
-      <p class="text-xs text-emerald-800 mt-2">Copy and store this key now. For security, it will not be shown again.</p>
+      <p class="text-xs text-emerald-800 mt-2">{{ _('Copy and store this key now. For security, it will not be shown again.') }}</p>
     </div>
     {% endif %}
     {% if new_webhook_secret %}
     <div class="rounded-xl border border-violet-200 bg-violet-50 p-5 mb-6">
-      <p class="font-semibold text-violet-900 mb-2">Your new webhook signing secret (shown once)</p>
+      <p class="font-semibold text-violet-900 mb-2">{{ _('Your new webhook signing secret (shown once)') }}</p>
       <div class="code-block relative group bg-white border border-violet-200 rounded-lg p-3">
-        <button class="copy-btn absolute top-2 right-2 rounded bg-violet-700 px-2 py-1 text-xs text-white opacity-100 hover:bg-violet-600">Copy</button>
+        <button class="copy-btn absolute top-2 right-2 rounded bg-violet-700 px-2 py-1 text-xs text-white opacity-100 hover:bg-violet-600">{{ _('Copy') }}</button>
         <pre class="font-mono text-sm break-all whitespace-pre-wrap pr-14">{{ new_webhook_secret }}</pre>
       </div>
-      <p class="text-xs text-violet-800 mt-2">Store this secret securely in your webhook receiver. It will not be shown again.</p>
+      <p class="text-xs text-violet-800 mt-2">{{ _('Store this secret securely in your webhook receiver. It will not be shown again.') }}</p>
     </div>
     {% endif %}
     {% if is_admin_preview %}
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6">
-      <p class="text-sm text-blue-900 font-medium">Admin preview mode (read-only) — you are viewing this portal as the partner owner.</p>
+      <p class="text-sm text-blue-900 font-medium">{{ _('Admin preview mode (read-only) — you are viewing this portal as the partner owner.') }}</p>
     </div>
     {% endif %}
 
     {% set has_api_activity = partner_health.counts.create > 0 or partner_health.counts.lookup > 0 or partner_health.counts.management > 0 %}
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6">
-      <p class="text-sm font-semibold text-blue-900 mb-1">What should I do next?</p>
+      <p class="text-sm font-semibold text-blue-900 mb-1">{{ _('What should I do next?') }}</p>
       {% if not has_verified_test_domain %}
-      <p class="text-sm text-primary-800">Add and verify a test domain first so your embed can load on staging.</p>
-      <a href="#domains-panel" class="text-sm font-semibold text-primary-700 hover:underline">Go to Domains ↓</a>
+      <p class="text-sm text-primary-800">{{ _('Add and verify a test domain first so your embed can load on staging.') }}</p>
+      <a href="#domains-panel" class="text-sm font-semibold text-primary-700 hover:underline">{{ _('Go to Domains ↓') }}</a>
       {% elif not has_test_key %}
-      <p class="text-sm text-primary-800">Create a test API key to run your first lookup/create calls.</p>
-      <a href="#api-keys-panel" class="text-sm font-semibold text-primary-700 hover:underline">Go to API keys ↓</a>
+      <p class="text-sm text-primary-800">{{ _('Create a test API key to run your first lookup/create calls.') }}</p>
+      <a href="#api-keys-panel" class="text-sm font-semibold text-primary-700 hover:underline">{{ _('Go to API keys ↓') }}</a>
       {% elif not has_api_activity %}
-      <p class="text-sm text-primary-800">Run your first backend API call using the quickstart examples below.</p>
-      <a href="#quickstart-panel" class="text-sm font-semibold text-primary-700 hover:underline">Go to Quickstart ↓</a>
+      <p class="text-sm text-primary-800">{{ _('Run your first backend API call using the quickstart examples below.') }}</p>
+      <a href="#quickstart-panel" class="text-sm font-semibold text-primary-700 hover:underline">{{ _('Go to Quickstart ↓') }}</a>
       {% elif partner.billing_status != 'active' %}
-      <p class="text-sm text-primary-800">Your test setup is ready. Choose a plan to activate live keys and production usage.</p>
+      <p class="text-sm text-primary-800">{{ _('Your test setup is ready. Choose a plan to activate live keys and production usage.') }}</p>
       {% else %}
-      <p class="text-sm text-primary-800">You are live-ready. Keep discussions healthy from the Discussions tab and monitor usage weekly.</p>
+      <p class="text-sm text-primary-800">{{ _('You are live-ready. Keep discussions healthy from the Discussions tab and monitor usage weekly.') }}</p>
       {% endif %}
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3 mb-8">
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Getting started checklist</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Getting started checklist') }}</h3>
         <ol class="text-sm text-gray-700 space-y-2">
           <li>
-            1) Verify your test domain
+            {{ _('1) Verify your test domain') }}
             {% if has_verified_test_domain %}
-              <span class="ml-2 text-emerald-600 font-semibold">Done</span>
+              <span class="ml-2 text-emerald-600 font-semibold">{{ _('Done') }}</span>
             {% else %}
-              <span class="ml-2 text-gray-400">Pending</span>
+              <span class="ml-2 text-gray-400">{{ _('Pending') }}</span>
             {% endif %}
           </li>
           <li>
-            2) Run API calls from your backend
+            {{ _('2) Run API calls from your backend') }}
             {% if partner_health.counts.create > 0 or partner_health.counts.lookup > 0 or partner_health.counts.management > 0 %}
-              <span class="ml-2 text-emerald-600 font-semibold">Ready</span>
+              <span class="ml-2 text-emerald-600 font-semibold">{{ _('Ready') }}</span>
             {% else %}
-              <span class="ml-2 text-gray-400">Pending</span>
+              <span class="ml-2 text-gray-400">{{ _('Pending') }}</span>
             {% endif %}
           </li>
           <li>
-            3) Embed with the returned URL
+            {{ _('3) Embed with the returned URL') }}
             {% if partner_health.counts.create > 0 and has_verified_test_domain %}
-              <span class="ml-2 text-emerald-600 font-semibold">Ready</span>
+              <span class="ml-2 text-emerald-600 font-semibold">{{ _('Ready') }}</span>
             {% else %}
-              <span class="ml-2 text-gray-400">Next</span>
+              <span class="ml-2 text-gray-400">{{ _('Next') }}</span>
             {% endif %}
           </li>
           <li>
-            4) Activate live keys
+            {{ _('4) Activate live keys') }}
             {% if partner.billing_status == 'active' %}
-              <span class="ml-2 text-emerald-600 font-semibold">Active</span>
+              <span class="ml-2 text-emerald-600 font-semibold">{{ _('Active') }}</span>
             {% else %}
-              <span class="ml-2 text-gray-400">Pending</span>
+              <span class="ml-2 text-gray-400">{{ _('Pending') }}</span>
             {% endif %}
           </li>
         </ol>
         <div class="mt-4">
           <a href="{{ url_for('partner.portal_getting_started') }}" class="text-sm font-semibold text-primary-600 hover:underline">
-            Open guided setup →
+            {{ _('Open guided setup →') }}
           </a>
         </div>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Plan &amp; Billing</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Plan &amp; Billing')|safe }}</h3>
         <div class="flex items-center gap-2 mb-2">
           <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold
             {% if partner.tier == 'enterprise' %}bg-gray-900 text-white
@@ -109,80 +109,80 @@
             {% else %}bg-gray-100 text-gray-600{% endif %}">
             {{ partner.tier|default('free')|title }}
           </span>
-          <span class="text-sm text-gray-500">&middot; Billing: <strong>{{ partner.billing_status|default('inactive') }}</strong></span>
+          <span class="text-sm text-gray-500">&middot; {{ _('Billing:') }} <strong>{{ partner.billing_status|default('inactive') }}</strong></span>
         </div>
         <p class="text-xs text-gray-500 mb-2">
           {% if partner.stripe_customer_id %}
-            Stripe customer linked. Use "Manage billing" for invoices and payment methods.
+            {{ _('Stripe customer linked. Use "Manage billing" for invoices and payment methods.') }}
           {% else %}
-            No Stripe customer yet. Start a plan checkout to unlock billing controls.
+            {{ _('No Stripe customer yet. Start a plan checkout to unlock billing controls.') }}
           {% endif %}
         </p>
         {% if partner_quota %}
         <p class="text-xs text-gray-700 mb-3 rounded-lg bg-gray-50 border border-gray-100 px-2 py-2">
-          <strong>Discussion quota:</strong>
-          Live this month: {{ partner_quota.live_used_month }}
-          {% if partner_quota.live_limit is not none %} / {{ partner_quota.live_limit }}{% else %} (no cap){% endif %}
-          · Test (lifetime): {{ partner_quota.test_used_lifetime }}
+          <strong>{{ _('Discussion quota:') }}</strong>
+          {{ _('Live this month:') }} {{ partner_quota.live_used_month }}
+          {% if partner_quota.live_limit is not none %} / {{ partner_quota.live_limit }}{% else %} {{ _('(no cap)') }}{% endif %}
+          · {{ _('Test (lifetime):') }} {{ partner_quota.test_used_lifetime }}
         </p>
         {% endif %}
         <div class="flex flex-wrap gap-2">
           {% if partner.billing_status != 'active' and can_manage_billing %}
           <div class="w-full mb-2">
-            <p class="text-xs text-gray-500 mb-2">Choose a plan to go live:</p>
+            <p class="text-xs text-gray-500 mb-2">{{ _('Choose a plan to go live:') }}</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="tier" value="starter">
                 <button type="submit" class="w-full text-left rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:bg-blue-50 transition-colors">
-                  <div class="text-sm font-semibold text-gray-900">Starter</div>
-                  <div class="text-xs text-gray-500">&pound;49/mo &middot; 100 discussions</div>
+                  <div class="text-sm font-semibold text-gray-900">{{ _('Starter') }}</div>
+                  <div class="text-xs text-gray-500">{{ _('&pound;49/mo &middot; 100 discussions')|safe }}</div>
                 </button>
               </form>
               <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="tier" value="professional">
                 <button type="submit" class="w-full text-left rounded-lg border-2 border-blue-600 p-3 hover:bg-blue-50 transition-colors">
-                  <div class="text-sm font-semibold text-gray-900">Professional</div>
-                  <div class="text-xs text-gray-500">&pound;249/mo &middot; 500 discussions</div>
+                  <div class="text-sm font-semibold text-gray-900">{{ _('Professional') }}</div>
+                  <div class="text-xs text-gray-500">{{ _('&pound;249/mo &middot; 500 discussions')|safe }}</div>
                 </button>
               </form>
             </div>
-            <p class="text-xs text-gray-400 mt-2">Need more? <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">Contact us</a> for Enterprise.</p>
+            <p class="text-xs text-gray-400 mt-2">{{ _('Need more?') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">{{ _('Contact us') }}</a> {{ _('for Enterprise.') }}</p>
           </div>
           {% endif %}
           {% if partner.stripe_customer_id and can_manage_billing %}
           <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            Manage billing
+            {{ _('Manage billing') }}
           </a>
           {% endif %}
           {% if not can_manage_billing %}
-          <p class="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">Billing actions are restricted for your account role.</p>
+          <p class="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">{{ _('Billing actions are restricted for your account role.') }}</p>
           {% endif %}
         </div>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Environments</h3>
-        <p class="text-sm text-gray-700">Use test keys for staging and live keys for production. Keep API keys on your server only.</p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Environments') }}</h3>
+        <p class="text-sm text-gray-700">{{ _('Use test keys for staging and live keys for production. Keep API keys on your server only.') }}</p>
         <form method="POST" action="{{ url_for('partner.portal_health_check') }}" class="mt-3">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            Run integration health check
+            {{ _('Run integration health check') }}
           </button>
         </form>
         {% if last_health_check %}
-        <p class="text-xs text-gray-500 mt-2">Last checked: {{ last_health_check[:19].replace('T', ' ') }} UTC</p>
+        <p class="text-xs text-gray-500 mt-2">{{ _('Last checked: %(time)s UTC', time=last_health_check[:19].replace('T', ' ')) }}</p>
         {% endif %}
       </div>
     </div>
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 mb-3">Integration health</h2>
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('Integration health') }}</h2>
       <div class="grid gap-3 md:grid-cols-2">
         {% for check in partner_health.checks %}
         <div class="rounded-lg border {{ 'border-emerald-200 bg-emerald-50' if check.ok else 'border-amber-200 bg-amber-50' }} p-3">
           <div class="text-sm font-semibold {{ 'text-emerald-800' if check.ok else 'text-amber-800' }}">
-            {{ check.label }} · {{ 'OK' if check.ok else 'Needs action' }}
+            {{ check.label }} · {% if check.ok %}{{ _('OK') }}{% else %}{{ _('Needs action') }}{% endif %}
           </div>
           {% if not check.ok %}
           <div class="text-xs text-amber-700 mt-1">{{ check.hint }}</div>
@@ -195,8 +195,8 @@
     {% if top_discussions %}
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-8">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-900">Top discussions by engagement</h2>
-        <a href="{{ url_for('partner.portal_discussions') }}" class="text-xs font-semibold text-primary-600 hover:underline">View all →</a>
+        <h2 class="text-xl font-semibold text-gray-900">{{ _('Top discussions by engagement') }}</h2>
+        <a href="{{ url_for('partner.portal_discussions') }}" class="text-xs font-semibold text-primary-600 hover:underline">{{ _('View all →') }}</a>
       </div>
       <div class="divide-y divide-gray-100">
         {% for row in top_discussions %}
@@ -207,12 +207,12 @@
                class="text-sm font-medium text-gray-900 hover:text-primary-600 truncate block">{{ d.title }}</a>
             <div class="flex flex-wrap items-center gap-2 mt-0.5">
               <span class="text-xs {{ 'text-green-700' if d.partner_env == 'live' else 'text-gray-500' }}">{{ d.partner_env }}</span>
-              <span class="text-xs {{ 'text-amber-600' if d.is_closed else 'text-emerald-600' }}">{{ 'closed' if d.is_closed else 'open' }}</span>
+              <span class="text-xs {{ 'text-amber-600' if d.is_closed else 'text-emerald-600' }}">{% if d.is_closed %}{{ _('closed') }}{% else %}{{ _('open') }}{% endif %}</span>
             </div>
           </div>
           <div class="shrink-0 text-right">
             <div class="text-lg font-semibold text-gray-900 tabular-nums">{{ row.votes }}</div>
-            <div class="text-xs text-gray-400">votes</div>
+            <div class="text-xs text-gray-400">{{ _('votes') }}</div>
           </div>
         </div>
         {% endfor %}
@@ -222,9 +222,9 @@
 
     <div class="grid gap-6 lg:grid-cols-2 mb-8">
       <div id="quickstart-panel" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Quickstart (test)</h2>
-        <p class="text-sm text-gray-600 mb-2">Lookup by URL, create if missing, then embed. Run these commands from your backend (not browser JavaScript).</p>
-        <p class="text-sm text-gray-600 mb-3">Prefer Python or Node.js? <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="font-semibold text-primary-600 hover:underline">Download our SDKs →</a></p>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Quickstart (test)') }}</h2>
+        <p class="text-sm text-gray-600 mb-2">{{ _('Lookup by URL, create if missing, then embed. Run these commands from your backend (not browser JavaScript).') }}</p>
+        <p class="text-sm text-gray-600 mb-3">{{ _('Prefer Python or Node.js?') }} <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="font-semibold text-primary-600 hover:underline">{{ _('Download our SDKs →') }}</a></p>
         {% set ns = namespace(api_key='sspk_test_...', is_real=false) %}
         {% if new_key and new_key.startswith('sspk_test_') %}
           {% set ns.api_key = new_key %}
@@ -238,26 +238,26 @@
         {% endif %}
         {% if not ns.is_real %}
         <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 mb-3">
-          For security, existing keys are masked in the portal. Create or rotate a test key to copy a full key value.
+          {{ _('For security, existing keys are masked in the portal. Create or rotate a test key to copy a full key value.') }}
           {% if can_manage_keys %}
           <form method="POST" action="{{ url_for('partner.portal_create_key') }}" class="inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="env" value="test">
-            <button class="font-semibold underline ml-1">Create test key now</button>
+            <button class="font-semibold underline ml-1">{{ _('Create test key now') }}</button>
           </form>
           {% endif %}
         </div>
         {% endif %}
         <div class="mb-3">
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
   -H "X-API-Key: {{ ns.api_key }}"</pre>
           </div>
         </div>
         <div class="mb-3">
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl -X POST "{{ base_url }}/api/partner/discussions" \
   -H "X-API-Key: {{ ns.api_key }}" \
   -H "Content-Type: application/json" \
@@ -266,26 +266,26 @@
         </div>
         <div>
           <div class="code-block relative group">
-            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
             <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">&lt;iframe src="{{ base_url }}/discussions/{id}/embed" width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
           </div>
         </div>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-gray-900">Usage (last 30 days)</h2>
+          <h2 class="text-xl font-semibold text-gray-900">{{ _('Usage (last 30 days)') }}</h2>
           {% if can_view_analytics %}
-          <a href="{{ url_for('partner.portal_usage_csv') }}" class="text-xs font-semibold text-primary-600 hover:underline">Download CSV</a>
+          <a href="{{ url_for('partner.portal_usage_csv') }}" class="text-xs font-semibold text-primary-600 hover:underline">{{ _('Download CSV') }}</a>
           {% endif %}
         </div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm text-gray-700 mb-5">
-          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Creates</div><div class="text-lg font-semibold">{{ usage.get('create', 0) }}</div></div>
-          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Lookups</div><div class="text-lg font-semibold">{{ usage.get('lookup', 0) }}</div></div>
-          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Snapshots</div><div class="text-lg font-semibold">{{ usage.get('snapshot', 0) }}</div></div>
-          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Management API</div><div class="text-lg font-semibold">{{ partner_health.counts.management }}</div><div class="text-xs text-gray-400 mt-1">List, patch, statements, flags</div></div>
+          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">{{ _('Creates') }}</div><div class="text-lg font-semibold">{{ usage.get('create', 0) }}</div></div>
+          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">{{ _('Lookups') }}</div><div class="text-lg font-semibold">{{ usage.get('lookup', 0) }}</div></div>
+          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">{{ _('Snapshots') }}</div><div class="text-lg font-semibold">{{ usage.get('snapshot', 0) }}</div></div>
+          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">{{ _('Management API') }}</div><div class="text-lg font-semibold">{{ partner_health.counts.management }}</div><div class="text-xs text-gray-400 mt-1">{{ _('List, patch, statements, flags') }}</div></div>
         </div>
         <div>
-          <p class="text-xs text-gray-500 mb-2">Daily API calls — last 14 days</p>
+          <p class="text-xs text-gray-500 mb-2">{{ _('Daily API calls — last 14 days') }}</p>
           <canvas id="usageDailyChart" height="80"></canvas>
         </div>
       </div>
@@ -293,17 +293,17 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
       <div id="domains-panel" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Domains</h2>
-        <p class="text-sm text-gray-600 mb-3">Add your staging and production hostnames exactly (for example, <code>www.example.com</code>). Embeds load only on verified active domains.</p>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Domains') }}</h2>
+        <p class="text-sm text-gray-600 mb-3">{{ _('Add your staging and production hostnames exactly (for example, <code>www.example.com</code>). Embeds load only on verified active domains.')|safe }}</p>
         {% if can_manage_domains %}
         <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input name="domain" type="text" placeholder="example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
-          <select name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm"><option value="test">Test</option><option value="live">Live</option></select>
-          <button type="submit" class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Add domain</button>
+          <select name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm"><option value="test">{{ _('Test') }}</option><option value="live">{{ _('Live') }}</option></select>
+          <button type="submit" class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('Add domain') }}</button>
         </form>
         {% else %}
-        <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">Domain management is restricted for your account role.</p>
+        <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">{{ _('Domain management is restricted for your account role.') }}</p>
         {% endif %}
         <div class="space-y-3">
           {% for domain in domains %}
@@ -311,50 +311,50 @@
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div class="font-semibold text-gray-900">{{ domain.domain }}</div>
-                <div class="text-xs text-gray-500">{{ domain.env|upper }} · {{ domain.verification_method|upper }} · {{ 'ACTIVE' if domain.is_active else 'INACTIVE' }}</div>
+                <div class="text-xs text-gray-500">{{ domain.env|upper }} · {{ domain.verification_method|upper }} · {% if domain.is_active %}{{ _('ACTIVE') }}{% else %}{{ _('INACTIVE') }}{% endif %}</div>
               </div>
               <span class="text-xs font-semibold {{ 'text-emerald-700' if domain.is_verified() and domain.is_active else 'text-gray-500' }}">
-                {{ 'Verified' if domain.is_verified() and domain.is_active else 'Not verified' }}
+                {% if domain.is_verified() and domain.is_active %}{{ _('Verified') }}{% else %}{{ _('Not verified') }}{% endif %}
               </span>
             </div>
             <div class="flex flex-wrap items-center gap-3 mt-2">
               {% if domain.is_active and not domain.is_verified() and can_manage_domains %}
-              <form method="POST" action="{{ url_for('partner.portal_verify_domain', domain_id=domain.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold text-primary-600 hover:underline">Verify</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_verify_domain', domain_id=domain.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold text-primary-600 hover:underline">{{ _('Verify') }}</button></form>
               {% endif %}
               {% if can_manage_domains %}
-              <form method="POST" action="{{ url_for('partner.portal_toggle_domain', domain_id=domain.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold {{ 'text-amber-700' if domain.is_active else 'text-emerald-700' }} hover:underline">{{ 'Turn off' if domain.is_active else 'Turn on' }}</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_remove_domain', domain_id=domain.id) }}" data-confirm="Remove this domain?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold text-red-600 hover:underline">Remove</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_toggle_domain', domain_id=domain.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold {{ 'text-amber-700' if domain.is_active else 'text-emerald-700' }} hover:underline">{% if domain.is_active %}{{ _('Turn off') }}{% else %}{{ _('Turn on') }}{% endif %}</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_remove_domain', domain_id=domain.id) }}" data-confirm="{{ _('Remove this domain?') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold text-red-600 hover:underline">{{ _('Remove') }}</button></form>
               {% endif %}
             </div>
             {% if domain.is_active and not domain.is_verified() %}
             <div class="mt-2">
-              <p class="text-xs text-gray-600 mb-1">Add this TXT record to your DNS:</p>
+              <p class="text-xs text-gray-600 mb-1">{{ _('Add this TXT record to your DNS:') }}</p>
               <div class="code-block relative group">
-                <button class="copy-btn absolute top-1 right-1 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+                <button class="copy-btn absolute top-1 right-1 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
                 <pre class="bg-white border border-gray-200 rounded px-2 py-1.5 text-xs font-mono text-gray-800 pr-16 whitespace-pre-wrap break-all">societyspeaks-verify={{ domain.verification_token }}</pre>
               </div>
-              <p class="text-xs text-gray-500 mt-1">After updating DNS, click Verify. Changes can take a few minutes to propagate.</p>
+              <p class="text-xs text-gray-500 mt-1">{{ _('After updating DNS, click Verify. Changes can take a few minutes to propagate.') }}</p>
             </div>
             {% endif %}
           </div>
           {% else %}
-          <p class="text-sm text-gray-500">No domains yet.</p>
+          <p class="text-sm text-gray-500">{{ _('No domains yet.') }}</p>
           {% endfor %}
         </div>
       </div>
 
       <div id="api-keys-panel" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">API keys</h2>
-        <p class="text-sm text-gray-600 mb-3">Use <code>sspk_test_...</code> keys in staging and <code>sspk_live_...</code> keys in production. Never expose keys in frontend code.</p>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('API keys') }}</h2>
+        <p class="text-sm text-gray-600 mb-3">{{ _('Use <code>sspk_test_...</code> keys in staging and <code>sspk_live_...</code> keys in production. Never expose keys in frontend code.')|safe }}</p>
         {% if can_manage_keys %}
         <div class="flex flex-wrap gap-2 mb-4">
-          <form method="POST" action="{{ url_for('partner.portal_create_key') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="env" value="test"><button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">New test key</button></form>
+          <form method="POST" action="{{ url_for('partner.portal_create_key') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="env" value="test"><button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('New test key') }}</button></form>
           {% if partner.billing_status == 'active' %}
-          <form method="POST" action="{{ url_for('partner.portal_create_key') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="env" value="live"><button class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">New live key</button></form>
+          <form method="POST" action="{{ url_for('partner.portal_create_key') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="env" value="live"><button class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">{{ _('New live key') }}</button></form>
           {% endif %}
         </div>
         {% else %}
-        <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">Key management is restricted to owners and admins.</p>
+        <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">{{ _('Key management is restricted to owners and admins.') }}</p>
         {% endif %}
         <div class="space-y-3">
           {% for key in keys %}
@@ -362,25 +362,25 @@
             <div><div class="font-mono text-sm text-gray-900 break-all">{{ key.key_prefix }}••••{{ key.key_last4 }}</div><div class="text-xs text-gray-500">{{ key.env|upper }} · {{ key.status|upper }}</div></div>
             {% if key.status == 'active' and can_manage_keys %}
             <div class="flex items-center gap-3">
-              <form method="POST" action="{{ url_for('partner.portal_rotate_key', key_id=key.id) }}" data-confirm="Rotate this key? The current key will stop working immediately."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-primary-600 hover:underline">Rotate</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_revoke_key', key_id=key.id) }}" data-confirm="Revoke this key? It will stop working immediately and cannot be recovered."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Revoke</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_rotate_key', key_id=key.id) }}" data-confirm="{{ _('Rotate this key? The current key will stop working immediately.') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-primary-600 hover:underline">{{ _('Rotate') }}</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_revoke_key', key_id=key.id) }}" data-confirm="{{ _('Revoke this key? It will stop working immediately and cannot be recovered.') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">{{ _('Revoke') }}</button></form>
             </div>
             {% endif %}
           </div>
           {% else %}
-          <p class="text-sm text-gray-500">No API keys yet.</p>
+          <p class="text-sm text-gray-500">{{ _('No API keys yet.') }}</p>
           {% endfor %}
         </div>
-        <p class="text-xs text-gray-500 mt-3">Rotate keys when teammates change or if a key may have been exposed. Revoked keys stop working immediately.</p>
+        <p class="text-xs text-gray-500 mt-3">{{ _('Rotate keys when teammates change or if a key may have been exposed. Revoked keys stop working immediately.') }}</p>
       </div>
     </div>
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-8">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-900">Webhook callbacks</h2>
-        <span class="text-xs text-gray-500">Signed with HMAC-SHA256</span>
+        <h2 class="text-xl font-semibold text-gray-900">{{ _('Webhook callbacks') }}</h2>
+        <span class="text-xs text-gray-500">{{ _('Signed with HMAC-SHA256') }}</span>
       </div>
-      <p class="text-sm text-gray-600 mb-3">Receive lifecycle events without polling. Use HTTPS and verify the signature and event ID for idempotency.</p>
+      <p class="text-sm text-gray-600 mb-3">{{ _('Receive lifecycle events without polling. Use HTTPS and verify the signature and event ID for idempotency.') }}</p>
       {% if can_manage_webhooks %}
       <form method="POST" action="{{ url_for('partner.portal_create_webhook') }}" class="grid gap-3 mb-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -393,10 +393,10 @@
           </label>
           {% endfor %}
         </div>
-        <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Add webhook endpoint</button>
+        <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('Add webhook endpoint') }}</button>
       </form>
       {% else %}
-      <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">Webhook management is restricted for your account role.</p>
+      <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">{{ _('Webhook management is restricted for your account role.') }}</p>
       {% endif %}
 
       <div class="space-y-3">
@@ -405,28 +405,28 @@
           <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div class="text-sm font-semibold text-gray-900 break-all">{{ wh.url }}</div>
-              <div class="text-xs text-gray-500">Status: {{ wh.status|upper }} · Secret: ••••{{ wh.secret_last4 }}</div>
-              <div class="text-xs text-gray-500 mt-1">Events: {{ (wh.event_types or []) | join(', ') }}</div>
+              <div class="text-xs text-gray-500">{{ _('Status:') }} {{ wh.status|upper }} · {{ _('Secret:') }} ••••{{ wh.secret_last4 }}</div>
+              <div class="text-xs text-gray-500 mt-1">{{ _('Events:') }} {{ (wh.event_types or []) | join(', ') }}</div>
             </div>
             {% if can_manage_webhooks %}
             <div class="flex flex-wrap items-center gap-3">
-              <form method="POST" action="{{ url_for('partner.portal_send_test_webhook', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-primary-600 hover:underline">Send test</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_rotate_webhook_secret', endpoint_id=wh.id) }}" data-confirm="Rotate the signing secret for this endpoint? Update your receiver before rotating."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-amber-700 hover:underline">Rotate secret</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_delete_webhook', endpoint_id=wh.id) }}" data-confirm="Delete this webhook endpoint? All deliveries will stop immediately."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Delete</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_send_test_webhook', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-primary-600 hover:underline">{{ _('Send test') }}</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_rotate_webhook_secret', endpoint_id=wh.id) }}" data-confirm="{{ _('Rotate the signing secret for this endpoint? Update your receiver before rotating.') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-amber-700 hover:underline">{{ _('Rotate secret') }}</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_delete_webhook', endpoint_id=wh.id) }}" data-confirm="{{ _('Delete this webhook endpoint? All deliveries will stop immediately.') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">{{ _('Delete') }}</button></form>
             </div>
             {% endif %}
           </div>
         </div>
         {% else %}
-        <p class="text-sm text-gray-500">No webhook endpoints configured.</p>
+        <p class="text-sm text-gray-500">{{ _('No webhook endpoints configured.') }}</p>
         {% endfor %}
       </div>
       {% if recent_webhook_deliveries %}
-      <p class="text-xs text-gray-500 mt-4">Recent deliveries:</p>
+      <p class="text-xs text-gray-500 mt-4">{{ _('Recent deliveries:') }}</p>
       <div class="mt-2 space-y-2">
         {% for d in recent_webhook_deliveries[:8] %}
         <div class="text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded px-2 py-1">
-          {{ d.event_type }} · {{ d.status }} · attempts {{ d.attempt_count }}{% if d.last_http_status %} · HTTP {{ d.last_http_status }}{% endif %}
+          {{ d.event_type }} · {{ d.status }} · {{ _('attempts %(count)d', count=d.attempt_count) }}{% if d.last_http_status %} · {{ _('HTTP %(code)s', code=d.last_http_status) }}{% endif %}
         </div>
         {% endfor %}
       </div>
@@ -435,18 +435,18 @@
 
     <div id="team" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-8">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-900">Team access</h2>
+        <h2 class="text-xl font-semibold text-gray-900">{{ _('Team access') }}</h2>
         {% if current_member %}
-        <span class="text-xs text-gray-500">Signed in as {{ current_member.email }} ({{ current_member.role|title }})</span>
+        <span class="text-xs text-gray-500">{{ _('Signed in as %(email)s (%(role)s)', email=current_member.email, role=current_member.role|title) }}</span>
         {% endif %}
       </div>
       {% if can_manage_team %}
       <form method="POST" action="{{ url_for('partner.portal_invite_member') }}" class="grid gap-3 sm:grid-cols-4 mb-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input name="full_name" type="text" placeholder="Full name (optional)" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        <input name="full_name" type="text" placeholder="{{ _('Full name (optional)') }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
         <input name="email" type="email" placeholder="teammate@example.com" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" required>
-        <select name="role" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm"><option value="member">Member</option><option value="admin">Admin</option></select>
-        <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Invite teammate</button>
+        <select name="role" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm"><option value="member">{{ _('Member') }}</option><option value="admin">{{ _('Admin') }}</option></select>
+        <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('Invite teammate') }}</button>
       </form>
       {% endif %}
       <div class="space-y-3">
@@ -455,8 +455,8 @@
           <div><div class="text-sm font-semibold text-gray-900 break-all">{{ member.full_name or member.email }}</div><div class="text-xs text-gray-500 break-all">{{ member.email }} · {{ member.role|upper }} · {{ member.status|upper }}</div></div>
           {% if can_manage_team and member.role != 'owner' %}
           <div class="flex items-center gap-3">
-            <form method="POST" action="{{ url_for('partner.portal_update_member_role', member_id=member.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select name="role" class="auto-submit-select rounded border border-gray-300 px-2 py-1 text-xs"><option value="member" {{ 'selected' if member.role == 'member' else '' }}>Member</option><option value="admin" {{ 'selected' if member.role == 'admin' else '' }}>Admin</option></select></form>
-            <form method="POST" action="{{ url_for('partner.portal_update_member_status', member_id=member.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="{{ 'disable' if member.status == 'active' else 'enable' }}"><button class="text-xs font-semibold {{ 'text-amber-700' if member.status == 'active' else 'text-emerald-700' }} hover:underline">{{ 'Disable' if member.status == 'active' else 'Enable' }}</button></form>
+            <form method="POST" action="{{ url_for('partner.portal_update_member_role', member_id=member.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select name="role" class="auto-submit-select rounded border border-gray-300 px-2 py-1 text-xs"><option value="member" {{ 'selected' if member.role == 'member' else '' }}>{{ _('Member') }}</option><option value="admin" {{ 'selected' if member.role == 'admin' else '' }}>{{ _('Admin') }}</option></select></form>
+            <form method="POST" action="{{ url_for('partner.portal_update_member_status', member_id=member.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="{{ 'disable' if member.status == 'active' else 'enable' }}"><button class="text-xs font-semibold {{ 'text-amber-700' if member.status == 'active' else 'text-emerald-700' }} hover:underline">{% if member.status == 'active' %}{{ _('Disable') }}{% else %}{{ _('Enable') }}{% endif %}</button></form>
           </div>
           <form method="POST" action="{{ url_for('partner.portal_update_member_permissions', member_id=member.id) }}" class="grid gap-1 text-xs text-gray-600 sm:grid-cols-3 mt-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -467,12 +467,12 @@
               <span>{{ label }}</span>
             </label>
             {% endfor %}
-            <button class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 w-fit">Save permissions</button>
+            <button class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 w-fit">{{ _('Save permissions') }}</button>
           </form>
           {% endif %}
         </div>
         {% else %}
-        <p class="text-sm text-gray-500">Only the owner has access right now.</p>
+        <p class="text-sm text-gray-500">{{ _('Only the owner has access right now.') }}</p>
         {% endfor %}
       </div>
     </div>
@@ -505,7 +505,12 @@
         tooltip: {
           callbacks: {
             title: function(items) { return items[0].label; },
-            label: function(item) { return item.raw + ' API call' + (item.raw !== 1 ? 's' : ''); }
+            label: function(item) {
+              var single = {{ gettext_js('%(count)d API call')|tojson }};
+              var plural = {{ gettext_js('%(count)d API calls')|tojson }};
+              var tpl = item.raw === 1 ? single : plural;
+              return tpl.replace('%(count)d', item.raw);
+            }
           }
         }
       },

@@ -438,8 +438,14 @@ class ResendClient:
 
         # Render template
         # Note: This assumes template exists at templates/emails/daily_brief.html
+        # DailyBriefSubscriber has no language field; the daily brief is an
+        # English-language news product, so we render under the default 'en'
+        # locale. Pass None to _render_for_user so it pins the locale
+        # explicitly rather than inheriting from an unrelated request context.
+        from app.resend_client import _render_for_user as _render_email_for_user
         try:
-            html = render_template(
+            html = _render_email_for_user(
+                None,
                 'emails/daily_brief.html',
                 brief=brief,
                 sorted_items=sorted_items,
@@ -544,7 +550,9 @@ class ResendClient:
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
 
-            html_content = render_template(
+            from app.resend_client import _render_for_user as _render_email_for_user, _subject_for_user as _subject_email_for_user
+            html_content = _render_email_for_user(
+                None,
                 'emails/daily_brief_welcome.html',
                 subscriber=subscriber,
                 magic_link_url=magic_link_url,
@@ -555,8 +563,8 @@ class ResendClient:
                 timezone=subscriber.timezone,
             )
 
-            cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief'
-            subject = f'Welcome to the {cadence_label} - Your Free Access is Active!'
+            cadence_label = _subject_email_for_user(None, 'Weekly Brief') if subscriber.cadence == 'weekly' else _subject_email_for_user(None, 'Daily Brief')
+            subject = _subject_email_for_user(None, 'Welcome to the %(label)s - Your Free Access is Active!', label=cadence_label)
 
             email_data = {
                 'from': self.from_email,

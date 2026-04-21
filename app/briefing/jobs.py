@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from typing import Optional, Dict, Any, List
 import redis
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -658,7 +659,7 @@ def get_queue_metrics() -> Dict[str, Any]:
     """
     client = get_redis_client()
     if not client:
-        return {'error': 'Redis not available'}
+        return {'error': _('Redis not available')}
 
     try:
         metrics = {

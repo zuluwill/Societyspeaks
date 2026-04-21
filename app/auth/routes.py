@@ -56,6 +56,7 @@ def _track_posthog(event, user_id, properties=None, flush=False, identify_proper
 
 
 from app import limiter
+from flask_babel import gettext as _
 
 
 def _safe_referrer_or(fallback_endpoint):
@@ -112,7 +113,7 @@ def _consume_pending_discussion_follow(user):
     db.session.add(DiscussionFollow(user_id=user.id, discussion_id=discussion.id))
     try:
         db.session.commit()
-        flash('Discussion saved. We will keep it handy in your dashboard.', 'success')
+        flash(_('Discussion saved. We will keep it handy in your dashboard.'), 'success')
         return discussion
     except Exception:
         db.session.rollback()
@@ -270,7 +271,7 @@ def verify_email(token):
             user.email_verified = True
             db.session.commit()
             _track_posthog('email_verified', user.id, {'user_id': user.id}, flush=True)
-        flash('Your email has been verified! You can now log in.', 'success')
+        flash(_('Your email has been verified! You can now log in.'), 'success')
         return redirect(url_for('auth.login'))
     return render_template(
         'auth/verify_email_expired.html',
@@ -304,7 +305,7 @@ def resend_verification():
         except Exception as e:
             current_app.logger.error(f"Failed to resend verification email: {e}")
 
-    flash('If that address is registered and unverified, a new verification link has been sent.', 'info')
+    flash(_('If that address is registered and unverified, a new verification link has been sent.'), 'info')
     if current_user.is_authenticated:
         return redirect(_safe_referrer_or('auth.dashboard'))
     return redirect(url_for('auth.login'))
@@ -324,7 +325,7 @@ def handle_invitation(token):
     ).first()
 
     if not membership:
-        flash('This invitation link is invalid or has expired.', 'error')
+        flash(_('This invitation link is invalid or has expired.'), 'error')
         return redirect(url_for('auth.login'))
 
     org_name = membership.org.company_name if membership.org else 'an organization'
@@ -333,7 +334,7 @@ def handle_invitation(token):
         # User is logged in - try to accept immediately
         try:
             accept_invitation(token, current_user)
-            flash(f'Welcome to {org_name}! You now have access to the team\'s briefings.', 'success')
+            flash(_("Welcome to %(org_name)s! You now have access to the team's briefings.", org_name=org_name), 'success')
             return redirect(url_for('briefing.list_briefings'))
         except ValueError as e:
             flash(str(e), 'error')
@@ -344,7 +345,7 @@ def handle_invitation(token):
         session['pending_invitation_org'] = org_name
         session['pending_invitation_email'] = membership.invite_email
 
-        flash(f'You\'ve been invited to join {org_name}. Please log in or create an account to accept.', 'info')
+        flash(_("You've been invited to join %(org_name)s. Please log in or create an account to accept.", org_name=org_name), 'info')
 
         # If the invited email exists, send to login; otherwise register
         existing_user = User.query.filter_by(email=membership.invite_email).first() if membership.invite_email else None
@@ -391,16 +392,16 @@ def register():
         
         # Validation checks
         if not username or not email_raw or not password:
-            flash("All fields are required.", "error")
+            flash(_("All fields are required."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         if len(password) < 8:
-            flash("Password must be at least 8 characters.", "error")
+            flash(_("Password must be at least 8 characters."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         clean_email = extract_clean_email(email_raw)
         if clean_email is None:
-            flash("Please provide a valid email address.", "error")
+            flash(_("Please provide a valid email address."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
         email = clean_email.lower()
 
@@ -410,11 +411,11 @@ def register():
         # Check for spam in a case-insensitive way
         input_text = f"{username.lower()} {email}"
         if any(pattern in input_text for pattern in spam_patterns):
-            flash("Registration denied due to suspicious content", "error")
+            flash(_("Registration denied due to suspicious content"), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         if User.query.filter_by(email=email).first():
-            flash("Email already registered. Please log in.", "error")
+            flash(_("Email already registered. Please log in."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Verify CAPTCHA (server-side session validation)
@@ -423,22 +424,22 @@ def register():
 
         # Check if session has expected value (prevents replay attacks)
         if expected is None:
-            flash("Session expired. Please try again.", "error")
+            flash(_("Session expired. Please try again."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Check if verification answer was provided
         if not verification:
-            flash("Please answer the verification question.", "error")
+            flash(_("Please answer the verification question."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         try:
             verification_int = int(verification)
         except (ValueError, TypeError):
-            flash("Incorrect verification answer. Please try again.", "error")
+            flash(_("Incorrect verification answer. Please try again."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         if verification_int != expected:
-            flash("Incorrect verification answer. Please try again.", "error")
+            flash(_("Incorrect verification answer. Please try again."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Hash the password and create the user
@@ -498,13 +499,13 @@ def register():
 
         if pending_plan:
             # Direct to checkout - don't make them log in separately
-            flash("Welcome! Complete your subscription setup below. We've sent a verification email to confirm your address.", "success")
+            flash(_("Welcome! Complete your subscription setup below. We've sent a verification email to confirm your address."), "success")
             return redirect(url_for('billing.pending_checkout',
                                     plan=pending_plan,
                                     interval=pending_interval))
 
         # No pending checkout - normal registration flow
-        flash("Welcome! We've sent a verification email. You can continue setting up your account.", "success")
+        flash(_("Welcome! We've sent a verification email. You can continue setting up your account."), "success")
         pending_redirect = _peek_pending_post_auth_redirect()
         if pending_redirect:
             return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
@@ -557,16 +558,16 @@ def login():
             remaining = get_partner_login_lockout(email)
             if remaining > 0:
                 flash(
-                    f"Too many failed attempts. Please try again in {remaining} seconds.",
+                    _('Too many failed attempts. Please try again in %(remaining)s seconds.', remaining=remaining),
                     "error",
                 )
                 return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
-            flash("Invalid email or password.", "error")
+            flash(_("Invalid email or password."), "error")
             return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
 
         # User record found - verify password
         if not check_password_hash(user.password, password):
-            flash("Invalid email or password.", "error")
+            flash(_("Invalid email or password."), "error")
             return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
 
         # Log the user in
@@ -600,7 +601,7 @@ def login():
             if merged > 0:
                 current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
         
-        flash("Logged in successfully!", "success")
+        flash(_("Logged in successfully!"), "success")
 
         # Check for pending steward invite stored before login redirect
         pending_steward_token = session.pop('pending_steward_invite_token', None)
@@ -616,7 +617,7 @@ def login():
             try:
                 membership = accept_invitation(pending_invite_token, user)
                 org_name = membership.org.company_name if membership.org else 'the organization'
-                flash(f'Welcome to {org_name}! You now have access to the team\'s briefings.', 'success')
+                flash(_("Welcome to %(org_name)s! You now have access to the team's briefings.", org_name=org_name), 'success')
                 return redirect(url_for('briefing.list_briefings'))
             except ValueError as e:
                 flash(str(e), 'warning')
@@ -829,13 +830,13 @@ def dashboard_subscribe():
             source='dashboard',
         )
         if result['status'] == 'already_active':
-            flash('You\'re already subscribed to the Daily Brief!', 'info')
+            flash(_('You\'re already subscribed to the Daily Brief!'), 'info')
         elif result['status'] == 'reactivated':
-            flash('Welcome back! Your Daily Brief subscription has been reactivated.', 'success')
+            flash(_('Welcome back! Your Daily Brief subscription has been reactivated.'), 'success')
         elif result['status'] == 'created':
-            flash(f'Subscribed! Your first Daily Brief will arrive at {email}.', 'success')
+            flash(_('Subscribed! Your first Daily Brief will arrive at %(email)s.', email=email), 'success')
         else:
-            flash('Something went wrong. Please try again.', 'error')
+            flash(_('Something went wrong. Please try again.'), 'error')
 
     elif sub_type == 'daily_question':
         frequency = request.form.get('email_frequency', 'weekly')
@@ -855,16 +856,16 @@ def dashboard_subscribe():
             track_posthog=False,
         )
         if result['status'] == 'already_active':
-            flash('You\'re already subscribed to the Daily Question!', 'info')
+            flash(_('You\'re already subscribed to the Daily Question!'), 'info')
         elif result['status'] == 'reactivated':
-            flash('Welcome back! Your Daily Question subscription has been reactivated.', 'success')
+            flash(_('Welcome back! Your Daily Question subscription has been reactivated.'), 'success')
         elif result['status'] == 'created':
-            flash(f'Subscribed! Your first Daily Question will arrive at {email}.', 'success')
+            flash(_('Subscribed! Your first Daily Question will arrive at %(email)s.', email=email), 'success')
         else:
-            flash('Something went wrong. Please try again.', 'error')
+            flash(_('Something went wrong. Please try again.'), 'error')
 
     else:
-        flash('Unknown subscription type.', 'error')
+        flash(_('Unknown subscription type.'), 'error')
 
     return redirect(url_for('auth.dashboard') + '#email-subscriptions')
 
@@ -963,9 +964,9 @@ def mark_notification_read(notification_id):
 def mark_all_notifications_read():
     updated = Notification.mark_all_as_read_for_user(current_user.id)
     if updated:
-        flash('All notifications marked as read.', 'success')
+        flash(_('All notifications marked as read.'), 'success')
     else:
-        flash('You have no unread notifications.', 'info')
+        flash(_('You have no unread notifications.'), 'info')
     return redirect(_safe_referrer_or('auth.notifications'))
 
 
@@ -981,7 +982,7 @@ def logout():
     # Track logout with PostHog
     _track_posthog('user_logged_out', user_id)
     
-    flash("Logged out successfully.", "success")
+    flash(_("Logged out successfully."), "success")
     return redirect(url_for('main.index'))
 
 
@@ -1014,7 +1015,7 @@ def password_reset_request():
 
             _track_posthog('password_reset_requested', user.id, {'user_id': user.id})
 
-        flash("Password reset instructions have been sent to your email.", "info")
+        flash(_("Password reset instructions have been sent to your email."), "info")
         return redirect(url_for('auth.login'))
 
     return render_template('auth/password_reset_request.html')
@@ -1027,7 +1028,7 @@ def password_reset(token):
     user = User.verify_reset_token(token)
 
     if not user:
-        flash("The password reset link is invalid or has expired.", "danger")
+        flash(_("The password reset link is invalid or has expired."), "danger")
         return redirect(url_for('auth.password_reset_request'))
 
     if request.method == 'POST':
@@ -1035,7 +1036,7 @@ def password_reset(token):
 
         # Validate the new password (for example, check minimum length)
         if not new_password or len(new_password) < 8:
-            flash("Password must be at least 8 characters long.", "error")
+            flash(_("Password must be at least 8 characters long."), "error")
             return render_template('auth/password_reset.html', token=token)
 
         # Set the new password
@@ -1044,11 +1045,11 @@ def password_reset(token):
         try:
             db.session.commit()  # Save changes to the database
             _track_posthog('password_reset_completed', user.id, {'user_id': user.id})
-            flash("Your password has been reset successfully!", "success")
+            flash(_("Your password has been reset successfully!"), "success")
             return redirect(url_for('auth.login'))
         except Exception as e:
             db.session.rollback()  # Rollback if commit fails
-            flash("An error occurred while resetting your password. Please try again.", "danger")
+            flash(_("An error occurred while resetting your password. Please try again."), "danger")
             current_app.logger.error(f"Password reset error: {str(e)}")
 
     return render_template('auth/password_reset.html', token=token)

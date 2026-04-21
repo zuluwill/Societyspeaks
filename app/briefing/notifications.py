@@ -9,6 +9,7 @@ import os
 import logging
 from typing import Optional, List
 from datetime import datetime
+from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +49,11 @@ def notify_draft_ready(brief_run_id: int) -> dict:
     try:
         brief_run = db.session.get(BriefRun, brief_run_id)
         if not brief_run:
-            return {'success': False, 'error': 'BriefRun not found'}
+            return {'success': False, 'error': _('BriefRun not found')}
 
         briefing = brief_run.briefing
         if not briefing:
-            return {'success': False, 'error': 'Briefing not found'}
+            return {'success': False, 'error': _('Briefing not found')}
 
         # Only notify if approval is required
         if briefing.mode != 'approval_required':
@@ -81,7 +82,7 @@ def notify_draft_ready(brief_run_id: int) -> dict:
 
         if not recipients:
             logger.warning(f"No recipients found for draft notification (briefing {briefing.id})")
-            return {'success': False, 'error': 'No recipients found'}
+            return {'success': False, 'error': _('No recipients found')}
 
         # Generate edit URL
         try:

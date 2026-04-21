@@ -1,19 +1,19 @@
-{% extends 'layout.html' %} {% block title %}Flag Statement{% endblock %} {%
+{% extends 'layout.html' %} {% block title %}{{ _('Flag Statement') }}{% endblock %} {%
 block content %}
 <div class="container mx-auto px-4 py-8 max-w-3xl">
   <!-- Header -->
   <div class="mb-6">
-    <h1 class="text-3xl font-bold mb-2">Flag Statement</h1>
-    <p class="text-gray-600">Report problematic content for moderator review</p>
+    <h1 class="text-3xl font-bold mb-2">{{ _('Flag Statement') }}</h1>
+    <p class="text-gray-600">{{ _('Report problematic content for moderator review') }}</p>
   </div>
 
   <!-- Statement Being Flagged -->
   <div class="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
-    <h3 class="font-semibold text-gray-700 mb-2">Statement:</h3>
+    <h3 class="font-semibold text-gray-700 mb-2">{{ _('Statement:') }}</h3>
     <p class="text-gray-900">{{ statement.content }}</p>
     <p class="text-sm text-gray-500 mt-2">
-      Posted by {% if statement.user %}{{ statement.user.username }}{% else
-      %}Anonymous{% endif %} on {{ statement.created_at.strftime('%B %d, %Y') }}
+      {% if statement.user %}{{ _('Posted by %(username)s on %(date)s', username=statement.user.username, date=statement.created_at.strftime('%B %d, %Y')) }}{% else
+      %}{{ _('Posted by Anonymous on %(date)s', date=statement.created_at.strftime('%B %d, %Y')) }}{% endif %}
     </p>
   </div>
 
@@ -32,7 +32,7 @@ block content %}
         rounded-lg px-4 py-3 focus:outline-none focus:ring-2
         focus:ring-primary-500") }}
         <p class="text-sm text-gray-500 mt-1">
-          Select the most appropriate reason
+          {{ _('Select the most appropriate reason') }}
         </p>
       </div>
 
@@ -41,16 +41,13 @@ block content %}
         {{ form.additional_context.label(class="block text-gray-700
         font-semibold mb-2") }} {{ form.additional_context(class="w-full border
         border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2
-        focus:ring-primary-500", rows="4", placeholder="Optional: Provide
-        additional context to help moderators understand the issue") }}
+        focus:ring-primary-500", rows="4", placeholder=_('Optional: Provide additional context to help moderators understand the issue')) }}
       </div>
 
       <!-- Warning -->
       <div class="bg-yellow-50 rounded-lg p-4 mb-6 border border-yellow-200">
         <p class="text-yellow-800 text-sm">
-          <strong>⚠️ Note:</strong> Flagging is for reporting violations of
-          community guidelines. Frivolous or malicious flags may result in
-          action against your account.
+          {{ _('<strong>⚠️ Note:</strong> Flagging is for reporting violations of community guidelines. Frivolous or malicious flags may result in action against your account.') }}
         </p>
       </div>
 
@@ -62,7 +59,7 @@ block content %}
           href="{{ url_for('statements.view_statement', statement_id=statement.id) }}"
           class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block"
         >
-          Cancel
+          {{ _('Cancel') }}
         </a>
       </div>
     </form>

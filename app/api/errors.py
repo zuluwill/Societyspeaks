@@ -5,7 +5,43 @@ Provides consistent JSON error format for partner API integration.
 All API errors return: {"error": "code", "message": "human readable message"}
 """
 from flask import jsonify, current_app
+from flask_babel import gettext as _
 from werkzeug.exceptions import HTTPException
+
+
+# Werkzeug default descriptions that pass through `abort(code)` with no custom
+# message. We translate the common ones so partner API consumers get localized
+# responses regardless of which Werkzeug version is installed.
+_WERKZEUG_DEFAULT_DESCRIPTIONS = {
+    "The browser (or proxy) sent a request that this server could not understand.":
+        lambda: _("The browser (or proxy) sent a request that this server could not understand."),
+    "The server could not verify that you are authorized to access the URL requested.":
+        lambda: _("The server could not verify that you are authorized to access the URL requested."),
+    "You don't have the permission to access the requested resource.":
+        lambda: _("You don't have the permission to access the requested resource."),
+    "The requested URL was not found on the server.":
+        lambda: _("The requested URL was not found on the server."),
+    "The method is not allowed for the requested URL.":
+        lambda: _("The method is not allowed for the requested URL."),
+    "The server encountered an internal error and was unable to complete your request.":
+        lambda: _("The server encountered an internal error and was unable to complete your request."),
+}
+
+
+def _localize_description(description) -> str:
+    """Translate a Werkzeug/abort description if we recognize it; else pass through.
+
+    `abort(code, "English")` produces descriptions that aren't msgids in our
+    catalog. We only localize the narrow, known set of Werkzeug defaults — any
+    custom description set by the caller stays verbatim.
+    """
+    if description is None:
+        return ""
+    text = str(description)
+    mapped = _WERKZEUG_DEFAULT_DESCRIPTIONS.get(text)
+    if mapped is not None:
+        return mapped()
+    return text
 
 
 def _retry_after_seconds(e, default: int = 60) -> int:
@@ -43,6 +79,34 @@ def api_error(code: str, message: str, status_code: int = 400):
     return response
 
 
+# Canonical translated message per HTTP status code — used by
+# handle_http_exception when a less-common exception (e.g. 402, 405, 503) is
+# raised without a custom description.
+_HTTP_MESSAGE_BY_STATUS = {
+    400: lambda: _("Bad request"),
+    401: lambda: _("Authentication required."),
+    402: lambda: _("Payment required."),
+    403: lambda: _("Access denied."),
+    404: lambda: _("Resource not found"),
+    405: lambda: _("The method used is not allowed for this resource."),
+    406: lambda: _("Not acceptable."),
+    408: lambda: _("Request timeout."),
+    409: lambda: _("Conflict with the current state of the resource."),
+    410: lambda: _("This resource is no longer available."),
+    411: lambda: _("Length required."),
+    413: lambda: _("Payload too large."),
+    414: lambda: _("URI too long."),
+    415: lambda: _("Unsupported media type."),
+    422: lambda: _("Unprocessable entity."),
+    429: lambda: _("Too many requests. Please try again later."),
+    500: lambda: _("An internal error occurred. Please try again later."),
+    501: lambda: _("Not implemented."),
+    502: lambda: _("Bad gateway."),
+    503: lambda: _("Service temporarily unavailable."),
+    504: lambda: _("Gateway timeout."),
+}
+
+
 def register_error_handlers(blueprint):
     """
     Register error handlers for the API blueprint.
@@ -51,20 +115,22 @@ def register_error_handlers(blueprint):
 
     @blueprint.errorhandler(400)
     def bad_request(e):
-        message = str(e.description) if hasattr(e, 'description') else 'Bad request'
+        # Prefer our canonical translated string; fall back to e.description only
+        # if the caller set a custom English description via abort(400, "msg").
+        message = _localize_description(e.description) if getattr(e, 'description', None) else _('Bad request')
         return api_error('bad_request', message, 400)
 
     @blueprint.errorhandler(401)
     def unauthorized(e):
-        return api_error('unauthorized', 'Authentication required.', 401)
+        return api_error('unauthorized', _('Authentication required.'), 401)
 
     @blueprint.errorhandler(403)
     def forbidden(e):
-        return api_error('forbidden', 'Access denied.', 403)
+        return api_error('forbidden', _('Access denied.'), 403)
 
     @blueprint.errorhandler(404)
     def not_found(e):
-        message = str(e.description) if hasattr(e, 'description') else 'Resource not found'
+        message = _localize_description(e.description) if getattr(e, 'description', None) else _('Resource not found')
         return api_error('not_found', message, 404)
 
     @blueprint.errorhandler(429)
@@ -72,7 +138,7 @@ def register_error_handlers(blueprint):
         retry_after = _retry_after_seconds(e, 60)
         response = api_error(
             'rate_limited',
-            f'Too many requests. Please retry in {retry_after} seconds.',
+            _('Too many requests. Please retry in %(retry_after)s seconds.', retry_after=retry_after),
             429
         )
         response.headers['Retry-After'] = str(retry_after)
@@ -83,17 +149,26 @@ def register_error_handlers(blueprint):
         current_app.logger.error(f'API Internal Error: {e}')
         return api_error(
             'internal_error',
-            'An internal error occurred. Please try again later.',
+            _('An internal error occurred. Please try again later.'),
             500
         )
 
     @blueprint.errorhandler(HTTPException)
     def handle_http_exception(e):
-        """Handle any other HTTP exceptions with JSON response."""
+        """Handle any other HTTP exceptions with JSON response.
+
+        Prefer our canonical translated message for the status code; fall back
+        to a localized description only for unknown status codes.
+        """
+        canonical = _HTTP_MESSAGE_BY_STATUS.get(e.code)
+        if canonical is not None:
+            message = canonical()
+        else:
+            message = _localize_description(e.description) if e.description else str(e)
         return api_error(
             e.name.lower().replace(' ', '_'),
-            e.description or str(e),
-            e.code
+            message,
+            e.code,
         )
 
 

@@ -1,15 +1,15 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Your subscription has ended{% endblock %}
+{% block title %}{{ _('Your subscription has ended') }}{% endblock %}
 
-{% block preheader %}Your Society Speaks subscription has ended and your briefings have been paused{% endblock %}
+{% block preheader %}{{ _('Your Society Speaks subscription has ended and your briefings have been paused') }}{% endblock %}
 
-{% block header_title %}Your subscription has ended{% endblock %}
+{% block header_title %}{{ _('Your subscription has ended') }}{% endblock %}
 
 {% block header_subtitle %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #bfdbfe; padding-top: 6px;">
-        Your briefings are paused — resubscribe any time to pick up where you left off
+        {{ _('Your briefings are paused — resubscribe any time to pick up where you left off') }}
     </td>
 </tr>
 {% endblock %}
@@ -18,48 +18,46 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 20px;">
-            Hi {{ username }},
+            {{ _('Hi %(username)s,', username=username) }}
         </td>
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 20px;">
-            Your Society Speaks subscription has now ended. We've paused your briefing{{ 's' if briefing_count != 1 else '' }}
-            so {{ 'they' if briefing_count != 1 else 'it' }} won't run while your account is inactive.
+            {% if briefing_count != 1 %}{{ _("Your Society Speaks subscription has now ended. We've paused your briefings so they won't run while your account is inactive.") }}{% else %}{{ _("Your Society Speaks subscription has now ended. We've paused your briefing so it won't run while your account is inactive.") }}{% endif %}
         </td>
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 8px;">
-            <strong>What's been paused:</strong>
+            <strong>{{ _("What's been paused:") }}</strong>
         </td>
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #6b7280; padding-bottom: 24px; padding-left: 16px;">
             {% if briefing_count == 0 %}
-            No active briefings were found on your account.
+            {{ _('No active briefings were found on your account.') }}
             {% elif briefing_count == 1 %}
-            1 briefing has been paused.
+            {{ _('1 briefing has been paused.') }}
             {% else %}
-            {{ briefing_count }} briefings have been paused.
+            {{ _('%(count)d briefings have been paused.', count=briefing_count) }}
             {% endif %}
         </td>
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #6b7280; padding-bottom: 28px;">
-            Resubscribe at any time and your briefings will automatically resume — your configuration, sources,
-            and history are all saved.
+            {{ _('Resubscribe at any time and your briefings will automatically resume — your configuration, sources, and history are all saved.') }}
         </td>
     </tr>
     <tr>
         <td align="center" style="padding-bottom: 28px;">
             <a href="{{ resubscribe_url }}"
                style="display: inline-block; background-color: #1e40af; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
-                View plans &amp; resubscribe
+                {{ _('View plans &amp; resubscribe')|safe }}
             </a>
         </td>
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-            Questions about your account? Reply to this email and we'll be happy to help.
+            {{ _("Questions about your account? Reply to this email and we'll be happy to help.") }}
         </td>
     </tr>
 </table>

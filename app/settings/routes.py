@@ -6,6 +6,7 @@ from app.models import User
 from .forms import ChangePasswordForm, NotificationPreferencesForm, DeleteAccountForm
 from app.billing.service import get_active_subscription
 from app.lib.locale_utils import language_preference_cookie_params
+from flask_babel import gettext as _
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -75,12 +76,12 @@ def view_settings():
                 current_user.discussion_update_notifications = notif_form.discussion_update_notifications.data
                 current_user.weekly_digest_enabled = notif_form.weekly_digest_enabled.data
                 db.session.commit()
-                flash('Notification preferences updated successfully.', 'success')
+                flash(_('Notification preferences updated successfully.'), 'success')
             except Exception:
                 db.session.rollback()
-                flash('Failed to update notification preferences. Please try again.', 'danger')
+                flash(_('Failed to update notification preferences. Please try again.'), 'danger')
         else:
-            flash('Failed to update notification preferences. Please try again.', 'danger')
+            flash(_('Failed to update notification preferences. Please try again.'), 'danger')
         return redirect(url_for('settings.view_settings'))
 
     # Pre-populate notification form with current user values on GET
@@ -109,16 +110,16 @@ def change_password():
         new_password = form.new_password.data
 
         if not check_password_hash(current_user.password, current_password):
-            flash('Current password is incorrect.', 'danger')
+            flash(_('Current password is incorrect.'), 'danger')
             return redirect(url_for('settings.view_settings'))
 
         # Update user's password
         current_user.password = generate_password_hash(new_password)
         db.session.commit()
-        flash('Password updated successfully.', 'success')
+        flash(_('Password updated successfully.'), 'success')
         return redirect(url_for('settings.view_settings'))
 
-    flash('Please correct the errors in the form.', 'danger')
+    flash(_('Please correct the errors in the form.'), 'danger')
     return redirect(url_for('settings.view_settings'))
 
 
@@ -129,11 +130,11 @@ def update_language():
     from app.lib.locale_utils import SUPPORTED_LANGUAGES
     lang = request.form.get('language', '').strip().lower()[:10]
     if lang not in SUPPORTED_LANGUAGES:
-        flash('Invalid language selection.', 'danger')
+        flash(_('Invalid language selection.'), 'danger')
         return redirect(url_for('settings.view_settings'))
     current_user.language = lang if lang != 'en' else None
     db.session.commit()
-    flash('Language preference saved.', 'success')
+    flash(_('Language preference saved.'), 'success')
     response = redirect(request.referrer or url_for('settings.view_settings'))
     response.set_cookie('ss_lang', lang, **language_preference_cookie_params())
     return response
@@ -155,7 +156,7 @@ def delete_account():
     
     user = db.session.get(User, current_user.id)
     if not user:
-        flash('Account deletion failed. Please try again.', 'error')
+        flash(_('Account deletion failed. Please try again.'), 'error')
         return redirect(url_for('settings.view_settings'))
 
     user_id = user.id
@@ -274,11 +275,11 @@ def delete_account():
         current_app.logger.info(f"User deleted their account (ID: {user_id})")
         logout_user()
         session.clear()
-        flash('Your account has been successfully deleted.', 'success')
+        flash(_('Your account has been successfully deleted.'), 'success')
         return redirect(url_for('main.index'))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting user account {user_id}: {str(e)}")
-        flash('Account deletion failed. Please try again.', 'error')
+        flash(_('Account deletion failed. Please try again.'), 'error')
         return redirect(url_for('settings.view_settings'))
