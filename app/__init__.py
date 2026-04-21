@@ -271,6 +271,13 @@ def create_app():
                     return None
                 if "PendingRollbackError" in (getattr(exc_type, "__name__", "") or ""):
                     return None
+                # OSError errno 5 (EIO) from gevent socket writes when a client
+                # (bot, load-balancer probe, early disconnect) drops the TCP
+                # connection before we finish writing the response.  These are
+                # harmless at the application level — gunicorn handles the
+                # worker lifecycle — but generate high-volume Sentry noise.
+                if exc_type is OSError and getattr(exc_info[1], "errno", None) == 5:
+                    return None
             # Event may have exception in payload (e.g. from logging integration)
             for exc in (event.get("exception") or {}).get("values") or []:
                 val = exc.get("value") or ""
@@ -280,6 +287,10 @@ def create_app():
                 if drop_if(val, "multiple head revisions"):
                     return None
                 if "PendingRollbackError" in typ:
+                    return None
+                # Same OSError errno 5 check for events that arrive via the
+                # Sentry logging integration rather than exc_info.
+                if typ == "OSError" and "[Errno 5]" in val:
                     return None
             return event
 
