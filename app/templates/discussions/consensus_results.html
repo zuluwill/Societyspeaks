@@ -177,14 +177,32 @@
     <div class="grid grid-cols-1 {% if opinion_groups|length > 1 %}lg:grid-cols-2{% endif %} gap-6">
       {% for group in opinion_groups %}
       <div class="border rounded-lg overflow-hidden">
-        <div class="bg-primary-600 text-white px-4 py-3">
+        {# Header #}
+        <div class="{% if group.too_few_votes %}bg-gray-400{% else %}bg-primary-600{% endif %} text-white px-4 py-3">
           <div class="flex items-center justify-between">
             <h3 class="font-semibold text-lg">{{ group.name }}</h3>
-            <span class="bg-blue-500 px-2 py-1 rounded text-sm">
-              {{ group.participant_count }} participant{% if group.participant_count != 1 %}s{% endif %}
+            <span class="{% if group.too_few_votes %}bg-gray-500{% else %}bg-blue-500{% endif %} px-2 py-1 rounded text-sm">
+              {{ group.participant_count }} {{ ngettext('participant', 'participants', group.participant_count) }}
             </span>
           </div>
         </div>
+
+        {# Body #}
+        {% if group.too_few_votes %}
+        <div class="p-4 bg-gray-50">
+          <div class="flex items-start gap-3 text-sm text-gray-500">
+            <svg class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="font-medium text-gray-600 mb-1">{{ _('Not enough shared votes yet') }}</p>
+              <p>
+                {{ _('This group has %(count)d %(members)s. To identify what they believe, members need to vote on the same statements. As more people vote, this section will fill in.', count=group.participant_count, members=ngettext('member', 'members', group.participant_count)) }}
+              </p>
+            </div>
+          </div>
+        </div>
+        {% else %}
         <div class="p-4 bg-gray-50">
           <p class="text-sm text-gray-600 mb-3 font-medium">{{ _('Top beliefs:') }}</p>
           <ul class="space-y-3">
@@ -195,23 +213,16 @@
                 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded font-medium">
                   {{ "%.0f"|format(stmt.agreement_rate * 100) }}{{ _('%% agree') }}
                 </span>
-                <span class="ml-2">{{ stmt.vote_count }} votes in group</span>
+                <span class="ml-2">{{ stmt.vote_count }} {{ _('votes in group') }}</span>
               </div>
             </li>
             {% endfor %}
           </ul>
         </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
-  </div>
-  {% elif analysis.cluster_data.get('representative_statements') %}
-  <div class="bg-gray-50 rounded-lg shadow p-6 mb-6 border border-gray-200">
-    <h2 class="text-xl font-semibold mb-4 text-gray-600">{{ _('What Each Group Believes') }}</h2>
-    <p class="text-gray-500">
-      Representative statements data is available but some statements may have been removed. 
-      Re-run the analysis to refresh this section.
-    </p>
   </div>
   {% endif %}
 

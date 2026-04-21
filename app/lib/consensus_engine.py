@@ -965,14 +965,20 @@ def identify_representative_statements(vote_matrix, user_labels, top_n=5):
         cluster_indices = np.where(cluster_mask)[0]
         cluster_votes = vote_matrix.iloc[cluster_indices]
 
-        # Calculate agreement for each statement within this cluster
+        # Calculate agreement for each statement within this cluster.
+        # Minimum votes needed scales with group size: at least half the group
+        # must have voted on a statement, but never requiring more than 3.
+        # This ensures small groups (2-3 people) are not silently excluded.
+        group_size = len(cluster_indices)
+        min_votes_needed = max(1, min(3, (group_size + 1) // 2))
+
         statement_scores = []
         for statement_id in cluster_votes.columns:
             votes = cluster_votes[statement_id]
             real_votes = votes.notna()
             vote_count = real_votes.sum()
 
-            if vote_count < 3:  # Need minimum votes to be representative
+            if vote_count < min_votes_needed:
                 continue
 
             # Calculate agreement rate (% who agree among those who voted)

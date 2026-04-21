@@ -353,73 +353,84 @@ def view_results(discussion_id):
     bridge_statements = Statement.query.filter(Statement.id.in_(bridge_stmt_ids)).all() if bridge_stmt_ids else []
     divisive_statements = Statement.query.filter(Statement.id.in_(divisive_stmt_ids)).all() if divisive_stmt_ids else []
     
-    # Get representative statements per opinion group
-    # This shows what each group believes (top 5 statements they agree on)
+    # Build opinion groups — include ALL clusters, even those too small to have
+    # representative statements, so users are never silently missing groups.
+    cluster_assignments = analysis.cluster_data.get('cluster_assignments', {})
     representative_data = analysis.cluster_data.get('representative_statements', {})
+
+    # Collect all cluster IDs from both sources so nothing is missed
+    all_cluster_ids: set = set()
+    for cid in representative_data.keys():
+        try:
+            all_cluster_ids.add(int(cid))
+        except (ValueError, TypeError):
+            all_cluster_ids.add(str(cid))
+    for c in cluster_assignments.values():
+        try:
+            all_cluster_ids.add(int(c))
+        except (ValueError, TypeError):
+            all_cluster_ids.add(str(c))
+
+    # Batch-fetch all statement objects referenced in representative_data
+    all_rep_stmt_ids = []
+    for stmts in representative_data.values():
+        all_rep_stmt_ids.extend(s['statement_id'] for s in stmts)
+    rep_statements_map = {}
+    if all_rep_stmt_ids:
+        rep_stmts = Statement.query.filter(Statement.id.in_(all_rep_stmt_ids)).all()
+        rep_statements_map = {s.id: s for s in rep_stmts}
+
+    def safe_cluster_sort_key(x):
+        try:
+            return (0, int(x))
+        except (ValueError, TypeError):
+            return (1, str(x))
+
     opinion_groups = []
-    
-    if representative_data:
-        # Collect all statement IDs across all groups
-        all_rep_stmt_ids = []
-        for cluster_id, stmts in representative_data.items():
-            all_rep_stmt_ids.extend([s['statement_id'] for s in stmts])
-        
-        # Fetch all statements in one query for efficiency
-        rep_statements_map = {}
-        if all_rep_stmt_ids:
-            rep_statements = Statement.query.filter(Statement.id.in_(all_rep_stmt_ids)).all()
-            rep_statements_map = {s.id: s for s in rep_statements}
-        
-        # Build opinion groups with enriched statement data
-        # Handle non-numeric cluster IDs gracefully (e.g., "noise" clusters)
-        def safe_cluster_sort_key(x):
+    for cluster_id in sorted(all_cluster_ids, key=safe_cluster_sort_key):
+        # Normalise cluster ID and produce a human-readable group name
+        try:
+            target_cluster = int(cluster_id)
+            group_name = f"Group {target_cluster + 1}"
+        except (ValueError, TypeError):
+            target_cluster = str(cluster_id)
+            group_name = str(cluster_id).title()
+
+        # Safe cross-type comparison (JSON may round-trip ints as strings)
+        def matches_cluster(c, _t=target_cluster):
             try:
-                return (0, int(x))
+                return int(c) == _t if isinstance(_t, int) else str(c) == _t
             except (ValueError, TypeError):
-                return (1, str(x))
-        
-        for cluster_id in sorted(representative_data.keys(), key=safe_cluster_sort_key):
-            group_stmts = []
-            for stmt_data in representative_data[cluster_id]:
-                stmt = rep_statements_map.get(stmt_data['statement_id'])
-                if stmt:
-                    group_stmts.append({
-                        'statement_id': stmt.id,
-                        'content': stmt.content,
-                        'agreement_rate': stmt_data.get('agreement_rate', 0),
-                        'vote_count': stmt_data.get('vote_count', 0),
-                        'strength': stmt_data.get('strength', 0)
-                    })
-            
-            if group_stmts:
-                # Count participants in this cluster
-                # Normalize comparison: cluster_id from representative_data and values from cluster_assignments
-                # may be strings or ints depending on JSON serialization
-                cluster_assignments = analysis.cluster_data.get('cluster_assignments', {})
-                
-                # Handle non-numeric cluster IDs (e.g., "noise")
-                try:
-                    target_cluster = int(cluster_id)
-                    group_name = f"Group {target_cluster + 1}"
-                except (ValueError, TypeError):
-                    target_cluster = str(cluster_id)
-                    group_name = str(cluster_id).title()  # e.g., "noise" -> "Noise"
-                
-                # Safe comparison that handles both numeric and string cluster IDs
-                def matches_cluster(c):
-                    try:
-                        return int(c) == target_cluster if isinstance(target_cluster, int) else str(c) == target_cluster
-                    except (ValueError, TypeError):
-                        return str(c) == str(target_cluster)
-                
-                participant_count = sum(1 for c in cluster_assignments.values() if matches_cluster(c))
-                
-                opinion_groups.append({
-                    'id': target_cluster,
-                    'name': group_name,
-                    'participant_count': participant_count,
-                    'statements': group_stmts
+                return str(c) == str(_t)
+
+        participant_count = sum(1 for c in cluster_assignments.values() if matches_cluster(c))
+
+        # Build the enriched statement list for this group
+        stmts_data = representative_data.get(
+            str(cluster_id),
+            representative_data.get(cluster_id, [])
+        )
+        group_stmts = []
+        for stmt_data in stmts_data:
+            stmt = rep_statements_map.get(stmt_data['statement_id'])
+            if stmt:
+                group_stmts.append({
+                    'statement_id': stmt.id,
+                    'content': stmt.content,
+                    'agreement_rate': stmt_data.get('agreement_rate', 0),
+                    'vote_count': stmt_data.get('vote_count', 0),
+                    'strength': stmt_data.get('strength', 0),
                 })
+
+        opinion_groups.append({
+            'id': target_cluster,
+            'name': group_name,
+            'participant_count': participant_count,
+            'statements': group_stmts,
+            # True when the group is too small/sparse to surface representative statements.
+            # Re-running analysis after more votes arrive will fill this in.
+            'too_few_votes': len(group_stmts) == 0,
+        })
 
     # Track consensus view from partner context
     ref = request.args.get('ref')
