@@ -36,6 +36,10 @@ args = "Flask App"
 task = "workflow.run"
 args = "Consensus Worker Pool (x3)"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Fill Translations"
+
 [[workflows.workflow]]
 name = "Flask App"
 author = "agent"
@@ -72,6 +76,17 @@ args = "Flask App"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Consensus Worker Pool (x3)"
+
+[[workflows.workflow]]
+name = "Fill Translations"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 scripts/translate_po_with_haiku.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [agent]
 expertMode = true
