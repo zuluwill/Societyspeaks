@@ -21,10 +21,13 @@ Invariant for the final package layout:
     Do not "clean up" what look like unused imports in this file.
 """
 
-# Step 0 shim: pull everything from the original module.
-# Later steps replace this line with explicit per-submodule imports.
+# Legacy shim (still holding most classes during the refactor).
 from app.models_legacy import *  # noqa: F401, F403
 
 # Explicit re-exports for the two non-class public names, both of which
 # are imported directly by other modules (db: 4 sites, generate_slug: 3).
 from app.models_legacy import db, generate_slug  # noqa: F401
+
+# Moved submodules. Keep importing them even if nothing else in the codebase
+# does — the side effect registers their tables in db.metadata.
+from app.models.polymarket import PolymarketMarket, TopicMarketMatch  # noqa: F401
