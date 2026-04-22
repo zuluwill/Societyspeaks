@@ -50,6 +50,11 @@ _BOT_WALLED_HOSTS = (
     "www.antidiskriminierungsstelle.de",
     "www.cpahq.org",
     "cep.lse.ac.uk",
+    # Additional hosts seen blocking GH Actions IPs (confirmed via CI logs):
+    "unfccc.int",
+    "www.ccomptes.fr",
+    "www.conseil-constitutionnel.fr",
+    "www.conseil-etat.fr",
 )
 
 
