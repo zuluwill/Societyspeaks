@@ -94,3 +94,9 @@ from app.models.profiles import (  # noqa: F401
     CompanyProfile,
     OrganizationMember,
 )
+from app.models.programme import (  # noqa: F401
+    Programme,
+    ProgrammeSteward,
+    ProgrammeAccessGrant,
+    ProgrammeExportJob,
+)
