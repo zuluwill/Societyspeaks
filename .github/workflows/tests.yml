@@ -29,6 +29,6 @@ jobs:
       - name: Run pytest
         env:
           FLASK_ENV: development
-          DATABASE_URL: sqlite:///:memory:
-          SECRET_KEY: test-secret-not-for-production
+          DATABASE_URL: "sqlite:///:memory:"
+          SECRET_KEY: "test-secret-not-for-production"
         run: pytest -v --tb=short
