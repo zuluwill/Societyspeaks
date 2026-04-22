@@ -34,6 +34,7 @@ def _transient_network_error(message: str) -> bool:
             "reset by peer",
             "connection reset",
             "broken pipe",
+            "remote end closed",
             "timed out",
             "timeout",
             "temporarily unavailable",
@@ -56,6 +57,13 @@ def _request_once(
     except URLError as e:
         reason = getattr(e, "reason", e)
         return None, str(reason)
+    except OSError as e:
+        # Catches http.client.RemoteDisconnected (subclass of ConnectionResetError)
+        # and other low-level socket errors that escape URLError when the peer drops
+        # the connection mid-read. Without this, the probe crashes the whole thread
+        # pool instead of being counted as a single-URL failure (which retries once
+        # if the message matches _transient_network_error).
+        return None, str(e) or type(e).__name__
 
 
 def _ssl_context() -> ssl.SSLContext:
