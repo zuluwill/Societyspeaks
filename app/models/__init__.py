@@ -78,3 +78,4 @@ from app.models.trending import (  # noqa: F401
     UpcomingEvent,
     SocialPostEngagement,
 )
+from app.models.news import NewsSource, NewsArticle  # noqa: F401
