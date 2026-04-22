@@ -67,6 +67,18 @@ class Config:
     # Feature flag to enable/disable embed functionality
     EMBED_ENABLED = os.getenv('EMBED_ENABLED', 'true').lower() == 'true'
 
+    # Background Claude Haiku translation for dynamic content (app/lib/translation_worker.py).
+    # Ingested news → discussions (DiscussionSourceArticle) can dominate token use; tune with allowlist / skip flags.
+    # Default off (cost); set MACHINE_TRANSLATION_ENABLED=true to re-enable.
+    MACHINE_TRANSLATION_ENABLED = os.getenv('MACHINE_TRANSLATION_ENABLED', 'false').lower() == 'true'
+    _mt_lang_codes = os.getenv('MACHINE_TRANSLATION_LANGUAGE_CODES', '').strip()
+    MACHINE_TRANSLATION_LANGUAGE_CODES = [
+        x.strip().lower()[:10] for x in _mt_lang_codes.split(',') if x.strip()
+    ] or None  # None = all supported non-English locales
+    MACHINE_TRANSLATION_SKIP_NEWS_SOURCED_DISCUSSIONS = (
+        os.getenv('MACHINE_TRANSLATION_SKIP_NEWS_SOURCED_DISCUSSIONS', 'false').lower() == 'true'
+    )
+
     # Optional: comma-separated list of partner refs that are disabled (embed and API return 403/unavailable)
     # Example: DISABLED_PARTNER_REFS=bad-actor,revoked-partner
     # Also: Partner.embed_disabled (DB) per slug — no redeploy required; see Admin → Partners.

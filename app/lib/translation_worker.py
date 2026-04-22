@@ -7,7 +7,13 @@ every 5 minutes. The request path uses get_cached_* functions (DB-only) and
 serves English on a miss; this worker fills the cache so subsequent requests
 get translated content without any API latency.
 
-Throughput per run (all 10 non-English languages):
+Config (see config.py / env):
+  MACHINE_TRANSLATION_ENABLED — master kill switch for this job
+  MACHINE_TRANSLATION_LANGUAGE_CODES — optional comma-separated subset (e.g. es,fr)
+  MACHINE_TRANSLATION_SKIP_NEWS_SOURCED_DISCUSSIONS — skip discussions linked to
+    ingested news (DiscussionSourceArticle), including their statements
+
+Throughput per run (per configured non-English language):
   Statements : up to STATEMENTS_PER_LANGUAGE per language
   Discussions: up to DISCUSSIONS_PER_LANGUAGE per language (title + description
                + info panel in a single batched API call)
@@ -21,6 +27,8 @@ import logging
 import time
 from collections import defaultdict
 from typing import Any
+
+from sqlalchemy import exists
 
 from app.lib.locale_utils import SUPPORTED_LANGUAGES
 
@@ -38,15 +46,36 @@ _INTER_LANGUAGE_DELAY_SECS = 0.5
 _NON_ENGLISH = [code for code in SUPPORTED_LANGUAGES if code != 'en']
 
 
+def _skip_news_sourced_discussions() -> bool:
+    try:
+        from flask import current_app
+        return bool(current_app.config.get('MACHINE_TRANSLATION_SKIP_NEWS_SOURCED_DISCUSSIONS'))
+    except RuntimeError:
+        return False
+
+
+def _language_codes_for_run() -> list[str]:
+    """Non-English locales to process; respects MACHINE_TRANSLATION_LANGUAGE_CODES when set."""
+    try:
+        from flask import current_app
+        allow = current_app.config.get('MACHINE_TRANSLATION_LANGUAGE_CODES')
+    except RuntimeError:
+        allow = None
+    if not allow:
+        return list(_NON_ENGLISH)
+    out = [c for c in allow if c in SUPPORTED_LANGUAGES and c != 'en']
+    return out if out else list(_NON_ENGLISH)
+
+
 # ---------------------------------------------------------------------------
 # Queries — LEFT JOIN + IS NULL is more efficient than NOT IN on large tables
 # ---------------------------------------------------------------------------
 
 def _untranslated_statements(language_code: str, limit: int) -> list:
     from sqlalchemy import and_
-    from app.models import Statement, StatementTranslation
+    from app.models import DiscussionSourceArticle, Statement, StatementTranslation
 
-    return (
+    q = (
         Statement.query
         .outerjoin(
             StatementTranslation,
@@ -60,18 +89,20 @@ def _untranslated_statements(language_code: str, limit: int) -> list:
             Statement.mod_status >= 0,
             StatementTranslation.id.is_(None),
         )
-        .order_by(Statement.id.desc())   # newest first — most likely to be viewed soon
-        .limit(limit)
-        .all()
     )
+    if _skip_news_sourced_discussions():
+        dsa = exists().where(DiscussionSourceArticle.discussion_id == Statement.discussion_id)
+        q = q.filter(~dsa)
+
+    return q.order_by(Statement.id.desc()).limit(limit).all()
 
 
 def _untranslated_discussions(language_code: str, limit: int) -> list:
     """Discussions with no DiscussionTranslation row for this language."""
     from sqlalchemy import and_
-    from app.models import Discussion, DiscussionTranslation
+    from app.models import Discussion, DiscussionSourceArticle, DiscussionTranslation
 
-    return (
+    q = (
         Discussion.query
         .outerjoin(
             DiscussionTranslation,
@@ -84,10 +115,12 @@ def _untranslated_discussions(language_code: str, limit: int) -> list:
             Discussion.has_native_statements.is_(True),
             DiscussionTranslation.id.is_(None),
         )
-        .order_by(Discussion.id.desc())
-        .limit(limit)
-        .all()
     )
+    if _skip_news_sourced_discussions():
+        dsa = exists().where(DiscussionSourceArticle.discussion_id == Discussion.id)
+        q = q.filter(~dsa)
+
+    return q.order_by(Discussion.id.desc()).limit(limit).all()
 
 
 def _discussions_missing_info(language_code: str, limit: int) -> list[tuple]:
@@ -98,9 +131,9 @@ def _discussions_missing_info(language_code: str, limit: int) -> list[tuple]:
     """
     from sqlalchemy import and_, or_
     from app import db
-    from app.models import Discussion, DiscussionTranslation
+    from app.models import Discussion, DiscussionSourceArticle, DiscussionTranslation
 
-    return (
+    q = (
         db.session.query(Discussion, DiscussionTranslation)
         .join(
             DiscussionTranslation,
@@ -122,10 +155,12 @@ def _discussions_missing_info(language_code: str, limit: int) -> list[tuple]:
                 ),
             ),
         )
-        .order_by(Discussion.id.desc())
-        .limit(limit)
-        .all()
     )
+    if _skip_news_sourced_discussions():
+        dsa = exists().where(DiscussionSourceArticle.discussion_id == Discussion.id)
+        q = q.filter(~dsa)
+
+    return q.order_by(Discussion.id.desc()).limit(limit).all()
 
 
 def _untranslated_programmes(language_code: str, limit: int) -> list:
@@ -387,9 +422,14 @@ def run_translation_worker() -> dict[str, Any]:
     job in app/scheduler.py. Each language is fully independent — a failure
     in one does not block the rest. Returns a summary dict for logging.
     """
+    from flask import current_app
+
+    if not current_app.config.get('MACHINE_TRANSLATION_ENABLED', True):
+        return {'statements': 0, 'discussions': 0, 'programmes': 0, 'errors': [], 'disabled': True}
+
     totals: dict[str, Any] = {'statements': 0, 'discussions': 0, 'programmes': 0, 'errors': []}
 
-    for lang_code in _NON_ENGLISH:
+    for lang_code in _language_codes_for_run():
         try:
             stmts = _process_statements(lang_code)
             discs = _process_discussions(lang_code)

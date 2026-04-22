@@ -440,6 +440,8 @@ def init_scheduler(app):
     def translate_pending_content_job():
         """Pre-translate new discussions, statements, and programmes into all supported languages."""
         with app.app_context():
+            if not app.config.get('MACHINE_TRANSLATION_ENABLED', True):
+                return
             try:
                 from app.lib.translation_worker import run_translation_worker
                 result = run_translation_worker()
