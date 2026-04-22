@@ -11,12 +11,14 @@ on:
       - "translations/**"
       - "babel.cfg"
       - "scripts/generate_po_files.py"
+      - "scripts/strip_po_obsolete.py"
       - ".github/workflows/i18n-compile.yml"
   pull_request:
     paths:
       - "translations/**"
       - "babel.cfg"
       - "scripts/generate_po_files.py"
+      - "scripts/strip_po_obsolete.py"
       - ".github/workflows/i18n-compile.yml"
 
 jobs:
@@ -31,5 +33,13 @@ jobs:
           cache-dependency-path: requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Install GNU gettext (msgfmt)
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gettext
+      - name: Verify PO files (GNU msgfmt strict check)
+        run: |
+          set -euo pipefail
+          for f in translations/*/LC_MESSAGES/messages.po; do
+            msgfmt -c -o /dev/null "$f"
+          done
       - name: Compile gettext catalogs
         run: pybabel compile -d translations

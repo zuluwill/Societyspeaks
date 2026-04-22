@@ -28069,520 +28069,163 @@ msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky에 자동으로 게시됩니다. X는 미리 작성된 텍스트와 함께 새 탭에서 열립니다."
 
-#~ msgid "Claim"
-#~ msgstr "주장"
 
-#~ msgid "Question"
-#~ msgstr "질문"
 
-#~ msgid "Journey complete"
-#~ msgstr "여정 완료"
 
-#~ msgid "View your full recap"
-#~ msgstr "전체 요약 보기"
 
-#~ msgid "Content Policy"
-#~ msgstr "콘텐츠 정책"
 
-#~ msgid "Your Profile"
-#~ msgstr "내 프로필"
 
-#~ msgid "Create Profile"
-#~ msgstr "프로필 생성"
 
-#~ msgid "Notifications"
-#~ msgstr "알림"
 
-#~ msgid "My Briefings"
-#~ msgstr "내 브리핑"
 
-#~ msgid "Settings"
-#~ msgstr "설정"
 
-#~ msgid "Partner Portal"
-#~ msgstr "파트너 포털"
 
-#~ msgid "Admin"
-#~ msgstr "관리"
 
-#~ msgid "Sign out"
-#~ msgstr "로그아웃"
 
-#~ msgid "Sign in"
-#~ msgstr "로그인"
 
-#~ msgid "Get Started"
-#~ msgstr "시작하기"
 
-#~ msgid "Skip to main content"
-#~ msgstr "본문으로 이동"
 
-#~ msgid "Open user menu"
-#~ msgstr "사용자 메뉴 열기"
 
-#~ msgid "Privacy Policy"
-#~ msgstr "개인정보 처리방침"
 
-#~ msgid "Terms of Service"
-#~ msgstr "이용약관"
 
-#~ msgid "Contact"
-#~ msgstr "연락처"
 
-#~ msgid "Connect"
-#~ msgstr "연결"
 
-#~ msgid "Guided journey"
-#~ msgstr "가이드 여정"
 
-#~ msgid "Start your civic journey"
-#~ msgstr "시민 여정 시작"
 
-#~ msgid "Pick up where you left off"
-#~ msgstr "중단한 곳부터 계속"
 
-#~ msgid "Themes"
-#~ msgstr "테마"
 
-#~ msgid "Completed"
-#~ msgstr "완료"
 
-#~ msgid "Archived"
-#~ msgstr "보관됨"
 
-#~ msgid "Edit"
-#~ msgstr "수정"
 
-#~ msgid "Export CSV"
-#~ msgstr "CSV 내보내기"
 
-#~ msgid "%(num)d statement"
-#~ msgid_plural "%(num)d statements"
-#~ msgstr[0] "%(num)d 진술"
 
-#~ msgid "%(num)d participant"
-#~ msgid_plural "%(num)d participants"
-#~ msgstr[0] "%(num)d 참여자"
 
-#~ msgid "View full analysis"
-#~ msgstr "전체 분석 보기"
 
-#~ msgid "Page %(page)s of %(pages)s"
-#~ msgstr "%(page)d / %(pages)d 페이지"
 
-#~ msgid ""
-#~ "<strong class=\"font-semibold text-gray-900\">%(count)s</strong> discussions"
-#~ msgstr ""
 
-#~ msgid "%(count)s sources"
-#~ msgstr ""
 
-#~ msgid "Showing %(from)s–%(to)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s unread"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Left (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Centre (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Right (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(count)s stories"
-#~ msgstr ""
 
-#~ msgid "(%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "%(count)s traders"
-#~ msgstr ""
 
-#~ msgid "Left (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Centre (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Right (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Based on %(total)s sources (%(left)sL / %(centre)sC / %(right)sR)"
-#~ msgstr ""
 
-#~ msgid "%(count)s uses"
-#~ msgstr ""
 
-#~ msgid "(%(count)s curated sources)"
-#~ msgstr ""
 
-#~ msgid "%(count)s stories per brief"
-#~ msgstr ""
 
-#~ msgid "%(count)s errors"
-#~ msgstr ""
 
-#~ msgid "%(count)s items"
-#~ msgstr ""
 
-#~ msgid "+ %(count)s more"
-#~ msgstr ""
 
-#~ msgid "%(num)s stories"
-#~ msgstr ""
 
-#~ msgid "%(count)s members (unlimited)"
-#~ msgstr ""
 
-#~ msgid "Maximum %(count)s per brief"
-#~ msgstr ""
 
-#~ msgid "%(count)s total recipients"
-#~ msgstr ""
 
-#~ msgid "Remove Selected (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Items (%(count)s)"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "This brief is approved and ready to send to %(count)s active recipients."
-#~ msgstr ""
 
-#~ msgid "Max Stories: %(count)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s topics covered"
-#~ msgstr ""
 
-#~ msgid "...and %(count)s more"
-#~ msgstr ""
 
-#~ msgid "%(count)s Unsure"
-#~ msgstr ""
 
-#~ msgid "Confirm Your Vote - Daily Question #%(num)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(total)s responses: %(agree)s%% Agree | %(disagree)s%% Disagree | "
-#~ "%(unsure)s%% Unsure - powered by societyspeaks.io"
-#~ msgstr ""
 
-#~ msgid "Question #%(num)s"
-#~ msgstr ""
 
-#~ msgid "%(n)s days"
-#~ msgstr ""
 
-#~ msgid "%(count)s responses recorded"
-#~ msgstr ""
 
-#~ msgid "(Showing %(shown)s of %(total)s)"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(base)s - What do you think? %(total)s people have weighed in. Add your "
-#~ "voice at societyspeaks.io"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Your vote is now part of the %(title)s discussion alongside %(count)s other "
-#~ "participants."
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've contributed <strong>%(count)s</strong> of %(threshold)s votes needed "
-#~ "to see the <em>Consensus Analysis</em> - discover which opinion group you "
-#~ "belong to and what brings people together."
-#~ msgstr ""
 
-#~ msgid "%(count)s more votes to unlock"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've voted on %(count)s statements. You can now see how your views compare"
-#~ " to different opinion groups."
-#~ msgstr ""
 
-#~ msgid "Question %(idx)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s votes"
-#~ msgstr ""
 
-#~ msgid "%(count)s people discussing %(link)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Theme <span class=\"font-bold text-white\">%(index)s</span> of <span "
-#~ "class=\"font-bold text-white\">%(total)s</span>"
-#~ msgstr ""
 
-#~ msgid "%(num)s to go"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on <span class=\"text-primary-600 font-bold\">%(num)s more "
-#~ "statements</span> to unlock"
-#~ msgstr ""
 
-#~ msgid "At least <strong>%(num)s users</strong> must participate"
-#~ msgstr ""
 
-#~ msgid "At least <strong>%(num)s total votes</strong>"
-#~ msgstr ""
 
-#~ msgid "Each statement needs at least <strong>%(num)s votes</strong>"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "<strong>Better analysis:</strong> More statements give the algorithm more "
-#~ "dimensions to work with — %(num)s or more statements leads to richer, more "
-#~ "nuanced consensus results."
-#~ msgstr ""
 
-#~ msgid "Pending Flags (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "(%(count)s trusted outlets)"
-#~ msgstr ""
 
-#~ msgid "%(num)s discussion"
-#~ msgid_plural "%(num)s discussions"
-#~ msgstr[0] "새 토론"
 
-#~ msgid "Showing %(start)s–%(end)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on at least %(n)s statements in this theme to open full analysis (you "
-#~ "can still open the page for a reminder)."
-#~ msgstr ""
 
-#~ msgid "Replies (%(count)s):"
-#~ msgstr ""
 
-#~ msgid "%(done)s of %(total)s themes done. Up next: %(next)s (~5 mins)"
-#~ msgstr ""
 
-#~ msgid "You've completed %(done)s of %(total)s themes — you're almost there!"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've completed %(done)s of %(total)s themes — you're more than halfway "
-#~ "through!"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've completed %(done)s of %(total)s themes — you're making good progress."
-#~ msgstr ""
 
-#~ msgid "You've completed %(done)s of %(total)s themes — you're on your way."
-#~ msgstr ""
 
-#~ msgid "%(done)s / %(total)s themes complete"
-#~ msgstr ""
 
-#~ msgid "About 5 minutes &nbsp;·&nbsp; %(count)s statements to vote on"
-#~ msgstr ""
 
-#~ msgid "%(count)s briefings have been paused."
-#~ msgstr ""
 
-#~ msgid "%(count)s new participants"
-#~ msgstr ""
 
-#~ msgid "%(count)s new participant"
-#~ msgstr ""
 
-#~ msgid "%(count)s new responses"
-#~ msgstr ""
 
-#~ msgid "%(count)s new response"
-#~ msgstr ""
 
-#~ msgid "%(count)s new votes"
-#~ msgstr ""
 
-#~ msgid "%(count)s new vote"
-#~ msgstr ""
 
-#~ msgid "%(count)s participants"
-#~ msgstr ""
 
-#~ msgid "Best experience: Vote on all %(count)s at once"
-#~ msgstr ""
 
-#~ msgid "View All %(count)s Questions"
-#~ msgstr ""
 
-#~ msgid "Question %(index)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s people discussing"
-#~ msgstr ""
 
-#~ msgid "Want to vote on all %(count)s at once?"
-#~ msgstr ""
 
-#~ msgid "%(total)s articles from %(sources)s sources with content today"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Center (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Found %(count)s result(s) for \"<strong>%(term)s</strong>\""
-#~ msgstr ""
 
-#~ msgid "Left (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Center (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Right (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "attempts %(count)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s API call"
-#~ msgstr ""
 
-#~ msgid "%(count)s API calls"
-#~ msgstr ""
 
-#~ msgid "page %(page)s of %(pages)s"
-#~ msgstr "%(page)d / %(pages)d 페이지"
 
-#~ msgid "You've explored all %(total)s big questions"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(votes)s votes cast across %(total)s themes on %(name)s. Scroll down to see"
-#~ " how the crowd voted and where you stand."
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've fully explored %(done)s of %(total)s themes and cast %(votes)s votes "
-#~ "in total."
-#~ msgstr ""
 
-#~ msgid "%(done)s/%(total)s votes"
-#~ msgstr ""
 
-#~ msgid "How %(total)s people voted"
-#~ msgstr ""
 
-#~ msgid "✓ Agreed: %(num)s"
-#~ msgstr ""
 
-#~ msgid "? Unsure: %(num)s"
-#~ msgstr ""
 
-#~ msgid "%(voted)s of %(total)s statements voted"
-#~ msgstr ""
 
-#~ msgid "%(total)s articles"
-#~ msgstr ""
 
-#~ msgid "Showing %(count)s of %(total)s pending topics"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "<strong class=\"font-semibold text-gray-900\">%(count)d</strong> discussions"
-#~ msgstr ""
 
-#~ msgid "%(count)d traders"
-#~ msgstr ""
 
-#~ msgid "Maximum %(count)d per brief"
-#~ msgstr ""
 
-#~ msgid "Join %(count)d people discussing"
-#~ msgstr "토론 참여"
 
-#~ msgid "This discussion is closed."
-#~ msgstr "이 토론은 종료되었습니다."
 
-#~ msgid "View full record"
-#~ msgstr "전체 기록 보기"
 
-#~ msgid "Thanks for participating!"
-#~ msgstr "참여해 주셔서 감사합니다!"
 
-#~ msgid "Analysis is not ready yet (%(count)d participants so far)."
-#~ msgstr "분석이 아직 준비되지 않았습니다 (지금까지 %(count)d 명의 참가자)."
 
-#~ msgid "View the record"
-#~ msgstr "기록 보기"
 
-#~ msgid "Vote on 1 more statement to unlock analysis"
-#~ msgstr "분석을 잠금 해제하려면 1개 더 투표하세요"
 
-#~ msgid "Vote on %(num)d more statements to unlock analysis"
-#~ msgstr "분석을 잠금 해제하려면 %(num)d개 더 투표하세요"
 
-#~ msgid "Retry"
-#~ msgstr "다시 시도"
 
-#~ msgid "Vote saved offline. Will sync when connected."
-#~ msgstr "오프라인으로 투표가 저장되었습니다. 연결 시 동기화됩니다."
 
-#~ msgid "Vote recorded!"
-#~ msgstr "투표가 기록되었습니다!"
 
-#~ msgid "You're voting too fast. Please wait a moment."
-#~ msgstr "너무 빨리 투표하고 있습니다. 잠시 기다려 주세요."
 
-#~ msgid "Couldn't save vote."
-#~ msgstr "투표를 저장할 수 없습니다."
 
-#~ msgid "You have already reported this statement."
-#~ msgstr "이미 이 진술을 신고하셨습니다."
 
-#~ msgid "Submitting..."
-#~ msgstr "제출 중..."
 
-#~ msgid "Thank you for your report. We will review it."
-#~ msgstr "신고해 주셔서 감사합니다. 검토하겠습니다."
 
-#~ msgid "Could not submit report. Please try again."
-#~ msgstr "보고서를 제출할 수 없습니다. 다시 시도해 주세요."
 
-#~ msgid "Reported"
-#~ msgstr "신고됨"
 
-#~ msgid "That statement is already in this discussion."
-#~ msgstr "해당 진술은 이미 이 토론에 있습니다."
 
-#~ msgid "You're posting too quickly. Please wait a bit."
-#~ msgstr "너무 빨리 게시하고 있습니다. 잠시 기다려 주세요."
 
-#~ msgid "Could not submit statement right now."
-#~ msgstr "지금은 진술을 제출할 수 없습니다."
 
-#~ msgid "Statement submitted. It will appear in the discussion shortly."
-#~ msgstr "진술이 제출되었습니다. 곧 토론에 표시될 것입니다."
 
-#~ msgid "Network error while submitting statement."
-#~ msgstr "진술 제출 중 네트워크 오류가 발생했습니다."
 
-#~ msgid "%(n)d total votes"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on at least %(n)d statements in this theme to open full analysis (you "
-#~ "can still open the page for a reminder)."
-#~ msgstr ""
 
-#~ msgid "%(count)d API call"
-#~ msgstr "반대"
 
-#~ msgid "%(count)d API calls"
-#~ msgstr ""

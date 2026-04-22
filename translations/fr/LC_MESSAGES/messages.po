@@ -30714,525 +30714,163 @@ msgstr ""
 "Les publications Bluesky se font automatiquement. X s'ouvre dans un nouvel "
 "onglet avec le texte pré-rempli."
 
-#~ msgid "Claim"
-#~ msgstr "Affirmation"
 
-#~ msgid "Question"
-#~ msgstr "Question"
 
-#~ msgid "Journey complete"
-#~ msgstr "Parcours terminé"
 
-#~ msgid "View your full recap"
-#~ msgstr "Voir votre récapitulatif complet"
 
-#~ msgid "Content Policy"
-#~ msgstr "Politique de contenu"
 
-#~ msgid "Your Profile"
-#~ msgstr "Votre profil"
 
-#~ msgid "Create Profile"
-#~ msgstr "Créer un profil"
 
-#~ msgid "Notifications"
-#~ msgstr "Notifications"
 
-#~ msgid "My Briefings"
-#~ msgstr "Mes briefings"
 
-#~ msgid "Settings"
-#~ msgstr "Paramètres"
 
-#~ msgid "Partner Portal"
-#~ msgstr "Portail partenaire"
 
-#~ msgid "Admin"
-#~ msgstr "Administration"
 
-#~ msgid "Sign out"
-#~ msgstr "Se déconnecter"
 
-#~ msgid "Sign in"
-#~ msgstr "Se connecter"
 
-#~ msgid "Get Started"
-#~ msgstr "Commencer"
 
-#~ msgid "Skip to main content"
-#~ msgstr "Aller au contenu principal"
 
-#~ msgid "Open user menu"
-#~ msgstr "Ouvrir le menu utilisateur"
 
-#~ msgid "Privacy Policy"
-#~ msgstr "Politique de confidentialité"
 
-#~ msgid "Terms of Service"
-#~ msgstr "Conditions d'utilisation"
 
-#~ msgid "Contact"
-#~ msgstr "Contact"
 
-#~ msgid "Connect"
-#~ msgstr "Connecter"
 
-#~ msgid "Guided journey"
-#~ msgstr "Parcours guidé"
 
-#~ msgid "Start your civic journey"
-#~ msgstr "Commencez votre parcours civique"
 
-#~ msgid "Pick up where you left off"
-#~ msgstr "Reprenez là où vous en étiez"
 
-#~ msgid "Themes"
-#~ msgstr "Thèmes"
 
-#~ msgid "Completed"
-#~ msgstr "Terminé"
 
-#~ msgid "Archived"
-#~ msgstr "Archivé"
 
-#~ msgid "Edit"
-#~ msgstr "Modifier"
 
-#~ msgid "Export CSV"
-#~ msgstr "Exporter CSV"
 
-#~ msgid "%(num)d statement"
-#~ msgid_plural "%(num)d statements"
-#~ msgstr[0] "%(num)d affirmation"
-#~ msgstr[1] "%(num)d affirmations"
 
-#~ msgid "%(num)d participant"
-#~ msgid_plural "%(num)d participants"
-#~ msgstr[0] "%(num)d participant"
-#~ msgstr[1] "%(num)d participants"
 
-#~ msgid "View full analysis"
-#~ msgstr "Voir l'analyse complète"
 
-#~ msgid "Page %(page)s of %(pages)s"
-#~ msgstr "Page %(page)d sur %(pages)d"
 
-#~ msgid ""
-#~ "<strong class=\"font-semibold text-gray-900\">%(count)s</strong> discussions"
-#~ msgstr ""
 
-#~ msgid "%(count)s sources"
-#~ msgstr ""
 
-#~ msgid "Showing %(from)s–%(to)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s unread"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Left (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Centre (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Right (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(count)s stories"
-#~ msgstr ""
 
-#~ msgid "(%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "%(count)s traders"
-#~ msgstr ""
 
-#~ msgid "Left (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Centre (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Right (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Based on %(total)s sources (%(left)sL / %(centre)sC / %(right)sR)"
-#~ msgstr ""
 
-#~ msgid "%(count)s uses"
-#~ msgstr ""
 
-#~ msgid "(%(count)s curated sources)"
-#~ msgstr ""
 
-#~ msgid "%(count)s stories per brief"
-#~ msgstr ""
 
-#~ msgid "%(count)s errors"
-#~ msgstr ""
 
-#~ msgid "%(count)s items"
-#~ msgstr ""
 
-#~ msgid "+ %(count)s more"
-#~ msgstr ""
 
-#~ msgid "%(num)s stories"
-#~ msgstr ""
 
-#~ msgid "%(count)s members (unlimited)"
-#~ msgstr ""
 
-#~ msgid "Maximum %(count)s per brief"
-#~ msgstr ""
 
-#~ msgid "%(count)s total recipients"
-#~ msgstr ""
 
-#~ msgid "Remove Selected (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Items (%(count)s)"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "This brief is approved and ready to send to %(count)s active recipients."
-#~ msgstr ""
 
-#~ msgid "Max Stories: %(count)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s topics covered"
-#~ msgstr ""
 
-#~ msgid "...and %(count)s more"
-#~ msgstr ""
 
-#~ msgid "%(count)s Unsure"
-#~ msgstr ""
 
-#~ msgid "Confirm Your Vote - Daily Question #%(num)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(total)s responses: %(agree)s%% Agree | %(disagree)s%% Disagree | "
-#~ "%(unsure)s%% Unsure - powered by societyspeaks.io"
-#~ msgstr ""
 
-#~ msgid "Question #%(num)s"
-#~ msgstr ""
 
-#~ msgid "%(n)s days"
-#~ msgstr ""
 
-#~ msgid "%(count)s responses recorded"
-#~ msgstr ""
 
-#~ msgid "(Showing %(shown)s of %(total)s)"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(base)s - What do you think? %(total)s people have weighed in. Add your "
-#~ "voice at societyspeaks.io"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Your vote is now part of the %(title)s discussion alongside %(count)s other "
-#~ "participants."
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've contributed <strong>%(count)s</strong> of %(threshold)s votes needed "
-#~ "to see the <em>Consensus Analysis</em> - discover which opinion group you "
-#~ "belong to and what brings people together."
-#~ msgstr ""
 
-#~ msgid "%(count)s more votes to unlock"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've voted on %(count)s statements. You can now see how your views compare"
-#~ " to different opinion groups."
-#~ msgstr ""
 
-#~ msgid "Question %(idx)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s votes"
-#~ msgstr ""
 
-#~ msgid "%(count)s people discussing %(link)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Theme <span class=\"font-bold text-white\">%(index)s</span> of <span "
-#~ "class=\"font-bold text-white\">%(total)s</span>"
-#~ msgstr ""
 
-#~ msgid "%(num)s to go"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on <span class=\"text-primary-600 font-bold\">%(num)s more "
-#~ "statements</span> to unlock"
-#~ msgstr ""
 
-#~ msgid "At least <strong>%(num)s users</strong> must participate"
-#~ msgstr ""
 
-#~ msgid "At least <strong>%(num)s total votes</strong>"
-#~ msgstr ""
 
-#~ msgid "Each statement needs at least <strong>%(num)s votes</strong>"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "<strong>Better analysis:</strong> More statements give the algorithm more "
-#~ "dimensions to work with — %(num)s or more statements leads to richer, more "
-#~ "nuanced consensus results."
-#~ msgstr ""
 
-#~ msgid "Pending Flags (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "(%(count)s trusted outlets)"
-#~ msgstr ""
 
-#~ msgid "%(num)s discussion"
-#~ msgid_plural "%(num)s discussions"
-#~ msgstr[0] "Nouvelle Discussion"
-#~ msgstr[1] ""
 
-#~ msgid "Showing %(start)s–%(end)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on at least %(n)s statements in this theme to open full analysis (you "
-#~ "can still open the page for a reminder)."
-#~ msgstr ""
 
-#~ msgid "Replies (%(count)s):"
-#~ msgstr ""
 
-#~ msgid "%(done)s of %(total)s themes done. Up next: %(next)s (~5 mins)"
-#~ msgstr ""
 
-#~ msgid "You've completed %(done)s of %(total)s themes — you're almost there!"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've completed %(done)s of %(total)s themes — you're more than halfway "
-#~ "through!"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've completed %(done)s of %(total)s themes — you're making good progress."
-#~ msgstr ""
 
-#~ msgid "You've completed %(done)s of %(total)s themes — you're on your way."
-#~ msgstr ""
 
-#~ msgid "%(done)s / %(total)s themes complete"
-#~ msgstr ""
 
-#~ msgid "About 5 minutes &nbsp;·&nbsp; %(count)s statements to vote on"
-#~ msgstr ""
 
-#~ msgid "%(count)s briefings have been paused."
-#~ msgstr ""
 
-#~ msgid "%(count)s new participants"
-#~ msgstr ""
 
-#~ msgid "%(count)s new participant"
-#~ msgstr ""
 
-#~ msgid "%(count)s new responses"
-#~ msgstr ""
 
-#~ msgid "%(count)s new response"
-#~ msgstr ""
 
-#~ msgid "%(count)s new votes"
-#~ msgstr ""
 
-#~ msgid "%(count)s new vote"
-#~ msgstr ""
 
-#~ msgid "%(count)s participants"
-#~ msgstr ""
 
-#~ msgid "Best experience: Vote on all %(count)s at once"
-#~ msgstr ""
 
-#~ msgid "View All %(count)s Questions"
-#~ msgstr ""
 
-#~ msgid "Question %(index)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s people discussing"
-#~ msgstr ""
 
-#~ msgid "Want to vote on all %(count)s at once?"
-#~ msgstr ""
 
-#~ msgid "%(total)s articles from %(sources)s sources with content today"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Center (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Found %(count)s result(s) for \"<strong>%(term)s</strong>\""
-#~ msgstr ""
 
-#~ msgid "Left (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Center (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Right (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "attempts %(count)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s API call"
-#~ msgstr ""
 
-#~ msgid "%(count)s API calls"
-#~ msgstr ""
 
-#~ msgid "page %(page)s of %(pages)s"
-#~ msgstr "Page %(page)d sur %(pages)d"
 
-#~ msgid "You've explored all %(total)s big questions"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(votes)s votes cast across %(total)s themes on %(name)s. Scroll down to see"
-#~ " how the crowd voted and where you stand."
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've fully explored %(done)s of %(total)s themes and cast %(votes)s votes "
-#~ "in total."
-#~ msgstr ""
 
-#~ msgid "%(done)s/%(total)s votes"
-#~ msgstr ""
 
-#~ msgid "How %(total)s people voted"
-#~ msgstr ""
 
-#~ msgid "✓ Agreed: %(num)s"
-#~ msgstr ""
 
-#~ msgid "? Unsure: %(num)s"
-#~ msgstr ""
 
-#~ msgid "%(voted)s of %(total)s statements voted"
-#~ msgstr ""
 
-#~ msgid "%(total)s articles"
-#~ msgstr ""
 
-#~ msgid "Showing %(count)s of %(total)s pending topics"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "<strong class=\"font-semibold text-gray-900\">%(count)d</strong> discussions"
-#~ msgstr ""
 
-#~ msgid "%(count)d traders"
-#~ msgstr ""
 
-#~ msgid "Maximum %(count)d per brief"
-#~ msgstr ""
 
-#~ msgid "Join %(count)d people discussing"
-#~ msgstr "Rejoindre le débat"
 
-#~ msgid "This discussion is closed."
-#~ msgstr "Cette discussion est fermée."
 
-#~ msgid "View full record"
-#~ msgstr "Voir le registre complet"
 
-#~ msgid "Thanks for participating!"
-#~ msgstr "Merci de votre participation !"
 
-#~ msgid "Analysis is not ready yet (%(count)d participants so far)."
-#~ msgstr ""
-#~ "L'analyse n'est pas encore prête (%(count)d participants jusqu'à présent)."
 
-#~ msgid "View the record"
-#~ msgstr "Voir le registre"
 
-#~ msgid "Vote on 1 more statement to unlock analysis"
-#~ msgstr "Votez sur 1 affirmation supplémentaire pour débloquer l'analyse"
 
-#~ msgid "Vote on %(num)d more statements to unlock analysis"
-#~ msgstr ""
-#~ "Votez sur %(num)d affirmations supplémentaires pour débloquer l'analyse"
 
-#~ msgid "Retry"
-#~ msgstr "Réessayer"
 
-#~ msgid "Vote saved offline. Will sync when connected."
-#~ msgstr "Vote enregistré hors ligne. Se synchronisera à la connexion."
 
-#~ msgid "Vote recorded!"
-#~ msgstr "Vote enregistré !"
 
-#~ msgid "You're voting too fast. Please wait a moment."
-#~ msgstr "Vous votez trop vite. Veuillez patienter un moment."
 
-#~ msgid "Couldn't save vote."
-#~ msgstr "Impossible d'enregistrer le vote."
 
-#~ msgid "You have already reported this statement."
-#~ msgstr "Vous avez déjà signalé cette affirmation."
 
-#~ msgid "Submitting..."
-#~ msgstr "Envoi..."
 
-#~ msgid "Thank you for your report. We will review it."
-#~ msgstr "Merci pour votre signalement. Nous allons l'examiner."
 
-#~ msgid "Could not submit report. Please try again."
-#~ msgstr "Impossible d'envoyer le signalement. Veuillez réessayer."
 
-#~ msgid "Reported"
-#~ msgstr "Signalé"
 
-#~ msgid "That statement is already in this discussion."
-#~ msgstr "Cette affirmation est déjà dans cette discussion."
 
-#~ msgid "You're posting too quickly. Please wait a bit."
-#~ msgstr "Vous publiez trop vite. Veuillez patienter un peu."
 
-#~ msgid "Could not submit statement right now."
-#~ msgstr "Impossible d'envoyer l'affirmation pour l'instant."
 
-#~ msgid "Statement submitted. It will appear in the discussion shortly."
-#~ msgstr "Affirmation soumise. Elle apparaîtra bientôt dans la discussion."
 
-#~ msgid "Network error while submitting statement."
-#~ msgstr "Erreur réseau lors de la soumission de l'affirmation."
 
-#~ msgid "%(n)d total votes"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on at least %(n)d statements in this theme to open full analysis (you "
-#~ "can still open the page for a reminder)."
-#~ msgstr ""
 
-#~ msgid "%(count)d API call"
-#~ msgstr "pas d'accord"
 
-#~ msgid "%(count)d API calls"
-#~ msgstr ""

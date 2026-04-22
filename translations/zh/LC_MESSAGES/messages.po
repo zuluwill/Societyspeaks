@@ -27490,520 +27490,163 @@ msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky 将自动发布。X 会在新标签页中打开，预填充文本。"
 
-#~ msgid "Claim"
-#~ msgstr "主张"
 
-#~ msgid "Question"
-#~ msgstr "问题"
 
-#~ msgid "Journey complete"
-#~ msgstr "旅程完成"
 
-#~ msgid "View your full recap"
-#~ msgstr "查看完整回顾"
 
-#~ msgid "Content Policy"
-#~ msgstr "内容政策"
 
-#~ msgid "Your Profile"
-#~ msgstr "我的资料"
 
-#~ msgid "Create Profile"
-#~ msgstr "创建资料"
 
-#~ msgid "Notifications"
-#~ msgstr "通知"
 
-#~ msgid "My Briefings"
-#~ msgstr "我的简报"
 
-#~ msgid "Settings"
-#~ msgstr "设置"
 
-#~ msgid "Partner Portal"
-#~ msgstr "合作伙伴门户"
 
-#~ msgid "Admin"
-#~ msgstr "管理"
 
-#~ msgid "Sign out"
-#~ msgstr "退出"
 
-#~ msgid "Sign in"
-#~ msgstr "登录"
 
-#~ msgid "Get Started"
-#~ msgstr "开始"
 
-#~ msgid "Skip to main content"
-#~ msgstr "跳至主要内容"
 
-#~ msgid "Open user menu"
-#~ msgstr "打开用户菜单"
 
-#~ msgid "Privacy Policy"
-#~ msgstr "隐私政策"
 
-#~ msgid "Terms of Service"
-#~ msgstr "服务条款"
 
-#~ msgid "Contact"
-#~ msgstr "联系"
 
-#~ msgid "Connect"
-#~ msgstr "连接"
 
-#~ msgid "Guided journey"
-#~ msgstr "引导旅程"
 
-#~ msgid "Start your civic journey"
-#~ msgstr "开始您的公民之旅"
 
-#~ msgid "Pick up where you left off"
-#~ msgstr "从上次停止的地方继续"
 
-#~ msgid "Themes"
-#~ msgstr "主题"
 
-#~ msgid "Completed"
-#~ msgstr "已完成"
 
-#~ msgid "Archived"
-#~ msgstr "已归档"
 
-#~ msgid "Edit"
-#~ msgstr "编辑"
 
-#~ msgid "Export CSV"
-#~ msgstr "导出 CSV"
 
-#~ msgid "%(num)d statement"
-#~ msgid_plural "%(num)d statements"
-#~ msgstr[0] "%(num)d 条陈述"
 
-#~ msgid "%(num)d participant"
-#~ msgid_plural "%(num)d participants"
-#~ msgstr[0] "%(num)d 位参与者"
 
-#~ msgid "View full analysis"
-#~ msgstr "查看完整分析"
 
-#~ msgid "Page %(page)s of %(pages)s"
-#~ msgstr "第 %(page)d 页，共 %(pages)d 页"
 
-#~ msgid ""
-#~ "<strong class=\"font-semibold text-gray-900\">%(count)s</strong> discussions"
-#~ msgstr ""
 
-#~ msgid "%(count)s sources"
-#~ msgstr ""
 
-#~ msgid "Showing %(from)s–%(to)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s unread"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Left (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Centre (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Right (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "%(count)s stories"
-#~ msgstr ""
 
-#~ msgid "(%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "%(count)s traders"
-#~ msgstr ""
 
-#~ msgid "Left (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Centre (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Right (%(count)s sources)"
-#~ msgstr ""
 
-#~ msgid "Based on %(total)s sources (%(left)sL / %(centre)sC / %(right)sR)"
-#~ msgstr ""
 
-#~ msgid "%(count)s uses"
-#~ msgstr ""
 
-#~ msgid "(%(count)s curated sources)"
-#~ msgstr ""
 
-#~ msgid "%(count)s stories per brief"
-#~ msgstr ""
 
-#~ msgid "%(count)s errors"
-#~ msgstr ""
 
-#~ msgid "%(count)s items"
-#~ msgstr ""
 
-#~ msgid "+ %(count)s more"
-#~ msgstr ""
 
-#~ msgid "%(num)s stories"
-#~ msgstr ""
 
-#~ msgid "%(count)s members (unlimited)"
-#~ msgstr ""
 
-#~ msgid "Maximum %(count)s per brief"
-#~ msgstr ""
 
-#~ msgid "%(count)s total recipients"
-#~ msgstr ""
 
-#~ msgid "Remove Selected (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Items (%(count)s)"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "This brief is approved and ready to send to %(count)s active recipients."
-#~ msgstr ""
 
-#~ msgid "Max Stories: %(count)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s topics covered"
-#~ msgstr ""
 
-#~ msgid "...and %(count)s more"
-#~ msgstr ""
 
-#~ msgid "%(count)s Unsure"
-#~ msgstr ""
 
-#~ msgid "Confirm Your Vote - Daily Question #%(num)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(total)s responses: %(agree)s%% Agree | %(disagree)s%% Disagree | "
-#~ "%(unsure)s%% Unsure - powered by societyspeaks.io"
-#~ msgstr ""
 
-#~ msgid "Question #%(num)s"
-#~ msgstr ""
 
-#~ msgid "%(n)s days"
-#~ msgstr ""
 
-#~ msgid "%(count)s responses recorded"
-#~ msgstr ""
 
-#~ msgid "(Showing %(shown)s of %(total)s)"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(base)s - What do you think? %(total)s people have weighed in. Add your "
-#~ "voice at societyspeaks.io"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Your vote is now part of the %(title)s discussion alongside %(count)s other "
-#~ "participants."
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've contributed <strong>%(count)s</strong> of %(threshold)s votes needed "
-#~ "to see the <em>Consensus Analysis</em> - discover which opinion group you "
-#~ "belong to and what brings people together."
-#~ msgstr ""
 
-#~ msgid "%(count)s more votes to unlock"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've voted on %(count)s statements. You can now see how your views compare"
-#~ " to different opinion groups."
-#~ msgstr ""
 
-#~ msgid "Question %(idx)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s votes"
-#~ msgstr ""
 
-#~ msgid "%(count)s people discussing %(link)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Theme <span class=\"font-bold text-white\">%(index)s</span> of <span "
-#~ "class=\"font-bold text-white\">%(total)s</span>"
-#~ msgstr ""
 
-#~ msgid "%(num)s to go"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on <span class=\"text-primary-600 font-bold\">%(num)s more "
-#~ "statements</span> to unlock"
-#~ msgstr ""
 
-#~ msgid "At least <strong>%(num)s users</strong> must participate"
-#~ msgstr ""
 
-#~ msgid "At least <strong>%(num)s total votes</strong>"
-#~ msgstr ""
 
-#~ msgid "Each statement needs at least <strong>%(num)s votes</strong>"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "<strong>Better analysis:</strong> More statements give the algorithm more "
-#~ "dimensions to work with — %(num)s or more statements leads to richer, more "
-#~ "nuanced consensus results."
-#~ msgstr ""
 
-#~ msgid "Pending Flags (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "(%(count)s trusted outlets)"
-#~ msgstr ""
 
-#~ msgid "%(num)s discussion"
-#~ msgid_plural "%(num)s discussions"
-#~ msgstr[0] "新讨论"
 
-#~ msgid "Showing %(start)s–%(end)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on at least %(n)s statements in this theme to open full analysis (you "
-#~ "can still open the page for a reminder)."
-#~ msgstr ""
 
-#~ msgid "Replies (%(count)s):"
-#~ msgstr ""
 
-#~ msgid "%(done)s of %(total)s themes done. Up next: %(next)s (~5 mins)"
-#~ msgstr ""
 
-#~ msgid "You've completed %(done)s of %(total)s themes — you're almost there!"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've completed %(done)s of %(total)s themes — you're more than halfway "
-#~ "through!"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've completed %(done)s of %(total)s themes — you're making good progress."
-#~ msgstr ""
 
-#~ msgid "You've completed %(done)s of %(total)s themes — you're on your way."
-#~ msgstr ""
 
-#~ msgid "%(done)s / %(total)s themes complete"
-#~ msgstr ""
 
-#~ msgid "About 5 minutes &nbsp;·&nbsp; %(count)s statements to vote on"
-#~ msgstr ""
 
-#~ msgid "%(count)s briefings have been paused."
-#~ msgstr ""
 
-#~ msgid "%(count)s new participants"
-#~ msgstr ""
 
-#~ msgid "%(count)s new participant"
-#~ msgstr ""
 
-#~ msgid "%(count)s new responses"
-#~ msgstr ""
 
-#~ msgid "%(count)s new response"
-#~ msgstr ""
 
-#~ msgid "%(count)s new votes"
-#~ msgstr ""
 
-#~ msgid "%(count)s new vote"
-#~ msgstr ""
 
-#~ msgid "%(count)s participants"
-#~ msgstr ""
 
-#~ msgid "Best experience: Vote on all %(count)s at once"
-#~ msgstr ""
 
-#~ msgid "View All %(count)s Questions"
-#~ msgstr ""
 
-#~ msgid "Question %(index)s of %(total)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s people discussing"
-#~ msgstr ""
 
-#~ msgid "Want to vote on all %(count)s at once?"
-#~ msgstr ""
 
-#~ msgid "%(total)s articles from %(sources)s sources with content today"
-#~ msgstr ""
 
-#~ msgid "%(pct)s%% Center (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Found %(count)s result(s) for \"<strong>%(term)s</strong>\""
-#~ msgstr ""
 
-#~ msgid "Left (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Center (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "Right (%(count)s)"
-#~ msgstr ""
 
-#~ msgid "attempts %(count)s"
-#~ msgstr ""
 
-#~ msgid "%(count)s API call"
-#~ msgstr ""
 
-#~ msgid "%(count)s API calls"
-#~ msgstr ""
 
-#~ msgid "page %(page)s of %(pages)s"
-#~ msgstr "第 %(page)d 页，共 %(pages)d 页"
 
-#~ msgid "You've explored all %(total)s big questions"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "%(votes)s votes cast across %(total)s themes on %(name)s. Scroll down to see"
-#~ " how the crowd voted and where you stand."
-#~ msgstr ""
 
-#~ msgid ""
-#~ "You've fully explored %(done)s of %(total)s themes and cast %(votes)s votes "
-#~ "in total."
-#~ msgstr ""
 
-#~ msgid "%(done)s/%(total)s votes"
-#~ msgstr ""
 
-#~ msgid "How %(total)s people voted"
-#~ msgstr ""
 
-#~ msgid "✓ Agreed: %(num)s"
-#~ msgstr ""
 
-#~ msgid "? Unsure: %(num)s"
-#~ msgstr ""
 
-#~ msgid "%(voted)s of %(total)s statements voted"
-#~ msgstr ""
 
-#~ msgid "%(total)s articles"
-#~ msgstr ""
 
-#~ msgid "Showing %(count)s of %(total)s pending topics"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "<strong class=\"font-semibold text-gray-900\">%(count)d</strong> discussions"
-#~ msgstr ""
 
-#~ msgid "%(count)d traders"
-#~ msgstr ""
 
-#~ msgid "Maximum %(count)d per brief"
-#~ msgstr ""
 
-#~ msgid "Join %(count)d people discussing"
-#~ msgstr "参与讨论"
 
-#~ msgid "This discussion is closed."
-#~ msgstr "此讨论已关闭。"
 
-#~ msgid "View full record"
-#~ msgstr "查看完整记录"
 
-#~ msgid "Thanks for participating!"
-#~ msgstr "感谢参与！"
 
-#~ msgid "Analysis is not ready yet (%(count)d participants so far)."
-#~ msgstr "分析尚未准备好（目前已有 %(count)d 名参与者）。"
 
-#~ msgid "View the record"
-#~ msgstr "查看记录"
 
-#~ msgid "Vote on 1 more statement to unlock analysis"
-#~ msgstr "再投1条陈述以解锁分析"
 
-#~ msgid "Vote on %(num)d more statements to unlock analysis"
-#~ msgstr "再投 %(num)d 条陈述以解锁分析"
 
-#~ msgid "Retry"
-#~ msgstr "重试"
 
-#~ msgid "Vote saved offline. Will sync when connected."
-#~ msgstr "离线保存投票。连接后将同步。"
 
-#~ msgid "Vote recorded!"
-#~ msgstr "投票已记录！"
 
-#~ msgid "You're voting too fast. Please wait a moment."
-#~ msgstr "投票速度太快。请稍等片刻。"
 
-#~ msgid "Couldn't save vote."
-#~ msgstr "无法保存投票。"
 
-#~ msgid "You have already reported this statement."
-#~ msgstr "您已经举报了此陈述。"
 
-#~ msgid "Submitting..."
-#~ msgstr "提交中..."
 
-#~ msgid "Thank you for your report. We will review it."
-#~ msgstr "感谢您的举报，我们将进行审核。"
 
-#~ msgid "Could not submit report. Please try again."
-#~ msgstr "无法提交举报。请重试。"
 
-#~ msgid "Reported"
-#~ msgstr "已举报"
 
-#~ msgid "That statement is already in this discussion."
-#~ msgstr "该陈述已在此讨论中。"
 
-#~ msgid "You're posting too quickly. Please wait a bit."
-#~ msgstr "您发布得太快了。请稍等片刻。"
 
-#~ msgid "Could not submit statement right now."
-#~ msgstr "当前无法提交陈述。"
 
-#~ msgid "Statement submitted. It will appear in the discussion shortly."
-#~ msgstr "陈述已提交，将很快出现在讨论中。"
 
-#~ msgid "Network error while submitting statement."
-#~ msgstr "提交陈述时网络错误。"
 
-#~ msgid "%(n)d total votes"
-#~ msgstr ""
 
-#~ msgid ""
-#~ "Vote on at least %(n)d statements in this theme to open full analysis (you "
-#~ "can still open the page for a reminder)."
-#~ msgstr ""
 
-#~ msgid "%(count)d API call"
-#~ msgstr "不同意"
 
-#~ msgid "%(count)d API calls"
-#~ msgstr ""

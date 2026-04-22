@@ -7,7 +7,7 @@ source via pybabel. The canonical i18n workflow is:
   pybabel extract -F babel.cfg -o messages.pot .
 
   # 2. Merge new/changed strings into all locale .po files
-  pybabel update -d translations -i messages.pot
+  pybabel update --ignore-obsolete -d translations -i messages.pot
 
   # 3. Fill in empty msgstr values, then compile
   pybabel compile -d translations
