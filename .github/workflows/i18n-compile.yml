@@ -2,6 +2,9 @@
 # *.mo is gitignored — generated at build time).
 name: i18n compile
 
+permissions:
+  contents: read
+
 on:
   push:
     paths:

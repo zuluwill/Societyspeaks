@@ -50,8 +50,10 @@ def test_index_journey_query_param_overrides_accept_language(app, db):
         db.session.commit()
 
     client = app.test_client()
+    # Pin UI to English so we assert on stable copy; the journey slug must still
+    # win over Accept-Language for *which edition* is shown (NL not DE).
     resp = client.get(
-        "/?journey=humanity-big-questions-nl",
+        "/?journey=humanity-big-questions-nl&lang=en",
         headers={"Accept-Language": "de-DE,de;q=0.9"},
     )
     body = resp.get_data(as_text=True)

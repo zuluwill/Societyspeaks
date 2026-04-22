@@ -3,6 +3,9 @@
 # (set JOURNEY_READING_LINK_STRICT=1 or --strict-forbidden to fail the job).
 name: Journey reading links
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   schedule:
