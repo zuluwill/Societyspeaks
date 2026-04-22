@@ -41,3 +41,18 @@ from app.models.translations import (  # noqa: F401
 )
 from app.models.consensus import ConsensusAnalysis, ConsensusJob  # noqa: F401
 from app.models.admin import AdminAuditEvent, AdminSettings  # noqa: F401
+from app.models.briefing import (  # noqa: F401
+    BriefTemplate,
+    InputSource,
+    IngestedItem,
+    Briefing,
+    BriefingSource,
+    BriefRun,
+    BriefRunItem,
+    BriefEmailOpen,
+    BriefEmailSend,
+    BriefLinkClick,
+    BriefRecipient,
+    SendingDomain,
+    BriefEdit,
+)
