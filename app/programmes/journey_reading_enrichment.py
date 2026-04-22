@@ -46,7 +46,7 @@ _UK: Dict[str, Pack] = {
         "**Optional references:** "
         "[UK AI Safety Institute](https://www.gov.uk/government/organisations/ai-safety-institute) · "
         "[Online Safety Act 2023 (legislation.gov.uk)](https://www.legislation.gov.uk/ukpga/2023/50/contents/enacted) · "
-        "[ICO — guide to AI & data protection](https://ico.org.uk/for-organisations/guide-to-data-protection/key-dp-themes/guidance-on-ai-and-data-protection/) · "
+        "[ICO — guide to AI & data protection](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/artificial-intelligence/guidance-on-ai-and-data-protection/) · "
         "[EUR-Lex — EU AI Act (UK alignment context)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689)",
         _L("UK Parliament — Science & Technology Committee", "https://committees.parliament.uk/committee/135/science-and-technology-committee/"),
         _L("Council of Europe — AI & human rights", "https://www.coe.int/en/web/artificial-intelligence"),
@@ -266,7 +266,7 @@ _NL: Dict[str, Pack] = {
         "[Eurostat](https://ec.europa.eu/eurostat)",
         _L("SER — Social and Economic Council", "https://www.ser.nl/en"),
         _L("ILO — Netherlands profile", "https://www.ilo.org/countries/netherlands/lang--en/index.htm"),
-        _L("European Commission — economic governance", "https://economy-finance.ec.europa.eu/economic-governance_en"),
+        _L("European Commission — economic governance", "https://economy-finance.ec.europa.eu/economic-and-fiscal-governance_en"),
         _L("World Bank — open data", "https://data.worldbank.org/"),
     ),
     "Health & care": _pack(
@@ -276,7 +276,7 @@ _NL: Dict[str, Pack] = {
         "[Zorginstituut Nederland](https://www.zorginstituutnederland.nl/en) · "
         "[WHO Regional Office for Europe](https://www.who.int/europe) · "
         "[OECD — Health at a Glance: Europe](https://www.oecd.org/health/health-at-a-glance-europe.htm)",
-        _L("Dutch Healthcare Authority (NZa)", "https://english.nza.nl/"),
+        _L("Dutch Healthcare Authority (NZa)", "https://www.nza.nl/english"),
         _L("Ministry of Health, Welfare and Sport", "https://www.government.nl/ministries/ministry-of-health-welfare-and-sport"),
         _L("Eurostat — health", "https://ec.europa.eu/eurostat/web/health"),
         _L("OECD — Health at a Glance: Europe", "https://www.oecd.org/health/health-at-a-glance-europe.htm"),
@@ -367,7 +367,7 @@ _IE: Dict[str, Pack] = {
         "[Department of Finance](https://www.gov.ie/en/organisation/department-of-finance/) · "
         "[Eurostat](https://ec.europa.eu/eurostat)",
         _L("ESRI — Economic & Social Research Institute", "https://www.esri.ie/"),
-        _L("European Commission — Ireland economy", "https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/ireland_en"),
+        _L("European Commission — Ireland economy", "https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages/ireland_en"),
         _L("OECD — Ireland economic surveys", "https://www.oecd.org/ireland/"),
         _L("ILO", "https://www.ilo.org/"),
     ),
@@ -470,7 +470,7 @@ _DE: Dict[str, Pack] = {
         "[Eurostat](https://ec.europa.eu/eurostat)",
         _L("ifo Institute", "https://www.ifo.de/en"),
         _L("DIW Berlin", "https://www.diw.de/en"),
-        _L("European Commission — Germany", "https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/germany_en"),
+        _L("European Commission — Germany", "https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages/germany_en"),
         _L("IMF — Germany", "https://www.imf.org/en/Countries/DEU"),
     ),
     "Health & care": _pack(
@@ -572,7 +572,7 @@ _FR: Dict[str, Pack] = {
         "[Eurostat](https://ec.europa.eu/eurostat)",
         _L("French Treasury (Direction générale du Trésor) — reports", "https://www.tresor.economie.gouv.fr/"),
         _L("OECD — France economic surveys", "https://www.oecd.org/france/"),
-        _L("European Commission — France", "https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/france_en"),
+        _L("European Commission — France", "https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages/france_en"),
         _L("ILO", "https://www.ilo.org/"),
     ),
     "Health & care": _pack(
@@ -604,7 +604,7 @@ _FR: Dict[str, Pack] = {
         "**Optional references:** "
         "[Conseil constitutionnel](https://www.conseil-constitutionnel.fr/english) · "
         "[Assemblée nationale](https://www.assemblee-nationale.fr/en) · "
-        "[Conseil d'État](https://english.conseil-etat.fr/) · "
+        "[Conseil d'État](https://www.conseil-etat.fr/en/) · "
         "[Venice Commission](https://www.venice.coe.int/)",
         _L("Commission nationale de l'informatique et des libertés (see CNIL)", "https://www.cnil.fr/en"),
         _L("IDEA", "https://www.idea.int/"),
@@ -963,7 +963,7 @@ _CN: Dict[str, Pack] = {
         "Consider **algorithmic governance, data security, and global technical standards**.\n\n"
         "**Optional references:** "
         "[Cyberspace Administration of China (CAC) — English portal](https://english.cac.gov.cn/) · "
-        "[MIIT — Ministry of Industry and Information Technology](https://english.miit.gov.cn/) · "
+        "[CSIS ChinaPower — technology & industrial policy](https://chinapower.csis.org/) · "
         "[ITU — AI standards work](https://www.itu.int/en/ITU-T/ai/Pages/default.aspx) · "
         "[ISO/IEC JTC 1/SC 42 — artificial intelligence](https://www.iso.org/committee/6794475.html)",
         _L("UNESCO — AI ethics recommendation", "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics"),
@@ -993,12 +993,12 @@ _CN: Dict[str, Pack] = {
         _L("National Bureau of Statistics — health & social statistics", "https://www.stats.gov.cn/english/"),
         _L("OECD — Health at a Glance: Asia/Pacific", "https://www.oecd.org/health/health-at-a-glance-asia-pacific-23150130.htm"),
         _L("Global Burden of Disease — IHME", "https://www.healthdata.org/research-analysis/gbd"),
-        _L("UN — SDG 3 data hub", "https://unstats.un.org/sdgs/reporting/Tier"),
+        _L("UN — SDG 3 data hub", "https://unstats.un.org/sdgs/iaeg-sdgs/tier-classification/"),
     ),
     "War, peace & security": _pack(
         "Normative questions on **defence modernisation, UN peacekeeping contributions, and maritime security**.\n\n"
         "**Optional references:** "
-        "[Ministry of National Defense (English)](https://eng.mod.gov.cn/) · "
+        "[IISS — The Military Balance](https://www.iiss.org/publications/the-military-balance/) · "
         "[Ministry of Foreign Affairs of the People's Republic of China](https://www.fmprc.gov.cn/eng/) · "
         "[UN Peacekeeping — troop contributors](https://peacekeeping.un.org/en/troop-and-police-contributors) · "
         "[UN Charter](https://www.un.org/en/about-us/un-charter/full-text)",
