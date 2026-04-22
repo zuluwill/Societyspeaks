@@ -45,6 +45,24 @@ dnspython>=2.6.1
 markdown>=3.6
 bleach>=6.1.0
 
+# Analytics
+posthog>=7.4.2
+
+# CORS for API endpoints
+flask-cors>=6.0.2
+
+# Billing
+stripe>=12.0.0
+
+# News ingestion
+feedparser>=6.0.12
+googlenewsdecoder>=0.1.7
+
+# LLMs (lazy-imported in generators and briefing; code uses the modern client API
+# that exists in both openai 1.x and 2.x)
+openai>=1.88.0
+anthropic>=0.75.0
+
 # Social Media Posting
 atproto>=0.0.30
 tweepy>=4.14.0
