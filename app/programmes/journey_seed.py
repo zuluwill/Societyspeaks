@@ -123,13 +123,13 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "**Optional references:** "
                 "[EU AI Act (official text via EUR-Lex)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) · "
                 "[UK AI Safety Institute](https://www.gov.uk/government/organisations/ai-safety-institute) · "
-                "[OECD.AI policy observatory](https://oecd.ai/en) · "
-                "[UN AI Advisory Body final report](https://www.un.org/en/sg/ai-advisory-body) · "
+                "[OECD.AI policy observatory](https://oecd.ai/en/) · "
+                "[UN AI Advisory Body final report](https://www.un.org/en/ai-advisory-body) · "
                 "[Acemoglu — simple macro of AI (NBER working paper)](https://www.nber.org/papers/w32167)"
             ),
             "information_links": [
                 {"label": "Council of Europe — AI & human rights", "url": "https://www.coe.int/en/web/artificial-intelligence"},
-                {"label": "IEEE Standards Association (AI ethics)", "url": "https://standards.ieee.org/industry-connections/activities/ieee-global-initiative-on-ethics-of-autonomous-and-intelligent-systems/"},
+                {"label": "IEEE Standards Association (AI ethics)", "url": "https://standards.ieee.org/industry-connections/activities/ieee-global-initiative/"},
                 {"label": "Partnership on AI", "url": "https://partnershiponai.org/"},
                 {"label": "Global Partnership on AI (GPAI)", "url": "https://gpai.ai/"},
             ],
@@ -189,7 +189,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "[The Lancet — universal health coverage collection](https://www.thelancet.com/series/universal-health-coverage) · "
                 "[Commonwealth Fund — international health policy comparisons](https://www.commonwealthfund.org/international-health-policy-center) · "
                 "[World Bank — health nutrition & population](https://www.worldbank.org/en/topic/health) · "
-                "[UN — mental health & well-being strategy](https://www.un.org/en/un75/mental-health-and-well-being)"
+                "[UN — mental health & well-being strategy](https://www.un.org/en/global-issues/mental-health)"
             ),
             "information_links": [
                 {"label": "OECD — health at a glance", "url": "https://www.oecd.org/health/health-at-a-glance.htm"},
@@ -217,9 +217,9 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "information_body": (
                 "These are **normative** questions about legitimacy and risk; reasonable people disagree sharply.\n\n"
                 "**Optional references:** "
-                "[UN — Responsibility to Protect (R2P)](https://www.un.org/en/genocideprevention/responsibility.shtml) · "
+                "[UN — Responsibility to Protect (R2P)](https://www.un.org/en/genocide-prevention/responsibility-protect/) · "
                 "[SIPRI — military expenditure database](https://www.sipri.org/databases/milex) · "
-                "[ICRC — autonomous weapons & IHL](https://www.icrc.org/en/warfare/autonomous-weapons) · "
+                "[ICRC — autonomous weapons & IHL](https://www.icrc.org/en/law-and-policy/autonomous-weapons) · "
                 "[UN Peacekeeping overview](https://peacekeeping.un.org/en) · "
                 "[Reaching Critical Will — civil society monitoring of disarmament](https://reachingcriticalwill.org/)"
             ),

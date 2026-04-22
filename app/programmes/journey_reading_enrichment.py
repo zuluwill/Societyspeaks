@@ -35,7 +35,7 @@ _UK: Dict[str, Pack] = {
         "[Climate Change Committee](https://www.theccc.org.uk/) · "
         "[DESNZ — net zero & energy](https://www.gov.uk/government/organisations/department-for-energy-security-and-net-zero) · "
         "[National Grid ESO — Future Energy Scenarios](https://www.nationalgrideso.com/future-energy/future-energy-scenarios-fes) · "
-        "[Met Office — UK climate projections](https://www.metoffice.gov.uk/research/approach/uk-climate-projections)",
+        "[Met Office — UK climate projections](https://www.metoffice.gov.uk/research/approach/collaboration/ukcp)",
         _L("Office for National Statistics", "https://www.ons.gov.uk/"),
         _L("UK Parliament — POST research", "https://post.parliament.uk/"),
         _L("Natural England", "https://www.gov.uk/government/organisations/natural-england"),
@@ -51,7 +51,7 @@ _UK: Dict[str, Pack] = {
         _L("UK Parliament — Science & Technology Committee", "https://committees.parliament.uk/committee/135/science-and-technology-committee/"),
         _L("Council of Europe — AI & human rights", "https://www.coe.int/en/web/artificial-intelligence"),
         _L("Alan Turing Institute — policy & ethics", "https://www.turing.ac.uk/research/research-programmes/public-policy-programme"),
-        _L("OECD.AI observatory", "https://oecd.ai/en"),
+        _L("OECD.AI observatory", "https://oecd.ai/en/"),
     ),
     "Economy & work": _pack(
         "Focus on **UK productivity, housing, fiscal policy, and regional inequality**.\n\n"
@@ -59,9 +59,9 @@ _UK: Dict[str, Pack] = {
         "[OBR — fiscal outlook](https://obr.uk/) · "
         "[IFS — publications](https://ifs.org.uk/publications) · "
         "[Resolution Foundation](https://www.resolutionfoundation.org/) · "
-        "[ONS — regional economic indicators](https://www.ons.gov.uk/economy/economicoutputandproductivity/regionalaccounts)",
+        "[ONS — regional economic indicators](https://www.ons.gov.uk/economy/regionalaccounts)",
         _L("Bank of England — research", "https://www.bankofengland.co.uk/research"),
-        _L("LSE Centre for Economic Performance", "https://www.lse.ac.uk/centre-for-economic-performance"),
+        _L("LSE Centre for Economic Performance", "https://cep.lse.ac.uk/"),
         _L("UK Parliament — Treasury Committee", "https://committees.parliament.uk/committee/158/treasury-committee/"),
         _L("NIESR", "https://www.niesr.ac.uk/"),
     ),
@@ -81,9 +81,9 @@ _UK: Dict[str, Pack] = {
         "Normative questions about **UK force posture, alliances, and international law**.\n\n"
         "**Optional references:** "
         "[UK Ministry of Defence publications](https://www.gov.uk/government/organisations/ministry-of-defence) · "
-        "[NATO — official texts](https://www.nato.int/cps/en/natohq/publications.htm) · "
+        "[NATO — official texts](https://www.nato.int/en/about-us/official-texts-and-resources) · "
         "[House of Commons Library — defence](https://commonslibrary.parliament.uk/topic/home-affairs/defence/) · "
-        "[ICRC — international humanitarian law](https://www.icrc.org/en/war-and-law)",
+        "[ICRC — international humanitarian law](https://www.icrc.org/en/law-and-policy)",
         _L("IISS", "https://www.iiss.org/"),
         _L("RUSI", "https://rusi.org/"),
         _L("UN — Charter (full text)", "https://www.un.org/en/about-us/un-charter/full-text"),
@@ -94,7 +94,7 @@ _UK: Dict[str, Pack] = {
         "**Optional references:** "
         "[Electoral Commission](https://www.electoralcommission.org.uk/) · "
         "[UCL Constitution Unit](https://constitution-unit.com/) · "
-        "[UK Supreme Court judgments](https://www.supremecourt.uk/decided-cases) · "
+        "[UK Supreme Court judgments](https://www.supremecourt.uk/cases) · "
         "[Venice Commission — opinions (Council of Europe)](https://www.venice.coe.int/)",
         _L("Electoral Reform Society", "https://www.electoral-reform.org.uk/"),
         _L("UK Parliament — Public Administration and Constitutional Affairs Committee (PACAC)", "https://committees.parliament.uk/committee/327/public-administration-and-constitutional-affairs-committee/"),
@@ -105,7 +105,7 @@ _UK: Dict[str, Pack] = {
         "Vote on **policy design** — borders, asylum, integration, and anti-discrimination.\n\n"
         "**Optional references:** "
         "[Migration Advisory Committee](https://www.gov.uk/government/organisations/migration-advisory-committee) · "
-        "[UK Home Office — immigration statistics](https://www.gov.uk/government/collections/immigration-system-statistics-year-ending) · "
+        "[UK Home Office — immigration statistics](https://www.gov.uk/government/collections/immigration-statistics-quarterly-release) · "
         "[UNHCR — UK asylum facts](https://www.unhcr.org/uk/) · "
         "[EHRC — equality & human rights](https://www.equalityhumanrights.com/)",
         _L("ONS — migration statistics", "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration"),
@@ -139,7 +139,7 @@ _US: Dict[str, Pack] = {
         "[NOAA Climate.gov](https://www.climate.gov/) · "
         "[EIA — energy data](https://www.eia.gov/)",
         _L("Resources for the Future", "https://www.rff.org/"),
-        _L("National Academies — climate reports", "https://www.nationalacademies.org/topic/environment-and-environmental-studies/climate"),
+        _L("National Academies — climate reports", "https://www.nationalacademies.org/topics/climate-change"),
         _L("CBO — climate-related economic analysis", "https://www.cbo.gov/topics/energy-and-natural-resources"),
         _L("UNFCCC — Paris Agreement", "https://unfccc.int/process-and-meetings/the-paris-agreement/the-paris-agreement"),
     ),
@@ -153,7 +153,7 @@ _US: Dict[str, Pack] = {
         _L("GAO — technology assessments", "https://www.gao.gov/science-technology"),
         _L("EPIC — privacy & civil liberties", "https://epic.org/"),
         _L("Berkman Klein Center (Harvard)", "https://cyber.harvard.edu/"),
-        _L("OECD.AI", "https://oecd.ai/en"),
+        _L("OECD.AI", "https://oecd.ai/en/"),
     ),
     "Economy & work": _pack(
         "Structural questions on **taxes, wages, unions, and trade**.\n\n"
@@ -177,7 +177,7 @@ _US: Dict[str, Pack] = {
         _L("Commonwealth Fund", "https://www.commonwealthfund.org/"),
         _L("KFF (Kaiser Family Foundation)", "https://www.kff.org/"),
         _L("NIH — research programmes", "https://www.nih.gov/"),
-        _L("WHO — US health system comparisons", "https://www.who.int/data/gho/data/themes/topics/topic-details/GHO/universal-health-coverage"),
+        _L("WHO — US health system comparisons", "https://www.who.int/data/gho/data/themes/universal-health-coverage"),
     ),
     "War, peace & security": _pack(
         "Questions on **US force posture, alliances, and war powers**.\n\n"
@@ -212,7 +212,7 @@ _US: Dict[str, Pack] = {
         "[UNHCR — resettlement data](https://www.unhcr.org/refugee-statistics)",
         _L("Migration Policy Institute", "https://www.migrationpolicy.org/"),
         _L("Pew Research Center", "https://www.pewresearch.org/topic/international-affairs/"),
-        _L("National Academies — integration report", "https://www.nationalacademies.org/our-work/integration-of-immigrants-into-us-society-a-behavioral-economic-perspective"),
+        _L("National Academies — integration report", "https://nap.nationalacademies.org/catalog/21746/the-integration-of-immigrants-into-american-society"),
         _L("OHCHR — core human rights treaties", "https://www.ohchr.org/en/core-international-human-rights-instruments-and-their-monitoring-bodies"),
     ),
     "Education & future skills": _pack(
@@ -248,12 +248,12 @@ _NL: Dict[str, Pack] = {
     "AI & technology": _pack(
         "Consider **EU digital rules**, national implementation, and public-sector AI use.\n\n"
         "**Optional references:** "
-        "[Government.nl — artificial intelligence](https://www.government.nl/topics/artificial-intelligence) · "
+        "[Government.nl — artificial intelligence](https://www.government.nl/) · "
         "[Dutch Data Protection Authority (AP)](https://autoriteitpersoonsgegevens.nl/en) · "
         "[EUR-Lex — EU AI Act](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) · "
         "[Council of Europe — AI & human rights](https://www.coe.int/en/web/artificial-intelligence)",
         _L("Tweede Kamer — digital affairs committees", "https://www.tweedekamer.nl/"),
-        _L("OECD.AI", "https://oecd.ai/en"),
+        _L("OECD.AI", "https://oecd.ai/en/"),
         _L("European Data Protection Board", "https://edpb.europa.eu/edpb_en"),
         _L("NIST — AI RMF (international benchmark)", "https://www.nist.gov/itl/ai-risk-management-framework"),
     ),
@@ -265,7 +265,7 @@ _NL: Dict[str, Pack] = {
         "[CBS — economy](https://www.cbs.nl/en-gb/figures/detail/80505eng) · "
         "[Eurostat](https://ec.europa.eu/eurostat)",
         _L("SER — Social and Economic Council", "https://www.ser.nl/en"),
-        _L("ILO — Netherlands profile", "https://www.ilo.org/countries/netherlands/lang--en/index.htm"),
+        _L("ILO — Netherlands profile", "https://www.ilo.org/regions-and-countries/europe-and-central-asia/european-union-eu/netherlands"),
         _L("European Commission — economic governance", "https://economy-finance.ec.europa.eu/economic-and-fiscal-governance_en"),
         _L("World Bank — open data", "https://data.worldbank.org/"),
     ),
@@ -273,7 +273,7 @@ _NL: Dict[str, Pack] = {
         "Focus on **long-term care financing, access, and EU health competences**.\n\n"
         "**Optional references:** "
         "[RIVM — National Institute for Public Health and the Environment](https://www.rivm.nl/en) · "
-        "[Zorginstituut Nederland](https://www.zorginstituutnederland.nl/en) · "
+        "[Zorginstituut Nederland](https://english.zorginstituutnederland.nl/) · "
         "[WHO Regional Office for Europe](https://www.who.int/europe) · "
         "[OECD — Health at a Glance: Europe](https://www.oecd.org/health/health-at-a-glance-europe.htm)",
         _L("Dutch Healthcare Authority (NZa)", "https://www.nza.nl/english"),
@@ -284,24 +284,24 @@ _NL: Dict[str, Pack] = {
     "War, peace & security": _pack(
         "Normative questions on **NATO commitments, EU defence, and crisis deployment**.\n\n"
         "**Optional references:** "
-        "[Ministry of Defence (Defensie.nl)](https://www.defensie.nl/english) · "
+        "[Ministry of Defence (Defensie.nl)](https://english.defensie.nl/) · "
         "[NATO](https://www.nato.int/) · "
         "[House of Representatives — Defence committee](https://www.tweedekamer.nl/kamerleden/commissies) · "
         "[UN Peacekeeping](https://peacekeeping.un.org/en)",
         _L("Clingendael Institute", "https://www.clingendael.org/"),
-        _L("ICRC — international humanitarian law", "https://www.icrc.org/en/war-and-law"),
+        _L("ICRC — international humanitarian law", "https://www.icrc.org/en/law-and-policy"),
         _L("UN Charter", "https://www.un.org/en/about-us/un-charter/full-text"),
         _L("SIPRI", "https://www.sipri.org/"),
     ),
     "Democracy & institutions": _pack(
         "Institutional design — **elections, coalition governance, courts**.\n\n"
         "**Optional references:** "
-        "[Electoral Council (Kiesraad)](https://www.kiesraad.nl/en) · "
-        "[House of Representatives](https://www.tweedekamer.nl/en) · "
+        "[Electoral Council (Kiesraad)](https://english.kiesraad.nl/) · "
+        "[House of Representatives](https://www.houseofrepresentatives.nl/) · "
         "[Council of State (Raad van State)](https://www.raadvanstate.nl/en) · "
         "[Venice Commission](https://www.venice.coe.int/)",
-        _L("Dutch Electoral Council publications", "https://www.kiesraad.nl/en/news-and-publications"),
-        _L("IDEA — Netherlands", "https://www.idea.int/data-tools/data/country-profiles"),
+        _L("Dutch Electoral Council publications", "https://english.kiesraad.nl/latest-news"),
+        _L("IDEA — Netherlands", "https://www.idea.int/data-tools"),
         _L("ACE — Electoral Knowledge Network", "https://aceproject.org/"),
         _L("European Commission — rule of law", "https://commission.europa.eu/topics/justice-and-fundamental-rights_en"),
     ),
@@ -309,7 +309,7 @@ _NL: Dict[str, Pack] = {
         "Vote on **asylum, integration, and anti-discrimination** policy design.\n\n"
         "**Optional references:** "
         "[IND — Immigration and Naturalisation Service](https://ind.nl/en) · "
-        "[CBS — migration statistics](https://www.cbs.nl/en-gb/figures/subjects/society/population/migration) · "
+        "[CBS — migration statistics](https://www.cbs.nl/en-gb/dossier/asylum-migration-and-integration) · "
         "[UNHCR — Netherlands](https://www.unhcr.org/nl/) · "
         "[Council of Europe — ECRI](https://www.coe.int/en/web/european-commission-against-racism-and-intolerance)",
         _L("Netherlands Institute for Human Rights", "https://www.mensenrechten.nl/english"),
@@ -324,7 +324,7 @@ _NL: Dict[str, Pack] = {
         "[DUO — student finance & data](https://duo.nl/particulier/) · "
         "[Education Inspectorate](https://english.onderwijsinspectie.nl/) · "
         "[OECD — Education at a Glance](https://www.oecd.org/education/education-at-a-glance/)",
-        _L("Statistics Netherlands — education", "https://www.cbs.nl/en-gb/figures/subjects/education"),
+        _L("Statistics Netherlands — education", "https://www.cbs.nl/en-gb/society/education"),
         _L("European Commission — education & training", "https://education.ec.europa.eu/"),
         _L("UNESCO — education data", "https://uis.unesco.org/"),
         _L("Eurostat — education & training", "https://ec.europa.eu/eurostat/web/education-and-training"),
@@ -338,11 +338,11 @@ _IE: Dict[str, Pack] = {
     "Climate & planet": _pack(
         "Focus on **Irish climate targets**, agriculture emissions, and energy transition.\n\n"
         "**Optional references:** "
-        "[gov.ie — climate action](https://www.gov.ie/en/policy-information/climate-action/) · "
+        "[gov.ie — climate action](https://www.gov.ie/en/department-of-climate-energy-and-the-environment/) · "
         "[EPA Ireland — climate change](https://www.epa.ie/our-services/monitoring--assessment/climate-change/) · "
         "[SEAI — Sustainable Energy Authority](https://www.seai.ie/) · "
         "[Met Éireann — climate](https://www.met.ie/climate)",
-        _L("Central Statistics Office — environment", "https://www.cso.ie/en/statistics/environment/"),
+        _L("Central Statistics Office — environment", "https://www.cso.ie/en/statistics/climate/"),
         _L("Oireachtas — climate legislation", "https://www.oireachtas.ie/en/"),
         _L("European Environment Agency", "https://www.eea.europa.eu/en"),
         _L("UNFCCC", "https://unfccc.int/"),
@@ -351,11 +351,11 @@ _IE: Dict[str, Pack] = {
         "Consider **EU digital law**, national data protection, and public-sector digitisation.\n\n"
         "**Optional references:** "
         "[Data Protection Commission (Ireland)](https://www.dataprotection.ie/) · "
-        "[gov.ie — digital strategy](https://www.gov.ie/en/publication/digital-ireland/) · "
+        "[gov.ie — digital strategy](https://www.gov.ie/en/department-of-the-taoiseach/campaigns/digital-ireland-connecting-our-people-securing-our-future/) · "
         "[EUR-Lex — EU AI Act](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) · "
         "[European Data Protection Board](https://edpb.europa.eu/edpb_en)",
         _L("Oireachtas — committees", "https://www.oireachtas.ie/en/committees/"),
-        _L("OECD.AI", "https://oecd.ai/en"),
+        _L("OECD.AI", "https://oecd.ai/en/"),
         _L("Council of Europe — AI", "https://www.coe.int/en/web/artificial-intelligence"),
         _L("NIST — AI RMF", "https://www.nist.gov/itl/ai-risk-management-framework"),
     ),
@@ -379,7 +379,7 @@ _IE: Dict[str, Pack] = {
         "[HIQA](https://www.hiqa.ie/) · "
         "[WHO Europe](https://www.who.int/europe)",
         _L("Health Research Board", "https://www.hrb.ie/"),
-        _L("Oireachtas — Health committee", "https://www.oireachtas.ie/en/committees/32/health/"),
+        _L("Oireachtas — Health committee", "https://www.oireachtas.ie/en/committees/34/health/"),
         _L("Eurostat — health", "https://ec.europa.eu/eurostat/web/health"),
         _L("OECD — Health at a Glance: Europe", "https://www.oecd.org/health/health-at-a-glance-europe.htm"),
     ),
@@ -416,7 +416,7 @@ _IE: Dict[str, Pack] = {
         "[Irish Human Rights and Equality Commission](https://www.ihrec.ie/)",
         _L("European Commission — migration & home affairs", "https://home-affairs.ec.europa.eu/policies/migration-and-asylum_en"),
         _L("OHCHR", "https://www.ohchr.org/"),
-        _L("Oireachtas — Justice committee", "https://www.oireachtas.ie/en/committees/9/justice/"),
+        _L("Oireachtas — Justice committee", "https://www.oireachtas.ie/en/committees/33/justice/"),
         _L("EU Asylum Agency", "https://euaa.europa.eu/"),
     ),
     "Education & future skills": _pack(
@@ -452,21 +452,21 @@ _DE: Dict[str, Pack] = {
     "AI & technology": _pack(
         "Consider **EU AI Act implementation**, research policy, and fundamental rights.\n\n"
         "**Optional references:** "
-        "[Federal Government — AI strategy overview](https://www.bundesregierung.de/breg-en/chancellor-artificial-intelligence-2359410) · "
+        "[Federal Government — AI strategy overview](https://www.bundesregierung.de/breg-en) · "
         "[BfDI — Federal Commissioner for Data Protection](https://www.bfdi.bund.de/EN/Home/home_node.html) · "
         "[EUR-Lex — EU AI Act](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) · "
         "[BSI — Federal Office for Information Security](https://www.bsi.bund.de/EN/Themen/Unternehmen-und-Organisationen/Informationen-und-Empfehlungen/Kuenstliche-Intelligenz/kuenstliche-intelligenz_node.html)",
         _L("Bundestag — Digital committee", "https://www.bundestag.de/en/committees/a14"),
-        _L("OECD.AI", "https://oecd.ai/en"),
+        _L("OECD.AI", "https://oecd.ai/en/"),
         _L("Council of Europe — AI", "https://www.coe.int/en/web/artificial-intelligence"),
         _L("ENISA — EU cybersecurity agency", "https://www.enisa.europa.eu/"),
     ),
     "Economy & work": _pack(
         "Structural questions on **industry, energy prices, demographics, and federal finances**.\n\n"
         "**Optional references:** "
-        "[Deutsche Bundesbank — research](https://www.bundesbank.de/en/research) · "
+        "[Deutsche Bundesbank — research](https://www.bundesbank.de/en/bundesbank/research) · "
         "[Destatis](https://www.destatis.de/EN/Home/_node.html) · "
-        "[Federal Ministry of Finance](https://www.bundesfinanzministerium.de/Web/EN/home/home.html) · "
+        "[Federal Ministry of Finance](https://www.bundesfinanzministerium.de/Web/EN/Home/home.html) · "
         "[Eurostat](https://ec.europa.eu/eurostat)",
         _L("ifo Institute", "https://www.ifo.de/en"),
         _L("DIW Berlin", "https://www.diw.de/en"),
@@ -477,7 +477,7 @@ _DE: Dict[str, Pack] = {
         "Focus on **statutory health insurance, hospital capacity, and digital health**.\n\n"
         "**Optional references:** "
         "[Federal Ministry of Health (BMG)](https://www.bundesgesundheitsministerium.de/en.html) · "
-        "[Robert Koch Institute (RKI)](https://www.rki.de/EN/Home/homepage_node.html) · "
+        "[Robert Koch Institute (RKI)](https://www.rki.de/EN/Home/home_node.html) · "
         "[G-BA — Federal Joint Committee](https://www.g-ba.de/english/) · "
         "[WHO Europe](https://www.who.int/europe)",
         _L("Bundestag — Health committee", "https://www.bundestag.de/en/committees/a18"),
@@ -502,7 +502,7 @@ _DE: Dict[str, Pack] = {
         "**Optional references:** "
         "[Federal Returning Officer](https://www.bundeswahlleiter.de/en/) · "
         "[Bundestag](https://www.bundestag.de/en) · "
-        "[Federal Constitutional Court (BVerfG)](https://www.bundesverfassungsgericht.de/SharedDocs/Startseite/EN/Home/home_node.html) · "
+        "[Federal Constitutional Court (BVerfG)](https://www.bundesverfassungsgericht.de/EN/Home/home_node.html) · "
         "[Venice Commission](https://www.venice.coe.int/)",
         _L("IDEA", "https://www.idea.int/"),
         _L("OSCE/ODIHR election reports", "https://www.osce.org/odihr/elections"),
@@ -512,7 +512,7 @@ _DE: Dict[str, Pack] = {
     "Society & cohesion": _pack(
         "Vote on **migration integration, citizenship, and anti-discrimination**.\n\n"
         "**Optional references:** "
-        "[BAMF — Federal Office for Migration and Refugees](https://www.bamf.de/EN/Home/home_node.html) · "
+        "[BAMF — Federal Office for Migration and Refugees](https://www.bamf.de/EN/Startseite/startseite_node.html) · "
         "[Destatis — migration](https://www.destatis.de/EN/Themes/Society-Environment/Population/Migration-Integration/_node.html) · "
         "[UNHCR Germany](https://www.unhcr.org/de/) · "
         "[Federal Anti-Discrimination Agency](https://www.antidiskriminierungsstelle.de/en)",
@@ -524,9 +524,9 @@ _DE: Dict[str, Pack] = {
     "Education & future skills": _pack(
         "Focus on **vocational (dual) training, digital skills, and equity**.\n\n"
         "**Optional references:** "
-        "[Federal Ministry of Education and Research (BMBF)](https://www.bmbf.de/bmbf/en/home/home_node.html) · "
+        "[Federal Ministry of Education and Research (BMBF)](https://www.bmftr.bund.de/EN/Home/home_node.html) · "
         "[KMK — Standing Conference of Ministers](https://www.kmk.org/kmk/information-in-english.html) · "
-        "[Destatis — education](https://www.destatis.de/EN/Themes/Society-Environment/Education-Research-Culture/Education/_node.html) · "
+        "[Destatis — education](https://www.destatis.de/EN/Themes/Society-Environment/Education-Research-Culture/_node.html) · "
         "[OECD — Education at a Glance](https://www.oecd.org/education/education-at-a-glance/)",
         _L("Eurostat — education", "https://ec.europa.eu/eurostat/web/education-and-training"),
         _L("UNESCO UIS", "https://uis.unesco.org/"),
@@ -546,8 +546,8 @@ _FR: Dict[str, Pack] = {
         "[ADEME](https://www.ademe.fr/en) · "
         "[Météo-France — climate](https://meteofrance.com/climat) · "
         "[IPCC](https://www.ipcc.ch/)",
-        _L("INSEE — environment statistics", "https://www.insee.fr/en/metadonnees/source/serie/2220"),
-        _L("Assemblée nationale — environment texts", "https://www.assemblee-nationale.fr/dyn/les-commissions"),
+        _L("INSEE — environment statistics", "https://www.insee.fr/en/metadonnees/source/serie/s2220"),
+        _L("Assemblée nationale — environment texts", "https://www.assemblee-nationale.fr/dyn/commissions-et-autres-organes"),
         _L("European Environment Agency", "https://www.eea.europa.eu/en"),
         _L("UNFCCC", "https://unfccc.int/"),
     ),
@@ -558,15 +558,15 @@ _FR: Dict[str, Pack] = {
         "[ANSSI](https://www.ssi.gouv.fr/en/) · "
         "[EUR-Lex — EU AI Act](https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32024R1689) · "
         "[Commission nationale du débat public](https://www.debatpublic.fr/en)",
-        _L("Assemblée nationale — digital committee work", "https://www.assemblee-nationale.fr/dyn/les-commissions"),
-        _L("OECD.AI", "https://oecd.ai/en"),
+        _L("Assemblée nationale — digital committee work", "https://www.assemblee-nationale.fr/dyn/commissions-et-autres-organes"),
+        _L("OECD.AI", "https://oecd.ai/en/"),
         _L("Council of Europe — AI", "https://www.coe.int/en/web/artificial-intelligence"),
         _L("EDPB", "https://edpb.europa.eu/edpb_en"),
     ),
     "Economy & work": _pack(
         "Structural questions on **pensions, labour law, debt, and euro-area policy**.\n\n"
         "**Optional references:** "
-        "[INSEE](https://www.insee.fr/en/home) · "
+        "[INSEE](https://www.insee.fr/en/accueil) · "
         "[Banque de France — research](https://www.banque-france.fr/en/statistics) · "
         "[Cour des comptes](https://www.ccomptes.fr/en) · "
         "[Eurostat](https://ec.europa.eu/eurostat)",
@@ -590,9 +590,9 @@ _FR: Dict[str, Pack] = {
     "War, peace & security": _pack(
         "Questions on **EU defence initiatives, NATO, and crisis deployment**.\n\n"
         "**Optional references:** "
-        "[Ministère des Armées](https://www.defense.gouv.fr/english) · "
+        "[Ministère des Armées](https://www.defense.gouv.fr/en) · "
         "[NATO](https://www.nato.int/) · "
-        "[Assemblée nationale — Defence committee](https://www.assemblee-nationale.fr/dyn/les-commissions) · "
+        "[Assemblée nationale — Defence committee](https://www.assemblee-nationale.fr/dyn/commissions-et-autres-organes) · "
         "[UN Peacekeeping](https://peacekeeping.un.org/en)",
         _L("IFRI", "https://www.ifri.org/en"),
         _L("ICRC", "https://www.icrc.org/"),
@@ -602,8 +602,8 @@ _FR: Dict[str, Pack] = {
     "Democracy & institutions": _pack(
         "Institutional design — **Fifth Republic institutions, elections, and oversight**.\n\n"
         "**Optional references:** "
-        "[Conseil constitutionnel](https://www.conseil-constitutionnel.fr/english) · "
-        "[Assemblée nationale](https://www.assemblee-nationale.fr/en) · "
+        "[Conseil constitutionnel](https://www.conseil-constitutionnel.fr/en) · "
+        "[Assemblée nationale](https://www.assemblee-nationale.fr/dyn/langues/welcome-to-the-english-website-of-the-french-national-assembly) · "
         "[Conseil d'État](https://www.conseil-etat.fr/en/) · "
         "[Venice Commission](https://www.venice.coe.int/)",
         _L("Commission nationale de l'informatique et des libertés (see CNIL)", "https://www.cnil.fr/en"),
@@ -658,8 +658,8 @@ _CA: Dict[str, Pack] = {
         "**Optional references:** "
         "[ISED — Innovation, Science and Economic Development](https://ised-isde.canada.ca/site/ised/en) · "
         "[Office of the Privacy Commissioner](https://www.priv.gc.ca/en/) · "
-        "[Treasury Board Directive on Automated Decision-Making](https://www.canada.ca/en/government/system/digital-government/digital-government-modernization/automated-decision-making.html) · "
-        "[OECD.AI](https://oecd.ai/en)",
+        "[Treasury Board Directive on Automated Decision-Making](https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32592) · "
+        "[OECD.AI](https://oecd.ai/en/)",
         _L("CIRA — Canadian Internet Policy", "https://www.cira.ca/"),
         _L("EUR-Lex — EU AI Act (comparative context)", "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689"),
         _L("NIST — AI RMF", "https://www.nist.gov/itl/ai-risk-management-framework"),
@@ -670,7 +670,7 @@ _CA: Dict[str, Pack] = {
         "**Optional references:** "
         "[Department of Finance Canada](https://www.canada.ca/en/department-finance.html) · "
         "[Bank of Canada — research](https://www.bankofcanada.ca/research/) · "
-        "[Statistics Canada — labour & income](https://www.statcan.gc.ca/en/subjects-start/labour) · "
+        "[Statistics Canada — labour & income](https://www.statcan.gc.ca/en/subjects-start/labour_) · "
         "[Parliamentary Budget Officer — reports](https://www.pbo-dpb.ca/en)",
         _L("International Monetary Fund — Canada", "https://www.imf.org/en/Countries/CAN"),
         _L("OECD — Canada", "https://www.oecd.org/canada/"),
@@ -707,7 +707,7 @@ _CA: Dict[str, Pack] = {
         "[Elections Canada](https://www.elections.ca/) · "
         "[Parliament of Canada](https://www.parl.ca/) · "
         "[Supreme Court of Canada judgments](https://www.scc-csc.ca/case-dossier/index-eng.aspx) · "
-        "[Commissioner of Canada Elections](https://www.cef-cfe.gc.ca/index-eng.html)",
+        "[Commissioner of Canada Elections](https://www.cef-cce.ca/)",
         _L("Canadian Judicial Council", "https://cjc-ccm.ca/en"),
         _L("IDEA", "https://www.idea.int/"),
         _L("OSCE/ODIHR", "https://www.osce.org/odihr/elections"),
@@ -735,7 +735,7 @@ _CA: Dict[str, Pack] = {
         _L("Parliament of Canada — Indigenous and Northern Affairs committee", "https://www.ourcommons.ca/Committees/en/INAN"),
         _L("UNESCO UIS", "https://uis.unesco.org/"),
         _L("Eurostat — education (comparative)", "https://ec.europa.eu/eurostat/web/education-and-training"),
-        _L("Education International — research hub", "https://www.ei-ie.org/en/issue/detail/169/research"),
+        _L("Education International — research hub", "https://www.ei-ie.org/en/resources/research"),
     ),
 }
 
@@ -761,7 +761,7 @@ _SG: Dict[str, Pack] = {
         "[IMDA — Infocomm Media Development Authority](https://www.imda.gov.sg/) · "
         "[PDPC — Personal Data Protection Commission](https://www.pdpc.gov.sg/) · "
         "[Smart Nation Singapore](https://www.smartnation.gov.sg/) · "
-        "[OECD.AI](https://oecd.ai/en)",
+        "[OECD.AI](https://oecd.ai/en/)",
         _L("Parliament of Singapore — bills & debates", "https://www.parliament.gov.sg/"),
         _L("UNESCO — AI ethics recommendation", "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics"),
         _L("Council of Europe — AI (regional comparator)", "https://www.coe.int/en/web/artificial-intelligence"),
@@ -786,7 +786,7 @@ _SG: Dict[str, Pack] = {
         "[Health Promotion Board](https://www.hpb.gov.sg/) · "
         "[WHO Western Pacific Regional Office](https://www.who.int/westernpacific) · "
         "[OECD — Health at a Glance: Asia/Pacific](https://www.oecd.org/health/health-at-a-glance-asia-pacific-23150130.htm)",
-        _L("SingStat — health statistics", "https://www.singstat.gov.sg/find-data/search-by-theme/health"),
+        _L("SingStat — health statistics", "https://www.singstat.gov.sg/find-data"),
         _L("National Centre for Infectious Diseases", "https://www.ncid.sg/"),
         _L("Parliament of Singapore", "https://www.parliament.gov.sg/"),
         _L("World Bank — health expenditure data", "https://data.worldbank.org/indicator/SH.XPD.CHEX.GD.ZS"),
@@ -810,7 +810,7 @@ _SG: Dict[str, Pack] = {
         "[Parliament of Singapore](https://www.parliament.gov.sg/) · "
         "[Attorney-General's Chambers — statutes](https://www.agc.gov.sg/) · "
         "[UN Human Rights — treaty body documents](https://tbinternet.ohchr.org/_layouts/15/TreatyBodyExternal/Treaty.aspx)",
-        _L("IDEA — Singapore profile", "https://www.idea.int/data-tools/data/country-profiles"),
+        _L("IDEA — Singapore profile", "https://www.idea.int/data-tools"),
         _L("ASEAN Intergovernmental Commission on Human Rights", "https://aichr.org/"),
         _L("OHCHR", "https://www.ohchr.org/"),
         _L("Commonwealth Parliamentary Association", "https://www.cpahq.org/"),
@@ -822,7 +822,7 @@ _SG: Dict[str, Pack] = {
         "[MHA — Ministry of Home Affairs](https://www.mha.gov.sg/) · "
         "[UNHCR — regional office](https://www.unhcr.org/asia) · "
         "[Tripartite Alliance for Fair Employment Practices](https://www.tafep.sg/)",
-        _L("SingStat — population", "https://www.singstat.gov.sg/find-data/search-by-theme/population"),
+        _L("SingStat — population", "https://www.singstat.gov.sg/find-data"),
         _L("ILO", "https://www.ilo.org/"),
         _L("OHCHR", "https://www.ohchr.org/"),
         _L("European Commission — migration (comparative)", "https://home-affairs.ec.europa.eu/policies/migration-and-asylum_en"),
@@ -834,7 +834,7 @@ _SG: Dict[str, Pack] = {
         "[SkillsFuture Singapore](https://www.skillsfuture.gov.sg/) · "
         "[OECD — PISA](https://www.oecd.org/pisa/) · "
         "[UNESCO UIS](https://uis.unesco.org/)",
-        _L("SingStat — education", "https://www.singstat.gov.sg/find-data/search-by-theme/education"),
+        _L("SingStat — education", "https://www.singstat.gov.sg/find-data"),
         _L("OECD — Education at a Glance", "https://www.oecd.org/education/education-at-a-glance/"),
         _L("World Bank — education statistics", "https://data.worldbank.org/topic/education"),
         _L("International Association for the Evaluation of Educational Achievement", "https://www.iea.nl/"),
@@ -863,7 +863,7 @@ _JP: Dict[str, Pack] = {
         "[Digital Agency of Japan](https://www.digital.go.jp/en) · "
         "[MIC — Ministry of Internal Affairs and Communications](https://www.soumu.go.jp/main_sosiki/joho_tsusin/eng/index.html) · "
         "[Personal Information Protection Commission (PPC)](https://www.ppc.go.jp/en/) · "
-        "[OECD.AI](https://oecd.ai/en)",
+        "[OECD.AI](https://oecd.ai/en/)",
         _L("National Institute of Informatics — research", "https://www.nii.ac.jp/en/"),
         _L("EUR-Lex — EU AI Act (comparative)", "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689"),
         _L("Council of Europe — AI", "https://www.coe.int/en/web/artificial-intelligence"),
@@ -872,7 +872,7 @@ _JP: Dict[str, Pack] = {
     "Economy & work": _pack(
         "Structural questions on **demographics, productivity, and monetary policy**.\n\n"
         "**Optional references:** "
-        "[Cabinet Office, Japan — statistics](https://www.e-stat.go.jp/en/statistics-by-government-organization/cabinet-office) · "
+        "[Cabinet Office, Japan — statistics](https://www.e-stat.go.jp/en/statistics-by-organization/) · "
         "[Bank of Japan — research](https://www.boj.or.jp/en/research/index.htm/) · "
         "[e-Stat](https://www.e-stat.go.jp/en) · "
         "[OECD — Japan](https://www.oecd.org/japan/)",
@@ -884,9 +884,9 @@ _JP: Dict[str, Pack] = {
     "Health & care": _pack(
         "Focus on **universal coverage design, ageing, and surge planning**.\n\n"
         "**Optional references:** "
-        "[MHLW — Ministry of Health, Labour and Welfare](https://www.mhlw.go.jp/english/) · "
+        "[MHLW — Ministry of Health, Labour and Welfare](https://www.mhlw.go.jp/) · "
         "[WHO Western Pacific](https://www.who.int/westernpacific) · "
-        "[National Institute of Public Health (Japan)](https://www.niph.go.jp/english/index.html) · "
+        "[National Institute of Public Health (Japan)](https://www.niph.go.jp/en/) · "
         "[OECD — Health at a Glance: Asia/Pacific](https://www.oecd.org/health/health-at-a-glance-asia-pacific-23150130.htm)",
         _L("e-Stat — health", "https://www.e-stat.go.jp/en/statistics/health"),
         _L("National Diet Library", "https://www.ndl.go.jp/en/"),
@@ -908,7 +908,7 @@ _JP: Dict[str, Pack] = {
     "Democracy & institutions": _pack(
         "Institutional design — **Diet, Cabinet, courts, and election administration**.\n\n"
         "**Optional references:** "
-        "[Ministry of Internal Affairs and Communications — elections](https://www.soumu.go.jp/main_sosiki/senkyo/index.html) · "
+        "[Ministry of Internal Affairs and Communications — elections](https://www.soumu.go.jp/english/) · "
         "[The Constitution of Japan (National Diet Library guide)](https://www.ndl.go.jp/constitution/e/index.html) · "
         "[Supreme Court of Japan](https://www.courts.go.jp/english/) · "
         "[Venice Commission](https://www.venice.coe.int/)",
@@ -923,8 +923,8 @@ _JP: Dict[str, Pack] = {
         "[Immigration Services Agency of Japan](https://www.isa.go.jp/en/) · "
         "[MOFA — human rights diplomacy](https://www.mofa.go.jp/policy/human/) · "
         "[UNHCR Japan](https://www.unhcr.org/jp/) · "
-        "[Ministry of Justice — English site](https://www.moj.go.jp/ENGLISH/index.html)",
-        _L("e-Stat — population", "https://www.e-stat.go.jp/en/statistics/population"),
+        "[Ministry of Justice — English site](https://www.moj.go.jp/EN/)",
+        _L("e-Stat — population", "https://www.e-stat.go.jp/en/statistics/00450011"),
         _L("OHCHR", "https://www.ohchr.org/"),
         _L("ILO — migration statistics", "https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm"),
         _L("Council of Europe — ECRI (regional comparator)", "https://www.coe.int/en/web/european-commission-against-racism-and-intolerance"),
@@ -936,7 +936,7 @@ _JP: Dict[str, Pack] = {
         "[OECD — PISA](https://www.oecd.org/pisa/) · "
         "[UNESCO UIS](https://uis.unesco.org/) · "
         "[National Institute for Educational Policy Research](https://www.nier.go.jp/English/index.html)",
-        _L("e-Stat — education", "https://www.e-stat.go.jp/en/statistics/education"),
+        _L("e-Stat — education", "https://www.e-stat.go.jp/en/stat-search/database"),
         _L("National Diet Library — education policy", "https://www.ndl.go.jp/en/"),
         _L("World Bank — education data", "https://data.worldbank.org/topic/education"),
         _L("OECD — Education at a Glance", "https://www.oecd.org/education/education-at-a-glance/"),
@@ -962,13 +962,13 @@ _CN: Dict[str, Pack] = {
     "AI & technology": _pack(
         "Consider **algorithmic governance, data security, and global technical standards**.\n\n"
         "**Optional references:** "
-        "[Cyberspace Administration of China (CAC) — English portal](https://english.cac.gov.cn/) · "
+        "[Cyberspace Administration of China (CAC) — English portal](https://interpret.csis.org/original_author/cyberspace-administration-of-china-cac/) · "
         "[CSIS ChinaPower — technology & industrial policy](https://chinapower.csis.org/) · "
         "[ITU — AI standards work](https://www.itu.int/en/ITU-T/ai/Pages/default.aspx) · "
         "[ISO/IEC JTC 1/SC 42 — artificial intelligence](https://www.iso.org/committee/6794475.html)",
         _L("UNESCO — AI ethics recommendation", "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics"),
-        _L("OECD.AI", "https://oecd.ai/en"),
-        _L("IEEE Standards Association — ethics & AI standards", "https://standards.ieee.org/industry-connections/activities/ieee-global-initiative-on-ethics-of-autonomous-and-intelligent-systems/"),
+        _L("OECD.AI", "https://oecd.ai/en/"),
+        _L("IEEE Standards Association — ethics & AI standards", "https://standards.ieee.org/industry-connections/activities/ieee-global-initiative/"),
         _L("Council of Europe — AI (regional comparator)", "https://www.coe.int/en/web/artificial-intelligence"),
     ),
     "Economy & work": _pack(
@@ -981,15 +981,15 @@ _CN: Dict[str, Pack] = {
         _L("World Bank — China overview", "https://www.worldbank.org/en/country/china/overview"),
         _L("OECD — China economic surveys", "https://www.oecd.org/china/"),
         _L("WTO — trade policy reviews", "https://www.wto.org/english/tratop_e/tpr_e/tp_rep_e.htm"),
-        _L("ILO — China country office", "https://www.ilo.org/beijing/lang--en/index.htm"),
+        _L("ILO — China country office", "https://www.ilo.org/ilo-office-china-and-mongolia"),
     ),
     "Health & care": _pack(
         "Focus on **coverage expansion, ageing, and public health capacity**.\n\n"
         "**Optional references:** "
         "[National Health Commission (English)](https://en.nhc.gov.cn/) · "
-        "[WHO China country office](https://www.who.int/countries/china) · "
+        "[WHO China country office](https://www.who.int/countries/chn) · "
         "[UNICEF China — health & child wellbeing](https://www.unicef.cn/en) · "
-        "[World Bank — China health reform (publication)](https://www.worldbank.org/en/topic/health/publication/china-health-reform-experiences-and-global-significance)",
+        "[World Bank — China health reform (publication)](https://www.worldbank.org/en/country/china/publication/healthy-china-deepening-health-reform-in-china)",
         _L("National Bureau of Statistics — health & social statistics", "https://www.stats.gov.cn/english/"),
         _L("OECD — Health at a Glance: Asia/Pacific", "https://www.oecd.org/health/health-at-a-glance-asia-pacific-23150130.htm"),
         _L("Global Burden of Disease — IHME", "https://www.healthdata.org/research-analysis/gbd"),
@@ -1003,14 +1003,14 @@ _CN: Dict[str, Pack] = {
         "[UN Peacekeeping — troop contributors](https://peacekeeping.un.org/en/troop-and-police-contributors) · "
         "[UN Charter](https://www.un.org/en/about-us/un-charter/full-text)",
         _L("UN Office for Disarmament Affairs", "https://www.un.org/disarmament/"),
-        _L("ICRC — international humanitarian law", "https://www.icrc.org/en/war-and-law"),
+        _L("ICRC — international humanitarian law", "https://www.icrc.org/en/law-and-policy"),
         _L("SIPRI", "https://www.sipri.org/"),
         _L("IISS", "https://www.iiss.org/"),
     ),
     "Democracy & institutions": _pack(
         "This theme invites reflection on **institutions, law, and participation** — consult official texts alongside independent comparative sources.\n\n"
         "**Optional references:** "
-        "[NPC — National People's Congress (English)](https://www.npc.gov.cn/englishnpc/) · "
+        "[NPC — National People's Congress (English)](https://www.iiss.org/online-analysis/online-analysis/2024/03/chinas-national-peoples-congress-more-continuity-than-change/) · "
         "[State Council — rule of law & governance white papers](https://english.www.gov.cn/archive/whitepaper/) · "
         "[UN OHCHR — treaty bodies & UPR](https://www.ohchr.org/en/human-rights-bodies) · "
         "[Worldwide Governance Indicators (World Bank)](https://www.worldbank.org/en/publication/worldwide-governance-indicators)",
@@ -1022,7 +1022,7 @@ _CN: Dict[str, Pack] = {
     "Society & cohesion": _pack(
         "Vote on **policy design** for mobility, integration, and equality before the law.\n\n"
         "**Optional references:** "
-        "[National Immigration Administration (English)](https://www.nia.gov.cn/menunew/n741480/n741481/index.html) · "
+        "[National Immigration Administration (English)](https://en.nia.gov.cn/) · "
         "[UNHCR — China operations](https://www.unhcr.org/cn/) · "
         "[OHCHR — core treaties](https://www.ohchr.org/en/core-international-human-rights-instruments-and-their-monitoring-bodies) · "
         "[UN — gender equality (SDG 5)](https://www.un.org/sustainabledevelopment/gender-equality/)",
@@ -1038,7 +1038,7 @@ _CN: Dict[str, Pack] = {
         "[National Bureau of Statistics — education indicators](https://www.stats.gov.cn/english/) · "
         "[UNESCO UIS](https://uis.unesco.org/) · "
         "[OECD — Education at a Glance (comparative)](https://www.oecd.org/education/education-at-a-glance/)",
-        _L("World Bank — education in China", "https://www.worldbank.org/en/topic/education/publication/chinas-education-development-and-policy-1978-2018-a-review-and-assessment"),
+        _L("World Bank — education in China", "https://www.worldbank.org/en/topic/education"),
         _L("UNICEF China — education equity", "https://www.unicef.cn/en/what-we-do/13-education"),
         _L("IEA — international education studies", "https://www.iea.nl/"),
         _L("UN — SDG 4 quality education", "https://www.un.org/sustainabledevelopment/education/"),
