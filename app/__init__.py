@@ -532,6 +532,12 @@ def create_app():
     from app.lib.bot_protection import generate_form_token
     app.jinja_env.globals['bot_form_token'] = generate_form_token
 
+    from app.email_utils import email_anchor_html
+    app.jinja_env.globals['email_anchor_html'] = email_anchor_html
+
+    from app.lib.jinja_i18n import escape_i18n
+    app.jinja_env.filters['escape_i18n'] = escape_i18n
+
     from app.utils.db_diagnostics import init_n_plus_one_guard
     init_n_plus_one_guard(app)
     

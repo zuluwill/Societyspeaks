@@ -76,7 +76,6 @@
 
 {% block footer_text %}
 <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">
-    {% set _pref_link = '<a href="' ~ settings_url ~ '" style="color: #1e40af;">' ~ _('Manage your preferences') ~ '</a>' %}
-    {{ _("You're receiving this because you opted into weekly digests. %(link)s", link=_pref_link)|safe }}
+    {{ _("You're receiving this because you opted into weekly digests. %(link)s", link=email_anchor_html(settings_url, _('Manage your preferences'), style='color: #1e40af;'))|safe }}
 </p>
 {% endblock %}

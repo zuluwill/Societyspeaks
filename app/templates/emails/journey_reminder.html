@@ -109,8 +109,7 @@
     <tr>
         <td style="background-color: #f9fafb; padding: 16px 32px 20px; border-top: 1px solid #e5e7eb; text-align: center;">
             <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
-                {% set _prog_link = '<a href="' ~ programme_url ~ '" style="color: #6b7280; text-decoration: underline;">' ~ programme_name ~ '</a>' %}
-                {{ _("You're receiving this because you asked for reminders on the %(link)s journey.", link=_prog_link)|safe }}
+                {{ _("You're receiving this because you asked for reminders on the %(link)s journey.", link=email_anchor_html(programme_url, programme_name, style='color: #6b7280; text-decoration: underline;'))|safe }}
                 <br>
                 <a href="{{ unsubscribe_url }}" style="color: #9ca3af; text-decoration: underline;">{{ _('Stop reminders') }}</a>
             </p>

@@ -331,6 +331,7 @@ society_speaks/
 
 ## Documentation
 
+- [CLAUDE.md](./CLAUDE.md) - Conventions for i18n, escaping, and tooling (for contributors and AI assistants)
 - [COMPLETE_SYSTEM_GUIDE.md](./COMPLETE_SYSTEM_GUIDE.md) - Full technical documentation
 - [QUICK_START.md](./QUICK_START.md) - Getting started guide
 - [IDEAS.md](./IDEAS.md) - Future plans and roadmap

@@ -142,8 +142,7 @@
                   color: #64748b;
                 "
               >
-                {% set _view_browser_link = '<a href="' ~ magic_link_url ~ '" target="_blank" style="color: #1e40af; text-decoration: underline">' ~ _('View in your browser') ~ '</a>' %}
-                {{ _('Having trouble viewing this email? %(link)s', link=_view_browser_link)|safe }}
+                {{ _('Having trouble viewing this email? %(link)s', link=email_anchor_html(magic_link_url, _('View in your browser'), target='_blank'))|safe }}
               </td>
             </tr>
           </table>
@@ -2580,9 +2579,9 @@
                           margin: 0;
                         "
                       >
-                        {% set _allsides_link = '<a href="https://allsides.com/media-bias" target="_blank" style="color: #7c3aed; text-decoration: underline">' ~ _('AllSides media bias ratings') ~ '</a>' %}
-                        {% set _method_link = '<a href="' ~ base_url ~ '/brief/methodology" target="_blank" style="color: #7c3aed; text-decoration: underline">' ~ _('Our methodology') ~ '</a>' %}
-                        {{ _('Source classifications based on %(allsides)s. %(methodology)s.', allsides=_allsides_link, methodology=_method_link)|safe }}
+                        {{ _('Source classifications based on %(allsides)s. %(methodology)s.',
+                            allsides=email_anchor_html('https://allsides.com/media-bias', _('AllSides media bias ratings'), target='_blank', style='color: #7c3aed; text-decoration: underline;'),
+                            methodology=email_anchor_html(base_url ~ '/brief/methodology', _('Our methodology'), target='_blank', style='color: #7c3aed; text-decoration: underline;'))|safe }}
                       </p>
                     </td>
                   </tr>

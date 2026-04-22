@@ -3,6 +3,10 @@
 Email utilities - helper functions and wrappers.
 All actual email sending is done via Resend (see app/resend_client.py).
 
+email_anchor_html: build <a> for HTML templates; use with gettext(..., link=...)
+so Jinja does not escape HTML inside translation placeholders (see templates in
+emails/).
+
 Note: RateLimiter is kept here as it's used by app/brief/email_client.py
 """
 import re
@@ -12,6 +16,29 @@ from email.utils import parseaddr
 from typing import Optional
 from flask import current_app, url_for
 from app.models import IndividualProfile, CompanyProfile
+
+
+def email_anchor_html(href, inner, target=None, style="color: #1e40af; text-decoration: underline;"):
+    """
+    Build a single <a> for HTML email bodies. Returns Markup so values passed to
+    gettext('… %(link)s', link=…) are not HTML-escaped by Jinja (which would show
+    raw tags in the client).
+
+    * href / target: attribute-escaped
+    * inner: link text (str or Markup from translated copy)
+    * style: full style attribute value, escaped
+    """
+    from markupsafe import Markup, escape
+
+    href_s = str(href).strip() if href is not None else ""
+    if not href_s:
+        href_s = "#"
+    inner_m = inner if isinstance(inner, Markup) else escape(str(inner))
+    head = f'<a href="{escape(href_s)}"'
+    if target:
+        head += f' target="{escape(str(target))}"'
+    head += f' style="{escape(style)}">'
+    return Markup(head) + inner_m + Markup("</a>")
 
 
 def extract_clean_email(raw: Optional[str]) -> Optional[str]:

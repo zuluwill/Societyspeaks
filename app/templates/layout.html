@@ -400,7 +400,7 @@
     <a
       href="#main-content"
       class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-gray-900 focus:font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-      >Skip to main content</a
+      >{{ _('Skip to main content') }}</a
     >
     <!-- Header -->
     <header
@@ -410,7 +410,7 @@
         <div class="flex w-full items-center justify-between py-6">
           <!-- Logo and Brand -->
           <div class="flex items-center">
-            <a href="/" class="flex items-center space-x-3">
+            <a href="{{ url_for('main.index') }}" class="flex items-center space-x-3">
               <svg
                 class="w-8 h-8"
                 viewBox="0 0 24 24"
@@ -433,7 +433,7 @@
           <!-- Desktop Navigation -->
           <div class="hidden lg:flex lg:items-center lg:space-x-6">
             <a
-              href="/"
+              href="{{ url_for('main.index') }}"
               class="text-base font-medium text-white hover:text-primary-50 transition"
               >{{ _('Home') }}</a
             >
@@ -498,7 +498,7 @@
                   href="{{ url_for('main.platform') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >{{ _('Discussions & Programmes') }}</a
+                  >{{ _('Discussions & Programmes')|escape_i18n }}</a
                 >
                 <div class="border-t border-gray-100 my-1"></div>
                 <div
@@ -567,7 +567,7 @@
                   >{{ _('News') }}</a
                 >
                 <a
-                  href="/discussions/search"
+                  href="{{ url_for('discussions.search_discussions') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                   >{{ _('Discussions') }}</a
@@ -617,7 +617,7 @@
                 style="display: none"
               >
                 <a
-                  href="/about"
+                  href="{{ url_for('main.about') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                   >{{ _('About Us') }}</a
@@ -681,12 +681,12 @@
                 aria-expanded="false"
                 aria-haspopup="true"
               >
-                <span class="sr-only">Open user menu</span>
+                <span class="sr-only">{{ _('Open user menu') }}</span>
                 {% if current_user.profile_type == 'individual' %}
                 <img
                   class="h-8 w-8 rounded-full object-cover"
                   src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
-                  alt="Profile photo"
+                  alt="{{ _('Profile photo') }}"
                   onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';"
                 />
                 <span class="ml-2"
@@ -698,7 +698,7 @@
                 <img
                   class="h-8 w-8 rounded-lg object-cover"
                   src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
-                  alt="Company logo"
+                  alt="{{ _('Company logo') }}"
                   onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                 />
                 <span class="ml-2"
@@ -839,7 +839,7 @@
               id="mobile-menu-button"
               class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-primary-50 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
             >
-              <span class="sr-only">Open main menu</span>
+              <span class="sr-only">{{ _('Open main menu') }}</span>
               <svg
                 class="block h-6 w-6"
                 fill="none"
@@ -862,57 +862,57 @@
         <div class="lg:hidden hidden" id="mobile-menu">
           <div class="space-y-1 px-2 pb-3 pt-2">
             <a
-              href="/"
+              href="{{ url_for('main.index') }}"
               class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-              >Home</a
+              >{{ _('Home') }}</a
             >
 
             <!-- Participate Section -->
             <div class="border-t border-primary-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
-                >Participate</span
+                >{{ _('Participate') }}</span
               >
               <a
                 href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
                 class="flex items-center rounded-md px-3 py-2 text-base font-semibold text-white hover:bg-primary-500"
               >
                 <svg class="w-4 h-4 mr-2 text-blue-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                Big Questions Journey
+                {{ _('Big Questions Journey') }}
               </a>
               <a
                 href="{{ url_for('daily.today') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Today's Question</a
+                >{{ _("Today's Question") }}</a
               >
               <a
                 href="{{ url_for('brief.today') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Daily Brief</a
+                >{{ _('Daily Brief') }}</a
               >
               <a
                 href="{{ url_for('main.platform') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Discussions &amp; Programmes</a
+                >{{ _('Discussions & Programmes')|escape_i18n }}</a
               >
               <a
                 href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >
-                Personal Briefs
+                {{ _('Personal Briefs') }}
                 <span
                   class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white"
-                  >Pro</span
+                  >{{ _('Pro') }}</span
                 >
               </a>
               <a
                 href="{{ url_for('partner.hub') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >
-                For Publishers
+                {{ _('For Publishers') }}
                 <span
                   class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white"
-                  >Pro</span
+                  >{{ _('Pro') }}</span
                 >
               </a>
             </div>
@@ -921,27 +921,27 @@
             <div class="border-t border-primary-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
-                >Explore</span
+                >{{ _('Explore') }}</span
               >
               <a
                 href="{{ url_for('news.dashboard') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >News</a
+                >{{ _('News') }}</a
               >
               <a
-                href="/discussions/search"
+                href="{{ url_for('discussions.search_discussions') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Discussions</a
+                >{{ _('Discussions') }}</a
               >
               <a
                 href="{{ url_for('programmes.list_programmes') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Programmes</a
+                >{{ _('Programmes') }}</a
               >
               <a
                 href="{{ url_for('sources.index') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Sources</a
+                >{{ _('Sources') }}</a
               >
             </div>
 
@@ -965,27 +965,27 @@
             <div class="border-t border-primary-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
-                >About</span
+                >{{ _('About') }}</span
               >
               <a
-                href="/about"
+                href="{{ url_for('main.about') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >About Us</a
+                >{{ _('About Us') }}</a
               >
               <a
                 href="{{ url_for('help.help') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >Help</a
+                >{{ _('Help') }}</a
               >
               <a
                 href="{{ url_for('main.faq') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
-                >FAQ</a
+                >{{ _('FAQ') }}</a
               >
               <a
                 href="{{ url_for('main.donate') }}"
                 class="mt-1 block rounded-full border border-white/70 px-4 py-2 text-center text-base font-semibold text-white hover:bg-white hover:text-primary-700 transition"
-                >Donate</a
+                >{{ _('Donate') }}</a
               >
             </div>
 
@@ -997,14 +997,14 @@
                   <img
                     class="h-8 w-8 rounded-full object-cover"
                     src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
-                    alt="Profile photo"
+                    alt="{{ _('Profile photo') }}"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';"
                   />
                   {% elif current_user.profile_type == 'company' %}
                   <img
                     class="h-8 w-8 rounded-lg object-cover"
                     src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
-                    alt="Company logo"
+                    alt="{{ _('Company logo') }}"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                   />
                   {% else %}
@@ -1174,7 +1174,7 @@
             <h3 class="text-white text-lg font-semibold mb-4">{{ _('Quick Links') }}</h3>
             <ul class="space-y-3">
               <li>
-                <a href="/" class="text-gray-400 hover:text-white transition"
+                <a href="{{ url_for('main.index') }}" class="text-gray-400 hover:text-white transition"
                   >{{ _('Home') }}</a
                 >
               </li>
@@ -1182,19 +1182,19 @@
                 <a
                   href="{{ url_for('main.platform') }}"
                   class="text-gray-400 hover:text-white transition"
-                  >{{ _('Discussions & Programmes') }}</a
+                  >{{ _('Discussions & Programmes')|escape_i18n }}</a
                 >
               </li>
               <li>
                 <a
-                  href="/daily"
+                  href="{{ url_for('daily.today') }}"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _("Today's Question") }}</a
                 >
               </li>
               <li>
                 <a
-                  href="/brief/today"
+                  href="{{ url_for('brief.today') }}"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _('Daily Brief') }}</a
                 >
@@ -1224,7 +1224,7 @@
               </li>
               <li>
                 <a
-                  href="/about"
+                  href="{{ url_for('main.about') }}"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _('About Us') }}</a
                 >
@@ -1238,36 +1238,36 @@
               </li>
               <li>
                 <a
-                  href="/help"
+                  href="{{ url_for('help.help') }}"
                   class="text-gray-400 hover:text-white transition"
-                  >Help</
+                  >{{ _('Help') }}</a
                 >
               </li>
               <li>
                 <a
-                  href="/privacy-policy"
+                  href="{{ url_for('main.privacy_policy') }}"
                   class="text-gray-400 hover:text-white transition"
-                  >Privacy Policy</a
+                  >{{ _('Privacy Policy') }}</a
                 >
               </li>
               <li>
                 <a
-                  href="/terms-and-conditions"
+                  href="{{ url_for('main.terms_and_conditions') }}"
                   class="text-gray-400 hover:text-white transition"
-                  >Terms of Service</a
+                  >{{ _('Terms of Service') }}</a
                 >
               </li>
               <li>
                 <a
-                  href="mailto:info@societyspeaks.io?subject=SocietySpeaks%20Inquiry"
+                  href="mailto:info@societyspeaks.io?subject={{ _('SocietySpeaks inquiry')|urlencode }}"
                   class="text-gray-400 hover:text-white transition"
-                  >Contact</a
+                  >{{ _('Contact') }}</a
                 >
               </li>
             </ul>
           </div>
           <div>
-            <h3 class="text-white text-lg font-semibold mb-4">Connect</h3>
+            <h3 class="text-white text-lg font-semibold mb-4">{{ _('Connect') }}</h3>
             <div class="flex flex-wrap items-center gap-4">
               <a
                 href="https://x.com/societyspeaksio"
@@ -1275,7 +1275,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span class="sr-only">X (formerly Twitter)</span>
+                <span class="sr-only">{{ _("X (formerly Twitter)") }}</span>
                 <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                   <path
                     d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
@@ -1288,7 +1288,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span class="sr-only">Bluesky</span>
+                <span class="sr-only">{{ _("Bluesky") }}</span>
                 <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                   <path
                     d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"
@@ -1301,7 +1301,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span class="sr-only">GitHub</span>
+                <span class="sr-only">{{ _("GitHub") }}</span>
                 <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                   <path
                     fill-rule="evenodd"
@@ -1324,10 +1324,11 @@
         </div>
         <div class="mt-8 pt-8 border-t border-gray-800 text-center">
           <p class="text-gray-400">
-            &copy; 2026 SocietySpeaks.io. All rights reserved. Made with ❤️ by
-            <a href="https://linktr.ee/gohandizo" class="hover:text-gray-300"
-              >William Roberts</a
-            >
+            {{ _("© %(year)s SocietySpeaks.io. All rights reserved.", year=2026) }}
+            <span class="whitespace-nowrap">
+              {{ _("Made with %(heart)s by", heart="❤️") }}
+              <a href="https://linktr.ee/gohandizo" class="hover:text-gray-300">{{ _("William Roberts") }}</a>
+            </span>
           </p>
         </div>
       </div>
