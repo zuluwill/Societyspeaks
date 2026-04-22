@@ -100,3 +100,17 @@ from app.models.programme import (  # noqa: F401
     ProgrammeAccessGrant,
     ProgrammeExportJob,
 )
+from app.models.discussions import (  # noqa: F401
+    DiscussionView,
+    Notification,
+    DiscussionFollow,
+    DiscussionUpdate,
+    DiscussionParticipant,
+    Discussion,
+    Statement,
+    StatementVote,
+    Response,
+    Evidence,
+    JourneyReminderSubscription,
+    StatementFlag,
+)
