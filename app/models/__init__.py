@@ -32,3 +32,4 @@ from app.models_legacy import db, generate_slug  # noqa: F401
 # does — the side effect registers their tables in db.metadata.
 from app.models.polymarket import PolymarketMarket, TopicMarketMatch  # noqa: F401
 from app.models.billing import PricingPlan, Subscription, Donation  # noqa: F401
+from app.models.email import EmailEvent, BriefEmailEvent  # noqa: F401
