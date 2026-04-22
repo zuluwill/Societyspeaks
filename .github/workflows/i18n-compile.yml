@@ -35,6 +35,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Install GNU gettext (msgfmt)
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gettext
+      - name: No obsolete #~ lines in PO catalogs
+        run: python3 scripts/strip_po_obsolete.py --check
       - name: Verify PO files (GNU msgfmt strict check)
         run: |
           set -euo pipefail

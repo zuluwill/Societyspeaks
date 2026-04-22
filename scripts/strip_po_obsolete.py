@@ -56,7 +56,15 @@ def main() -> int:
             print(f"unchanged: {po}")
 
     if args.check:
-        return 1 if changed else 0
+        if changed:
+            print(
+                "\nObsolete #~ lines found in .po files. Fix with:\n"
+                "  python3 scripts/strip_po_obsolete.py\n"
+                "Prefer prevention: pybabel update --ignore-obsolete (see scripts/compile_translations.sh).\n",
+                file=sys.stderr,
+            )
+            return 1
+        return 0
     return 0
 
 
