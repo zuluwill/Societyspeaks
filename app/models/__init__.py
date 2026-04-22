@@ -88,3 +88,9 @@ from app.models.partner import (  # noqa: F401
     PartnerMember,
     PartnerUsageEvent,
 )
+from app.models.profiles import (  # noqa: F401
+    ProfileView,
+    IndividualProfile,
+    CompanyProfile,
+    OrganizationMember,
+)
