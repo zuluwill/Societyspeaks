@@ -9,7 +9,8 @@ def _read(path: str) -> str:
 
 
 def test_programme_export_job_model_exists():
-    source = _read("app/models.py")
+    from tests.conftest import read_models_source
+    source = read_models_source()
     assert "class ProgrammeExportJob" in source
     assert "STATUS_QUEUED = 'queued'" in source
     assert "STATUS_RUNNING = 'running'" in source

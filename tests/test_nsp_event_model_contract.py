@@ -9,7 +9,8 @@ def _read(path: str) -> str:
 
 
 def test_analytics_models_exist():
-    source = _read("app/models.py")
+    from tests.conftest import read_models_source
+    source = read_models_source()
     assert "class AnalyticsEvent" in source
     assert "class AnalyticsDailyAggregate" in source
     assert "uq_analytics_daily_dims" in source

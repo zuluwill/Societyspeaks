@@ -15,7 +15,8 @@ def test_consensus_trigger_enqueues_job_instead_of_running_inline():
 
 
 def test_consensus_job_model_has_lifecycle_statuses():
-    source = _read("app/models.py")
+    from tests.conftest import read_models_source
+    source = read_models_source()
     assert "class ConsensusJob" in source
     assert "STATUS_QUEUED = 'queued'" in source
     assert "STATUS_RUNNING = 'running'" in source

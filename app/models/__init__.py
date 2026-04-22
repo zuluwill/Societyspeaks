@@ -1,0 +1,30 @@
+"""
+Models package — shim state during the models-split refactor.
+
+Step 0 of the refactor renames the original app/models.py to
+app/models_legacy.py and introduces this package. At this point every
+class and helper still lives in models_legacy.py; this __init__.py
+re-exports them so `from app.models import X` continues to work
+unchanged for the 307 existing call sites.
+
+Subsequent steps move classes into domain submodules (app/models/users.py,
+app/models/discussions.py, etc.) and update this file to import from the
+new locations. The public contract of `from app.models import X` must
+survive every step.
+
+Invariant for the final package layout:
+    Every submodule in app/models/ MUST be imported here, whether its
+    classes are re-exported individually or not. The SQLAlchemy
+    declarative registry is populated by import side-effect; a submodule
+    that is defined but not imported has zero tables in db.metadata, and
+    alembic autogenerate will happily emit a DROP TABLE migration for it.
+    Do not "clean up" what look like unused imports in this file.
+"""
+
+# Step 0 shim: pull everything from the original module.
+# Later steps replace this line with explicit per-submodule imports.
+from app.models_legacy import *  # noqa: F401, F403
+
+# Explicit re-exports for the two non-class public names, both of which
+# are imported directly by other modules (db: 4 sites, generate_slug: 3).
+from app.models_legacy import db, generate_slug  # noqa: F401

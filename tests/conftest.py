@@ -5,12 +5,41 @@ Pytest configuration and shared fixtures.
 import pytest
 import os
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.dialects.postgresql import JSONB
 
 # Add the app directory to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def read_models_source() -> str:
+    """Return the concatenated source of all files that define SQLAlchemy models.
+
+    Handles three repo states without caller changes:
+      - Pre-split (historical): a single ``app/models.py``.
+      - Shim (during refactor): ``app/models_legacy.py`` plus an
+        ``app/models/`` package that re-exports from it.
+      - Post-split: ``app/models/`` package only, split by domain.
+
+    Source-inspection tests (the ``test_*_contract`` suite) call this so
+    they keep working through every intermediate step of the split.
+    """
+    parts: list[str] = []
+    for candidate in (
+        _REPO_ROOT / "app" / "models.py",
+        _REPO_ROOT / "app" / "models_legacy.py",
+    ):
+        if candidate.exists():
+            parts.append(candidate.read_text(encoding="utf-8"))
+    pkg_dir = _REPO_ROOT / "app" / "models"
+    if pkg_dir.is_dir():
+        for submodule in sorted(pkg_dir.glob("*.py")):
+            parts.append(submodule.read_text(encoding="utf-8"))
+    return "\n".join(parts)
 
 # Set DATABASE_URL before Config class is imported (it validates at class-definition time)
 os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
