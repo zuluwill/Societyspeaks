@@ -125,7 +125,7 @@ def get_image(filename):
     except Exception as e:
         current_app.logger.error(f"Error retrieving image {filename}: {str(e)}")
         if 'banner' in filename:
-            return send_file('static/images/default-banner.png', mimetype='image/png')
+            return send_file('static/images/default-banner.jpg', mimetype='image/jpeg')
         return send_file('static/images/default-avatar.png', mimetype='image/png')
 
 

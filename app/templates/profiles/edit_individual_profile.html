@@ -56,7 +56,7 @@
                             <div id="banner-image-click" class="w-full h-48 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer">
                                 <img id="banner-preview" 
                                      class="w-full h-full object-cover" 
-                                     src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}" 
+                                     src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.jpg') }}" 
                                      alt="{{ _('Banner Image') }}">
                                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <span class="text-white text-sm">{{ _('Click to change') }}</span>

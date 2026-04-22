@@ -180,10 +180,22 @@ class Config:
     LOGGING_CONFIG = {
         'version': 1,
         'disable_existing_loggers': False,
+        'filters': {
+            'request_id': {
+                '()': 'app.lib.logging_utils.RequestIdFilter',
+            },
+        },
+        'formatters': {
+            'default': {
+                'format': '%(asctime)s [%(levelname)s] [rid=%(request_id)s] %(name)s: %(message)s',
+            },
+        },
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
                 'level': 'INFO',
+                'filters': ['request_id'],
+                'formatter': 'default',
             },
         },
         'root': {

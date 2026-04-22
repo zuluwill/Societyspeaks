@@ -23,6 +23,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
 import posthog
 from flask_caching import Cache
+from flask_compress import Compress
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -65,6 +66,7 @@ login_manager = LoginManager()
 babel = Babel()
 sess = Session()
 cache = Cache()
+compress = Compress()
 csrf = CSRFProtect()
 limiter = Limiter(
     key_func=get_remote_address,
@@ -312,24 +314,32 @@ def create_app():
     # Trust X-Forwarded-For / Proto from exactly one reverse proxy.
     # Keep forwarded host trust opt-in to reduce host header spoofing risk.
     trust_proxy_host = os.getenv("TRUST_PROXY_HOST_HEADER", "false").lower() == "true"
+
+    # When behind Cloudflare, prefer CF-Connecting-IP for REMOTE_ADDR (after ProxyFix runs).
+    # This layer must sit *inside* ProxyFix (closer to Flask): Werkzeug's ProxyFix always
+    # derives REMOTE_ADDR from X-Forwarded-For when present, so an outer CF wrapper would
+    # be overwritten and the CF header would never win.
+    # Gated behind BEHIND_CLOUDFLARE because the header is trivially spoofable when
+    # the origin is reachable without Cloudflare — any client could forge it to bypass
+    # per-IP rate limits. Set BEHIND_CLOUDFLARE=1 only after all ingress is locked to
+    # Cloudflare (origin rule, allowlist, or Cloudflare Tunnel).
+    _wsgi_inner = app.wsgi_app
+    if os.getenv("BEHIND_CLOUDFLARE", "").lower() in ("1", "true", "yes"):
+
+        def _cloudflare_remote_addr(environ, start_response):
+            cf_ip = environ.get("HTTP_CF_CONNECTING_IP")
+            if cf_ip and cf_ip.strip():
+                environ["REMOTE_ADDR"] = cf_ip.strip()
+            return _wsgi_inner(environ, start_response)
+
+        _wsgi_inner = _cloudflare_remote_addr
+
     app.wsgi_app = ProxyFix(
-        app.wsgi_app,
+        _wsgi_inner,
         x_for=1,
         x_proto=1,
         x_host=1 if trust_proxy_host else 0,
     )
-
-    # When behind Cloudflare, use CF-Connecting-IP so rate limiting and logging see the real client IP.
-    # Without this, request.remote_addr would be Cloudflare's IP and per-user limits would be wrong.
-    _original_wsgi_app = app.wsgi_app
-
-    def _cloudflare_remote_addr(environ, start_response):
-        cf_ip = environ.get("HTTP_CF_CONNECTING_IP")
-        if cf_ip and cf_ip.strip():
-            environ["REMOTE_ADDR"] = cf_ip.strip()
-        return _original_wsgi_app(environ, start_response)
-
-    app.wsgi_app = _cloudflare_remote_addr
 
     dictConfig(Config.LOGGING_CONFIG)
 
@@ -465,6 +475,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    compress.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'  # type: ignore[assignment]
     login_manager.login_message_category = "info"
@@ -916,6 +927,28 @@ def create_app():
     _LATENCY_MAX_SAMPLES = 2000  # rolling window size
 
     import random as _random
+
+    @app.before_request
+    def _assign_request_id():
+        from app.lib.logging_utils import new_request_id
+        incoming = (request.headers.get('X-Request-ID') or '').strip()
+        # Only honor incoming IDs that look safe (short, URL-safe chars) so a
+        # hostile client can't inject log-forging or header-splitting payloads.
+        if incoming and len(incoming) <= 64 and all(c.isalnum() or c in '-_' for c in incoming):
+            g.request_id = incoming
+        else:
+            g.request_id = new_request_id()
+        try:
+            sentry_sdk.set_tag('request_id', g.request_id)
+        except Exception:
+            pass
+
+    @app.after_request
+    def _add_request_id_header(response):
+        rid = getattr(g, 'request_id', None)
+        if rid:
+            response.headers['X-Request-ID'] = rid
+        return response
 
     @app.before_request
     def _record_request_start():
