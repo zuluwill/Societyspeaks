@@ -71,3 +71,10 @@ from app.models.daily_question import (  # noqa: F401
     DailyQuestionSubscriber,
     DailyQuestionSelection,
 )
+from app.models.trending import (  # noqa: F401
+    TrendingTopic,
+    TrendingTopicArticle,
+    DiscussionSourceArticle,
+    UpcomingEvent,
+    SocialPostEngagement,
+)
