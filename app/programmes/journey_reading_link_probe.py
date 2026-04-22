@@ -89,12 +89,14 @@ def probe_url(url: str, timeout: float) -> ProbeOutcome:
         return ProbeOutcome(True, head_status, "HEAD", f"HEAD {head_status}", False)
     elif head_status == 429:
         time.sleep(2.0)
-    elif head_status in (404, 405, 501) or head_status in (401, 403):
-        # Many CDNs return 404 on HEAD only; retry with GET before treating as dead.
+    elif head_status in (400, 403, 404, 405, 501) or head_status == 401:
+        # Many servers / CDNs (notably German federal gov sites and some CMS
+        # platforms) return 400 or 404 on HEAD only; others gate HEAD behind
+        # an auth check (401/403). In every case, retry with GET before
+        # treating the URL as dead.
         pass  # try GET
     elif head_status is not None and head_status >= 400:
-        soft = head_status in (401, 403)
-        return ProbeOutcome(False, head_status, "HEAD", f"HEAD {head_status}", soft)
+        return ProbeOutcome(False, head_status, "HEAD", f"HEAD {head_status}", False)
 
     get_status, get_err = _request_once(url, "GET", timeout, ctx)
     if get_err and _transient_network_error(get_err):
