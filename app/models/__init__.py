@@ -64,3 +64,10 @@ from app.models.daily_brief import (  # noqa: F401
     DailyBriefSubscriber,
     BriefTeam,
 )
+from app.models.daily_question import (  # noqa: F401
+    DailyQuestion,
+    DailyQuestionResponse,
+    DailyQuestionResponseFlag,
+    DailyQuestionSubscriber,
+    DailyQuestionSelection,
+)
