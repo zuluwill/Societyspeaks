@@ -40,3 +40,4 @@ from app.models.translations import (  # noqa: F401
     ProgrammeTranslation,
 )
 from app.models.consensus import ConsensusAnalysis, ConsensusJob  # noqa: F401
+from app.models.admin import AdminAuditEvent, AdminSettings  # noqa: F401
