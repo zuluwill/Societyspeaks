@@ -12,8 +12,16 @@ from typing import Optional, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+# Browser-style User-Agent. Government / health / statistics sites
+# (canada.ca, insee.fr, ifo.de, santepubliquefrance.fr, medicaid.gov,
+# enecho.meti.go.jp, antidiskriminierungsstelle.de, cpahq.org) WAF-block
+# or slow-path non-browser UAs, producing false-positive "dead link"
+# failures even though the URLs load fine in a real browser. Since the
+# probe's purpose is to answer "can a user reach these pages?", browser-
+# shape UA is the honest signal.
 USER_AGENT = (
-    "SocietySpeaksJourneyLinkCheck/1.0 (repository QA; urllib; contact via project maintainer)"
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 )
 
 
@@ -48,7 +56,22 @@ def _request_once(
     timeout: float,
     ctx: ssl.SSLContext,
 ) -> Tuple[Optional[int], Optional[str]]:
-    req = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"}, method=method)
+    # Request headers closer to a real browser. Some gov/WAF hosts (canada.ca,
+    # insee.fr, santepubliquefrance.fr) refuse or time out requests that don't
+    # look like a browser. Accept-Language is included because a handful of
+    # sites 400/500 on a bare */* Accept.
+    # Accept-Encoding deliberately omitted: urllib does not decompress, so the
+    # response body would come back gzip-framed and we don't need it anyway
+    # (status code is all we read).
+    req = Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+        },
+        method=method,
+    )
     try:
         with urlopen(req, timeout=timeout, context=ctx) as resp:
             return resp.getcode(), None
