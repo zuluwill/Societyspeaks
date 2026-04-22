@@ -1,18 +1,13 @@
 """
-Models package — shim state during the models-split refactor.
+Models package — aggregated import surface.
 
-Step 0 of the refactor renames the original app/models.py to
-app/models_legacy.py and introduces this package. At this point every
-class and helper still lives in models_legacy.py; this __init__.py
-re-exports them so `from app.models import X` continues to work
-unchanged for the 307 existing call sites.
+The original monolithic app/models.py has been split across domain
+submodules. Every persistent class reaches the SQLAlchemy declarative
+registry via one of the imports in this file, so the `from app.models
+import X` contract used by ~300 call sites in the rest of the app
+continues to resolve the same names.
 
-Subsequent steps move classes into domain submodules (app/models/users.py,
-app/models/discussions.py, etc.) and update this file to import from the
-new locations. The public contract of `from app.models import X` must
-survive every step.
-
-Invariant for the final package layout:
+Invariant for the package layout:
     Every submodule in app/models/ MUST be imported here, whether its
     classes are re-exported individually or not. The SQLAlchemy
     declarative registry is populated by import side-effect; a submodule
@@ -21,15 +16,11 @@ Invariant for the final package layout:
     Do not "clean up" what look like unused imports in this file.
 """
 
-# Legacy shim (still holding most classes during the refactor).
-from app.models_legacy import *  # noqa: F401, F403
+# Non-class public names re-exported by historical convention
+# (db: 4 call sites, generate_slug: 4 call sites).
+from app import db  # noqa: F401
+from app.models._base import generate_slug  # noqa: F401
 
-# Explicit re-exports for the two non-class public names, both of which
-# are imported directly by other modules (db: 4 sites, generate_slug: 3).
-from app.models_legacy import db, generate_slug  # noqa: F401
-
-# Moved submodules. Keep importing them even if nothing else in the codebase
-# does — the side effect registers their tables in db.metadata.
 from app.models.polymarket import PolymarketMarket, TopicMarketMatch  # noqa: F401
 from app.models.billing import PricingPlan, Subscription, Donation  # noqa: F401
 from app.models.email import EmailEvent, BriefEmailEvent  # noqa: F401
@@ -114,3 +105,4 @@ from app.models.discussions import (  # noqa: F401
     JourneyReminderSubscription,
     StatementFlag,
 )
+from app.models.users import User, UserAPIKey  # noqa: F401

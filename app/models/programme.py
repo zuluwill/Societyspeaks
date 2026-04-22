@@ -19,7 +19,7 @@ from datetime import timedelta
 
 from app import db
 from app.lib.time import utcnow_naive
-from app.models_legacy import generate_slug
+from app.models._base import generate_slug
 
 
 class Programme(db.Model):

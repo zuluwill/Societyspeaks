@@ -1,43 +1,24 @@
-from app import db, cache
-from app.lib.time import utcnow_naive
+"""
+Account-level models: User (with Flask-Login mixin, password + email
+verification tokens, notification preferences) and UserAPIKey (per-user
+encrypted LLM API keys for optional Phase 4 features).
+
+Moved here from app/models.py as part of the models-split refactor
+(the final domain submodule — models_legacy.py is deleted in the same
+step).
+
+Notification lives in app.models.discussions and is pulled in lazily
+inside User.unread_notification_count to avoid depending on a sibling
+submodule at import time.
+"""
+
 from flask import current_app, g
-from datetime import datetime, timedelta
-from slugify import slugify as python_slugify
 from flask_login import UserMixin
-from unidecode import unidecode
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.orm import validates
-from sqlalchemy import event
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.dialects.postgresql import JSONB
-from typing import Optional
 
-import re
-import time
-
-
-
-def generate_slug(name):
-    """Generate a URL-friendly slug from a string."""
-    if not name:
-        return ""
-
-    # Convert to lowercase and normalize unicode characters
-    name = str(name).lower()
-    name = unidecode(name)
-
-    # Replace non-alphanumeric characters with hyphens
-    name = re.sub(r'[^a-z0-9]+', '-', name)
-
-    # Remove leading/trailing hyphens
-    name = name.strip('-')
-
-    # Replace multiple consecutive hyphens with a single hyphen
-    name = re.sub(r'-+', '-', name)
-
-    return name
+from app import db
+from app.lib.time import utcnow_naive
 
 
 class User(UserMixin, db.Model):
@@ -132,7 +113,7 @@ class User(UserMixin, db.Model):
         try:
             user_id = s.loads(token, salt='email-verification-salt', max_age=expiration)['user_id']
             return db.session.get(User, user_id), False
-        except Exception as e:
+        except Exception:
             # Distinguish between expired and truly invalid tokens
             try:
                 user_id = s.loads(token, salt='email-verification-salt', max_age=None)['user_id']
@@ -151,9 +132,8 @@ class User(UserMixin, db.Model):
 
     @property
     def unread_notification_count(self):
-        # Lazy import: Notification now lives in app.models.discussions; avoid a
-        # module-top import to keep models_legacy decoupled from the discussions
-        # submodule during the migration.
+        # Lazy import avoids pulling the discussions submodule into users
+        # at import time.
         from app.models.discussions import Notification
         cache_key = f'_unread_notif_count_{self.id}'
         cached = getattr(g, cache_key, None)
@@ -176,7 +156,7 @@ class UserAPIKey(db.Model):
     __table_args__ = (
         db.Index('idx_api_key_user', 'user_id'),
     )
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     provider = db.Column(db.String(50), nullable=False)  # 'openai', 'anthropic'
@@ -184,6 +164,6 @@ class UserAPIKey(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     last_validated = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
-    
+
     # Relationships
     user = db.relationship('User', backref='api_keys')
