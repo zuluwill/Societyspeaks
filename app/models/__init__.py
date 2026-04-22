@@ -56,3 +56,11 @@ from app.models.briefing import (  # noqa: F401
     SendingDomain,
     BriefEdit,
 )
+from app.models.daily_brief import (  # noqa: F401
+    DailyBrief,
+    BriefItem,
+    NewsPerspectiveCache,
+    AudioGenerationJob,
+    DailyBriefSubscriber,
+    BriefTeam,
+)
