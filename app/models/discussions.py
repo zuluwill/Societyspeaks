@@ -25,7 +25,7 @@ from flask import current_app
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import validates
 
-from app import db
+from app import db, cache
 from app.lib.time import utcnow_naive
 from app.models._base import generate_slug
 
