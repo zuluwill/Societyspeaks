@@ -4,8 +4,8 @@ verification tokens, notification preferences) and UserAPIKey (per-user
 encrypted LLM API keys for optional Phase 4 features).
 
 Moved here from app/models.py as part of the models-split refactor
-(the final domain submodule — models_legacy.py is deleted in the same
-step).
+(this was the last domain submodule brought over before deleting the
+shim / monolith file).
 
 Notification lives in app.models.discussions and is pulled in lazily
 inside User.unread_notification_count to avoid depending on a sibling

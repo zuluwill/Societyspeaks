@@ -15,8 +15,8 @@ classes they hook:
   news_article_before_insert  — NewsArticle, before_insert
   news_article_before_update  — NewsArticle, before_update
 
-If a listener is left behind in app/models_legacy.py while the target
-class moves, SQLAlchemy silently stops firing the hook — the
+If a listener is not defined in the same module as the mapped class
+it targets, SQLAlchemy silently stops firing the hook — the
 verify_models_split.py probe catches this by inserting a NewsSource
 and asserting the slug got populated.
 """

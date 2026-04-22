@@ -17,29 +17,18 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def read_models_source() -> str:
-    """Return the concatenated source of all files that define SQLAlchemy models.
+    """Return the concatenated source of every module that defines
+    SQLAlchemy models.
 
-    Handles three repo states without caller changes:
-      - Pre-split (historical): a single ``app/models.py``.
-      - Shim (during refactor): ``app/models_legacy.py`` plus an
-        ``app/models/`` package that re-exports from it.
-      - Post-split: ``app/models/`` package only, split by domain.
-
-    Source-inspection tests (the ``test_*_contract`` suite) call this so
-    they keep working through every intermediate step of the split.
+    Source-inspection tests (the ``test_*_contract`` suite) call this to
+    assert on text in the model definitions without needing to know
+    which submodule under ``app/models/`` a given class lives in.
     """
-    parts: list[str] = []
-    for candidate in (
-        _REPO_ROOT / "app" / "models.py",
-        _REPO_ROOT / "app" / "models_legacy.py",
-    ):
-        if candidate.exists():
-            parts.append(candidate.read_text(encoding="utf-8"))
     pkg_dir = _REPO_ROOT / "app" / "models"
-    if pkg_dir.is_dir():
-        for submodule in sorted(pkg_dir.glob("*.py")):
-            parts.append(submodule.read_text(encoding="utf-8"))
-    return "\n".join(parts)
+    return "\n".join(
+        submodule.read_text(encoding="utf-8")
+        for submodule in sorted(pkg_dir.glob("*.py"))
+    )
 
 # Set DATABASE_URL before Config class is imported (it validates at class-definition time)
 os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')

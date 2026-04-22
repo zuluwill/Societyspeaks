@@ -16,7 +16,7 @@ No event listeners in this block. Cross-domain relationships (User,
 Programme, Partner, CompanyProfile, TrendingTopic, Polymarket,
 NewsArticle) all use string references. One lazy import lives in
 Discussion.search_discussions to avoid a circular pull with
-generate_slug, which is still in app/models_legacy.py.
+generate_slug, which lives in app.models._base.
 """
 
 from datetime import timedelta
