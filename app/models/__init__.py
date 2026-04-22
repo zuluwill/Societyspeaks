@@ -79,3 +79,12 @@ from app.models.trending import (  # noqa: F401
     SocialPostEngagement,
 )
 from app.models.news import NewsSource, NewsArticle  # noqa: F401
+from app.models.partner import (  # noqa: F401
+    Partner,
+    PartnerDomain,
+    PartnerApiKey,
+    PartnerWebhookEndpoint,
+    PartnerWebhookDelivery,
+    PartnerMember,
+    PartnerUsageEvent,
+)
