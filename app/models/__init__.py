@@ -39,3 +39,4 @@ from app.models.translations import (  # noqa: F401
     DiscussionTranslation,
     ProgrammeTranslation,
 )
+from app.models.consensus import ConsensusAnalysis, ConsensusJob  # noqa: F401
