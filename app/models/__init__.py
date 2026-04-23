@@ -19,7 +19,7 @@ Invariant for the package layout:
 # Non-class public names re-exported by historical convention
 # (db: 4 call sites, generate_slug: 4 call sites).
 from app import db  # noqa: F401
-from app.models._base import generate_slug  # noqa: F401
+from app.models._base import generate_slug, generate_unique_slug  # noqa: F401
 
 from app.models.polymarket import PolymarketMarket, TopicMarketMatch  # noqa: F401
 from app.models.billing import PricingPlan, Subscription, Donation  # noqa: F401

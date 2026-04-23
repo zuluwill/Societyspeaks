@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload %}
+{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload, render_social_fields %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
@@ -103,11 +103,7 @@
                 <div class="space-y-4">
                     <h2 class="text-lg font-semibold text-gray-900">{{ _('Social Media') }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{ render_field_with_errors(form.linkedin_url, input_class="bg-white") }}
-                        {{ render_field_with_errors(form.twitter_url, input_class="bg-white") }}
-                        {{ render_field_with_errors(form.facebook_url, input_class="bg-white") }}
-                        {{ render_field_with_errors(form.instagram_url, input_class="bg-white") }}
-                        {{ render_field_with_errors(form.tiktok_url, input_class="bg-white") }}
+                        {{ render_social_fields(form, input_class="bg-white") }}
                     </div>
                 </div>
 

@@ -2,8 +2,9 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent, Programme, OrganizationMember
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent, Programme, OrganizationMember, generate_unique_slug
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
+from app.profiles.helpers import apply_form_to_profile
 from app.admin.forms import UserAssignmentForm, AdminProgrammeForm, AdminOrgMemberForm
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
@@ -248,9 +249,13 @@ def create_individual_profile():
 
     if form.validate_on_submit() and user_form.validate():
         try:
-            profile_image = handle_image_upload(form.profile_image.data, 'profile')
-            banner_image = handle_image_upload(form.banner_image.data, 'banner')
             user = create_or_get_user(user_form)
+            profile_image = handle_image_upload(
+                form.profile_image.data, 'profile', user_id=user.id,
+            )
+            banner_image = handle_image_upload(
+                form.banner_image.data, 'banner', user_id=user.id,
+            )
 
             profile = IndividualProfile(
                 user_id=user.id,
@@ -266,7 +271,9 @@ def create_individual_profile():
                 twitter_url=form.twitter_url.data,
                 facebook_url=form.facebook_url.data,
                 instagram_url=form.instagram_url.data,
-                tiktok_url=form.tiktok_url.data
+                tiktok_url=form.tiktok_url.data,
+                bluesky_url=form.bluesky_url.data,
+                slug=generate_unique_slug(IndividualProfile, form.full_name.data, fallback='profile'),
             )
 
             user.profile_type = 'individual'
@@ -303,9 +310,21 @@ def edit_individual_profile(profile_id):
     if form.validate_on_submit() and user_form.validate():
         try:
             if form.profile_image.data:
-                profile.profile_image = handle_image_upload(form.profile_image.data, 'profile')
+                uploaded = handle_image_upload(
+                    form.profile_image.data, 'profile', user_id=profile.user_id,
+                )
+                if uploaded is None:
+                    flash("New profile picture couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept.", 'warning')
+                else:
+                    profile.profile_image = uploaded
             if form.banner_image.data:
-                profile.banner_image = handle_image_upload(form.banner_image.data, 'banner')
+                uploaded = handle_image_upload(
+                    form.banner_image.data, 'banner', user_id=profile.user_id,
+                )
+                if uploaded is None:
+                    flash("New banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept.", 'warning')
+                else:
+                    profile.banner_image = uploaded
 
             update_profile_fields(profile, form)
             handle_user_reassignment(profile, user_form, 'individual')
@@ -332,9 +351,11 @@ def create_company_profile():
 
     if form.validate_on_submit() and user_form.validate():
         try:
-            logo = handle_image_upload(form.logo.data, 'logo')
-            banner_image = handle_image_upload(form.banner_image.data, 'banner')
             user = create_or_get_user(user_form)
+            logo = handle_image_upload(form.logo.data, 'logo', user_id=user.id)
+            banner_image = handle_image_upload(
+                form.banner_image.data, 'banner', user_id=user.id,
+            )
 
             profile = CompanyProfile(
                 user_id=user.id,
@@ -350,7 +371,9 @@ def create_company_profile():
                 twitter_url=form.twitter_url.data,
                 facebook_url=form.facebook_url.data,
                 instagram_url=form.instagram_url.data,
-                tiktok_url=form.tiktok_url.data
+                tiktok_url=form.tiktok_url.data,
+                bluesky_url=form.bluesky_url.data,
+                slug=generate_unique_slug(CompanyProfile, form.company_name.data, fallback='company'),
             )
 
             user.profile_type = 'company'
@@ -387,9 +410,21 @@ def edit_company_profile(profile_id):
     if form.validate_on_submit() and user_form.validate():
         try:
             if form.logo.data:
-                profile.logo = handle_image_upload(form.logo.data, 'logo')
+                uploaded = handle_image_upload(
+                    form.logo.data, 'logo', user_id=profile.user_id,
+                )
+                if uploaded is None:
+                    flash("New logo couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept.", 'warning')
+                else:
+                    profile.logo = uploaded
             if form.banner_image.data:
-                profile.banner_image = handle_image_upload(form.banner_image.data, 'banner')
+                uploaded = handle_image_upload(
+                    form.banner_image.data, 'banner', user_id=profile.user_id,
+                )
+                if uploaded is None:
+                    flash("New banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept.", 'warning')
+                else:
+                    profile.banner_image = uploaded
 
             update_profile_fields(profile, form)
             handle_user_reassignment(profile, user_form, 'company')
@@ -566,13 +601,24 @@ def admin_remove_org_member(profile_id, member_id):
 
 
 # Helper Functions
-def handle_image_upload(file_data, prefix):
-    if file_data:
-        filename = secure_filename(file_data.filename)
+def handle_image_upload(file_data, prefix, user_id=None):
+    """Return the stored filename, or None if no file / upload failed validation.
+
+    ``upload_to_object_storage`` enforces extension + size checks and returns
+    None on failure; we must propagate that so the caller doesn't persist a
+    filename that isn't actually in object storage.
+
+    When ``user_id`` is given the uploader prefixes with ``{user_id}_{ts}_``,
+    matching user-facing uploads — so admin and user paths produce identical
+    storage-key shapes. ``prefix`` ("profile"/"banner"/"logo") is only used
+    as fallback namespacing when no ``user_id`` is known.
+    """
+    if not file_data:
+        return None
+    filename = secure_filename(file_data.filename)
+    if user_id is None:
         filename = f"{prefix}_{int(time.time())}_{filename}"
-        upload_to_object_storage(file_data, filename)
-        return filename
-    return None
+    return upload_to_object_storage(file_data, filename, user_id=user_id)
 
 
 def create_or_get_user(user_form):
@@ -590,9 +636,7 @@ def create_or_get_user(user_form):
 
 
 def update_profile_fields(profile, form):
-    for field in form.data:
-        if field not in ['csrf_token', 'profile_image', 'banner_image', 'logo']:
-            setattr(profile, field, form.data[field])
+    apply_form_to_profile(profile, form)
 
 
 def handle_user_reassignment(profile, user_form, profile_type):

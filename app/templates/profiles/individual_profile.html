@@ -25,13 +25,7 @@
         "addressCountry": "{{ profile.country }}"
       },
       {% endif %}
-      "sameAs": [
-        {% if profile.linkedin_url %}"{{ profile.linkedin_url }}",{% endif %}
-        {% if profile.twitter_url %}"{{ profile.twitter_url }}",{% endif %}
-        {% if profile.facebook_url %}"{{ profile.facebook_url }}",{% endif %}
-        {% if profile.instagram_url %}"{{ profile.instagram_url }}",{% endif %}
-        {% if profile.tiktok_url %}"{{ profile.tiktok_url }}"{% endif %}
-      ]
+      "sameAs": {{ [profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list | tojson }}
     }
     </script>
 {% endblock %}

@@ -2,90 +2,28 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app, abort, make_response
 from flask_login import login_required, current_user
 from app import db
-from app.models import IndividualProfile, CompanyProfile, Discussion, Programme
+from app.models import IndividualProfile, CompanyProfile, Discussion, Programme, generate_unique_slug
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from replit.object_storage import Client
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
-from app.storage_utils import get_recent_activity
+from app.storage_utils import (
+    delete_from_object_storage,
+    get_recent_activity,
+    upload_to_object_storage,
+)
 from app.middleware import track_profile_view
 
 
-import os
-import json
-import time
 import io
-from pathlib import Path
 from app.lib.url_utils import safe_next_url as _safe_next_url
 from flask_babel import gettext as _
 
+from app.profiles.helpers import apply_form_to_profile
 
 profiles_bp = Blueprint('profiles', __name__, template_folder='../templates/profiles')
 
 client = Client()
-
-# Allowed file extensions for uploads
-ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-
-
-def allowed_file(filename):
-    """Check if file extension is allowed"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def validate_file_size(file_data):
-    """Check if file size is within limits"""
-    file_data.seek(0, os.SEEK_END)
-    size = file_data.tell()
-    file_data.seek(0)
-    return size <= MAX_FILE_SIZE
-
-
-
-def upload_to_object_storage(file_data, filename):
-    """Upload file to Replit's object storage with validation"""
-    try:
-        # Validate file extension
-        if not allowed_file(filename):
-            current_app.logger.warning(f"Blocked upload of disallowed file type: {filename}")
-            return None
-        
-        # Validate file size
-        if not validate_file_size(file_data):
-            current_app.logger.warning(f"Blocked upload of oversized file: {filename}")
-            return None
-        
-        # Avoid adding the unique prefix multiple times
-        if not filename.startswith(f"{current_user.id}_"):
-            filename = f"{current_user.id}_{int(time.time())}_{filename}"
-        storage_path = f"profile_images/{filename}"
-
-        # Read file data
-        file_content = file_data.read()
-
-        # Upload file content as bytes
-        client.upload_from_bytes(storage_path, file_content)
-
-        current_app.logger.info(f"Successfully uploaded {filename} to object storage")
-        return filename
-
-    except Exception as e:
-        current_app.logger.error(f"Error uploading file: {str(e)}")
-        return None
-
-
-
-def delete_from_object_storage(filename):
-    """Delete a file from Replit's object storage"""
-    try:
-        storage_path = f"profile_images/{filename}"
-        client.delete(storage_path)
-        current_app.logger.info(f"Successfully deleted {filename} from object storage")
-        return True
-
-    except Exception as e:
-        current_app.logger.error(f"Error deleting {filename} from object storage: {str(e)}")
-        return False
 
 
 
@@ -186,25 +124,27 @@ def create_individual_profile():
     form = IndividualProfileForm()
     next_url = _safe_next_url(request.form.get('next') or request.args.get('next'))
     if form.validate_on_submit():
+        profile_image = None
+        banner_image = None
         try:
-            profile_image = None
-            banner_image = None
-
-            # Handle file uploads
             if form.profile_image.data:
-                profile_image_file = form.profile_image.data
-                profile_image = secure_filename(profile_image_file.filename)
-                profile_image = f"{current_user.id}_{int(time.time())}_{profile_image}"
-                upload_to_object_storage(profile_image_file, profile_image)
+                profile_image = upload_to_object_storage(
+                    form.profile_image.data,
+                    secure_filename(form.profile_image.data.filename),
+                    user_id=current_user.id,
+                )
+                if profile_image is None:
+                    flash(_("Profile picture couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB). Your profile was saved without it."), "warning")
 
             if form.banner_image.data:
-                banner_image_file = form.banner_image.data
-                banner_image = secure_filename(banner_image_file.filename)
-                banner_image = f"{current_user.id}_{int(time.time())}_{banner_image}"
-                upload_to_object_storage(banner_image_file, banner_image)
+                banner_image = upload_to_object_storage(
+                    form.banner_image.data,
+                    secure_filename(form.banner_image.data.filename),
+                    user_id=current_user.id,
+                )
+                if banner_image is None:
+                    flash(_("Banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB). Your profile was saved without it."), "warning")
 
-            
-            # Create profile
             profile = IndividualProfile(
                 user_id=current_user.id,
                 full_name=form.full_name.data,
@@ -215,15 +155,15 @@ def create_individual_profile():
                 country=form.country.data,
                 email=form.email.data,
                 website=form.website.data,
-                # Social links
                 linkedin_url=form.linkedin_url.data,
                 twitter_url=form.twitter_url.data,
                 facebook_url=form.facebook_url.data,
                 instagram_url=form.instagram_url.data,
-                tiktok_url=form.tiktok_url.data
+                tiktok_url=form.tiktok_url.data,
+                bluesky_url=form.bluesky_url.data,
+                slug=generate_unique_slug(IndividualProfile, form.full_name.data, fallback='profile'),
             )
 
-            # Update user's profile type
             current_user.profile_type = 'individual'
 
             db.session.add(profile)
@@ -249,6 +189,13 @@ def create_individual_profile():
 
         except Exception as e:
             db.session.rollback()
+            # Don't leak orphaned images in object storage when the DB step fails.
+            for uploaded in (profile_image, banner_image):
+                if uploaded:
+                    try:
+                        delete_from_object_storage(uploaded)
+                    except Exception:
+                        pass
             current_app.logger.error(f"Error creating profile: {str(e)}")
             flash(_("Error creating profile. Please try again."), "error")
             return render_template('profiles/create_individual_profile.html', form=form, next_url=next_url)
@@ -262,22 +209,27 @@ def create_company_profile():
     form = CompanyProfileForm()
     next_url = _safe_next_url(request.form.get('next') or request.args.get('next'))
     if form.validate_on_submit():
+        logo = None
+        banner_image = None
         try:
-            logo = None
-            banner_image = None
-
-            # Handle file uploads without double prefixing
             if form.logo.data:
-                logo_file = form.logo.data
-                # Just use the file name directly
-                logo = upload_to_object_storage(logo_file, secure_filename(logo_file.filename))
+                logo = upload_to_object_storage(
+                    form.logo.data,
+                    secure_filename(form.logo.data.filename),
+                    user_id=current_user.id,
+                )
+                if logo is None:
+                    flash(_("Logo couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB). Your profile was saved without it."), "warning")
 
             if form.banner_image.data:
-                banner_image_file = form.banner_image.data
-                # Just use the file name directly
-                banner_image = upload_to_object_storage(banner_image_file, secure_filename(banner_image_file.filename))
+                banner_image = upload_to_object_storage(
+                    form.banner_image.data,
+                    secure_filename(form.banner_image.data.filename),
+                    user_id=current_user.id,
+                )
+                if banner_image is None:
+                    flash(_("Banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB). Your profile was saved without it."), "warning")
 
-            # Create profile
             profile = CompanyProfile(
                 user_id=current_user.id,
                 company_name=form.company_name.data,
@@ -292,7 +244,9 @@ def create_company_profile():
                 twitter_url=form.twitter_url.data,
                 facebook_url=form.facebook_url.data,
                 instagram_url=form.instagram_url.data,
-                tiktok_url=form.tiktok_url.data
+                tiktok_url=form.tiktok_url.data,
+                bluesky_url=form.bluesky_url.data,
+                slug=generate_unique_slug(CompanyProfile, form.company_name.data, fallback='company'),
             )
 
             current_user.profile_type = 'company'
@@ -354,31 +308,29 @@ def edit_individual_profile(username):
     if form.validate_on_submit():
         try:
             
-            # Handle file uploads
             if form.profile_image.data and isinstance(form.profile_image.data, FileStorage):
-                profile_image_file = form.profile_image.data
-                profile_image = upload_to_object_storage(profile_image_file, secure_filename(profile_image_file.filename))
-                profile.profile_image = profile_image
+                uploaded = upload_to_object_storage(
+                    form.profile_image.data,
+                    secure_filename(form.profile_image.data.filename),
+                    user_id=current_user.id,
+                )
+                if uploaded is None:
+                    flash(_("New profile picture couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept."), "warning")
+                else:
+                    profile.profile_image = uploaded
 
             if form.banner_image.data and isinstance(form.banner_image.data, FileStorage):
-                banner_image_file = form.banner_image.data
-                banner_image = upload_to_object_storage(banner_image_file, secure_filename(banner_image_file.filename))
-                profile.banner_image = banner_image
+                uploaded = upload_to_object_storage(
+                    form.banner_image.data,
+                    secure_filename(form.banner_image.data.filename),
+                    user_id=current_user.id,
+                )
+                if uploaded is None:
+                    flash(_("New banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept."), "warning")
+                else:
+                    profile.banner_image = uploaded
 
-
-            # Update other fields directly
-            profile.full_name = form.full_name.data
-            profile.bio = form.bio.data
-            profile.city = form.city.data
-            profile.country = form.country.data
-            profile.email = form.email.data
-            profile.website = form.website.data
-            profile.linkedin_url = form.linkedin_url.data
-            profile.twitter_url = form.twitter_url.data
-            profile.facebook_url = form.facebook_url.data
-            profile.instagram_url = form.instagram_url.data
-            profile.tiktok_url = form.tiktok_url.data
-            
+            apply_form_to_profile(profile, form)
 
             # Update slug if name changed
             profile.update_slug()
@@ -424,29 +376,29 @@ def edit_company_profile(company_name):
 
     if form.validate_on_submit():
         try:
-            # Handle file uploads for logo and banner images
             if form.logo.data and isinstance(form.logo.data, FileStorage):
-                logo_file = form.logo.data
-                logo = upload_to_object_storage(logo_file, secure_filename(logo_file.filename))
-                profile.logo = logo  # Update profile's logo field
+                uploaded = upload_to_object_storage(
+                    form.logo.data,
+                    secure_filename(form.logo.data.filename),
+                    user_id=current_user.id,
+                )
+                if uploaded is None:
+                    flash(_("New logo couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept."), "warning")
+                else:
+                    profile.logo = uploaded
 
             if form.banner_image.data and isinstance(form.banner_image.data, FileStorage):
-                banner_image_file = form.banner_image.data
-                banner_image = upload_to_object_storage(banner_image_file, secure_filename(banner_image_file.filename))
-                profile.banner_image = banner_image
+                uploaded = upload_to_object_storage(
+                    form.banner_image.data,
+                    secure_filename(form.banner_image.data.filename),
+                    user_id=current_user.id,
+                )
+                if uploaded is None:
+                    flash(_("New banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the existing one was kept."), "warning")
+                else:
+                    profile.banner_image = uploaded
 
-            # Update other fields
-            profile.company_name = form.company_name.data
-            profile.description = form.description.data
-            profile.city = form.city.data
-            profile.country = form.country.data
-            profile.email = form.email.data
-            profile.website = form.website.data
-            profile.linkedin_url = form.linkedin_url.data
-            profile.twitter_url = form.twitter_url.data
-            profile.facebook_url = form.facebook_url.data
-            profile.instagram_url = form.instagram_url.data
-            profile.tiktok_url = form.tiktok_url.data
+            apply_form_to_profile(profile, form)
 
             # Update slug if name changed
             profile.update_slug()

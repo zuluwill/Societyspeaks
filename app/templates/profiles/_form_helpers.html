@@ -13,6 +13,19 @@
 </div>
 {% endmacro %}
 
+{# Renders the inner list of social-link URL fields shared by every profile
+   create/edit template. Each template keeps ownership of its wrapper/heading
+   so stacked vs. grid layouts stay in the template. Add a new social field
+   here (and in the form + model) to roll it out everywhere at once. #}
+{% macro render_social_fields(form, input_class="") %}
+    {{ render_field_with_errors(form.linkedin_url, input_class=input_class) }}
+    {{ render_field_with_errors(form.twitter_url, input_class=input_class) }}
+    {{ render_field_with_errors(form.facebook_url, input_class=input_class) }}
+    {{ render_field_with_errors(form.instagram_url, input_class=input_class) }}
+    {{ render_field_with_errors(form.tiktok_url, input_class=input_class) }}
+    {{ render_field_with_errors(form.bluesky_url, input_class=input_class) }}
+{% endmacro %}
+
 {% macro render_image_upload(field, preview_id, button_text, icon_path="") %}
 <div class="mb-8">
     <div class="flex items-center justify-between mb-2">

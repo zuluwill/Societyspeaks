@@ -1,6 +1,6 @@
 {# templates/admin/profiles/edit_individual.html #}
 {% extends "admin/_admin_base.html" %}
-{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload %}
+{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload, render_social_fields %}
 {% from "admin/profiles/_profile_form.html" import render_user_assignment_form, render_user_assignment_script %}
 
 {% block title %}Edit Individual Profile - Admin{% endblock %}
@@ -42,11 +42,7 @@
                 <div class="mb-8">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Social Links</h3>
                     <div class="space-y-4">
-                        {{ render_field_with_errors(form.linkedin_url) }}
-                        {{ render_field_with_errors(form.twitter_url) }}
-                        {{ render_field_with_errors(form.facebook_url) }}
-                        {{ render_field_with_errors(form.instagram_url) }}
-                        {{ render_field_with_errors(form.tiktok_url) }}
+                        {{ render_social_fields(form) }}
                     </div>
                 </div>
 

@@ -14,7 +14,7 @@ from app.models import (
     Subscription,
     OrganizationMember,
     Donation,
-    generate_slug,
+    generate_unique_slug,
     Partner,
 )
 
@@ -772,16 +772,10 @@ def get_or_create_organization(user, plan):
         return existing_org
 
     org_name = f"{user.username}'s Organization"
-    slug = generate_slug(org_name)
-
-    existing_slug = CompanyProfile.query.filter_by(slug=slug).first()
-    if existing_slug:
-        slug = f"{slug}-{user.id}"
-
     org = CompanyProfile(
         user_id=user.id,
         company_name=org_name,
-        slug=slug,
+        slug=generate_unique_slug(CompanyProfile, org_name, fallback='organization'),
         email=user.email,
     )
     db.session.add(org)

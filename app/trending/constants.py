@@ -106,36 +106,7 @@ def extract_geographic_info_from_articles(articles) -> tuple:
     return geographic_scope, country
 
 
-def get_unique_slug(model_class, base_slug: str, max_attempts: int = 100) -> str:
-    """
-    Generate a unique slug for a model, handling race conditions gracefully.
-    Uses database-level uniqueness check with retry logic.
-
-    Args:
-        model_class: SQLAlchemy model class with 'slug' field
-        base_slug: The base slug to start from
-        max_attempts: Maximum number of suffix attempts
-
-    Returns:
-        A unique slug string
-
-    Raises:
-        ValueError: If unable to generate unique slug after max_attempts
-    """
-    import random
-    import string
-
-    slug = base_slug
-
-    for attempt in range(max_attempts):
-        existing = model_class.query.filter_by(slug=slug).first()
-        if not existing:
-            return slug
-
-        if attempt < 10:
-            slug = f"{base_slug}-{attempt + 1}"
-        else:
-            suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-            slug = f"{base_slug}-{suffix}"
-
-    raise ValueError(f"Unable to generate unique slug after {max_attempts} attempts")
+# Canonical implementation lives in app.models._base. Re-exported here for
+# back-compat — existing call sites in the partner module still import it
+# from this location.
+from app.models._base import get_unique_slug  # noqa: F401

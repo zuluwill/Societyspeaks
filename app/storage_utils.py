@@ -77,10 +77,42 @@ def get_recent_activity(user_id):
     return activity
 
 
+# Canonical validation rules for profile-image uploads. Anything hitting
+# object storage should pass through these — including admin-side uploads.
+ALLOWED_IMAGE_EXTENSIONS = frozenset({'jpg', 'jpeg', 'png', 'gif', 'webp'})
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+def _has_allowed_extension(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+
+def _within_max_size(file_data):
+    file_data.seek(0, os.SEEK_END)
+    size = file_data.tell()
+    file_data.seek(0)
+    return size <= MAX_IMAGE_SIZE
+
+
 def upload_to_object_storage(file_data, filename, user_id=None):
-    """Upload file to Replit's object storage"""
+    """Upload an image to object storage, returning the stored filename.
+
+    Returns ``None`` if validation fails (bad extension, oversized) or if
+    the upload itself raises. Callers MUST check the return value before
+    persisting it — storing a non-None filename implies the bytes are in
+    storage. Passing ``user_id`` prefixes the stored filename so two
+    users who upload identically-named files don't clobber each other.
+    """
+    if file_data is None:
+        return None
     try:
-        if user_id and not filename.startswith(f"{user_id}_"):
+        if not _has_allowed_extension(filename):
+            current_app.logger.warning(f"Blocked upload of disallowed file type: {filename}")
+            return None
+        if not _within_max_size(file_data):
+            current_app.logger.warning(f"Blocked upload of oversized file: {filename}")
+            return None
+        if user_id is not None and not filename.startswith(f"{user_id}_"):
             filename = f"{user_id}_{int(time.time())}_{filename}"
         storage_path = f"profile_images/{filename}"
 

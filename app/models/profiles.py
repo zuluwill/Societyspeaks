@@ -23,7 +23,7 @@ simpler than shuttling ProfileView across modules.
 
 from app import db
 from app.lib.time import utcnow_naive
-from app.models._base import generate_slug
+from app.models._base import generate_slug, generate_unique_slug
 
 
 class ProfileView(db.Model):
@@ -57,6 +57,7 @@ class IndividualProfile(db.Model):
     facebook_url = db.Column(db.String(255))
     instagram_url = db.Column(db.String(255))
     tiktok_url = db.Column(db.String(255))
+    bluesky_url = db.Column(db.String(255))
     slug = db.Column(db.String(150), unique=True, nullable=False)
 
     discussions = db.relationship('Discussion', backref='individual_profile', lazy='dynamic', foreign_keys='Discussion.individual_profile_id')
@@ -67,12 +68,20 @@ class IndividualProfile(db.Model):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # Default-only fallback: callers are expected to pass a pre-uniquified
+        # slug (see app.models._base.generate_unique_slug). Keeps __init__
+        # side-effect free (no DB query) to match the rest of the codebase.
         if not self.slug and self.full_name:
             self.slug = generate_slug(self.full_name)
 
     def update_slug(self):
-        if self.full_name:
-            self.slug = generate_slug(self.full_name)
+        # Called on a persisted instance during edit flows — always has an id,
+        # so exclude_id prevents the profile from colliding with itself.
+        if not self.full_name:
+            return
+        self.slug = generate_unique_slug(
+            IndividualProfile, self.full_name, fallback='profile', exclude_id=self.id,
+        )
 
 
 class CompanyProfile(db.Model):
@@ -96,6 +105,7 @@ class CompanyProfile(db.Model):
     facebook_url = db.Column(db.String(255))
     instagram_url = db.Column(db.String(255))
     tiktok_url = db.Column(db.String(255))
+    bluesky_url = db.Column(db.String(255))
     slug = db.Column(db.String(150), unique=True, nullable=False)
 
     discussions = db.relationship('Discussion', backref='company_profile', lazy='dynamic', foreign_keys='Discussion.company_profile_id')
@@ -110,8 +120,11 @@ class CompanyProfile(db.Model):
             self.slug = generate_slug(self.company_name)
 
     def update_slug(self):
-        if self.company_name:
-            self.slug = generate_slug(self.company_name)
+        if not self.company_name:
+            return
+        self.slug = generate_unique_slug(
+            CompanyProfile, self.company_name, fallback='company', exclude_id=self.id,
+        )
 
 
 class OrganizationMember(db.Model):

@@ -215,6 +215,7 @@ class IndividualProfileForm(FlaskForm):
     facebook_url = URLField(_l('Facebook'), validators=[Optional(), URL()])
     instagram_url = URLField(_l('Instagram'), validators=[Optional(), URL()])
     tiktok_url = URLField(_l('TikTok'), validators=[Optional(), URL()])
+    bluesky_url = URLField(_l('Bluesky'), validators=[Optional(), URL()])
     
     profile_image = FileField(_l('Profile Picture'), validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
     banner_image = FileField(_l('Banner Image'), validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
@@ -233,6 +234,7 @@ class CompanyProfileForm(FlaskForm):
     facebook_url = URLField(_l('Facebook'), validators=[Optional(), URL()])
     instagram_url = URLField(_l('Instagram'), validators=[Optional(), URL()])
     tiktok_url = URLField(_l('TikTok'), validators=[Optional(), URL()])
+    bluesky_url = URLField(_l('Bluesky'), validators=[Optional(), URL()])
     
     logo = FileField(_l('Company Logo'), validators=[Optional(), FileAllowed(['jpg','jpeg', 'png'], 'Images only!')])
     banner_image = FileField(_l('Banner Image'), validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
