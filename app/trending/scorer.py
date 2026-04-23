@@ -505,7 +505,7 @@ Headlines:
 Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "p": 0.9, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "p": 0.1, "geo": "global", "countries": "Global"}}]"""
 
     message = client.messages.create(
-        model="claude-3-5-haiku-20241022",
+        model="claude-haiku-4-5-20251001",
         max_tokens=1000,
         messages=[{"role": "user", "content": prompt}]
     )
@@ -644,7 +644,7 @@ def _call_anthropic(api_key: str, prompt: str) -> str:
     import anthropic
     client = anthropic.Anthropic(api_key=api_key)
     message = client.messages.create(
-        model="claude-3-5-haiku-20241022",
+        model="claude-haiku-4-5-20251001",
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}]
     )

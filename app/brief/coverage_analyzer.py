@@ -303,7 +303,7 @@ Respond with ONLY JSON:
                 import anthropic
                 client = anthropic.Anthropic(api_key=api_key)
                 message = client.messages.create(
-                    model="claude-3-5-haiku-20241022",
+                    model="claude-haiku-4-5-20251001",
                     max_tokens=150,
                     temperature=0.3,
                     system="You are a media analyst explaining coverage patterns. Be neutral and specific. Respond only in valid JSON.",

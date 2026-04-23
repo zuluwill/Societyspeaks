@@ -124,7 +124,7 @@ class BriefingGenerator:
         for attempt in range(max_retries):
             try:
                 response = client.messages.create(
-                    model="claude-3-5-haiku-20241022",
+                    model="claude-haiku-4-5-20251001",
                     max_tokens=max_tokens,
                     system=system_prompt,
                     messages=[{"role": "user", "content": prompt}]
@@ -137,7 +137,7 @@ class BriefingGenerator:
                 if hasattr(response, 'usage') and response.usage:
                     total_tokens = (getattr(response.usage, 'input_tokens', 0) or 0) + (getattr(response.usage, 'output_tokens', 0) or 0)
                     cost = total_tokens * 0.00000025
-                    self._track_token_spend(total_tokens, cost, 'claude-3-haiku')
+                    self._track_token_spend(total_tokens, cost, 'claude-haiku-4-5')
                 return content
 
             except anthropic.APIStatusError as e:

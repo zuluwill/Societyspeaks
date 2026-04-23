@@ -110,7 +110,7 @@ Reply with just the category name, nothing else."""
 
     try:
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=20,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -206,7 +206,7 @@ Source country: {source_country}
 Reply in JSON: {{"scope": "global|national|local", "country": "country name or null"}}"""
 
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=100,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -322,7 +322,7 @@ Title: {title}
 Keep it under 200 characters. No quotes or attribution."""
 
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=100,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -456,7 +456,7 @@ Return ONLY a JSON array: [{{"content": "statement text", "position": "pro/con/n
     
     try:
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}]
         )
