@@ -10,13 +10,13 @@ def get_base_url():
     return 'https://societyspeaks.io'
 
 def generate_sitemap():
-    """Generate the sitemap XML content with optimized priorities"""
+    """Generate the sitemap XML content with only verified, existing routes"""
     base_url = get_base_url()
-    current_date = datetime.now().strftime("%Y-%m-%d")
 
     xml_content = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+
         '  <!-- Main Pages -->',
         '  <url>',
         f'    <loc>{base_url}/</loc>',
@@ -36,73 +36,18 @@ def generate_sitemap():
         '    <changefreq>daily</changefreq>',
         '  </url>',
         '  <url>',
-        f'    <loc>{base_url}/discussions/featured</loc>',
+        f'    <loc>{base_url}/discussions/news</loc>',
         '    <priority>0.9</priority>',
-        '    <changefreq>daily</changefreq>',
+        '    <changefreq>hourly</changefreq>',
         '  </url>',
 
-        '  <!-- Discussion Categories -->',
-    ]
-
-    # Add category pages
-    categories = ['healthcare', 'environment', 'education', 'technology', 'politics', 'society']
-    for category in categories:
-        category_entry = [
-            '  <url>',
-            f'    <loc>{base_url}/discussions/categories/{category}</loc>',
-            '    <priority>0.8</priority>',
-            '    <changefreq>daily</changefreq>',
-            '  </url>'
-        ]
-        xml_content.extend(category_entry)
-
-    # Add location-based pages
-    xml_content.extend([
-        '  <!-- Location-based Discussions -->',
-        '  <url>',
-        f'    <loc>{base_url}/discussions/location/global</loc>',
-        '    <priority>0.8</priority>',
-        '    <changefreq>daily</changefreq>',
-        '  </url>',
-        '  <url>',
-        f'    <loc>{base_url}/discussions/location/country</loc>',
-        '    <priority>0.8</priority>',
-        '    <changefreq>daily</changefreq>',
-        '  </url>',
-        '  <url>',
-        f'    <loc>{base_url}/discussions/location/city</loc>',
-        '    <priority>0.8</priority>',
-        '    <changefreq>daily</changefreq>',
-        '  </url>'
-    ])
-
-    # Add user features
-    xml_content.extend([
-        '  <!-- User Features -->',
-        '  <url>',
-        f'    <loc>{base_url}/start-discussion</loc>',
-        '    <priority>0.8</priority>',
-        '    <changefreq>monthly</changefreq>',
-        '  </url>'
-    ])
-
-    # Add support and information pages
-    xml_content.extend([
-        '  <!-- Support & Information -->',
-        '  <url>',
-        f'    <loc>{base_url}/support</loc>',
-        '    <priority>0.7</priority>',
-        '    <changefreq>monthly</changefreq>',
-        '  </url>',
+        '  <!-- Donation -->',
         '  <url>',
         f'    <loc>{base_url}/donate</loc>',
         '    <priority>0.7</priority>',
         '    <changefreq>monthly</changefreq>',
-        '  </url>'
-    ])
+        '  </url>',
 
-    # Add legal pages
-    xml_content.extend([
         '  <!-- Legal Pages -->',
         '  <url>',
         f'    <loc>{base_url}/privacy-policy</loc>',
@@ -118,22 +63,8 @@ def generate_sitemap():
         f'    <loc>{base_url}/content-policy</loc>',
         '    <priority>0.5</priority>',
         '    <changefreq>monthly</changefreq>',
-        '  </url>'
-    ])
+        '  </url>',
 
-    
-    # Add News section
-    xml_content.extend([
-        '  <!-- News Discussions -->',
-        '  <url>',
-        f'    <loc>{base_url}/discussions/news</loc>',
-        '    <priority>0.9</priority>',
-        '    <changefreq>hourly</changefreq>',
-        '  </url>'
-    ])
-
-    # Add help and resources
-    xml_content.extend([
         '  <!-- Help & Resources -->',
         '  <url>',
         f'    <loc>{base_url}/help</loc>',
@@ -180,12 +111,7 @@ def generate_sitemap():
         '    <priority>0.6</priority>',
         '    <changefreq>monthly</changefreq>',
         '  </url>',
-        '  <url>',
-        f'    <loc>{base_url}/contact</loc>',
-        '    <priority>0.6</priority>',
-        '    <changefreq>monthly</changefreq>',
-        '  </url>'
-    ])
+    ]
 
     # Add dynamic discussions if they exist
     try:
@@ -208,5 +134,4 @@ def generate_sitemap():
     # Close the XML
     xml_content.append('</urlset>')
 
-    # Join all lines with newlines
     return '\n'.join(xml_content)

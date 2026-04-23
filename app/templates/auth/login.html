@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow" />
+{% endblock %}
+
 {# Suppress the global flash block — we render flashes inside the card below #}
 {% block flash_messages %}{% endblock %}
 

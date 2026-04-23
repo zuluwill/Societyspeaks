@@ -506,6 +506,9 @@ Disallow: /register
 Disallow: /auth/
 Disallow: /*/*/edit
 Disallow: /*/edit
+Disallow: /*/follow/start
+Disallow: /*/follow
+Disallow: /*/unfollow
 
 # Sitemaps and LLM Context
 Sitemap: {base_url}/sitemap.xml
