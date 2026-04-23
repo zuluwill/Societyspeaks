@@ -39,7 +39,21 @@
 
         <button type="submit" id="login-submit-btn" class="w-full mt-6 bg-blue-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg transition min-h-11">{{ _('Login') }}</button>
     </form>
-    <script>
+
+    <div class="relative mt-6">
+        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-gray-200"></div>
+        </div>
+        <div class="relative flex justify-center text-xs uppercase tracking-wide">
+            <span class="bg-white px-2 text-gray-400">{{ _('or') }}</span>
+        </div>
+    </div>
+
+    <a href="{{ url_for('auth.magic_link_request', next=next_url) if next_url else url_for('auth.magic_link_request') }}"
+       class="mt-4 block w-full text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold py-2 px-4 rounded-lg transition min-h-11">
+        {{ _('Email me a sign-in link') }}
+    </a>
+    <script nonce="{{ csp_nonce() }}">
       (function () {
         var form = document.querySelector('form[action*="login"]');
         var btn  = document.getElementById('login-submit-btn');

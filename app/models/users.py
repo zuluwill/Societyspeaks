@@ -51,6 +51,13 @@ class User(UserMixin, db.Model):
     # Login tracking
     last_login_at = db.Column(db.DateTime, nullable=True)
 
+    # Magic-link login: any signed token whose payload `iat` is earlier than
+    # this timestamp is rejected. Bumped on every send (invalidates prior
+    # pending tokens — latest-email-wins) and on successful consume
+    # (one-shot — consumed link can't be clicked again). NULL = no magic
+    # link has ever been issued for this user.
+    magic_login_valid_after = db.Column(db.DateTime, nullable=True)
+
     # Stripe billing
     stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True)
 
@@ -94,6 +101,66 @@ class User(UserMixin, db.Model):
         except Exception:
             return None
         return db.session.get(User, user_id)
+
+    # Token generation and verification methods for magic-link login.
+    #
+    # A magic-link token is a signed payload {'user_id', 'iat'} with a 15-min
+    # itsdangerous max_age. Validity is additionally gated on
+    # User.magic_login_valid_after: a token is accepted iff its iat is >= that
+    # column. Callers MUST commit the session between get_* (which bumps the
+    # column) and dispatching the email — otherwise a concurrent consumer
+    # might read stale state. On successful consume, call
+    # consume_magic_login_token() and commit to invalidate the link.
+    MAGIC_LOGIN_EXPIRES_SEC = 15 * 60  # 15 minutes
+
+    def get_magic_login_token(self, expires_sec=None):
+        """Issue a magic-link token and invalidate any previously-pending one.
+
+        Mutates ``self.magic_login_valid_after`` in the session — the caller is
+        responsible for committing before sending the email.
+        """
+        now = utcnow_naive()
+        self.magic_login_valid_after = now
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps(
+            {'user_id': self.id, 'iat': now.isoformat()},
+            salt='magic-login-salt',
+        )
+
+    @staticmethod
+    def verify_magic_login_token(token, expiration=None):
+        """Return the User if the token is signed, unexpired, and not superseded.
+
+        Returns None for any failure mode (bad signature, expired, consumed,
+        superseded by a newer send). Callers treat all None outcomes the
+        same in user-facing copy.
+        """
+        from datetime import datetime
+        if expiration is None:
+            expiration = User.MAGIC_LOGIN_EXPIRES_SEC
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            payload = s.loads(token, salt='magic-login-salt', max_age=expiration)
+        except Exception:
+            return None
+        user_id = payload.get('user_id')
+        iat_raw = payload.get('iat')
+        if not user_id or not iat_raw:
+            return None
+        user = db.session.get(User, user_id)
+        if user is None or user.magic_login_valid_after is None:
+            return None
+        try:
+            iat = datetime.fromisoformat(iat_raw)
+        except (TypeError, ValueError):
+            return None
+        if iat < user.magic_login_valid_after:
+            return None
+        return user
+
+    def consume_magic_login_token(self):
+        """Invalidate the magic-link token just used. Caller commits."""
+        self.magic_login_valid_after = utcnow_naive()
 
     # Token generation and verification methods for email verification (separate from password reset)
     def get_email_verification_token(self, expires_sec=86400):

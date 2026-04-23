@@ -254,11 +254,24 @@ class ResendEmailClient:
                 raise ValueError("RESEND_API_KEY environment variable required in production")
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
-        
+
         # Email addresses - use brief.societyspeaks.io subdomain which is verified in Resend
         self.from_email = os.environ.get('RESEND_FROM_EMAIL', 'Society Speaks <hello@brief.societyspeaks.io>')
         self.from_email_daily = os.environ.get('RESEND_DAILY_FROM_EMAIL', 'Daily Questions <daily@brief.societyspeaks.io>')
-        
+
+        # Separate From for transactional (auth) emails. Ideally this is on the
+        # root domain (`societyspeaks.io`) so the sender↔link domain match;
+        # Gmail Safe Browsing treats mismatched domains as a phishing signal
+        # and marks the link as "dangerous". Falls back to RESEND_FROM_EMAIL
+        # while DKIM/DMARC on the root domain is still being configured.
+        _tx_from = (os.environ.get('RESEND_TRANSACTIONAL_FROM_EMAIL') or '').strip()
+        self.transactional_from_email = _tx_from if _tx_from else self.from_email
+
+        # Optional Reply-To for transactional mail — a reachable Reply-To is a
+        # positive deliverability signal and gives users a way to respond.
+        _reply = (os.environ.get('RESEND_REPLY_TO') or '').strip()
+        self.reply_to_email = _reply if _reply else None
+
         # Base URL for building links
         self.base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io')
 
@@ -371,124 +384,124 @@ class ResendEmailClient:
     # TRANSACTIONAL EMAILS
     # =========================================================================
 
-    def send_password_reset(self, user, token: str) -> bool:
+    def _send_transactional_email(
+        self,
+        user,
+        *,
+        template_stem: str,
+        subject_msgid: str,
+        entity_ref_id: Optional[str] = None,
+        log_label: str = 'transactional',
+        **template_ctx,
+    ) -> bool:
+        """Render html + plaintext for a transactional email and send via Resend.
+
+        Shared path for password reset, magic login, welcome, verification, and
+        account activation emails. Gmail penalises HTML-only transactional mail, so we always
+        render the parallel ``{stem}.txt`` template and attach it as the
+        ``text`` part of the multipart payload. Also attaches:
+
+        - Reply-To (when ``RESEND_REPLY_TO`` is configured) — positive
+          deliverability signal, gives users a place to actually reply.
+        - X-Entity-Ref-ID — per-send identifier ESPs can use to dedup
+          retried deliveries of the same logical email.
+        - transactional_from_email — separate From address configurable via
+          ``RESEND_TRANSACTIONAL_FROM_EMAIL`` for sender↔link domain alignment.
         """
-        Send password reset email.
-
-        Args:
-            user: User object with email and username
-            token: Password reset token
-
-        Returns:
-            bool: Success status
-        """
-        reset_url = f"{self.base_url}/auth/reset-password/{token}"
-
         try:
-            html = _render_for_user(
-                user,
-                'emails/password_reset.html',
-                username=user.username or 'User',
-                reset_url=reset_url,
-                base_url=self.base_url
-            )
+            html = _render_for_user(user, f'{template_stem}.html', **template_ctx)
+            text = _render_for_user(user, f'{template_stem}.txt', **template_ctx)
         except Exception as e:
-            logger.error(f"Template rendering failed for password_reset: {e}")
+            logger.error(f"Template rendering failed for {template_stem}: {e}")
             return False
 
-        email_data = {
-            'from': self.from_email,
+        email_data: Dict[str, Any] = {
+            'from': self.transactional_from_email,
             'to': [user.email],
-            'subject': _subject_for_user(user, 'Reset Your Password - Society Speaks'),
-            'html': html
+            'subject': _subject_for_user(user, subject_msgid),
+            'html': html,
+            'text': text,
         }
+        if self.reply_to_email:
+            email_data['reply_to'] = self.reply_to_email
+
+        headers: Dict[str, str] = {}
+        if entity_ref_id:
+            headers['X-Entity-Ref-ID'] = entity_ref_id
+        if headers:
+            email_data['headers'] = headers
 
         success = self._send_with_retry(email_data, use_rate_limit=False)
-        
+
         if success:
-            logger.info(f"Password reset email sent to {user.email}")
+            logger.info(f"{log_label} email sent to user {user.id}")
         else:
-            logger.error(f"Failed to send password reset email to {user.email}")
+            logger.error(f"Failed to send {log_label} email to user {user.id}")
 
         return success
+
+    def send_password_reset(self, user, token: str) -> bool:
+        """Send password reset email."""
+        reset_url = f"{self.base_url}/auth/reset-password/{token}"
+        return self._send_transactional_email(
+            user,
+            template_stem='emails/password_reset',
+            subject_msgid='Reset Your Password - Society Speaks',
+            entity_ref_id=f"password-reset:{user.id}:{token[:16]}",
+            log_label='Password reset',
+            username=user.username or 'User',
+            reset_url=reset_url,
+            base_url=self.base_url,
+        )
+
+    def send_magic_login_link(self, user, magic_url: str) -> bool:
+        """Send a magic-link sign-in email.
+
+        The URL points at the landing page (GET), which shows a Continue button
+        that POSTs to consume the token — defeats email-scanner prefetchers
+        that would otherwise burn a one-shot token before the user clicks.
+        """
+        # Tail of the URL is the signed token; use a short prefix as dedup key.
+        _token_tail = magic_url.rstrip('/').rsplit('/', 1)[-1][:16]
+        return self._send_transactional_email(
+            user,
+            template_stem='emails/magic_login',
+            subject_msgid='Your Society Speaks sign-in link',
+            entity_ref_id=f"magic-login:{user.id}:{_token_tail}",
+            log_label='Magic-login',
+            username=user.username or 'User',
+            magic_url=magic_url,
+            base_url=self.base_url,
+        )
 
     def send_welcome_email(self, user, verification_url: Optional[str] = None) -> bool:
-        """
-        Send welcome email to new user.
-
-        Args:
-            user: User object with email and username
-            verification_url: Optional email verification URL
-
-        Returns:
-            bool: Success status
-        """
-        try:
-            html = _render_for_user(
-                user,
-                'emails/welcome.html',
-                username=user.username or 'There',
-                verification_url=verification_url,
-                base_url=self.base_url
-            )
-        except Exception as e:
-            logger.error(f"Template rendering failed for welcome: {e}")
-            return False
-
-        email_data = {
-            'from': self.from_email,
-            'to': [user.email],
-            'subject': _subject_for_user(user, 'Welcome to Society Speaks!'),
-            'html': html
-        }
-
-        success = self._send_with_retry(email_data, use_rate_limit=False)
-        
-        if success:
-            logger.info(f"Welcome email sent to {user.email}")
-        else:
-            logger.error(f"Failed to send welcome email to {user.email}")
-
-        return success
+        """Send welcome email to new user."""
+        return self._send_transactional_email(
+            user,
+            template_stem='emails/welcome',
+            subject_msgid='Welcome to Society Speaks!',
+            entity_ref_id=f"welcome:{user.id}",
+            log_label='Welcome',
+            username=user.username or 'There',
+            verification_url=verification_url,
+            base_url=self.base_url,
+        )
 
     def send_verification_email(self, user, verification_url: str) -> bool:
-        """
-        Send a standalone email verification email (used for resends).
-
-        Args:
-            user: User object with email and username
-            verification_url: The full verification URL
-
-        Returns:
-            bool: Success status
-        """
-        try:
-            html = _render_for_user(
-                user,
-                'emails/verify_email.html',
-                username=user.username or 'there',
-                verification_url=verification_url,
-                base_url=self.base_url
-            )
-        except Exception as e:
-            logger.error(f"Template rendering failed for verify_email: {e}")
-            return False
-
-        email_data = {
-            'from': self.from_email,
-            'to': [user.email],
-            'subject': _subject_for_user(user, 'Verify your Society Speaks email address'),
-            'html': html
-        }
-
-        success = self._send_with_retry(email_data, use_rate_limit=False)
-
-        if success:
-            logger.info(f"Verification email sent to {user.email}")
-        else:
-            logger.error(f"Failed to send verification email to {user.email}")
-
-        return success
+        """Send a standalone email verification email (used for resends)."""
+        # Last path segment of the verification URL is the token; short prefix
+        # keeps Ref-ID stable across retries of the same send.
+        _token_tail = verification_url.rstrip('/').rsplit('/', 1)[-1][:16]
+        return self._send_transactional_email(
+            user,
+            template_stem='emails/verify_email',
+            subject_msgid='Verify your Society Speaks email address',
+            entity_ref_id=f"verify:{user.id}:{_token_tail}",
+            log_label='Verification',
+            username=user.username or 'there',
+            verification_url=verification_url,
+            base_url=self.base_url,
+        )
 
     def send_account_activation(self, user, activation_token: str) -> bool:
         """
@@ -502,34 +515,16 @@ class ResendEmailClient:
             bool: Success status
         """
         activation_url = f"{self.base_url}/auth/activate/{activation_token}"
-        
-        try:
-            html = _render_for_user(
-                user,
-                'emails/account_activation.html',
-                username=user.username or 'User',
-                activation_url=activation_url,
-                base_url=self.base_url
-            )
-        except Exception as e:
-            logger.error(f"Template rendering failed for account_activation: {e}")
-            return False
-
-        email_data = {
-            'from': self.from_email,
-            'to': [user.email],
-            'subject': _subject_for_user(user, 'Activate Your Society Speaks Account'),
-            'html': html
-        }
-
-        success = self._send_with_retry(email_data, use_rate_limit=False)
-        
-        if success:
-            logger.info(f"Account activation email sent to {user.email}")
-        else:
-            logger.error(f"Failed to send account activation email to {user.email}")
-
-        return success
+        return self._send_transactional_email(
+            user,
+            template_stem='emails/account_activation',
+            subject_msgid='Activate Your Society Speaks Account',
+            entity_ref_id=f"activate:{user.id}:{activation_token[:16]}",
+            log_label='Account activation',
+            username=user.username or 'User',
+            activation_url=activation_url,
+            base_url=self.base_url,
+        )
 
     # =========================================================================
     # DAILY QUESTION EMAILS
@@ -1129,6 +1124,16 @@ def send_welcome_email(user, verification_url: Optional[str] = None) -> bool:
         return client.send_welcome_email(user, verification_url)
     except Exception as e:
         logger.error(f"Failed to send welcome email: {e}")
+        return False
+
+
+def send_magic_login_email(user, magic_url: str) -> bool:
+    """Send a magic-link sign-in email. Never raises."""
+    try:
+        client = get_resend_client()
+        return client.send_magic_login_link(user, magic_url)
+    except Exception as e:
+        logger.error(f"Failed to send magic-login email: {e}")
         return False
 
 

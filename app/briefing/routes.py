@@ -2058,11 +2058,16 @@ def manage_recipients(briefing_id):
     return render_template('briefing/recipients.html', briefing=briefing, recipients=recipients)
 
 
-@briefing_bp.route('/<int:briefing_id>/unsubscribe/<token>')
+@briefing_bp.route('/<int:briefing_id>/unsubscribe/<token>', methods=['GET', 'POST'])
 @limiter.limit("60/minute")
 def unsubscribe(briefing_id, token):
     """
     Unsubscribe recipient from briefing.
+
+    Accepts both GET (human click) and POST (RFC 8058 one-click, triggered by
+    mail clients that honour the paired ``List-Unsubscribe`` +
+    ``List-Unsubscribe-Post: List-Unsubscribe=One-Click`` headers — required
+    by Gmail for bulk senders from 2024 onward).
 
     Note: We intentionally do NOT enforce token expiry for unsubscribe.
     CAN-SPAM and GDPR require that unsubscribe links work indefinitely.

@@ -693,9 +693,14 @@ def journey_reminder_subscribe(slug):
         return jsonify({'success': False, 'error': 'server_error'}), 500
 
 
-@programmes_bp.route('/<slug>/journey-reminder/unsubscribe', methods=['GET'])
+@programmes_bp.route('/<slug>/journey-reminder/unsubscribe', methods=['GET', 'POST'])
 def journey_reminder_unsubscribe(slug):
-    """One-click unsubscribe from journey reminders via token or login."""
+    """One-click unsubscribe from journey reminders via token or login.
+
+    Accepts POST so mail clients honouring RFC 8058 ``List-Unsubscribe-Post:
+    List-Unsubscribe=One-Click`` (required by Gmail for bulk senders from 2024)
+    can unsubscribe the recipient without a user-visible browser round-trip.
+    """
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     token = request.args.get('token', '').strip() or None
 

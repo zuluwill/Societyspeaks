@@ -1,0 +1,11 @@
+{{ _('Hi %(username)s,', username=username) }}
+
+{{ _('Please verify your email address by opening the link below. It will expire in 24 hours.') }}
+
+{{ verification_url }}
+
+{{ _("If you didn't request this email, you can safely ignore it.") }}
+
+—
+{{ _('Society Speaks') }}
+{{ base_url }}

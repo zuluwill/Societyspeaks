@@ -1,0 +1,21 @@
+{{ _('Hi %(username)s,', username=username) }}
+
+{{ _("Welcome to Society Speaks! We're building a platform for thoughtful civic discourse, where people can find common ground on the issues that matter.") }}
+
+{% if verification_url %}
+{{ _('Please verify your email address to get started:') }}
+{{ verification_url }}
+
+{% endif %}
+{{ _('What you can do on Society Speaks:') }}
+
+  - {{ _('Join Discussions — vote on statements and see where consensus forms') }}
+  - {{ _('Daily Questions — answer a civic question each day') }}
+  - {{ _('Daily Brief — get balanced news coverage analysis') }}
+  - {{ _('Add Your Voice — submit statements for others to consider') }}
+
+{{ _('Explore discussions:') }} {{ base_url }}/discussions
+
+—
+{{ _('Society Speaks') }}
+{{ base_url }}

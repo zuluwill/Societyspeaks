@@ -1,0 +1,11 @@
+{{ _('Hi %(username)s,', username=username) }}
+
+{{ _('Thanks for signing up! Please open the link below to activate your account. This link will expire in 24 hours.') }}
+
+{{ activation_url }}
+
+{{ _("If you didn't create an account with Society Speaks, you can safely ignore this email.") }}
+
+—
+{{ _('Society Speaks') }}
+{{ base_url }}

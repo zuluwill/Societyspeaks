@@ -10,7 +10,7 @@ from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
 from app.analytics.events import record_event
 # Email functions (migrated from Loops to Resend)
-from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email
+from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email, send_magic_login_email
 from app.email_utils import extract_clean_email, get_missing_individual_profile_fields, get_missing_company_profile_fields
 from app.lib.auth_utils import normalize_email
 from app.lib.url_utils import safe_next_url
@@ -88,6 +88,108 @@ def _peek_pending_post_auth_redirect():
 
 def _pop_pending_post_auth_redirect():
     return safe_next_url(session.pop('pending_post_auth_redirect', None))
+
+
+def _finalize_login(user, *, method, next_url=None):
+    """Run all post-authentication side-effects and return the redirect Response.
+
+    Shared by the password ``/login`` route and the magic-link consume route
+    so every login pathway hits the same hooks: Flask-Login session,
+    pending-redirect preservation, discussion follow-up, partner-portal sync,
+    last_login_at, analytics events (with ``method`` attribution), anonymous
+    vote merging, pending invite handling, and the profile-setup vs.
+    dashboard redirect.
+
+    ``method`` is 'password' or 'magic_link' and is recorded in
+    ``record_event`` + PostHog for supportability.
+    """
+    login_user(user)
+    # Only touch the session-stored pending redirect when the caller has one
+    # to install — flows like magic-link consume store it at request time and
+    # don't want the consume step to wipe it.
+    if next_url is not None:
+        _set_pending_post_auth_redirect(next_url)
+    _consume_pending_discussion_follow(user)
+    sync_partner_portal_session_for_email(user.email)
+
+    try:
+        from app.lib.time import utcnow_naive as _utcnow
+        user.last_login_at = _utcnow()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    record_event('user_logged_in', user_id=user.id, event_metadata={'method': method})
+    _track_posthog(
+        'user_logged_in',
+        user.id,
+        {'email': user.email, 'method': method},
+        identify_properties={'email': user.email, 'username': user.username},
+        flush=True,
+    )
+
+    fingerprint = session.get('statement_vote_fingerprint')
+    if fingerprint:
+        merged = StatementVote.merge_anonymous_votes(fingerprint, user.id)
+        if merged > 0:
+            current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
+
+    flash(_("Logged in successfully!"), "success")
+
+    pending_steward_token = session.pop('pending_steward_invite_token', None)
+    if pending_steward_token:
+        return redirect(url_for('programmes.accept_steward_invite', token=pending_steward_token))
+
+    pending_invite_token = session.pop('pending_invitation_token', None)
+    session.pop('pending_invitation_org', None)
+    session.pop('pending_invitation_email', None)
+    if pending_invite_token:
+        try:
+            membership = accept_invitation(pending_invite_token, user)
+            org_name = membership.org.company_name if membership.org else 'the organization'
+            flash(_("Welcome to %(org_name)s! You now have access to the team's briefings.", org_name=org_name), 'success')
+            return redirect(url_for('briefing.list_briefings'))
+        except ValueError as e:
+            flash(str(e), 'warning')
+
+    session.pop('pending_checkout_plan', None)
+    session.pop('pending_checkout_interval', None)
+
+    profile = user.individual_profile or user.company_profile
+    if not profile:
+        pending_redirect = _peek_pending_post_auth_redirect()
+        if pending_redirect:
+            return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
+        return redirect(url_for('profiles.select_profile_type'))
+
+    # Fire profile-completion reminder at most once per 7 days if profile has gaps.
+    missing_fields = (
+        get_missing_individual_profile_fields(profile)
+        if isinstance(profile, IndividualProfile)
+        else get_missing_company_profile_fields(profile)
+    )
+    if missing_fields:
+        _reminder_cache_key = f"profile_reminder_sent:{user.id}"
+        _already_sent = False
+        try:
+            _already_sent = bool(cache.get(_reminder_cache_key))
+        except Exception:
+            pass
+        if not _already_sent:
+            from app.resend_client import send_profile_completion_reminder_email
+            if isinstance(profile, IndividualProfile):
+                profile_url = url_for('profiles.edit_individual_profile',
+                                     username=profile.slug, _external=True)
+            else:
+                profile_url = url_for('profiles.edit_company_profile',
+                                     company_name=profile.slug, _external=True)
+            try:
+                send_profile_completion_reminder_email(user, missing_fields, profile_url)
+                cache.set(_reminder_cache_key, '1', timeout=7 * 24 * 3600)
+            except Exception as e:
+                current_app.logger.error(f"Failed to send profile reminder: {e}")
+
+    return redirect(_pop_pending_post_auth_redirect() or url_for('auth.dashboard'))
 
 
 def _consume_pending_discussion_follow(user):
@@ -570,109 +672,7 @@ def login():
             flash(_("Invalid email or password."), "error")
             return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
 
-        # Log the user in
-        login_user(user)
-        _set_pending_post_auth_redirect(next_url)
-        _consume_pending_discussion_follow(user)
-
-        # Keep partner portal session in sync with the authenticated user so a
-        # reused browser session cannot retain access from another account.
-        sync_partner_portal_session_for_email(user.email)
-
-        # Update last login timestamp and record event
-        try:
-            from app.lib.time import utcnow_naive
-            user.last_login_at = utcnow_naive()
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-
-        record_event('user_logged_in', user_id=user.id, event_metadata={'method': 'password'})
-
-        # Track login with PostHog
-        _track_posthog('user_logged_in', user.id, {'email': user.email, 'method': 'password'},
-                       identify_properties={'email': user.email, 'username': user.username},
-                       flush=True)
-        
-        # Merge any anonymous votes from this session to the user's account
-        fingerprint = session.get('statement_vote_fingerprint')
-        if fingerprint:
-            merged = StatementVote.merge_anonymous_votes(fingerprint, user.id)
-            if merged > 0:
-                current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
-        
-        flash(_("Logged in successfully!"), "success")
-
-        # Check for pending steward invite stored before login redirect
-        pending_steward_token = session.pop('pending_steward_invite_token', None)
-        if pending_steward_token:
-            return redirect(url_for('programmes.accept_steward_invite', token=pending_steward_token))
-
-        # Check for pending organization invitation
-        pending_invite_token = session.pop('pending_invitation_token', None)
-        session.pop('pending_invitation_org', None)  # Clean up
-        session.pop('pending_invitation_email', None)  # Clean up
-
-        if pending_invite_token:
-            try:
-                membership = accept_invitation(pending_invite_token, user)
-                org_name = membership.org.company_name if membership.org else 'the organization'
-                flash(_("Welcome to %(org_name)s! You now have access to the team's briefings.", org_name=org_name), 'success')
-                return redirect(url_for('briefing.list_briefings'))
-            except ValueError as e:
-                flash(str(e), 'warning')
-                # Continue with normal login flow
-
-        # Clean up any stale checkout session data
-        # (New registrations now auto-login and redirect to checkout directly)
-        session.pop('pending_checkout_plan', None)
-        session.pop('pending_checkout_interval', None)
-
-        # Check if the user has an individual or company profile
-        profile = user.individual_profile or user.company_profile
-
-        if not profile:
-            # Redirect to profile setup if no profile exists
-            pending_redirect = _peek_pending_post_auth_redirect()
-            if pending_redirect:
-                return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
-            return redirect(url_for('profiles.select_profile_type'))
-
-        # If the user has a profile, check for missing fields and send reminder if necessary
-        missing_fields = (
-            get_missing_individual_profile_fields(profile)
-            if isinstance(profile, IndividualProfile)
-            else get_missing_company_profile_fields(profile)
-        )
-
-        # Send profile completion reminder if there are missing fields, at most once per 7 days
-        if missing_fields:
-            _reminder_cache_key = f"profile_reminder_sent:{user.id}"
-            _already_sent = False
-            try:
-                _already_sent = bool(cache.get(_reminder_cache_key))
-            except Exception:
-                pass
-
-            if not _already_sent:
-                from app.resend_client import send_profile_completion_reminder_email
-
-                if isinstance(profile, IndividualProfile):
-                    profile_url = url_for('profiles.edit_individual_profile',
-                                         username=profile.slug, _external=True)
-                else:
-                    profile_url = url_for('profiles.edit_company_profile',
-                                         company_name=profile.slug, _external=True)
-
-                try:
-                    send_profile_completion_reminder_email(user, missing_fields, profile_url)
-                    # Suppress further reminders for 7 days
-                    cache.set(_reminder_cache_key, '1', timeout=7 * 24 * 3600)
-                except Exception as e:
-                    current_app.logger.error(f"Failed to send profile reminder: {e}")
-
-        # Redirect to the dashboard if the user has a complete or partially complete profile
-        return redirect(_pop_pending_post_auth_redirect() or url_for('auth.dashboard'))
+        return _finalize_login(user, method='password', next_url=next_url)
 
     return render_template('auth/login.html', next_url=next_url)
 
@@ -1053,3 +1053,141 @@ def password_reset(token):
             current_app.logger.error(f"Password reset error: {str(e)}")
 
     return render_template('auth/password_reset.html', token=token)
+
+
+# =============================================================================
+# Magic-link (passwordless) login
+# =============================================================================
+#
+# Three-step flow:
+#   1. GET/POST /auth/login/magic-link — user submits email; we email a link.
+#   2. GET /auth/login/magic-link/<token> — landing page with Continue button.
+#      Does NOT consume the token. Email scanners / link pre-fetchers only hit
+#      this GET, so a one-shot token survives them.
+#   3. POST /auth/login/magic-link/<token> — user clicks Continue. Consumes
+#      the token, auto-verifies email (possession proof), runs the same
+#      post-auth hooks as password login via _finalize_login.
+#
+# Anti-enumeration: the request step always flashes the same message regardless
+# of whether the email matches an account.
+#
+# Per-email debounce (short cache TTL) prevents mailbombing a single address
+# even when an attacker rotates IPs.
+
+_MAGIC_LINK_EMAIL_COOLDOWN_SECONDS = 60  # 1 request per email per minute
+
+
+@auth_bp.route('/login/magic-link', methods=['GET', 'POST'])
+@limiter.limit("5/hour", methods=['POST'])
+def magic_link_request():
+    next_url = _current_next_url()
+
+    if current_user.is_authenticated:
+        return redirect(next_url or url_for('auth.dashboard'))
+
+    if request.method == 'POST':
+        email = normalize_email(request.form.get('email'))
+
+        # Preserve `next` across the round-trip — the email link has no query
+        # string, so the consume step reads this from the session instead.
+        _set_pending_post_auth_redirect(next_url)
+
+        if email:
+            cooldown_key = f"magic_link_cooldown:{email}"
+            on_cooldown = False
+            try:
+                on_cooldown = bool(cache.get(cooldown_key))
+            except Exception:
+                pass
+
+            if not on_cooldown:
+                user = User.query.filter(func.lower(User.email) == email).first()
+                if user:
+                    try:
+                        token = user.get_magic_login_token()
+                        db.session.commit()  # Commit valid_after BEFORE sending email.
+                        magic_url = url_for(
+                            'auth.magic_link_landing',
+                            token=token,
+                            _external=True,
+                        )
+                        send_magic_login_email(user, magic_url)
+                        _track_posthog('magic_link_requested', user.id,
+                                       {'email': user.email})
+                        current_app.logger.info(
+                            f"Magic-link requested for user {user.id}")
+                    except Exception as e:
+                        db.session.rollback()
+                        current_app.logger.error(
+                            f"Magic-link request failed for user "
+                            f"{getattr(user, 'id', 'unknown')}: {e}")
+
+                # Set cooldown whether or not an account exists — prevents
+                # per-email enumeration via response-timing on repeated sends.
+                try:
+                    cache.set(cooldown_key, '1',
+                              timeout=_MAGIC_LINK_EMAIL_COOLDOWN_SECONDS)
+                except Exception:
+                    pass
+
+        flash(_("If that email has a Society Speaks account, we've sent you a sign-in link. Check your inbox — it expires in 15 minutes."), 'info')
+        return render_template('auth/magic_link_sent.html',
+                               email=email,
+                               next_url=next_url)
+
+    return render_template('auth/magic_link_request.html', next_url=next_url)
+
+
+@auth_bp.route('/login/magic-link/<token>', methods=['GET'])
+@limiter.limit("20/minute")
+def magic_link_landing(token):
+    """Render the Continue landing page — does NOT consume the token.
+
+    Email scanners and prefetchers issue GET requests; keeping consume
+    behind a POST means a one-shot token survives them.
+    """
+    user = User.verify_magic_login_token(token)
+    if user is None:
+        flash(_("This sign-in link is invalid, expired, or has already been used. Request a new one below."), 'warning')
+        return redirect(url_for('auth.magic_link_request'))
+
+    if current_user.is_authenticated and current_user.id == user.id:
+        # Same user already logged in — skip the confirmation step. Still
+        # consume the token so the email link is not left as a valid bearer
+        # credential (e.g. another device or a forwarded message).
+        try:
+            user.consume_magic_login_token()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return redirect(_pop_pending_post_auth_redirect() or url_for('auth.dashboard'))
+
+    return render_template('auth/magic_link_continue.html',
+                           token=token,
+                           email=user.email)
+
+
+@auth_bp.route('/login/magic-link/<token>', methods=['POST'])
+@limiter.limit("20/minute")
+def magic_link_consume(token):
+    user = User.verify_magic_login_token(token)
+    if user is None:
+        flash(_("This sign-in link is invalid, expired, or has already been used. Request a new one below."), 'warning')
+        return redirect(url_for('auth.magic_link_request'))
+
+    # Safely hand off sessions if another account is currently logged in.
+    if current_user.is_authenticated and current_user.id != user.id:
+        logout_user()
+
+    try:
+        user.consume_magic_login_token()
+        if not user.email_verified:
+            user.email_verified = True
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Magic-link consume failed for user {user.id}: {e}")
+        flash(_("Something went wrong signing you in. Please request a new link."), 'danger')
+        return redirect(url_for('auth.magic_link_request'))
+
+    return _finalize_login(user, method='magic_link', next_url=None)

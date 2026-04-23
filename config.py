@@ -331,6 +331,9 @@ class Config:
     RESEND_API_KEY = os.getenv('RESEND_API_KEY')
     RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', 'Society Speaks <hello@societyspeaks.io>')
     RESEND_DAILY_FROM_EMAIL = os.getenv('RESEND_DAILY_FROM_EMAIL', 'Daily Questions <daily@societyspeaks.io>')
+    # Optional: align auth-email From with link domain (see ResendEmailClient).
+    RESEND_TRANSACTIONAL_FROM_EMAIL = os.getenv('RESEND_TRANSACTIONAL_FROM_EMAIL')
+    RESEND_REPLY_TO = os.getenv('RESEND_REPLY_TO')
     
     # Validate Resend API key in production
     if not RESEND_API_KEY and os.getenv('FLASK_ENV') == 'production':

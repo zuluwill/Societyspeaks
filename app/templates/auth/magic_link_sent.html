@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow" />
+{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md text-center">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+    </div>
+
+    <h1 class="mt-4 text-2xl font-bold text-gray-800">{{ _('Check your inbox') }}</h1>
+
+    {% if email %}
+    <p class="mt-2 text-sm text-gray-600">
+        {{ _("If %(email)s has a Society Speaks account, we've sent you a sign-in link.", email=email) }}
+    </p>
+    {% else %}
+    <p class="mt-2 text-sm text-gray-600">
+        {{ _("If that email has a Society Speaks account, we've sent you a sign-in link.") }}
+    </p>
+    {% endif %}
+
+    <p class="mt-4 text-sm text-gray-500">
+        {{ _("The link expires in 15 minutes and can only be used once. Didn't get it? Check your spam folder.") }}
+    </p>
+
+    <div class="mt-6 space-y-2">
+        <a href="{{ url_for('auth.magic_link_request', next=next_url) if next_url else url_for('auth.magic_link_request') }}"
+           class="inline-block text-sm text-primary-500 hover:underline">
+            {{ _('Request another link') }}
+        </a>
+        <div>
+            <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}"
+               class="text-sm text-gray-500 hover:underline">{{ _('Sign in with password instead') }}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{{ _('Hi %(username)s,', username=username) }}
+
+{{ _('Open the link below to sign in to your Society Speaks account. No password needed.') }}
+
+{{ magic_url }}
+
+{{ _('This link will expire in 15 minutes and can only be used once.') }}
+
+{{ _("If you didn't request this link, you can safely ignore this email. Your account stays secure.") }}
+
+—
+{{ _('Society Speaks') }}
+{{ base_url }}
