@@ -105,6 +105,8 @@ STRIPE_PERSONAL_MONTHLY_PRICE_ID = "price_1T0InvAjRojnyfWfBrvh6xe8"
 STRIPE_PERSONAL_YEARLY_PRICE_ID = "price_1T0IoaAjRojnyfWfKlEFMxme"
 X_POSTING_ENABLED = "false"
 GUNICORN_CMD_ARGS = "-c gunicorn_config.py"
+RESEND_TRANSACTIONAL_FROM_EMAIL = "Society Speaks <hello@societyspeaks.io>"
+RESEND_REPLY_TO = "hello@societyspeaks.io"
 
 [userenv.production]
 
