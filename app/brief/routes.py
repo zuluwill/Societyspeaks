@@ -1236,6 +1236,7 @@ def admin_analytics():
             'auth': 'Authentication',
             'daily_brief': 'Daily Brief',
             'daily_question': 'Daily Question',
-            'discussion': 'Discussion Notifications'
+            'discussion': 'Discussion Notifications',
+            'admin': 'Admin / system',
         }
     )

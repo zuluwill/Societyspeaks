@@ -18,7 +18,7 @@
         <p class="text-gray-600">{{ _('Email performance metrics for the last 30 briefs') }}</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-sm border p-6">
             <div class="text-sm font-medium text-gray-500 mb-1">{{ _('Total Emails Sent') }}</div>
             <div class="text-3xl font-bold text-gray-900">{{ total_sent }}</div>
@@ -28,12 +28,16 @@
             <div class="text-3xl font-bold text-green-600">{{ total_opens }}</div>
         </div>
         <div class="bg-white rounded-lg shadow-sm border p-6">
-            <div class="text-sm font-medium text-gray-500 mb-1">{{ _('Open Rate') }}</div>
-            <div class="text-3xl font-bold text-primary-600">{{ open_rate }}%</div>
+            <div class="text-sm font-medium text-gray-500 mb-1">{{ _('Open rate') }} <span class="text-gray-400 font-normal">({{ _('of sent') }})</span></div>
+            <div class="text-3xl font-bold text-primary-600">{% if open_rate is not none %}{{ open_rate }}%{% else %}{{ _('N/A') }}{% endif %}</div>
         </div>
         <div class="bg-white rounded-lg shadow-sm border p-6">
-            <div class="text-sm font-medium text-gray-500 mb-1">{{ _('Click Rate') }}</div>
-            <div class="text-3xl font-bold text-purple-600">{{ click_rate }}%</div>
+            <div class="text-sm font-medium text-gray-500 mb-1">{{ _('CTR') }} <span class="text-gray-400 font-normal">({{ _('of sent') }})</span></div>
+            <div class="text-3xl font-bold text-purple-600">{% if click_rate is not none %}{{ click_rate }}%{% else %}{{ _('N/A') }}{% endif %}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-6 sm:col-span-2 lg:col-span-1">
+            <div class="text-sm font-medium text-gray-500 mb-1">{{ _('Click-to-open (CTOR)') }}</div>
+            <div class="text-3xl font-bold text-indigo-600">{% if click_to_open_rate is not none %}{{ click_to_open_rate }}%{% else %}{{ _('N/A') }}{% endif %}</div>
         </div>
     </div>
 
@@ -59,8 +63,8 @@
                         <td class="py-3 px-2 text-right text-green-600">{{ data.opens }}</td>
                         <td class="py-3 px-2 text-right text-purple-600">{{ data.clicks }}</td>
                         <td class="py-3 px-2 text-right text-primary-600">
-                            {% if data.sent > 0 %}
-                                {{ ((data.opens / data.sent) * 100)|round(1) }}%
+                            {% if data.open_rate is not none %}
+                                {{ data.open_rate }}%
                             {% else %}
                                 -
                             {% endif %}

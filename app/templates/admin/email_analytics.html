@@ -2,6 +2,7 @@
 {% block title %}Email Analytics - Admin{% endblock %}
 
 {% block admin_content %}
+{% macro pct(v) %}{% if v is not none %}{{ v }}%{% else %}N/A{% endif %}{% endmacro %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     {# Header #}
     <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
@@ -53,30 +54,31 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Delivered</div>
             <div class="mt-1 text-2xl font-bold text-primary-600">{{ stats.total_delivered | default(0) }}</div>
-            <div class="text-xs text-gray-500">{{ stats.delivery_rate | default(0) }}%</div>
+            <div class="text-xs text-gray-500">{{ pct(stats.delivery_rate) }}{% if stats.get('delivery_rate_estimated') %} <span class="text-amber-600" title="Estimated from (sent − bounces) when no delivered webhooks">(est.)</span>{% endif %}</div>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Opened</div>
             <div class="mt-1 text-2xl font-bold text-green-600">{{ stats.total_opened | default(0) }}</div>
-            <div class="text-xs text-gray-500">{{ stats.open_rate | default(0) }}% rate</div>
+            <div class="text-xs text-gray-500">Open rate: {{ pct(stats.open_rate) }} of delivered</div>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Clicked</div>
             <div class="mt-1 text-2xl font-bold text-purple-600">{{ stats.total_clicked | default(0) }}</div>
-            <div class="text-xs text-gray-500">{{ stats.click_rate | default(0) }}% rate</div>
+            <div class="text-xs text-gray-500">CTR: {{ pct(stats.click_rate) }} · CTOR: {{ pct(stats.click_to_open_rate) }}</div>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bounced</div>
             <div class="mt-1 text-2xl font-bold text-red-600">{{ stats.total_bounced | default(0) }}</div>
-            <div class="text-xs text-gray-500">{{ stats.bounce_rate | default(0) }}%</div>
+            <div class="text-xs text-gray-500">{{ pct(stats.bounce_rate) }} of sent</div>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4">
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Complaints</div>
             <div class="mt-1 text-2xl font-bold text-orange-600">{{ stats.total_complained | default(0) }}</div>
+            <div class="text-xs text-gray-500">Rate: {{ pct(stats.complaint_rate) }} of delivered</div>
         </div>
     </div>
 
@@ -140,18 +142,22 @@
                             <span class="font-medium text-gray-900">{{ cat_name }}</span>
                             <span class="text-sm text-gray-500">{{ cat_stats.total_sent | default(0) }} sent</span>
                         </div>
-                        <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                             <div>
-                                <span class="text-gray-500">Open Rate</span>
-                                <div class="font-semibold text-green-600">{{ cat_stats.open_rate | default(0) }}%</div>
+                                <span class="text-gray-500">Open (of del.)</span>
+                                <div class="font-semibold text-green-600">{{ pct(cat_stats.open_rate) }}</div>
                             </div>
                             <div>
-                                <span class="text-gray-500">Click Rate</span>
-                                <div class="font-semibold text-purple-600">{{ cat_stats.click_rate | default(0) }}%</div>
+                                <span class="text-gray-500">CTR</span>
+                                <div class="font-semibold text-purple-600">{{ pct(cat_stats.click_rate) }}</div>
                             </div>
                             <div>
-                                <span class="text-gray-500">Bounce Rate</span>
-                                <div class="font-semibold text-red-600">{{ cat_stats.bounce_rate | default(0) }}%</div>
+                                <span class="text-gray-500">CTOR</span>
+                                <div class="font-semibold text-indigo-600">{{ pct(cat_stats.click_to_open_rate) }}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Bounce</span>
+                                <div class="font-semibold text-red-600">{{ pct(cat_stats.bounce_rate) }}</div>
                             </div>
                         </div>
                     </div>
@@ -207,6 +213,7 @@
                                 {% elif event.email_category == 'daily_brief' %}bg-amber-100 text-amber-700
                                 {% elif event.email_category == 'daily_question' %}bg-green-100 text-green-700
                                 {% elif event.email_category == 'discussion' %}bg-purple-100 text-purple-700
+                                {% elif event.email_category == 'admin' %}bg-slate-100 text-slate-800
                                 {% else %}bg-gray-100 text-gray-700{% endif %}">
                                 {{ event.email_category | replace('_', ' ') | title }}
                             </span>
@@ -236,6 +243,7 @@
     {# Webhook setup info #}
     <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 class="text-lg font-semibold text-blue-900 mb-2">Webhook Configuration</h3>
+        <p class="text-sm text-primary-800 mb-2">Open rate, CTR, and CTOR use <strong>delivered</strong> (and complaint rate vs delivered) when <code>email.delivered</code> webhooks are present. If those show N/A, subscribe to the events below and enable open tracking for your domain. For daily briefs, link clicks are also recorded via <code class="text-xs">/brief/track/click</code>; set <code class="text-xs">EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS=false</code> or turn off Resend link tracking on the domain to avoid double-counting the same click.</p>
         <p class="text-primary-800 mb-4">To track email events, configure this webhook URL in your Resend dashboard:</p>
         <div class="bg-white rounded p-4 font-mono text-sm break-all border border-blue-200">
             {{ request.host_url }}brief/webhooks/resend

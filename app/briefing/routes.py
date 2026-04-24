@@ -21,6 +21,7 @@ from app.models import (
     BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile, NewsSource,
     BriefEmailOpen, BriefLinkClick, OrganizationMember, Subscription
 )
+from app.models.email import EmailEvent
 from app.billing.enforcement import (
     get_subscription_context, check_can_create_brief, enforce_brief_limit,
     check_source_limit, check_recipient_limit, require_feature
@@ -3246,22 +3247,41 @@ def analytics(briefing_id):
         status="sent"
     ).order_by(BriefRun.sent_at.desc()).limit(30).all()
     
-    # Calculate aggregate stats
+    # Calculate aggregate stats (BriefRun: no per-message delivered events; use sent cohort).
     total_sent = sum(r.emails_sent or 0 for r in runs)
     total_opens = sum(r.unique_opens or 0 for r in runs)
     total_clicks = sum(r.total_clicks or 0 for r in runs)
+
+    _rates = EmailEvent.compute_rate_metrics(
+        total_sent,
+        0,
+        total_opens,
+        total_clicks,
+        0,
+        0,
+        engagement_basis="sent",
+    )
+    open_rate = _rates.get("open_rate")
+    click_rate = _rates.get("click_rate")
+    click_to_open_rate = _rates.get("click_to_open_rate")
     
-    open_rate = (total_opens / total_sent * 100) if total_sent > 0 else 0
-    click_rate = (total_clicks / total_opens * 100) if total_opens > 0 else 0
-    
-    # Prepare chart data
+    # Prepare chart data — compute per-row rates via the shared helper so the
+    # sent-basis definition stays in one place.
     chart_data = []
     for run in reversed(runs):
+        run_sent = run.emails_sent or 0
+        run_opens = run.unique_opens or 0
+        run_clicks = run.total_clicks or 0
+        row_rates = EmailEvent.compute_rate_metrics(
+            run_sent, 0, run_opens, run_clicks, 0, 0,
+            engagement_basis="sent",
+        )
         chart_data.append({
             "date": run.sent_at.strftime("%b %d") if run.sent_at else "N/A",
-            "sent": run.emails_sent or 0,
-            "opens": run.unique_opens or 0,
-            "clicks": run.total_clicks or 0,
+            "sent": run_sent,
+            "opens": run_opens,
+            "clicks": run_clicks,
+            "open_rate": row_rates.get("open_rate"),
         })
     
     return render_template(
@@ -3271,8 +3291,9 @@ def analytics(briefing_id):
         total_sent=total_sent,
         total_opens=total_opens,
         total_clicks=total_clicks,
-        open_rate=round(open_rate, 1),
-        click_rate=round(click_rate, 1),
+        open_rate=open_rate,
+        click_rate=click_rate,
+        click_to_open_rate=click_to_open_rate,
         chart_data=chart_data
     )
 

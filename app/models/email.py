@@ -10,7 +10,7 @@ imports.
 """
 
 from datetime import timedelta
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from app import db
 from app.lib.time import utcnow_naive
@@ -97,6 +97,85 @@ class EmailEvent(db.Model):
         if normalized.startswith('email.'):
             normalized = normalized[6:]
         return normalized
+
+    @staticmethod
+    def compute_rate_metrics(
+        total_sent: int,
+        total_delivered: int,
+        total_opened: int,
+        total_clicked: int,
+        total_bounced: int = 0,
+        total_complained: int = 0,
+        *,
+        engagement_basis: str = "delivered",
+    ) -> Dict[str, Any]:
+        """
+        Single source of truth for email performance rates (0–100 or None = N/A).
+
+        Definitions (industry-typical for ESP-backed metrics):
+        - **delivery_rate**: delivered / sent, or (sent − hard bounces) / sent when
+          `delivered` events are not tracked; None if we cannot estimate.
+        - **open_rate** (per delivered message): unique opens are not in this table
+          (each open is a row) — we report opens / delivered as a proxy, N/A if no
+          delivery cohort. With ``engagement_basis="sent"`` (e.g. briefing runs
+          without Resend webhooks) uses opens / sent and CTR = clicks / sent.
+        - **click_rate** (CTR): clicks / **delivered** (or / sent with sent-basis).
+        - **click_to_open_rate** (CTOR): clicks / opens, N/A if opens = 0.
+
+        None values are intentional: the UI should show N/A, not 0%,
+        when the denominator is unknown (e.g. no `email.delivered` webhooks).
+        """
+        if engagement_basis not in ("delivered", "sent"):
+            raise ValueError("engagement_basis must be 'delivered' or 'sent'")
+
+        out: Dict[str, Any] = {
+            "delivery_rate": None,
+            "delivery_rate_estimated": False,
+            "open_rate": None,
+            "click_rate": None,
+            "click_to_open_rate": None,
+            "bounce_rate": None,
+            "complaint_rate": None,
+        }
+
+        if total_sent <= 0:
+            return out
+
+        if engagement_basis == "delivered":
+            if total_delivered > 0:
+                # total_delivered > 0 implies total_sent > 0 (can't deliver what wasn't sent),
+                # so no divide-by-zero guard is needed here.
+                out["delivery_rate"] = round(total_delivered / total_sent * 100, 1)
+            elif total_bounced > 0:
+                out["delivery_rate"] = round(
+                    max(total_sent - total_bounced, 0) / total_sent * 100, 1
+                )
+                out["delivery_rate_estimated"] = True
+            # else: None — no delivery signal
+
+            out["bounce_rate"] = round((total_bounced / total_sent) * 100, 1)
+
+            denom = total_delivered
+            if denom > 0:
+                out["open_rate"] = round((total_opened / denom) * 100, 1)
+                out["click_rate"] = round((total_clicked / denom) * 100, 1)
+                out["complaint_rate"] = round((total_complained / denom) * 100, 1)
+        else:  # engagement_basis == "sent"
+            # total_sent > 0 here — the early-return above rules out the zero case.
+            out["open_rate"] = round((total_opened / total_sent) * 100, 1)
+            out["click_rate"] = round((total_clicked / total_sent) * 100, 1)
+            if total_opened > 0:
+                out["click_to_open_rate"] = round(
+                    (total_clicked / total_opened) * 100, 1
+                )
+            return out
+
+        if total_opened > 0:
+            out["click_to_open_rate"] = round(
+                (total_clicked / total_opened) * 100, 1
+            )
+
+        return out
 
     @classmethod
     def record_event(cls, recipient_email: str, event_type: str, email_category: str,
@@ -188,18 +267,30 @@ class EmailEvent(db.Model):
         total_bounced = event_counts.get(cls.EVENT_BOUNCED, 0)
         total_complained = event_counts.get(cls.EVENT_COMPLAINED, 0)
 
+        rates = cls.compute_rate_metrics(
+            total_sent,
+            total_delivered,
+            total_opened,
+            total_clicked,
+            total_bounced,
+            total_complained,
+            engagement_basis="delivered",
+        )
         return {
-            'total_sent': total_sent,
-            'total_delivered': total_delivered,
-            'total_opened': total_opened,
-            'total_clicked': total_clicked,
-            'total_bounced': total_bounced,
-            'total_complained': total_complained,
-            'delivery_rate': round((total_delivered / total_sent * 100), 1) if total_sent > 0 else 0,
-            'open_rate': round((total_opened / total_delivered * 100), 1) if total_delivered > 0 else 0,
-            'click_rate': round((total_clicked / total_opened * 100), 1) if total_opened > 0 else 0,
-            'bounce_rate': round((total_bounced / total_sent * 100), 1) if total_sent > 0 else 0,
-            'event_counts': event_counts
+            "total_sent": total_sent,
+            "total_delivered": total_delivered,
+            "total_opened": total_opened,
+            "total_clicked": total_clicked,
+            "total_bounced": total_bounced,
+            "total_complained": total_complained,
+            "delivery_rate": rates["delivery_rate"],
+            "delivery_rate_estimated": rates["delivery_rate_estimated"],
+            "open_rate": rates["open_rate"],
+            "click_rate": rates["click_rate"],
+            "click_to_open_rate": rates["click_to_open_rate"],
+            "bounce_rate": rates["bounce_rate"],
+            "complaint_rate": rates["complaint_rate"],
+            "event_counts": event_counts,
         }
 
     @classmethod

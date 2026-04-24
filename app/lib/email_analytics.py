@@ -23,10 +23,10 @@ Usage:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from app.lib.time import utcnow_naive
 from typing import Dict, Any, Optional, List, Tuple
-from flask import current_app
+from flask import current_app, has_app_context
 from app import db
 from app.models import (
     EmailEvent, User, DailyBriefSubscriber, 
@@ -35,27 +35,34 @@ from app.models import (
 
 logger = logging.getLogger(__name__)
 
+# First-party click-tracking URL substring. Matches the route registered at
+# app/brief/routes.py (`brief.brief_track_click`, `/brief/track/click/<id>`).
+# If that blueprint path ever changes, update this constant too — grep for the
+# other end by the constant name.
+_FIRST_PARTY_CLICK_TRACKER_PATH = "/brief/track/click"
+
 
 class EmailAnalytics:
     """
     Unified email analytics service.
     DRY: All email tracking goes through this single service.
     """
-    
-    # Email categories (mirrors EmailEvent constants)
-    CATEGORY_AUTH = 'auth'
-    CATEGORY_DAILY_BRIEF = 'daily_brief'
-    CATEGORY_DAILY_QUESTION = 'daily_question'
-    CATEGORY_DISCUSSION = 'discussion'
-    CATEGORY_ADMIN = 'admin'
-    
-    # Event types
-    EVENT_SENT = 'sent'
-    EVENT_DELIVERED = 'delivered'
-    EVENT_OPENED = 'opened'
-    EVENT_CLICKED = 'clicked'
-    EVENT_BOUNCED = 'bounced'
-    EVENT_COMPLAINED = 'complained'
+
+    # Re-exported from EmailEvent so there is a single source of truth for
+    # category / event-type strings. External call sites keep using
+    # ``EmailAnalytics.CATEGORY_*`` / ``EmailAnalytics.EVENT_*``.
+    CATEGORY_AUTH = EmailEvent.CATEGORY_AUTH
+    CATEGORY_DAILY_BRIEF = EmailEvent.CATEGORY_DAILY_BRIEF
+    CATEGORY_DAILY_QUESTION = EmailEvent.CATEGORY_DAILY_QUESTION
+    CATEGORY_DISCUSSION = EmailEvent.CATEGORY_DISCUSSION
+    CATEGORY_ADMIN = EmailEvent.CATEGORY_ADMIN
+
+    EVENT_SENT = EmailEvent.EVENT_SENT
+    EVENT_DELIVERED = EmailEvent.EVENT_DELIVERED
+    EVENT_OPENED = EmailEvent.EVENT_OPENED
+    EVENT_CLICKED = EmailEvent.EVENT_CLICKED
+    EVENT_BOUNCED = EmailEvent.EVENT_BOUNCED
+    EVENT_COMPLAINED = EmailEvent.EVENT_COMPLAINED
 
     @classmethod
     def record_send(cls, email: str, category: str, resend_id: Optional[str] = None,
@@ -168,6 +175,30 @@ class EmailAnalytics:
             # Normalize event type (remove 'email.' prefix)
             normalized_type = event_type.replace('email.', '')
 
+            # Optional: ignore Resend email.clicked when first-party tracking is authoritative
+            # (set EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS=false; see admin email analytics).
+            if normalized_type == cls.EVENT_CLICKED:
+                if has_app_context() and not current_app.config.get(
+                    "EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS", True
+                ):
+                    logger.info(
+                        "Skipping Resend email.clicked webhook (EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS is false)"
+                    )
+                    return None
+                click_preview = ""
+                click_block = data.get("click") or {}
+                if isinstance(click_block, dict):
+                    click_preview = (
+                        click_block.get("link")
+                        or click_block.get("url")
+                        or ""
+                    )
+                if _FIRST_PARTY_CLICK_TRACKER_PATH in (click_preview or ""):
+                    logger.info(
+                        "Skipping Resend email.clicked; link uses first-party brief tracker URL"
+                    )
+                    return None
+
             # Durable idempotency: ignore duplicate webhook events for same
             # resend_email_id + event_type + recipient combination.
             resend_email_id = data.get('email_id')
@@ -239,48 +270,65 @@ class EmailAnalytics:
     def _identify_email_context(cls, email: str, data: Dict) -> tuple:
         """
         Identify email category and related records based on recipient.
-        DRY: Centralized logic for email context identification.
-        
+        Subscriber/list membership takes precedence over User heuristics so
+        webhook rows match categories used at send time (record_send).
+
         Returns:
             tuple: (category, context_dict)
         """
-        context = {}
-        category = cls.CATEGORY_AUTH  # Default
-        
-        # Check if it's a brief subscriber
-        brief_subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
-        if brief_subscriber:
-            context['brief_subscriber_id'] = brief_subscriber.id
-            # Check subject to distinguish brief from other emails
-            subject = data.get('subject', '').lower()
-            if 'brief' in subject or 'news' in subject:
-                category = cls.CATEGORY_DAILY_BRIEF
+        subject = (data.get("subject") or "").lower()
+        context: Dict[str, Any] = {}
 
-        # Check if it's a briefing recipient (briefing system)
+        brief_subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
         briefing_recipient = BriefRecipient.query.filter_by(email=email).first()
-        if briefing_recipient:
-            category = cls.CATEGORY_DAILY_BRIEF
-        
-        # Check if it's a question subscriber
         question_subscriber = DailyQuestionSubscriber.query.filter_by(email=email).first()
-        if question_subscriber:
-            context['question_subscriber_id'] = question_subscriber.id
-            subject = data.get('subject', '').lower()
-            if 'question' in subject or 'daily' in subject:
-                category = cls.CATEGORY_DAILY_QUESTION
-        
-        # Check if it's a registered user
         user = User.query.filter_by(email=email).first()
+
+        if brief_subscriber:
+            context["brief_subscriber_id"] = brief_subscriber.id
+        if question_subscriber:
+            context["question_subscriber_id"] = question_subscriber.id
         if user:
-            context['user_id'] = user.id
-            subject = data.get('subject', '').lower()
-            if 'password' in subject or 'reset' in subject:
+            context["user_id"] = user.id
+
+        # Precedence: list membership first (matches send-time categories); subject only
+        # disambiguates when the same address appears on multiple lists.
+        if brief_subscriber and briefing_recipient:
+            if any(
+                k in subject
+                for k in ("question of the day", "daily question")
+            ):
+                category = cls.CATEGORY_DAILY_QUESTION
+            else:
+                category = cls.CATEGORY_DAILY_BRIEF
+        elif brief_subscriber and question_subscriber:
+            if any(
+                k in subject
+                for k in (
+                    "question of the day",
+                    "daily question",
+                    "your question",
+                )
+            ):
+                category = cls.CATEGORY_DAILY_QUESTION
+            else:
+                category = cls.CATEGORY_DAILY_BRIEF
+        elif brief_subscriber or briefing_recipient:
+            category = cls.CATEGORY_DAILY_BRIEF
+        elif question_subscriber:
+            category = cls.CATEGORY_DAILY_QUESTION
+        elif user:
+            if "password" in subject or "reset" in subject:
                 category = cls.CATEGORY_AUTH
-            elif 'welcome' in subject:
+            elif "welcome" in subject:
                 category = cls.CATEGORY_AUTH
-            elif 'discussion' in subject or 'notification' in subject:
+            elif "discussion" in subject or "notification" in subject:
                 category = cls.CATEGORY_DISCUSSION
-        
+            else:
+                category = cls.CATEGORY_AUTH
+        else:
+            category = cls.CATEGORY_AUTH
+
         return category, context
 
     @classmethod
@@ -340,8 +388,13 @@ class EmailAnalytics:
         
         # Per-category stats
         categories = {}
-        for cat in [cls.CATEGORY_AUTH, cls.CATEGORY_DAILY_BRIEF, 
-                    cls.CATEGORY_DAILY_QUESTION, cls.CATEGORY_DISCUSSION]:
+        for cat in [
+            cls.CATEGORY_AUTH,
+            cls.CATEGORY_DAILY_BRIEF,
+            cls.CATEGORY_DAILY_QUESTION,
+            cls.CATEGORY_DISCUSSION,
+            cls.CATEGORY_ADMIN,
+        ]:
             categories[cat] = EmailEvent.get_stats(email_category=cat, days=days)
         
         # Subscriber counts
@@ -399,28 +452,45 @@ class EmailAnalytics:
         ).all()
         
         stats = {
-            'total_sent': 0,
-            'total_opened': 0,
-            'total_clicked': 0,
-            'categories': {}
+            "total_sent": 0,
+            "total_delivered": 0,
+            "total_opened": 0,
+            "total_clicked": 0,
+            "total_bounced": 0,
+            "total_complained": 0,
+            "categories": {},
         }
         
         for event in events:
             normalized_type = EmailEvent.normalize_event_type(event.event_type)
             if normalized_type == cls.EVENT_SENT:
-                stats['total_sent'] += 1
+                stats["total_sent"] += 1
+            elif normalized_type == cls.EVENT_DELIVERED:
+                stats["total_delivered"] += 1
             elif normalized_type == cls.EVENT_OPENED:
-                stats['total_opened'] += 1
+                stats["total_opened"] += 1
             elif normalized_type == cls.EVENT_CLICKED:
-                stats['total_clicked'] += 1
+                stats["total_clicked"] += 1
+            elif normalized_type == cls.EVENT_BOUNCED:
+                stats["total_bounced"] += 1
+            elif normalized_type == cls.EVENT_COMPLAINED:
+                stats["total_complained"] += 1
             
             # Track by category
-            if event.email_category not in stats['categories']:
-                stats['categories'][event.email_category] = 0
-            stats['categories'][event.email_category] += 1
+            if event.email_category not in stats["categories"]:
+                stats["categories"][event.email_category] = 0
+            stats["categories"][event.email_category] += 1
         
-        stats['open_rate'] = round((stats['total_opened'] / stats['total_sent'] * 100), 1) if stats['total_sent'] > 0 else 0
-        stats['click_rate'] = round((stats['total_clicked'] / stats['total_opened'] * 100), 1) if stats['total_opened'] > 0 else 0
+        rates = EmailEvent.compute_rate_metrics(
+            stats["total_sent"],
+            stats["total_delivered"],
+            stats["total_opened"],
+            stats["total_clicked"],
+            stats["total_bounced"],
+            stats["total_complained"],
+            engagement_basis="delivered",
+        )
+        stats.update(rates)
         
         return stats
 

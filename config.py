@@ -338,7 +338,13 @@ class Config:
     # Validate Resend API key in production
     if not RESEND_API_KEY and os.getenv('FLASK_ENV') == 'production':
         logging.warning("RESEND_API_KEY not set in production - email sending will fail")
-    
+
+    # If false, ignore Resend `email.clicked` webhooks (use first-party click routes only
+    # or Resend domain click tracking off). Default true for backward compatibility.
+    EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS = (
+        os.getenv("EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS", "true").lower() == "true"
+    )
+
     # Legacy SMTP Configuration (kept for backwards compatibility, not actively used)
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
