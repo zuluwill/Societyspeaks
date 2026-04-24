@@ -6,6 +6,13 @@
 {% set seo_title = discussion_translation.title if discussion_translation else discussion.title %}
 {% set seo_desc = (discussion_translation.description if discussion_translation else '') or (discussion.description or '') %}
 {% set author_ld_name = discussion.creator.username if discussion.creator else _('Society Speaks') %}
+{% if discussion.creator and discussion.creator.individual_profile %}
+  {% set author_ld_url = url_for('profiles.view_individual_profile', username=discussion.creator.individual_profile.slug, _external=True) %}
+{% elif discussion.creator and discussion.creator.company_profile %}
+  {% set author_ld_url = url_for('profiles.view_company_profile', company_name=discussion.creator.company_profile.slug, _external=True) %}
+{% else %}
+  {% set author_ld_url = url_for('main.index', _external=True) %}
+{% endif %}
 
 {% block title %}{{ seo_title }} — Society Speaks{% endblock %}
 
@@ -30,8 +37,10 @@
   "@type": "DiscussionForumPosting",
   "headline": seo_title,
   "description": (seo_desc or _('Join the discussion on SocietySpeaks.')),
-  "datePublished": discussion.created_at.isoformat(),
-  "author": {"@type": "Person", "name": author_ld_name},
+  "text": (seo_desc or _('Join the discussion on SocietySpeaks.')),
+  "url": _disc_canonical,
+  "datePublished": (discussion.created_at.isoformat() ~ "+00:00"),
+  "author": {"@type": "Person", "name": author_ld_name, "url": author_ld_url},
   "discussionUrl": _disc_canonical,
 } | tojson }}
 </script>
