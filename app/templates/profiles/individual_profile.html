@@ -10,23 +10,19 @@
     <link rel="canonical" href="{{ url_for('profiles.view_individual_profile', username=profile.slug, _external=True) }}">
 
     <!-- Structured Data for SEO -->
+    {% set _profile_url = url_for('profiles.view_individual_profile', username=profile.slug, _external=True) %}
+    {% set _profile_image = url_for('profiles.get_image', filename=profile.profile_image, _external=True) if profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png', _external=True) %}
     <script type="application/ld+json">
-    {
+    {{ {
       "@context": "https://schema.org",
       "@type": "Person",
-      "name": "{{ profile.full_name }}",
-      "description": "{{ profile.bio | default(_('Member on SocietySpeaks contributing to public discourse.')) }}",
-      "url": "{{ url_for('profiles.view_individual_profile', username=profile.slug, _external=True) }}",
-      "image": "{{ url_for('profiles.get_image', filename=profile.profile_image, _external=True) }}",
-      {% if profile.city and profile.country %}
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "{{ profile.city }}",
-        "addressCountry": "{{ profile.country }}"
-      },
-      {% endif %}
-      "sameAs": {{ [profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list | tojson }}
-    }
+      "name": profile.full_name,
+      "description": (profile.bio or _('Member on SocietySpeaks contributing to public discourse.')),
+      "url": _profile_url,
+      "image": _profile_image,
+      "address": {"@type": "PostalAddress", "addressLocality": profile.city, "addressCountry": profile.country} if (profile.city and profile.country) else None,
+      "sameAs": [profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list
+    } | tojson }}
     </script>
 {% endblock %}
 

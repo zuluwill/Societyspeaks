@@ -13,15 +13,16 @@
     <meta property="og:description" content="{{ _('Explore discussions sourced from %(name)s', name=source.name) }}">
     <meta property="og:type" content="profile">
 
+    {% set _source_page_url = url_for('sources.view_source', slug=source.slug, _external=True) %}
     <script type="application/ld+json">
-    {
+    {{ {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "{{ source.name }}",
-      "description": "{{ source.display_description|e if source.display_description else '' }}",
-      {% if source.website_url %}"url": "{{ source.website_url }}",{% endif %}
-      "sameAs": "{{ url_for('sources.view_source', slug=source.slug, _external=True) }}"
-    }
+      "name": source.name,
+      "description": (source.display_description or ''),
+      "url": (source.website_url if source.website_url else _source_page_url),
+      "sameAs": [_source_page_url]
+    } | tojson }}
     </script>
 {% endblock %}
 

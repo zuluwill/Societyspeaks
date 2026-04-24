@@ -29,7 +29,7 @@ discussion_card %} {% block head %}
     "isPartOf": {
       "@type": "WebSite",
       "name": "Society Speaks",
-      "url": "https://societyspeaks.io"
+      "url": "{{ url_for('main.index', _external=True) }}"
     },
     "about": {
       "@type": "Thing",
@@ -38,7 +38,7 @@ discussion_card %} {% block head %}
     "publisher": {
       "@type": "Organization",
       "name": "Society Speaks",
-      "url": "https://societyspeaks.io"
+      "url": "{{ url_for('main.index', _external=True) }}"
     }
   }
 </script>

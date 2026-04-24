@@ -10,23 +10,19 @@
     <link rel="canonical" href="{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}">
 
     <!-- Structured Data for SEO -->
+    {% set _company_url = url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) %}
+    {% set _company_logo = url_for('profiles.get_image', filename=profile.logo, _external=True) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png', _external=True) %}
     <script type="application/ld+json">
-    {
+    {{ {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "{{ profile.company_name }}",
-      "description": "{{ profile.description | default(_('An organization on SocietySpeaks contributing to public discourse and meaningful change.')) }}",
-      "url": "{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}",
-      "logo": "{{ url_for('profiles.get_image', filename=profile.logo, _external=True) }}",
-      {% if profile.city and profile.country %}
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "{{ profile.city }}",
-        "addressCountry": "{{ profile.country }}"
-      },
-      {% endif %}
-      "sameAs": {{ [profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list | tojson }}
-    }
+      "name": profile.company_name,
+      "description": (profile.description or _('An organization on SocietySpeaks contributing to public discourse and meaningful change.')),
+      "url": _company_url,
+      "logo": _company_logo,
+      "address": {"@type": "PostalAddress", "addressLocality": profile.city, "addressCountry": profile.country} if (profile.city and profile.country) else None,
+      "sameAs": [profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list
+    } | tojson }}
     </script>
 {% endblock %}
 
