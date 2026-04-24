@@ -25,6 +25,7 @@ from app.lib.locale_utils import language_preference_cookie_params
 import io
 import mimetypes
 import os
+import time
 from flask_babel import gettext as _
 
 main_bp = Blueprint('main', __name__)
@@ -295,6 +296,16 @@ def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
     return False
 
 
+def _is_transient_storage_error(error):
+    """Return True for transient connection errors that should be retried silently."""
+    error_msg = str(error)
+    # ('', '') is a common empty-tuple error from http.client on dropped connections
+    if error_msg in ("('', '')", "('','')", "(b'', b'')"):
+        return True
+    transient_patterns = ('connection', 'timeout', 'reset', 'broken pipe', 'eof', 'empty reply')
+    return any(p in error_msg.lower() for p in transient_patterns)
+
+
 def _serve_object_storage_asset(filename):
     """Serve static assets from object storage to avoid disk I/O."""
     if '..' in filename or filename.startswith('/'):
@@ -306,17 +317,31 @@ def _serve_object_storage_asset(filename):
 
     storage_path = f"static_assets/{filename}"
 
-    try:
-        file_data = asset_client.download_as_bytes(storage_path)
-    except ObjectNotFoundError:
-        current_app.logger.warning(f"Asset not found in storage: {storage_path}")
-        abort(404)
-    except Exception as error:
-        error_msg = str(error)
-        if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower() or 'could not be found' in error_msg.lower():
+    max_attempts = 3
+    last_error = None
+    for attempt in range(max_attempts):
+        try:
+            file_data = asset_client.download_as_bytes(storage_path)
+            last_error = None
+            break
+        except ObjectNotFoundError:
             current_app.logger.warning(f"Asset not found in storage: {storage_path}")
             abort(404)
-        current_app.logger.error(f"Error fetching asset {storage_path}: {error}")
+        except Exception as error:
+            error_msg = str(error)
+            if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower() or 'could not be found' in error_msg.lower():
+                current_app.logger.warning(f"Asset not found in storage: {storage_path}")
+                abort(404)
+            last_error = error
+            if _is_transient_storage_error(error) and attempt < max_attempts - 1:
+                time.sleep(0.1 * (attempt + 1))
+                continue
+            # Non-transient error — log and bail immediately
+            current_app.logger.error(f"Error fetching asset {storage_path}: {error}")
+            return Response("Service unavailable", status=503)
+
+    if last_error is not None:
+        current_app.logger.warning(f"Transient error fetching asset {storage_path} after {max_attempts} attempts: {last_error}")
         return Response("Service unavailable", status=503)
 
     if not file_data:
