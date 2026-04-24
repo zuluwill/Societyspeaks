@@ -107,6 +107,7 @@ X_POSTING_ENABLED = "false"
 GUNICORN_CMD_ARGS = "-c gunicorn_config.py"
 RESEND_TRANSACTIONAL_FROM_EMAIL = "Society Speaks <hello@societyspeaks.io>"
 RESEND_REPLY_TO = "hello@societyspeaks.io"
+EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS = "false"
 
 [userenv.production]
 
