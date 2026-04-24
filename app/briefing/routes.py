@@ -7,7 +7,7 @@ CRUD routes for multi-tenant briefing system.
 from functools import wraps
 from flask import render_template, redirect, url_for, flash, request, jsonify, g, session
 from flask_login import login_required, current_user
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
 from app.briefing import briefing_bp
 from app.briefing.validators import (
@@ -512,7 +512,10 @@ def landing():
             Subscription.status == 'past_due'
         ).first():
             return redirect(url_for('briefing.list_briefings'))
-    return render_template('briefing/landing.html')
+    # priceValidUntil for SoftwareApplication JSON-LD — rolling 1 year so the schema
+    # never advertises a stale/expired price to search engines.
+    price_valid_until = (date.today() + timedelta(days=365)).isoformat()
+    return render_template('briefing/landing.html', price_valid_until=price_valid_until)
 
 
 @briefing_bp.route('/')

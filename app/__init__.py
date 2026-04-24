@@ -549,6 +549,16 @@ def create_app():
     from app.lib.jinja_i18n import escape_i18n
     app.jinja_env.filters['escape_i18n'] = escape_i18n
 
+    def drop_nulls(value):
+        """Recursively remove keys whose values are None (used for JSON-LD so we don't emit `null` fields)."""
+        if isinstance(value, dict):
+            return {k: drop_nulls(v) for k, v in value.items() if v is not None}
+        if isinstance(value, list):
+            return [drop_nulls(v) for v in value if v is not None]
+        return value
+
+    app.jinja_env.filters['drop_nulls'] = drop_nulls
+
     from app.utils.db_diagnostics import init_n_plus_one_guard
     init_n_plus_one_guard(app)
     

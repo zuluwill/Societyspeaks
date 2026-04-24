@@ -7,19 +7,20 @@
     <meta name="keywords" content="society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}">
     <link rel="canonical" href="{{ url_for('discussions.search_discussions', _external=True) }}">
 
+    {% set _search_ld_desc = _('Search discussions on SocietySpeaks.') %}
+    {% if search_term %}
+      {% set _search_ld_desc = _search_ld_desc ~ ' ' ~ _('Results for %(term)s.', term=search_term) %}
+    {% endif %}
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
-    {
+    {{ {
       "@context": "https://schema.org",
       "@type": "SearchResultsPage",
-      "name": "Explore Discussions",
-      "description": "Search discussions on SocietySpeaks. {% if search_term %}Results for '{{ search_term }}'.{% endif %}",
-      "query": "{{ search_term or '' }}",
-      "about": "Discussions, Society, Community Engagement",
-      "searchTerm": "{{ search_term or '' }}",
-      "totalResults": "{{ discussions.total if discussions else 0 }}",
-      "url": "{{ url_for('discussions.search_discussions', _external=True) }}"
-    }
+      "name": _('Explore Discussions'),
+      "description": _search_ld_desc,
+      "about": _('Discussions, Society, Community Engagement'),
+      "url": url_for('discussions.search_discussions', _external=True)
+    } | tojson }}
     </script>
 {% endblock %}
 

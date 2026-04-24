@@ -15,13 +15,13 @@ source_logo %} {% block head %}
 <link rel="canonical" href="{{ url_for('sources.index', _external=True) }}" />
 
 <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": "{{ _('News Sources') }}",
-    "description": "{{ _('Browse news sources and podcasts on SocietySpeaks') }}",
-    "url": "{{ url_for('sources.index', _external=True) }}"
-  }
+{{ {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": _('News Sources'),
+  "description": _('Browse news sources and podcasts on SocietySpeaks'),
+  "url": url_for('sources.index', _external=True)
+} | tojson }}
 </script>
 {% endblock %} {% block scripts %} {{ super() }}
 <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>

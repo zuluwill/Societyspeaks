@@ -37,11 +37,10 @@
   "@type": "DiscussionForumPosting",
   "headline": seo_title,
   "description": (seo_desc or _('Join the discussion on SocietySpeaks.')),
-  "text": (seo_desc or _('Join the discussion on SocietySpeaks.')),
   "url": _disc_canonical,
-  "datePublished": (discussion.created_at.isoformat() ~ "+00:00"),
+  "datePublished": discussion.created_at.strftime('%Y-%m-%dT%H:%M:%SZ'),
   "author": {"@type": "Person", "name": author_ld_name, "url": author_ld_url},
-  "discussionUrl": _disc_canonical,
+  "discussionUrl": _disc_canonical
 } | tojson }}
 </script>
 {% endblock %}

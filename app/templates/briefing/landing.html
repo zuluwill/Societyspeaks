@@ -11,137 +11,138 @@
 {% block head %}
 <link rel="canonical" href="{{ url_for('briefing.landing', _external=True) }}">
 
+{% set _briefing_site_url = url_for('main.index', _external=True) %}
 <!-- JSON-LD Structured Data for Product -->
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Society Speaks Personal Briefs",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
-  "description": "{{ _('AI-powered daily briefings from the sources you trust. Replace newsletter overload with one calm, synthesised brief delivered on your schedule.') }}",
+  "description": _('AI-powered daily briefings from the sources you trust. Replace newsletter overload with one calm, synthesised brief delivered on your schedule.'),
   "offers": [
     {
       "@type": "Offer",
-      "name": "{{ _('Personal') }}",
+      "name": _('Personal'),
       "price": "4.99",
       "priceCurrency": "GBP",
-      "priceValidUntil": "2026-12-31",
-      "description": "{{ _('Unlimited briefs with full-quality summaries, context, and source links') }}"
+      "priceValidUntil": price_valid_until,
+      "description": _('Unlimited briefs with full-quality summaries, context, and source links')
     },
     {
       "@type": "Offer",
-      "name": "{{ _('Professional') }}",
+      "name": _('Professional'),
       "price": "25",
       "priceCurrency": "GBP",
-      "priceValidUntil": "2026-12-31",
-      "description": "{{ _('Unlimited briefs, unlimited sources, 50 recipients, and priority processing') }}"
+      "priceValidUntil": price_valid_until,
+      "description": _('Unlimited briefs, unlimited sources, 50 recipients, and priority processing')
     },
     {
       "@type": "Offer",
-      "name": "{{ _('Team') }}",
+      "name": _('Team'),
       "price": "300",
       "priceCurrency": "GBP",
-      "priceValidUntil": "2026-12-31",
-      "description": "{{ _('Unlimited briefs, 500 recipients, custom branding') }}"
+      "priceValidUntil": price_valid_until,
+      "description": _('Unlimited briefs, 500 recipients, custom branding')
     }
   ],
   "provider": {
     "@type": "Organization",
     "name": "Society Speaks",
-    "url": "{{ url_for('main.index', _external=True) }}"
+    "url": _briefing_site_url
   }
-}
+} | tojson }}
 </script>
 
 <!-- FAQ Schema -->
 <script type="application/ld+json">
-{
+{{ {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "{{ _('Is this AI-generated?') }}",
+      "name": _('Is this AI-generated?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _('Yes. We use AI to synthesise and summarise from your sources. Every claim links back to its source, and you can review and edit before sending.') }}"
+        "text": _('Yes. We use AI to synthesise and summarise from your sources. Every claim links back to its source, and you can review and edit before sending.')
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('How is this different from ChatGPT or Perplexity?') }}",
+      "name": _('How is this different from ChatGPT or Perplexity?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _("Those tools answer questions. We monitor sources and deliver briefings on a schedule. You're not searching — you're being briefed on what changed since yesterday.") }}"
+        "text": _("Those tools answer questions. We monitor sources and deliver briefings on a schedule. You're not searching — you're being briefed on what changed since yesterday.")
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('Can I upload my own research documents?') }}",
+      "name": _('Can I upload my own research documents?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _("Yes, on all paid plans including Personal. Upload PDFs and we'll synthesise them alongside your public sources.") }}"
+        "text": _("Yes, on all paid plans including Personal. Upload PDFs and we'll synthesise them alongside your public sources.")
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('Can I review before sending to my team?') }}",
+      "name": _('Can I review before sending to my team?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _("Yes. Enable approval workflow and you'll receive a draft to review, edit, and approve before it goes out.") }}"
+        "text": _("Yes. Enable approval workflow and you'll receive a draft to review, edit, and approve before it goes out.")
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _("What if I don't like it?") }}",
+      "name": _("What if I don't like it?"),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _('Cancel anytime, no questions asked. 30-day free trial.') }}"
+        "text": _('Cancel anytime, no questions asked. 30-day free trial.')
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('What sources can I add?') }}",
+      "name": _('What sources can I add?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _('RSS feeds, Substack newsletters, web pages, and PDF documents. We support 140+ curated sources out of the box, or add your own custom sources.') }}"
+        "text": _('RSS feeds, Substack newsletters, web pages, and PDF documents. We support 140+ curated sources out of the box, or add your own custom sources.')
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('How long does setup take?') }}",
+      "name": _('How long does setup take?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _("About 2 minutes. Pick a template, customise your sources if you want, set your delivery time, and you're done. First brief arrives the next morning.") }}"
+        "text": _("About 2 minutes. Pick a template, customise your sources if you want, set your delivery time, and you're done. First brief arrives the next morning.")
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _("What's the difference between Personal and Professional?") }}",
+      "name": _("What's the difference between Personal and Professional?"),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _('Both plans include unlimited briefs and PDF uploads. Personal gives you up to 15 sources in total and up to 10 recipients per brief — perfect for staying informed yourself. Professional unlocks unlimited sources, up to 50 recipients per brief, and priority processing — ideal if you need deeper coverage or want to share briefs with colleagues.') }}"
+        "text": _('Both plans include unlimited briefs and PDF uploads. Personal gives you up to 15 sources in total and up to 10 recipients per brief — perfect for staying informed yourself. Professional unlocks unlimited sources, up to 50 recipients per brief, and priority processing — ideal if you need deeper coverage or want to share briefs with colleagues.')
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('Do all plans include a free trial?') }}",
+      "name": _('Do all plans include a free trial?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _("Yes. Every plan includes a 30-day free trial. For Enterprise, contact us to discuss your specific requirements and we'll set up a tailored pilot.") }}"
+        "text": _("Yes. Every plan includes a 30-day free trial. For Enterprise, contact us to discuss your specific requirements and we'll set up a tailored pilot.")
       }
     },
     {
       "@type": "Question",
-      "name": "{{ _('Can I keep my briefs private or share them publicly?') }}",
+      "name": _('Can I keep my briefs private or share them publicly?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{{ _('Both. Each brief can be private (just you), organisation-only (your team), or public (shareable link anyone can view). You control visibility per brief.') }}"
+        "text": _('Both. Each brief can be private (just you), organisation-only (your team), or public (shareable link anyone can view). You control visibility per brief.')
       }
     }
   ]
-}
+} | tojson }}
 </script>
 {% endblock %}
 

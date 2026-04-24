@@ -19,12 +19,16 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": source.name,
-      "description": (source.display_description or ''),
+      "description": (source.display_description or None),
       "url": (source.website_url if source.website_url else _source_page_url),
-      "sameAs": [_source_page_url]
-    } | tojson }}
+      "mainEntityOfPage": {"@type": "WebPage", "@id": _source_page_url}
+    } | drop_nulls | tojson }}
     </script>
 {% endblock %}
+
+{# Suppress layout.html's site-wide Organization JSON-LD on source pages so the #}
+{# source's own Organization entity isn't duplicated.                           #}
+{% block site_structured_data %}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">

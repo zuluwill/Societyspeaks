@@ -20,11 +20,15 @@
       "description": (profile.description or _('An organization on SocietySpeaks contributing to public discourse and meaningful change.')),
       "url": _company_url,
       "logo": _company_logo,
-      "address": {"@type": "PostalAddress", "addressLocality": profile.city, "addressCountry": profile.country} if (profile.city and profile.country) else None,
-      "sameAs": [profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list
-    } | tojson }}
+      "address": ({"@type": "PostalAddress", "addressLocality": profile.city, "addressCountry": profile.country} if (profile.city and profile.country) else None),
+      "sameAs": ([profile.linkedin_url, profile.twitter_url, profile.facebook_url, profile.instagram_url, profile.tiktok_url, profile.bluesky_url] | select | list) or None
+    } | drop_nulls | tojson }}
     </script>
 {% endblock %}
+
+{# Suppress layout.html's global Organization/WebApplication JSON-LD on profile pages #}
+{# so the Organization entity on this page isn't duplicated.                          #}
+{% block site_structured_data %}{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-8">

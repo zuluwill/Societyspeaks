@@ -19,28 +19,30 @@ discussion_card %} {% block head %}
 />
 <meta property="og:type" content="website" />
 
+{% set _news_feed_url = url_for('discussions.news_feed', _external=True) %}
+{% set _site_url = url_for('main.index', _external=True) %}
 <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": "News Discussions",
-    "description": "Trending topics from trusted journalism, transformed into structured debates for nuanced conversation",
-    "url": "{{ url_for('discussions.news_feed', _external=True) }}",
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "Society Speaks",
-      "url": "{{ url_for('main.index', _external=True) }}"
-    },
-    "about": {
-      "@type": "Thing",
-      "name": "Current Affairs Discussions"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Society Speaks",
-      "url": "{{ url_for('main.index', _external=True) }}"
-    }
+{{ {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": _('News Discussions'),
+  "description": _('Trending topics from trusted journalism, transformed into structured debates for nuanced conversation'),
+  "url": _news_feed_url,
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Society Speaks",
+    "url": _site_url
+  },
+  "about": {
+    "@type": "Thing",
+    "name": _('Current Affairs Discussions')
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Society Speaks",
+    "url": _site_url
   }
+} | tojson }}
 </script>
 <style>
   .topic-scroll {

@@ -317,59 +317,64 @@
       });
     </script>
 
+    {# Site-wide Organization + WebApplication JSON-LD. Child templates that #}
+    {# emit their own Organization entity (profiles, sources) override this  #}
+    {# block with empty content to avoid duplicate entities on the page.     #}
+    {% block site_structured_data %}
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Society Speaks",
-        "alternateName": "SocietySpeaks.io",
-        "url": "{{ url_for('main.index', _external=True) }}",
-        "logo": "{{ url_for('main.serve_asset', filename='images/default-logo.png', _external=True) }}",
-        "sameAs": [
-          "https://twitter.com/societyspeaksio",
-          "https://bsky.app/profile/societyspeaks.bsky.social",
-          "https://github.com/zuluwill/Societyspeaks"
-        ],
-        "description": "Society Speaks is a sense-making system for society. It uses machine learning to turn disagreement into understanding, revealing consensus statements, bridge ideas that unite groups, and genuine fault lines where deeper work is needed.",
-        "slogan": "Making disagreement useful again",
-        "foundingDate": "2024",
-        "knowsAbout": [
-          "consensus building",
-          "public opinion analysis",
-          "civic technology",
-          "democratic deliberation",
-          "opinion clustering",
-          "Pol.is"
-        ]
-      }
+    {{ {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Society Speaks",
+      "alternateName": "SocietySpeaks.io",
+      "url": url_for('main.index', _external=True),
+      "logo": url_for('main.serve_asset', filename='images/default-logo.png', _external=True),
+      "sameAs": [
+        "https://twitter.com/societyspeaksio",
+        "https://bsky.app/profile/societyspeaks.bsky.social",
+        "https://github.com/zuluwill/Societyspeaks"
+      ],
+      "description": "Society Speaks is a sense-making system for society. It uses machine learning to turn disagreement into understanding, revealing consensus statements, bridge ideas that unite groups, and genuine fault lines where deeper work is needed.",
+      "slogan": "Making disagreement useful again",
+      "foundingDate": "2024",
+      "knowsAbout": [
+        "consensus building",
+        "public opinion analysis",
+        "civic technology",
+        "democratic deliberation",
+        "opinion clustering",
+        "Pol.is"
+      ]
+    } | tojson }}
     </script>
 
     <!-- LLM/AI Discovery Metadata -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Society Speaks",
-        "applicationCategory": "Civic Technology",
-        "operatingSystem": "Web",
-        "description": "A sense-making system that transforms public participation into actionable insight. Features include: Daily Question (daily civic participation ritual), News-to-Deliberation (transforms journalism into balanced prompts), Consensus Analysis (ML-powered clustering using PCA and agglomerative clustering to identify opinion groups, consensus statements, bridge statements, and divisive statements).",
-        "featureList": [
-          "Opinion clustering by voting patterns (not demographics)",
-          "Consensus statement detection (broad agreement across groups)",
-          "Bridge statement identification (ideas that unite different opinion clusters)",
-          "Divisive statement surfacing (genuine fault lines)",
-          "Daily civic participation questions",
-          "News-to-deliberation pipeline with civic relevance scoring",
-          "Longitudinal public opinion tracking"
-        ],
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        }
+    {{ {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Society Speaks",
+      "applicationCategory": "Civic Technology",
+      "operatingSystem": "Web",
+      "description": "A sense-making system that transforms public participation into actionable insight. Features include: Daily Question (daily civic participation ritual), News-to-Deliberation (transforms journalism into balanced prompts), Consensus Analysis (ML-powered clustering using PCA and agglomerative clustering to identify opinion groups, consensus statements, bridge statements, and divisive statements).",
+      "featureList": [
+        "Opinion clustering by voting patterns (not demographics)",
+        "Consensus statement detection (broad agreement across groups)",
+        "Bridge statement identification (ideas that unite different opinion clusters)",
+        "Divisive statement surfacing (genuine fault lines)",
+        "Daily civic participation questions",
+        "News-to-deliberation pipeline with civic relevance scoring",
+        "Longitudinal public opinion tracking"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
       }
+    } | tojson }}
     </script>
+    {% endblock %}
     <!-- Source logo image error handler: must be in head so it fires before images load -->
     <script nonce="{{ csp_nonce() }}">
     (function() {
