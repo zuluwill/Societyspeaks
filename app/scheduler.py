@@ -55,6 +55,7 @@ class _ShutdownNoiseFilter(logging.Filter):
     """
     _SUPPRESSED = (
         "cannot schedule new futures after shutdown",
+        "cannot schedule new futures after interpreter shutdown",
         "interpreter is shutting down",
         "Error submitting job",
     )

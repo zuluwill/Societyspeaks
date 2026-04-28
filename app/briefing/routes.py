@@ -5,7 +5,7 @@ CRUD routes for multi-tenant briefing system.
 """
 
 from functools import wraps
-from flask import render_template, redirect, url_for, flash, request, jsonify, g, session
+from flask import render_template, redirect, url_for, flash, request, jsonify, g, session, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
