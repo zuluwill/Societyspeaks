@@ -331,46 +331,92 @@ class EmailAnalytics:
 
         return category, context
 
+    # Number of soft bounces before an address is suppressed.
+    SOFT_BOUNCE_SUPPRESS_THRESHOLD = 3
+
+    @classmethod
+    def _count_soft_bounces(cls, email: str) -> int:
+        """Return the total number of soft-bounce events recorded for *email*."""
+        try:
+            return EmailEvent.query.filter_by(
+                recipient_email=email,
+                event_type=cls.EVENT_BOUNCED,
+                bounce_type='soft',
+            ).count()
+        except Exception as e:
+            logger.warning(f"Could not count soft bounces for {email}: {e}")
+            return 0
+
     @classmethod
     def _handle_deliverability_issue(cls, email: str, event_type: str, bounce_type: Optional[str] = None):
         """
         Handle bounces and complaints by updating subscriber status.
         DRY: Centralized deliverability handling.
+
+        Hard bounces and complaints suppress immediately.
+        Soft bounces are suppressed once SOFT_BOUNCE_SUPPRESS_THRESHOLD is reached
+        (counted across all recorded EmailEvent rows for the address).
         """
         try:
+            is_hard_bounce = event_type == cls.EVENT_BOUNCED and bounce_type == 'hard'
+            is_complaint = event_type == cls.EVENT_COMPLAINED
+
+            # For soft bounces, check whether the threshold has been crossed.
+            # The current event has already been written to EmailEvent before this
+            # method is called, so the count includes the event we just recorded.
+            suppress_soft = False
+            if event_type == cls.EVENT_BOUNCED and bounce_type == 'soft':
+                soft_count = cls._count_soft_bounces(email)
+                if soft_count >= cls.SOFT_BOUNCE_SUPPRESS_THRESHOLD:
+                    suppress_soft = True
+                    logger.warning(
+                        f"Soft-bounce threshold reached for {email} "
+                        f"({soft_count} soft bounces) — suppressing"
+                    )
+                else:
+                    logger.info(
+                        f"Soft bounce recorded for {email} "
+                        f"({soft_count}/{cls.SOFT_BOUNCE_SUPPRESS_THRESHOLD} before suppression)"
+                    )
+
+            should_suppress = is_hard_bounce or is_complaint or suppress_soft
+
+            if not should_suppress:
+                return
+
             # Update brief subscriber
             brief_sub = DailyBriefSubscriber.query.filter_by(email=email).first()
             if brief_sub:
-                if event_type == cls.EVENT_BOUNCED and bounce_type == 'hard':
-                    brief_sub.status = 'bounced'
-                    logger.info(f"Marked brief subscriber {email} as bounced")
-                elif event_type == cls.EVENT_COMPLAINED:
+                if is_complaint:
                     brief_sub.status = 'unsubscribed'
                     brief_sub.unsubscribed_at = utcnow_naive()
                     logger.info(f"Unsubscribed brief subscriber {email} due to complaint")
-            
+                else:
+                    brief_sub.status = 'bounced'
+                    reason = 'hard bounce' if is_hard_bounce else f'repeated soft bounces'
+                    logger.info(f"Marked brief subscriber {email} as bounced ({reason})")
+
             # Update question subscriber
             question_sub = DailyQuestionSubscriber.query.filter_by(email=email).first()
             if question_sub:
-                if event_type == cls.EVENT_BOUNCED and bounce_type == 'hard':
-                    question_sub.is_active = False
-                    logger.info(f"Deactivated question subscriber {email} due to bounce")
-                elif event_type == cls.EVENT_COMPLAINED:
-                    question_sub.is_active = False
+                question_sub.is_active = False
+                if is_complaint:
                     logger.info(f"Deactivated question subscriber {email} due to complaint")
+                else:
+                    reason = 'hard bounce' if is_hard_bounce else 'repeated soft bounces'
+                    logger.info(f"Deactivated question subscriber {email} ({reason})")
 
             # Update briefing recipients (briefing pipeline)
             briefing_recipient = BriefRecipient.query.filter_by(email=email).first()
             if briefing_recipient:
-                if event_type == cls.EVENT_BOUNCED and bounce_type == 'hard':
-                    briefing_recipient.status = 'unsubscribed'
-                    briefing_recipient.unsubscribed_at = utcnow_naive()
-                    logger.info(f"Unsubscribed briefing recipient {email} due to hard bounce")
-                elif event_type == cls.EVENT_COMPLAINED:
-                    briefing_recipient.status = 'unsubscribed'
-                    briefing_recipient.unsubscribed_at = utcnow_naive()
+                briefing_recipient.status = 'unsubscribed'
+                briefing_recipient.unsubscribed_at = utcnow_naive()
+                if is_complaint:
                     logger.info(f"Unsubscribed briefing recipient {email} due to complaint")
-                    
+                else:
+                    reason = 'hard bounce' if is_hard_bounce else 'repeated soft bounces'
+                    logger.info(f"Unsubscribed briefing recipient {email} ({reason})")
+
         except Exception as e:
             logger.error(f"Failed to handle deliverability issue: {e}")
 
