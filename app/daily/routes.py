@@ -1641,6 +1641,7 @@ def one_click_vote(token, vote_choice):
                     properties={
                         'question_id': question.id,
                         'question_number': question.question_number,
+                        'question_text': question.question_text,
                         'vote': vote_choice,
                         'has_reason': bool(reason),
                         'reason_tag': reason_tag,
@@ -1808,6 +1809,7 @@ def vote():
                     properties={
                         'question_id': question.id,
                         'question_number': question.question_number,
+                        'question_text': question.question_text,
                         'vote': vote_value,
                         'has_reason': bool(reason),
                         'reason_tag': reason_tag,

@@ -1209,9 +1209,12 @@ def vote_statement(statement_id):
                 distinct_id = get_statement_vote_fingerprint()
 
             vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
+            _disc = statement.discussion
             properties = {
                 'statement_id': statement_id,
                 'discussion_id': statement.discussion_id,
+                'discussion_topic': _disc.topic if _disc else None,
+                'discussion_title': _disc.title if _disc else None,
                 'vote': vote_label,
                 'is_authenticated': current_user.is_authenticated
             }
