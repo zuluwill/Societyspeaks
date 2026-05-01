@@ -1330,22 +1330,29 @@ def journey_abandon():
             return jsonify({'ok': False}), 400
         if current_user.is_authenticated:
             ph_id = str(current_user.id)
+            journey_session_id = None
         else:
             from app.discussions.statements import get_statement_vote_fingerprint
             ph_id = get_statement_vote_fingerprint()
+            journey_session_id = ph_id
         ordered = ordered_journey_discussions(programme)
         jtype = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
+        step_number = data.get('step_number')
+        step_name = data.get('step_name', '') or ''
+        abandoned_at_step = step_name if step_name else (f'Step {step_number}' if step_number is not None else None)
         props = {
             'journey_id': programme.id,
             'journey_type': jtype,
             'journey_slug': programme.slug,
             'journey_name': programme.name,
-            'step_number': data.get('step_number'),
-            'step_name': data.get('step_name', ''),
+            'abandoned_at_step': abandoned_at_step,
+            'step_number': step_number,
+            'step_name': step_name,
             'total_steps': len(ordered),
             'votes_cast': int(data.get('votes_cast', 0)),
             'total_statements': int(data.get('total_statements', 0)),
             'is_authenticated': current_user.is_authenticated,
+            'journey_session_id': journey_session_id,
         }
         time_on_step_ms = data.get('time_on_step_ms')
         if isinstance(time_on_step_ms, (int, float)) and time_on_step_ms > 0:

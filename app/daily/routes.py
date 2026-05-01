@@ -1648,7 +1648,7 @@ def one_click_vote(token, vote_choice):
                         'confidence_level': confidence_level,
                         'context_expanded': context_expanded,
                         'source_link_click_count': source_link_click_count,
-                        'is_authenticated': current_user.is_authenticated,
+                        'is_authenticated': bool(current_user.is_authenticated),
                         'voted_via_email': True,
                         'source': request.args.get('source', 'email'),
                     }

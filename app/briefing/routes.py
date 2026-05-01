@@ -805,7 +805,7 @@ def use_template(template_id):
 
             _track_posthog('briefing_created', current_user.id, {
                 'briefing_id': briefing.id,
-                'briefing_name': name,
+                'briefing_name': briefing.name or name,
                 'owner_type': owner_type,
                 'cadence': cadence,
                 'from_template': True,
@@ -1035,7 +1035,7 @@ def create_briefing():
 
             _track_posthog('briefing_created', current_user.id, {
                 'briefing_id': briefing.id,
-                'briefing_name': name,
+                'briefing_name': briefing.name or name,
                 'owner_type': owner_type,
                 'cadence': cadence,
                 'from_template': bool(template_id),

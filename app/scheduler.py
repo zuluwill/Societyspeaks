@@ -1638,6 +1638,7 @@ def init_scheduler(app):
                                     event='daily_brief_posted_to_x',
                                     properties={
                                         'brief_id': brief.id,
+                                        'brief_title': brief.title,
                                         'brief_date': brief.date.isoformat(),
                                         'tweet_id': tweet_id,
                                         'item_count': brief.item_count
@@ -1673,6 +1674,7 @@ def init_scheduler(app):
                                     event='daily_brief_posted_to_bluesky',
                                     properties={
                                         'brief_id': brief.id,
+                                        'brief_title': brief.title,
                                         'brief_date': brief.date.isoformat(),
                                         'bluesky_uri': bluesky_uri,
                                         'item_count': brief.item_count
@@ -2750,6 +2752,7 @@ def init_scheduler(app):
                 if approved_runs:
                     logger.info(f"Found {len(approved_runs)} approved BriefRuns to send")
                     
+                    import posthog as _posthog_mod
                     for brief_run in approved_runs:
                         try:
                             result = send_brief_run_emails(brief_run.id)
@@ -2758,6 +2761,24 @@ def init_scheduler(app):
                                 f"failed={result.get('failed', 0)}, "
                                 f"method={result.get('method', 'unknown')}"
                             )
+                            try:
+                                if _posthog_mod and getattr(_posthog_mod, 'project_api_key', None):
+                                    _briefing = brief_run.briefing
+                                    _posthog_mod.capture(
+                                        distinct_id='system',
+                                        event='briefing_sent',
+                                        properties={
+                                            'briefing_id': brief_run.briefing_id,
+                                            'briefing_name': _briefing.name if _briefing else None,
+                                            'brief_run_id': brief_run.id,
+                                            'recipients_sent': result.get('sent', 0),
+                                            'recipients_failed': result.get('failed', 0),
+                                            'cadence': _briefing.cadence if _briefing else None,
+                                            'source': 'scheduler',
+                                        }
+                                    )
+                            except Exception as _ph_e:
+                                logger.warning(f"PostHog briefing_sent tracking error: {_ph_e}")
                         except Exception as e:
                             logger.error(f"Error sending BriefRun {brief_run.id}: {e}", exc_info=True)
                             db.session.rollback()
