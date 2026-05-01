@@ -210,6 +210,8 @@ def create_individual_profile():
 def create_company_profile():
     form = CompanyProfileForm()
     next_url = _safe_next_url(request.form.get('next') or request.args.get('next'))
+    if request.method == 'GET' and not form.email.data:
+        form.email.data = current_user.email
     if form.validate_on_submit():
         logo = None
         banner_image = None
