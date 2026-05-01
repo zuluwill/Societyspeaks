@@ -50,8 +50,15 @@
                 {% block form_actions %}
                 <!-- Submit Button -->
                 <div class="flex justify-end">
-                    <button type="submit" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        {{ _('Create Profile') }}
+                    <button type="submit" id="submitProfileBtn" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span id="submitProfileLabel">{{ _('Create Profile') }}</span>
+                        <span id="submitProfileSpinner" class="hidden ml-2 inline-flex items-center">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            {{ _('Saving...') }}
+                        </span>
                     </button>
                 </div>
                 {% endblock %}
@@ -67,6 +74,15 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
     if (!fullName.value.trim()) {
         e.preventDefault();
         alert({{ _('Please enter your full name')|tojson }});
+        return;
+    }
+    const btn = document.getElementById('submitProfileBtn');
+    const label = document.getElementById('submitProfileLabel');
+    const spinner = document.getElementById('submitProfileSpinner');
+    if (btn) {
+        btn.disabled = true;
+        if (label) label.classList.add('hidden');
+        if (spinner) spinner.classList.remove('hidden');
     }
 });
 </script>
