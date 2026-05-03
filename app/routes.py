@@ -93,7 +93,18 @@ def index():
         question_date=date.today(),
         status='published'
     ).first()
-    
+
+    # Fallback: if the scheduler hasn't published today's question yet (e.g. early
+    # morning before the 7am job runs), try to auto-publish it now so the homepage
+    # always shows a question rather than the generic "How you vote" placeholder.
+    if not daily_question:
+        try:
+            from app.daily.auto_selection import auto_publish_todays_question
+            daily_question = auto_publish_todays_question()
+        except Exception as e:
+            import logging as _logging
+            _logging.getLogger(__name__).warning(f"Homepage: fallback auto-publish failed: {e}")
+
     # Get today's or most recent daily brief for the homepage preview
     daily_brief = DailyBrief.get_today()
     if not daily_brief:
