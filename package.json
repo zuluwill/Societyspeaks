@@ -6,5 +6,38 @@
   },
   "dependencies": {
     "tailwindcss": "^3.4.19"
+  },
+  "overrides": {
+    "chokidar": {
+      "picomatch": "2.3.2"
+    },
+    "micromatch": {
+      "picomatch": "2.3.2"
+    },
+    "anymatch": {
+      "picomatch": "2.3.2"
+    },
+    "readdirp": {
+      "picomatch": "2.3.2"
+    },
+    "tinyglobby": {
+      "picomatch": "4.0.4"
+    },
+    "fdir": {
+      "picomatch": "4.0.4"
+    },
+    "postcss": "8.5.13",
+    "postcss-import": {
+      "postcss": "8.5.13"
+    },
+    "postcss-js": {
+      "postcss": "8.5.13"
+    },
+    "postcss-load-config": {
+      "postcss": "8.5.13"
+    },
+    "postcss-nested": {
+      "postcss": "8.5.13"
+    }
   }
 }

@@ -6,7 +6,7 @@ hidden = [".pythonlibs"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
+packages = ["cacert", "cargo", "glibcLocales", "libev", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
 
 [deployment]
 run = ["bash", "-c", "(while true; do APP_ROLE=scheduler python3 scripts/run_scheduler.py; echo \"Scheduler exited ($?), restarting in 5s...\"; sleep 5; done) & SCHED_PID=$!; APP_ROLE=web gunicorn run:app & WEB_PID=$!; trap 'kill $SCHED_PID $WEB_PID 2>/dev/null' INT TERM; wait $WEB_PID; EXIT_CODE=$?; kill $SCHED_PID 2>/dev/null; wait; exit $EXIT_CODE"]
