@@ -209,34 +209,53 @@
     </style>
 
     <!-- Global error handlers — installed before any third-party scripts so
-         our handlers run first and can call event.preventDefault(), preventing
-         the browser and external monitoring tools from double-reporting errors
-         that we have already normalised and logged ourselves. -->
+         our handlers run first.
+
+         Design principles:
+         - Real Error instances: log them, then let the browser and downstream
+           tools (PostHog exception tracker, DevTools breakpoints) handle them
+           normally. Do NOT suppress them.
+         - Non-Error rejections/throws: these are almost always noise from
+           third-party scripts (GTM, analytics CDNs). Log the raw value for
+           diagnosability, then call preventDefault() to stop the browser from
+           reporting the same event as "unhandled" a second time. -->
     <script nonce="{{ csp_nonce() }}">
       (function () {
         // Unhandled promise rejections (async code, fetch, etc.)
         window.addEventListener('unhandledrejection', function (event) {
           var reason = event.reason;
           if (reason instanceof Error) {
+            // Real error — log it, but do NOT preventDefault() so PostHog
+            // exception capture and DevTools still receive it normally.
             console.error('[SS] Unhandled promise rejection:', reason);
           } else {
-            console.error('[SS] Unhandled promise rejection (non-Error):', reason);
+            // Non-Error value — almost always third-party script noise.
+            // Log the value for diagnosability, then suppress the browser's
+            // default "Uncaught (in promise)" report to avoid double-noise.
+            console.warn('[SS] Unhandled promise rejection (non-Error value):', reason);
+            event.preventDefault();
           }
-          // Prevent the browser from additionally reporting this as unhandled,
-          // which avoids duplicate noise in external monitoring tools.
-          event.preventDefault();
         });
 
-        // Synchronous uncaught exceptions — log source details for easier
-        // diagnosis, then let the default browser handling proceed.
+        // Synchronous uncaught exceptions.
+        // Only intercept non-Error throws (genuine JS errors are Error instances
+        // and should propagate normally to PostHog and DevTools).
+        // Cross-origin scripts produce event.error === null with message
+        // "Script error." — log those as a warning too.
         window.addEventListener('error', function (event) {
-          if (event.error && !(event.error instanceof Error)) {
-            console.error(
-              '[SS] Uncaught non-Error exception:',
-              event.error,
-              'at', event.filename + ':' + event.lineno + ':' + event.colno
+          if (!event.error) {
+            // Cross-origin script error: no details available due to CORS.
+            if (event.message === 'Script error.' || event.filename === '') {
+              console.warn('[SS] Cross-origin script error (no details available due to CORS)');
+            }
+          } else if (!(event.error instanceof Error)) {
+            console.warn(
+              '[SS] Uncaught non-Error exception:', event.error,
+              'at', (event.filename || '?') + ':' + event.lineno + ':' + event.colno
             );
           }
+          // Real Error instances: do nothing — let the browser and PostHog
+          // handle them through their normal pipelines.
         });
       }());
     </script>
@@ -313,12 +332,6 @@
         api_host:
           '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
         person_profiles: "identified_only",
-        // Disable PostHog's built-in exception autocapture. It hooks into
-        // window.onerror and unhandledrejection and internally throws non-Error
-        // values that trigger monitoring noise. Our own global error handler
-        // (installed above GTM/PostHog) already normalises and logs all
-        // unhandled rejections, so PostHog exception capture adds no value.
-        capture_exceptions: false,
         loaded: function(ph) {
           {% if current_user.is_authenticated %}
           ph.identify('{{ current_user.id }}', {

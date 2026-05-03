@@ -102,8 +102,7 @@ def index():
             from app.daily.auto_selection import auto_publish_todays_question
             daily_question = auto_publish_todays_question()
         except Exception as e:
-            import logging as _logging
-            _logging.getLogger(__name__).warning(f"Homepage: fallback auto-publish failed: {e}")
+            current_app.logger.warning(f"Homepage: fallback auto-publish failed: {e}")
 
     # Get today's or most recent daily brief for the homepage preview
     daily_brief = DailyBrief.get_today()
