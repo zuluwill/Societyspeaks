@@ -61,7 +61,7 @@
             </div>
             
             <p class="text-gray-600 mb-6 text-center">
-                {{ _('You selected %(choice)s', choice='<span class="font-semibold text-gray-900">' ~ vote_label ~ '</span>')|safe }}
+                {{ _('You selected') }} <span class="font-semibold text-gray-900">{{ vote_label }}</span>
             </p>
             
             {# PRIMARY ACTION: Quick submit without reason #}
