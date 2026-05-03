@@ -208,6 +208,39 @@
       }
     </style>
 
+    <!-- Global error handlers — installed before any third-party scripts so
+         our handlers run first and can call event.preventDefault(), preventing
+         the browser and external monitoring tools from double-reporting errors
+         that we have already normalised and logged ourselves. -->
+    <script nonce="{{ csp_nonce() }}">
+      (function () {
+        // Unhandled promise rejections (async code, fetch, etc.)
+        window.addEventListener('unhandledrejection', function (event) {
+          var reason = event.reason;
+          if (reason instanceof Error) {
+            console.error('[SS] Unhandled promise rejection:', reason);
+          } else {
+            console.error('[SS] Unhandled promise rejection (non-Error):', reason);
+          }
+          // Prevent the browser from additionally reporting this as unhandled,
+          // which avoids duplicate noise in external monitoring tools.
+          event.preventDefault();
+        });
+
+        // Synchronous uncaught exceptions — log source details for easier
+        // diagnosis, then let the default browser handling proceed.
+        window.addEventListener('error', function (event) {
+          if (event.error && !(event.error instanceof Error)) {
+            console.error(
+              '[SS] Uncaught non-Error exception:',
+              event.error,
+              'at', event.filename + ':' + event.lineno + ':' + event.colno
+            );
+          }
+        });
+      }());
+    </script>
+
     <!-- Google Tag Manager -->
     <script nonce="{{ csp_nonce() }}">
       (function (w, d, s, l, i) {
@@ -280,6 +313,12 @@
         api_host:
           '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
         person_profiles: "identified_only",
+        // Disable PostHog's built-in exception autocapture. It hooks into
+        // window.onerror and unhandledrejection and internally throws non-Error
+        // values that trigger monitoring noise. Our own global error handler
+        // (installed above GTM/PostHog) already normalises and logs all
+        // unhandled rejections, so PostHog exception capture adds no value.
+        capture_exceptions: false,
         loaded: function(ph) {
           {% if current_user.is_authenticated %}
           ph.identify('{{ current_user.id }}', {
@@ -1522,17 +1561,6 @@
           e.preventDefault();
           switchLanguage(btn.getAttribute("data-lang"));
         });
-      });
-    </script>
-
-    <!-- Global error handler: catches unhandled promise rejections and ensures
-         non-Error values are normalised before surfacing to the console. -->
-    <script nonce="{{ csp_nonce() }}">
-      window.addEventListener('unhandledrejection', function (event) {
-        var reason = event.reason;
-        if (!(reason instanceof Error)) {
-          console.error('Unhandled rejection (non-Error value):', reason);
-        }
       });
     </script>
 

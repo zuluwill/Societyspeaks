@@ -268,7 +268,10 @@ def init_scheduler(app):
     
     # Configure scheduler with generous misfire handling
     # This allows jobs to run even if app restarts around scheduled time
+    # timezone='UTC' is set explicitly to avoid a tzlocal UserWarning on
+    # containers that have no system timezone configuration.
     scheduler = BackgroundScheduler(
+        timezone='UTC',
         executors={
             # Cap at 8 threads.  Default is 10; keeping it lower reduces the
             # peak number of concurrent Flask/SQLAlchemy contexts alive at once
