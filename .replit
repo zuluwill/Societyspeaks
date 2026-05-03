@@ -112,3 +112,7 @@ EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS = "false"
 [userenv.production]
 
 [userenv.development]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000
