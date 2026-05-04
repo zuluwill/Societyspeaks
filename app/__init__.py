@@ -557,7 +557,7 @@ def create_app():
             should_show_briefings_subscription_cta,
         )
 
-        if not current_user.is_authenticated:
+        if current_user is None or not current_user.is_authenticated:
             return {
                 'show_briefings_subscribe_cta': False,
                 'briefings_checkout_activation_pending': False,
@@ -770,7 +770,10 @@ def create_app():
     from app.models import User
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except (TypeError, ValueError):
+            return None
 
     # Register blueprints
     from app.routes import init_routes
