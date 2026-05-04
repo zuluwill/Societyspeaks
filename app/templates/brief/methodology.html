@@ -280,9 +280,10 @@
                         <span class="text-red-600">{{ _('Right-leaning') }}</span>
                     </div>
                 </div>
-                {% set _allsides_ratings_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="text-amber-600 hover:underline">' ~ _('AllSides Media Bias Ratings') ~ '</a>' %}
                 <p class="text-gray-600 mt-4 ml-11">
-                    {{ _('Source ratings come from %(allsides_link)s. We show the balance not to say who\'s "right," but to help you see blind spots in coverage.', allsides_link=_allsides_ratings_link)|safe }}
+                    {{ _('Source ratings come from')|safe }}
+                    <a href="https://www.allsides.com/media-bias/ratings" target="_blank" class="text-amber-600 hover:underline">{{ _('AllSides Media Bias Ratings') }}</a>.
+                    {{ _('We show the balance not to say who\'s "right," but to help you see blind spots in coverage.') }}
                 </p>
             </section>
 
