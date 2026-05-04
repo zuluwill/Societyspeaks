@@ -30,8 +30,21 @@ def read_models_source() -> str:
         for submodule in sorted(pkg_dir.glob("*.py"))
     )
 
-# Set DATABASE_URL before Config class is imported (it validates at class-definition time)
+# Force test-safe environment variables before any app module is imported.
+#
+# DATABASE_URL: Config validates this at class-definition time; SQLite keeps
+# tests hermetic and avoids connecting to the real Postgres database.
+#
+# FLASK_ENV: must be 'development' for the entire test session.  When it is
+# 'production', config.py raises RuntimeError if Redis is unreachable at
+# startup — which breaks tests that patch socket.getaddrinfo (such as
+# test_network_patches) and trigger app package initialisation before the
+# per-test `app` fixture has had a chance to override the environment.
+# The `app` fixture already forces 'development' for individual tests; this
+# module-level assignment ensures it is correct even for tests that don't
+# request the `app` fixture at all.
 os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
+os.environ['FLASK_ENV'] = 'development'
 
 # Mock deployment-specific modules that are not available in the test environment
 # (replit.object_storage is only available on Replit's platform)
