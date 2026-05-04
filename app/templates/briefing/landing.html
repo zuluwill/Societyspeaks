@@ -187,21 +187,12 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4">
-          {% if current_user.is_authenticated %}
-          <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-create-brief">
-            {{ _('Create your brief') }}
-            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-            </svg>
-          </a>
-          {% else %}
           <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-start-trial">
             {{ _('Start free 30-day trial') }}
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
           </a>
-          {% endif %}
           <a href="#see-example" class="inline-flex items-center justify-center rounded-lg px-6 py-4 text-base font-medium transition-all" style="color: #e2e8f0; border: 1px solid #475569" data-ph-capture-attribute-cta="hero-see-example">
             {{ _('See an example brief') }}
           </a>
@@ -1333,21 +1324,12 @@
       <p class="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
         {{ _('Set up your brief in 2 minutes. First delivery arrives tomorrow.') }}
       </p>
-      {% if current_user.is_authenticated %}
-      <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-lg font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4)" data-ph-capture-attribute-cta="footer-create-brief">
-        {{ _('Create your brief') }}
-        <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-        </svg>
-      </a>
-      {% else %}
       <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-lg font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4)" data-ph-capture-attribute-cta="footer-start-trial">
         {{ _('Start free 30-day trial') }}
         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
         </svg>
       </a>
-      {% endif %}
       <p class="text-slate-400 text-sm mt-4">{{ _('Cancel anytime.') }}</p>
     </div>
   </section>

@@ -152,8 +152,17 @@ def _finalize_login(user, *, method, next_url=None):
         except ValueError as e:
             flash(str(e), 'warning')
 
-    session.pop('pending_checkout_plan', None)
-    session.pop('pending_checkout_interval', None)
+    pending_plan = session.pop('pending_checkout_plan', None)
+    pending_interval = session.pop('pending_checkout_interval', 'month')
+    if pending_plan:
+        from app.billing.service import get_active_subscription as _get_active_sub
+        if not _get_active_sub(user):
+            current_app.logger.info(
+                f"Resuming checkout intent for user {user.id}: plan={pending_plan} interval={pending_interval}"
+            )
+            return redirect(url_for('billing.pending_checkout',
+                                    plan=pending_plan,
+                                    interval=pending_interval))
 
     profile = user.individual_profile or user.company_profile
     if not profile:

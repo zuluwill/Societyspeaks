@@ -54,6 +54,49 @@
         </div>
         {% endif %}
         
+        {% if not active_sub and not activation_pending %}
+        <!-- No subscription — prominent upgrade CTA -->
+        <div class="mb-8 rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)">
+            <div class="px-6 py-8 sm:px-10 sm:py-10">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div>
+                        <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: #60a5fa">{{ _('30-day free trial') }}</p>
+                        <h2 class="text-2xl font-bold text-white mb-2">{{ _('Start your Personal Brief today') }}</h2>
+                        <p class="text-slate-300 max-w-xl">{{ _('One daily brief from the sources you trust. Set up in 2 minutes. No credit card required until your trial ends.') }}</p>
+                        <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: #94a3b8">
+                            <li class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('Unlimited briefs') }}
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('PDF document uploads') }}
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('Cancel anytime') }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 lg:flex-col lg:items-stretch flex-shrink-0">
+                        <form action="{{ url_for('billing.checkout') }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="plan" value="starter">
+                            <input type="hidden" name="interval" value="month">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-500 transition-colors shadow-lg">
+                                {{ _('Start free trial — £4.99/month') }}
+                                <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                        </form>
+                        <a href="{{ url_for('briefing.landing') }}#pricing" class="inline-flex items-center justify-center px-6 py-3 rounded-lg border text-sm font-medium transition-colors" style="border-color: #475569; color: #e2e8f0;">
+                            {{ _('Compare all plans') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Header -->
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -62,6 +105,7 @@
                     <p class="mt-2 text-gray-600">{{ _('Create and manage your personalised news briefs') }}</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
+                    {% if active_sub %}
                     <a href="{{ url_for('billing.customer_portal') }}"
                        class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +113,7 @@
                         </svg>
                         {{ _('Manage Billing') }}
                     </a>
+                    {% endif %}
                     {% if current_user.company_profile %}
                     <a href="{{ url_for('briefing.list_domains') }}"
                        class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -78,6 +123,7 @@
                         {{ _('Domains') }}
                     </a>
                     {% endif %}
+                    {% if active_sub or activation_pending %}
                     <a href="{{ url_for('briefing.marketplace') }}"
                        class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,6 +131,15 @@
                         </svg>
                         {{ _('Create Briefing') }}
                     </a>
+                    {% else %}
+                    <a href="{{ url_for('briefing.landing') }}#pricing"
+                       class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                        {{ _('Start Free Trial') }}
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -98,9 +153,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
+                {% if active_sub or activation_pending %}
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ _('Create Your First Briefing') }}</h2>
                 <p class="text-gray-600 max-w-md mx-auto mb-8">{{ _('Get a personalised news digest delivered to your inbox. Choose a template to get started quickly, or build your own from scratch.') }}</p>
-
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
                     <a href="{{ url_for('briefing.marketplace') }}"
                        class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm">
@@ -117,6 +172,23 @@
                         {{ _('Create from Scratch') }}
                     </a>
                 </div>
+                {% else %}
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ _('Your briefs will appear here') }}</h2>
+                <p class="text-gray-600 max-w-md mx-auto mb-8">{{ _('Start a free 30-day trial to create your first brief. Pick a template, add your sources, and get your first delivery tomorrow morning.') }}</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="{{ url_for('briefing.landing') }}#pricing"
+                       class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                        {{ _('See plans & start free trial') }}
+                    </a>
+                    <a href="{{ url_for('briefing.landing') }}"
+                       class="inline-flex items-center justify-center px-6 py-3 bg-white text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors border border-gray-300">
+                        {{ _('Learn more') }}
+                    </a>
+                </div>
+                {% endif %}
             </div>
             
             {% if featured_templates %}
