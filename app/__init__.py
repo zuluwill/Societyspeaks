@@ -259,7 +259,7 @@ def create_app():
             if "log_record" in hint:
                 record = hint["log_record"]
                 msg = (record.getMessage() or "") if hasattr(record, "getMessage") else str(record.msg or "")
-                if drop_if(msg, "cannot schedule new futures after shutdown", "multiple head revisions"):
+                if drop_if(msg, "cannot schedule new futures", "multiple head revisions"):
                     return None
                 if drop_if(msg, "Failed to generate audio for item"):
                     return None
@@ -276,7 +276,7 @@ def create_app():
             if exc_info:
                 exc_msg = str(exc_info[1] or "")
                 exc_type = exc_info[0]
-                if exc_type is RuntimeError and drop_if(exc_msg, "cannot schedule new futures after shutdown"):
+                if exc_type is RuntimeError and drop_if(exc_msg, "cannot schedule new futures"):
                     return None
                 if drop_if(exc_msg, "multiple head revisions"):
                     return None
@@ -293,7 +293,7 @@ def create_app():
             for exc in (event.get("exception") or {}).get("values") or []:
                 val = exc.get("value") or ""
                 typ = exc.get("type") or ""
-                if typ == "RuntimeError" and drop_if(val, "cannot schedule new futures after shutdown"):
+                if typ == "RuntimeError" and drop_if(val, "cannot schedule new futures"):
                     return None
                 if drop_if(val, "multiple head revisions"):
                     return None
