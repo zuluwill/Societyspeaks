@@ -78,6 +78,30 @@ def resolve_locale() -> str:
     return 'en'
 
 
+def email_html_locale_kwargs(locale_code: str | None) -> dict[str, str]:
+    """
+    ``lang`` and ``dir`` attributes for transactional HTML emails (``base_email``).
+
+    Matches the active Flask-Babel language code (e.g. ``en``, ``zh``, ``ar``) to
+    BCP‑47-ish primary language tags and to ``dir`` from :data:`SUPPORTED_LANGUAGES`
+    so RTL layouts (Arabic) render correctly across clients.
+
+    Intended for merging into ``render_template`` contexts next to ``force_locale``.
+    """
+    from babel import Locale as BabelLocale
+
+    raw = (locale_code or 'en').strip() or 'en'
+    raw = raw.replace('-', '_')
+    try:
+        lc = BabelLocale.parse(raw, sep='_')
+        lang_key = lc.language or 'en'
+    except Exception:
+        lang_key = 'en'
+
+    meta = SUPPORTED_LANGUAGES.get(lang_key) or {}
+    return {'html_lang': lang_key, 'html_dir': meta.get('dir', 'ltr')}
+
+
 def resolve_user_locale(user=None) -> str:
     """
     Resolve the locale to use when rendering for a specific user *outside* a

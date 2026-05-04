@@ -20,7 +20,7 @@ from flask_babel import force_locale, gettext
 import requests
 from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
 from app.briefing.link_tracker import wrap_links as _wrap_links
-from app.lib.locale_utils import resolve_user_locale
+from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,11 @@ def _render_for_user(user, template, **ctx) -> str:
     `_()` call inside the template — including any loaded layout/partials — picks
     up the right translations. Works outside request context too.
     """
-    with force_locale(resolve_user_locale(user)):
-        return render_template(template, **ctx)
+    locale_str = resolve_user_locale(user)
+    with force_locale(locale_str):
+        base_ctx = email_html_locale_kwargs(locale_str)
+        merged = {**base_ctx, **ctx}
+        return render_template(template, **merged)
 
 
 def _subject_for_user(user, message: str, **variables) -> str:
@@ -41,6 +44,12 @@ def _subject_for_user(user, message: str, **variables) -> str:
 
     Mirrors `_render_for_user` but for the string we hand to Resend as subject.
     Keeps substitution variables lazy so translators can rearrange placeholders.
+
+    Msgids passed as positional string literals (second argument) are extracted by pybabel
+    via ``keywords = _subject_for_user:2`` in ``babel.cfg``.
+    Strings that only flow through intermediates such as ``subject_msgid`` or nested
+    ``subject=`` callers are duplicated in ``app/email_subject_msgids_for_extract.py`` so
+    ``pybabel extract`` still catalogs them — keep that module in sync when changing copy.
     """
     with force_locale(resolve_user_locale(user)):
         return gettext(message, **variables) if variables else gettext(message)

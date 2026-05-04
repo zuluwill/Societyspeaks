@@ -35,7 +35,8 @@
         <button type="button"
           class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors journey-recap-share"
           data-share-title="{{ _('%(name)s — I completed the Big Questions journey', name=programme.name) }}"
-          data-share-url="{{ recap_share_url }}">
+          data-share-url="{{ recap_share_url }}"
+          data-recap-share-kind="complete">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
           <span class="journey-recap-share-label">{{ _('Share your recap') }}</span>
         </button>
@@ -60,7 +61,8 @@
       <button type="button"
         class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-sm font-medium transition-colors journey-recap-share"
         data-share-title="{{ _('%(name)s — civic journey on Society Speaks', name=programme.name) }}"
-        data-share-url="{{ recap_share_url }}">
+        data-share-url="{{ recap_share_url }}"
+        data-recap-share-kind="partial">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
         <span class="journey-recap-share-label">{{ _('Invite a friend') }}</span>
       </button>
@@ -333,15 +335,31 @@
 (function () {
   /* ── Share buttons ──────────────────────────────────────────────────── */
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var recapMeta = { journey_slug: {{ programme.slug | tojson }}, journey_id: {{ programme.id | int }} };
+
+  function phCapture(ev, props) {
+    try {
+      if (window.posthog && typeof window.posthog.capture === 'function') {
+        window.posthog.capture(ev, props || {});
+      }
+    } catch (e) {}
+  }
 
   function wireShare(btn) {
     btn.addEventListener('click', async function () {
       var title = this.getAttribute('data-share-title') || 'Society Speaks';
       var url   = this.getAttribute('data-share-url')   || window.location.href;
+      var shareKind = this.getAttribute('data-recap-share-kind') || 'recap';
       var label = this.querySelector('.journey-recap-share-label');
+      var baseProps = Object.assign({}, recapMeta, {
+        recap_kind: shareKind,
+        surface: 'recap_page',
+      });
+      var hasNativeShare = typeof navigator.share === 'function';
       try {
-        if (navigator.share) {
+        if (hasNativeShare) {
           await navigator.share({ title: title, url: url });
+          phCapture('journey_recap_share', Object.assign({}, baseProps, { method: 'native_share' }));
           if (label) {
             var o = label.textContent;
             label.textContent = {{ _('Shared ✓')|tojson }};
@@ -349,16 +367,23 @@
           }
           return;
         }
-      } catch (e) { if (e && e.name === 'AbortError') return; }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
       try {
         await navigator.clipboard.writeText(url);
+        var clipMethod = hasNativeShare ? 'clipboard_fallback' : 'clipboard';
+        phCapture('journey_recap_share', Object.assign({}, baseProps, { method: clipMethod }));
         if (label) {
           var orig = label.textContent;
           label.textContent = {{ _('Link copied ✓')|tojson }};
           btn.classList.add('bg-white/40');
           setTimeout(function () { label.textContent = orig; btn.classList.remove('bg-white/40'); }, 2500);
         }
-      } catch (e2) { window.prompt({{ _('Copy this link:')|tojson }}, url); }
+      } catch (e2) {
+        phCapture('journey_recap_share', Object.assign({}, baseProps, { method: 'prompt_fallback' }));
+        window.prompt({{ _('Copy this link:')|tojson }}, url);
+      }
     });
   }
   document.querySelectorAll('.journey-recap-share').forEach(wireShare);

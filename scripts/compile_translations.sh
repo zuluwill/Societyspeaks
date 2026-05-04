@@ -2,6 +2,11 @@
 # Compile gettext .po → .mo for Flask-Babel (run in CI and before production deploy).
 #
 # Full i18n workflow after adding new UI strings:
+#
+# Email subjects in app/resend_client.py that are passed as ``subject_msgid=`` (or similar)
+# are mirrored in ``app/email_subject_msgids_for_extract.py`` dead ``gettext()`` calls — see
+# babel.cfg (`keywords = _subject_for_user:2`) for positional ``_subject_for_user`` literals.
+#
 #   1. pybabel extract -F babel.cfg -o messages.pot .
 #   2. pybabel update --ignore-obsolete -d translations -i messages.pot
 #      (--ignore-obsolete avoids #~ obsolete blocks that duplicate live msgids;

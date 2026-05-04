@@ -177,31 +177,41 @@
 
   {% if journey_mode and journey_progress %}
   {% set jp = journey_progress %}
+  {# Estimated minutes remaining for in-progress banner (same heuristic as per-theme "~N min"). #}
+  {% set jmin = namespace(v=0) %}
+  {% for item in jp.theme_items %}
+    {% if not item.is_complete and item.statement_total > 0 %}
+      {% set left = item.statement_total - item.user_votes %}
+      {% if left > 0 %}
+        {% set jmin.v = jmin.v + ([left * 2, 5] | max) %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
 
   {# ── Completion celebration banner ───────────────────────────────────── #}
   {% if jp.is_journey_complete %}
   <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg text-white px-4 sm:px-6 py-6 mb-5">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-emerald-100 mb-1">Journey complete</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-emerald-100 mb-1">{{ _('Journey complete') }}</p>
         <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <svg class="w-6 h-6 text-yellow-300 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 text-yellow-300 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
           </svg>
-          You've completed the Big Questions Journey!
+          {{ _("You've finished — amazing work.") }}
         </h2>
         <p class="text-sm text-emerald-100 mt-1">
-          {{ jp.total_user_votes }} votes across all {{ jp.total_themes }} themes. See how your views compare to everyone else.
+          {{ _('%(votes)s votes across %(total)d themes — see how you compare.', votes=jp.total_user_votes, total=jp.total_themes) }}
         </p>
         <p class="text-xs text-emerald-100/90 mt-2 max-w-xl">
-          Most people spread this over several short sessions — often about 20–40 minutes per theme, but you can go entirely at your own pace.
+          {{ _('People usually spread this across short sessions (~20–40 minutes per theme). There is no deadline.') }}
         </p>
       </div>
       <div class="flex flex-col sm:items-end gap-2 shrink-0">
         <a href="{{ url_for('programmes.programme_journey_recap', slug=programme.slug) }}"
-           class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-emerald-800 text-sm font-semibold shadow hover:bg-emerald-50 transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          View your full recap
+           class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-emerald-800 text-sm font-semibold shadow hover:bg-emerald-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-600">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          {{ _('View full recap') }}
         </a>
       </div>
     </div>
@@ -226,62 +236,85 @@
   <div class="bg-gradient-to-r from-primary-600 to-blue-700 rounded-xl shadow-md text-white px-4 sm:px-6 py-5 mb-5">
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-semibold uppercase tracking-wide text-primary-200 mb-1">Guided journey</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary-200 mb-1">{{ _('Guided journey') }}</p>
         {% set themes_left = jp.total_themes - jp.completed_themes %}
-        {% if jp.completed_themes == 0 %}
-        <h2 class="text-lg sm:text-xl font-bold">Start your civic journey</h2>
+        {% set votes_pct_rounded = jp.votes_pct | round | int %}
+        {% if jp.completed_themes == 0 and jp.total_user_votes == 0 %}
+        <h2 class="text-lg sm:text-xl font-bold">{{ _('Start your civic journey') }}</h2>
+        {% elif jp.completed_themes == 0 and jp.total_user_votes > 0 %}
+        <h2 class="text-lg sm:text-xl font-bold">{{ _("You're on your way") }}</h2>
         {% elif themes_left == 1 %}
-        <h2 class="text-lg sm:text-xl font-bold">Almost there — 1 theme left!</h2>
+        <h2 class="text-lg sm:text-xl font-bold">{{ _('Almost there — one theme left!') }}</h2>
         {% else %}
-        <h2 class="text-lg sm:text-xl font-bold">Pick up where you left off</h2>
+        <h2 class="text-lg sm:text-xl font-bold">{{ _('Pick up where you left off') }}</h2>
         {% endif %}
 
         {# Progress text + bar #}
-        <p class="text-sm text-primary-100 mt-1 mb-2">
-          {{ jp.completed_themes }} of {{ jp.total_themes }} {{ _('themes completed') }}
+        <p class="text-sm text-primary-100 mt-1 mb-1">
+          {{ jp.completed_themes }} / {{ jp.total_themes }} {{ _('themes completed') }}
+          {% if votes_pct_rounded > 0 %}
+          · {{ _('~%(pct)d%% through by votes', pct=votes_pct_rounded) }}
+          {% endif %}
+          {% if jmin.v > 0 and not jp.is_journey_complete %}
+          · {{ _('~%(mins)d min left at your pace', mins=jmin.v) }}
+          {% endif %}
           {% if not current_user.is_authenticated %}
-          — <a href="{{ url_for('auth.login') }}" class="underline font-medium text-white">sign in</a> to track your progress.
+          — <a href="{{ url_for('auth.login', next=request.path) }}" class="underline font-medium text-white">{{ _('Sign in') }}</a> {{ _('to save progress.') }}
           {% elif jp.total_user_votes > 0 %}
           · {{ jp.total_user_votes }} {{ _('votes cast') }}
           {% endif %}
         </p>
         {# At least 1% width when there is any vote activity but rounded % is 0 #}
         {% set journey_pct = [ (1 if jp.total_user_votes > 0 and jp.votes_pct | int < 1 else jp.votes_pct | int), 100 ] | min %}
-        <div class="h-1.5 bg-white/20 rounded-full overflow-hidden w-full max-w-xs"
+        <div class="h-1.5 bg-white/20 rounded-full overflow-hidden w-full max-w-md"
              role="progressbar"
              aria-valuemin="0"
              aria-valuemax="100"
              aria-valuenow="{{ journey_pct }}"
-             aria-label="Votes across all themes in this journey">
+             aria-label="{{ _('Progress through all statements in this journey') }}">
           <div class="h-full rounded-full {% if jp.votes_pct > 60 %}bg-emerald-400{% else %}bg-primary-200{% endif %}"
                style="width:0;transition:width 1s cubic-bezier(0.4,0,0.2,1)"
                data-journey-progress
                data-journey-target="{{ journey_pct }}%"></div>
         </div>
         <p class="text-xs text-primary-200/95 mt-3 max-w-xl leading-relaxed">
-          Most people complete this over several short sessions — often about 20–40 minutes per theme, but there is no deadline. Take breaks whenever you like.
+          {{ _('Most people spread this across short sessions (~20–40 minutes per theme). Take breaks anytime — nothing is gated.') }}
         </p>
       </div>
 
       <div class="flex flex-col sm:items-end gap-2 shrink-0">
         {% if jp.next_item %}
         <a href="{{ url_for('discussions.view_discussion', discussion_id=jp.next_item.discussion.id, slug=jp.next_item.discussion.slug) }}"
-           class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white text-primary-800 text-sm font-semibold shadow hover:bg-primary-50 transition-colors">
-          <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>
-          {% if jp.completed_themes == 0 %}Begin:{% else %}Continue:{% endif %}
+           class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white text-primary-800 text-sm font-semibold shadow hover:bg-primary-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700">
+          <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>
+          {% if jp.completed_themes == 0 and jp.total_user_votes == 0 %}{{ _('Begin:') }}{% else %}{{ _('Continue:') }}{% endif %}
           {{ (jp.next_item.discussion.programme_theme or jp.next_item.discussion.title) | truncate(38, True) }}
         </a>
         {% endif %}
         <a href="{{ url_for('programmes.programme_journey_recap', slug=programme.slug) }}"
-           class="text-sm text-white/80 hover:text-white underline font-medium">
+           class="text-sm text-white/90 hover:text-white underline font-medium text-center sm:text-right rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 px-0.5">
           {{ _('View progress recap') }}
         </a>
+        <div class="flex flex-wrap items-center justify-center sm:justify-end gap-2 pt-1">
+          <button type="button"
+                  id="journey-programme-share-btn"
+                  aria-label="{{ _('Share this journey — opens native share sheet or copies link') }}"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            <span class="js-journey-btn-label">{{ _('Share journey') }}</span></button>
+          <button type="button"
+                  id="journey-programme-copy-btn"
+                  aria-label="{{ _('Copy journey overview link') }}"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            <span class="js-journey-btn-label">{{ _('Copy link') }}</span></button>
+        </div>
       </div>
     </div>
 
     {# Theme checklist with per-theme mini progress #}
     <div class="mt-4 border-t border-white/20 pt-4">
-      <p class="text-xs font-semibold text-primary-200 uppercase tracking-wide mb-2.5">Themes</p>
+      <p class="text-xs font-semibold text-primary-200 uppercase tracking-wide mb-2.5">{{ _('Themes') }}</p>
       <ol class="grid grid-cols-1 sm:grid-cols-2 gap-y-2.5 gap-x-4">
         {% for item in jp.theme_items %}
         <li>
@@ -289,7 +322,7 @@
              class="flex items-start gap-2 group">
             {# Status indicator #}
             {% if item.is_complete %}
-            <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-400 flex items-center justify-center flex-shrink-0" title="Completed">
+            <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-400 flex items-center justify-center flex-shrink-0" title="{{ _('Completed') }}">
               <svg class="w-3 h-3 text-primary-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
             </span>
             {% elif item.user_votes > 0 %}
@@ -297,7 +330,7 @@
               {{ item.user_votes }}
             </span>
             {% else %}
-            <span class="mt-0.5 w-5 h-5 rounded-full border-2 border-primary-300/60 flex-shrink-0" title="Not started"></span>
+            <span class="mt-0.5 w-5 h-5 rounded-full border-2 border-primary-300/60 flex-shrink-0" title="{{ _('Not started') }}"></span>
             {% endif %}
 
             <div class="flex-1 min-w-0">
@@ -334,10 +367,11 @@
   {% endif %}
 
   {# ── Journey reminder cadence panel ──────────────────────────────────────
-     Shown when: journey in progress (not complete), user has started (≥1 theme),
+     Shown when: journey in progress (not complete), user has invested (votes or finished ≥1 theme),
      and no active subscription is set yet.
   #}
-  {% if journey_mode and journey_progress and not journey_progress.is_journey_complete and journey_progress.completed_themes >= 1 %}
+  {% set _jp_engaged = (journey_progress is not none) and (journey_progress.completed_themes >= 1 or journey_progress.total_user_votes > 0) %}
+  {% if journey_mode and journey_progress and not journey_progress.is_journey_complete and _jp_engaged %}
   {% if not journey_reminder_subscription or journey_reminder_subscription.unsubscribed_at %}
   <div id="journey-reminder-panel" class="bg-white rounded-xl shadow-sm border border-primary-100 px-4 sm:px-6 py-4 mb-5">
     <div class="flex items-start gap-3">
@@ -347,42 +381,42 @@
         </svg>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-gray-900 mb-0.5">Want a reminder to come back and finish?</p>
-        <p class="text-xs text-gray-500 mb-3">This journey is long — we can nudge you at a time that fits your life, wherever you are.</p>
+        <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ _('Want reminders to finish this journey?') }}</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _('Short email nudges — pick cadence and time. One tap unsubscribe anytime.') }}</p>
 
         <div id="journey-reminder-form" class="space-y-3">
           {% if not current_user.is_authenticated %}
           <div>
-            <label for="journey-reminder-email" class="block text-xs font-medium text-gray-600 mb-1">Email for reminders</label>
-            <input type="email" id="journey-reminder-email" name="journey-reminder-email" placeholder="you@example.com"
+            <label for="journey-reminder-email" class="block text-xs font-medium text-gray-600 mb-1">{{ _('Email for reminders') }}</label>
+            <input type="email" id="journey-reminder-email" name="journey-reminder-email" placeholder="{{ _('you@example.com') }}"
                    class="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
                    autocomplete="email" inputmode="email">
           </div>
           {% endif %}
 
           <div role="group" aria-labelledby="journey-reminder-cadence-label">
-            <p id="journey-reminder-cadence-label" class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">How often?</p>
+            <p id="journey-reminder-cadence-label" class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">{{ _('How often?') }}</p>
             <div class="flex flex-wrap gap-2">
               <button type="button" data-cadence="weekly"
                       class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400"
                       aria-pressed="false">
-                Weekly
+                {{ _('Weekly') }}
               </button>
               <button type="button" data-cadence="twice_weekly"
                       class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400"
                       aria-pressed="false">
-                Twice a week
+                {{ _('Twice a week') }}
               </button>
               <button type="button" data-cadence="weekend"
                       class="journey-cadence-choice px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400"
                       aria-pressed="false">
-                Weekend mornings
+                {{ _('Weekend mornings') }}
               </button>
             </div>
           </div>
 
           <div>
-            <label for="journey-preferred-time" class="block text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">What time? <span class="normal-case font-normal text-gray-500">(your device’s local time)</span></label>
+            <label for="journey-preferred-time" class="block text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">{{ _('What time?') }} <span class="normal-case font-normal text-gray-500">{{ _('(your device’s local time)') }}</span></label>
             <input type="time" id="journey-preferred-time" value="08:00"
                    class="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 w-32">
           </div>
@@ -391,11 +425,11 @@
                   class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ _('Turn on reminders') }}
           </button>
-          <p class="text-xs text-gray-400 leading-relaxed">We only use this to send journey nudges. You can stop anytime from the link in our emails.</p>
+          <p class="text-xs text-gray-400 leading-relaxed">{{ _('We only send journey nudges. Unsubscribe anytime from our emails.') }}</p>
         </div>
         <p id="journey-reminder-msg" class="text-xs text-gray-500 mt-2 hidden" role="status" aria-live="polite"></p>
       </div>
-      <button type="button" id="journey-reminder-dismiss" class="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors" aria-label="Dismiss">
+      <button type="button" id="journey-reminder-dismiss" class="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded" aria-label="{{ _('Dismiss reminder suggestion') }}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -404,7 +438,8 @@
   </div>
   {% elif journey_reminder_subscription and not journey_reminder_subscription.unsubscribed_at %}
   {% set _jrs = journey_reminder_subscription %}
-  {% set _cadence_label = {'weekly': 'Weekly', 'weekend': 'Weekend mornings', 'twice_weekly': 'Twice a week', 'commute': 'Twice a week'}[_jrs.cadence] if _jrs.cadence in ('weekly','weekend','twice_weekly','commute') else _jrs.cadence %}
+  {% set _cadence_label_map = {'weekly': _('Weekly'), 'weekend': _('Weekend mornings'), 'twice_weekly': _('Twice a week'), 'commute': _('Twice a week')} %}
+  {% set _cadence_label = (_cadence_label_map[_jrs.cadence] if _jrs.cadence in _cadence_label_map else _jrs.cadence) %}
   {% set _h = _jrs.preferred_hour %}
   {% set _m = _jrs.preferred_minute if _jrs.preferred_minute is not none else 0 %}
   {% set _h12 = (_h % 12) if (_h % 12) != 0 else 12 %}
@@ -418,8 +453,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         <p class="text-sm text-gray-700">
-          Reminders set:
-          <span class="font-semibold text-gray-900">{{ _cadence_label }}, {{ _time_label }} your time</span>
+          {{ _('Reminders on: %(cadence)s at %(time)s your time.', cadence=_cadence_label, time=_time_label) }}
         </p>
       </div>
       <a href="{{ url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug) }}" class="text-xs text-gray-400 hover:text-gray-600 underline">{{ _('Stop reminders') }}</a>
@@ -574,8 +608,21 @@
 {% if journey_mode and journey_progress %}
 <script nonce="{{ csp_nonce() }}">
 (function () {
+  function phCapture(ev, props) {
+    try {
+      if (window.posthog && typeof window.posthog.capture === 'function') {
+        window.posthog.capture(ev, props || {});
+      }
+    } catch (e) {}
+  }
+
   var REMINDER_URL = {{ url_for('programmes.journey_reminder_subscribe', slug=programme.slug) | tojson }};
   var CSRF_TOKEN = {{ csrf_token() | tojson }};
+  var JOURNEY_SS_KEY = {{ ('journey_reminder_dismissed_' ~ programme.slug) | tojson }};
+  var PROGRAMME_META = {
+    slug: {{ programme.slug | tojson }},
+    id: {{ programme.id | int }},
+  };
   var panel = document.getElementById('journey-reminder-panel');
   var msgEl = document.getElementById('journey-reminder-msg');
 
@@ -586,9 +633,18 @@
   } catch (e) {}
 
   var CADENCE_LABELS = {
-    weekly: 'weekly',
-    twice_weekly: 'twice a week (Tue & Thu)',
-    weekend: 'on weekend mornings'
+    weekly: {{ _('Once a week')|tojson }},
+    twice_weekly: {{ _('Twice a week — Tue and Thu')|tojson }},
+    weekend: {{ _('Weekend mornings')|tojson }},
+  };
+  var MR = {
+    chooseCadenceFirst: {{ _('Choose how often you want a reminder first.')|tojson }},
+    needEmail: {{ _('Enter the email address where we should send reminders.')|tojson }},
+    remindersOnLine: {{ _('Reminders are scheduled:')|tojson }},
+    atYourTime: {{ _('at')|tojson }},
+    anonymousConfirm: {{ _('Check your inbox for a confirmation link to pick up where you left off.')|tojson }},
+    accountSaved: {{ _('Reminders saved for your account.')|tojson }},
+    errorGeneric: {{ _('Something went wrong. Please try again.')|tojson }},
   };
 
   function getPreferredTime() {
@@ -628,12 +684,15 @@
     if (dismiss) {
       dismiss.addEventListener('click', function () {
         panel.style.display = 'none';
-        try { sessionStorage.setItem('journey_reminder_dismissed', '1'); } catch(e) {}
+        try { sessionStorage.setItem(JOURNEY_SS_KEY, '1'); } catch(e) {}
+        phCapture('journey_reminder_panel_dismissed', { journey_slug: PROGRAMME_META.slug, journey_id: PROGRAMME_META.id });
       });
     }
     try {
-      if (sessionStorage.getItem('journey_reminder_dismissed') === '1') {
+      if (sessionStorage.getItem(JOURNEY_SS_KEY) === '1') {
         panel.style.display = 'none';
+      } else {
+        phCapture('journey_reminder_panel_shown', { journey_slug: PROGRAMME_META.slug, journey_id: PROGRAMME_META.id });
       }
     } catch(e) {}
 
@@ -664,7 +723,7 @@
     if (submitBtn) {
       submitBtn.addEventListener('click', function () {
         if (!selectedCadence) {
-          showMsg('Choose how often you would like a reminder, then press Turn on reminders.', 'red');
+          showMsg(MR.chooseCadenceFirst, 'red');
           return;
         }
         var t = getPreferredTime();
@@ -672,9 +731,10 @@
         var payload = { cadence: selectedCadence, timezone: USER_TZ, preferred_hour: t.hour, preferred_minute: t.minute };
         if (emailEl) {
           var email = emailEl.value.trim();
-          if (!email) { showMsg('Please enter your email address so we know where to send reminders.', 'red'); emailEl.focus(); return; }
+          if (!email) { showMsg(MR.needEmail, 'red'); emailEl.focus(); return; }
           payload.email = email;
         }
+        var anonReminderFlow = !!(document.getElementById('journey-reminder-email'));
         submitBtn.disabled = true;
         document.querySelectorAll('.journey-cadence-choice').forEach(function (b) { b.disabled = true; });
         fetch(REMINDER_URL, {
@@ -690,27 +750,122 @@
             var form = document.getElementById('journey-reminder-form');
             if (form) {
               form.innerHTML =
-                '<p class="text-sm text-emerald-700 font-medium">&#10003; Reminders are on: ' +
-                cadenceText + ', at ' + timeText + ' your local time.</p>';
+                '<p class="text-sm text-emerald-700 font-medium">✓ ' +
+                MR.remindersOnLine + ' ' +
+                cadenceText + ', ' +
+                MR.atYourTime + ' ' +
+                timeText + '.</p>';
             }
+            phCapture('journey_reminder_confirmed_ui', {
+              journey_slug: PROGRAMME_META.slug,
+              journey_id: PROGRAMME_META.id,
+              cadence: selectedCadence,
+              anonymous: anonReminderFlow,
+            });
             if (emailEl) {
-              showMsg('Check your inbox — we have sent a confirmation with a link to pick up where you left off.', 'green');
+              showMsg(MR.anonymousConfirm, 'green');
             } else {
-              showMsg('Reminders saved for your account.', 'green');
+              showMsg(MR.accountSaved, 'green');
             }
           } else {
             submitBtn.disabled = false;
             document.querySelectorAll('.journey-cadence-choice').forEach(function (b) { b.disabled = false; });
-            showMsg('Something went wrong. Please try again.', 'red');
+            showMsg(MR.errorGeneric, 'red');
           }
         })
         .catch(function () {
           submitBtn.disabled = false;
           document.querySelectorAll('.journey-cadence-choice').forEach(function (b) { b.disabled = false; });
-          showMsg('Something went wrong. Please try again.', 'red');
+          showMsg(MR.errorGeneric, 'red');
         });
       });
     }
+  }
+})();
+
+(function () {
+  function phCapture(ev, props) {
+    try {
+      if (window.posthog && typeof window.posthog.capture === 'function') {
+        window.posthog.capture(ev, props || {});
+      }
+    } catch (e) {}
+  }
+  function copyText(url, onOk) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(onOk).catch(function () {});
+      return;
+    }
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'absolute';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      onOk();
+    } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  var programmeUrl = {{ url_for('programmes.view_programme', slug=programme.slug, _external=True) | tojson }};
+  var shareBtn = document.getElementById('journey-programme-share-btn');
+  var copyBtn = document.getElementById('journey-programme-copy-btn');
+  var slug = {{ programme.slug | tojson }};
+  var pid = {{ programme.id | int }};
+  function labelFlash(btn, text) {
+    if (!btn) return;
+    var label = btn.querySelector('.js-journey-btn-label');
+    if (label) {
+      var prev = label.textContent;
+      label.textContent = text;
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      setTimeout(function () {
+        label.textContent = prev;
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+      }, 2000);
+      return;
+    }
+    var prevAll = btn.textContent;
+    btn.textContent = text;
+    btn.disabled = true;
+    setTimeout(function () {
+      btn.textContent = prevAll;
+      btn.disabled = false;
+    }, 2000);
+  }
+  var copiedLabel = {{ _('Copied!')|tojson }};
+  if (shareBtn) {
+    shareBtn.addEventListener('click', function () {
+      var title = {{ (_('Big Questions civic journey — Society Speaks'))|tojson }};
+      if (navigator.share) {
+        navigator.share({ title: title, text: title, url: programmeUrl }).then(function () {
+          phCapture('journey_programme_share', { journey_slug: slug, journey_id: pid, surface: 'programme_banner', method: 'native_share' });
+        }).catch(function (err) {
+          if (err && err.name === 'AbortError') return;
+          copyText(programmeUrl, function () {
+            labelFlash(shareBtn, copiedLabel);
+            phCapture('journey_programme_share', { journey_slug: slug, journey_id: pid, surface: 'programme_banner', method: 'clipboard_fallback' });
+          });
+        });
+        return;
+      }
+      copyText(programmeUrl, function () {
+        labelFlash(shareBtn, copiedLabel);
+        phCapture('journey_programme_share', { journey_slug: slug, journey_id: pid, surface: 'programme_banner', method: 'clipboard' });
+      });
+    });
+  }
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      copyText(programmeUrl, function () {
+        labelFlash(copyBtn, copiedLabel);
+        phCapture('journey_programme_share', { journey_slug: slug, journey_id: pid, surface: 'programme_banner', method: 'copy_button' });
+      });
+    });
   }
 })();
 </script>

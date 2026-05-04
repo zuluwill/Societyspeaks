@@ -38,7 +38,7 @@ from app.programmes.utils import (
     parse_csv_list,
     validate_cohort_for_discussion,
 )
-from app.lib.locale_utils import language_preference_cookie_params
+from app.lib.locale_utils import email_html_locale_kwargs, language_preference_cookie_params
 from app.lib.translation import (
     get_cached_programme_translations_map,
     get_cached_programme_translation,
@@ -51,7 +51,7 @@ from app.programmes.journey import (
     ordered_journey_discussions,
     user_statement_votes_detail_batch,
 )
-from flask_babel import gettext as _
+from flask_babel import format_time, force_locale, get_locale, gettext as _
 
 
 programmes_bp = Blueprint('programmes', __name__, template_folder='../templates/programmes')
@@ -651,43 +651,66 @@ def journey_reminder_subscribe(slug):
 
         db.session.flush()
 
-        # Human-readable cadence labels for emails
-        _cadence_labels = {
-            'weekly': 'once a week',
-            'weekend': 'on Saturday mornings',
-            'twice_weekly': 'twice a week (Tue & Thu)',
-            'commute': 'twice a week (Tue & Thu)',
-        }
-        h12 = preferred_hour % 12 or 12
-        ampm = 'am' if preferred_hour < 12 else 'pm'
-        m_str = f'{preferred_minute:02d}'
-        time_label = f'at {h12}:{m_str}{ampm}'
-        cadence_label = f"{_cadence_labels.get(cadence, cadence)}, {time_label}"
-
         if not user_id:
+            from datetime import time as dt_time
+
             token = sub.generate_resume_token(expires_hours=72)
             db.session.commit()
             from app.resend_client import get_resend_client
             from flask import render_template as _rt
+
             client = get_resend_client()
             base_url = client.base_url
             confirm_url = f"{base_url}/programmes/{programme.slug}?jrt={token}"
-            html = _rt(
-                'emails/journey_reminder_confirm.html',
-                programme_name=programme.name,
-                confirm_url=confirm_url,
-                cadence_label=cadence_label,
-                base_url=base_url,
-            )
+            locale_str = str(get_locale() or 'en')
+            with force_locale(locale_str):
+                cadence_fragments = {
+                    'weekly': _('once a week'),
+                    'weekend': _('on Saturday mornings'),
+                    'twice_weekly': _('twice a week (Tue & Thu)'),
+                    'commute': _('twice a week (Tue & Thu)'),
+                }
+                cadence_part = cadence_fragments[cadence]
+                clock_local = format_time(
+                    dt_time(preferred_hour, preferred_minute),
+                    format='short',
+                )
+                cadence_label = _('%(schedule)s at %(time)s', schedule=cadence_part, time=clock_local)
+                subject = _('Journey reminders set — Society Speaks')
+                _mail_ctx = {
+                    **email_html_locale_kwargs(locale_str),
+                    'programme_name': programme.name,
+                    'confirm_url': confirm_url,
+                    'cadence_label': cadence_label,
+                    'base_url': base_url,
+                }
+                html = _rt('emails/journey_reminder_confirm.html', **_mail_ctx)
             email_data = {
                 'from': client.from_email,
                 'to': [email],
-                'subject': f"Your journey reminders are set — Society Speaks",
+                'subject': subject,
                 'html': html,
             }
             client._send_with_retry(email_data, use_rate_limit=False)
         else:
             db.session.commit()
+
+        if _posthog and getattr(_posthog, 'project_api_key', None):
+            try:
+                _jid = str(user_id) if user_id else normalize_email(email)
+                _posthog.capture(
+                    distinct_id=_jid,
+                    event='journey_reminder_opt_in',
+                    properties={
+                        'journey_id': programme.id,
+                        'journey_slug': programme.slug,
+                        'cadence': cadence,
+                        'is_authenticated': bool(user_id),
+                    },
+                )
+                _posthog.flush()
+            except Exception as _e:
+                current_app.logger.warning(f"PostHog journey_reminder_opt_in error: {_e}")
 
         return jsonify({'success': True, 'cadence': cadence, 'preferred_hour': preferred_hour, 'preferred_minute': preferred_minute})
 

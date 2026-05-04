@@ -93,7 +93,7 @@
     </div>
     <h2 class="text-2xl font-bold mb-2">{{ _('Theme complete!') }}</h2>
     <p class="text-emerald-100 text-sm mb-6 max-w-sm mx-auto" id="journey-complete-msg">
-      You've voted on all {{ _gjc_ti.statement_total }} statements in this theme.
+      {{ _('You voted on every statement in this theme (%(total)d).', total=_gjc_ti.statement_total) }}
     </p>
     <div id="journey-complete-actions" class="flex flex-col gap-4 items-stretch max-w-lg mx-auto w-full"></div>
     <p class="text-xs text-emerald-50/90 mt-2 max-w-md mx-auto leading-relaxed" id="journey-complete-follow-hint"></p>
@@ -1171,6 +1171,11 @@
   var CONSENSUS_STAFF_BYPASS = {{ 'true' if (is_creator or is_admin) else 'false' }};
   var SHARE_URL = {{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) | tojson }};
   var SHARE_TITLE = {{ (discussion.programme_theme or discussion.title) | tojson }};
+  var SHARE_TRACK_BASE = {
+    journey_slug: {{ discussion.programme.slug | tojson }},
+    journey_id: {{ discussion.programme.id | int }},
+    discussion_id: {{ discussion.id | int }},
+  };
 
   // i18n strings used when this script builds DOM markup dynamically.
   // Gettext returns plain str, so |tojson is safe.
@@ -1181,8 +1186,13 @@
     shareLabel:        {{ _('Share')|tojson }},
     copyLinkAria:      {{ _('Copy link to this discussion')|tojson }},
     copyLinkLabel:     {{ _('Copy link')|tojson }},
+    shareCopiedShort:  {{ _('Copied!')|tojson }},
     deliberationNote:  {{ _('Open the deliberation map for this theme, or share this page. If analysis is still computing, the results page explains what happens next.')|tojson }},
-    journeyCompleteMsg:{{ _("You've completed the entire Big Questions Journey! See how your views compare to everyone else's.")|tojson }}
+    journeyCompleteMsg: {{ _("You've completed the entire Big Questions Journey! See how your views compare to everyone else's.")|tojson }},
+    viewFullRecap: {{ _('View your full recap')|tojson }},
+    continueTheme: {{ _('Continue to next theme')|tojson }},
+    recapProgressSoFar: {{ _('Journey recap so far')|tojson }},
+    viewRecap: {{ _('View your recap')|tojson }},
   };
 
   /** Escape text for safe insertion into HTML (theme titles, etc.). */
@@ -1294,7 +1304,8 @@
     if (!focusCard || !completeCard) return;
     focusCard.classList.add('hidden');
     completeCard.classList.remove('hidden');
-    completeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var reduceMoScroll = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    completeCard.scrollIntoView({ behavior: reduceMoScroll ? 'auto' : 'smooth', block: 'center' });
 
     var actionsEl = document.getElementById('journey-complete-actions');
     var followHintEl = document.getElementById('journey-complete-follow-hint');
@@ -1311,42 +1322,81 @@
     function consensusUnlockedClient() {
       return CONSENSUS_STAFF_BYPASS || CONSENSUS_INITIAL_UNLOCKED || distinctClientVotes() >= CONSENSUS_THRESHOLD;
     }
-    var btnClass = 'inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow transition-colors text-sm sm:text-base';
+    var btnClass =
+      'inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow transition-colors text-sm sm:text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-600';
+    function phCapture(ev, props) {
+      try {
+        if (window.posthog && typeof window.posthog.capture === 'function') {
+          window.posthog.capture(ev, props || {});
+        }
+      } catch (e) {}
+    }
+    function clipCopyShareUrl(ok) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(SHARE_URL).then(ok).catch(function () {});
+        return;
+      }
+      var ta = document.createElement('textarea');
+      ta.value = SHARE_URL;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'absolute';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        ok();
+      } catch (e) {}
+      document.body.removeChild(ta);
+    }
     function wireJourneyShareControls() {
       var shareBtn = document.getElementById('journey-share-btn');
       var copyBtn = document.getElementById('journey-copy-link-btn');
-      if (shareBtn) {
-        if (!navigator.share) {
-          shareBtn.style.display = 'none';
-        } else {
-          shareBtn.addEventListener('click', function () {
-            navigator.share({ title: SHARE_TITLE, text: SHARE_TITLE, url: SHARE_URL }).catch(function () {});
-          });
+      function flashCopied(btn, labelDone) {
+        if (!btn) return;
+        var label = btn.querySelector('.js-journey-btn-label');
+        var nextTxt = labelDone || I18N.shareCopiedShort;
+        if (label) {
+          var prev = label.textContent;
+          label.textContent = nextTxt;
+          setTimeout(function () { label.textContent = prev; }, 2000);
+          return;
         }
+        var prevAll = btn.textContent;
+        btn.textContent = nextTxt;
+        setTimeout(function () { btn.textContent = prevAll; }, 2000);
+      }
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function () {
+          var shareOpts = {
+            title: SHARE_TITLE || 'Society Speaks',
+            text: SHARE_TITLE || '',
+            url: SHARE_URL,
+          };
+          if (navigator.share) {
+            navigator.share(shareOpts).then(function () {
+              phCapture('journey_theme_complete_share', Object.assign({ surface: 'theme_complete_card' }, SHARE_TRACK_BASE, { method: 'native_share' }));
+            }).catch(function (err) {
+              if (err && err.name === 'AbortError') return;
+              clipCopyShareUrl(function () {
+                flashCopied(shareBtn, I18N.shareCopiedShort);
+                phCapture('journey_theme_complete_share', Object.assign({ surface: 'theme_complete_card' }, SHARE_TRACK_BASE, { method: 'clipboard_fallback_from_share' }));
+              });
+            });
+            return;
+          }
+          clipCopyShareUrl(function () {
+            flashCopied(shareBtn, I18N.shareCopiedShort);
+            phCapture('journey_theme_complete_share', Object.assign({ surface: 'theme_complete_card' }, SHARE_TRACK_BASE, { method: 'clipboard_primary' }));
+          });
+        });
       }
       if (copyBtn) {
         copyBtn.addEventListener('click', function () {
-          function ok() {
-            var prev = copyBtn.textContent;
-            copyBtn.textContent = 'Copied!';
-            setTimeout(function () { copyBtn.textContent = prev; }, 2000);
-          }
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(SHARE_URL).then(ok).catch(function () {});
-          } else {
-            var ta = document.createElement('textarea');
-            ta.value = SHARE_URL;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'absolute';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            try {
-              document.execCommand('copy');
-              ok();
-            } catch (e) {}
-            document.body.removeChild(ta);
-          }
+          clipCopyShareUrl(function () {
+            flashCopied(copyBtn);
+            phCapture('journey_theme_complete_share', Object.assign({ surface: 'theme_complete_card' }, SHARE_TRACK_BASE, { method: 'copy_button' }));
+          });
         });
       }
     }
@@ -1376,12 +1426,12 @@
         btnClass +
         ' bg-white/15 text-white hover:bg-white/25" aria-label="' + escHtml(I18N.shareAria) + '">' +
         '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>' +
-        '<span>' + escHtml(I18N.shareLabel) + '</span></button>' +
+        '<span class="js-journey-btn-label">' + escHtml(I18N.shareLabel) + '</span></button>' +
         '<button type="button" id="journey-copy-link-btn" class="' +
         btnClass +
         ' bg-white/15 text-white hover:bg-white/25" aria-label="' + escHtml(I18N.copyLinkAria) + '">' +
         '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>' +
-        '<span>' + escHtml(I18N.copyLinkLabel) + '</span></button>';
+        '<span class="js-journey-btn-label">' + escHtml(I18N.copyLinkLabel) + '</span></button>';
       return (
         '<div class="border-t border-white/25 pt-4 mt-1 text-left">' +
         '<p class="text-xs text-emerald-50/95 mb-3 leading-relaxed text-center">' + escHtml(I18N.deliberationNote) + '</p>' +
@@ -1406,7 +1456,8 @@
           btnClass +
           ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">' +
           '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' +
-          'View your full recap</a>';
+          escHtml(I18N.viewFullRecap) +
+          '</a>';
       } else if (NEXT_THEME_URL) {
         primaryRow =
           '<a href="' +
@@ -1415,21 +1466,26 @@
           btnClass +
           ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">' +
           '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>' +
-          '<span class="text-left">Continue to next theme' +
+          '<span class="text-left">' +
+          escHtml(I18N.continueTheme) +
           (NEXT_THEME_NAME ? ': <span class="font-normal opacity-90">' + escHtml(NEXT_THEME_NAME) + '</span>' : '') +
           '</span></a>' +
           '<a href="' +
           RECAP_URL +
           '" class="' +
           btnClass +
-          ' bg-white/20 text-white hover:bg-white/30 w-full sm:w-auto">Journey recap so far</a>';
+          ' bg-white/20 text-white hover:bg-white/30 w-full sm:w-auto">' +
+          escHtml(I18N.recapProgressSoFar) +
+          '</a>';
       } else {
         primaryRow =
           '<a href="' +
           RECAP_URL +
           '" class="' +
           btnClass +
-          ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">View your recap</a>';
+          ' bg-white text-emerald-800 hover:bg-emerald-50 w-full sm:w-auto">' +
+          escHtml(I18N.viewRecap) +
+          '</a>';
       }
       actionsEl.innerHTML =
         '<div class="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">' +
