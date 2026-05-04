@@ -716,7 +716,7 @@ def init_scheduler(app):
 
         Targets subscriptions in ``trialing`` status whose ``trial_end`` is between
         20 and 25 days from now (i.e. 5–10 days into the trial).  A Redis key
-        ``trial:mid_email:<sub_id>`` (TTL 35 days) is used as a send-once guard so
+        ``trial:mid_email:<local_subscription_pk>`` (TTL 35 days) is used as a send-once guard so
         the email is never sent twice even if the job misfires and double-runs.
 
         No external calls are made if there are no matching subscriptions.
@@ -734,42 +734,53 @@ def init_scheduler(app):
                 window_min = now + timedelta(days=20)
                 window_max = now + timedelta(days=25)
 
-                candidates = (
-                    Subscription.query
-                    .filter(
+                candidates_q = (
+                    Subscription.query.filter(
                         Subscription.status == 'trialing',
                         Subscription.trial_end >= window_min,
                         Subscription.trial_end <= window_max,
-                    )
-                    .all()
+                    ).order_by(Subscription.id.asc())
                 )
 
-                if not candidates:
-                    return
-
-                redis_client = None
                 try:
-                    from app.extensions import redis_client as _rc
-                    redis_client = _rc
+                    from app.lib.redis_client import get_client as _get_redis
+
+                    redis_client = _get_redis(decode_responses=True)
                 except Exception:
-                    pass
+                    redis_client = None
 
                 sent = skipped = errors = 0
-                for sub in candidates:
-                    cache_key = f'trial:mid_email:{sub.id}'
+                redis_warned = False
 
-                    if redis_client:
-                        try:
-                            if redis_client.get(cache_key):
-                                skipped += 1
-                                continue
-                        except Exception:
-                            pass
-
+                for sub in candidates_q.yield_per(200):
                     user = db.session.get(User, sub.user_id) if sub.user_id else None
                     if not user or not user.email:
                         skipped += 1
                         continue
+
+                    cache_key = f'trial:mid_email:{sub.id}'
+                    claimed_redis = False
+
+                    if redis_client:
+                        try:
+                            claimed_redis = bool(
+                                redis_client.set(cache_key, '1', nx=True, ex=60 * 60 * 24 * 35)
+                            )
+                            if not claimed_redis:
+                                skipped += 1
+                                continue
+                        except Exception as redis_exc:
+                            logger.warning(
+                                'Mid-trial email: Redis SET NX failed for sub %s: %s',
+                                sub.id,
+                                redis_exc,
+                            )
+                    elif not redis_warned:
+                        redis_warned = True
+                        logger.warning(
+                            'Mid-trial email job: Redis unavailable — send-once dedupe disabled '
+                            '(configure REDIS_URL to prevent duplicate mid-trial emails)'
+                        )
 
                     days_remaining = max(1, (sub.trial_end - now).days) if sub.trial_end else 23
 
@@ -789,16 +800,21 @@ def init_scheduler(app):
                         )
                         if ok:
                             sent += 1
-                            if redis_client:
-                                try:
-                                    redis_client.setex(cache_key, 60 * 60 * 24 * 35, '1')
-                                except Exception:
-                                    pass
                         else:
                             errors += 1
+                            if redis_client and claimed_redis:
+                                try:
+                                    redis_client.delete(cache_key)
+                                except Exception:
+                                    pass
                     except Exception as e:
                         logger.error(f'Mid-trial email failed for sub {sub.id}: {e}', exc_info=True)
                         errors += 1
+                        if redis_client and claimed_redis:
+                            try:
+                                redis_client.delete(cache_key)
+                            except Exception:
+                                pass
 
                 logger.info(f'Mid-trial emails: sent={sent} skipped={skipped} errors={errors}')
             except Exception as e:

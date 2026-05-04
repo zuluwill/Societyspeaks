@@ -139,7 +139,7 @@ def test_send_subscription_cancelled_email_reuses_client_for_fallback_url(monkey
     assert len(helper_calls) == 1
     _, template, subject, context, helper_client = helper_calls[0]
     assert template == 'emails/subscription_cancelled.html'
-    assert subject == 'Your Society Speaks subscription has ended'
-    assert context['resubscribe_url'] == f'{client.base_url}/briefings/landing'
+    assert subject == "We've paused your briefings — come back any time"
+    assert context['resubscribe_url'] == f'{client.base_url}/briefings/landing#pricing'
     assert context['briefing_count'] == 2
     assert helper_client is client
