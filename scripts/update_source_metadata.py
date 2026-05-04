@@ -20,7 +20,7 @@ SOURCE_METADATA = {
     'Acquired Podcast': {
         'source_category': 'podcast',
         'website_url': 'https://www.acquired.fm/',
-        'logo_url': 'https://logo.clearbit.com/acquired.fm',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/43/c5/fb/43c5fbdf-b302-053a-2704-ba5f74322625/mza_13119989780540450831.jpg/600x600bb.jpg',
         'description': 'Deep dives into the playbooks of the greatest companies and investors. Hosted by Ben Gilbert and David Rosenthal.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/acquired/id1050462261',
@@ -37,7 +37,7 @@ SOURCE_METADATA = {
     'All-In Podcast': {
         'source_category': 'podcast',
         'website_url': 'https://www.allin.com/',
-        'logo_url': 'https://logo.clearbit.com/allin.com',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts124/v4/c7/d2/92/c7d292ea-44b3-47ff-2f5e-74fa5b23db6c/mza_7005270671777648882.png/600x600bb.jpg',
         'description': 'Industry veterans break down the biggest stories in tech, investing, and politics. Hosted by Chamath Palihapitiya, Jason Calacanis, David Sacks, and David Friedberg.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/all-in-with-chamath-jason-sacks-friedberg/id1502871393',
@@ -185,7 +185,7 @@ SOURCE_METADATA = {
     'Huberman Lab': {
         'source_category': 'podcast',
         'website_url': 'https://www.hubermanlab.com/',
-        'logo_url': 'https://logo.clearbit.com/hubermanlab.com',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/9a/d3/19/9ad31912-0b5a-a16e-2d7c-9fd074698b9c/mza_8994222203629500925.jpg/600x600bb.jpg',
         'description': 'Neuroscience and science-based tools for everyday life. Hosted by Stanford professor Andrew Huberman.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/huberman-lab/id1545953110',
@@ -202,7 +202,7 @@ SOURCE_METADATA = {
     'Lex Fridman Podcast': {
         'source_category': 'podcast',
         'website_url': 'https://lexfridman.com/',
-        'logo_url': 'https://logo.clearbit.com/lexfridman.com',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/3e/e3/9c/3ee39c89-de08-47a6-7f3d-3849cef6d255/mza_16657851278549137484.png/600x600bb.jpg',
         'description': 'Conversations about AI, science, technology, history, philosophy, and the nature of intelligence and consciousness.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/lex-fridman-podcast/id1434243584',
@@ -237,7 +237,7 @@ SOURCE_METADATA = {
     'Modern Wisdom': {
         'source_category': 'podcast',
         'website_url': 'https://modernwisdom.com/',
-        'logo_url': 'https://logo.clearbit.com/modernwisdom.com',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/7f/73/99/7f739968-f65e-f679-d1fd-c727118c69f0/mza_17156407142775783271.jpg/600x600bb.jpg',
         'description': 'Conversations on life, philosophy, psychology, and self-improvement. Hosted by Chris Williamson.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/modern-wisdom/id1347973549',
@@ -445,7 +445,7 @@ SOURCE_METADATA = {
     'The Rest Is Politics': {
         'source_category': 'podcast',
         'website_url': 'https://www.therestispolitics.com/',
-        'logo_url': 'https://logo.clearbit.com/therestispolitics.com',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/7c/a6/83/7ca6831b-adc0-1d70-0c4a-8d9f37de10bd/mza_14183575544234021474.jpg/600x600bb.jpg',
         'description': 'Political commentary from both sides of the aisle with Alastair Campbell (left) and Rory Stewart (right).',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/the-rest-is-politics/id1614231270',
@@ -468,7 +468,7 @@ SOURCE_METADATA = {
     'The Tim Ferriss Show': {
         'source_category': 'podcast',
         'website_url': 'https://tim.blog/podcast/',
-        'logo_url': 'https://logo.clearbit.com/tim.blog',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/18/39/b4/1839b420-7aff-c501-5d0d-af2842fba013/mza_6255154260686997849.jpeg/600x600bb.jpg',
         'description': 'World-class performers share tactics, tools, and routines. Hosted by Tim Ferriss.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/the-tim-ferriss-show/id863897795',
