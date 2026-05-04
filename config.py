@@ -148,11 +148,14 @@ class Config:
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
 
-    # Neon's direct-connect endpoints now return AAAA (IPv6) records that are
-    # unreachable on some hosting environments (including Replit deployments).
-    # Transparently rewrite the URL to use Neon's pooler endpoint, which resolves
-    # to IPv4 only, fixes the connectivity issue, and also improves connection
-    # efficiency under load (PgBouncer transaction-mode pooling).
+    # Neon's direct-connect endpoints publish both A and AAAA records.  In
+    # environments without IPv6 connectivity (Replit deployments) the IPv6
+    # path fails before falling back to IPv4.  We solve the IPv6 problem
+    # primarily via the socket-level IPv4-preference patch
+    # (app/lib/network_patches.py), but also transparently rewrite Neon
+    # URLs to the pooler endpoint, which is Neon's recommended production
+    # setup (PgBouncer transaction-mode pooling) and reduces direct-
+    # endpoint pressure.  Defence in depth.
     if (SQLALCHEMY_DATABASE_URI and
             '.neon.tech' in SQLALCHEMY_DATABASE_URI and
             '-pooler.' not in SQLALCHEMY_DATABASE_URI):
@@ -166,7 +169,20 @@ class Config:
             SQLALCHEMY_DATABASE_URI = _rewritten_uri
             logging.info(
                 "Neon direct endpoint detected; DATABASE_URL automatically rewritten "
-                "to use pooler endpoint (IPv4) to avoid IPv6 connectivity issues."
+                "to use pooler endpoint (recommended production setup)."
+            )
+        else:
+            # The URL contains '.neon.tech' and is not already a pooler URL,
+            # but our regex didn't match.  Most likely Neon changed their
+            # endpoint id format — surface this so we notice in logs rather
+            # than silently shipping a config that bypasses the pooler.  The
+            # IPv4 patch still protects against IPv6 issues; this is just
+            # to keep ops aware.
+            logging.warning(
+                "Neon URL detected but pooler-rewrite regex did not match — "
+                "endpoint id format may have changed. Consider updating "
+                "config.py or setting DATABASE_URL to a -pooler endpoint manually. "
+                "Connectivity is unaffected (IPv4 patch handles IPv6)."
             )
 
     # Stripe billing configuration

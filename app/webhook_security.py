@@ -179,13 +179,20 @@ def check_replay_protection(timestamp, payload):
             try:
                 from app.lib.redis_client import get_client
                 r = get_client(decode_responses=False)
-                
+
+                if r is None:
+                    # Pool init failed (logged inside get_client); fall through
+                    # to the same fail-open/fail-closed policy as a runtime
+                    # Redis exception so the behaviour is identical regardless
+                    # of *when* Redis became unavailable.
+                    raise RuntimeError("Redis client unavailable for replay protection")
+
                 # Use SETNX to atomically check and set
                 # Returns True if key didn't exist (first time seeing this request)
                 # Returns False if key already exists (replay attack)
                 is_new_request = r.set(f"webhook_replay:{request_id}", "1", ex=300, nx=True)
                 return bool(is_new_request)
-                
+
             except Exception as redis_error:
                 current_app.logger.error(f"Redis replay protection failed: {redis_error}")
                 # In production, fail closed (reject request)

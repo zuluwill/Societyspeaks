@@ -9,33 +9,17 @@ block scheduler orchestration or web traffic.
 import logging
 import os
 import signal
-import socket as _socket
 import sys
 import time
-
-try:
-    import redis as redis_lib
-except Exception:  # pragma: no cover - optional runtime dependency
-    redis_lib = None
 
 # Ensure the workspace root is on sys.path so `app` can be imported
 # regardless of the working directory the workflow runner uses.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# IPv4-preference patch — see run.py for full rationale.
-_orig_getaddrinfo = _socket.getaddrinfo
-
-
-def _prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):  # noqa: A002
-    results = _orig_getaddrinfo(host, port, family, type, proto, flags)
-    if family == 0 and port is not None:
-        ipv4 = [r for r in results if r[0] == _socket.AF_INET]
-        if ipv4:
-            return ipv4
-    return results
-
-
-_socket.getaddrinfo = _prefer_ipv4
+# IPv4-preference patch — single source of truth lives in app/lib/network_patches.
+# Must run before create_app() (which opens the SESSION_REDIS pool and pings it).
+from app.lib.network_patches import apply_ipv4_preference  # noqa: E402
+apply_ipv4_preference()
 
 # Ensure this process never starts the in-app scheduler.
 os.environ.setdefault("DISABLE_SCHEDULER", "1")
@@ -69,18 +53,19 @@ def _handle_shutdown(signum, _frame):
     _RUNNING = False
 
 
-def _build_redis_client():
-    redis_url = (os.getenv("REDIS_URL") or "").strip()
-    if not redis_url or redis_lib is None:
-        return None
+def _publish_heartbeat(worker_id):
+    """Publish a heartbeat for this worker via the shared Redis pool.
+
+    Resolving the client through ``get_client()`` on every tick is a cheap
+    dict lookup once the pool is warm, and it self-heals if the pool was
+    not available at worker start.
+    """
     try:
-        return redis_lib.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
+        from app.lib.redis_client import get_client
+        redis_client = get_client(decode_responses=False)
     except Exception as exc:
-        logger.warning(f"Consensus worker Redis init failed: {exc}")
-        return None
-
-
-def _publish_heartbeat(redis_client, worker_id):
+        logger.debug(f"Consensus worker heartbeat client unavailable: {exc}")
+        return
     if not redis_client:
         return
     try:
@@ -103,7 +88,6 @@ def main():
     active_sleep = max(0.0, float(app.config.get("CONSENSUS_WORKER_ACTIVE_SLEEP_SECONDS", 0.2)))
     metrics_interval = max(5, int(app.config.get("CONSENSUS_WORKER_METRICS_INTERVAL_SECONDS", 30)))
 
-    redis_client = _build_redis_client()
     last_metrics_at = 0.0
     last_stale_at = 0.0
     last_export_stale_at = 0.0
@@ -113,7 +97,7 @@ def main():
     with app.app_context():
         while _RUNNING:
             try:
-                _publish_heartbeat(redis_client, worker_id)
+                _publish_heartbeat(worker_id)
                 now = time.time()
                 if (now - last_stale_at) >= stale_sweep_interval:
                     stale_count = mark_stale_consensus_jobs()

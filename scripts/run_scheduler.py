@@ -19,26 +19,15 @@ import logging
 import os
 import resource
 import signal
-import socket as _socket
 import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# IPv4-preference patch — see run.py for full rationale.
-_orig_getaddrinfo = _socket.getaddrinfo
-
-
-def _prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):  # noqa: A002
-    results = _orig_getaddrinfo(host, port, family, type, proto, flags)
-    if family == 0 and port is not None:
-        ipv4 = [r for r in results if r[0] == _socket.AF_INET]
-        if ipv4:
-            return ipv4
-    return results
-
-
-_socket.getaddrinfo = _prefer_ipv4
+# IPv4-preference patch — single source of truth lives in app/lib/network_patches.
+# Must run before create_app() (which opens the SESSION_REDIS pool and pings it).
+from app.lib.network_patches import apply_ipv4_preference  # noqa: E402
+apply_ipv4_preference()
 
 os.environ.setdefault("APP_ROLE", "scheduler")
 
@@ -179,10 +168,9 @@ except Exception as exc:
 # (another process cannot accidentally release a lock it doesn't hold).
 _SCHEDULER_LOCK_KEY = 'scheduler_lock'
 try:
-    _redis_url = os.environ.get('REDIS_URL', '')
-    if _redis_url:
-        import redis as _redis_lib
-        _rc = _redis_lib.from_url(_redis_url, socket_timeout=3, socket_connect_timeout=3)
+    from app.lib.redis_client import get_client as _get_shared_redis
+    _rc = _get_shared_redis(decode_responses=False)
+    if _rc is not None:
         _release_script = """
 if redis.call('get', KEYS[1]) == ARGV[1] then
     return redis.call('del', KEYS[1])

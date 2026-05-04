@@ -12,37 +12,15 @@ patch_psycopg()
 # ---------------------------------------------------------------------------
 # IPv4-preference patch
 #
-# Replit's deployment environment does not have outbound IPv6 connectivity
-# (confirmed: socket.connect to 2001:4860:4860::8888 returns ENETUNREACH).
-# Several external services (Neon PostgreSQL, Redis Cloud) now return both
-# AAAA (IPv6) and A (IPv4) records in their DNS responses.  Without this
-# patch, Python's socket layer may try an IPv6 address first, fail with
-# "Network is unreachable", and surface an error to Sentry before falling
-# back to IPv4 — or not fall back at all depending on the client library.
-#
-# This wrapper must be applied AFTER gevent's monkey.patch_all() so that
-# we wrap the already-patched gevent socket, not the stdlib original.
+# Replit's deployment environment does not have outbound IPv6 connectivity.
+# Must be applied AFTER gevent's monkey.patch_all() so that we wrap the
+# already-patched gevent socket rather than the stdlib original.
+# Full rationale + design constraints live in app/lib/network_patches.py —
+# this is the only place the patch is implemented; every other entry
+# point imports from there.
 # ---------------------------------------------------------------------------
-import socket as _socket
-
-_orig_getaddrinfo = _socket.getaddrinfo
-
-
-def _prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):  # noqa: A002
-    results = _orig_getaddrinfo(host, port, family, type, proto, flags)
-    # Only filter when:
-    #   - The caller did not explicitly request a specific address family (family=0 / AF_UNSPEC)
-    #   - A port was given — i.e. this is a real connection attempt, not a pure
-    #     security/SSRF hostname resolution (which passes port=None so it can
-    #     inspect *all* resolved addresses before deciding whether to connect).
-    if family == 0 and port is not None:
-        ipv4 = [r for r in results if r[0] == _socket.AF_INET]
-        if ipv4:
-            return ipv4
-    return results
-
-
-_socket.getaddrinfo = _prefer_ipv4
+from app.lib.network_patches import apply_ipv4_preference  # noqa: E402
+apply_ipv4_preference()
 
 # ---------------------------------------------------------------------------
 # Cert-file reliability: copy the CA bundle to /tmp (a RAM-backed tmpfs)

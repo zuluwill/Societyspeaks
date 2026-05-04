@@ -90,21 +90,17 @@ def post_fork(server, worker):
     # ------------------------------------------------------------------
     # 3. Shared Redis connection pool (app.lib.redis_client)
     #    All Redis consumers (briefing jobs, ingestion queue, abuse
-    #    guardrails, counters, etc.) share a single persistent pool per
+    #    guardrails, counters, etc.) share a persistent pool per
     #    REDIS_URL/decode_responses combination.  With preload_app=True the
     #    pools are created in the master process before forking.  We must
     #    reset every pool so each worker opens its own fresh sockets and
-    #    does not share file descriptors with the master or sibling workers.
+    #    does not share file descriptors with the master or sibling
+    #    workers (sharing FDs corrupts the Redis protocol stream).
     # ------------------------------------------------------------------
     try:
-        from app.lib.redis_client import _clients, _lock
-        with _lock:
-            for _client in _clients.values():
-                _pool = getattr(_client, "connection_pool", None)
-                if _pool is not None:
-                    _pool.reset()
-            _clients.clear()
-        _log.info("post_fork [%s]: shared redis_client pools reset OK", worker.pid)
+        from app.lib.redis_client import reset_pools_after_fork
+        _count = reset_pools_after_fork()
+        _log.info("post_fork [%s]: shared redis_client pools reset OK (%d)", worker.pid, _count)
     except Exception as exc:
         _log.warning("post_fork [%s]: shared redis_client pool reset failed: %s", worker.pid, exc)
 

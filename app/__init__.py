@@ -1,3 +1,13 @@
+# IPv4-preference patch — installed at the very top of the app package so
+# every entry point that imports `app` (web, scheduler, consensus worker,
+# every maintenance script under scripts/) gets DNS-level IPv4 preference
+# before any library opens a TCP socket.  Idempotent — safe to also be
+# called explicitly from run.py (which is required, because run.py needs
+# to install the patch *after* gevent.monkey.patch_all()).
+# Full rationale + design constraints live in app/lib/network_patches.py.
+from app.lib.network_patches import apply_ipv4_preference as _apply_ipv4_preference
+_apply_ipv4_preference()
+
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify, make_response, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
