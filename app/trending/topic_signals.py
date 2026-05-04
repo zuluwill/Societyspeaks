@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 PREMIUM_SOURCES = [
     'The Economist', 'Financial Times', 'The New Yorker', 'Foreign Affairs',
-    'UnHerd', 'The Atlantic', 'The News Agents', 'The Rest Is Politics',
+    'UnHerd', 'The Atlantic', 'The News Agents', 'Radical with Amol Rajan',
+    'The Rest Is Politics',
     'Triggernometry', 'All-In Podcast', 'The Tim Ferriss Show',
     'Diary of a CEO', 'Modern Wisdom'
 ]

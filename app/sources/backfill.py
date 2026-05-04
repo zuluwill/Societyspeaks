@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Known podcast sources - these get source_category='podcast'
 KNOWN_PODCASTS = {
     'The News Agents',
+    'Radical with Amol Rajan',
     'The Rest Is Politics',
     'Triggernometry',
     'All-In Podcast',
@@ -81,6 +82,10 @@ SOURCE_BRANDING = {
     'The News Agents': {
         'website_url': 'https://www.globalplayer.com/podcasts/42KuWj/',
         'description': 'Daily news podcast with Emily Maitlis, Jon Sopel, and Lewis Goodall breaking down the biggest stories.',
+    },
+    'Radical with Amol Rajan': {
+        'website_url': 'https://www.bbc.co.uk/programmes/p0gg4k6r',
+        'description': 'BBC Radio 4 series in which Amol Rajan interviews innovators and thinkers on ideas shaping politics, business, and society.',
     },
     'Modern Wisdom': {
         'website_url': 'https://modernwisdom.com/',

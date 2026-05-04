@@ -1497,6 +1497,14 @@ def seed_default_sources():
             'political_leaning': -2.0  # Left - UK political podcast
         },
         {
+            'name': 'Radical with Amol Rajan',
+            'feed_url': 'https://podcasts.files.bbci.co.uk/p0gg4k6r.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # BBC Radio 4; interview series, public-service impartiality
+        },
+        {
             'name': 'The Rest Is Politics',
             'feed_url': 'https://feeds.acast.com/public/shows/the-rest-is-politics',
             'source_type': 'rss',

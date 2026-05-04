@@ -243,6 +243,11 @@ ALLSIDES_RATINGS = {
         'source': 'manual',
         'notes': 'Features both left (Alastair Campbell) and right (Rory Stewart) hosts'
     },
+    'Radical with Amol Rajan': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'BBC Radio 4 interview series; host-led long-form conversations with varied expert guests'
+    },
     'The Tim Ferriss Show': {
         'leaning': 0,  # Center
         'source': 'manual',

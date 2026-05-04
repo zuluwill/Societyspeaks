@@ -433,6 +433,15 @@ SOURCE_METADATA = {
             'spotify': 'https://open.spotify.com/show/5yNr9AjGBvqPtv9VG8dcSC',
         }
     },
+    'Radical with Amol Rajan': {
+        'source_category': 'podcast',
+        'website_url': 'https://www.bbc.co.uk/sounds/brand/p0gg4k6r',
+        'logo_url': 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/ce/7a/68/ce7a68ba-aed1-bc90-4cbf-5a1fbc85aecf/mza_809840271793966274.jpg/600x600bb.jpg',
+        'description': 'Amol Rajan speaks with pioneers and innovators about radical ideas reshaping how we live, work, and govern—from BBC Radio 4 and Sounds.',
+        'podcast_urls': {
+            'apple': 'https://podcasts.apple.com/gb/podcast/radical-with-amol-rajan/id1708808280',
+        }
+    },
     'The Rest Is Politics': {
         'source_category': 'podcast',
         'website_url': 'https://www.therestispolitics.com/',
