@@ -71,8 +71,12 @@
       <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 class="font-semibold text-blue-900 mb-2">{{ _('Testing the API') }}</h3>
         <ul class="text-primary-800 text-sm space-y-1">
-          <li>{{ _('<strong>Partner Portal:</strong> %(link)s to get your test API key and DNS verification token.', link='<a href="' ~ (url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup')) ~ '" class="underline font-medium">' ~ (_('Open your dashboard') if partner else _('Create a portal')) ~ '</a>')|safe }}</li>
-          <li>{{ _('<strong>Interactive playground:</strong> %(link)s to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.', link='<a href="' ~ url_for('partner.api_playground') ~ '" class="underline font-medium">' ~ _('Open API Playground') ~ '</a>')|safe }}</li>
+          <li>{{ _('<strong>Partner Portal:</strong>')|safe }}
+            <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="underline font-medium">{{ _('Open your dashboard') if partner else _('Create a portal') }}</a>
+            {{ _('to get your test API key and DNS verification token.') }}</li>
+          <li>{{ _('<strong>Interactive playground:</strong>')|safe }}
+            <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">{{ _('Open API Playground') }}</a>
+            {{ _('to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.') }}</li>
           <li>{{ _('<strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.')|safe }}</li>
           <li>{{ _('<strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.')|safe }}</li>
         </ul>
@@ -1224,7 +1228,8 @@ app.post(
   <div class="mt-12 pt-8 border-t border-gray-200">
     <p class="text-gray-500 text-sm">
       {{ _('Questions?') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">{{ _('Contact us') }}</a>
-      {{ _('or visit the %(link)s.', link='<a href="' ~ (url_for('partner.portal_dashboard') if partner else url_for('partner.hub')) ~ '" class="text-primary-600 hover:underline">' ~ (_('Partner Dashboard') if partner else _('Partner Hub')) ~ '</a>')|safe }}
+      {{ _('or visit the') }}
+      <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.hub') }}" class="text-primary-600 hover:underline">{{ _('Partner Dashboard') if partner else _('Partner Hub') }}</a>.
     </p>
   </div>
 </div>

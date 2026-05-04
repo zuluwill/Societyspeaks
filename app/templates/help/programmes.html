@@ -107,8 +107,11 @@
           </div>
           <div>
             <h3 class="font-semibold text-gray-900">{{ _('Public') }}</h3>
-            {% set _catalogue_link = '<a href="' ~ url_for('programmes.list_programmes') ~ '" class="text-primary-600 hover:underline">' ~ _('public catalogue') ~ '</a>' %}
-            <p class="text-sm text-gray-700 mt-1">{{ _('Your programme appears in the %(catalogue_link)s. Anyone can browse and participate — no account required to read, an account is needed to vote or submit statements.', catalogue_link=_catalogue_link)|safe }}</p>
+            <p class="text-sm text-gray-700 mt-1">
+              {{ _('Your programme appears in the') }}
+              <a href="{{ url_for('programmes.list_programmes') }}" class="text-primary-600 hover:underline">{{ _('public catalogue') }}</a>.
+              {{ _('Anyone can browse and participate — no account required to read, an account is needed to vote or submit statements.') }}
+            </p>
             <p class="text-sm text-gray-500 mt-1">{{ _('Best for: open public consultations, transparent policy debates.') }}</p>
           </div>
         </div>
@@ -179,8 +182,10 @@
       <ol class="space-y-3 text-gray-700">
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">1</span>
-          {% set _new_prog_link = '<a href="' ~ url_for('programmes.create_programme') ~ '" class="text-primary-600 hover:underline">/programmes/new</a>' %}
-          <div>{{ _('<strong>Go to Programmes → New programme</strong> from the navigation menu, or visit %(link)s.', link=_new_prog_link)|safe }}</div>
+          <div>
+            {{ _('<strong>Go to Programmes → New programme</strong> from the navigation menu, or visit')|safe }}
+            <a href="{{ url_for('programmes.create_programme') }}" class="text-primary-600 hover:underline">/programmes/new</a>.
+          </div>
         </li>
         <li class="flex gap-3">
           <span class="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">2</span>

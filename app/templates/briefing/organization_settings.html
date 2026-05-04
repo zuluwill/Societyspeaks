@@ -186,7 +186,9 @@
           {% else %}
           <div class="bg-yellow-50 rounded-md p-3 border border-yellow-100">
             <p class="text-sm text-yellow-800">
-              {{ _("You've reached the maximum of %(max)s team members on your %(plan)s plan. %(link_start)sUpgrade your plan%(link_end)s to add more.", max=max_seats, plan=plan.name, link_start='<a href="' + url_for('billing.customer_portal') + '" class="font-medium underline">', link_end='</a>')|safe }}
+              {{ _("You've reached the maximum of %(max)s team members on your %(plan)s plan.", max=max_seats, plan=plan.name) }}
+              <a href="{{ url_for('billing.customer_portal') }}" class="font-medium underline">{{ _('Upgrade your plan') }}</a>
+              {{ _('to add more.') }}
             </p>
           </div>
           {% endif %}

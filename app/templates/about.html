@@ -51,9 +51,10 @@
                         <span class="text-gray-700">{{ _('Optional short explanations for your reasoning') }}</span>
                     </li>
                 </ul>
-                {% set _polis_link = '<a href="https://pol.is" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Pol.is</a>' %}
                 <p class="text-gray-700">
-                    {{ _('Using machine learning inspired by %(polis)s, we analyse voting patterns to identify natural opinion clusters, without labels, ideological assumptions, or demographic bias. This reveals how views actually form and overlap, something polls and comment sections consistently fail to capture.', polis=_polis_link)|safe }}
+                    {{ _('Using machine learning inspired by') }}
+                    <a href="https://pol.is" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Pol.is</a>,
+                    {{ _('we analyse voting patterns to identify natural opinion clusters, without labels, ideological assumptions, or demographic bias. This reveals how views actually form and overlap, something polls and comment sections consistently fail to capture.') }}
                 </p>
             </section>
 
@@ -205,9 +206,10 @@
 
             <section class="mb-16 lg:mb-20">
                 <h2 class="text-2xl font-bold text-gray-900 mb-8">{{ _('The Daily Question') }}</h2>
-                {% set _daily_link = '<a href="' ~ url_for('daily.today') ~ '" class="text-primary-600 hover:underline">' ~ _('Daily Question') ~ '</a>' %}
                 <p class="text-gray-700 mb-4">
-                    {{ _('The %(daily_link)s is the entry point.', daily_link=_daily_link)|safe }}
+                    {{ _('The') }}
+                    <a href="{{ url_for('daily.today') }}" class="text-primary-600 hover:underline">{{ _('Daily Question') }}</a>
+                    {{ _('is the entry point.') }}
                 </p>
                 <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                     <ul class="space-y-3 text-gray-700">

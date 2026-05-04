@@ -138,8 +138,8 @@
     </main>
 
     <footer>
-        <p>{{ _('Published by %(link_start)s%(name)s%(link_end)s', link_start='<a href="' + url_for('briefing.public_briefing', briefing_id=briefing.id, _external=True) + '">', name=briefing.name, link_end='</a>')|safe }}</p>
-        <p>{{ _('Powered by %(link_start)sSociety Speaks%(link_end)s', link_start='<a href="' + url_for('main.index', _external=True) + '">', link_end='</a>')|safe }}</p>
+        <p>{{ _('Published by') }} <a href="{{ url_for('briefing.public_briefing', briefing_id=briefing.id, _external=True) }}">{{ briefing.name }}</a></p>
+        <p>{{ _('Powered by') }} <a href="{{ url_for('main.index', _external=True) }}">Society Speaks</a></p>
         <p><a href="{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=brief_run.id, _external=True) }}">{{ _('View full version') }}</a></p>
     </footer>
 </body>

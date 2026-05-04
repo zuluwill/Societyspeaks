@@ -25,7 +25,8 @@
           <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ _('API Playground') }}</h1>
           <p class="text-gray-600">
             {{ _('Try browser-safe Partner API endpoints from your browser. Requests are sent to this site. Write/management endpoints are server-to-server only.') }}
-            {{ _('Get test keys in the %(portal_link)s.', portal_link='<a href="' ~ url_for('partner.portal_signup') ~ '" class="text-primary-600 hover:underline">' ~ _('Partner Portal') ~ '</a>')|safe }}
+            {{ _('Get test keys in the') }}
+            <a href="{{ url_for('partner.portal_signup') }}" class="text-primary-600 hover:underline">{{ _('Partner Portal') }}</a>.
           </p>
           <p class="text-sm text-gray-600">
             {{ _('Browser-safe in this playground: <code>GET /api/discussions/by-article-url</code>, <code>GET /api/discussions/{id}/snapshot</code>, and <code>GET /api/oembed</code>. Use backend tools (curl/Postman/server code) for authenticated endpoints such as <code>/api/partner/discussions</code>, <code>/api/partner/discussions/by-external-id</code>, <code>/api/partner/analytics/usage-export</code>, and <code>/api/partner/webhooks</code>.')|safe }}

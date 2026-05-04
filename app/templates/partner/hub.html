@@ -988,7 +988,8 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
         <h3 class="font-semibold text-gray-900 mb-2">{{ _('What can readers do in the embed?') }}</h3>
         <p class="text-sm text-gray-600">
           {{ _('Vote (agree, disagree, unsure) and report statements by default. Owners/admins can optionally enable inline statement submissions per discussion from the Partner Portal when their newsroom workflow needs it.') }}
-          {{ _('See the %(rules_link)s.', rules_link='<a href="' ~ url_for('partner.rules_of_record') ~ '" class="text-primary-600 hover:underline">' ~ _('Rules of the Record') ~ '</a>')|safe }}
+          {{ _('See the') }}
+          <a href="{{ url_for('partner.rules_of_record') }}" class="text-primary-600 hover:underline">{{ _('Rules of the Record') }}</a>.
         </p>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -1014,7 +1015,9 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
         <h3 class="font-semibold text-gray-900 mb-2">{{ _('Can I customize the embed appearance?') }}</h3>
         <p class="text-sm text-gray-600">
           {{ _('Yes. Choose from preset themes or set custom primary/background colors and fonts.') }}
-          {{ _('See %(params_link)s in the API docs.', params_link='<a href="' ~ url_for('partner.api_docs') ~ '#embed-url-parameters" class="text-primary-600 hover:underline">' ~ _('embed parameters') ~ '</a>')|safe }}
+          {{ _('See') }}
+          <a href="{{ url_for('partner.api_docs') }}#embed-url-parameters" class="text-primary-600 hover:underline">{{ _('embed parameters') }}</a>
+          {{ _('in the API docs.') }}
         </p>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

@@ -436,8 +436,7 @@
     </main>
 
     <footer>
-        {% set _ss_link = '<a href="' ~ url_for('main.index', _external=True) ~ '">Society Speaks</a>' %}
-        <p>{{ _('Published %(date)s by %(link)s', date=brief.date.strftime('%B %d, %Y'), link=_ss_link)|safe }}</p>
+        <p>{{ _('Published %(date)s by', date=brief.date.strftime('%B %d, %Y')) }} <a href="{{ url_for('main.index', _external=True) }}">Society Speaks</a></p>
         <p>
             <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">{{ _('View full version') }}</a>
             | <a href="{{ url_for('brief.methodology', _external=True) }}">{{ _('Our methodology') }}</a>

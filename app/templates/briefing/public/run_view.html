@@ -121,7 +121,7 @@
 
         <!-- Footer -->
         <div class="mt-12 text-center text-sm text-gray-500">
-            <p>{{ _('This briefing is powered by %(link_start)sSociety Speaks%(link_end)s', link_start='<a href="' + url_for('main.index') + '" class="text-primary-600 hover:underline">', link_end='</a>')|safe }}</p>
+            <p>{{ _('This briefing is powered by') }} <a href="{{ url_for('main.index') }}" class="text-primary-600 hover:underline">Society Speaks</a></p>
         </div>
     </div>
 </div>

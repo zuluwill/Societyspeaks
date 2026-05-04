@@ -138,10 +138,10 @@
         </div>
 
         <!-- Unsubscribe Link -->
-        {% set _unsub_link = '<a href="' ~ url_for('daily.unsubscribe', token=token) ~ '" class="text-red-600 hover:text-red-700 underline">' ~ _('Unsubscribe') ~ '</a>' %}
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-500">
-                {{ _("Don't want to receive any emails? %(unsub_link)s", unsub_link=_unsub_link)|safe }}
+                {{ _("Don't want to receive any emails?") }}
+                <a href="{{ url_for('daily.unsubscribe', token=token) }}" class="text-red-600 hover:text-red-700 underline">{{ _('Unsubscribe') }}</a>
             </p>
         </div>
 

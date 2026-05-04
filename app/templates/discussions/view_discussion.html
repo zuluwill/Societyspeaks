@@ -595,14 +595,16 @@
           <h2 class="text-xl font-semibold text-gray-900">{{ _('What Happened Next') }}</h2>
           <p class="text-sm text-gray-500 mt-1">{{ _('Organiser and steward updates, outcomes, and next steps.') }}</p>
           {% if guided_journey_context %}
-          {% set _suggest_link = '<a href="' ~ url_for('statements.create_statement', discussion_id=discussion.id) ~ '" class="text-primary-600 font-medium hover:underline">' ~ _('Suggest a statement') ~ '</a>' %}
-          {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
-            {% set _mod_link = '<a href="' ~ url_for('moderation.moderation_queue', discussion_id=discussion.id) ~ '" class="text-primary-600 font-medium hover:underline">' ~ _('moderation queue') ~ '</a>' %}
-          {% else %}
-            {% set _mod_link = _('moderation queue') %}
-          {% endif %}
           <p class="text-sm text-gray-600 mt-2 leading-relaxed">
-            {{ _('These posts are written by <strong>discussion organisers</strong> (for example policy outcomes, hearings, or next steps). They are <strong>not</strong> where you suggest new voting statements — use %(suggest_link)s instead. Suggestions go through the %(mod_link)s before they appear for voting.', suggest_link=_suggest_link, mod_link=_mod_link)|safe }}
+            {{ _('These posts are written by <strong>discussion organisers</strong> (for example policy outcomes, hearings, or next steps). They are <strong>not</strong> where you suggest new voting statements — use')|safe }}
+            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('Suggest a statement') }}</a>
+            {{ _('instead. Suggestions go through the') }}
+            {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
+              <a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('moderation queue') }}</a>
+            {% else %}
+              {{ _('moderation queue') }}
+            {% endif %}
+            {{ _('before they appear for voting.') }}
           </p>
           {% endif %}
         </div>
@@ -672,14 +674,16 @@
           <p class="text-sm text-gray-600 mt-2 leading-relaxed">
             {{ _('This section is a short <strong>news-style timeline</strong> from organisers (decisions, hearings, what changed in the real world). It is separate from voting on the fixed statement list above.')|safe }}
           </p>
-          {% set _suggest_link2 = '<a href="' ~ url_for('statements.create_statement', discussion_id=discussion.id) ~ '" class="text-primary-600 font-medium hover:underline">' ~ _('Suggest a statement') ~ '</a>' %}
-          {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
-            {% set _mod_link2 = '<a href="' ~ url_for('moderation.moderation_queue', discussion_id=discussion.id) ~ '" class="text-primary-600 font-medium hover:underline">' ~ _('moderation queue') ~ '</a>' %}
-          {% else %}
-            {% set _mod_link2 = _('moderation queue') %}
-          {% endif %}
           <p class="text-sm text-gray-600 mt-2 leading-relaxed">
-            {{ _('<strong>Want to propose a new statement</strong> for this theme? Use %(suggest_link)s. Your text is reviewed in the %(mod_link)s before it can appear for others to vote on.', suggest_link=_suggest_link2, mod_link=_mod_link2)|safe }}
+            {{ _('<strong>Want to propose a new statement</strong> for this theme? Use')|safe }}
+            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('Suggest a statement') }}</a>.
+            {{ _('Your text is reviewed in the') }}
+            {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
+              <a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('moderation queue') }}</a>
+            {% else %}
+              {{ _('moderation queue') }}
+            {% endif %}
+            {{ _('before it can appear for others to vote on.') }}
           </p>
           {% if can_manage_updates %}
           <p class="text-sm text-gray-500 mt-2">
@@ -726,8 +730,9 @@
     {% if discussion.embed_code %} {{ discussion.embed_code | safe }} {% else %}
     <div class="text-center p-6">
       <p class="text-gray-600">
-        {% set _polis_link = '<a href="' ~ polis_url ~ '" target="_blank" class="text-primary-600 hover:underline">' ~ _('Click here') ~ '</a>' %}
-        {{ _('The discussion embed is not available. %(link)s to open it in a new tab.', link=_polis_link)|safe }}
+        {{ _('The discussion embed is not available.') }}
+        <a href="{{ polis_url }}" target="_blank" class="text-primary-600 hover:underline">{{ _('Click here') }}</a>
+        {{ _('to open it in a new tab.') }}
       </p>
     </div>
     {% endif %} {% endif %}

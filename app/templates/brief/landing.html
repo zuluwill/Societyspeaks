@@ -237,12 +237,13 @@
                     </div>
                 </div>
             </div>
-            {% set _allsides_link = '<a href="https://www.allsides.com/media-bias/ratings" target="_blank" rel="noopener" class="underline hover:text-gray-700">AllSides</a>' %}
-            {% set _sources_link = '<a href="' ~ url_for('help.news_feed') ~ '" class="underline hover:text-gray-700">' ~ _('See all 140+ sources') ~ '</a>' %}
             <p class="text-center text-xs text-gray-500 mt-4">
                 <span class="inline-flex items-center gap-1 mr-3"><span class="w-2 h-2 rounded bg-gray-300"></span> {{ _('News/Analysis') }}</span>
                 <span class="inline-flex items-center gap-1 mr-4"><span class="w-2 h-2 rounded bg-purple-300"></span> {{ _('Podcast') }}</span>
-                | {{ _('Bias ratings from %(allsides_link)s | %(sources_link)s', allsides_link=_allsides_link, sources_link=_sources_link)|safe }}
+                | {{ _('Bias ratings from') }}
+                <a href="https://www.allsides.com/media-bias/ratings" target="_blank" rel="noopener" class="underline hover:text-gray-700">AllSides</a>
+                |
+                <a href="{{ url_for('help.news_feed') }}" class="underline hover:text-gray-700">{{ _('See all 140+ sources') }}</a>
             </p>
         </div>
     </section>

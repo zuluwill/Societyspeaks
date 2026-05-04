@@ -209,9 +209,9 @@
                 <!-- Discussion Link (if available) -->
                 {% if q_data.discussion_stats.has_discussion %}
                 <div class="px-6 pb-5 pt-3 border-t border-gray-100 bg-gray-50">
-                    {% set _disc_view_link = '<a href="' ~ q_data.discussion_stats.discussion_url ~ '?source=weekly_batch&q=' ~ q_data.question.id ~ '" class="text-primary-600 hover:text-primary-700 underline ml-1">' ~ _('View discussion') ~ ' &rarr;</a>' %}
                     <p class="text-sm text-gray-600">
-                        &#128172; {{ _('%(count)d people discussing %(link)s', count=q_data.discussion_stats.participant_count, link=_disc_view_link)|safe }}
+                        &#128172; {{ _('%(count)d people discussing', count=q_data.discussion_stats.participant_count) }}
+                        <a href="{{ q_data.discussion_stats.discussion_url }}?source=weekly_batch&q={{ q_data.question.id }}" class="text-primary-600 hover:text-primary-700 underline ml-1">{{ _('View discussion') }} &rarr;</a>
                     </p>
                 </div>
                 {% endif %}

@@ -61,8 +61,9 @@
     </ul>
     <p>{{ _('<strong>Lawful basis:</strong> We process this data under our legitimate interest to operate the service, prevent abuse, and provide partners with aggregated participation metrics. We do not sell this data.')|safe }}</p>
     <p>{{ _('<strong>Retention:</strong> Session fingerprints and partner ref are retained for the duration needed for rate limiting and analytics (e.g. 90 days for event logs). IP logs are kept only as long as needed for security (e.g. 30 days).')|safe }}</p>
-    {% set _contact_link = '<a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">info@societyspeaks.io</a>' %}
-    <p>{{ _('<strong>Your rights:</strong> You can request erasure or a copy of data we hold about you by contacting %(contact)s. We will respond within 30 days. For more on your rights, see section 6 below.', contact=_contact_link)|safe }}</p>
+    <p>{{ _('<strong>Your rights:</strong> You can request erasure or a copy of data we hold about you by contacting')|safe }}
+    <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">info@societyspeaks.io</a>.
+    {{ _('We will respond within 30 days. For more on your rights, see section 6 below.') }}</p>
 
     <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('2. How We Use Your Information') }}</h2>
 

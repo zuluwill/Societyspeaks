@@ -39,11 +39,11 @@
             </div>
             {% endif %}
 
-            {% set _open_prefs_link = '<a href="' ~ url_for('daily.manage_preferences') ~ '" class="text-primary-600 hover:underline font-medium">' ~ _('open preferences now') ~ '</a>' %}
             <p class="text-sm text-gray-600 mb-4">
                 {{ _('You can change frequency, day, time, and time zone anytime from the preferences link in any email we send.') }}
                 {% if can_manage_daily_preferences %}
-                {{ _('If you are logged in, you can also %(open_prefs_link)s.', open_prefs_link=_open_prefs_link)|safe }}
+                {{ _('If you are logged in, you can also') }}
+                <a href="{{ url_for('daily.manage_preferences') }}" class="text-primary-600 hover:underline font-medium">{{ _('open preferences now') }}</a>.
                 {% endif %}
             </p>
 
@@ -73,14 +73,13 @@
             </div>
         </div>
 
-        {% set _explore_link = '<a href="/" class="text-primary-600 hover:underline">' ~ _('explore more discussions') ~ '</a>' %}
         <div class="space-y-3">
             <a href="{{ url_for('daily.today') }}"
                class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition">
                 {{ _("Try today's question") }}
             </a>
             <p class="text-sm text-gray-500">
-                {{ _('Or %(explore_link)s', explore_link=_explore_link)|safe }}
+                {{ _('Or') }} <a href="/" class="text-primary-600 hover:underline">{{ _('explore more discussions') }}</a>
             </p>
         </div>
     </div>
