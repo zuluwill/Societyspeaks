@@ -424,22 +424,25 @@ def view_programme(slug):
             if candidate and candidate.programme_id == programme.id:
                 journey_reminder_subscription = candidate
 
-        # PostHog: fire journey_started once per session per journey
+        # PostHog: fire journey_started once per user per journey per 24 h.
+        # Cache-based dedup (not session): the old Redis session gate persisted
+        # indefinitely and permanently blocked the event for returning users.
         if _posthog and getattr(_posthog, 'project_api_key', None):
-            _start_key = f'ph_journey_started_{programme.id}'
-            if not session.get(_start_key):
-                try:
-                    import uuid as _uuid
-                    if current_user.is_authenticated:
-                        _ph_id = str(current_user.id)
-                    else:
-                        _ph_id = (
-                            session.get('statement_vote_fingerprint')
-                            or session.get('journey_anon_id')
-                        )
-                        if not _ph_id:
-                            _ph_id = str(_uuid.uuid4())
-                            session['journey_anon_id'] = _ph_id
+            try:
+                import uuid as _uuid
+                if current_user.is_authenticated:
+                    _ph_id = str(current_user.id)
+                else:
+                    _ph_id = (
+                        session.get('statement_vote_fingerprint')
+                        or session.get('journey_anon_id')
+                    )
+                    if not _ph_id:
+                        _ph_id = str(_uuid.uuid4())
+                        session['journey_anon_id'] = _ph_id
+                        session.modified = True
+                _start_cache_key = f'ph_journey_started:{programme.id}:{_ph_id[:32]}'
+                if not cache.get(_start_cache_key):
                     _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
                     _posthog.capture(
                         distinct_id=_ph_id,
@@ -454,10 +457,9 @@ def view_programme(slug):
                         },
                     )
                     _posthog.flush()
-                    session[_start_key] = True
-                    session.modified = True
-                except Exception as _e:
-                    current_app.logger.warning(f"PostHog journey_started error: {_e}")
+                    cache.set(_start_cache_key, True, timeout=86400)  # 24-hour dedup
+            except Exception as _e:
+                current_app.logger.warning(f"PostHog journey_started error: {_e}")
 
     view_lang = resolve_language(request)
     programme_translation = (
@@ -515,22 +517,25 @@ def programme_journey_recap(slug):
         _external=True,
     )
 
-    # PostHog: fire journey_completed once per session when user reaches the recap page
+    # PostHog: fire journey_completed once per user per journey (30-day dedup).
+    # Cache-based dedup (not session): the old Redis session gate persisted
+    # indefinitely and permanently blocked the event for returning users.
     if _posthog and getattr(_posthog, 'project_api_key', None):
-        _complete_key = f'ph_journey_completed_{programme.id}'
-        if not session.get(_complete_key):
-            try:
-                import uuid as _uuid
-                if current_user.is_authenticated:
-                    _ph_id = str(current_user.id)
-                else:
-                    _ph_id = (
-                        session.get('statement_vote_fingerprint')
-                        or session.get('journey_anon_id')
-                    )
-                    if not _ph_id:
-                        _ph_id = str(_uuid.uuid4())
-                        session['journey_anon_id'] = _ph_id
+        try:
+            import uuid as _uuid
+            if current_user.is_authenticated:
+                _ph_id = str(current_user.id)
+            else:
+                _ph_id = (
+                    session.get('statement_vote_fingerprint')
+                    or session.get('journey_anon_id')
+                )
+                if not _ph_id:
+                    _ph_id = str(_uuid.uuid4())
+                    session['journey_anon_id'] = _ph_id
+                    session.modified = True
+            _complete_cache_key = f'ph_journey_completed:{programme.id}:{_ph_id[:32]}'
+            if not cache.get(_complete_cache_key):
                 _ordered = ordered_discussions
                 _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
                 _posthog.capture(
@@ -546,10 +551,9 @@ def programme_journey_recap(slug):
                     },
                 )
                 _posthog.flush()
-                session[_complete_key] = True
-                session.modified = True
-            except Exception as _e:
-                current_app.logger.warning(f"PostHog journey_completed error: {_e}")
+                cache.set(_complete_cache_key, True, timeout=86400 * 30)  # 30-day dedup
+        except Exception as _e:
+            current_app.logger.warning(f"PostHog journey_completed error: {_e}")
 
     return render_template(
         'programmes/journey_recap.html',
