@@ -911,11 +911,11 @@
                 {% endif %}
 
                 <!-- Methodology Note -->
-                {% set _allsides_bias_link = '<a href="https://allsides.com/media-bias" target="_blank" rel="noopener" class="text-purple-600 hover:underline">' ~ _('AllSides media bias ratings') ~ '</a>' %}
-                {% set _methodology_link = '<a href="' ~ url_for('brief.methodology') ~ '" class="text-purple-600 hover:underline ml-1">' ~ _('Learn more about our methodology') ~ '</a>' %}
                 <div class="text-center pt-4 border-t border-purple-100">
                     <p class="text-xs text-gray-500">
-                        {{ _('Source classifications based on %(allsides_link)s. %(methodology_link)s.', allsides_link=_allsides_bias_link, methodology_link=_methodology_link)|safe }}
+                        {{ _('Source classifications based on') }}
+                        <a href="https://allsides.com/media-bias" target="_blank" rel="noopener" class="text-purple-600 hover:underline">{{ _('AllSides media bias ratings') }}</a>.
+                        <a href="{{ url_for('brief.methodology') }}" class="text-purple-600 hover:underline ml-1">{{ _('Learn more about our methodology') }}</a>.
                     </p>
                 </div>
             </div>
