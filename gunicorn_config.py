@@ -88,19 +88,25 @@ def post_fork(server, worker):
         _log.warning("post_fork [%s]: SESSION_REDIS pool reset failed: %s", worker.pid, exc)
 
     # ------------------------------------------------------------------
-    # 3. counter_utils lru_cache'd Redis client
-    #    increment_counter() is only called during request handling so the
-    #    lru_cache is normally empty at fork time and there is nothing to
-    #    reset.  We clear it defensively so that if a warm-startup health
-    #    check or future startup hook ever calls increment_counter(), any
-    #    cached client with inherited sockets is discarded.
+    # 3. Shared Redis connection pool (app.lib.redis_client)
+    #    All Redis consumers (briefing jobs, ingestion queue, abuse
+    #    guardrails, counters, etc.) share a single persistent pool per
+    #    REDIS_URL/decode_responses combination.  With preload_app=True the
+    #    pools are created in the master process before forking.  We must
+    #    reset every pool so each worker opens its own fresh sockets and
+    #    does not share file descriptors with the master or sibling workers.
     # ------------------------------------------------------------------
     try:
-        from app.lib.counter_utils import _get_redis_client as _counter_rc
-        _counter_rc.cache_clear()
-        _log.info("post_fork [%s]: counter_utils Redis client cache cleared", worker.pid)
+        from app.lib.redis_client import _clients, _lock
+        with _lock:
+            for _client in _clients.values():
+                _pool = getattr(_client, "connection_pool", None)
+                if _pool is not None:
+                    _pool.reset()
+            _clients.clear()
+        _log.info("post_fork [%s]: shared redis_client pools reset OK", worker.pid)
     except Exception as exc:
-        _log.warning("post_fork [%s]: counter_utils cache clear failed: %s", worker.pid, exc)
+        _log.warning("post_fork [%s]: shared redis_client pool reset failed: %s", worker.pid, exc)
 
     # ------------------------------------------------------------------
     # 4. Flask-Caching Redis pool

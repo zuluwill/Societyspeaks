@@ -10,8 +10,6 @@ import os
 import logging
 from typing import Optional
 
-import redis
-
 from app import db
 from app.models import InputSource
 from app.briefing.ingestion.source_ingester import SourceIngester
@@ -19,20 +17,14 @@ from app.briefing.ingestion.source_ingester import SourceIngester
 
 logger = logging.getLogger(__name__)
 
-REDIS_URL = os.environ.get('REDIS_URL')
 INGESTION_QUEUE_KEY = 'briefing:ingestion_queue'
 INGESTION_QUEUE_MAX_SIZE = int(os.environ.get('BRIEFING_INGESTION_QUEUE_MAX_SIZE', '5000'))
 INGESTION_DEDUPE_TTL_SECONDS = int(os.environ.get('BRIEFING_INGESTION_DEDUPE_TTL_SECONDS', '60'))
 
 
 def _get_redis_client():
-    if not REDIS_URL:
-        return None
-    try:
-        return redis.from_url(REDIS_URL, decode_responses=True)
-    except Exception as e:
-        logger.warning(f"Briefing ingestion queue Redis unavailable: {e}")
-        return None
+    from app.lib.redis_client import get_client
+    return get_client(decode_responses=True)
 
 
 def queue_ingestion_job(

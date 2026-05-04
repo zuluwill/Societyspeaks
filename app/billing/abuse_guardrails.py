@@ -20,8 +20,6 @@ from typing import Optional, Tuple, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-REDIS_URL = os.environ.get('REDIS_URL')
-
 RATE_LIMIT_PREFIX = 'abuse:'
 
 GENERATION_LIMITS = {
@@ -47,15 +45,9 @@ TOKEN_SPEND_THRESHOLDS = {
 
 
 def _get_redis():
-    """Get Redis client for rate limiting."""
-    if not REDIS_URL:
-        return None
-    try:
-        import redis
-        return redis.from_url(REDIS_URL, decode_responses=True)
-    except Exception as e:
-        logger.warning(f"Redis unavailable for abuse guardrails: {e}")
-        return None
+    """Get the shared Redis client for rate limiting."""
+    from app.lib.redis_client import get_client
+    return get_client(decode_responses=True)
 
 
 def check_generation_rate_limit(user_id: int) -> Tuple[bool, Optional[str]]:

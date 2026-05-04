@@ -148,6 +148,26 @@ class Config:
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
 
+    # Neon's direct-connect endpoints now return AAAA (IPv6) records that are
+    # unreachable on some hosting environments (including Replit deployments).
+    # Transparently rewrite the URL to use Neon's pooler endpoint, which resolves
+    # to IPv4 only, fixes the connectivity issue, and also improves connection
+    # efficiency under load (PgBouncer transaction-mode pooling).
+    if (SQLALCHEMY_DATABASE_URI and
+            '.neon.tech' in SQLALCHEMY_DATABASE_URI and
+            '-pooler.' not in SQLALCHEMY_DATABASE_URI):
+        import re as _neon_re
+        _rewritten_uri = _neon_re.sub(
+            r'(ep-[a-z0-9-]+)(\.[\w.-]+\.neon\.tech)',
+            r'\1-pooler\2',
+            SQLALCHEMY_DATABASE_URI,
+        )
+        if _rewritten_uri != SQLALCHEMY_DATABASE_URI:
+            SQLALCHEMY_DATABASE_URI = _rewritten_uri
+            logging.info(
+                "Neon direct endpoint detected; DATABASE_URL automatically rewritten "
+                "to use pooler endpoint (IPv4) to avoid IPv6 connectivity issues."
+            )
 
     # Stripe billing configuration
     STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
@@ -159,7 +179,7 @@ class Config:
     # When using Neon's PgBouncer pooler ("-pooler" in DATABASE_URL hostname), SQLAlchemy's
     # own pool sits in front of PgBouncer, so smaller sizes are appropriate — the pooler
     # handles multiplexing to the real database.
-    _using_pooler = '-pooler' in (os.getenv('DATABASE_URL') or '')
+    _using_pooler = '-pooler' in (SQLALCHEMY_DATABASE_URI or '')
     _default_pool_size = '5' if _using_pooler else '10'
     _default_max_overflow = '10' if _using_pooler else '20'
 

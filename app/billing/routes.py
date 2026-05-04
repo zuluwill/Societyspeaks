@@ -326,13 +326,10 @@ def customer_portal():
 
 
 def _get_webhook_redis():
-    """Return Redis client for webhook idempotency, or None if unavailable."""
+    """Return the shared Redis client for webhook idempotency, or None if unavailable."""
     try:
-        import redis
-        redis_url = current_app.config.get('REDIS_URL')
-        if not redis_url:
-            return None
-        return redis.from_url(redis_url, socket_connect_timeout=2)
+        from app.lib.redis_client import get_client
+        return get_client(decode_responses=False)
     except Exception:
         return None
 

@@ -2050,9 +2050,13 @@ def init_scheduler(app):
             STALE_HEARTBEAT_SECONDS = 600
             
             try:
-                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                from app.lib.redis_client import get_client as _get_shared_redis
+                import redis as redis_lib
+                r = _get_shared_redis(decode_responses=True)
+                if not r:
+                    return
                 try:
-                    status = (r.get(status_key) or b'').decode()
+                    status = r.get(status_key) or ''
                 except (redis_lib.exceptions.ConnectionError, redis_lib.exceptions.TimeoutError,
                         ConnectionError, OSError):
                     # Redis is temporarily unavailable (e.g. TLS migration, restart).
@@ -2061,7 +2065,7 @@ def init_scheduler(app):
                     return
 
                 if status == 'running':
-                    heartbeat_raw = (r.get(heartbeat_key) or b'').decode()
+                    heartbeat_raw = r.get(heartbeat_key) or ''
                     is_stale = False
                     if heartbeat_raw:
                         try:
@@ -2094,7 +2098,7 @@ def init_scheduler(app):
                         status = 'queued'
 
                 if status == 'queued':
-                    queued_at_raw = (r.get(queued_at_key) or b'').decode()
+                    queued_at_raw = r.get(queued_at_key) or ''
                     if queued_at_raw:
                         try:
                             queued_for_seconds = utcnow_naive().timestamp() - float(queued_at_raw)
@@ -2128,7 +2132,7 @@ def init_scheduler(app):
                     return
 
                 def _check_claim() -> bool:
-                    current = (r.get(claim_key) or b'').decode()
+                    current = r.get(claim_key) or ''
                     return current == my_claim
 
                 def _set_step(message: str) -> None:

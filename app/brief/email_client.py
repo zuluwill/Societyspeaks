@@ -93,8 +93,10 @@ def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
     lock_token = secrets.token_urlsafe(18)
 
     try:
-        import redis as redis_lib
-        client = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+        from app.lib.redis_client import get_client
+        client = get_client(decode_responses=False)
+        if not client:
+            return False, None, lock_key, None, "redis_unavailable"
         acquired = client.set(lock_key, lock_token, nx=True, ex=max(30, int(ttl_seconds)))
         if not acquired:
             return False, None, lock_key, None, "lock_held"
@@ -847,9 +849,9 @@ class BriefEmailScheduler:
             return {'sent': 0, 'failed': 0, 'errors': []}
 
         try:
-            import redis as redis_lib
-            r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-            if not r.set(lock_key, os.getpid(), nx=True, ex=3500):
+            from app.lib.redis_client import get_client
+            r = get_client(decode_responses=False)
+            if not r or not r.set(lock_key, os.getpid(), nx=True, ex=3500):
                 logger.info(
                     f"Weekly brief send already in progress for hour {current_hour} (lock held), skipping"
                 )

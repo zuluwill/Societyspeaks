@@ -295,16 +295,15 @@ def emergency_generate():
             flash(f'Brief already published for {brief_date}.', 'warning')
             return redirect(url_for('brief_admin.dashboard'))
         
-        import redis as redis_lib
-        redis_url = current_app.config.get('REDIS_URL') or os.environ.get('REDIS_URL')
-        if not redis_url:
+        from app.lib.redis_client import get_client
+        r = get_client(decode_responses=True)
+        if not r:
             flash('Redis not available — cannot queue background task.', 'error')
             return redirect(url_for('brief_admin.dashboard'))
-        
-        r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+
         key = 'emergency_brief_generate'
-        
-        current_status = (r.get(f'{key}:status') or b'').decode()
+
+        current_status = r.get(f'{key}:status') or ''
         if current_status in ('running', 'queued'):
             flash('Emergency generation is already running in the background. Refresh the page to check progress.', 'info')
             return redirect(url_for('brief_admin.dashboard'))
@@ -332,17 +331,16 @@ def emergency_generate():
 @admin_required
 def emergency_generate_status():
     """Poll endpoint for emergency generation progress."""
-    import redis as redis_lib
-    redis_url = current_app.config.get('REDIS_URL') or os.environ.get('REDIS_URL')
-    if not redis_url:
+    from app.lib.redis_client import get_client
+    r = get_client(decode_responses=True)
+    if not r:
         return jsonify({'status': 'unknown', 'step': 'Redis unavailable'})
-    
+
     try:
-        r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
         key = 'emergency_brief_generate'
-        status = (r.get(f'{key}:status') or b'').decode() or 'idle'
-        step = (r.get(f'{key}:step') or b'').decode() or ''
-        error = (r.get(f'{key}:error') or b'').decode() or ''
+        status = r.get(f'{key}:status') or 'idle'
+        step = r.get(f'{key}:step') or ''
+        error = r.get(f'{key}:error') or ''
         return jsonify({'status': status, 'step': step, 'error': error})
     except Exception:
         return jsonify({'status': 'unknown', 'step': 'Could not check status'})

@@ -75,11 +75,10 @@ limiter = Limiter(
 talisman = Talisman() if Talisman else None
 
 
-@lru_cache(maxsize=2)
-def _get_redis_client(redis_url: str):
-    """Reuse Redis client for low-latency observability paths."""
-    import redis as redis_lib
-    return redis_lib.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
+def _get_redis_client(redis_url: str = None):
+    """Return the shared Redis client for observability paths."""
+    from app.lib.redis_client import get_client
+    return get_client(decode_responses=False)
 
 
 def try_connect_db(app, retries=3):
@@ -640,9 +639,10 @@ def create_app():
             # Test Redis connectivity in production if we have a URL
             if redis_url and not redis_url.startswith('memory://'):
                 try:
-                    import redis
-                    r = redis.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                    r.ping()
+                    from app.lib.redis_client import get_client
+                    r = get_client(decode_responses=False)
+                    if r:
+                        r.ping()
                     app.config['RATELIMIT_STORAGE_URI'] = redis_url
                     app.config['RATELIMIT_STORAGE_URL'] = redis_url
                     app.logger.info("Rate limiter configured with Redis (production)")
@@ -651,13 +651,14 @@ def create_app():
                     app.logger.error("Falling back to memory-based rate limiting - this is not ideal for production.")
                     app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
                     app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
-        
+
         # Development mode - allow memory fallback but warn
         elif redis_url and not redis_url.startswith('memory://'):
             try:
-                import redis
-                r = redis.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                r.ping()
+                from app.lib.redis_client import get_client
+                r = get_client(decode_responses=False)
+                if r:
+                    r.ping()
                 app.config['RATELIMIT_STORAGE_URI'] = redis_url
                 app.config['RATELIMIT_STORAGE_URL'] = redis_url
                 app.logger.info("Rate limiter configured with Redis (development)")
@@ -1126,8 +1127,10 @@ def create_app():
                 return False
 
             try:
-                import redis as redis_lib
-                redis_client = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                from app.lib.redis_client import get_client as _get_shared_redis
+                redis_client = _get_shared_redis(decode_responses=False)
+                if not redis_client:
+                    raise RuntimeError("REDIS_URL not configured")
             except Exception as connect_error:
                 _scheduler_state['last_error'] = f"Redis connect failed: {connect_error}"
                 app.logger.error(f"Could not connect to Redis for scheduler lock: {connect_error}")
@@ -1311,8 +1314,8 @@ def create_app():
                         _scheduler_state['lock_acquired'] = False
                         return False
                     try:
-                        import redis as redis_lib
-                        redis_client = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                        from app.lib.redis_client import get_client as _get_shared_redis
+                        redis_client = _get_shared_redis(decode_responses=False) or redis_client
                     except Exception:
                         pass
 

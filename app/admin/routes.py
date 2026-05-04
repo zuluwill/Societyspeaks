@@ -78,16 +78,12 @@ def _load_worker_heartbeats():
     Returns {'workers': [...], 'errors': [...]} and never raises.
     """
     payload = {'workers': [], 'errors': []}
-    redis_url = (os.getenv("REDIS_URL") or "").strip()
-    if not redis_url:
-        payload['errors'].append("REDIS_URL not configured")
-        return payload
-    if redis_lib is None:
-        payload['errors'].append("redis client unavailable")
-        return payload
-
     try:
-        client = redis_lib.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
+        from app.lib.redis_client import get_client
+        client = get_client(decode_responses=False)
+        if not client:
+            payload['errors'].append("REDIS_URL not configured")
+            return payload
         keys = client.keys("consensus_worker:heartbeat:*") or []
         now_ts = int(time.time())
         workers = []

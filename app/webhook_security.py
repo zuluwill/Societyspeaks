@@ -177,8 +177,8 @@ def check_replay_protection(timestamp, payload):
         redis_url = current_app.config.get('REDIS_URL')
         if redis_url and not redis_url.startswith('memory://'):
             try:
-                import redis
-                r = redis.from_url(redis_url)
+                from app.lib.redis_client import get_client
+                r = get_client(decode_responses=False)
                 
                 # Use SETNX to atomically check and set
                 # Returns True if key didn't exist (first time seeing this request)

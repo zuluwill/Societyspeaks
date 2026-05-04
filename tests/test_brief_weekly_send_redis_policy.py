@@ -21,7 +21,7 @@ def test_weekly_brief_hourly_returns_empty_when_lock_not_acquired(app, app_conte
     fake_client.set = MagicMock(return_value=False)
 
     with patch('app.brief.email_client.ResendClient', return_value=MagicMock()):
-        with patch('redis.from_url', return_value=fake_client):
+        with patch('app.lib.redis_client.get_client', return_value=fake_client):
             from app.brief.email_client import BriefEmailScheduler
 
             sched = BriefEmailScheduler()

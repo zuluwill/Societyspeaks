@@ -18,12 +18,11 @@ import threading
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from typing import Optional, Dict, Any, List
-import redis
 from flask_babel import gettext as _
+from app.lib.redis_client import get_client as _get_shared_redis
 
 logger = logging.getLogger(__name__)
 
-REDIS_URL = os.environ.get('REDIS_URL')
 IS_REPLIT_DEPLOYMENT = os.environ.get('REPLIT_DEPLOYMENT') == '1'
 JOB_PREFIX = 'briefing:job:'
 JOB_EXPIRY = 3600  # Jobs expire after 1 hour
@@ -72,14 +71,8 @@ def _purge_expired_in_memory_jobs() -> None:
 
 
 def get_redis_client():
-    """Get Redis client connection."""
-    if not REDIS_URL:
-        return None
-    try:
-        return redis.from_url(REDIS_URL, decode_responses=True)
-    except Exception as e:
-        logger.error(f"Failed to connect to Redis: {e}")
-        return None
+    """Get the shared Redis client (persistent connection pool)."""
+    return _get_shared_redis(decode_responses=True)
 
 
 class GenerationJob:

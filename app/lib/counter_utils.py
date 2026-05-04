@@ -5,30 +5,15 @@ Uses atomic Redis increments when REDIS_URL is configured, with optional cache
 fallback so metrics never block request paths.
 """
 
-import os
 import logging
-from functools import lru_cache
 
 
 logger = logging.getLogger(__name__)
 
 
-@lru_cache(maxsize=1)
 def _get_redis_client():
-    redis_url = (os.getenv('REDIS_URL') or '').strip()
-    if not redis_url:
-        return None
-    try:
-        import redis
-        return redis.from_url(
-            redis_url,
-            decode_responses=True,
-            socket_timeout=2,
-            socket_connect_timeout=2
-        )
-    except Exception as e:
-        logger.debug(f"Counter Redis client unavailable: {e}")
-        return None
+    from app.lib.redis_client import get_client
+    return get_client(decode_responses=True)
 
 
 def increment_counter(key: str, ttl_seconds: int = 3600, fallback_cache=None):
