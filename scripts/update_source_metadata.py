@@ -479,7 +479,7 @@ SOURCE_METADATA = {
     'Triggernometry': {
         'source_category': 'podcast',
         'website_url': 'https://www.triggernometry.com/',
-        'logo_url': 'https://logo.clearbit.com/triggernometry.com',
+        'logo_url': 'https://megaphone.imgix.net/podcasts/16ae3cde-9374-11ee-8661-7bb08adc24d3/image/519d808c98bea1a7db7c28a0a4343f26.png?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress',
         'description': 'Long-form conversations on politics, culture, and free speech with Konstantin Kisin and Francis Foster.',
         'podcast_urls': {
             'apple': 'https://podcasts.apple.com/podcast/triggernometry/id1375568988',

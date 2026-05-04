@@ -432,9 +432,15 @@ class NewsFetcher:
                     if existing:
                         continue
                     
-                    url = entry.get('link', '')
-                    if url and NewsArticle.query.filter_by(url=url[:1000]).first():
-                        continue
+                    # URL dedup: only check episode-specific URLs (skip generic homepages
+                    # that podcasts often use as link= for every episode)
+                    link_url = entry.get('link', '')
+                    if link_url and link_url.startswith(('http://', 'https://')):
+                        from urllib.parse import urlparse as _urlparse
+                        _path = _urlparse(link_url).path.rstrip('/')
+                        if len(_path) > 5:  # Non-trivial path = episode-specific URL
+                            if NewsArticle.query.filter_by(url=link_url[:1000]).first():
+                                continue
                 except Exception as db_err:
                     logger.warning(f"DB error checking existing article: {db_err}")
                     db.session.rollback()
@@ -468,8 +474,13 @@ class NewsFetcher:
                     if cleaned_summary and cleaned_summary == title:
                         cleaned_summary = None
                 
-                # Get URL with validation
+                # Get URL: prefer the episode link; fall back to enclosure (audio) URL
+                # which is how many podcast feeds (Megaphone, Acast, etc.) expose episode URLs
                 url = entry.get('link', '')
+                if not url or not url.startswith(('http://', 'https://')):
+                    enclosures = entry.get('enclosures', [])
+                    if enclosures:
+                        url = enclosures[0].get('url', '')
                 if not url or not url.startswith(('http://', 'https://')):
                     continue  # Skip entries without valid URLs
                 
