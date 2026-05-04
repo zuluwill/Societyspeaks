@@ -176,6 +176,37 @@ class NewsFetcher:
             logger.error(f"Error updating error count for {source.name}: {inner_e}")
             db.session.rollback()
     
+    def fetch_source(self, source: NewsSource) -> List[NewsArticle]:
+        """
+        Fetch articles from a single source.
+
+        Useful for testing or manually triggering a fetch for one source.
+        Dispatches to the appropriate private fetch method based on source_type.
+
+        Args:
+            source: NewsSource instance to fetch from
+
+        Returns:
+            List of newly fetched NewsArticle instances
+        """
+        try:
+            if source.source_type == 'guardian':
+                articles = self._fetch_guardian(source)
+            elif source.source_type == 'rss':
+                articles = self._fetch_rss(source)
+            else:
+                logger.warning(f"Unknown source type for {source.name}: {source.source_type}")
+                return []
+
+            source.last_fetched_at = utcnow_naive()
+            source.fetch_error_count = 0
+            db.session.commit()
+            return articles
+
+        except Exception as e:
+            self._handle_fetch_error(source, e)
+            return []
+
     def fetch_all_sources(self) -> List[NewsArticle]:
         """
         Fetch articles from all active sources.
