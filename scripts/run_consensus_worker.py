@@ -28,7 +28,7 @@ _orig_getaddrinfo = _socket.getaddrinfo
 
 def _prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):  # noqa: A002
     results = _orig_getaddrinfo(host, port, family, type, proto, flags)
-    if family == 0:
+    if family == 0 and port is not None:
         ipv4 = [r for r in results if r[0] == _socket.AF_INET]
         if ipv4:
             return ipv4

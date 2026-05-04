@@ -30,7 +30,12 @@ _orig_getaddrinfo = _socket.getaddrinfo
 
 def _prefer_ipv4(host, port, family=0, type=0, proto=0, flags=0):  # noqa: A002
     results = _orig_getaddrinfo(host, port, family, type, proto, flags)
-    if family == 0:  # only filter when caller did not specify address family
+    # Only filter when:
+    #   - The caller did not explicitly request a specific address family (family=0 / AF_UNSPEC)
+    #   - A port was given — i.e. this is a real connection attempt, not a pure
+    #     security/SSRF hostname resolution (which passes port=None so it can
+    #     inspect *all* resolved addresses before deciding whether to connect).
+    if family == 0 and port is not None:
         ipv4 = [r for r in results if r[0] == _socket.AF_INET]
         if ipv4:
             return ipv4
