@@ -1,4 +1,4 @@
-{{ _('Hi %(username)s,', username=username) }}
+{{ _('Hi %(username)s,', username=username)|escape_i18n }}
 
 {{ _('Thanks for signing up! Please open the link below to activate your account. This link will expire in 24 hours.') }}
 

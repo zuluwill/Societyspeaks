@@ -27,7 +27,7 @@
                 {% if briefing_count == 1 %}
                     {{ _('Your Society Speaks subscription has ended and your briefing has been paused.')|safe }}
                 {% else %}
-                    {{ _('Your Society Speaks subscription has ended and your <strong>%(count)s briefings</strong> have been paused.', count=briefing_count)|safe }}
+                    {{ _('Your Society Speaks subscription has ended and your <strong>%(count)s briefings</strong> have been paused.', count=briefing_count|int)|safe }}
                 {% endif %}
             {% else %}
                 {{ _('Your Society Speaks subscription has ended.') }}

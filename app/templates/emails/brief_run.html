@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ briefing.name }}</title>
+    <title>{{ briefing.name|e }}</title>
     <style type="text/css">
         body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
@@ -28,13 +28,13 @@
                     
                     <!-- Header -->
                     <tr>
-                        <td align="center" class="mobile-padding" style="background-color: {{ briefing.accent_color|default('#1e40af') }}; padding: 36px 24px;">
+                        <td align="center" class="mobile-padding" style="background-color: {{ briefing.accent_color|default('#1e40af')|e }}; padding: 36px 24px;">
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                                 {% if briefing.logo_url or company_logo_url %}
                                 <tr>
                                     <td align="center" style="padding-bottom: 16px;">
-                                        <img src="{{ briefing.logo_url or company_logo_url }}"
-                                             alt="{{ briefing.name }}"
+                                        <img src="{{ (briefing.logo_url or company_logo_url)|e }}"
+                                             alt="{{ briefing.name|e }}"
                                              style="max-width: 140px; max-height: 70px; height: auto; display: block;"
                                              onerror="this.style.display='none';">
                                     </td>
@@ -43,13 +43,13 @@
                                 {% if briefing.header_text %}
                                 <tr>
                                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 8px;">
-                                        {{ briefing.header_text }}
+                                        {{ briefing.header_text|e }}
                                     </td>
                                 </tr>
                                 {% endif %}
                                 <tr>
                                     <td align="center" style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #ffffff; line-height: 1.2; padding-bottom: 8px;">
-                                        {{ briefing.name }}
+                                        {{ briefing.name|e }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -81,13 +81,13 @@
                                 <tr>
                                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.6;">
                                         <p style="margin: 0 0 8px 0;">
-                                            <a href="{{ view_url }}" target="_blank" style="color: {{ briefing.accent_color|default('#1e40af') }}; text-decoration: underline;">{{ _('View in browser') }}</a>
+                                            <a href="{{ view_url }}" target="_blank" style="color: {{ briefing.accent_color|default('#1e40af')|e }}; text-decoration: underline;">{{ _('View in browser') }}</a>
                                         </p>
                                         <p style="margin: 0 0 8px 0;">
                                             <a href="{{ unsubscribe_url }}" target="_blank" style="color: #6b7280; text-decoration: underline;">{{ _('Unsubscribe') }}</a>
                                         </p>
                                         <p style="margin: 0; color: #9ca3af;">
-                                            {{ _("Generated using Society Speaks' open, auditable sense-making engine.") }}
+                                            {{ _("Generated using Society Speaks' open, auditable sense-making engine.")|escape_i18n }}
                                         </p>
                                     </td>
                                 </tr>

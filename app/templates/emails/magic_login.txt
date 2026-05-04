@@ -1,4 +1,4 @@
-{{ _('Hi %(username)s,', username=username) }}
+{{ _('Hi %(username)s,', username=username)|escape_i18n }}
 
 {{ _('Open the link below to sign in to your Society Speaks account. No password needed.') }}
 

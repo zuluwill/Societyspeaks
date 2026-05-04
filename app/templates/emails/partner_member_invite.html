@@ -1,18 +1,18 @@
 <!doctype html>
 <html>
 <body style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
-  <h2 style="margin: 0 0 12px;">{{ _("You're invited to %(partner)s", partner=partner.name) }}</h2>
+  <h2 style="margin: 0 0 12px;">{{ _("You're invited to %(partner)s", partner=partner.name)|escape_i18n }}</h2>
   <p style="margin: 0 0 12px;">
-    {{ _('%(inviter)s invited you to access the Society Speaks Partner Portal.', inviter=inviter_name) }}
+    {{ _('%(inviter)s invited you to access the Society Speaks Partner Portal.', inviter=inviter_name)|escape_i18n }}
   </p>
   <p style="margin: 0 0 16px;">
-    <a href="{{ invite_url }}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 14px;border-radius:6px;">{{ _('Accept invite') }}</a>
+            <a href="{{ invite_url|e }}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 14px;border-radius:6px;">{{ _('Accept invite') }}</a>
   </p>
   <p style="margin: 0 0 8px; font-size: 12px; color: #6b7280;">
     {{ _('If the button does not work, copy this link:') }}
   </p>
   <p style="margin: 0; font-size: 12px; color: #6b7280; word-break: break-all;">
-    {{ invite_url }}
+    {{ invite_url|e }}
   </p>
 </body>
 </html>

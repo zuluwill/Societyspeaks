@@ -1,4 +1,4 @@
-{{ _('Hi %(username)s,', username=username) }}
+{{ _('Hi %(username)s,', username=username)|escape_i18n }}
 
 {{ _("Welcome to Society Speaks! We're building a platform for thoughtful civic discourse, where people can find common ground on the issues that matter.") }}
 

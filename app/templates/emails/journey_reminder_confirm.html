@@ -2,7 +2,7 @@
 
 {% block title %}{{ _('Journey reminders set — Society Speaks') }}{% endblock %}
 
-{% block preheader %}{{ _("You're all set. We'll remind you %(cadence)s to continue your civic journey.", cadence=cadence_label) }}{% endblock %}
+{% block preheader %}{{ _("You're all set. We'll remind you %(cadence)s to continue your civic journey.", cadence=cadence_label)|escape_i18n }}{% endblock %}
 
 {% block content %}
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -11,7 +11,7 @@
             <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #a5b4fc; text-transform: uppercase;">{{ _('Guided Civic Journey') }}</p>
             <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff;">{{ _("You're all set!") }}</h1>
             <p style="margin: 10px 0 0; font-size: 14px; color: #c7d2fe; line-height: 1.5;">
-                {{ _('We\'ll remind you <strong style="color: #ffffff;">%(cadence)s</strong> to continue the <strong style="color: #ffffff;">%(programme)s</strong> journey.', cadence=cadence_label, programme=programme_name)|safe }}
+                {{ _('We\'ll remind you <strong style="color: #ffffff;">%(cadence)s</strong> to continue the <strong style="color: #ffffff;">%(programme)s</strong> journey.', cadence=cadence_label|e, programme=programme_name|e)|safe }}
             </p>
         </td>
     </tr>

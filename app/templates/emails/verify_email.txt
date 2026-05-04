@@ -1,4 +1,4 @@
-{{ _('Hi %(username)s,', username=username) }}
+{{ _('Hi %(username)s,', username=username)|escape_i18n }}
 
 {{ _('Please verify your email address by opening the link below. It will expire in 24 hours.') }}
 

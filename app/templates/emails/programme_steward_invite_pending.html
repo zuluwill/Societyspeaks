@@ -2,14 +2,14 @@
 <html lang="en">
   <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
     <h2>{{ _('Programme Steward Invitation') }}</h2>
-    <p>{{ _('<strong>%(inviter)s</strong> has invited you to steward the programme <strong>%(programme)s</strong> on Society Speaks.', inviter=inviter_name, programme=programme.name)|safe }}</p>
+    <p>{{ _('<strong>%(inviter)s</strong> has invited you to steward the programme <strong>%(programme)s</strong> on Society Speaks.', inviter=inviter_name|e, programme=programme.name|e)|safe }}</p>
     <p>{{ _('To accept this invitation you will need a Society Speaks account. <strong>Please register using this email address</strong>, then click the button below.')|safe }}</p>
     <p>
-      <a href="{{ invite_url }}" style="display: inline-block; padding: 10px 14px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">
+      <a href="{{ invite_url|e }}" style="display: inline-block; padding: 10px 14px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">
         {{ _('Accept steward invitation') }}
       </a>
     </p>
     <p>{{ _('If the button does not work, copy and paste this URL:') }}</p>
-    <p><a href="{{ invite_url }}">{{ invite_url }}</a></p>
+    <p><a href="{{ invite_url|e }}">{{ invite_url|e }}</a></p>
   </body>
 </html>

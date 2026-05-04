@@ -1,15 +1,15 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}{{ _('Daily Question #%(number)s - Society Speaks', number=question_number) }}{% endblock %}
+{% block title %}{{ _('Daily Question #%(number)s - Society Speaks', number=question_number)|escape_i18n }}{% endblock %}
 
-{% block preheader %}{{ question_text[:100] }}...{% endblock %}
+{% block preheader %}{{ (question_text[:100] if question_text else '')|e }}...{% endblock %}
 
 {% block header_title %}{{ _('Daily Question') }}{% endblock %}
 
 {% block header_subtitle %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #bfdbfe;">
-        #{{ question_number }} &bull; {{ topic_category }}
+        #{{ question_number }} &bull; {{ topic_category|e }}
     </td>
 </tr>
 {% endblock %}
@@ -23,7 +23,7 @@
                 <tr>
                     <td style="padding: 12px 16px;">
                         <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #92400e;">
-                            🔥 {{ streak_message }}
+                            🔥 {{ streak_message|e }}
                         </span>
                     </td>
                 </tr>
@@ -41,7 +41,7 @@
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                             <tr>
                                 <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 600; line-height: 1.4; color: #0f172a; text-align: center;">
-                                    {{ question_text }}
+                                    {{ question_text|e }}
                                 </td>
                             </tr>
                         </table>
@@ -65,7 +65,7 @@
                             </tr>
                             <tr>
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e40af;">
-                                    {{ question_context }}
+                                    {{ question_context|e }}
                                 </td>
                             </tr>
                         </table>
@@ -166,7 +166,7 @@
                             </tr>
                             <tr>
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #713f12;">
-                                    {{ why_this_question }}
+                                    {{ why_this_question|e }}
                                 </td>
                             </tr>
                         </table>
@@ -192,9 +192,9 @@
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border: 1px solid #e5e7eb; border-radius: 6px; background-color: #f9fafb;">
                             <tr>
                                 <td style="padding: 10px 14px;">
-                                    <a href="{{ article.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 600; color: #1d4ed8; text-decoration: none; line-height: 1.4; display: block;">{{ article.title }}</a>
+                                    <a href="{{ article.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 600; color: #1d4ed8; text-decoration: none; line-height: 1.4; display: block;">{{ article.title|e }}</a>
                                     {% if article.source and article.source.name %}
-                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 4px 0 0 0;">{{ article.source.name }}</p>
+                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 4px 0 0 0;">{{ article.source.name|e }}</p>
                                     {% endif %}
                                 </td>
                             </tr>

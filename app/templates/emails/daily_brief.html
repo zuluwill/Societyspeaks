@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="x-apple-disable-message-reformatting" />
-    <title>{{ brief.title }}</title>
+    <title>{{ brief.title|e }}</title>
     <!--[if mso]>
       <noscript>
         <xml>
@@ -106,7 +106,7 @@
   >
     <!-- Preheader (hidden preview text) -->
     <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all">
-      {{ brief.intro_text[:100] }}...
+      {{ (brief.intro_text[:100] if brief.intro_text else '')|e }}...
       &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
     </div>
 
@@ -1484,7 +1484,7 @@
                           margin-bottom: 0;
                         "
                       >
-                        {{ _('Voice: %(voice)s', voice=item.audio_voice_id|title) }}
+                        {{ _('Voice: %(voice)s', voice=item.audio_voice_id|title)|escape_i18n }}
                       </p>
                       {% endif %}
                     </td>

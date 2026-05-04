@@ -2,7 +2,7 @@
 
 {% block title %}{% if is_monthly %}{{ _('10 Questions This Month') }}{% else %}{{ _('5 Questions This Week') }}{% endif %} - {{ _('Society Speaks') }}{% endblock %}
 
-{% block preheader %}{% if is_monthly %}{{ _('Vote on 10 civic questions this month') }}{% else %}{{ _('Vote on 5 civic questions this week') }}{% endif %}: {{ questions[0].question.question_text[:60] if questions else '' }}...{% endblock %}
+{% block preheader %}{% if is_monthly %}{{ _('Vote on 10 civic questions this month') }}{% else %}{{ _('Vote on 5 civic questions this week') }}{% endif %}: {{ (questions[0].question.question_text[:60] if questions else '')|e }}...{% endblock %}
 
 {% block header_title %}{% if is_monthly %}{{ _('10 Questions This Month') }}{% else %}{{ _('5 Questions This Week') }}{% endif %}{% endblock %}
 
@@ -87,7 +87,7 @@
                             <!-- Question Text -->
                             <tr>
                                 <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 600; line-height: 1.4; color: #0f172a; padding-bottom: 12px;">
-                                    "{{ q_data.question.question_text }}"
+                                    "{{ q_data.question.question_text|e }}"
                                 </td>
                             </tr>
 
@@ -96,7 +96,7 @@
                             <tr>
                                 <td style="padding-bottom: 16px;">
                                     <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.5; color: #6b7280; margin: 0; padding: 12px; background-color: #ffffff; border-radius: 6px; border-left: 3px solid #3b82f6;">
-                                        {{ q_data.question.context[:200] }}{% if q_data.question.context|length > 200 %}...{% endif %}
+                                        {{ q_data.question.context[:200]|e }}{% if q_data.question.context|length > 200 %}...{% endif %}
                                     </p>
                                 </td>
                             </tr>
@@ -106,7 +106,7 @@
                             <tr>
                                 <td style="padding-bottom: 14px;">
                                     <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #64748b; margin: 0;">
-                                        <strong>{{ _('Why this question:') }}</strong> {{ q_data.question.why_this_question }}
+                                        <strong>{{ _('Why this question:') }}</strong> {{ q_data.question.why_this_question|e }}
                                     </p>
                                 </td>
                             </tr>
@@ -127,9 +127,9 @@
                                                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border: 1px solid #e5e7eb; border-radius: 6px; background-color: #f9fafb;">
                                                     <tr>
                                                         <td style="padding: 8px 12px;">
-                                                            <a href="{{ article.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; color: #1d4ed8; text-decoration: none; line-height: 1.4; display: block;">{{ article.title }}</a>
+                                                            <a href="{{ article.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; color: #1d4ed8; text-decoration: none; line-height: 1.4; display: block;">{{ article.title|e }}</a>
                                                             {% if article.source and article.source.name %}
-                                                            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 3px 0 0 0;">{{ article.source.name }}</p>
+                                                            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 3px 0 0 0;">{{ article.source.name|e }}</p>
                                                             {% endif %}
                                                         </td>
                                                     </tr>
@@ -251,7 +251,7 @@
 </tr>
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af;">
-        {% if is_monthly %}{{ _('Receiving monthly digests on the 1st') }}{% else %}{{ _('Receiving %(day)ss at %(hour)s:00', day=send_day_name, hour=send_hour) }}{% endif %}
+        {% if is_monthly %}{{ _('Receiving monthly digests on the 1st') }}{% else %}{{ _('Receiving %(day)ss at %(hour)s:00', day=send_day_name, hour=send_hour)|escape_i18n }}{% endif %}
     </td>
 </tr>
 {% endblock %}

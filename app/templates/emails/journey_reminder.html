@@ -2,7 +2,7 @@
 
 {% block title %}{{ _('Continue your civic journey — Society Speaks') }}{% endblock %}
 
-{% block preheader %}{{ _('%(done)s of %(total)d themes done. Up next: %(next)s (~5 mins)', done=completed_themes, total=total_themes, next=next_theme_name) }}{% endblock %}
+{% block preheader %}{{ _('%(done)s of %(total)d themes done. Up next: %(next)s (~5 mins)', done=completed_themes, total=total_themes, next=next_theme_name)|escape_i18n }}{% endblock %}
 
 {% block content %}
 <!-- Journey Reminder Email -->
@@ -11,13 +11,13 @@
         <td style="background: linear-gradient(135deg, #4338ca 0%, #1d4ed8 100%); padding: 28px 32px 24px; border-radius: 8px 8px 0 0;">
             <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #a5b4fc; text-transform: uppercase;">{{ _('Guided Civic Journey') }}</p>
             <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; line-height: 1.3;">
-                {{ _('Time for your next topic, %(username)s', username=username) }}
+                {{ _('Time for your next topic, %(username)s', username=username)|escape_i18n }}
             </h1>
             <p style="margin: 10px 0 0; font-size: 14px; color: #c7d2fe; line-height: 1.5;">
-                {% if pct >= 75 %}{{ _("You've completed %(done)s of %(total)d themes — you're almost there!", done=completed_themes, total=total_themes) }}
-                {% elif pct >= 50 %}{{ _("You've completed %(done)s of %(total)d themes — you're more than halfway through!", done=completed_themes, total=total_themes) }}
-                {% elif pct >= 25 %}{{ _("You've completed %(done)s of %(total)d themes — you're making good progress.", done=completed_themes, total=total_themes) }}
-                {% else %}{{ _("You've completed %(done)s of %(total)d themes — you're on your way.", done=completed_themes, total=total_themes) }}
+                {% if pct >= 75 %}{{ _("You've completed %(done)s of %(total)d themes — you're almost there!", done=completed_themes, total=total_themes)|escape_i18n }}
+                {% elif pct >= 50 %}{{ _("You've completed %(done)s of %(total)d themes — you're more than halfway through!", done=completed_themes, total=total_themes)|escape_i18n }}
+                {% elif pct >= 25 %}{{ _("You've completed %(done)s of %(total)d themes — you're making good progress.", done=completed_themes, total=total_themes)|escape_i18n }}
+                {% else %}{{ _("You've completed %(done)s of %(total)d themes — you're on your way.", done=completed_themes, total=total_themes)|escape_i18n }}
                 {% endif %}
             </p>
         </td>
@@ -29,7 +29,7 @@
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                     <td style="padding-bottom: 6px;">
-                        <p style="margin: 0; font-size: 12px; color: #a5b4fc;">{{ _('%(done)s / %(total)d themes complete', done=completed_themes, total=total_themes) }}</p>
+                        <p style="margin: 0; font-size: 12px; color: #a5b4fc;">{{ _('%(done)s / %(total)d themes complete', done=completed_themes, total=total_themes)|escape_i18n }}</p>
                     </td>
                 </tr>
                 <tr>
@@ -50,9 +50,9 @@
     <tr>
         <td style="background-color: #ffffff; padding: 28px 32px 0;">
             <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #6b7280; text-transform: uppercase;">{{ _('Up next') }}</p>
-            <h2 style="margin: 0 0 6px; font-size: 19px; font-weight: 700; color: #111827;">{{ next_theme_name }}</h2>
+            <h2 style="margin: 0 0 6px; font-size: 19px; font-weight: 700; color: #111827;">{{ next_theme_name|e }}</h2>
             <p style="margin: 0; font-size: 13px; color: #6b7280;">
-                {{ _('About 5 minutes &nbsp;·&nbsp; %(count)d statements to vote on', count=(next_statement_count or 7))|safe }}
+                {{ _('About 5 minutes &nbsp;·&nbsp; %(count)d statements to vote on', count=(next_statement_count or 7)|int)|safe }}
             </p>
         </td>
     </tr>

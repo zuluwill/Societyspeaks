@@ -2,7 +2,7 @@
 
 {% set cadence_label = _('Weekly Brief') if (subscriber.cadence == 'weekly') else _('Daily Brief') %}
 
-{% block title %}{{ _('Welcome to the %(cadence)s - Society Speaks', cadence=cadence_label) }}{% endblock %}
+{% block title %}{{ _('Welcome to the %(cadence)s - Society Speaks', cadence=cadence_label)|escape_i18n }}{% endblock %}
 
 {% block preheader %}{{ _("Your free access is now active! Here's your magic link to access briefs anytime.") }}{% endblock %}
 
@@ -20,7 +20,7 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 24px;">
-            {{ _('Thanks for subscribing to the %(cadence)s! We curate the most important news and provide AI-powered analysis to help you stay informed.', cadence=cadence_label) }}
+            {{ _('Thanks for subscribing to the %(cadence)s! We curate the most important news and provide AI-powered analysis to help you stay informed.', cadence=cadence_label)|escape_i18n }}
         </td>
     </tr>
     <tr>
@@ -34,7 +34,7 @@
                 <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.8; color: #374151;">
                         <strong>{{ _('Cadence:') }}</strong> {% if subscriber.cadence == 'weekly' %}{{ _('Weekly (every %(day)s)', day=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][subscriber.preferred_weekly_day or 6]) }}{% else %}{{ _('Daily') }}{% endif %}<br>
-                        <strong>{{ _('Delivery time:') }}</strong> {{ preferred_hour }}:00 ({{ timezone }})<br>
+                        <strong>{{ _('Delivery time:') }}</strong> {{ preferred_hour }}:00 ({{ timezone|e }})<br>
                         <strong>{{ _('Status:') }}</strong> {{ _('Free access (no expiration)') }}
                     </td>
                 </tr>

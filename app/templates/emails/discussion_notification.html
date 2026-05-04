@@ -1,8 +1,8 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}{{ subject }}{% endblock %}
+{% block title %}{{ subject|escape_i18n }}{% endblock %}
 
-{% block preheader %}{{ message }}{% endblock %}
+{% block preheader %}{{ message|escape_i18n }}{% endblock %}
 
 {% block header_title %}
     {% if notification_type == 'new_participant' %}
@@ -17,7 +17,7 @@
 {% block header_subtitle %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #bfdbfe; padding-top: 4px;">
-        {{ discussion_title }}
+        {{ discussion_title|e }}
     </td>
 </tr>
 {% endblock %}
@@ -26,12 +26,12 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 20px;">
-            {{ _('Hi %(username)s,', username=username) }}
+            {{ _('Hi %(username)s,', username=username)|escape_i18n }}
         </td>
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 28px;">
-            {{ message }}
+            {{ message|escape_i18n }}
         </td>
     </tr>
 
@@ -49,7 +49,7 @@
                             </tr>
                             <tr>
                                 <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; color: #1e3a8a; line-height: 1.4;">
-                                    {{ discussion_title }}
+                                    {{ discussion_title|e }}
                                 </td>
                             </tr>
                         </table>

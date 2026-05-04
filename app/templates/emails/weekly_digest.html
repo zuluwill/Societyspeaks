@@ -3,7 +3,7 @@
 {% block title %}{{ _('Your Weekly Discussion Digest') }}{% endblock %}
 
 {% block content %}
-<p>{{ _('Hi %(username)s,', username=username) }}</p>
+<p>{{ _('Hi %(username)s,', username=username)|escape_i18n }}</p>
 
 <p>{{ _("Here's what's been happening in your discussions this week:") }}</p>
 
@@ -12,7 +12,7 @@
     {% for discussion in discussions_with_activity %}
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #1e40af;">
         <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #1e40af;">
-            <a href="{{ discussion.url }}" style="color: #1e40af; text-decoration: none;">{{ discussion.title }}</a>
+            <a href="{{ discussion.url }}" style="color: #1e40af; text-decoration: none;">{{ discussion.title|e }}</a>
         </h3>
         <div style="font-size: 14px; color: #6b7280;">
             {% if discussion.new_participants > 0 %}
@@ -49,7 +49,7 @@
     <ul style="margin: 0; padding-left: 20px; color: #374151;">
         {% for topic in trending_topics[:5] %}
         <li style="margin-bottom: 8px;">
-            <a href="{{ topic.url }}" style="color: #1e40af; text-decoration: none;">{{ topic.title }}</a>
+            <a href="{{ topic.url }}" style="color: #1e40af; text-decoration: none;">{{ topic.title|e }}</a>
             {% if topic.participant_count >= 20 %}
             <span style="color: #9ca3af; font-size: 13px;">({{ _('%(count)d participants', count=topic.participant_count) }})</span>
             {% else %}

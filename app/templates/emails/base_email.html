@@ -89,13 +89,13 @@
                                 </tr>
                                 <tr>
                                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #64748b; padding-bottom: 16px;">
-                                        {{ _('Sense-making, not sensationalism') }}
+                                        {{ _('Sense-making, not sensationalism')|escape_i18n }}
                                     </td>
                                 </tr>
                                 {% block footer_links %}
                                 <tr>
                                     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569;">
-                                        <a href="{{ base_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">{{ _('Visit Society Speaks') }}</a>
+                                        <a href="{{ base_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">{{ _('Visit Society Speaks')|escape_i18n }}</a>
                                     </td>
                                 </tr>
                                 {% endblock %}

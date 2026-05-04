@@ -3,7 +3,7 @@
 {% block title %}{{ _('Complete Your Profile') }}{% endblock %}
 
 {% block content %}
-<p>{{ _('Hi %(username)s,', username=username) }}</p>
+<p>{{ _('Hi %(username)s,', username=username)|escape_i18n }}</p>
 
 <p>{{ _('Your Society Speaks profile is almost complete! A complete profile helps you:') }}</p>
 
@@ -18,7 +18,7 @@
     <p style="margin: 0 0 12px 0; font-weight: 600; color: #92400e;">{{ _('Missing information:') }}</p>
     <ul style="margin: 0; padding-left: 20px; color: #92400e;">
         {% for field in missing_fields %}
-        <li style="margin-bottom: 4px;">{{ field }}</li>
+        <li style="margin-bottom: 4px;">{{ field|e }}</li>
         {% endfor %}
     </ul>
 </div>
