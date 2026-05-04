@@ -61,44 +61,90 @@
         {% endif %}
         
         {% if show_briefings_subscribe_cta %}
-        <!-- No subscription — prominent upgrade CTA -->
+        <!-- No subscription — plan-choice upgrade CTA -->
         <div id="briefings-upgrade" class="mb-8 rounded-2xl overflow-hidden scroll-mt-24" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)">
             <div class="px-6 py-8 sm:px-10 sm:py-10">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                    <div>
-                        <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: #60a5fa">{{ _('30-day free trial') }}</p>
-                        <h2 class="text-2xl font-bold text-white mb-2">{{ _('Start your Personal Brief today') }}</h2>
-                        <p class="text-slate-300 max-w-xl">{{ _('One daily brief from the sources you trust. Set up in minutes. Your trial is free; add a payment method anytime before it ends to stay subscribed.') }}</p>
-                        <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: #94a3b8">
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                <!-- Header -->
+                <div class="mb-6">
+                    <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: #60a5fa">{{ _('30-day free trial · no card required') }}</p>
+                    <h2 class="text-2xl font-bold text-white mb-2">{{ _('Choose your plan to get started') }}</h2>
+                    <p class="text-slate-300">{{ _('All plans include the same 30-day free trial. Add a payment method before day 30 to keep your briefings running.') }}</p>
+                </div>
+
+                <!-- Plan cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+
+                    <!-- Personal (Starter) -->
+                    <div class="rounded-xl p-5 flex flex-col" style="background-color: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);">
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-white mb-0.5">{{ _('Personal') }}</p>
+                            <p class="text-xs" style="color: #94a3b8">{{ _('For individuals') }}</p>
+                        </div>
+                        <p class="text-2xl font-bold text-white mb-1">£4.99<span class="text-base font-normal" style="color:#94a3b8">/mo</span></p>
+                        <ul class="text-xs mb-4 space-y-1.5 flex-1" style="color: #94a3b8">
+                            <li class="flex items-start gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                 {{ _('Unlimited briefs') }}
                             </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                {{ _('PDF document uploads') }}
+                            <li class="flex items-start gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('PDF uploads & custom sources') }}
                             </li>
-                            <li class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                {{ _('Cancel anytime') }}
+                            <li class="flex items-start gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('Scheduled daily delivery') }}
                             </li>
                         </ul>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3 lg:flex-col lg:items-stretch flex-shrink-0">
                         <form action="{{ url_for('billing.checkout') }}" method="POST">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="plan" value="starter">
                             <input type="hidden" name="interval" value="month">
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-500 transition-colors shadow-lg">
-                                {{ _('Start free trial — £4.99/month') }}
-                                <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-500 transition-colors">
+                                {{ _('Start free trial') }}
+                                <svg class="ml-1.5 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                             </button>
                         </form>
-                        <a href="{{ url_for('briefing.landing') }}#pricing" class="inline-flex items-center justify-center px-6 py-3 rounded-lg border text-sm font-medium transition-colors" style="border-color: #475569; color: #e2e8f0;">
-                            {{ _('Compare all plans') }}
-                        </a>
+                    </div>
+
+                    <!-- Professional -->
+                    <div class="rounded-xl p-5 flex flex-col relative" style="background-color: rgba(255,255,255,0.07); border: 1px solid rgba(96,165,250,0.5);">
+                        <span class="absolute -top-3 left-4 px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background-color: #1d4ed8; color: #fff;">{{ _('Most popular') }}</span>
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-white mb-0.5">{{ _('Professional') }}</p>
+                            <p class="text-xs" style="color: #94a3b8">{{ _('For researchers & analysts') }}</p>
+                        </div>
+                        <p class="text-2xl font-bold text-white mb-1">£25<span class="text-base font-normal" style="color:#94a3b8">/mo</span></p>
+                        <ul class="text-xs mb-4 space-y-1.5 flex-1" style="color: #94a3b8">
+                            <li class="flex items-start gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('Everything in Personal') }}
+                            </li>
+                            <li class="flex items-start gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('Priority processing & support') }}
+                            </li>
+                            <li class="flex items-start gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                {{ _('Advanced source & filter controls') }}
+                            </li>
+                        </ul>
+                        <form action="{{ url_for('billing.checkout') }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="plan" value="professional">
+                            <input type="hidden" name="interval" value="month">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors" style="background-color: #1d4ed8; color: #fff;">
+                                {{ _('Start free trial') }}
+                                <svg class="ml-1.5 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                        </form>
                     </div>
                 </div>
+
+                <!-- Compare all plans link -->
+                <p class="text-center text-sm" style="color: #64748b">
+                    {{ _('Need a team or enterprise plan?') }}
+                    <a href="{{ url_for('briefing.landing') }}#pricing" class="font-medium hover:underline" style="color: #93c5fd;">{{ _('Compare all plans →') }}</a>
+                </p>
             </div>
         </div>
         {% endif %}

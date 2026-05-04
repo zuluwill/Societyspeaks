@@ -1433,28 +1433,79 @@ def send_subscription_cancelled_email(user, resubscribe_url: Optional[str] = Non
     """
     Notify a user that their subscription has been cancelled and their briefings paused.
 
-    Triggered by the Stripe `customer.subscription.deleted` webhook.
+    Triggered by the Stripe ``customer.subscription.deleted`` webhook.
 
     Args:
         user:             User object (must have .email and .username).
-        resubscribe_url:  Full URL to the plans/pricing page.
+        resubscribe_url:  Full URL to the plans/pricing page (defaults to landing#pricing).
         briefing_count:   Number of briefings that were paused.
 
     Returns:
         bool: True if sent successfully.
     """
     client = None
+    try:
+        client = get_resend_client()
+        base = client.base_url.rstrip('/')
+    except Exception:
+        base = ''
+
     if not resubscribe_url:
-        try:
-            client = get_resend_client()
-            resubscribe_url = f"{client.base_url}/briefings/landing"
-        except Exception:
-            resubscribe_url = '/briefings/landing'
+        resubscribe_url = f'{base}/briefings/landing#pricing' if base else '/briefings/landing#pricing'
+
     return _send_user_transactional_email(
         user,
         'emails/subscription_cancelled.html',
-        'Your Society Speaks subscription has ended',
+        "We've paused your briefings — come back any time",
         {'resubscribe_url': resubscribe_url, 'briefing_count': briefing_count},
+        client=client,
+    )
+
+
+def send_trial_mid_email(
+    user,
+    days_remaining: int,
+    *,
+    manage_billing_url: Optional[str] = None,
+    briefings_url: Optional[str] = None,
+) -> bool:
+    """
+    Mid-trial engagement email sent at approximately day 7 of the 30-day trial.
+
+    Reminds the user of what their subscription includes, shows progress, and
+    encourages them to add a payment method while emphasising no charge until
+    day 30.
+
+    Args:
+        user:               Recipient (must have ``email`` and ``username``).
+        days_remaining:     Days remaining in the trial (typically ~23 at day 7).
+        manage_billing_url: Absolute URL to billing portal / card-update entrypoint.
+        briefings_url:      Absolute URL to the user's briefings list.
+
+    Returns:
+        True if the message was accepted for delivery.
+    """
+    client = None
+    try:
+        client = get_resend_client()
+        base = client.base_url.rstrip('/')
+    except Exception:
+        base = ''
+
+    if not manage_billing_url:
+        manage_billing_url = f'{base}/billing/card-update' if base else '/billing/card-update'
+    if not briefings_url:
+        briefings_url = f'{base}/briefings' if base else '/briefings'
+
+    return _send_user_transactional_email(
+        user,
+        'emails/trial_mid.html',
+        f"You're one week into your free trial — {days_remaining} days left",
+        {
+            'days_remaining': days_remaining,
+            'manage_billing_url': manage_billing_url,
+            'briefings_url': briefings_url,
+        },
         client=client,
     )
 

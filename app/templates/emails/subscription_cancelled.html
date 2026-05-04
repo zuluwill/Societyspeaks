@@ -1,15 +1,15 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}{{ _('Your subscription has ended') }}{% endblock %}
+{% block title %}{{ _('Your Society Speaks subscription has ended') }}{% endblock %}
 
-{% block preheader %}{{ _('Your Society Speaks subscription has ended and your briefings have been paused') }}{% endblock %}
+{% block preheader %}{{ _("Your briefings are paused — your sources and settings are saved. Come back any time.") }}{% endblock %}
 
 {% block header_title %}{{ _('Your subscription has ended') }}{% endblock %}
 
 {% block header_subtitle %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #bfdbfe; padding-top: 6px;">
-        {{ _('Your briefings are paused — resubscribe any time to pick up where you left off') }}
+        {{ _('Your briefings are paused — pick up where you left off any time') }}
     </td>
 </tr>
 {% endblock %}
@@ -23,41 +23,85 @@
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 20px;">
-            {% if briefing_count != 1 %}{{ _("Your Society Speaks subscription has now ended. We've paused your briefings so they won't run while your account is inactive.") }}{% else %}{{ _("Your Society Speaks subscription has now ended. We've paused your briefing so it won't run while your account is inactive.") }}{% endif %}
-        </td>
-    </tr>
-    <tr>
-        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 8px;">
-            <strong>{{ _("What's been paused:") }}</strong>
-        </td>
-    </tr>
-    <tr>
-        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #6b7280; padding-bottom: 24px; padding-left: 16px;">
-            {% if briefing_count == 0 %}
-            {{ _('No active briefings were found on your account.') }}
-            {% elif briefing_count == 1 %}
-            {{ _('1 briefing has been paused.') }}
+            {% if briefing_count and briefing_count > 0 %}
+                {% if briefing_count == 1 %}
+                    {{ _('Your Society Speaks subscription has ended and your briefing has been paused.')|safe }}
+                {% else %}
+                    {{ _('Your Society Speaks subscription has ended and your <strong>%(count)s briefings</strong> have been paused.', count=briefing_count)|safe }}
+                {% endif %}
             {% else %}
-            {{ _('%(count)d briefings have been paused.', count=briefing_count) }}
+                {{ _('Your Society Speaks subscription has ended.') }}
             {% endif %}
         </td>
     </tr>
     <tr>
-        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #6b7280; padding-bottom: 28px;">
-            {{ _('Resubscribe at any time and your briefings will automatically resume — your configuration, sources, and history are all saved.') }}
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #6b7280; padding-bottom: 24px;">
+            {{ _('Everything is saved — your briefs, sources, schedules, and history. Resubscribing takes less than a minute and your briefings will be back in your inbox the next morning.') }}
         </td>
     </tr>
+
+    <!-- What you get back -->
     <tr>
-        <td align="center" style="padding-bottom: 28px;">
+        <td style="padding-bottom: 28px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; overflow: hidden;">
+                <tr>
+                    <td style="padding: 20px 24px;">
+                        <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #64748b; margin: 0 0 14px 0;">{{ _('When you resubscribe you get back') }}</p>
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="padding-bottom: 12px;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td width="24" valign="top" style="padding-top: 1px; color: #2563eb; font-size: 16px; font-weight: 700;">→</td>
+                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #374151; padding-left: 8px;">{{ _('All your saved briefs and sources, instantly re-activated') }}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom: 12px;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td width="24" valign="top" style="padding-top: 1px; color: #2563eb; font-size: 16px; font-weight: 700;">→</td>
+                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #374151; padding-left: 8px;">{{ _('Briefings back in your inbox the next morning') }}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td width="24" valign="top" style="padding-top: 1px; color: #2563eb; font-size: 16px; font-weight: 700;">→</td>
+                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #374151; padding-left: 8px;">{{ _('Cancel again any time — no long-term commitment') }}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td align="center" style="padding-bottom: 12px;">
             <a href="{{ resubscribe_url }}"
-               style="display: inline-block; background-color: #1e40af; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
+               style="display: inline-block; background-color: #1e40af; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px;">
                 {{ _('View plans &amp; resubscribe')|safe }}
             </a>
         </td>
     </tr>
     <tr>
+        <td align="center" style="padding-bottom: 28px;">
+            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #9ca3af; margin: 8px 0 0 0;">{{ _('Personal from £4.99/month · Professional from £25/month · cancel any time') }}</p>
+        </td>
+    </tr>
+
+    <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-            {{ _("Questions about your account? Reply to this email and we'll be happy to help.") }}
+            {{ _("Changed your mind or have a question? Just reply to this email — we read every one.") }}
         </td>
     </tr>
 </table>

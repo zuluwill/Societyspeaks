@@ -709,6 +709,101 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f'Briefing Stripe reconciliation failed: {e}', exc_info=True)
 
+    @scheduler.scheduled_job('cron', hour=9, minute=30, id='trial_mid_email', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def send_trial_mid_emails_job():
+        """
+        Send a mid-trial engagement email to users around day 7 of their 30-day trial.
+
+        Targets subscriptions in ``trialing`` status whose ``trial_end`` is between
+        20 and 25 days from now (i.e. 5–10 days into the trial).  A Redis key
+        ``trial:mid_email:<sub_id>`` (TTL 35 days) is used as a send-once guard so
+        the email is never sent twice even if the job misfires and double-runs.
+
+        No external calls are made if there are no matching subscriptions.
+        """
+        with app.app_context():
+            try:
+                from datetime import timedelta
+                from app import db
+                from app.models.billing import Subscription
+                from app.models import User
+                from app.resend_client import send_trial_mid_email
+                from flask import url_for
+
+                now = utcnow_naive()
+                window_min = now + timedelta(days=20)
+                window_max = now + timedelta(days=25)
+
+                candidates = (
+                    Subscription.query
+                    .filter(
+                        Subscription.status == 'trialing',
+                        Subscription.trial_end >= window_min,
+                        Subscription.trial_end <= window_max,
+                    )
+                    .all()
+                )
+
+                if not candidates:
+                    return
+
+                redis_client = None
+                try:
+                    from app.extensions import redis_client as _rc
+                    redis_client = _rc
+                except Exception:
+                    pass
+
+                sent = skipped = errors = 0
+                for sub in candidates:
+                    cache_key = f'trial:mid_email:{sub.id}'
+
+                    if redis_client:
+                        try:
+                            if redis_client.get(cache_key):
+                                skipped += 1
+                                continue
+                        except Exception:
+                            pass
+
+                    user = db.session.get(User, sub.user_id) if sub.user_id else None
+                    if not user or not user.email:
+                        skipped += 1
+                        continue
+
+                    days_remaining = max(1, (sub.trial_end - now).days) if sub.trial_end else 23
+
+                    try:
+                        manage_billing_url = url_for('billing.stripe_recovery_card_update', _external=True)
+                        briefings_url = url_for('briefing.list_briefings', _external=True)
+                    except Exception:
+                        manage_billing_url = None
+                        briefings_url = None
+
+                    try:
+                        ok = send_trial_mid_email(
+                            user,
+                            days_remaining,
+                            manage_billing_url=manage_billing_url,
+                            briefings_url=briefings_url,
+                        )
+                        if ok:
+                            sent += 1
+                            if redis_client:
+                                try:
+                                    redis_client.setex(cache_key, 60 * 60 * 24 * 35, '1')
+                                except Exception:
+                                    pass
+                        else:
+                            errors += 1
+                    except Exception as e:
+                        logger.error(f'Mid-trial email failed for sub {sub.id}: {e}', exc_info=True)
+                        errors += 1
+
+                logger.info(f'Mid-trial emails: sent={sent} skipped={skipped} errors={errors}')
+            except Exception as e:
+                logger.error(f'Mid-trial email job failed: {e}', exc_info=True)
+
     @scheduler.scheduled_job('cron', minute='0', id='pending_topic_catchup', max_instances=1, coalesce=True, misfire_grace_time=1800)
     def pending_topic_catchup_job():
         """
