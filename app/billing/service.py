@@ -735,20 +735,40 @@ def get_active_subscription(user):
 
 
 def briefings_has_past_due_subscription(user):
-    """True if the user or their organisation has a Stripe subscription in past_due."""
+    """True if the user or any of their organisations has a Stripe subscription in past_due.
+
+    Mirrors the membership traversal in ``get_active_subscription`` so that the
+    "payment needed" CTA is shown consistently for org members whose org
+    subscription has lapsed — not only for org owners.
+    """
     if not user or not getattr(user, 'id', None):
         return False
+
     if Subscription.query.filter(
         Subscription.user_id == user.id,
         Subscription.status == 'past_due',
     ).first():
         return True
-    user_org = get_user_organization(user)
-    if user_org and Subscription.query.filter(
-        Subscription.org_id == user_org.id,
+
+    # Org the user owns
+    if user.company_profile and Subscription.query.filter(
+        Subscription.org_id == user.company_profile.id,
         Subscription.status == 'past_due',
     ).first():
         return True
+
+    # Orgs the user is a member of (consistent with get_active_subscription)
+    memberships = OrganizationMember.query.filter(
+        OrganizationMember.user_id == user.id,
+        OrganizationMember.status == 'active',
+    ).all()
+    for membership in memberships:
+        if Subscription.query.filter(
+            Subscription.org_id == membership.org_id,
+            Subscription.status == 'past_due',
+        ).first():
+            return True
+
     return False
 
 

@@ -1231,10 +1231,11 @@ def vote_statement(statement_id):
 
     # PostHog: track journey step completion for guided journey discussions
     # Fires for both authenticated and anonymous users.
-    # Session gate removed: the _voted >= _total condition is the natural
-    # deduplicator. The old session-based gate used the server-side Redis
-    # session which persisted indefinitely, silently blocking all events for
-    # returning users after the first completion.
+    # Cache-based 24-hour dedup: prevents duplicate events when a user changes
+    # a vote on an already-completed step (which still satisfies _voted >= _total).
+    # Consistent with the journey_started / journey_completed dedup pattern in
+    # programmes/routes.py.  The old session-based gate was replaced because it
+    # persisted indefinitely and silently blocked events for returning users.
     if (
         posthog
         and getattr(posthog, 'project_api_key', None)
@@ -1275,22 +1276,25 @@ def vote_statement(statement_id):
                         None,
                     )
                     if _step_num is not None:
-                        _total_steps = len(_ordered)
-                        _is_final = _step_num == _total_steps
-                        posthog.capture(
-                            distinct_id=_ph_id,
-                            event='journey_step_completed',
-                            properties={
-                                'journey_id': _programme.id,
-                                'journey_name': _programme.name,
-                                'step_number': _step_num,
-                                'step_name': discussion.programme_theme or discussion.slug,
-                                'step_type': 'voting',
-                                'is_final_step': _is_final,
-                                'is_authenticated': current_user.is_authenticated,
-                            },
-                        )
-                        posthog.flush()
+                        _step_cache_key = f'ph_journey_step_completed:{_programme.id}:{discussion.id}:{_ph_id[:32]}'
+                        if not cache.get(_step_cache_key):
+                            _total_steps = len(_ordered)
+                            _is_final = _step_num == _total_steps
+                            posthog.capture(
+                                distinct_id=_ph_id,
+                                event='journey_step_completed',
+                                properties={
+                                    'journey_id': _programme.id,
+                                    'journey_name': _programme.name,
+                                    'step_number': _step_num,
+                                    'step_name': discussion.programme_theme or discussion.slug,
+                                    'step_type': 'voting',
+                                    'is_final_step': _is_final,
+                                    'is_authenticated': current_user.is_authenticated,
+                                },
+                            )
+                            posthog.flush()
+                            cache.set(_step_cache_key, True, timeout=86400)  # 24-hour dedup
         except Exception as _e:
             current_app.logger.warning(f"PostHog journey_step_completed error: {_e}")
 
