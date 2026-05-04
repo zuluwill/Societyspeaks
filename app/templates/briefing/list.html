@@ -32,7 +32,13 @@
                     <h3 class="text-sm font-semibold text-primary-800">
                         {% if trial_days_remaining == 0 %}{{ _('Your free trial ends today') }}{% elif trial_days_remaining == 1 %}{{ _('Your free trial ends in 1 day') }}{% else %}{{ _('Your free trial ends in %(days)s days', days=trial_days_remaining) }}{% endif %}
                     </h3>
-                    <p class="text-sm text-primary-700 mt-1">{{ _('Add a payment method now to keep your briefs running without interruption.') }}</p>
+                    <p class="text-sm text-primary-700 mt-1">
+                        {% if trial_days_remaining > 7 %}
+                        {{ _('Your trial is active. Add a payment method anytime so briefings continue smoothly after it ends.') }}
+                        {% else %}
+                        {{ _('Add a payment method now to keep your briefs running without interruption.') }}
+                        {% endif %}
+                    </p>
                     <a href="{{ url_for('billing.customer_portal') }}" class="inline-flex items-center mt-2 text-sm font-medium text-primary-800 hover:text-primary-900 underline">{{ _('Manage subscription') }} <span aria-hidden="true">&rarr;</span></a>
                 </div>
             </div>
@@ -54,15 +60,15 @@
         </div>
         {% endif %}
         
-        {% if not active_sub and not activation_pending %}
+        {% if show_briefings_subscribe_cta %}
         <!-- No subscription — prominent upgrade CTA -->
-        <div class="mb-8 rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)">
+        <div id="briefings-upgrade" class="mb-8 rounded-2xl overflow-hidden scroll-mt-24" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)">
             <div class="px-6 py-8 sm:px-10 sm:py-10">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div>
                         <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: #60a5fa">{{ _('30-day free trial') }}</p>
                         <h2 class="text-2xl font-bold text-white mb-2">{{ _('Start your Personal Brief today') }}</h2>
-                        <p class="text-slate-300 max-w-xl">{{ _('One daily brief from the sources you trust. Set up in 2 minutes. No credit card required until your trial ends.') }}</p>
+                        <p class="text-slate-300 max-w-xl">{{ _('One daily brief from the sources you trust. Set up in minutes. Your trial is free; add a payment method anytime before it ends to stay subscribed.') }}</p>
                         <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: #94a3b8">
                             <li class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -131,13 +137,21 @@
                         </svg>
                         {{ _('Create Briefing') }}
                     </a>
-                    {% else %}
-                    <a href="{{ url_for('briefing.landing') }}#pricing"
+                    {% elif is_past_due %}
+                    <a href="{{ url_for('billing.customer_portal') }}"
+                       class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        {{ _('Fix payment') }}
+                    </a>
+                    {% elif show_briefings_subscribe_cta %}
+                    <a href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
                        class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
-                        {{ _('Start Free Trial') }}
+                        {{ _('Start free trial') }}
                     </a>
                     {% endif %}
                 </div>
@@ -176,7 +190,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ _('Your briefs will appear here') }}</h2>
                 <p class="text-gray-600 max-w-md mx-auto mb-8">{{ _('Start a free 30-day trial to create your first brief. Pick a template, add your sources, and get your first delivery tomorrow morning.') }}</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="{{ url_for('briefing.landing') }}#pricing"
+                    <a href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
                        class="inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -195,13 +209,13 @@
             <div class="px-6 py-8 border-t border-gray-100">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-gray-900">{{ _('Popular Templates') }}</h3>
-                    <a href="{{ url_for('briefing.marketplace') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                    <a href="{% if active_sub or activation_pending %}{{ url_for('briefing.marketplace') }}{% else %}{{ url_for('briefing.list_briefings') }}#briefings-upgrade{% endif %}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
                         {{ _('View all templates') }}
                     </a>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {% for template in featured_templates[:3] %}
-                    <a href="{{ url_for('briefing.use_template', template_id=template.id) }}" 
+                    <a href="{% if active_sub or activation_pending %}{{ url_for('briefing.use_template', template_id=template.id) }}{% else %}{{ url_for('briefing.list_briefings') }}#briefings-upgrade{% endif %}"
                        class="flex items-start p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group">
                         <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary-600 flex-shrink-0">
                             {% if template.icon == 'landmark' %}
@@ -335,5 +349,21 @@
         {% endif %}
     </div>
 </div>
+
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form[action*="checkout"]').forEach(function(form) {
+      form.addEventListener('submit', function() {
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn && !btn.disabled) {
+          btn.disabled = true;
+          btn.setAttribute('aria-busy', 'true');
+          btn.textContent = '{{ _('Redirecting to secure checkout...') }}';
+          btn.classList.add('opacity-75', 'cursor-wait');
+        }
+      });
+    });
+  });
+</script>
 
 {% endblock %}

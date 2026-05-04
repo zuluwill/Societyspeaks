@@ -984,9 +984,11 @@ def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = Fal
                     has_active_subscription = sub is not None
         elif briefing.owner_type == 'org':
             from app.models import Subscription
+            from app.billing.service import SUBSCRIPTION_ACCESS_STATUSES
+
             sub = Subscription.query.filter(
                 Subscription.org_id == briefing.owner_id,
-                Subscription.status.in_(['trialing', 'active'])
+                Subscription.status.in_(SUBSCRIPTION_ACCESS_STATUSES)
             ).first()
             has_active_subscription = sub is not None
         

@@ -49,7 +49,7 @@
         </div>
     </div>
 
-    <a href="{{ url_for('auth.magic_link_request', next=next_url) if next_url else url_for('auth.magic_link_request') }}"
+    <a href="{% if session.get('pending_checkout_plan') %}{% if next_url %}{{ url_for('auth.magic_link_request', next=next_url, checkout_plan=session['pending_checkout_plan'], checkout_interval=session.get('pending_checkout_interval', 'month')) }}{% else %}{{ url_for('auth.magic_link_request', checkout_plan=session['pending_checkout_plan'], checkout_interval=session.get('pending_checkout_interval', 'month')) }}{% endif %}{% elif next_url %}{{ url_for('auth.magic_link_request', next=next_url) }}{% else %}{{ url_for('auth.magic_link_request') }}{% endif %}"
        class="mt-4 block w-full text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold py-2 px-4 rounded-lg transition min-h-11">
         {{ _('Email me a sign-in link') }}
     </a>
@@ -66,6 +66,18 @@
       })();
     </script>
 
-    <p class="text-center mt-4 text-sm text-gray-600">{{ _("Don't have an account?") }} <a href="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}" class="text-primary-500 hover:underline">{{ _('Register') }}</a></p>
+    <p class="text-center mt-4 text-sm text-gray-600">{{ _("Don't have an account?") }}
+      {% if session.get('pending_checkout_plan') %}
+        {% if next_url %}
+        <a href="{{ url_for('auth.register', next=next_url, checkout_plan=session['pending_checkout_plan'], checkout_interval=session.get('pending_checkout_interval', 'month')) }}" class="text-primary-500 hover:underline">{{ _('Register') }}</a>
+        {% else %}
+        <a href="{{ url_for('auth.register', checkout_plan=session['pending_checkout_plan'], checkout_interval=session.get('pending_checkout_interval', 'month')) }}" class="text-primary-500 hover:underline">{{ _('Register') }}</a>
+        {% endif %}
+      {% elif next_url %}
+        <a href="{{ url_for('auth.register', next=next_url) }}" class="text-primary-500 hover:underline">{{ _('Register') }}</a>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}" class="text-primary-500 hover:underline">{{ _('Register') }}</a>
+      {% endif %}
+    </p>
 </div>
 {% endblock %}

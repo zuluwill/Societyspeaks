@@ -430,7 +430,7 @@
     </div>
 
     <div class="text-center mt-12">
-      {% if current_user.is_authenticated %}
+      {% if current_user.is_authenticated and current_user.is_admin %}
       <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-8 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-all">
         {{ _('Create your brief') }}
       </a>

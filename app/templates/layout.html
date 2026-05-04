@@ -728,6 +728,14 @@
               class="ml-4 inline-flex items-center rounded-full border border-white/70 px-4 py-1.5 text-sm font-semibold text-white hover:bg-white hover:text-primary-700 transition"
             >{{ _('Donate') }}</a>
 
+            {% if current_user.is_authenticated and show_briefings_subscribe_cta %}
+            <a
+              href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
+              class="ml-3 hidden sm:inline-flex items-center rounded-full bg-amber-400 px-4 py-1.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-amber-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-700 focus:ring-amber-200"
+              data-ph-capture-attribute-cta="nav-briefings-trial"
+            >{{ _('Unlock Personal Briefs') }}</a>
+            {% endif %}
+
             {% if current_user.is_authenticated %}
             <!-- Authenticated Desktop Menu -->
             <div class="relative ml-3">
@@ -1115,6 +1123,14 @@
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
                   >{{ _('Dashboard') }}</a
                 >
+                {% if show_briefings_subscribe_cta %}
+                <a
+                  href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
+                  class="block rounded-md px-3 py-2 text-base font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300"
+                  data-ph-capture-attribute-cta="nav-mobile-briefings-trial"
+                  >{{ _('Unlock Personal Briefs') }}</a
+                >
+                {% endif %}
                 <a
                   href="{{ url_for('auth.notifications') }}"
                   class="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"

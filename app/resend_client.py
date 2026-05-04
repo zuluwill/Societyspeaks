@@ -1374,37 +1374,57 @@ def _send_user_transactional_email(
         return False
 
 
-def send_trial_ending_email(user, days_remaining: int = 3, upgrade_url: Optional[str] = None) -> bool:
+def send_trial_ending_email(
+    user,
+    days_remaining: int = 3,
+    *,
+    manage_billing_url: Optional[str] = None,
+    pricing_url: Optional[str] = None,
+    upgrade_url: Optional[str] = None,
+) -> bool:
     """
-    Notify a paid-briefings subscriber that their 30-day free trial is ending soon.
+    Notify a paid-briefings subscriber that their free trial is ending soon.
 
-    Triggered by the Stripe `customer.subscription.trial_will_end` webhook (fires
-    3 days before trial end).  This is for the paid Briefings product only — it is
-    unrelated to the Daily Brief newsletter subscription.
+    Triggered by the Stripe ``customer.subscription.trial_will_end`` webhook (fires
+    three days before trial end). Stripe recommends pointing customers at billing
+    where they can add a payment method before the trial converts.
 
     Args:
-        user:           User object (must have .email and .username).
-        days_remaining: Days left in the trial (typically 3 from Stripe webhook).
-        upgrade_url:    Full URL to the plans/pricing page.  Callers in a request
-                        context should pass url_for('briefing.landing', _external=True).
-                        Defaults to base_url + '/briefings/landing' for contexts
-                        where url_for is unavailable (e.g. scheduled jobs).
+        user: Recipient (must have ``email`` and ``username``).
+        days_remaining: Days left in the trial (typically ``3`` from Stripe).
+        manage_billing_url: Absolute URL to our billing portal entrypoint (login
+            required). Defaults to ``{base}/billing/portal``.
+        pricing_url: Absolute URL to plans / upgrade marketing (e.g. landing ``#pricing``).
+        upgrade_url: Deprecated; used as ``pricing_url`` when ``pricing_url`` is omitted.
 
     Returns:
-        bool: True if sent successfully.
+        True if the message was accepted for delivery.
     """
     client = None
-    if not upgrade_url:
-        try:
-            client = get_resend_client()
-            upgrade_url = f"{client.base_url}/briefings/landing"
-        except Exception:
-            upgrade_url = '/briefings/landing'
+    try:
+        client = get_resend_client()
+        base = client.base_url.rstrip('/')
+    except Exception:
+        base = ''
+
+    if not manage_billing_url:
+        manage_billing_url = f'{base}/billing/card-update' if base else '/billing/card-update'
+
+    resolved_pricing = pricing_url or upgrade_url
+    if not resolved_pricing:
+        resolved_pricing = f'{base}/briefings/landing#pricing' if base else '/briefings/landing#pricing'
+
+    template_ctx = {
+        'days_remaining': days_remaining,
+        'manage_billing_url': manage_billing_url,
+        'pricing_url': resolved_pricing,
+    }
+
     return _send_user_transactional_email(
         user,
         'emails/trial_ending.html',
         f"Your free trial ends in {days_remaining} day{'s' if days_remaining != 1 else ''} — keep your briefings going",
-        {'days_remaining': days_remaining, 'upgrade_url': upgrade_url},
+        template_ctx,
         client=client,
     )
 

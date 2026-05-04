@@ -696,8 +696,19 @@ def init_scheduler(app):
             from app.billing.service import reconcile_partner_subscriptions
             updated = reconcile_partner_subscriptions()
             logger.info(f"Partner billing reconciliation complete (updated={updated})")
-    
-    
+
+    @scheduler.scheduled_job('cron', hour=5, minute=15, id='reconcile_briefing_subscriptions', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def reconcile_briefing_subscriptions_job():
+        """Refresh Paid Briefings Subscription rows from Stripe (bounded batch + Redis cursor)."""
+        with app.app_context():
+            from app.billing.reconciliation import reconcile_briefing_subscriptions_batch
+
+            try:
+                stats = reconcile_briefing_subscriptions_batch()
+                logger.info('Briefing Stripe reconciliation: %s', stats)
+            except Exception as e:
+                logger.error(f'Briefing Stripe reconciliation failed: {e}', exc_info=True)
+
     @scheduler.scheduled_job('cron', minute='0', id='pending_topic_catchup', max_instances=1, coalesce=True, misfire_grace_time=1800)
     def pending_topic_catchup_job():
         """
@@ -2420,7 +2431,7 @@ def init_scheduler(app):
                             )
                             continue
 
-                        from app.billing.service import get_active_subscription
+                        from app.billing.service import get_active_subscription, SUBSCRIPTION_ACCESS_STATUSES
                         from app.models import User, Subscription
                         
                         has_active_subscription = False
@@ -2436,7 +2447,7 @@ def init_scheduler(app):
                         elif briefing.owner_type == 'org':
                             sub = Subscription.query.filter(
                                 Subscription.org_id == briefing.owner_id,
-                                Subscription.status.in_(['trialing', 'active'])
+                                Subscription.status.in_(SUBSCRIPTION_ACCESS_STATUSES)
                             ).first()
                             has_active_subscription = sub is not None
                         

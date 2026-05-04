@@ -53,7 +53,7 @@
 
     <p class="text-center mt-6 text-sm text-gray-600">
         {{ _('Prefer a password?') }}
-        <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}"
+        <a href="{% if session.get('pending_checkout_plan') %}{% if next_url %}{{ url_for('auth.login', next=next_url, checkout_plan=session['pending_checkout_plan'], checkout_interval=session.get('pending_checkout_interval', 'month')) }}{% else %}{{ url_for('auth.login', checkout_plan=session['pending_checkout_plan'], checkout_interval=session.get('pending_checkout_interval', 'month')) }}{% endif %}{% elif next_url %}{{ url_for('auth.login', next=next_url) }}{% else %}{{ url_for('auth.login') }}{% endif %}"
            class="text-primary-500 hover:underline">{{ _('Sign in with password') }}</a>
     </p>
 </div>

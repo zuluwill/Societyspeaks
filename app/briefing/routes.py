@@ -501,17 +501,10 @@ def source_owner_required(f):
 @limiter.limit("60/minute")
 def landing():
     """Public landing page for Briefing System - marketing/sales page.
-    Users who already have a subscription (including past_due) are sent to their
-    dashboard. Logged-in users with no subscription still see pricing to start a trial."""
+    Users who already have subscription access (including ``past_due`` grace) go to
+    their dashboard. Logged-in users without access still see pricing."""
     if current_user.is_authenticated:
         if get_active_subscription(current_user):
-            return redirect(url_for('briefing.list_briefings'))
-        # past_due is excluded from get_active_subscription but these users still have
-        # a subscription — send them to the dashboard where the payment warning banner is shown
-        if Subscription.query.filter(
-            Subscription.user_id == current_user.id,
-            Subscription.status == 'past_due'
-        ).first():
             return redirect(url_for('briefing.list_briefings'))
     # priceValidUntil for SoftwareApplication JSON-LD — rolling 1 year so the schema
     # never advertises a stale/expired price to search engines.
@@ -557,15 +550,14 @@ def list_briefings():
         else:
             activation_pending = True
 
-    # Show in-app trial ending warning when 7 or fewer days remain
+    # Show in-app trial reminder during the final two weeks of trial (Stripe emails fire ~3 days before end).
     trial_days_remaining = None
     if active_sub and active_sub.status == 'trialing' and active_sub.trial_end:
         days = (active_sub.trial_end - utcnow_naive()).days
-        if 0 <= days <= 7:
+        if 0 <= days <= 14:
             trial_days_remaining = days
 
-    # Check for past_due separately — get_active_subscription only returns trialing/active,
-    # so the past_due banner must be driven by an explicit query here.
+    # Payment failed (Stripe retry window): still entitled via get_active_subscription.
     is_past_due = bool(
         Subscription.query.filter(
             Subscription.user_id == current_user.id,

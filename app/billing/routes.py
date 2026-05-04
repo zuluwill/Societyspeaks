@@ -236,15 +236,35 @@ def checkout_success():
         try:
             checkout_session = _stripe_call(s.checkout.Session.retrieve, session_id)
 
-            # Security: Verify the checkout session belongs to this user
-            if checkout_session.customer and current_user.stripe_customer_id:
-                if checkout_session.customer != current_user.stripe_customer_id:
-                    current_app.logger.warning(
-                        f"Checkout session customer mismatch: session={checkout_session.customer}, "
-                        f"user={current_user.id} has customer_id={current_user.stripe_customer_id}"
-                    )
-                    flash(_('Invalid checkout session.'), 'error')
-                    return redirect(url_for('briefing.landing'))
+            raw_meta = getattr(checkout_session, 'metadata', None)
+            session_meta = dict(raw_meta) if raw_meta else {}
+
+            expected_uid = session_meta.get('user_id')
+            if expected_uid is None or str(expected_uid) != str(current_user.id):
+                current_app.logger.warning(
+                    f"Checkout session user mismatch: metadata user_id={expected_uid}, "
+                    f"logged_in_user={current_user.id}, session_id={session_id}"
+                )
+                flash(_('Invalid checkout session.'), 'error')
+                return redirect(url_for('briefing.landing'))
+
+            cust_ref = checkout_session.customer
+            cust_id = cust_ref
+            if cust_ref is not None and not isinstance(cust_ref, str):
+                cust_id = getattr(cust_ref, 'id', None)
+
+            if cust_id:
+                if current_user.stripe_customer_id:
+                    if cust_id != current_user.stripe_customer_id:
+                        current_app.logger.warning(
+                            f"Checkout session customer mismatch: session={cust_id}, "
+                            f"user={current_user.id} has customer_id={current_user.stripe_customer_id}"
+                        )
+                        flash(_('Invalid checkout session.'), 'error')
+                        return redirect(url_for('briefing.landing'))
+                else:
+                    current_user.stripe_customer_id = cust_id
+                    db.session.commit()
 
             if checkout_session.subscription:
                 sub_id = checkout_session.subscription if isinstance(checkout_session.subscription, str) else checkout_session.subscription.id
@@ -255,8 +275,7 @@ def checkout_success():
                     is_org_plan = True
                 # Track paid briefing subscription with PostHog (only when we just synced from this checkout)
                 if sub and sub.plan:
-                    meta = getattr(checkout_session, 'metadata', None) or {}
-                    interval = _normalize_billing_interval(meta.get('billing_interval', 'month')) or 'month'
+                    interval = _normalize_billing_interval(session_meta.get('billing_interval', 'month')) or 'month'
                     plan = sub.plan
                     price_pence = plan.price_yearly if interval == 'year' else plan.price_monthly
                     _track_posthog('paid_briefing_subscribed', current_user.id, {
@@ -323,6 +342,24 @@ def customer_portal():
         current_app.logger.error(f"Stripe portal error: {e}")
         flash(_('Unable to access billing portal. Please try again.'), 'error')
         return redirect(url_for('briefing.list_briefings'))
+
+
+@billing_bp.route('/card-update')
+def stripe_recovery_card_update():
+    """Stable URL for app transactional email links (trial ending, etc.).
+
+    If Stripe Revenue recovery emails use **Stripe-hosted** pages (Dashboard →
+    Revenue recovery → Emails), Stripe does not call this URL for failed
+    payments or expiring-card flows.
+
+    Use ``{APP_BASE_URL}/billing/card-update`` as the **custom link** only when
+    you switch those flows to a custom URL — it signs users in (when needed)
+    and redirects to Customer Portal.
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('billing.customer_portal'))
+    next_portal = url_for('billing.customer_portal')
+    return redirect(url_for('auth.login', next=next_portal))
 
 
 def _get_webhook_redis():
@@ -468,6 +505,8 @@ def webhook():
                 _handle_partner_checkout_completed(data)
             elif metadata.get('purpose') == 'donation':
                 _handle_donation_checkout_completed(data)
+            else:
+                _handle_briefing_checkout_completed(data)
         elif event_type == 'checkout.session.expired':
             current_app.logger.info(f"Checkout session expired: {data.get('id')}")
         elif event_type == 'checkout.session.async_payment_succeeded':
@@ -723,6 +762,78 @@ def _handle_donation_checkout_completed(checkout_data):
         raise
 
 
+def _handle_briefing_checkout_completed(checkout_data):
+    """Sync Paid Briefings subscription after Checkout completes.
+
+    ``customer.subscription.created`` usually syncs first; this is a safety net when
+    Stripe delivers Checkout before Subscription events or retries only replay Checkout.
+    """
+    metadata = _get_stripe_metadata(checkout_data)
+    if metadata.get('purpose') == 'partner_subscription':
+        return
+    if metadata.get('purpose') == 'donation':
+        return
+    # Legacy partner sessions without explicit purpose
+    if metadata.get('partner_id') and not metadata.get('purpose'):
+        return
+
+    if _get_stripe_field(checkout_data, 'mode') != 'subscription':
+        return
+
+    user_id_raw = metadata.get('user_id')
+    if not user_id_raw:
+        current_app.logger.info(
+            f"Briefing checkout {_get_stripe_field(checkout_data, 'id')} has no user_id metadata — skipping sync"
+        )
+        return
+
+    try:
+        uid = int(user_id_raw)
+    except (TypeError, ValueError):
+        current_app.logger.warning(f"Invalid user_id in briefing checkout metadata: {user_id_raw!r}")
+        return
+
+    user = db.session.get(User, uid)
+    if not user:
+        current_app.logger.warning(f"No local user for briefing checkout user_id={uid}")
+        return
+
+    customer_ref = _get_stripe_field(checkout_data, 'customer')
+    if hasattr(customer_ref, 'id'):
+        customer_ref = customer_ref.id
+    if customer_ref and user.stripe_customer_id and customer_ref != user.stripe_customer_id:
+        current_app.logger.error(
+            f"Briefing checkout customer mismatch for user {uid}: "
+            f"session_customer={customer_ref} user_customer={user.stripe_customer_id}"
+        )
+        return
+    if customer_ref and not user.stripe_customer_id:
+        user.stripe_customer_id = customer_ref
+        db.session.commit()
+
+    subscription_ref = _get_stripe_field(checkout_data, 'subscription')
+    if hasattr(subscription_ref, 'id'):
+        subscription_ref = subscription_ref.id
+    if not subscription_ref:
+        current_app.logger.info(
+            f"Briefing checkout {_get_stripe_field(checkout_data, 'id')} has no subscription field yet"
+        )
+        return
+
+    s = get_stripe()
+    try:
+        stripe_sub = _stripe_call(s.Subscription.retrieve, subscription_ref)
+        sync_subscription_with_org(stripe_sub, user)
+        current_app.logger.info(
+            f"Synced briefing subscription from checkout.session.completed for user {uid}"
+        )
+        _reactivate_user_briefings(user.id)
+    except ValueError as exc:
+        current_app.logger.error(f"Briefing checkout sync failed for user {uid}: {exc}")
+    except stripe.error.StripeError as exc:
+        current_app.logger.error(f"Stripe error syncing briefing checkout for user {uid}: {exc}")
+
+
 def _pause_user_briefings(user_id):
     """Pause all active briefings for a user. Returns the count paused."""
     from app.models import Briefing
@@ -791,28 +902,67 @@ def handle_subscription_deleted(subscription_data):
 
 
 def handle_payment_failed(invoice_data):
-    """Handle failed payment."""
-    subscription_id = invoice_data.get('subscription')
-    if subscription_id:
-        sub = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
-        if sub:
-            sub.status = 'past_due'
-            db.session.commit()
-            current_app.logger.info(f"Subscription {sub.id} marked past_due")
+    """Handle failed payment.
 
-            next_retry_ts = invoice_data.get('next_payment_attempt')
-            next_retry = None
-            if next_retry_ts:
-                from datetime import datetime as _dt
-                next_retry = _dt.utcfromtimestamp(next_retry_ts).strftime('%Y-%m-%d %H:%M UTC')
-            _track_posthog('paid_briefing_payment_failed', sub.user_id, {
-                'subscription_id': sub.id,
-                'plan_name': sub.plan.name if sub.plan else None,
-                'plan_code': sub.plan.code if sub.plan else None,
-                'billing_interval': sub.billing_interval,
-                'attempt_count': invoice_data.get('attempt_count'),
-                'next_retry': next_retry,
-            })
+    Reconcile from Stripe after ``invoice.payment_failed`` so local state matches
+    Stripe (handles webhook reordering: e.g. customer pays on a Stripe-hosted
+    recovery page and ``customer.subscription.updated`` arrives before a delayed
+    failure event).
+    """
+    subscription_ref = invoice_data.get('subscription')
+    if hasattr(subscription_ref, 'id'):
+        subscription_ref = subscription_ref.id
+    subscription_id = subscription_ref
+    if not subscription_id:
+        return
+
+    sub = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
+    if not sub:
+        return
+
+    s = get_stripe()
+    stripe_sub = None
+    try:
+        stripe_sub = _stripe_call(s.Subscription.retrieve, subscription_id)
+    except stripe.error.StripeError as exc:
+        current_app.logger.error(
+            f"Stripe Subscription.retrieve failed in payment_failed handler ({subscription_id}): {exc}"
+        )
+
+    if stripe_sub:
+        try:
+            sync_subscription_from_stripe(stripe_sub, user_id=sub.user_id, org_id=sub.org_id)
+            current_app.logger.info(f"Synced subscription {sub.id} after invoice.payment_failed")
+        except ValueError as exc:
+            current_app.logger.error(
+                f"Full sync failed after payment_failed for subscription {subscription_id}: {exc}"
+            )
+            raw_status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
+            sub.status = raw_status
+            db.session.commit()
+    else:
+        sub.status = 'past_due'
+        db.session.commit()
+        current_app.logger.info(f"Subscription {sub.id} marked past_due (Stripe retrieve unavailable)")
+
+    if sub.status != 'past_due':
+        return
+
+    next_retry_ts = invoice_data.get('next_payment_attempt')
+    next_retry = None
+    if next_retry_ts:
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+
+        next_retry = _dt.fromtimestamp(next_retry_ts, tz=_tz.utc).strftime('%Y-%m-%d %H:%M UTC')
+    _track_posthog('paid_briefing_payment_failed', sub.user_id, {
+        'subscription_id': sub.id,
+        'plan_name': sub.plan.name if sub.plan else None,
+        'plan_code': sub.plan.code if sub.plan else None,
+        'billing_interval': sub.billing_interval,
+        'attempt_count': invoice_data.get('attempt_count'),
+        'next_retry': next_retry,
+    })
 
 
 def handle_trial_ending(subscription_data):
@@ -829,8 +979,15 @@ def handle_trial_ending(subscription_data):
     current_app.logger.info(f"Trial ending soon for user {sub.user_id}")
     try:
         from app.resend_client import send_trial_ending_email
-        upgrade_url = url_for('briefing.landing', _external=True)
-        send_trial_ending_email(sub.user, days_remaining=3, upgrade_url=upgrade_url)
+
+        manage_billing_url = url_for('billing.stripe_recovery_card_update', _external=True)
+        pricing_url = url_for('briefing.landing', _external=True) + '#pricing'
+        send_trial_ending_email(
+            sub.user,
+            days_remaining=3,
+            manage_billing_url=manage_billing_url,
+            pricing_url=pricing_url,
+        )
     except Exception as e:
         current_app.logger.error(f"Failed to send trial ending email to user {sub.user_id}: {e}")
 
@@ -847,14 +1004,19 @@ def handle_subscription_paused(subscription_data):
 
 
 def handle_subscription_resumed(subscription_data):
-    """Handle subscription resumed."""
+    """Handle subscription resumed (Stripe Billing pause/resume)."""
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
-    if sub:
-        sub.status = 'active'
-        db.session.commit()
-        current_app.logger.info(f"Subscription {sub.id} resumed")
+    if not sub:
+        return
+    s = get_stripe()
+    try:
+        stripe_sub = _stripe_call(s.Subscription.retrieve, subscription_data['id'])
+        sync_subscription_from_stripe(stripe_sub, user_id=sub.user_id, org_id=sub.org_id)
+        current_app.logger.info(f"Subscription {sub.id} resumed (synced from Stripe)")
         if sub.user_id:
             _reactivate_user_briefings(sub.user_id)
+    except ValueError as exc:
+        current_app.logger.error(f"Failed to sync resumed subscription {sub.id}: {exc}")
 
 
 @billing_bp.route('/pending-checkout')

@@ -547,6 +547,32 @@ def create_app():
             lang = 'en'
         return dict(current_lang=lang, supported_languages=SUPPORTED_LANGUAGES)
 
+    @app.context_processor
+    def inject_briefings_subscription_nav():
+        """Expose Paid Briefings funnel state for nav, dashboard, and list banners."""
+        from flask import session
+        from flask_login import current_user
+        from app.billing.service import (
+            briefings_has_past_due_subscription,
+            should_show_briefings_subscription_cta,
+        )
+
+        if not current_user.is_authenticated:
+            return {
+                'show_briefings_subscribe_cta': False,
+                'briefings_checkout_activation_pending': False,
+                'briefings_past_due_any': False,
+            }
+        return {
+            'show_briefings_subscribe_cta': should_show_briefings_subscription_cta(
+                current_user, session
+            ),
+            'briefings_checkout_activation_pending': bool(
+                session.get('pending_subscription_activation')
+            ),
+            'briefings_past_due_any': briefings_has_past_due_subscription(current_user),
+        }
+
     app.jinja_env.globals.update(current_user=current_user)
 
     from app.lib.bot_protection import generate_form_token

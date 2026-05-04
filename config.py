@@ -189,6 +189,24 @@ class Config:
     STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
     STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
     STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+    # Paid Briefings: batch reconcile local Subscription rows vs Stripe (webhook safety net).
+    STRIPE_BRIEFING_RECONCILE_ENABLED = (
+        os.getenv('STRIPE_BRIEFING_RECONCILE_ENABLED', 'true').lower() == 'true'
+    )
+    STRIPE_BRIEFING_RECONCILE_BATCH_SIZE = _env_int('STRIPE_BRIEFING_RECONCILE_BATCH_SIZE', 200)
+    STRIPE_BRIEFING_RECONCILE_MAX_PER_RUN = _env_int('STRIPE_BRIEFING_RECONCILE_MAX_PER_RUN', 5000)
+    _reconcile_sleep_raw = (os.getenv('STRIPE_BRIEFING_RECONCILE_SLEEP_SECONDS') or '0').strip()
+    try:
+        STRIPE_BRIEFING_RECONCILE_SLEEP_SECONDS = float(_reconcile_sleep_raw or '0')
+    except ValueError:
+        logging.warning(
+            'Invalid STRIPE_BRIEFING_RECONCILE_SLEEP_SECONDS=%r; using 0',
+            _reconcile_sleep_raw,
+        )
+        STRIPE_BRIEFING_RECONCILE_SLEEP_SECONDS = 0.0
+    STRIPE_BRIEFING_RECONCILE_ALLOW_NO_REDIS_CURSOR = (
+        os.getenv('STRIPE_BRIEFING_RECONCILE_ALLOW_NO_REDIS_CURSOR', 'false').lower() == 'true'
+    )
     DONATION_MIN_AMOUNT_PENCE = int(os.getenv('DONATION_MIN_AMOUNT_PENCE', '100'))  # GBP 1.00 minimum
 
     # Enhanced Database Connection Settings (configurable for scaling)

@@ -15,7 +15,7 @@ from app.email_utils import extract_clean_email, get_missing_individual_profile_
 from app.lib.auth_utils import normalize_email
 from app.lib.url_utils import safe_next_url
 # Billing service for invitation handling
-from app.billing.service import accept_invitation, get_active_subscription
+from app.billing.service import accept_invitation, get_active_subscription, VALID_BILLING_INTERVALS
 from app.brief.subscription import process_subscription as process_brief_subscription
 from app.brief.constants import VALID_SEND_HOURS as BRIEF_VALID_SEND_HOURS
 from app.daily.utils import (
@@ -39,6 +39,18 @@ from app.lib.partner_portal_session import (
 
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _stash_checkout_intent_from_querystring():
+    """Persist pricing/checkout selection from ``checkout_plan`` query params."""
+    plan = request.args.get('checkout_plan')
+    interval = request.args.get('checkout_interval', 'month')
+    if not plan:
+        return
+    if interval not in VALID_BILLING_INTERVALS:
+        interval = 'month'
+    session['pending_checkout_plan'] = plan
+    session['pending_checkout_interval'] = interval
 
 
 def _track_posthog(event, user_id, properties=None, flush=False, identify_properties=None):
@@ -134,10 +146,9 @@ def _finalize_login(user, *, method, next_url=None):
         if merged > 0:
             current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
 
-    flash(_("Logged in successfully!"), "success")
-
     pending_steward_token = session.pop('pending_steward_invite_token', None)
     if pending_steward_token:
+        flash(_("Logged in successfully!"), "success")
         return redirect(url_for('programmes.accept_steward_invite', token=pending_steward_token))
 
     pending_invite_token = session.pop('pending_invitation_token', None)
@@ -151,18 +162,21 @@ def _finalize_login(user, *, method, next_url=None):
             return redirect(url_for('briefing.list_briefings'))
         except ValueError as e:
             flash(str(e), 'warning')
+            flash(_("Logged in successfully!"), "success")
 
     pending_plan = session.pop('pending_checkout_plan', None)
     pending_interval = session.pop('pending_checkout_interval', 'month')
     if pending_plan:
-        from app.billing.service import get_active_subscription as _get_active_sub
-        if not _get_active_sub(user):
+        if not get_active_subscription(user):
             current_app.logger.info(
                 f"Resuming checkout intent for user {user.id}: plan={pending_plan} interval={pending_interval}"
             )
+            flash(_("You're signed in. Opening secure checkout..."), "success")
             return redirect(url_for('billing.pending_checkout',
                                     plan=pending_plan,
                                     interval=pending_interval))
+
+    flash(_("Logged in successfully!"), "success")
 
     profile = user.individual_profile or user.company_profile
     if not profile:
@@ -472,18 +486,14 @@ def register():
     next_url = _current_next_url()
 
     # Capture checkout intent from query params (for briefing signups)
+    _stash_checkout_intent_from_querystring()
     checkout_plan = request.args.get('checkout_plan')
-    checkout_interval = request.args.get('checkout_interval', 'month')
-
-    if checkout_plan:
-        session['pending_checkout_plan'] = checkout_plan
-        session['pending_checkout_interval'] = checkout_interval
 
     # If a logged-in user clicks "Start free trial", skip registration and go straight to Stripe
     if current_user.is_authenticated and checkout_plan:
         return redirect(url_for('billing.pending_checkout',
                                 plan=checkout_plan,
-                                interval=checkout_interval))
+                                interval=session.get('pending_checkout_interval', 'month')))
 
     # Get invitation context from session (set by /invite/<token> route)
     pending_invitation_email = session.get('pending_invitation_email')
@@ -642,6 +652,7 @@ def register():
 @limiter.limit("10/minute")
 def login():
     next_url = _current_next_url()
+    _stash_checkout_intent_from_querystring()
     # Guard: if a concurrent/duplicate POST arrives after the first already
     # logged the user in, skip re-processing to prevent duplicate flash messages.
     if current_user.is_authenticated:
@@ -1090,6 +1101,7 @@ _MAGIC_LINK_EMAIL_COOLDOWN_SECONDS = 60  # 1 request per email per minute
 @limiter.limit("5/hour", methods=['POST'])
 def magic_link_request():
     next_url = _current_next_url()
+    _stash_checkout_intent_from_querystring()
 
     if current_user.is_authenticated:
         return redirect(next_url or url_for('auth.dashboard'))

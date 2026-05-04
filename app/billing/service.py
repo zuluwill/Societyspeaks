@@ -20,6 +20,9 @@ from app.models import (
 
 VALID_BILLING_INTERVALS = {'month', 'year'}
 
+# Stripe-backed subs that still grant product access (past_due = grace while Stripe retries).
+SUBSCRIPTION_ACCESS_STATUSES = ('trialing', 'active', 'past_due')
+
 _STRIPE_TRANSIENT_ERRORS = (OSError, IOError, ConnectionError, TimeoutError)
 
 _ca_bundle_lock = threading.Lock()
@@ -104,7 +107,13 @@ def get_or_create_stripe_customer(user):
 
 
 def create_checkout_session(user, plan_code, billing_interval='month', success_url=None, cancel_url=None):
-    """Create a Stripe Checkout session for subscription."""
+    """Create a Stripe Checkout session for a subscription with a 30-day trial.
+
+    Uses Stripe Checkout ``payment_method_collection='if_required'`` so customers
+    may complete signup without entering a card first; if no default payment
+    method exists before trial end, the subscription cancels (see Stripe docs:
+    Configure free trials for Checkout).
+    """
     s = get_stripe()
 
     if billing_interval not in VALID_BILLING_INTERVALS:
@@ -127,12 +136,18 @@ def create_checkout_session(user, plan_code, billing_interval='month', success_u
         customer=customer.id,
         payment_method_types=['card'],
         mode='subscription',
+        payment_method_collection='if_required',
         line_items=[{
             'price': price_id,
             'quantity': 1,
         }],
         subscription_data={
             'trial_period_days': 30,
+            'trial_settings': {
+                'end_behavior': {
+                    'missing_payment_method': 'cancel',
+                },
+            },
             'metadata': {
                 'user_id': str(user.id),
                 'plan_code': plan_code,
@@ -514,8 +529,7 @@ def reconcile_partner_subscriptions():
         return 0
 
     partners_updated = 0
-    partners = Partner.query.filter(Partner.stripe_subscription_id.isnot(None)).all()
-    for partner in partners:
+    for partner in Partner.query.filter(Partner.stripe_subscription_id.isnot(None)).yield_per(500):
         try:
             subscription = _stripe_call(s.Subscription.retrieve, partner.stripe_subscription_id)
         except Exception as e:
@@ -540,7 +554,7 @@ def reconcile_partner_subscriptions():
     return partners_updated
 
 
-def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None):
+def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None, *, commit=True):
     """Create or update local subscription record from Stripe subscription data.
     
     Preserves existing org_id linkage if already set (important for webhook updates).
@@ -550,6 +564,8 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
     - Inside items.data[0] (API version 2025-12-15.clover and later)
     
     Also compatible with both Stripe API objects and webhook event data (dict format).
+
+    ``commit=False`` flushes only — use inside a larger transaction (e.g. batch reconcile).
     """
     sub_id = stripe_subscription.get('id') if isinstance(stripe_subscription, dict) else stripe_subscription.id
     customer_id = stripe_subscription.get('customer') if isinstance(stripe_subscription, dict) else stripe_subscription.customer
@@ -631,28 +647,33 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
     if plan:
         sub.plan_id = plan.id
     
-    db.session.commit()
+    if commit:
+        db.session.commit()
+    else:
+        db.session.flush()
     return sub
 
 
 def get_active_subscription(user):
-    """Get the user's active subscription, if any.
-    
-    Priority order when multiple active subscriptions exist:
-    1. Stripe subscriptions (user is paying) - always take precedence
-    2. Manual subscriptions (admin-granted free access) - fallback
-    
-    This ensures paying customers always get their paid plan limits.
-    
-    Checks in order:
-    1. User's direct subscription (Stripe first, then manual)
-    2. Subscription for organization user owns (Stripe first, then manual)
-    3. Subscription for any organization user is a member of (Stripe first, then manual)
+    """Get the user's subscription for **product access**, if any.
+
+    Includes ``past_due`` Stripe subscriptions so customers keep access during
+    Stripe's retry/grace window (recovery emails / hosted update flows).
+
+    Manual (admin-granted) subscriptions never use ``past_due`` — only trialing/active.
+
+    Priority when multiple exist:
+    1. User-attached Stripe subscription (trialing / active / past_due)
+    2. Manual subscription on the user
+    3. Org Stripe subscription (owned org, then member orgs)
+    4. Manual org subscription
     """
+    access = SUBSCRIPTION_ACCESS_STATUSES
+
     # Check user's direct subscription - Stripe takes priority
     stripe_sub = Subscription.query.filter(
         Subscription.user_id == user.id,
-        Subscription.status.in_(['trialing', 'active']),
+        Subscription.status.in_(access),
         Subscription.stripe_subscription_id.isnot(None)  # Stripe only
     ).order_by(Subscription.created_at.desc()).first()
 
@@ -673,7 +694,7 @@ def get_active_subscription(user):
     if user.company_profile:
         stripe_sub = Subscription.query.filter(
             Subscription.org_id == user.company_profile.id,
-            Subscription.status.in_(['trialing', 'active']),
+            Subscription.status.in_(access),
             Subscription.stripe_subscription_id.isnot(None)
         ).order_by(Subscription.created_at.desc()).first()
         if stripe_sub:
@@ -696,7 +717,7 @@ def get_active_subscription(user):
     for membership in memberships:
         stripe_sub = Subscription.query.filter(
             Subscription.org_id == membership.org_id,
-            Subscription.status.in_(['trialing', 'active']),
+            Subscription.status.in_(access),
             Subscription.stripe_subscription_id.isnot(None)
         ).order_by(Subscription.created_at.desc()).first()
         if stripe_sub:
@@ -711,6 +732,42 @@ def get_active_subscription(user):
             return manual_sub
 
     return None
+
+
+def briefings_has_past_due_subscription(user):
+    """True if the user or their organisation has a Stripe subscription in past_due."""
+    if not user or not getattr(user, 'id', None):
+        return False
+    if Subscription.query.filter(
+        Subscription.user_id == user.id,
+        Subscription.status == 'past_due',
+    ).first():
+        return True
+    user_org = get_user_organization(user)
+    if user_org and Subscription.query.filter(
+        Subscription.org_id == user_org.id,
+        Subscription.status == 'past_due',
+    ).first():
+        return True
+    return False
+
+
+def should_show_briefings_subscription_cta(user, flask_session=None):
+    """Whether to show Paid Briefings trial / subscribe CTAs (nav, banners, dashboard).
+
+    Suppressed when the user already has subscription access, checkout activation
+    is in flight, or they should resolve payment (past_due) instead of starting a trial.
+    """
+    if not user or not getattr(user, 'id', None):
+        return False
+    if get_active_subscription(user):
+        return False
+    sess = flask_session or {}
+    if sess.get('pending_subscription_activation'):
+        return False
+    if briefings_has_past_due_subscription(user):
+        return False
+    return True
 
 
 def get_user_organization(user):

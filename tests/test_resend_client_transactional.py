@@ -62,7 +62,11 @@ def test_send_user_transactional_email_uses_given_client_and_renders(monkeypatch
         user=user,
         template='emails/trial_ending.html',
         subject='Your subject',
-        context={'days_remaining': 3, 'upgrade_url': 'https://example.com/upgrade'},
+        context={
+            'days_remaining': 3,
+            'manage_billing_url': 'https://example.com/billing/card-update',
+            'pricing_url': 'https://example.com/pricing#plans',
+        },
         client=client,
     )
 
@@ -73,7 +77,8 @@ def test_send_user_transactional_email_uses_given_client_and_renders(monkeypatch
     assert kwargs['username'] == 'alice'
     assert kwargs['base_url'] == client.base_url
     assert kwargs['days_remaining'] == 3
-    assert kwargs['upgrade_url'] == 'https://example.com/upgrade'
+    assert kwargs['manage_billing_url'] == 'https://example.com/billing/card-update'
+    assert kwargs['pricing_url'] == 'https://example.com/pricing#plans'
     assert len(client.sent) == 1
     assert client.sent[0]['to'] == ['alice@example.com']
     assert client.sent[0]['subject'] == 'Your subject'
@@ -96,7 +101,7 @@ def test_send_trial_ending_email_reuses_client_for_fallback_url(monkeypatch):
     monkeypatch.setattr(resend_client, 'get_resend_client', _fake_get_client)
     monkeypatch.setattr(resend_client, '_send_user_transactional_email', _fake_helper)
 
-    result = resend_client.send_trial_ending_email(user, days_remaining=5, upgrade_url=None)
+    result = resend_client.send_trial_ending_email(user, days_remaining=5)
 
     assert result is True
     assert call_count['get_client'] == 1
@@ -104,7 +109,8 @@ def test_send_trial_ending_email_reuses_client_for_fallback_url(monkeypatch):
     _, template, subject, context, helper_client = helper_calls[0]
     assert template == 'emails/trial_ending.html'
     assert '5 days' in subject
-    assert context['upgrade_url'] == f'{client.base_url}/briefings/landing'
+    assert context['manage_billing_url'] == f'{client.base_url}/billing/card-update'
+    assert context['pricing_url'] == f'{client.base_url}/briefings/landing#pricing'
     assert context['days_remaining'] == 5
     assert helper_client is client
 

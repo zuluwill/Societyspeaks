@@ -592,14 +592,45 @@
                     </a>
                     {% endif %}
                 </div>
+                {% elif briefings_past_due_any %}
+                <div class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 mb-3">
+                    <p class="font-medium">{{ _('Payment needed') }}</p>
+                    <p class="mt-1 text-amber-900">{{ _('We could not process your latest subscription payment. Update your payment method to keep briefings running.') }}</p>
+                </div>
+                <a href="{{ url_for('billing.customer_portal') }}"
+                   class="w-full inline-flex items-center justify-center gap-2 bg-amber-600 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-amber-700 transition-colors min-h-9">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    {{ _('Update payment method') }}
+                </a>
+                {% elif briefings_checkout_activation_pending %}
+                <div class="text-xs text-primary-800 bg-primary-50 border border-primary-200 rounded-md p-3 mb-3">
+                    <p>{{ _('Your Briefings subscription is activating. This usually takes under a minute.') }}</p>
+                </div>
+                <a href="{{ url_for('briefing.list_briefings') }}"
+                   class="w-full inline-flex items-center justify-center gap-2 bg-primary-600 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-primary-700 transition-colors min-h-9">
+                    {{ _('Go to My Briefings') }}
+                </a>
+                {% elif show_briefings_subscribe_cta %}
+                <div class="text-xs text-gray-500 mb-3">
+                    <p>{{ _('Get personalised AI briefings in your inbox. Start a free trial from My Briefings — one click to secure checkout.') }}</p>
+                </div>
+                <a href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
+                   class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9"
+                   data-ph-capture-attribute-cta="dashboard-briefings-trial">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    {{ _('Start your free trial') }}
+                </a>
+                <a href="{{ url_for('briefing.landing') }}#pricing"
+                   class="mt-2 w-full inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-50 transition-colors min-h-9">
+                    {{ _('Compare plans') }}
+                </a>
                 {% else %}
                 <div class="text-xs text-gray-500 mb-3">
-                    <p>{{ _('Get personalised AI-curated briefings delivered to your inbox. Set your topics, sources, and schedule.') }}</p>
+                    <p>{{ _('Paid Briefings requires an active subscription. View plans to subscribe or resume.') }}</p>
                 </div>
-                <a href="{{ url_for('briefing.landing') }}"
+                <a href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
                    class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    {{ _('Start a free trial') }}
+                    {{ _('View subscription options') }}
                 </a>
                 {% endif %}
             </div>
