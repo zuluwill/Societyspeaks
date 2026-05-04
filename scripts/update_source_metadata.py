@@ -31,7 +31,7 @@ SOURCE_METADATA = {
     'Al Jazeera English': {
         'source_category': 'broadcaster',
         'website_url': 'https://www.aljazeera.com/',
-        'logo_url': 'https://logo.clearbit.com/aljazeera.com',
+        'logo_url': 'https://www.aljazeera.com/apple-touch-icon.png',
         'description': 'International English-language news channel providing comprehensive news coverage with a global perspective from Doha, Qatar.'
     },
     'All-In Podcast': {
@@ -54,61 +54,61 @@ SOURCE_METADATA = {
     'Ars Technica': {
         'source_category': 'newspaper',
         'website_url': 'https://arstechnica.com/',
-        'logo_url': 'https://logo.clearbit.com/arstechnica.com',
+        'logo_url': 'https://icon.horse/icon/arstechnica.com',
         'description': 'Technology news and analysis covering IT, science, gaming, and tech policy with in-depth reporting.'
     },
     'Axios': {
         'source_category': 'newspaper',
         'website_url': 'https://www.axios.com/',
-        'logo_url': 'https://logo.clearbit.com/axios.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=axios.com&sz=256',
         'description': 'Smart brevity news covering politics, business, technology, and more. Get essential news efficiently.'
     },
     'BBC News': {
         'source_category': 'broadcaster',
         'website_url': 'https://www.bbc.co.uk/news',
-        'logo_url': 'https://logo.clearbit.com/bbc.com',
+        'logo_url': 'https://static.bbci.co.uk/wwhp/1.145.0/responsive/img/apple-touch/apple-touch-180.jpg',
         'description': 'The British Broadcasting Corporation - the world\'s leading public service broadcaster providing impartial news coverage.'
     },
     'Bloomberg': {
         'source_category': 'newspaper',
         'website_url': 'https://www.bloomberg.com/',
-        'logo_url': 'https://logo.clearbit.com/bloomberg.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=bloomberg.com&sz=256',
         'description': 'Global business and financial news, stock quotes, and market data. Breaking news on world markets, economics, politics, and business.'
     },
     'Brookings Institution': {
         'source_category': 'think_tank',
         'website_url': 'https://www.brookings.edu/',
-        'logo_url': 'https://logo.clearbit.com/brookings.edu',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=brookings.edu&sz=256',
         'description': 'Non-profit public policy research organization providing in-depth analysis and policy recommendations.'
     },
     'Carbon Brief': {
         'source_category': 'newspaper',
         'website_url': 'https://www.carbonbrief.org/',
-        'logo_url': 'https://logo.clearbit.com/carbonbrief.org',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=carbonbrief.org&sz=256',
         'description': 'UK-based website covering the latest developments in climate science, climate policy and energy policy.'
     },
     'Cato Institute': {
         'source_category': 'think_tank',
         'website_url': 'https://www.cato.org/',
-        'logo_url': 'https://logo.clearbit.com/cato.org',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=cato.org&sz=256',
         'description': 'Libertarian think tank dedicated to individual liberty, limited government, free markets and peace.'
     },
     'Christianity Today': {
         'source_category': 'magazine',
         'website_url': 'https://www.christianitytoday.com/',
-        'logo_url': 'https://logo.clearbit.com/christianitytoday.com',
+        'logo_url': 'https://icon.horse/icon/christianitytoday.com',
         'description': 'Evangelical Christian magazine covering faith, church life, culture, and global Christianity.'
     },
     'City Journal': {
         'source_category': 'magazine',
         'website_url': 'https://www.city-journal.org/',
-        'logo_url': 'https://logo.clearbit.com/city-journal.org',
+        'logo_url': 'https://icon.horse/icon/city-journal.org',
         'description': 'Publication of the Manhattan Institute focusing on urban policy, culture, and economics.'
     },
     'Commonweal': {
         'source_category': 'magazine',
         'website_url': 'https://www.commonwealmagazine.org/',
-        'logo_url': 'https://logo.clearbit.com/commonwealmagazine.org',
+        'logo_url': 'https://www.commonwealmagazine.org/apple-touch-icon.png',
         'description': 'Liberal Catholic magazine offering independent commentary on religion, politics, and culture.'
     },
     'Diary of a CEO': {
@@ -125,31 +125,31 @@ SOURCE_METADATA = {
     'Farnam Street': {
         'source_category': 'newsletter',
         'website_url': 'https://fs.blog/',
-        'logo_url': 'https://logo.clearbit.com/fs.blog',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=fs.blog&sz=256',
         'description': 'Mastering the best of what other people have already figured out. Mental models and timeless wisdom.'
     },
     'Financial Times': {
         'source_category': 'newspaper',
         'website_url': 'https://www.ft.com/',
-        'logo_url': 'https://logo.clearbit.com/ft.com',
+        'logo_url': 'https://icon.horse/icon/ft.com',
         'description': 'International daily newspaper with emphasis on business, economic and financial news and analysis.'
     },
     'First Things': {
         'source_category': 'magazine',
         'website_url': 'https://www.firstthings.com/',
-        'logo_url': 'https://logo.clearbit.com/firstthings.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=firstthings.com&sz=256',
         'description': 'Journal of religion and public life featuring leading scholars on faith, culture, and public policy.'
     },
     'Foreign Affairs': {
         'source_category': 'magazine',
         'website_url': 'https://www.foreignaffairs.com/',
-        'logo_url': 'https://logo.clearbit.com/foreignaffairs.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=foreignaffairs.com&sz=256',
         'description': 'Leading publication on international relations and U.S. foreign policy, published by the Council on Foreign Relations.'
     },
     'Foreign Policy': {
         'source_category': 'magazine',
         'website_url': 'https://foreignpolicy.com/',
-        'logo_url': 'https://logo.clearbit.com/foreignpolicy.com',
+        'logo_url': 'https://icon.horse/icon/foreignpolicy.com',
         'description': 'Global magazine of news and ideas covering foreign affairs, politics, economics, and culture.'
     },
     'Anne Applebaum': {
@@ -196,7 +196,7 @@ SOURCE_METADATA = {
     'Lawfare': {
         'source_category': 'newspaper',
         'website_url': 'https://www.lawfaremedia.org/',
-        'logo_url': 'https://logo.clearbit.com/lawfaremedia.org',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=lawfaremedia.org&sz=256',
         'description': 'Blog on national security law, covering the hard national security choices and expert legal analysis.'
     },
     'Lex Fridman Podcast': {
@@ -213,25 +213,25 @@ SOURCE_METADATA = {
     'Manhattan Institute': {
         'source_category': 'think_tank',
         'website_url': 'https://www.manhattan-institute.org/',
-        'logo_url': 'https://logo.clearbit.com/manhattan-institute.org',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=manhattan-institute.org&sz=256',
         'description': 'Conservative think tank focused on urban policy, economics, and public policy research.'
     },
     'Marginal Revolution': {
         'source_category': 'newsletter',
         'website_url': 'https://marginalrevolution.com/',
-        'logo_url': 'https://logo.clearbit.com/marginalrevolution.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=marginalrevolution.com&sz=256',
         'description': 'Economics blog by Tyler Cowen and Alex Tabarrok covering economics, culture, and ideas.'
     },
     'Matt Taibbi': {
         'source_category': 'newsletter',
         'website_url': 'https://www.racket.news/',
-        'logo_url': 'https://logo.clearbit.com/racket.news',
+        'logo_url': 'https://icon.horse/icon/racket.news',
         'description': 'Investigative journalism and media criticism from former Rolling Stone writer Matt Taibbi.'
     },
     'MIT Technology Review': {
         'source_category': 'magazine',
         'website_url': 'https://www.technologyreview.com/',
-        'logo_url': 'https://logo.clearbit.com/technologyreview.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=technologyreview.com&sz=256',
         'description': 'Oldest technology magazine, covering emerging technologies and their commercial and social impact.'
     },
     'Modern Wisdom': {
@@ -248,13 +248,13 @@ SOURCE_METADATA = {
     'National Review': {
         'source_category': 'magazine',
         'website_url': 'https://www.nationalreview.com/',
-        'logo_url': 'https://logo.clearbit.com/nationalreview.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=nationalreview.com&sz=256',
         'description': 'Leading American conservative editorial magazine founded by William F. Buckley Jr.'
     },
     'New Statesman': {
         'source_category': 'magazine',
         'website_url': 'https://www.newstatesman.com/',
-        'logo_url': 'https://logo.clearbit.com/newstatesman.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=newstatesman.com&sz=256',
         'description': 'British political and cultural magazine with progressive editorial perspective.'
     },
     'Noahpinion': {
@@ -284,31 +284,31 @@ SOURCE_METADATA = {
     'Politico EU': {
         'source_category': 'newspaper',
         'website_url': 'https://www.politico.eu/',
-        'logo_url': 'https://logo.clearbit.com/politico.eu',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=politico.eu&sz=256',
         'description': 'European political journalism covering EU policy, elections, and politics.'
     },
     'ProPublica': {
         'source_category': 'newspaper',
         'website_url': 'https://www.propublica.org/',
-        'logo_url': 'https://logo.clearbit.com/propublica.org',
+        'logo_url': 'https://icon.horse/icon/propublica.org',
         'description': 'Non-profit investigative journalism organization producing stories in the public interest.'
     },
     'Reason': {
         'source_category': 'magazine',
         'website_url': 'https://reason.com/',
-        'logo_url': 'https://logo.clearbit.com/reason.com',
+        'logo_url': 'https://icon.horse/icon/reason.com',
         'description': 'Libertarian magazine covering politics, culture, and ideas with a focus on free markets and individual liberty.'
     },
     'Rest of World': {
         'source_category': 'newspaper',
         'website_url': 'https://restofworld.org/',
-        'logo_url': 'https://logo.clearbit.com/restofworld.org',
+        'logo_url': 'https://icon.horse/icon/restofworld.org',
         'description': 'International journalism covering technology\'s impact outside the Western bubble.'
     },
     'Semafor': {
         'source_category': 'newspaper',
         'website_url': 'https://www.semafor.com/',
-        'logo_url': 'https://logo.clearbit.com/semafor.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=semafor.com&sz=256',
         'description': 'Global news platform with transparent journalism separating facts from analysis and opinion.'
     },
     'Slow Boring': {
@@ -320,61 +320,61 @@ SOURCE_METADATA = {
     'South China Morning Post': {
         'source_category': 'newspaper',
         'website_url': 'https://www.scmp.com/',
-        'logo_url': 'https://logo.clearbit.com/scmp.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=scmp.com&sz=256',
         'description': 'Hong Kong-based English-language newspaper covering China, Asia, and international news.'
     },
     'Stratechery': {
         'source_category': 'newsletter',
         'website_url': 'https://stratechery.com/',
-        'logo_url': 'https://logo.clearbit.com/stratechery.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=stratechery.com&sz=256',
         'description': 'Analysis of technology and media strategy from Ben Thompson.'
     },
     'TechCrunch': {
         'source_category': 'newspaper',
         'website_url': 'https://techcrunch.com/',
-        'logo_url': 'https://logo.clearbit.com/techcrunch.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=techcrunch.com&sz=256',
         'description': 'Leading technology media property covering startups, venture capital, and tech innovation.'
     },
     'The American Conservative': {
         'source_category': 'magazine',
         'website_url': 'https://www.theamericanconservative.com/',
-        'logo_url': 'https://logo.clearbit.com/theamericanconservative.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=theamericanconservative.com&sz=256',
         'description': 'Conservative magazine focused on traditional values, realist foreign policy, and Main Street economics.'
     },
     'The Atlantic': {
         'source_category': 'magazine',
         'website_url': 'https://www.theatlantic.com/',
-        'logo_url': 'https://logo.clearbit.com/theatlantic.com',
+        'logo_url': 'https://icon.horse/icon/theatlantic.com',
         'description': 'American magazine covering news, politics, culture, technology, and more with in-depth features.'
     },
     'The Commentary Magazine': {
         'source_category': 'magazine',
         'website_url': 'https://www.commentary.org/',
-        'logo_url': 'https://logo.clearbit.com/commentary.org',
+        'logo_url': 'https://icon.horse/icon/commentary.org',
         'description': 'Neoconservative magazine covering politics, culture, and ideas.'
     },
     'The Conversation': {
         'source_category': 'newspaper',
         'website_url': 'https://theconversation.com/',
-        'logo_url': 'https://logo.clearbit.com/theconversation.com',
+        'logo_url': 'https://icon.horse/icon/theconversation.com',
         'description': 'Independent source of news and views from the academic and research community.'
     },
     'The Critic': {
         'source_category': 'magazine',
         'website_url': 'https://thecritic.co.uk/',
-        'logo_url': 'https://logo.clearbit.com/thecritic.co.uk',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=thecritic.co.uk&sz=256',
         'description': 'British intellectual magazine featuring essays on politics, culture, and ideas.'
     },
     'The Dispatch': {
         'source_category': 'newspaper',
         'website_url': 'https://thedispatch.com/',
-        'logo_url': 'https://logo.clearbit.com/thedispatch.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=thedispatch.com&sz=256',
         'description': 'Fact-based conservative news and commentary focused on policy and politics.'
     },
     'The Economist': {
         'source_category': 'magazine',
         'website_url': 'https://www.economist.com/',
-        'logo_url': 'https://logo.clearbit.com/economist.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=economist.com&sz=256',
         'description': 'International weekly newspaper focused on current affairs, business, and world politics.'
     },
     'The Ezra Klein Show': {
@@ -390,31 +390,31 @@ SOURCE_METADATA = {
     'The Free Press': {
         'source_category': 'newspaper',
         'website_url': 'https://www.thefp.com/',
-        'logo_url': 'https://logo.clearbit.com/thefp.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=thefp.com&sz=256',
         'description': 'Independent journalism committed to covering stories others won\'t. Founded by Bari Weiss.'
     },
     'The Guardian': {
         'source_category': 'newspaper',
         'website_url': 'https://www.theguardian.com/',
-        'logo_url': 'https://logo.clearbit.com/theguardian.com',
+        'logo_url': 'https://icon.horse/icon/theguardian.com',
         'description': 'British daily newspaper with progressive editorial perspective and global coverage.'
     },
     'The Independent': {
         'source_category': 'newspaper',
         'website_url': 'https://www.independent.co.uk/',
-        'logo_url': 'https://logo.clearbit.com/independent.co.uk',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=independent.co.uk&sz=256',
         'description': 'British online newspaper offering news, views, and analysis on UK and world events.'
     },
     'The Intercept': {
         'source_category': 'newspaper',
         'website_url': 'https://theintercept.com/',
-        'logo_url': 'https://logo.clearbit.com/theintercept.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=theintercept.com&sz=256',
         'description': 'Investigative journalism with a focus on national security, politics, and civil liberties.'
     },
     'The New Yorker': {
         'source_category': 'magazine',
         'website_url': 'https://www.newyorker.com/',
-        'logo_url': 'https://logo.clearbit.com/newyorker.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=newyorker.com&sz=256',
         'description': 'American magazine featuring journalism, commentary, criticism, essays, fiction, and cartoons.'
     },
     'The Observer': {
@@ -456,13 +456,13 @@ SOURCE_METADATA = {
     'The Spectator': {
         'source_category': 'magazine',
         'website_url': 'https://www.spectator.co.uk/',
-        'logo_url': 'https://logo.clearbit.com/spectator.co.uk',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=spectator.co.uk&sz=256',
         'description': 'British conservative weekly magazine covering politics, culture, and current affairs.'
     },
     'The Telegraph': {
         'source_category': 'newspaper',
         'website_url': 'https://www.telegraph.co.uk/',
-        'logo_url': 'https://logo.clearbit.com/telegraph.co.uk',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=telegraph.co.uk&sz=256',
         'description': 'British broadsheet newspaper with conservative editorial perspective.'
     },
     'The Tim Ferriss Show': {
@@ -490,13 +490,13 @@ SOURCE_METADATA = {
     'UnHerd': {
         'source_category': 'newspaper',
         'website_url': 'https://unherd.com/',
-        'logo_url': 'https://logo.clearbit.com/unherd.com',
+        'logo_url': 'https://icon.horse/icon/unherd.com',
         'description': 'Independent British online magazine challenging mainstream thinking with diverse viewpoints.'
     },
     'War on the Rocks': {
         'source_category': 'newspaper',
         'website_url': 'https://warontherocks.com/',
-        'logo_url': 'https://logo.clearbit.com/warontherocks.com',
+        'logo_url': 'https://www.google.com/s2/favicons?domain=warontherocks.com&sz=256',
         'description': 'Platform for analysis, commentary, and debate on foreign policy and national security.'
     }
 }
