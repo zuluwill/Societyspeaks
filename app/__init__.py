@@ -272,6 +272,11 @@ def create_app():
                 # worker; no user impact.  Suppress to avoid alert fatigue.
                 if drop_if(msg, "exited with code 128"):
                     return None
+                # Gunicorn worker recycling (max_requests) and graceful shutdown both
+                # send SIGTERM to the outgoing worker.  This is expected behavior and
+                # generates no user-visible impact; suppress the noise from Sentry.
+                if drop_if(msg, "was sent SIGTERM", "Worker was sent SIGTERM"):
+                    return None
             exc_info = hint.get("exc_info")
             if exc_info:
                 exc_msg = str(exc_info[1] or "")
@@ -557,7 +562,12 @@ def create_app():
             should_show_briefings_subscription_cta,
         )
 
-        if current_user is None or not current_user.is_authenticated:
+        try:
+            authenticated = current_user.is_authenticated
+        except Exception:
+            authenticated = False
+
+        if not authenticated:
             return {
                 'show_briefings_subscribe_cta': False,
                 'briefings_checkout_activation_pending': False,
