@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-05-05 19:35+0100\n"
+"POT-Creation-Date: 2026-05-05 19:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -88,89 +88,89 @@ msgstr ""
 "We hebben uw briefings onderbroken. U kunt op elk gewenst moment "
 "terugkomen"
 
-#: app/resend_client.py:576
+#: app/resend_client.py:577
 msgid "You're Subscribed to Daily Civic Questions!"
 msgstr "U bent geabonneerd op Dagelijkse Burgervragen!"
 
-#: app/resend_client.py:680 app/resend_client.py:952
+#: app/resend_client.py:681 app/resend_client.py:953
 #, python-format
 msgid "Daily Question #%(num)s: %(topic)s"
 msgstr "Dagelijkse vraag %(num)s: %(topic)s"
 
-#: app/resend_client.py:680 app/resend_client.py:952
+#: app/resend_client.py:681 app/resend_client.py:953
 msgid "Civic"
 msgstr "Burger"
 
-#: app/resend_client.py:772
+#: app/resend_client.py:773
 #, python-format
 msgid "5 Questions This Week: %(first)s..."
 msgstr "5 vragen deze week: %(first)s..."
 
-#: app/resend_client.py:867
+#: app/resend_client.py:868
 #, python-format
 msgid "10 Questions This Month: %(first)s..."
 msgstr "10 vragen deze maand: %(first)s..."
 
-#: app/resend_client.py:1227
+#: app/resend_client.py:1228
 msgid "New participant in your discussion"
 msgstr "Nieuwe deelnemer in je discussie"
 
-#: app/resend_client.py:1228
+#: app/resend_client.py:1229
 #, python-format
 msgid "Someone new has joined your discussion '%(title)s'"
 msgstr "Iemand nieuws is aangesloten bij je discussie '%(title)s'"
 
-#: app/resend_client.py:1231
+#: app/resend_client.py:1232
 msgid "New activity in your discussion"
 msgstr "Nieuwe activiteit in je discussie"
 
-#: app/resend_client.py:1232
+#: app/resend_client.py:1233
 #, python-format
 msgid "There's new activity in your discussion '%(title)s'"
 msgstr "Er is nieuwe activiteit in je discussie '%(title)s'"
 
-#: app/resend_client.py:1234
+#: app/resend_client.py:1235
 msgid "New activity in a discussion you follow"
 msgstr "Nieuwe activiteit in een discussie die je volgt"
 
-#: app/resend_client.py:1235
+#: app/resend_client.py:1236
 #, python-format
 msgid "There's new activity in a discussion you're following: '%(title)s'"
 msgstr "Er is nieuwe activiteit in een discussie die je volgt: '%(title)s'"
 
-#: app/resend_client.py:1237
+#: app/resend_client.py:1238
 #, python-format
 msgid "Update: %(title)s"
 msgstr "Update: %(title)s"
 
-#: app/resend_client.py:1238
+#: app/resend_client.py:1239
 #, python-format
 msgid "A new update was posted to '%(title)s'"
 msgstr "Een nieuwe update is geplaatst op '%(title)s'"
 
-#: app/resend_client.py:1240
+#: app/resend_client.py:1241
 msgid "Activity in your discussion"
 msgstr "Activiteit in je discussie"
 
-#: app/resend_client.py:1241
+#: app/resend_client.py:1242
 #, python-format
 msgid "There's been activity in your discussion '%(title)s'"
 msgstr "Er is activiteit geweest in je discussie '%(title)s'"
 
-#: app/resend_client.py:1323
+#: app/resend_client.py:1324
 #, python-format
 msgid "You've been invited to join %(org)s on Society Speaks"
 msgstr "U bent uitgenodigd om lid te worden van %(org)s op Society Speaks"
 
-#: app/resend_client.py:1550
+#: app/resend_client.py:1551
 msgid "Complete Your Society Speaks Profile"
 msgstr "Voltooi uw Society Speaks-profiel"
 
-#: app/resend_client.py:1617
+#: app/resend_client.py:1618
 msgid "Your Weekly Discussion Digest - Society Speaks"
 msgstr "Uw wekelijks discussiedigest - Society Speaks"
 
-#: app/resend_client.py:1838
+#: app/resend_client.py:1840
 #, python-format
 msgid "Continue your journey: %(theme)s — Society Speaks"
 msgstr "Ga verder met je traject: %(theme)s — Society Speaks"
@@ -417,7 +417,7 @@ msgid "Subscribed! Your first Daily Brief will arrive at %(email)s."
 msgstr "Geabonneerd! Je eerste Daily Brief wordt verzonden naar %(email)s."
 
 #: app/auth/routes.py:882 app/auth/routes.py:908 app/brief/routes.py:539
-#: app/brief/routes.py:540 app/templates/programmes/view.html:646
+#: app/brief/routes.py:540 app/templates/programmes/view.html:647
 msgid "Something went wrong. Please try again."
 msgstr "Er is iets misgegaan. Probeer het opnieuw."
 
@@ -6392,10 +6392,10 @@ msgstr "Beheerder"
 msgid "Sign out"
 msgstr "Uitloggen"
 
-#: app/templates/discussions/_guided_journey_rail.html:61
+#: app/templates/discussions/_guided_journey_rail.html:62
 #: app/templates/layout.html:896 app/templates/layout.html:1188
 #: app/templates/partner/portal/login.html:34 app/templates/platform.html:1157
-#: app/templates/programmes/view.html:262
+#: app/templates/programmes/view.html:263
 msgid "Sign in"
 msgstr "Inloggen"
 
@@ -9072,8 +9072,8 @@ msgstr "Dagelijks"
 #: app/templates/brief/reader.html:6 app/templates/brief/reader.html:267
 #: app/templates/brief/subscribe.html:67 app/templates/briefing/create.html:93
 #: app/templates/briefing/edit.html:43 app/templates/daily/preferences.html:50
-#: app/templates/daily/subscribe.html:55 app/templates/programmes/view.html:402
-#: app/templates/programmes/view.html:440
+#: app/templates/daily/subscribe.html:55 app/templates/programmes/view.html:403
+#: app/templates/programmes/view.html:441
 msgid "Weekly"
 msgstr "Wekelijks"
 
@@ -10660,7 +10660,7 @@ msgid "Every day"
 msgstr "Elke dag"
 
 #: app/templates/brief/preferences.html:87
-#: app/templates/programmes/view.html:635
+#: app/templates/programmes/view.html:636
 msgid "Once a week"
 msgstr "Eens per week"
 
@@ -10965,12 +10965,12 @@ msgid "Using your account email"
 msgstr "Met je accounte-mail"
 
 #: app/templates/brief/subscribe.html:44 app/templates/daily/subscribe.html:42
-#: app/templates/programmes/view.html:390
+#: app/templates/programmes/view.html:391
 msgid "you@example.com"
 msgstr "you@example.com"
 
 #: app/templates/brief/subscribe.html:56 app/templates/daily/subscribe.html:46
-#: app/templates/programmes/view.html:397
+#: app/templates/programmes/view.html:398
 msgid "How often?"
 msgstr "Hoe vaak?"
 
@@ -15642,7 +15642,7 @@ msgstr "Link kopiëren"
 #: app/templates/discussions/view_discussion.html:860
 #: app/templates/discussions/view_native.html:1189
 #: app/templates/partner/embed_generator.html:355
-#: app/templates/programmes/view.html:839
+#: app/templates/programmes/view.html:840
 msgid "Copied!"
 msgstr "Gekopieerd!"
 
@@ -17072,15 +17072,15 @@ msgstr "Stem kon niet worden geregistreerd:"
 msgid "Failed to record vote. Please try again."
 msgstr "Stem kon niet worden geregistreerd. Probeer het alstublieft opnieuw."
 
-#: app/templates/discussions/_guided_journey_rail.html:19
+#: app/templates/discussions/_guided_journey_rail.html:20
 msgid "Big Questions journey progress for this theme"
 msgstr "Voortgang Big Questions-reis voor dit thema"
 
-#: app/templates/discussions/_guided_journey_rail.html:24
+#: app/templates/discussions/_guided_journey_rail.html:25
 msgid "Big Questions"
 msgstr "Big Questions"
 
-#: app/templates/discussions/_guided_journey_rail.html:27
+#: app/templates/discussions/_guided_journey_rail.html:28
 #, python-format
 msgid ""
 "Theme <span class=\"font-bold text-white\">%(index)s</span> of <span "
@@ -17089,33 +17089,33 @@ msgstr ""
 "Thema <span class=\"font-bold text-white\">%(index)s</span> van <span "
 "class=\"font-bold text-white\">%(total)d</span>"
 
-#: app/templates/discussions/_guided_journey_rail.html:35
+#: app/templates/discussions/_guided_journey_rail.html:36
 msgid "Journey overview"
 msgstr "Overzicht van de reis"
 
-#: app/templates/discussions/_guided_journey_rail.html:40
+#: app/templates/discussions/_guided_journey_rail.html:41
 msgid "themes done"
 msgstr "thema's afgerond"
 
-#: app/templates/discussions/_guided_journey_rail.html:41
+#: app/templates/discussions/_guided_journey_rail.html:42
 #, python-format
 msgid "~%(p)d%%"
 msgstr "~%(p)d%%"
 
-#: app/templates/discussions/_guided_journey_rail.html:42
+#: app/templates/discussions/_guided_journey_rail.html:43
 msgid "min left overall"
 msgstr "min resterend totaal"
 
-#: app/templates/discussions/_guided_journey_rail.html:54
+#: app/templates/discussions/_guided_journey_rail.html:55
 msgid "All done ✓"
 msgstr "Allemaal klaar ✓"
 
-#: app/templates/discussions/_guided_journey_rail.html:55
+#: app/templates/discussions/_guided_journey_rail.html:56
 #, python-format
 msgid "%(num)d to go"
 msgstr "%(num)d nog te gaan"
 
-#: app/templates/discussions/_guided_journey_rail.html:56
+#: app/templates/discussions/_guided_journey_rail.html:57
 #: app/templates/partner/portal/discussion_detail.html:204
 #, python-format
 msgid "%(num)d statement"
@@ -17123,23 +17123,23 @@ msgid_plural "%(num)d statements"
 msgstr[0] "%(num)d stelling"
 msgstr[1] "%(num)d stellingen"
 
-#: app/templates/discussions/_guided_journey_rail.html:61
+#: app/templates/discussions/_guided_journey_rail.html:62
 msgid "to track your progress"
 msgstr "om je voortgang bij te houden"
 
-#: app/templates/discussions/_guided_journey_rail.html:71
+#: app/templates/discussions/_guided_journey_rail.html:72
 msgid "Your recap"
 msgstr "Je samenvatting"
 
-#: app/templates/discussions/_guided_journey_rail.html:76
+#: app/templates/discussions/_guided_journey_rail.html:77
 msgid "Next theme →"
 msgstr "Volgende thema →"
 
-#: app/templates/discussions/_guided_journey_rail.html:81
+#: app/templates/discussions/_guided_journey_rail.html:82
 msgid "View recap"
 msgstr "Samenvatting bekijken"
 
-#: app/templates/discussions/_guided_journey_rail.html:86
+#: app/templates/discussions/_guided_journey_rail.html:87
 msgid "Full recap →"
 msgstr "Volledig overzicht →"
 
@@ -19620,7 +19620,7 @@ msgid "Copy link to this discussion"
 msgstr "Link naar deze discussie kopiëren"
 
 #: app/templates/discussions/view_native.html:1188
-#: app/templates/programmes/view.html:310
+#: app/templates/programmes/view.html:311
 msgid "Copy link"
 msgstr "Link kopiëren"
 
@@ -20238,9 +20238,9 @@ msgstr "Zet je civieke reis voort — Society Speaks"
 
 #: app/templates/emails/journey_reminder.html:5
 #, python-format
-msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~2 mins)"
+msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~%(mins)d mins)"
 msgstr ""
-"%(done)s van %(total)d thema's gedaan. Volgende: %(next)s (~2 min)"
+"%(done)s van %(total)d thema's gedaan. Volgende: %(next)s (~%(mins)d min)"
 
 #: app/templates/emails/journey_reminder.html:12
 #: app/templates/emails/journey_reminder_confirm.html:11
@@ -20291,8 +20291,9 @@ msgstr "Volgende"
 
 #: app/templates/emails/journey_reminder.html:55
 #, python-format
-msgid "About 5 minutes &nbsp;·&nbsp; %(count)d statements to vote on"
-msgstr "Ongeveer 5 minuten &nbsp;·&nbsp; %(count)d stellingen om over te stemmen"
+msgid "About %(mins)d minutes &nbsp;·&nbsp; %(count)d statements to vote on"
+msgstr ""
+"Ongeveer %(mins)d minuten &nbsp;·&nbsp; %(count)d stellingen om over te stemmen"
 
 #: app/templates/emails/journey_reminder.html:68
 #: app/templates/emails/journey_reminder_confirm.html:28
@@ -20319,7 +20320,7 @@ msgstr ""
 "%(link)s-reis."
 
 #: app/templates/emails/journey_reminder.html:114
-#: app/templates/programmes/view.html:458
+#: app/templates/programmes/view.html:459
 msgid "Stop reminders"
 msgstr "Herinneringen stoppen"
 
@@ -24101,7 +24102,7 @@ msgstr ""
 #: app/templates/help/programmes.html:239
 #: app/templates/programmes/_form.html:134
 #: app/templates/programmes/settings.html:39
-#: app/templates/programmes/view.html:317
+#: app/templates/programmes/view.html:318
 msgid "Themes"
 msgstr "Thema's"
 
@@ -29231,7 +29232,7 @@ msgstr "U bent klaar om over uw website uit te breiden."
 
 #: app/templates/partner/portal/success.html:25
 #: app/templates/programmes/journey_recap.html:117
-#: app/templates/programmes/view.html:325
+#: app/templates/programmes/view.html:326
 msgid "Completed"
 msgstr "Voltooid"
 
@@ -29890,7 +29891,7 @@ msgstr ""
 "hoogtepunten per thema."
 
 #: app/templates/programmes/journey_recap.html:30
-#: app/templates/programmes/view.html:196
+#: app/templates/programmes/view.html:197
 msgid "Journey complete"
 msgstr "Reis voltooid"
 
@@ -29993,7 +29994,7 @@ msgid "%(done)s/%(total)d votes"
 msgstr "%(done)s/%(total)d stemmen"
 
 #: app/templates/programmes/journey_recap.html:125
-#: app/templates/programmes/view.html:333
+#: app/templates/programmes/view.html:334
 msgid "Not started"
 msgstr "Niet gestart"
 
@@ -30223,194 +30224,199 @@ msgstr ""
 msgid "No participant access grants yet."
 msgstr "Nog geen deelnemerstoegangen verleend."
 
-#: app/templates/programmes/view.html:201
+#: app/templates/programmes/view.html:202
 msgid "You've finished — amazing work."
 msgstr "Je bent klaar – geweldig werk."
 
-#: app/templates/programmes/view.html:204
+#: app/templates/programmes/view.html:205
 #, python-format
 msgid "%(votes)s votes across %(total)d themes — see how you compare."
 msgstr "%(votes)s stemmen over %(total)d thema's: kijk hoe u zich verhoudt."
 
-#: app/templates/programmes/view.html:207
+#: app/templates/programmes/view.html:208
+#, python-format
 msgid ""
-"Each theme is quick (~2 minutes). Spread them across sessions — there is "
-"no deadline."
+"Each theme is quick (~%(mins)d minutes). Spread them across sessions — "
+"there is no deadline."
 msgstr ""
-"Elk thema is snel (~2 minuten). Verdeel het over sessies — er is geen "
-"deadline."
+"Elk thema is snel (~%(mins)d minuten). Verdeel het over sessies — er is "
+"geen deadline."
 
-#: app/templates/programmes/view.html:214
+#: app/templates/programmes/view.html:215
 msgid "View full recap"
 msgstr "Volledige samenvatting bekijken"
 
-#: app/templates/programmes/view.html:239
+#: app/templates/programmes/view.html:240
 msgid "Guided journey"
 msgstr "Geleide reis"
 
-#: app/templates/programmes/view.html:243
+#: app/templates/programmes/view.html:244
 msgid "Start your civic journey"
 msgstr "Begin uw burgerjournaal"
 
-#: app/templates/programmes/view.html:245
+#: app/templates/programmes/view.html:246
 msgid "You're on your way"
 msgstr "U bent onderweg"
 
-#: app/templates/programmes/view.html:247
+#: app/templates/programmes/view.html:248
 msgid "Almost there — one theme left!"
 msgstr "Het is bijna zover: nog één thema over!"
 
-#: app/templates/programmes/view.html:249
+#: app/templates/programmes/view.html:250
 msgid "Pick up where you left off"
 msgstr "Ga verder waar u bent gebleven"
 
-#: app/templates/programmes/view.html:254
+#: app/templates/programmes/view.html:255
 msgid "themes completed"
 msgstr "thema's voltooid"
 
-#: app/templates/programmes/view.html:256
+#: app/templates/programmes/view.html:257
 #, python-format
 msgid "~%(pct)d%% through by votes"
 msgstr "~%(pct)d%% voorbij via stemmen"
 
-#: app/templates/programmes/view.html:259
+#: app/templates/programmes/view.html:260
 #, python-format
 msgid "~%(mins)d min left at your pace"
 msgstr "~%(mins)d min resterend in jouw tempo"
 
-#: app/templates/programmes/view.html:262
+#: app/templates/programmes/view.html:263
 msgid "to save progress."
 msgstr "om uw voortgang op te slaan."
 
-#: app/templates/programmes/view.html:264
+#: app/templates/programmes/view.html:265
 msgid "votes cast"
 msgstr "stemmen uitgebracht"
 
-#: app/templates/programmes/view.html:274
+#: app/templates/programmes/view.html:275
 msgid "Progress through all statements in this journey"
 msgstr "Ga door alle stellingen in deze reis"
 
-#: app/templates/programmes/view.html:281
-msgid "Each theme is quick (~2 minutes). Take breaks anytime — nothing is gated."
+#: app/templates/programmes/view.html:282
+#, python-format
+msgid ""
+"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is"
+" gated."
 msgstr ""
-"Elk thema is snel (~2 minuten). Neem pauzes wanneer je wilt — niets is "
-"verplicht."
+"Elk thema is snel (~%(mins)d minuten). Neem pauzes wanneer je wilt — "
+"niets is verplicht."
 
-#: app/templates/programmes/view.html:290
+#: app/templates/programmes/view.html:291
 msgid "Begin:"
 msgstr "Beginnen:"
 
-#: app/templates/programmes/view.html:290
+#: app/templates/programmes/view.html:291
 msgid "Continue:"
 msgstr "Voortzetten:"
 
-#: app/templates/programmes/view.html:296
+#: app/templates/programmes/view.html:297
 msgid "View progress recap"
 msgstr "Voortgangssamenvatting bekijken"
 
-#: app/templates/programmes/view.html:301
+#: app/templates/programmes/view.html:302
 msgid "Share this journey — opens native share sheet or copies link"
 msgstr "Deel deze reis - opent het oorspronkelijke deelblad of kopieert de link"
 
-#: app/templates/programmes/view.html:304
+#: app/templates/programmes/view.html:305
 msgid "Share journey"
 msgstr "Reis delen"
 
-#: app/templates/programmes/view.html:307
+#: app/templates/programmes/view.html:308
 msgid "Copy journey overview link"
 msgstr "Kopieer de overzichtslink van de journey"
 
-#: app/templates/programmes/view.html:342
-msgid "~2 min"
-msgstr "~2 min"
+#: app/templates/programmes/view.html:343
+#, python-format
+msgid "~%(mins)d min"
+msgstr "~%(mins)d min"
 
-#: app/templates/programmes/view.html:383
+#: app/templates/programmes/view.html:384
 msgid "Want reminders to finish this journey?"
 msgstr "Wilt u herinneringen om deze reis te voltooien?"
 
-#: app/templates/programmes/view.html:384
+#: app/templates/programmes/view.html:385
 msgid "Short email nudges — pick cadence and time. One tap unsubscribe anytime."
 msgstr ""
 "Korte e-mailnudges: kies cadans en tijd. Met één tik kunt u zich op elk "
 "gewenst moment afmelden."
 
-#: app/templates/programmes/view.html:389
+#: app/templates/programmes/view.html:390
 msgid "Email for reminders"
 msgstr "E-mail voor herinneringen"
 
-#: app/templates/programmes/view.html:407
-#: app/templates/programmes/view.html:440
+#: app/templates/programmes/view.html:408
+#: app/templates/programmes/view.html:441
 msgid "Twice a week"
 msgstr "Twee keer per week"
 
-#: app/templates/programmes/view.html:412
-#: app/templates/programmes/view.html:440
-#: app/templates/programmes/view.html:637
+#: app/templates/programmes/view.html:413
+#: app/templates/programmes/view.html:441
+#: app/templates/programmes/view.html:638
 msgid "Weekend mornings"
 msgstr "Zaterdag- en zondagochtend"
 
-#: app/templates/programmes/view.html:418
+#: app/templates/programmes/view.html:419
 msgid "What time?"
 msgstr "Hoe laat?"
 
-#: app/templates/programmes/view.html:418
+#: app/templates/programmes/view.html:419
 msgid "(your device’s local time)"
 msgstr "(de lokale tijd van uw apparaat)"
 
-#: app/templates/programmes/view.html:425
+#: app/templates/programmes/view.html:426
 msgid "Turn on reminders"
 msgstr "Herinneringen inschakelen"
 
-#: app/templates/programmes/view.html:427
+#: app/templates/programmes/view.html:428
 msgid "We only send journey nudges. Unsubscribe anytime from our emails."
 msgstr ""
 "Wij sturen alleen reisnudges. U kunt zich op elk gewenst moment afmelden "
 "voor onze e-mails."
 
-#: app/templates/programmes/view.html:431
+#: app/templates/programmes/view.html:432
 msgid "Dismiss reminder suggestion"
 msgstr "Herinneringssuggestie afwijzen"
 
-#: app/templates/programmes/view.html:455
+#: app/templates/programmes/view.html:456
 #, python-format
 msgid "Reminders on: %(cadence)s at %(time)s your time."
 msgstr "Herinneringen op: %(cadence)s om %(time)s uw lokale tijd."
 
-#: app/templates/programmes/view.html:527
+#: app/templates/programmes/view.html:528
 msgid "Add discussion"
 msgstr "Discussie toevoegen"
 
-#: app/templates/programmes/view.html:636
+#: app/templates/programmes/view.html:637
 msgid "Twice a week — Tue and Thu"
 msgstr "Twee keer per week: dinsdag en donderdag"
 
-#: app/templates/programmes/view.html:640
+#: app/templates/programmes/view.html:641
 msgid "Choose how often you want a reminder first."
 msgstr "Kies hoe vaak je eerst een herinnering wilt."
 
-#: app/templates/programmes/view.html:641
+#: app/templates/programmes/view.html:642
 msgid "Enter the email address where we should send reminders."
 msgstr "Voer het e-mailadres in waar we herinneringen naar toe moeten sturen."
 
-#: app/templates/programmes/view.html:642
+#: app/templates/programmes/view.html:643
 msgid "Reminders are scheduled:"
 msgstr "Herinneringen zijn gepland:"
 
-#: app/templates/programmes/view.html:643
+#: app/templates/programmes/view.html:644
 msgid "at"
 msgstr "bij"
 
-#: app/templates/programmes/view.html:644
+#: app/templates/programmes/view.html:645
 msgid "Check your inbox for a confirmation link to pick up where you left off."
 msgstr ""
 "Controleer uw inbox voor een bevestigingslink om verder te gaan waar u "
 "bent gebleven."
 
-#: app/templates/programmes/view.html:645
+#: app/templates/programmes/view.html:646
 msgid "Reminders saved for your account."
 msgstr "Herinneringen opgeslagen voor uw account."
 
-#: app/templates/programmes/view.html:842
+#: app/templates/programmes/view.html:843
 msgid "Big Questions civic journey — Society Speaks"
 msgstr "Big Questions burgertraject — Society Speaks"
 

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-05-05 19:35+0100\n"
+"POT-Creation-Date: 2026-05-05 19:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hi\n"
@@ -86,89 +86,89 @@ msgstr "अपने Society Speaks खाते को सक्रिय क�
 msgid "We've paused your briefings — come back any time"
 msgstr "हमने आपकी ब्रीफिंग रोक दी है - किसी भी समय वापस आएँ"
 
-#: app/resend_client.py:576
+#: app/resend_client.py:577
 msgid "You're Subscribed to Daily Civic Questions!"
 msgstr "आप दैनिक नागरिक प्रश्नों की सदस्यता ले चुके हैं!"
 
-#: app/resend_client.py:680 app/resend_client.py:952
+#: app/resend_client.py:681 app/resend_client.py:953
 #, python-format
 msgid "Daily Question #%(num)s: %(topic)s"
 msgstr "दैनिक प्रश्न %(num)s: %(topic)s"
 
-#: app/resend_client.py:680 app/resend_client.py:952
+#: app/resend_client.py:681 app/resend_client.py:953
 msgid "Civic"
 msgstr "नागरिक"
 
-#: app/resend_client.py:772
+#: app/resend_client.py:773
 #, python-format
 msgid "5 Questions This Week: %(first)s..."
 msgstr "इस सप्ताह के 5 प्रश्न: %(first)s..."
 
-#: app/resend_client.py:867
+#: app/resend_client.py:868
 #, python-format
 msgid "10 Questions This Month: %(first)s..."
 msgstr "इस महीने के 10 प्रश्न: %(first)s..."
 
-#: app/resend_client.py:1227
+#: app/resend_client.py:1228
 msgid "New participant in your discussion"
 msgstr "आपकी चर्चा में नया प्रतिभागी"
 
-#: app/resend_client.py:1228
+#: app/resend_client.py:1229
 #, python-format
 msgid "Someone new has joined your discussion '%(title)s'"
 msgstr "कोई नया व्यक्ति आपकी चर्चा '%(title)s' में शामिल हुआ है"
 
-#: app/resend_client.py:1231
+#: app/resend_client.py:1232
 msgid "New activity in your discussion"
 msgstr "आपकी चर्चा में नई गतिविधि"
 
-#: app/resend_client.py:1232
+#: app/resend_client.py:1233
 #, python-format
 msgid "There's new activity in your discussion '%(title)s'"
 msgstr "आपकी चर्चा '%(title)s' में नई गतिविधि है"
 
-#: app/resend_client.py:1234
+#: app/resend_client.py:1235
 msgid "New activity in a discussion you follow"
 msgstr "एक चर्चा में नई गतिविधि जिसे आप फॉलो करते हैं"
 
-#: app/resend_client.py:1235
+#: app/resend_client.py:1236
 #, python-format
 msgid "There's new activity in a discussion you're following: '%(title)s'"
 msgstr "एक चर्चा में नई गतिविधि है जिसे आप फॉलो करते हैं: '%(title)s'"
 
-#: app/resend_client.py:1237
+#: app/resend_client.py:1238
 #, python-format
 msgid "Update: %(title)s"
 msgstr "अपडेट: %(title)s"
 
-#: app/resend_client.py:1238
+#: app/resend_client.py:1239
 #, python-format
 msgid "A new update was posted to '%(title)s'"
 msgstr "'%(title)s' पर एक नया अपडेट पोस्ट किया गया है"
 
-#: app/resend_client.py:1240
+#: app/resend_client.py:1241
 msgid "Activity in your discussion"
 msgstr "आपकी चर्चा में गतिविधि"
 
-#: app/resend_client.py:1241
+#: app/resend_client.py:1242
 #, python-format
 msgid "There's been activity in your discussion '%(title)s'"
 msgstr "आपकी चर्चा '%(title)s' में गतिविधि हुई है"
 
-#: app/resend_client.py:1323
+#: app/resend_client.py:1324
 #, python-format
 msgid "You've been invited to join %(org)s on Society Speaks"
 msgstr "आपको %(org)s पर Society Speaks में शामिल होने के लिए आमंत्रित किया गया है"
 
-#: app/resend_client.py:1550
+#: app/resend_client.py:1551
 msgid "Complete Your Society Speaks Profile"
 msgstr "अपनी Society Speaks प्रोफ़ाइल पूरी करें"
 
-#: app/resend_client.py:1617
+#: app/resend_client.py:1618
 msgid "Your Weekly Discussion Digest - Society Speaks"
 msgstr "आपका साप्ताहिक चर्चा संक्षेप - Society Speaks"
 
-#: app/resend_client.py:1838
+#: app/resend_client.py:1840
 #, python-format
 msgid "Continue your journey: %(theme)s — Society Speaks"
 msgstr "अपनी यात्रा जारी रखें: %(theme)s — Society Speaks"
@@ -411,7 +411,7 @@ msgid "Subscribed! Your first Daily Brief will arrive at %(email)s."
 msgstr "सदस्यता ली गई! आपका पहला Daily Brief %(email)s को भेजा जाएगा।"
 
 #: app/auth/routes.py:882 app/auth/routes.py:908 app/brief/routes.py:539
-#: app/brief/routes.py:540 app/templates/programmes/view.html:646
+#: app/brief/routes.py:540 app/templates/programmes/view.html:647
 msgid "Something went wrong. Please try again."
 msgstr "कुछ गलत हुआ। कृपया पुनः प्रयास करें।"
 
@@ -6313,10 +6313,10 @@ msgstr "व्यवस्थापक"
 msgid "Sign out"
 msgstr "साइन आउट"
 
-#: app/templates/discussions/_guided_journey_rail.html:61
+#: app/templates/discussions/_guided_journey_rail.html:62
 #: app/templates/layout.html:896 app/templates/layout.html:1188
 #: app/templates/partner/portal/login.html:34 app/templates/platform.html:1157
-#: app/templates/programmes/view.html:262
+#: app/templates/programmes/view.html:263
 msgid "Sign in"
 msgstr "साइन इन"
 
@@ -8957,8 +8957,8 @@ msgstr "दैनिक"
 #: app/templates/brief/reader.html:6 app/templates/brief/reader.html:267
 #: app/templates/brief/subscribe.html:67 app/templates/briefing/create.html:93
 #: app/templates/briefing/edit.html:43 app/templates/daily/preferences.html:50
-#: app/templates/daily/subscribe.html:55 app/templates/programmes/view.html:402
-#: app/templates/programmes/view.html:440
+#: app/templates/daily/subscribe.html:55 app/templates/programmes/view.html:403
+#: app/templates/programmes/view.html:441
 msgid "Weekly"
 msgstr "साप्ताहिक"
 
@@ -10541,7 +10541,7 @@ msgid "Every day"
 msgstr "हर दिन"
 
 #: app/templates/brief/preferences.html:87
-#: app/templates/programmes/view.html:635
+#: app/templates/programmes/view.html:636
 msgid "Once a week"
 msgstr "हर सप्ताह"
 
@@ -10844,12 +10844,12 @@ msgid "Using your account email"
 msgstr "आपके खाते की ईमेल का उपयोग करके"
 
 #: app/templates/brief/subscribe.html:44 app/templates/daily/subscribe.html:42
-#: app/templates/programmes/view.html:390
+#: app/templates/programmes/view.html:391
 msgid "you@example.com"
 msgstr "you@example.com"
 
 #: app/templates/brief/subscribe.html:56 app/templates/daily/subscribe.html:46
-#: app/templates/programmes/view.html:397
+#: app/templates/programmes/view.html:398
 msgid "How often?"
 msgstr "कितनी बार?"
 
@@ -15499,7 +15499,7 @@ msgstr "लिंक कॉपी करें"
 #: app/templates/discussions/view_discussion.html:860
 #: app/templates/discussions/view_native.html:1189
 #: app/templates/partner/embed_generator.html:355
-#: app/templates/programmes/view.html:839
+#: app/templates/programmes/view.html:840
 msgid "Copied!"
 msgstr "कॉपी हो गया!"
 
@@ -16920,15 +16920,15 @@ msgstr "वोट रिकॉर्ड करने में विफल:"
 msgid "Failed to record vote. Please try again."
 msgstr "वोट रिकॉर्ड करने में विफल। कृपया दोबारा कोशिश करें।"
 
-#: app/templates/discussions/_guided_journey_rail.html:19
+#: app/templates/discussions/_guided_journey_rail.html:20
 msgid "Big Questions journey progress for this theme"
 msgstr "इस थीम के लिए Big Questions यात्रा की प्रगति"
 
-#: app/templates/discussions/_guided_journey_rail.html:24
+#: app/templates/discussions/_guided_journey_rail.html:25
 msgid "Big Questions"
 msgstr "Big Questions"
 
-#: app/templates/discussions/_guided_journey_rail.html:27
+#: app/templates/discussions/_guided_journey_rail.html:28
 #, python-format
 msgid ""
 "Theme <span class=\"font-bold text-white\">%(index)s</span> of <span "
@@ -16937,33 +16937,33 @@ msgstr ""
 "थीम <span class=\"font-bold text-white\">%(index)s</span> का <span class"
 "=\"font-bold text-white\">%(total)d</span>"
 
-#: app/templates/discussions/_guided_journey_rail.html:35
+#: app/templates/discussions/_guided_journey_rail.html:36
 msgid "Journey overview"
 msgstr "यात्रा का अवलोकन"
 
-#: app/templates/discussions/_guided_journey_rail.html:40
+#: app/templates/discussions/_guided_journey_rail.html:41
 msgid "themes done"
 msgstr "विषय पूरे हुए"
 
-#: app/templates/discussions/_guided_journey_rail.html:41
+#: app/templates/discussions/_guided_journey_rail.html:42
 #, python-format
 msgid "~%(p)d%%"
 msgstr "~%(p)d%%"
 
-#: app/templates/discussions/_guided_journey_rail.html:42
+#: app/templates/discussions/_guided_journey_rail.html:43
 msgid "min left overall"
 msgstr "कुल में बाकी मिनट"
 
-#: app/templates/discussions/_guided_journey_rail.html:54
+#: app/templates/discussions/_guided_journey_rail.html:55
 msgid "All done ✓"
 msgstr "सब कुछ पूरा हो गया ✓"
 
-#: app/templates/discussions/_guided_journey_rail.html:55
+#: app/templates/discussions/_guided_journey_rail.html:56
 #, python-format
 msgid "%(num)d to go"
 msgstr "%(num)d बाकी है"
 
-#: app/templates/discussions/_guided_journey_rail.html:56
+#: app/templates/discussions/_guided_journey_rail.html:57
 #: app/templates/partner/portal/discussion_detail.html:204
 #, python-format
 msgid "%(num)d statement"
@@ -16971,23 +16971,23 @@ msgid_plural "%(num)d statements"
 msgstr[0] "%(num)d कथन"
 msgstr[1] "%(num)d कथन"
 
-#: app/templates/discussions/_guided_journey_rail.html:61
+#: app/templates/discussions/_guided_journey_rail.html:62
 msgid "to track your progress"
 msgstr "अपनी प्रगति ट्रैक करने के लिए"
 
-#: app/templates/discussions/_guided_journey_rail.html:71
+#: app/templates/discussions/_guided_journey_rail.html:72
 msgid "Your recap"
 msgstr "आपका सारांश"
 
-#: app/templates/discussions/_guided_journey_rail.html:76
+#: app/templates/discussions/_guided_journey_rail.html:77
 msgid "Next theme →"
 msgstr "अगला थीम →"
 
-#: app/templates/discussions/_guided_journey_rail.html:81
+#: app/templates/discussions/_guided_journey_rail.html:82
 msgid "View recap"
 msgstr "सारांश देखें"
 
-#: app/templates/discussions/_guided_journey_rail.html:86
+#: app/templates/discussions/_guided_journey_rail.html:87
 msgid "Full recap →"
 msgstr "पूरा सारांश →"
 
@@ -19426,7 +19426,7 @@ msgid "Copy link to this discussion"
 msgstr "इस चर्चा के लिए लिंक कॉपी करें"
 
 #: app/templates/discussions/view_native.html:1188
-#: app/templates/programmes/view.html:310
+#: app/templates/programmes/view.html:311
 msgid "Copy link"
 msgstr "लिंक कॉपी करें"
 
@@ -20043,9 +20043,9 @@ msgid "Continue your civic journey — Society Speaks"
 msgstr "अपनी नागरिक यात्रा जारी रखें — Society Speaks"
 
 #: app/templates/emails/journey_reminder.html:5
-#, fuzzy, python-format
-msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~2 mins)"
-msgstr "%(done)s का %(total)d विषय पूरा हुआ। अगला: %(next)s (~5 मिनट)"
+#, python-format
+msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~%(mins)d mins)"
+msgstr "%(total)d विषयों में से %(done)s पूरे। आगे: %(next)s (~%(mins)d मिनट)"
 
 #: app/templates/emails/journey_reminder.html:12
 #: app/templates/emails/journey_reminder_confirm.html:11
@@ -20098,8 +20098,9 @@ msgstr "अगला"
 
 #: app/templates/emails/journey_reminder.html:55
 #, python-format
-msgid "About 5 minutes &nbsp;·&nbsp; %(count)d statements to vote on"
-msgstr "लगभग 5 मिनट &nbsp;·&nbsp; %(count)d कथनों पर वोट करने के लिए"
+msgid "About %(mins)d minutes &nbsp;·&nbsp; %(count)d statements to vote on"
+msgstr ""
+"लगभग %(mins)d मिनट &nbsp;·&nbsp; %(count)d कथनों पर वोट करने के लिए"
 
 #: app/templates/emails/journey_reminder.html:68
 #: app/templates/emails/journey_reminder_confirm.html:28
@@ -20126,7 +20127,7 @@ msgstr ""
 "माँगे थे।"
 
 #: app/templates/emails/journey_reminder.html:114
-#: app/templates/programmes/view.html:458
+#: app/templates/programmes/view.html:459
 msgid "Stop reminders"
 msgstr "अनुस्मारक बंद करें"
 
@@ -23867,7 +23868,7 @@ msgstr ""
 #: app/templates/help/programmes.html:239
 #: app/templates/programmes/_form.html:134
 #: app/templates/programmes/settings.html:39
-#: app/templates/programmes/view.html:317
+#: app/templates/programmes/view.html:318
 msgid "Themes"
 msgstr "थीम"
 
@@ -28936,7 +28937,7 @@ msgstr "आप अपनी साइट में स्केल करने 
 
 #: app/templates/partner/portal/success.html:25
 #: app/templates/programmes/journey_recap.html:117
-#: app/templates/programmes/view.html:325
+#: app/templates/programmes/view.html:326
 msgid "Completed"
 msgstr "पूरा किया गया"
 
@@ -29595,7 +29596,7 @@ msgid ""
 msgstr "सहमति और विषय दर विषय पुल हाइलाइट के साथ संरचित नागरिक भागीदारी।"
 
 #: app/templates/programmes/journey_recap.html:30
-#: app/templates/programmes/view.html:196
+#: app/templates/programmes/view.html:197
 msgid "Journey complete"
 msgstr "यात्रा पूर्ण"
 
@@ -29698,7 +29699,7 @@ msgid "%(done)s/%(total)d votes"
 msgstr "%(done)s/%(total)d वोट"
 
 #: app/templates/programmes/journey_recap.html:125
-#: app/templates/programmes/view.html:333
+#: app/templates/programmes/view.html:334
 msgid "Not started"
 msgstr "शुरू नहीं किया गया"
 
@@ -29928,193 +29929,197 @@ msgstr ""
 msgid "No participant access grants yet."
 msgstr "अभी तक कोई प्रतिभागी पहुंच प्रदान नहीं की गई।"
 
-#: app/templates/programmes/view.html:201
+#: app/templates/programmes/view.html:202
 msgid "You've finished — amazing work."
 msgstr "आपने पूरा कर लिया है - अद्भुत काम।"
 
-#: app/templates/programmes/view.html:204
+#: app/templates/programmes/view.html:205
 #, python-format
 msgid "%(votes)s votes across %(total)d themes — see how you compare."
 msgstr "%(votes)s वोट %(total)d विषयों में — देखें कि आप कैसे तुलना करते हैं।"
 
-#: app/templates/programmes/view.html:207
+#: app/templates/programmes/view.html:208
+#, python-format
 msgid ""
-"Each theme is quick (~2 minutes). Spread them across sessions — there is "
-"no deadline."
+"Each theme is quick (~%(mins)d minutes). Spread them across sessions — "
+"there is no deadline."
 msgstr ""
+"हर विषय जल्दी (~%(mins)d मिनट)। कई सत्रों में करें — कोई समय सीमा नहीं।"
 
-#: app/templates/programmes/view.html:214
+#: app/templates/programmes/view.html:215
 msgid "View full recap"
 msgstr "पूरा रीकैप देखें"
 
-#: app/templates/programmes/view.html:239
+#: app/templates/programmes/view.html:240
 msgid "Guided journey"
 msgstr "निर्देशित यात्रा"
 
-#: app/templates/programmes/view.html:243
+#: app/templates/programmes/view.html:244
 msgid "Start your civic journey"
 msgstr "अपनी नागरिक यात्रा शुरू करें"
 
-#: app/templates/programmes/view.html:245
+#: app/templates/programmes/view.html:246
 msgid "You're on your way"
 msgstr "आप रास्ते पर हैं"
 
-#: app/templates/programmes/view.html:247
+#: app/templates/programmes/view.html:248
 msgid "Almost there — one theme left!"
 msgstr "लगभग वहाँ - एक विषय शेष है!"
 
-#: app/templates/programmes/view.html:249
+#: app/templates/programmes/view.html:250
 msgid "Pick up where you left off"
 msgstr "जहां आपने छोड़ा था वहां से फिर से शुरू करें"
 
-#: app/templates/programmes/view.html:254
+#: app/templates/programmes/view.html:255
 msgid "themes completed"
 msgstr "विषय पूर्ण"
 
-#: app/templates/programmes/view.html:256
+#: app/templates/programmes/view.html:257
 #, python-format
 msgid "~%(pct)d%% through by votes"
 msgstr "वोटों से ~%(pct)d%% आगे"
 
-#: app/templates/programmes/view.html:259
+#: app/templates/programmes/view.html:260
 #, python-format
 msgid "~%(mins)d min left at your pace"
 msgstr "आपकी गति से ~%(mins)d मिनट बचे हैं"
 
-#: app/templates/programmes/view.html:262
+#: app/templates/programmes/view.html:263
 msgid "to save progress."
 msgstr "प्रगति बचाने के लिए।"
 
-#: app/templates/programmes/view.html:264
+#: app/templates/programmes/view.html:265
 msgid "votes cast"
 msgstr "वोट डाले"
 
-#: app/templates/programmes/view.html:274
+#: app/templates/programmes/view.html:275
 msgid "Progress through all statements in this journey"
 msgstr "इस यात्रा में सभी कथनों के माध्यम से आगे बढ़ें"
 
-#: app/templates/programmes/view.html:281
-#, fuzzy
-msgid "Each theme is quick (~2 minutes). Take breaks anytime — nothing is gated."
+#: app/templates/programmes/view.html:282
+#, python-format
+msgid ""
+"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is"
+" gated."
 msgstr ""
-"अधिकांश लोग इसे छोटे सत्रों (प्रति थीम ~20-40 मिनट) में फैलाते हैं। कभी "
-"भी ब्रेक लें - कुछ भी बंद नहीं है।"
+"हर विषय जल्दी (~%(mins)d मिनट)। कभी विराम लें — कुछ बाध्यकारी नहीं।"
 
-#: app/templates/programmes/view.html:290
+#: app/templates/programmes/view.html:291
 msgid "Begin:"
 msgstr "शुरू करना:"
 
-#: app/templates/programmes/view.html:290
+#: app/templates/programmes/view.html:291
 msgid "Continue:"
 msgstr "जारी रखें:"
 
-#: app/templates/programmes/view.html:296
+#: app/templates/programmes/view.html:297
 msgid "View progress recap"
 msgstr "प्रगति सारांश देखें"
 
-#: app/templates/programmes/view.html:301
+#: app/templates/programmes/view.html:302
 msgid "Share this journey — opens native share sheet or copies link"
 msgstr "इस यात्रा को साझा करें - मूल शेयर शीट या कॉपी लिंक खोलता है"
 
-#: app/templates/programmes/view.html:304
+#: app/templates/programmes/view.html:305
 msgid "Share journey"
 msgstr "यात्रा साझा करें"
 
-#: app/templates/programmes/view.html:307
+#: app/templates/programmes/view.html:308
 msgid "Copy journey overview link"
 msgstr "यात्रा अवलोकन लिंक कॉपी करें"
 
-#: app/templates/programmes/view.html:342
-msgid "~2 min"
-msgstr ""
+#: app/templates/programmes/view.html:343
+#, python-format
+msgid "~%(mins)d min"
+msgstr "~%(mins)d मिन"
 
-#: app/templates/programmes/view.html:383
+#: app/templates/programmes/view.html:384
 msgid "Want reminders to finish this journey?"
 msgstr "क्या आप इस यात्रा को समाप्त करने के लिए अनुस्मारक चाहते हैं?"
 
-#: app/templates/programmes/view.html:384
+#: app/templates/programmes/view.html:385
 msgid "Short email nudges — pick cadence and time. One tap unsubscribe anytime."
 msgstr ""
 "लघु ईमेल संकेत - ताल और समय चुनें। किसी भी समय एक टैप से सदस्यता समाप्त "
 "करें।"
 
-#: app/templates/programmes/view.html:389
+#: app/templates/programmes/view.html:390
 msgid "Email for reminders"
 msgstr "रिमाइंडर के लिए ईमेल"
 
-#: app/templates/programmes/view.html:407
-#: app/templates/programmes/view.html:440
+#: app/templates/programmes/view.html:408
+#: app/templates/programmes/view.html:441
 msgid "Twice a week"
 msgstr "हफ्ते में दो बार"
 
-#: app/templates/programmes/view.html:412
-#: app/templates/programmes/view.html:440
-#: app/templates/programmes/view.html:637
+#: app/templates/programmes/view.html:413
+#: app/templates/programmes/view.html:441
+#: app/templates/programmes/view.html:638
 msgid "Weekend mornings"
 msgstr "सप्ताहांत की सुबह"
 
-#: app/templates/programmes/view.html:418
+#: app/templates/programmes/view.html:419
 msgid "What time?"
 msgstr "कौन सा समय?"
 
-#: app/templates/programmes/view.html:418
+#: app/templates/programmes/view.html:419
 msgid "(your device’s local time)"
 msgstr "(आपके डिवाइस का स्थानीय समय)"
 
-#: app/templates/programmes/view.html:425
+#: app/templates/programmes/view.html:426
 msgid "Turn on reminders"
 msgstr "अनुस्मारक चालू करें"
 
-#: app/templates/programmes/view.html:427
+#: app/templates/programmes/view.html:428
 msgid "We only send journey nudges. Unsubscribe anytime from our emails."
 msgstr ""
 "हम केवल यात्रा संबंधी सूचनाएं भेजते हैं। हमारे ईमेल से किसी भी समय "
 "सदस्यता समाप्त करें।"
 
-#: app/templates/programmes/view.html:431
+#: app/templates/programmes/view.html:432
 msgid "Dismiss reminder suggestion"
 msgstr "अनुस्मारक सुझाव खारिज करें"
 
-#: app/templates/programmes/view.html:455
+#: app/templates/programmes/view.html:456
 #, python-format
 msgid "Reminders on: %(cadence)s at %(time)s your time."
 msgstr "रिमाइंडर: %(cadence)s को %(time)s आपके समय पर।"
 
-#: app/templates/programmes/view.html:527
+#: app/templates/programmes/view.html:528
 msgid "Add discussion"
 msgstr "चर्चा जोड़ें"
 
-#: app/templates/programmes/view.html:636
+#: app/templates/programmes/view.html:637
 msgid "Twice a week — Tue and Thu"
 msgstr "सप्ताह में दो बार - मंगलवार और गुरुवार"
 
-#: app/templates/programmes/view.html:640
+#: app/templates/programmes/view.html:641
 msgid "Choose how often you want a reminder first."
 msgstr "पहले चुनें कि आप कितनी बार अनुस्मारक चाहते हैं।"
 
-#: app/templates/programmes/view.html:641
+#: app/templates/programmes/view.html:642
 msgid "Enter the email address where we should send reminders."
 msgstr "वह ईमेल पता दर्ज करें जहां हम रिमाइंडर भेजें।"
 
-#: app/templates/programmes/view.html:642
+#: app/templates/programmes/view.html:643
 msgid "Reminders are scheduled:"
 msgstr "अनुस्मारक निर्धारित हैं:"
 
-#: app/templates/programmes/view.html:643
+#: app/templates/programmes/view.html:644
 msgid "at"
 msgstr "को"
 
-#: app/templates/programmes/view.html:644
+#: app/templates/programmes/view.html:645
 msgid "Check your inbox for a confirmation link to pick up where you left off."
 msgstr ""
 "अपने इनबॉक्स में एक पुष्टि लिंक के लिए जांचें जहां आप रुके थे वहां से "
 "शुरू करने के लिए।"
 
-#: app/templates/programmes/view.html:645
+#: app/templates/programmes/view.html:646
 msgid "Reminders saved for your account."
 msgstr "आपके खाते के लिए रिमाइंडर सहेज दिए गए।"
 
-#: app/templates/programmes/view.html:842
+#: app/templates/programmes/view.html:843
 msgid "Big Questions civic journey — Society Speaks"
 msgstr "Big Questions civic journey — Society Speaks"
 

@@ -21,6 +21,7 @@ import requests
 from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
 from app.briefing.link_tracker import wrap_links as _wrap_links
 from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
+from app.programmes.journey import GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME
 
 logger = logging.getLogger(__name__)
 
@@ -1830,6 +1831,7 @@ def send_journey_reminder_email(
             next_statement_count=next_statement_count,
             theme_checklist=theme_checklist,
             is_anonymous=not subscription.user_id,
+            theme_minutes_display_hint=GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME,
         )
 
         email_data = {

@@ -16,6 +16,10 @@ from app.models import ConsensusAnalysis, Discussion, Programme, Statement, Stat
 from app.api.utils import batch_discussion_participant_counts
 from app.programmes.journey_variants import VARIANT_METADATA
 
+# Rounded UX hint for “~N min” / “~N minutes” copy on guided journeys (vote-first
+# themes). Not a promise of wall-clock time; keep in sync with product messaging.
+GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME = 2
+
 
 # ---------------------------------------------------------------------------
 # Config helpers
@@ -341,6 +345,10 @@ def build_journey_progress(
     For anonymous visitors pass ``anon_fingerprint_aliases`` from
     ``anonymous_fingerprint_aliases_for_daily_lookup()`` so progress matches
     votes stored under any legacy cookie namespace.
+
+    ``theme_minutes_display_hint`` is the UX minute figure next to each theme
+    (see ``GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME``); templates sum it for
+    “min left” copy.
     """
     if discussions is None:
         discussions = ordered_journey_discussions(programme)
@@ -389,6 +397,7 @@ def build_journey_progress(
         "total_user_votes": total_user_votes,
         "total_statements": total_statements,
         "is_journey_complete": is_journey_complete,
+        "theme_minutes_display_hint": GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME,
     }
 
 

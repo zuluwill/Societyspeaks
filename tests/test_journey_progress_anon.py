@@ -61,6 +61,7 @@ def test_build_journey_progress_counts_anonymous_votes(app, db):
         assert prog["theme_items"][0].statement_total == 2
         assert prog["theme_items"][0].user_votes == 1
         assert prog["theme_items"][0].is_complete is False
+        assert prog["theme_minutes_display_hint"] == 2
 
 
 def test_build_journey_progress_anon_ignores_hidden_statement_votes(app, db):

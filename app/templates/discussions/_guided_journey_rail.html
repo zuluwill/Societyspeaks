@@ -4,13 +4,14 @@
 {% set jp = gjc.progress %}
 {% set ti = gjc.theme_item %}
 {% set prog = gjc.programme %}
-{# Rough minutes left: ~2 min budget per theme with votes remaining (matches programme page). #}
+{# Rough minutes left: one display-hint minute budget per theme with votes remaining. #}
 {% set jrail_mins = namespace(v=0) %}
+{% set _th = jp.theme_minutes_display_hint %}
 {% for item in jp.theme_items %}
   {% if not item.is_complete and item.statement_total > 0 %}
     {% set _left = item.statement_total - item.user_votes %}
     {% if _left > 0 %}
-      {% set jrail_mins.v = jrail_mins.v + 2 %}
+      {% set jrail_mins.v = jrail_mins.v + _th %}
     {% endif %}
   {% endif %}
 {% endfor %}

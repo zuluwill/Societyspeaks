@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-05-05 19:35+0100\n"
+"POT-Creation-Date: 2026-05-05 19:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ar\n"
@@ -87,89 +87,89 @@ msgstr "تفعيل حسابك في Society Speaks"
 msgid "We've paused your briefings — come back any time"
 msgstr "لقد أوقفنا ملخصاتك مؤقتًا - يمكنك العودة في أي وقت"
 
-#: app/resend_client.py:576
+#: app/resend_client.py:577
 msgid "You're Subscribed to Daily Civic Questions!"
 msgstr "أنت مشترك في الأسئلة المدنية اليومية!"
 
-#: app/resend_client.py:680 app/resend_client.py:952
+#: app/resend_client.py:681 app/resend_client.py:953
 #, python-format
 msgid "Daily Question #%(num)s: %(topic)s"
 msgstr "السؤال اليومي رقم %(num)s: %(topic)s"
 
-#: app/resend_client.py:680 app/resend_client.py:952
+#: app/resend_client.py:681 app/resend_client.py:953
 msgid "Civic"
 msgstr "مدني"
 
-#: app/resend_client.py:772
+#: app/resend_client.py:773
 #, python-format
 msgid "5 Questions This Week: %(first)s..."
 msgstr "5 أسئلة هذا الأسبوع: %(first)s..."
 
-#: app/resend_client.py:867
+#: app/resend_client.py:868
 #, python-format
 msgid "10 Questions This Month: %(first)s..."
 msgstr "10 أسئلة هذا الشهر: %(first)s..."
 
-#: app/resend_client.py:1227
+#: app/resend_client.py:1228
 msgid "New participant in your discussion"
 msgstr "مشارك جديد في نقاشك"
 
-#: app/resend_client.py:1228
+#: app/resend_client.py:1229
 #, python-format
 msgid "Someone new has joined your discussion '%(title)s'"
 msgstr "شخص جديد انضم إلى نقاشك '%(title)s'"
 
-#: app/resend_client.py:1231
+#: app/resend_client.py:1232
 msgid "New activity in your discussion"
 msgstr "نشاط جديد في نقاشك"
 
-#: app/resend_client.py:1232
+#: app/resend_client.py:1233
 #, python-format
 msgid "There's new activity in your discussion '%(title)s'"
 msgstr "هناك نشاط جديد في نقاشك '%(title)s'"
 
-#: app/resend_client.py:1234
+#: app/resend_client.py:1235
 msgid "New activity in a discussion you follow"
 msgstr "نشاط جديد في نقاش تتابعه"
 
-#: app/resend_client.py:1235
+#: app/resend_client.py:1236
 #, python-format
 msgid "There's new activity in a discussion you're following: '%(title)s'"
 msgstr "هناك نشاط جديد في النقاش الذي تتابعه: '%(title)s'"
 
-#: app/resend_client.py:1237
+#: app/resend_client.py:1238
 #, python-format
 msgid "Update: %(title)s"
 msgstr "تحديث: %(title)s"
 
-#: app/resend_client.py:1238
+#: app/resend_client.py:1239
 #, python-format
 msgid "A new update was posted to '%(title)s'"
 msgstr "تم نشر تحديث جديد على '%(title)s'"
 
-#: app/resend_client.py:1240
+#: app/resend_client.py:1241
 msgid "Activity in your discussion"
 msgstr "نشاط في نقاشك"
 
-#: app/resend_client.py:1241
+#: app/resend_client.py:1242
 #, python-format
 msgid "There's been activity in your discussion '%(title)s'"
 msgstr "حدث نشاط في نقاشك '%(title)s'"
 
-#: app/resend_client.py:1323
+#: app/resend_client.py:1324
 #, python-format
 msgid "You've been invited to join %(org)s on Society Speaks"
 msgstr "تمت دعوتك للانضمام إلى %(org)s على Society Speaks"
 
-#: app/resend_client.py:1550
+#: app/resend_client.py:1551
 msgid "Complete Your Society Speaks Profile"
 msgstr "أكمل ملفك الشخصي في Society Speaks"
 
-#: app/resend_client.py:1617
+#: app/resend_client.py:1618
 msgid "Your Weekly Discussion Digest - Society Speaks"
 msgstr "ملخص مناقشاتك الأسبوعي - Society Speaks"
 
-#: app/resend_client.py:1838
+#: app/resend_client.py:1840
 #, python-format
 msgid "Continue your journey: %(theme)s — Society Speaks"
 msgstr "تابع رحلتك: %(theme)s — Society Speaks"
@@ -408,7 +408,7 @@ msgid "Subscribed! Your first Daily Brief will arrive at %(email)s."
 msgstr "تم الاشتراك! ستصل نشرتك اليومية الأولى إلى %(email)s."
 
 #: app/auth/routes.py:882 app/auth/routes.py:908 app/brief/routes.py:539
-#: app/brief/routes.py:540 app/templates/programmes/view.html:646
+#: app/brief/routes.py:540 app/templates/programmes/view.html:647
 msgid "Something went wrong. Please try again."
 msgstr "حدث خطأ ما. يرجى المحاولة مجدداً."
 
@@ -6154,10 +6154,10 @@ msgstr "الإدارة"
 msgid "Sign out"
 msgstr "تسجيل الخروج"
 
-#: app/templates/discussions/_guided_journey_rail.html:61
+#: app/templates/discussions/_guided_journey_rail.html:62
 #: app/templates/layout.html:896 app/templates/layout.html:1188
 #: app/templates/partner/portal/login.html:34 app/templates/platform.html:1157
-#: app/templates/programmes/view.html:262
+#: app/templates/programmes/view.html:263
 msgid "Sign in"
 msgstr "تسجيل الدخول"
 
@@ -8721,8 +8721,8 @@ msgstr "يومياً"
 #: app/templates/brief/reader.html:6 app/templates/brief/reader.html:267
 #: app/templates/brief/subscribe.html:67 app/templates/briefing/create.html:93
 #: app/templates/briefing/edit.html:43 app/templates/daily/preferences.html:50
-#: app/templates/daily/subscribe.html:55 app/templates/programmes/view.html:402
-#: app/templates/programmes/view.html:440
+#: app/templates/daily/subscribe.html:55 app/templates/programmes/view.html:403
+#: app/templates/programmes/view.html:441
 msgid "Weekly"
 msgstr "أسبوعياً"
 
@@ -10275,7 +10275,7 @@ msgid "Every day"
 msgstr "كل يوم"
 
 #: app/templates/brief/preferences.html:87
-#: app/templates/programmes/view.html:635
+#: app/templates/programmes/view.html:636
 msgid "Once a week"
 msgstr "مرة واحدة في الأسبوع"
 
@@ -10572,12 +10572,12 @@ msgid "Using your account email"
 msgstr "باستخدام بريدك الإلكتروني للحساب"
 
 #: app/templates/brief/subscribe.html:44 app/templates/daily/subscribe.html:42
-#: app/templates/programmes/view.html:390
+#: app/templates/programmes/view.html:391
 msgid "you@example.com"
 msgstr "you@example.com"
 
 #: app/templates/brief/subscribe.html:56 app/templates/daily/subscribe.html:46
-#: app/templates/programmes/view.html:397
+#: app/templates/programmes/view.html:398
 msgid "How often?"
 msgstr "كم مرة؟"
 
@@ -15160,7 +15160,7 @@ msgstr "نسخ الرابط"
 #: app/templates/discussions/view_discussion.html:860
 #: app/templates/discussions/view_native.html:1189
 #: app/templates/partner/embed_generator.html:355
-#: app/templates/programmes/view.html:839
+#: app/templates/programmes/view.html:840
 msgid "Copied!"
 msgstr "تم النسخ!"
 
@@ -16554,15 +16554,15 @@ msgstr "فشل تسجيل التصويت:"
 msgid "Failed to record vote. Please try again."
 msgstr "فشل تسجيل التصويت. يرجى المحاولة مرة أخرى."
 
-#: app/templates/discussions/_guided_journey_rail.html:19
+#: app/templates/discussions/_guided_journey_rail.html:20
 msgid "Big Questions journey progress for this theme"
 msgstr "تقدم رحلة Big Questions لهذا الموضوع"
 
-#: app/templates/discussions/_guided_journey_rail.html:24
+#: app/templates/discussions/_guided_journey_rail.html:25
 msgid "Big Questions"
 msgstr "Big Questions"
 
-#: app/templates/discussions/_guided_journey_rail.html:27
+#: app/templates/discussions/_guided_journey_rail.html:28
 #, python-format
 msgid ""
 "Theme <span class=\"font-bold text-white\">%(index)s</span> of <span "
@@ -16571,33 +16571,33 @@ msgstr ""
 "الموضوع <span class=\"font-bold text-white\">%(index)s</span> من <span "
 "class=\"font-bold text-white\">%(total)d</span>"
 
-#: app/templates/discussions/_guided_journey_rail.html:35
+#: app/templates/discussions/_guided_journey_rail.html:36
 msgid "Journey overview"
 msgstr "نظرة عامة على الرحلة"
 
-#: app/templates/discussions/_guided_journey_rail.html:40
+#: app/templates/discussions/_guided_journey_rail.html:41
 msgid "themes done"
 msgstr "مواضيع مكتملة"
 
-#: app/templates/discussions/_guided_journey_rail.html:41
+#: app/templates/discussions/_guided_journey_rail.html:42
 #, python-format
 msgid "~%(p)d%%"
 msgstr "~%(p)d%%"
 
-#: app/templates/discussions/_guided_journey_rail.html:42
+#: app/templates/discussions/_guided_journey_rail.html:43
 msgid "min left overall"
 msgstr "دقائق متبقية إجمالاً"
 
-#: app/templates/discussions/_guided_journey_rail.html:54
+#: app/templates/discussions/_guided_journey_rail.html:55
 msgid "All done ✓"
 msgstr "تم الانتهاء ✓"
 
-#: app/templates/discussions/_guided_journey_rail.html:55
+#: app/templates/discussions/_guided_journey_rail.html:56
 #, python-format
 msgid "%(num)d to go"
 msgstr "%(num)d متبقية"
 
-#: app/templates/discussions/_guided_journey_rail.html:56
+#: app/templates/discussions/_guided_journey_rail.html:57
 #: app/templates/partner/portal/discussion_detail.html:204
 #, python-format
 msgid "%(num)d statement"
@@ -16609,23 +16609,23 @@ msgstr[3] "%(num)d بيانات"
 msgstr[4] "%(num)d بيانات"
 msgstr[5] "%(num)d تصريحات"
 
-#: app/templates/discussions/_guided_journey_rail.html:61
+#: app/templates/discussions/_guided_journey_rail.html:62
 msgid "to track your progress"
 msgstr "لتتبع تقدمك"
 
-#: app/templates/discussions/_guided_journey_rail.html:71
+#: app/templates/discussions/_guided_journey_rail.html:72
 msgid "Your recap"
 msgstr "ملخصك"
 
-#: app/templates/discussions/_guided_journey_rail.html:76
+#: app/templates/discussions/_guided_journey_rail.html:77
 msgid "Next theme →"
 msgstr "الموضوع التالي ←"
 
-#: app/templates/discussions/_guided_journey_rail.html:81
+#: app/templates/discussions/_guided_journey_rail.html:82
 msgid "View recap"
 msgstr "عرض الملخص"
 
-#: app/templates/discussions/_guided_journey_rail.html:86
+#: app/templates/discussions/_guided_journey_rail.html:87
 msgid "Full recap →"
 msgstr "الملخص الكامل →"
 
@@ -19049,7 +19049,7 @@ msgid "Copy link to this discussion"
 msgstr "نسخ رابط هذا النقاش"
 
 #: app/templates/discussions/view_native.html:1188
-#: app/templates/programmes/view.html:310
+#: app/templates/programmes/view.html:311
 msgid "Copy link"
 msgstr "نسخ الرابط"
 
@@ -19649,8 +19649,9 @@ msgstr "تابع رحلتك المدنية — Society Speaks"
 
 #: app/templates/emails/journey_reminder.html:5
 #, python-format
-msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~2 mins)"
-msgstr "%(done)s من أصل %(total)d مواضيع منجزة. التالي: %(next)s (~2 دقيقة)"
+msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~%(mins)d mins)"
+msgstr ""
+"%(done)s من أصل %(total)d مواضيع منجزة. التالي: %(next)s (~%(mins)d دقيقة)"
 
 #: app/templates/emails/journey_reminder.html:12
 #: app/templates/emails/journey_reminder_confirm.html:11
@@ -19697,8 +19698,9 @@ msgstr "التالي"
 
 #: app/templates/emails/journey_reminder.html:55
 #, python-format
-msgid "About 5 minutes &nbsp;·&nbsp; %(count)d statements to vote on"
-msgstr "حوالي 5 دقائق &nbsp;·&nbsp; %(count)d تصريحات للتصويت عليها"
+msgid "About %(mins)d minutes &nbsp;·&nbsp; %(count)d statements to vote on"
+msgstr ""
+"حوالي %(mins)d دقائق &nbsp;·&nbsp; %(count)d تصريحات للتصويت عليها"
 
 #: app/templates/emails/journey_reminder.html:68
 #: app/templates/emails/journey_reminder_confirm.html:28
@@ -19723,7 +19725,7 @@ msgid ""
 msgstr "أنت تتلقى هذا لأنك طلبت تذكيرات على رحلة %(link)s."
 
 #: app/templates/emails/journey_reminder.html:114
-#: app/templates/programmes/view.html:458
+#: app/templates/programmes/view.html:459
 msgid "Stop reminders"
 msgstr "إيقاف التذكيرات"
 
@@ -23322,7 +23324,7 @@ msgstr ""
 #: app/templates/help/programmes.html:239
 #: app/templates/programmes/_form.html:134
 #: app/templates/programmes/settings.html:39
-#: app/templates/programmes/view.html:317
+#: app/templates/programmes/view.html:318
 msgid "Themes"
 msgstr "المواضيع"
 
@@ -28303,7 +28305,7 @@ msgstr "أنت جاهز للتوسع عبر موقعك."
 
 #: app/templates/partner/portal/success.html:25
 #: app/templates/programmes/journey_recap.html:117
-#: app/templates/programmes/view.html:325
+#: app/templates/programmes/view.html:326
 msgid "Completed"
 msgstr "مكتمل"
 
@@ -28936,7 +28938,7 @@ msgid ""
 msgstr "مشاركة مدنية منظمة مع تسليط الضوء على الإجماع والأفكار الجسور لكل موضوع."
 
 #: app/templates/programmes/journey_recap.html:30
-#: app/templates/programmes/view.html:196
+#: app/templates/programmes/view.html:197
 msgid "Journey complete"
 msgstr "اكتملت الرحلة"
 
@@ -29038,7 +29040,7 @@ msgid "%(done)s/%(total)d votes"
 msgstr "%(done)s/%(total)d أصوات"
 
 #: app/templates/programmes/journey_recap.html:125
-#: app/templates/programmes/view.html:333
+#: app/templates/programmes/view.html:334
 msgid "Not started"
 msgstr "لم تبدأ بعد"
 
@@ -29283,190 +29285,195 @@ msgstr ""
 msgid "No participant access grants yet."
 msgstr "لا توجد تصاريح وصول للمشاركين حتى الآن."
 
-#: app/templates/programmes/view.html:201
+#: app/templates/programmes/view.html:202
 msgid "You've finished — amazing work."
 msgstr "لقد انتهيت – عمل رائع."
 
-#: app/templates/programmes/view.html:204
+#: app/templates/programmes/view.html:205
 #, python-format
 msgid "%(votes)s votes across %(total)d themes — see how you compare."
 msgstr "%(votes)s أصوات عبر %(total)d موضوع — انظر كيف يمكنك المقارنة."
 
-#: app/templates/programmes/view.html:207
+#: app/templates/programmes/view.html:208
+#, python-format
 msgid ""
-"Each theme is quick (~2 minutes). Spread them across sessions — there is "
-"no deadline."
+"Each theme is quick (~%(mins)d minutes). Spread them across sessions — "
+"there is no deadline."
 msgstr ""
-"كل موضوع سريع (~2 دقيقة). وزّعه على جلسات — لا موعد نهائي."
+"كل موضوع سريع (~%(mins)d دقيقة). وزّعه على جلسات — لا موعد نهائي."
 
-#: app/templates/programmes/view.html:214
+#: app/templates/programmes/view.html:215
 msgid "View full recap"
 msgstr "عرض الملخص الكامل"
 
-#: app/templates/programmes/view.html:239
+#: app/templates/programmes/view.html:240
 msgid "Guided journey"
 msgstr "رحلة موجّهة"
 
-#: app/templates/programmes/view.html:243
+#: app/templates/programmes/view.html:244
 msgid "Start your civic journey"
 msgstr "ابدأ رحلتك المدنية"
 
-#: app/templates/programmes/view.html:245
+#: app/templates/programmes/view.html:246
 msgid "You're on your way"
 msgstr "أنت في الطريق الصحيح"
 
-#: app/templates/programmes/view.html:247
+#: app/templates/programmes/view.html:248
 msgid "Almost there — one theme left!"
 msgstr "لقد أوشكت على الانتهاء — بقي موضوع واحد!"
 
-#: app/templates/programmes/view.html:249
+#: app/templates/programmes/view.html:250
 msgid "Pick up where you left off"
 msgstr "استكمل من حيث توقفت"
 
-#: app/templates/programmes/view.html:254
+#: app/templates/programmes/view.html:255
 msgid "themes completed"
 msgstr "موضوعات مكتملة"
 
-#: app/templates/programmes/view.html:256
+#: app/templates/programmes/view.html:257
 #, python-format
 msgid "~%(pct)d%% through by votes"
 msgstr "~%(pct)d%% مكتملة من التصويتات"
 
-#: app/templates/programmes/view.html:259
+#: app/templates/programmes/view.html:260
 #, python-format
 msgid "~%(mins)d min left at your pace"
 msgstr "~%(mins)d دقيقة متبقية وفقًا لسرعتك"
 
-#: app/templates/programmes/view.html:262
+#: app/templates/programmes/view.html:263
 msgid "to save progress."
 msgstr "لحفظ التقدم."
 
-#: app/templates/programmes/view.html:264
+#: app/templates/programmes/view.html:265
 msgid "votes cast"
 msgstr "أصوات أدلى بها"
 
-#: app/templates/programmes/view.html:274
+#: app/templates/programmes/view.html:275
 msgid "Progress through all statements in this journey"
 msgstr "أحرز تقدماً في جميع العبارات في هذه الرحلة"
 
-#: app/templates/programmes/view.html:281
-msgid "Each theme is quick (~2 minutes). Take breaks anytime — nothing is gated."
+#: app/templates/programmes/view.html:282
+#, python-format
+msgid ""
+"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is"
+" gated."
 msgstr ""
-"كل موضوع سريع (~2 دقيقة). خذ فترات راحة متى شئت — لا شيء إلزامي."
+"كل موضوع سريع (~%(mins)d دقيقة). خذ فترات راحة متى شئت — لا شيء إلزامي."
 
-#: app/templates/programmes/view.html:290
+#: app/templates/programmes/view.html:291
 msgid "Begin:"
 msgstr "يبدأ:"
 
-#: app/templates/programmes/view.html:290
+#: app/templates/programmes/view.html:291
 msgid "Continue:"
 msgstr "استكمل:"
 
-#: app/templates/programmes/view.html:296
+#: app/templates/programmes/view.html:297
 msgid "View progress recap"
 msgstr "عرض ملخص التقدم"
 
-#: app/templates/programmes/view.html:301
+#: app/templates/programmes/view.html:302
 msgid "Share this journey — opens native share sheet or copies link"
 msgstr "مشاركة هذه الرحلة - لفتح ورقة المشاركة الأصلية أو نسخ الرابط"
 
-#: app/templates/programmes/view.html:304
+#: app/templates/programmes/view.html:305
 msgid "Share journey"
 msgstr "شارك الرحلة"
 
-#: app/templates/programmes/view.html:307
+#: app/templates/programmes/view.html:308
 msgid "Copy journey overview link"
 msgstr "انسخ رابط نظرة عامة على الرحلة"
 
-#: app/templates/programmes/view.html:342
-msgid "~2 min"
-msgstr "~2 د"
+#: app/templates/programmes/view.html:343
+#, python-format
+msgid "~%(mins)d min"
+msgstr "~%(mins)d د"
 
-#: app/templates/programmes/view.html:383
+#: app/templates/programmes/view.html:384
 msgid "Want reminders to finish this journey?"
 msgstr "هل تريد تذكيرات لإنهاء هذه الرحلة؟"
 
-#: app/templates/programmes/view.html:384
+#: app/templates/programmes/view.html:385
 msgid "Short email nudges — pick cadence and time. One tap unsubscribe anytime."
 msgstr ""
 "تنبيهات قصيرة عبر البريد الإلكتروني — اختر الإيقاع والوقت. بنقرة واحدة "
 "إلغاء الاشتراك في أي وقت."
 
-#: app/templates/programmes/view.html:389
+#: app/templates/programmes/view.html:390
 msgid "Email for reminders"
 msgstr "البريد الإلكتروني للتذكيرات"
 
-#: app/templates/programmes/view.html:407
-#: app/templates/programmes/view.html:440
+#: app/templates/programmes/view.html:408
+#: app/templates/programmes/view.html:441
 msgid "Twice a week"
 msgstr "مرتين في الأسبوع"
 
-#: app/templates/programmes/view.html:412
-#: app/templates/programmes/view.html:440
-#: app/templates/programmes/view.html:637
+#: app/templates/programmes/view.html:413
+#: app/templates/programmes/view.html:441
+#: app/templates/programmes/view.html:638
 msgid "Weekend mornings"
 msgstr "صباحات نهاية الأسبوع"
 
-#: app/templates/programmes/view.html:418
+#: app/templates/programmes/view.html:419
 msgid "What time?"
 msgstr "في أي وقت؟"
 
-#: app/templates/programmes/view.html:418
+#: app/templates/programmes/view.html:419
 msgid "(your device’s local time)"
 msgstr "(التوقيت المحلي لجهازك)"
 
-#: app/templates/programmes/view.html:425
+#: app/templates/programmes/view.html:426
 msgid "Turn on reminders"
 msgstr "تشغيل التذكيرات"
 
-#: app/templates/programmes/view.html:427
+#: app/templates/programmes/view.html:428
 msgid "We only send journey nudges. Unsubscribe anytime from our emails."
 msgstr ""
 "نحن نرسل فقط دفعات الرحلة. إلغاء الاشتراك في أي وقت من رسائل البريد "
 "الإلكتروني لدينا."
 
-#: app/templates/programmes/view.html:431
+#: app/templates/programmes/view.html:432
 msgid "Dismiss reminder suggestion"
 msgstr "رفض اقتراح التذكير"
 
-#: app/templates/programmes/view.html:455
+#: app/templates/programmes/view.html:456
 #, python-format
 msgid "Reminders on: %(cadence)s at %(time)s your time."
 msgstr "تذكيرات بشأن: %(cadence)s في %(time)s من وقتك."
 
-#: app/templates/programmes/view.html:527
+#: app/templates/programmes/view.html:528
 msgid "Add discussion"
 msgstr "إضافة نقاش"
 
-#: app/templates/programmes/view.html:636
+#: app/templates/programmes/view.html:637
 msgid "Twice a week — Tue and Thu"
 msgstr "مرتين في الأسبوع - الثلاثاء والخميس"
 
-#: app/templates/programmes/view.html:640
+#: app/templates/programmes/view.html:641
 msgid "Choose how often you want a reminder first."
 msgstr "اختر عدد المرات التي تريد فيها التذكير أولاً."
 
-#: app/templates/programmes/view.html:641
+#: app/templates/programmes/view.html:642
 msgid "Enter the email address where we should send reminders."
 msgstr "أدخل عنوان بريدك الإلكتروني حيث يجب أن نرسل لك التذكيرات."
 
-#: app/templates/programmes/view.html:642
+#: app/templates/programmes/view.html:643
 msgid "Reminders are scheduled:"
 msgstr "تمت جدولة التذكيرات:"
 
-#: app/templates/programmes/view.html:643
+#: app/templates/programmes/view.html:644
 msgid "at"
 msgstr "في"
 
-#: app/templates/programmes/view.html:644
+#: app/templates/programmes/view.html:645
 msgid "Check your inbox for a confirmation link to pick up where you left off."
 msgstr "تحقق من بريدك الوارد للعثور على رابط التأكيد لمتابعة ما توقفت عنده."
 
-#: app/templates/programmes/view.html:645
+#: app/templates/programmes/view.html:646
 msgid "Reminders saved for your account."
 msgstr "تم حفظ التذكيرات لحسابك."
 
-#: app/templates/programmes/view.html:842
+#: app/templates/programmes/view.html:843
 msgid "Big Questions civic journey — Society Speaks"
 msgstr "رحلة Big Questions المدنية — Society Speaks"
 

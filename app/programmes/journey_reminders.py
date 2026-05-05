@@ -57,14 +57,14 @@ def send_due_journey_reminders(db, app_context=True):
             ordered = ordered_journey_discussions(programme)
             progress = build_journey_progress(programme, sub.user_id, discussions=ordered)
 
-            if progress.is_journey_complete:
+            if progress["is_journey_complete"]:
                 sub.unsubscribed_at = now
                 db.session.commit()
                 logger.info(f"Auto-unsubscribed {sub.email} ({programme.slug}) — journey complete")
                 skipped += 1
                 continue
 
-            if not progress.next_item:
+            if not progress["next_item"]:
                 skipped += 1
                 continue
 
@@ -73,16 +73,16 @@ def send_due_journey_reminders(db, app_context=True):
                     'name': item.discussion.programme_theme or item.discussion.title,
                     'is_complete': item.is_complete,
                 }
-                for item in progress.theme_items
+                for item in progress["theme_items"]
             ]
 
             success = send_journey_reminder_email(
                 subscription=sub,
                 programme=programme,
-                next_discussion=progress.next_item.discussion,
+                next_discussion=progress["next_item"].discussion,
                 theme_checklist=theme_checklist,
-                completed_themes=progress.completed_themes,
-                total_themes=progress.total_themes,
+                completed_themes=progress["completed_themes"],
+                total_themes=progress["total_themes"],
             )
 
             if success:
