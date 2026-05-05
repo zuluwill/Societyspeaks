@@ -13259,9 +13259,6 @@ msgstr "組織に参加するためのリンクが記載されたメールが送
 msgid ""
 "You've reached the maximum of %(max)s team members on your %(plan)s plan."
 msgstr ""
-"%(plan)s プランでは最大 %(max)s "
-"名のチームメンバーに達しました。%(link_start)sプランをアップグレード%(link_end)sして、さらに追加できます。"
-
 #: app/templates/briefing/organization_settings.html:190
 msgid "Upgrade your plan"
 msgstr ""
@@ -17806,8 +17803,7 @@ msgstr "Society Speaks でのディスカッション作成"
 #: app/templates/discussions/search_discussions.html:12
 #, fuzzy, python-format
 msgid "Results for %(term)s."
-msgstr "「%(term)s」で%(num)d件の結果が見つかりました"
-
+msgstr ""
 #: app/templates/discussions/search_discussions.html:21
 #, fuzzy
 msgid "Discussions, Society, Community Engagement"
@@ -27795,7 +27791,7 @@ msgstr "あなたの投票:"
 #: app/templates/programmes/journey_recap.html:265
 #, fuzzy, python-format
 msgid "%(voted)d of %(total)d statements"
-msgstr "%(voted)s / %(total)d 件の意見に投票"
+msgstr "%(voted)d / %(total)d 件の意見に投票"
 
 #: app/templates/programmes/journey_recap.html:272
 #, fuzzy, python-format
@@ -27946,9 +27942,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "%(votes)s votes across %(total)d themes — see how you compare."
 msgstr ""
-"%(name)s で %(total)d テーマ全体で %(votes)s "
-"票が投じられました。下にスクロールしてクラウドの投票状況と自分の立場を確認してください。"
-
 #: app/templates/programmes/view.html:207
 msgid ""
 "People usually spread this across short sessions (~20–40 minutes per theme)."
@@ -27991,7 +27984,7 @@ msgstr "テーマ完了"
 #: app/templates/programmes/view.html:256
 #, fuzzy, python-format
 msgid "~%(pct)d%% through by votes"
-msgstr "%(pct)s%% 右"
+msgstr "%(pct)d%% 右"
 
 #: app/templates/programmes/view.html:259
 #, python-format

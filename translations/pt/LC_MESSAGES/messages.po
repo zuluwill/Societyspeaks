@@ -14356,9 +14356,6 @@ msgstr ""
 msgid ""
 "You've reached the maximum of %(max)s team members on your %(plan)s plan."
 msgstr ""
-"Você atingiu o máximo de %(max)s membros da equipe no plano %(plan)s. "
-"%(link_start)sAtualize seu plano%(link_end)s para adicionar mais."
-
 #: app/templates/briefing/organization_settings.html:190
 msgid "Upgrade your plan"
 msgstr ""
@@ -19146,7 +19143,7 @@ msgstr "Criar Discussões no Society Speaks"
 #: app/templates/discussions/search_discussions.html:12
 #, fuzzy, python-format
 msgid "Results for %(term)s."
-msgstr "Encontrado %(num)d resultado para \"%(term)s\""
+msgstr ""
 
 #: app/templates/discussions/search_discussions.html:21
 #, fuzzy
@@ -30028,7 +30025,7 @@ msgstr "Você votou:"
 #: app/templates/programmes/journey_recap.html:265
 #, fuzzy, python-format
 msgid "%(voted)d of %(total)d statements"
-msgstr "%(voted)s de %(total)d declarações votadas"
+msgstr "%(voted)d de %(total)d declarações votadas"
 
 #: app/templates/programmes/journey_recap.html:272
 #, fuzzy, python-format
@@ -30187,9 +30184,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "%(votes)s votes across %(total)d themes — see how you compare."
 msgstr ""
-"%(votes)s votos registrados em %(total)d temas em %(name)s. Role para baixo "
-"para ver como a multidão votou e onde você se posiciona."
-
 #: app/templates/programmes/view.html:207
 msgid ""
 "People usually spread this across short sessions (~20–40 minutes per theme)."
@@ -30232,7 +30226,7 @@ msgstr "temas concluídos"
 #: app/templates/programmes/view.html:256
 #, fuzzy, python-format
 msgid "~%(pct)d%% through by votes"
-msgstr "%(pct)s%% Direita"
+msgstr "%(pct)d%% Direita"
 
 #: app/templates/programmes/view.html:259
 #, python-format
