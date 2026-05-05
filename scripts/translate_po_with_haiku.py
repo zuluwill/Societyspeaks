@@ -41,6 +41,18 @@ import time
 from pathlib import Path
 from typing import List, Tuple
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _load_repo_env() -> None:
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(_REPO_ROOT / ".env")
+    except ImportError:
+        pass
+
+
 try:
     import polib
 except ImportError:
@@ -187,25 +199,24 @@ def validate_translation(src: str, tr: str) -> bool:
     return src_ph == tr_ph
 
 
-def plural_entries(entry) -> List[Tuple[str, int]]:
-    """For a plural entry, return (text, index) pairs for each msgstr_plural slot."""
-    if not entry.msgid_plural:
-        return [(entry.msgid, -1)]
-    # Single + plural msgid mapped to multiple msgstr_plural[i] slots.
-    # Most target languages only need 2 forms; some (ar, ru) need more.
-    return [(entry.msgid, 0), (entry.msgid_plural, 1)]
+def nplurals_from_po_header(pofile: polib.POFile) -> int:
+    """Plural slot count from Plural-Forms (default 2 for singular + plural)."""
+    hdr = (pofile.metadata or {}).get("Plural-Forms") or ""
+    m = re.search(r"nplurals\s*=\s*(\d+)", hdr, re.I)
+    return int(m.group(1)) if m else 2
 
 
 def collect_pending(pofile: polib.POFile, only_new: bool) -> List[Tuple[polib.POEntry, str, int]]:
     """Return (entry, msgid_text, plural_index) for each empty/fuzzy msgstr slot."""
+    npl_cat = nplurals_from_po_header(pofile)
     pending = []
     for entry in pofile:
         if entry.obsolete:
             continue
         is_fuzzy = "fuzzy" in entry.flags
         if entry.msgid_plural:
-            # plural: multiple msgstr_plural slots
-            for i, ms in sorted(entry.msgstr_plural.items()):
+            for i in range(npl_cat):
+                ms = entry.msgstr_plural.get(i, "")
                 if ms.strip() and (only_new or not is_fuzzy):
                     continue
                 src = entry.msgid if i == 0 else entry.msgid_plural
@@ -296,22 +307,29 @@ def translate_locale(
 
 
 def run_pybabel_compile() -> int:
-    try:
-        r = subprocess.run(
-            ["pybabel", "compile", "-d", "translations"],
-            check=False, capture_output=True, text=True,
-        )
-        if r.returncode != 0 or "error" in r.stderr.lower():
-            print(r.stderr)
-            return r.returncode or 1
-        print(r.stderr.strip())
-        return 0
-    except FileNotFoundError:
-        print("pybabel not on PATH — skipping compile")
-        return 0
+    py = sys.executable or "python3"
+    for base in [["pybabel"], [py, "-m", "babel.messages.frontend"]]:
+        try:
+            r = subprocess.run(
+                base + ["compile", "-d", "translations"],
+                cwd=_REPO_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError:
+            continue
+        errs = sum(1 for line in r.stderr.splitlines() if line.startswith("error"))
+        if r.returncode == 0 and errs == 0:
+            if r.stderr.strip():
+                print(r.stderr.strip())
+            return 0
+    print("compile: could not compile translations (pybabel / python -m babel)")
+    return 1
 
 
 def main():
+    _load_repo_env()
     p = argparse.ArgumentParser()
     p.add_argument("--locales", nargs="*", default=None,
                    help="Locales to translate (default: all non-English)")

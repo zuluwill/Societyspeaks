@@ -14,6 +14,8 @@
 #   3. ANTHROPIC_API_KEY=... python3 scripts/translate_po_with_haiku.py  # fill empty msgstrs
 #   4. ./scripts/compile_translations.sh  (this script)  # rebuild .mo files
 #   5. python3 scripts/i18n_check.py  # sanity check placeholders / bindings
+#   If gettext reports placeholder/format errors after split-template refactors, run:
+#      python3 scripts/repair_po_after_template_splits.py
 #   If legacy .po files still have #~ collisions, run: python3 scripts/strip_po_obsolete.py
 #
 # Deploy (scripts/build.sh) also runs step 4 automatically.

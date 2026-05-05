@@ -12,20 +12,28 @@ Exits non-zero if any of these fail:
   5. Any `render_template('emails/…')` bypasses `_render_for_user`.
   6. Any `_l(` lazy_gettext appears in a `|tojson` context.
   7. pybabel extract + compile succeeds with zero errors.
+  8. GNU msgfmt --check-syntax (when `msgfmt` is on PATH) passes for every locale.
+  9. Named printf tokens in non-empty translations match each msgid (same tokens as
+     `pybabel compile` / gettext format checks).
 
 Usage:
     python3 scripts/i18n_check.py                 # normal mode, exits 0/1
-    python3 scripts/i18n_check.py --json          # emit machine-readable report
+    python3 scripts/i18n_check.py --json               # emit machine-readable report
+    python3 scripts/i18n_check.py --skip-msgfmt          # gettext msgfmt binary not installed
 """
 from __future__ import annotations
 
 import argparse
 import ast
 import json
+import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
+
+from babel.messages.pofile import read_po
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -58,6 +66,95 @@ PLACE_RE = re.compile(r"%\([A-Za-z_][A-Za-z0-9_]*\)[a-zA-Z]|%%|%[sdrifxX]")
 
 def placeholders(s: str) -> list[str]:
     return PLACE_RE.findall(s or "")
+
+
+def percent_sequence_valid(s: str | None) -> tuple[bool, str]:
+    """Reject bare `%` that would break gettext %-formatting (mirrors template checks)."""
+    body = s or ""
+    if "%" not in body:
+        return True, ""
+    safe = placeholders(body)
+    expected = sum(2 if x == "%%" else 1 for x in safe)
+    if body.count("%") != expected:
+        return False, "bare or broken % sequence"
+    return True, ""
+
+
+def check_po_printf_parity(report: list[str]) -> int:
+    """Ensure each non-empty translation has the same printf tokens as its msgid."""
+    failures = 0
+    trans_root = ROOT.joinpath("translations")
+    for po in sorted(trans_root.glob("*/LC_MESSAGES/messages.po")):
+        locale = po.parts[-3]
+        with po.open(encoding="utf-8") as f:
+            catalog = read_po(f, locale=locale)
+        for msg in catalog:
+            mid = msg.id
+            ms = msg.string
+            pairs: list[tuple[str, str]]
+            if isinstance(mid, tuple):
+                n = len(mid)
+                ms_list = list(ms) if isinstance(ms, (list, tuple)) else [""] * n
+                while len(ms_list) < n:
+                    ms_list.append("")
+                pairs = list(zip(mid, ms_list[:n]))
+            else:
+                if isinstance(mid, str) and not mid.strip():
+                    continue
+                pairs = [(str(mid), ms if isinstance(ms, str) else "")]
+            for msgid_s, msgstr_s in pairs:
+                if msgstr_s is None:
+                    continue
+                mss = str(msgstr_s)
+                if not mss.strip():
+                    continue
+                ok, why = percent_sequence_valid(mss)
+                if not ok:
+                    snippet = (msgid_s.replace("\n", " ")[:72] + ("…" if len(msgid_s) > 72 else ""))
+                    report.append(f"PO-BAD-PERCENT {locale} msgid={snippet!r}: {why}")
+                    failures += 1
+                    continue
+                if sorted(placeholders(msgid_s)) != sorted(placeholders(mss)):
+                    snippet = (msgid_s.replace("\n", " ")[:72] + ("…" if len(msgid_s) > 72 else ""))
+                    report.append(
+                        f"PO-PLACEHOLDER-MISMATCH {locale} msgid={snippet!r}: "
+                        f"id={placeholders(msgid_s)!r} vs str={placeholders(mss)!r}"
+                    )
+                    failures += 1
+    return failures
+
+
+def check_msgfmt_strict(report: list[str]) -> int:
+    """GNU gettext `msgfmt --check` across locales (no-op if msgfmt is unavailable)."""
+    try:
+        subprocess.run(
+            ["msgfmt", "--version"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return 0
+    failures = 0
+    for po in sorted(ROOT.joinpath("translations").glob("*/LC_MESSAGES/messages.po")):
+        with tempfile.NamedTemporaryFile(suffix=".mo", delete=False) as tmp:
+            out_mo = Path(tmp.name)
+        try:
+            r = subprocess.run(
+                ["msgfmt", "-c", "-o", str(out_mo), str(po)],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        finally:
+            out_mo.unlink(missing_ok=True)
+        if r.returncode != 0:
+            failures += 1
+            detail = (r.stderr or r.stdout or "").strip()
+            report.append(f"MSGFMT {po.relative_to(ROOT)}: {detail}")
+    return failures
 
 
 def check_percent_validity(report: list[str]) -> int:
@@ -175,21 +272,32 @@ def check_lazy_in_tojson(report: list[str]) -> int:
 
 def check_pybabel() -> tuple[int, str]:
     """Run pybabel extract + compile; return (error_count, output)."""
+    pot_path = ROOT / "messages.pot"
+    python = os.environ.get("PYTHON", "python3")
+    attempts: list[list[str]] = [["pybabel"], [python, "-m", "babel.messages.frontend"]]
+    last_err = "babel extract/compile unavailable"
     try:
-        r = subprocess.run(
-            ["pybabel", "extract", "-F", "babel.cfg", "-o", "messages.pot", "."],
-            cwd=ROOT, check=False, capture_output=True, text=True,
-        )
-        if r.returncode != 0:
-            return -1, f"extract failed:\n{r.stderr}"
-        r2 = subprocess.run(
-            ["pybabel", "compile", "-d", "translations"],
-            cwd=ROOT, check=False, capture_output=True, text=True,
-        )
-        errs = sum(1 for line in r2.stderr.splitlines() if line.startswith("error"))
-        return errs, r2.stderr
-    except FileNotFoundError:
-        return -1, "pybabel not on PATH"
+        for base in attempts:
+            try:
+                r = subprocess.run(
+                    base + ["extract", "-F", "babel.cfg", "-o", "messages.pot", "."],
+                    cwd=ROOT, check=False, capture_output=True, text=True,
+                )
+            except FileNotFoundError:
+                last_err = f"{base[0]} not available"
+                continue
+            if r.returncode != 0:
+                last_err = f"extract failed:\n{r.stderr}"
+                continue
+            r2 = subprocess.run(
+                base + ["compile", "-d", "translations"],
+                cwd=ROOT, check=False, capture_output=True, text=True,
+            )
+            errs = sum(1 for line in r2.stderr.splitlines() if line.startswith("error"))
+            return errs, r2.stderr
+        return -1, last_err
+    finally:
+        pot_path.unlink(missing_ok=True)
 
 
 def main():
@@ -197,6 +305,8 @@ def main():
     p.add_argument("--json", action="store_true")
     p.add_argument("--skip-pybabel", action="store_true",
                    help="Skip pybabel extract/compile check (slow in pre-commit)")
+    p.add_argument("--skip-msgfmt", action="store_true",
+                   help="Skip GNU msgfmt --check (not installed on all dev machines)")
     args = p.parse_args()
 
     report: list[str] = []
@@ -206,7 +316,13 @@ def main():
         "unwrapped_flashes": check_unwrapped_flashes(report),
         "email_render_bypass": check_email_render_helpers(report),
         "lazy_in_tojson": check_lazy_in_tojson(report),
+        "po_placeholder_parity": check_po_printf_parity(report),
     }
+
+    if not args.skip_msgfmt:
+        results["msgfmt_check"] = check_msgfmt_strict(report)
+    else:
+        results["msgfmt_check"] = 0
 
     if not args.skip_pybabel:
         errs, output = check_pybabel()

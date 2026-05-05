@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-05-04 18:50+0100\n"
+"POT-Creation-Date: 2026-05-05 07:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: ja <LL@li.org>\n"
@@ -60,51 +60,126 @@ msgstr "管理者アクセスが必要です"
 msgid "Admin access required."
 msgstr "管理者アクセスが必要です。"
 
-#: app/resend_client.py:1221
+#: app/email_subject_msgids_for_extract.py:24
+#: app/templates/emails/password_reset.html:3
+msgid "Reset Your Password - Society Speaks"
+msgstr "パスワードをリセット - Society Speaks"
+
+#: app/email_subject_msgids_for_extract.py:25
+#: app/templates/emails/magic_login.html:3
+#, fuzzy
+msgid "Your Society Speaks sign-in link"
+msgstr "✓ Society Speaks のみ"
+
+#: app/email_subject_msgids_for_extract.py:26
+#, fuzzy
+msgid "Welcome to Society Speaks!"
+msgstr "Society Speaks へようこそ"
+
+#: app/email_subject_msgids_for_extract.py:27
+#, fuzzy
+msgid "Verify your Society Speaks email address"
+msgstr "メールアドレス確認 - Society Speaks"
+
+#: app/email_subject_msgids_for_extract.py:28
+#, fuzzy
+msgid "Activate Your Society Speaks Account"
+msgstr "Society Speaksアカウントを有効化してください"
+
+#: app/email_subject_msgids_for_extract.py:31
+msgid "We've paused your briefings — come back any time"
+msgstr "ブリーフィングを一時停止しました - いつでも戻ってきてください"
+
+#: app/resend_client.py:576
+#, fuzzy
+msgid "You're Subscribed to Daily Civic Questions!"
+msgstr "毎日の市民的な質問への購読に成功しました!"
+
+#: app/resend_client.py:680 app/resend_client.py:952
+#, python-format
+msgid "Daily Question #%(num)s: %(topic)s"
+msgstr "デイリークエスチョン %(num)s：%(topic)s"
+
+#: app/resend_client.py:680 app/resend_client.py:952
+#, fuzzy
+msgid "Civic"
+msgstr "市民的価値:"
+
+#: app/resend_client.py:772
+#, python-format
+msgid "5 Questions This Week: %(first)s..."
+msgstr "今週の5つの質問: %(first)s..."
+
+#: app/resend_client.py:867
+#, python-format
+msgid "10 Questions This Month: %(first)s..."
+msgstr "今月の10の質問: %(first)s..."
+
+#: app/resend_client.py:1227
 msgid "New participant in your discussion"
 msgstr "あなたのディスカッションに新しい参加者が参加しました"
 
-#: app/resend_client.py:1222
+#: app/resend_client.py:1228
 #, python-format
 msgid "Someone new has joined your discussion '%(title)s'"
 msgstr "新しい参加者が「%(title)s」のディスカッションに参加しました"
 
-#: app/resend_client.py:1225
+#: app/resend_client.py:1231
 msgid "New activity in your discussion"
 msgstr "あなたのディスカッションに新しいアクティビティがあります"
 
-#: app/resend_client.py:1226
+#: app/resend_client.py:1232
 #, python-format
 msgid "There's new activity in your discussion '%(title)s'"
 msgstr "「%(title)s」のディスカッションに新しいアクティビティがあります"
 
-#: app/resend_client.py:1228
+#: app/resend_client.py:1234
 msgid "New activity in a discussion you follow"
 msgstr "フォローしているディスカッションに新しいアクティビティ"
 
-#: app/resend_client.py:1229
+#: app/resend_client.py:1235
 #, python-format
 msgid "There's new activity in a discussion you're following: '%(title)s'"
 msgstr "フォロー中の「%(title)s」というディスカッションに新しいアクティビティがあります"
 
-#: app/resend_client.py:1231
+#: app/resend_client.py:1237
 #, python-format
 msgid "Update: %(title)s"
 msgstr "更新: %(title)s"
 
-#: app/resend_client.py:1232
+#: app/resend_client.py:1238
 #, python-format
 msgid "A new update was posted to '%(title)s'"
 msgstr "「%(title)s」に新しい更新が投稿されました"
 
-#: app/resend_client.py:1234
+#: app/resend_client.py:1240
 msgid "Activity in your discussion"
 msgstr "あなたのディスカッションのアクティビティ"
 
-#: app/resend_client.py:1235
+#: app/resend_client.py:1241
 #, python-format
 msgid "There's been activity in your discussion '%(title)s'"
 msgstr "「%(title)s」のディスカッションにアクティビティがありました"
+
+#: app/resend_client.py:1323
+#, fuzzy, python-format
+msgid "You've been invited to join %(org)s on Society Speaks"
+msgstr "%(org)sへのご招待 - Society Speaks"
+
+#: app/resend_client.py:1550
+#, fuzzy
+msgid "Complete Your Society Speaks Profile"
+msgstr "プロフィールを完成させる"
+
+#: app/resend_client.py:1617
+#, fuzzy
+msgid "Your Weekly Discussion Digest - Society Speaks"
+msgstr "週間ディスカッション・ダイジェスト"
+
+#: app/resend_client.py:1838
+#, python-format
+msgid "Continue your journey: %(theme)s — Society Speaks"
+msgstr "ジャーニーを続ける：%(theme)s — Society Speaks"
 
 #: app/routes.py:255 app/routes.py:272
 msgid "No valid donation session found."
@@ -238,7 +313,7 @@ msgstr "%(org_name)sへようこそ！チームのブリーフィングにアク
 
 #: app/auth/routes.py:174
 msgid "You're signed in. Opening secure checkout..."
-msgstr ""
+msgstr "サインインしています。安全なチェックアウトを開いています..."
 
 #: app/auth/routes.py:241
 msgid "Discussion saved. We will keep it handy in your dashboard."
@@ -391,6 +466,8 @@ msgid ""
 "If that email has a Society Speaks account, we've sent you a sign-in link. "
 "Check your inbox — it expires in 15 minutes."
 msgstr ""
+"そのメールに Society Speaks アカウントが含まれている場合は、サインイン リンクを送信しています。受信箱を確認してください。有効期限は "
+"15 分で切れます。"
 
 #: app/auth/routes.py:1172 app/auth/routes.py:1196
 #, fuzzy
@@ -1487,7 +1564,7 @@ msgstr "AIラベリング機能を使用するには、設定でLLM APIキーを
 msgid ""
 "Cluster labels generated. %(n)d label(s) were withheld because the model "
 "could not cite supporting statements."
-msgstr ""
+msgstr "クラスターラベルが生成されました。モデルが裏付けとなるステートメントを引用できなかったため、%(n)d 個のラベルが保留されました。"
 
 #: app/discussions/consensus.py:1224
 msgid "Cluster labels generated successfully!"
@@ -1783,137 +1860,137 @@ msgstr "一時的な競合により投票を記録できませんでした。も
 msgid "Temporary conflict while saving vote"
 msgstr "投票の保存中に一時的な競合が発生しました"
 
-#: app/discussions/statements.py:1354
+#: app/discussions/statements.py:1358
 msgid "Vote recorded."
 msgstr "投票が記録されました。"
 
-#: app/discussions/statements.py:1453
+#: app/discussions/statements.py:1457
 msgid "You can only edit your own statements"
 msgstr "自分のステートメントのみ編集できます"
 
-#: app/discussions/statements.py:1458
+#: app/discussions/statements.py:1462
 msgid "Edit window expired (10 minutes)"
 msgstr "編集期間が終了しました（10分）"
 
-#: app/discussions/statements.py:1469
+#: app/discussions/statements.py:1473
 msgid "Statement updated successfully"
 msgstr "ステートメントが正常に更新されました"
 
-#: app/discussions/statements.py:1486
+#: app/discussions/statements.py:1490
 msgid "You can only delete your own statements"
 msgstr "自分の投稿のみ削除できます"
 
-#: app/discussions/statements.py:1494
+#: app/discussions/statements.py:1498
 msgid "Statement deleted"
 msgstr "投稿が削除されました"
 
-#: app/discussions/statements.py:1515
+#: app/discussions/statements.py:1519
 msgid "You've already flagged this statement"
 msgstr "この投稿は既にフラグを付けています"
 
-#: app/discussions/statements.py:1530
+#: app/discussions/statements.py:1534
 msgid "Statement flagged for review"
 msgstr "投稿がレビュー用にフラグされました"
 
-#: app/discussions/statements.py:1640
+#: app/discussions/statements.py:1644
 msgid "Discussion not found"
 msgstr "ディスカッションが見つかりません"
 
-#: app/discussions/statements.py:1684
+#: app/discussions/statements.py:1688
 msgid "Your thought has been added!"
 msgstr "ご意見をありがとうございます！"
 
-#: app/discussions/statements.py:1688
+#: app/discussions/statements.py:1692
 msgid "Couldn't save your response. Try again?"
 msgstr "回答を保存できませんでした。もう一度試してみてください。"
 
-#: app/discussions/statements.py:1690
+#: app/discussions/statements.py:1694
 #, python-format
 msgid "Response must be at least %(min_length)s characters"
 msgstr "回答は%(min_length)s文字以上である必要があります"
 
-#: app/discussions/statements.py:1747
+#: app/discussions/statements.py:1751
 msgid "Response posted successfully!"
 msgstr "回答が正常に投稿されました！"
 
-#: app/discussions/statements.py:1753
+#: app/discussions/statements.py:1757
 msgid "An error occurred while posting your response"
 msgstr "回答の投稿中にエラーが発生しました"
 
-#: app/discussions/statements.py:1767
+#: app/discussions/statements.py:1771
 msgid "This response has been deleted"
 msgstr "この回答は削除されています"
 
-#: app/discussions/statements.py:1801
+#: app/discussions/statements.py:1805
 msgid "You can only edit your own responses"
 msgstr "自分の回答のみ編集できます"
 
-#: app/discussions/statements.py:1806
+#: app/discussions/statements.py:1810
 msgid "Cannot edit a deleted response"
 msgstr "削除された回答は編集できません"
 
-#: app/discussions/statements.py:1812
+#: app/discussions/statements.py:1816
 msgid "Edit window has expired (10 minutes)"
 msgstr "編集期限が切れました（10分）"
 
-#: app/discussions/statements.py:1824
+#: app/discussions/statements.py:1828
 msgid "Response updated successfully!"
 msgstr "回答が正常に更新されました！"
 
-#: app/discussions/statements.py:1845
+#: app/discussions/statements.py:1849
 msgid "You don't have permission to delete this response"
 msgstr "この回答を削除する権限がありません"
 
-#: app/discussions/statements.py:1851
+#: app/discussions/statements.py:1855
 msgid "Response deleted successfully"
 msgstr "回答が正常に削除されました"
 
-#: app/discussions/statements.py:1982
+#: app/discussions/statements.py:1986
 msgid "You don't have permission to add evidence to this response"
 msgstr "この回答にエビデンスを追加する権限がありません"
 
-#: app/discussions/statements.py:2007
+#: app/discussions/statements.py:2011
 msgid "File size must be under 10MB"
 msgstr "ファイルサイズは10MB未満である必要があります"
 
-#: app/discussions/statements.py:2030
+#: app/discussions/statements.py:2034
 msgid "Error uploading file. Please try again."
 msgstr "ファイルのアップロードエラー。もう一度試してください。"
 
-#: app/discussions/statements.py:2036
+#: app/discussions/statements.py:2040
 msgid "Evidence added successfully!"
 msgstr "エビデンスが正常に追加されました！"
 
-#: app/discussions/statements.py:2043
+#: app/discussions/statements.py:2047
 msgid "An error occurred while adding evidence"
 msgstr "エビデンスの追加中にエラーが発生しました"
 
-#: app/discussions/statements.py:2064
+#: app/discussions/statements.py:2068
 msgid "You don't have permission to delete this evidence"
 msgstr "このエビデンスを削除する権限がありません"
 
-#: app/discussions/statements.py:2080
+#: app/discussions/statements.py:2084
 msgid "Evidence deleted successfully"
 msgstr "エビデンスが正常に削除されました"
 
-#: app/discussions/statements.py:2099
+#: app/discussions/statements.py:2103
 msgid "Only the discussion owner can update evidence quality"
 msgstr "ディスカッション所有者のみがエビデンスの品質を更新できます"
 
-#: app/discussions/statements.py:2104
+#: app/discussions/statements.py:2108
 msgid "Invalid quality status"
 msgstr "無効な品質ステータスです"
 
-#: app/discussions/statements.py:2110
+#: app/discussions/statements.py:2114
 #, python-format
 msgid "Evidence marked as %(quality_status)s"
 msgstr "エビデンスが%(quality_status)sとしてマークされました"
 
-#: app/discussions/statements.py:2127
+#: app/discussions/statements.py:2131
 msgid "No file attached to this evidence"
 msgstr "このエビデンスには添付ファイルがありません"
 
-#: app/discussions/statements.py:2150
+#: app/discussions/statements.py:2154
 msgid "Error downloading file"
 msgstr "ファイルのダウンロードエラー"
 
@@ -2002,6 +2079,11 @@ msgstr "このリセットリンクは無効であるか、有効期限が切れ
 #: app/partner/routes.py:766
 msgid "Your password has been reset. You are now signed in."
 msgstr "パスワードがリセットされました。サインインしています。"
+
+#: app/partner/routes.py:784
+#: app/templates/emails/partner_password_reset.html:5
+msgid "Reset your Society Speaks Partner Portal password"
+msgstr "Society Speaks Partner Portal パスワードをリセット"
 
 #: app/partner/routes.py:794
 msgid "Signed out."
@@ -2161,7 +2243,7 @@ msgid ""
 "retry."
 msgstr "招待が保存されましたが、メール配信に失敗しました。ログから招待リンクをコピーするか、もう一度試してください。"
 
-#: app/partner/routes.py:1544 app/programmes/routes.py:1007
+#: app/partner/routes.py:1544 app/programmes/routes.py:1011
 #, python-format
 msgid "Invite sent to %(email)s."
 msgstr "%(email)s に招待を送信しました。"
@@ -2485,12 +2567,16 @@ msgid ""
 "Profile picture couldn't be uploaded (must be JPG, PNG, GIF or WEBP under "
 "5MB). Your profile was saved without it."
 msgstr ""
+"プロフィール写真をアップロードできませんでした (5MB 未満の JPG、PNG、GIF、または WEBP "
+"である必要があります)。あなたのプロフィールはそれなしで保存されました。"
 
 #: app/profiles/routes.py:148 app/profiles/routes.py:235
 msgid ""
 "Banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB)."
 " Your profile was saved without it."
 msgstr ""
+"バナー画像をアップロードできませんでした (5MB 未満の JPG、PNG、GIF、または WEBP "
+"である必要があります)。あなたのプロフィールはそれなしで保存されました。"
 
 #: app/profiles/routes.py:189 app/profiles/routes.py:275
 msgid ""
@@ -2507,6 +2593,8 @@ msgid ""
 "Logo couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB). Your "
 "profile was saved without it."
 msgstr ""
+"ロゴをアップロードできませんでした (5MB 未満の JPG、PNG、GIF、または WEBP "
+"である必要があります)。あなたのプロフィールはそれなしで保存されました。"
 
 #: app/profiles/routes.py:291
 msgid "Error creating company profile. Please try again."
@@ -2521,12 +2609,16 @@ msgid ""
 "New profile picture couldn't be uploaded (must be JPG, PNG, GIF or WEBP "
 "under 5MB); the existing one was kept."
 msgstr ""
+"新しいプロフィール写真をアップロードできませんでした (5MB 未満の JPG、PNG、GIF、または WEBP "
+"である必要があります)。既存のものは保管されていました。"
 
 #: app/profiles/routes.py:333 app/profiles/routes.py:401
 msgid ""
 "New banner image couldn't be uploaded (must be JPG, PNG, GIF or WEBP under "
 "5MB); the existing one was kept."
 msgstr ""
+"新しいバナー画像をアップロードできませんでした (5MB 未満の JPG、PNG、GIF、または WEBP "
+"である必要があります)。既存のものは保管されていました。"
 
 #: app/profiles/routes.py:359
 msgid "Profile updated successfully!"
@@ -2541,6 +2633,8 @@ msgid ""
 "New logo couldn't be uploaded (must be JPG, PNG, GIF or WEBP under 5MB); the"
 " existing one was kept."
 msgstr ""
+"新しいロゴをアップロードできませんでした (5MB 未満の JPG、PNG、GIF、または WEBP "
+"である必要があります)。既存のものは保管されていました。"
 
 #: app/profiles/routes.py:427
 msgid "Company profile updated successfully!"
@@ -2558,7 +2652,7 @@ msgstr "プログラムが正常に作成されました。"
 msgid "Could not create programme. Please try again."
 msgstr "プログラムを作成できませんでした。もう一度お試しください。"
 
-#: app/programmes/routes.py:383 app/programmes/routes.py:498
+#: app/programmes/routes.py:383 app/programmes/routes.py:500
 msgid "Please log in to access this programme."
 msgstr "このプログラムにアクセスするにはログインしてください。"
 
@@ -2566,183 +2660,183 @@ msgstr "このプログラムにアクセスするにはログインしてくだ
 msgid "Welcome back! Pick up where you left off."
 msgstr "お帰りなさい！中断したところから再開できます。"
 
-#: app/programmes/routes.py:502
+#: app/programmes/routes.py:504
 msgid "This recap view is only available for guided flagship programmes."
 msgstr "このレキャップビューはガイド付きフラッグシッププログラムでのみご利用いただけます。"
 
-#: app/programmes/routes.py:664
+#: app/programmes/routes.py:668
 msgid "once a week"
 msgstr "週に1回"
 
-#: app/programmes/routes.py:665
+#: app/programmes/routes.py:669
 msgid "on Saturday mornings"
 msgstr "土曜の朝"
 
-#: app/programmes/routes.py:666 app/programmes/routes.py:667
+#: app/programmes/routes.py:670 app/programmes/routes.py:671
 msgid "twice a week (Tue & Thu)"
 msgstr "週2回（火曜と木曜）"
 
-#: app/programmes/routes.py:674
+#: app/programmes/routes.py:678
 #, python-format
 msgid "%(schedule)s at %(time)s"
 msgstr "%(schedule)s、%(time)s"
 
-#: app/programmes/routes.py:675
+#: app/programmes/routes.py:679
 #: app/templates/emails/journey_reminder_confirm.html:3
 msgid "Journey reminders set — Society Speaks"
 msgstr "ジャーニーリマインダーを設定しました — Society Speaks"
 
-#: app/programmes/routes.py:745
+#: app/programmes/routes.py:749
 msgid "You've been unsubscribed from journey reminders."
 msgstr "ジャーニーリマインダーの購読を解除しました。"
 
-#: app/programmes/routes.py:747
+#: app/programmes/routes.py:751
 msgid "Could not find that subscription — it may have already been removed."
 msgstr "そのサブスクリプションが見つかりません。削除済みの可能性があります。"
 
-#: app/programmes/routes.py:757
+#: app/programmes/routes.py:761
 msgid "You don't have permission to edit this programme."
 msgstr "このプログラムを編集する権限がありません。"
 
-#: app/programmes/routes.py:798
+#: app/programmes/routes.py:802
 msgid "Programme updated successfully."
 msgstr "プログラムが正常に更新されました。"
 
-#: app/programmes/routes.py:803
+#: app/programmes/routes.py:807
 msgid "Could not update programme. Please try again."
 msgstr "プログラムを更新できませんでした。もう一度お試しください。"
 
-#: app/programmes/routes.py:813
+#: app/programmes/routes.py:817
 msgid "You don't have permission to access settings."
 msgstr "設定にアクセスする権限がありません。"
 
-#: app/programmes/routes.py:846
+#: app/programmes/routes.py:850
 msgid "You don't have permission to archive this programme."
 msgstr "このプログラムをアーカイブする権限がありません。"
 
-#: app/programmes/routes.py:852
+#: app/programmes/routes.py:856
 msgid "Programme archived."
 msgstr "プログラムがアーカイブされました。"
 
-#: app/programmes/routes.py:861
+#: app/programmes/routes.py:865
 msgid "You don't have permission to unarchive this programme."
 msgstr "このプログラムをアーカイブ解除する権限がありません。"
 
-#: app/programmes/routes.py:867
+#: app/programmes/routes.py:871
 msgid "Programme restored to active."
 msgstr "プログラムがアクティブに復元されました。"
 
-#: app/programmes/routes.py:913
+#: app/programmes/routes.py:917
 msgid "You don't have permission to invite stewards."
 msgstr "スチュワードを招待する権限がありません。"
 
-#: app/programmes/routes.py:918
+#: app/programmes/routes.py:922
 msgid "Please provide a valid email."
 msgstr "有効なメールアドレスを入力してください。"
 
-#: app/programmes/routes.py:952 app/programmes/routes.py:996
+#: app/programmes/routes.py:956 app/programmes/routes.py:1000
 msgid "Could not create steward invite."
 msgstr "スチュワード招待を作成できませんでした。"
 
-#: app/programmes/routes.py:959 app/programmes/routes.py:1004
+#: app/programmes/routes.py:963 app/programmes/routes.py:1008
 msgid "Invite saved but email failed. Please retry."
 msgstr "招待は保存されましたがメール送信に失敗しました。もう一度お試しください。"
 
-#: app/programmes/routes.py:961
+#: app/programmes/routes.py:965
 #, python-format
 msgid "Invite sent to %(email)s. They will need to register an account first."
 msgstr "%(email)sに招待を送信しました。まずアカウントを登録する必要があります。"
 
-#: app/programmes/routes.py:970
+#: app/programmes/routes.py:974
 msgid "That user is already a steward."
 msgstr "そのユーザーはすでにスチュワードです。"
 
-#: app/programmes/routes.py:1035
+#: app/programmes/routes.py:1039
 msgid "You don't have permission to invite participants."
 msgstr "参加者を招待する権限がありません。"
 
-#: app/programmes/routes.py:1039
+#: app/programmes/routes.py:1043
 msgid ""
 "Private programmes only allow owner/steward access. Invite as steward or "
 "switch visibility to invite-only."
 msgstr "プライベートプログラムはオーナー/スチュワードのアクセスのみです。スチュワードとして招待するか、表示設定を招待限定に変更してください。"
 
-#: app/programmes/routes.py:1046
+#: app/programmes/routes.py:1050
 msgid "Please provide a valid participant email."
 msgstr "有効な参加者メールアドレスを入力してください。"
 
-#: app/programmes/routes.py:1053
+#: app/programmes/routes.py:1057
 msgid "No existing user found with that email. They must register first."
 msgstr "そのメールアドレスの既存ユーザーが見つかりません。まず登録する必要があります。"
 
-#: app/programmes/routes.py:1057
+#: app/programmes/routes.py:1061
 msgid "That user already has steward or owner access."
 msgstr "そのユーザーはすでにスチュワードまたはオーナーアクセスを持っています。"
 
-#: app/programmes/routes.py:1062
+#: app/programmes/routes.py:1066
 msgid "That user already has participant access."
 msgstr "そのユーザーはすでに参加者アクセスを持っています。"
 
-#: app/programmes/routes.py:1082
+#: app/programmes/routes.py:1086
 msgid "Could not grant participant access."
 msgstr "参加者アクセスを付与できませんでした。"
 
-#: app/programmes/routes.py:1093
+#: app/programmes/routes.py:1097
 #, python-format
 msgid "Participant access granted to %(email)s."
 msgstr "%(email)sに参加者アクセスを付与しました。"
 
-#: app/programmes/routes.py:1095
+#: app/programmes/routes.py:1099
 msgid ""
 "Invite email could not be delivered. Access is active, but you may need to "
 "share the programme link manually."
 msgstr "招待メールを送信できませんでした。アクセスは有効ですが、プログラムリンクを手動で共有する必要があるかもしれません。"
 
-#: app/programmes/routes.py:1104
+#: app/programmes/routes.py:1108
 msgid "You don't have permission to revoke participant access."
 msgstr "参加者のアクセスを取り消す権限がありません。"
 
-#: app/programmes/routes.py:1114
+#: app/programmes/routes.py:1118
 msgid "Could not revoke participant access. Please try again."
 msgstr "参加者のアクセスを取り消せませんでした。もう一度お試しください。"
 
-#: app/programmes/routes.py:1116
+#: app/programmes/routes.py:1120
 msgid "Participant access revoked."
 msgstr "参加者のアクセスが取り消されました。"
 
-#: app/programmes/routes.py:1125
+#: app/programmes/routes.py:1129
 msgid "You don't have permission to remove stewards."
 msgstr "スチュワードを削除する権限がありません。"
 
-#: app/programmes/routes.py:1135
+#: app/programmes/routes.py:1139
 msgid "Could not remove steward. Please try again."
 msgstr "スチュワードを削除できませんでした。もう一度お試しください。"
 
-#: app/programmes/routes.py:1137
+#: app/programmes/routes.py:1141
 msgid "Steward removed."
 msgstr "スチュワードが削除されました。"
 
-#: app/programmes/routes.py:1147
+#: app/programmes/routes.py:1151
 msgid "Please log in or register to accept the steward invitation."
 msgstr "スチュワードの招待を受け入れるにはログインまたは登録してください。"
 
-#: app/programmes/routes.py:1152
+#: app/programmes/routes.py:1156
 msgid "This invite is for another user account."
 msgstr "この招待は別のユーザーアカウント向けです。"
 
-#: app/programmes/routes.py:1157
+#: app/programmes/routes.py:1161
 msgid "This invite is for a different email address."
 msgstr "この招待は別のメールアドレス向けです。"
 
-#: app/programmes/routes.py:1166
+#: app/programmes/routes.py:1170
 msgid "Steward access granted."
 msgstr "スチュワードアクセスが付与されました。"
 
-#: app/programmes/routes.py:1175
+#: app/programmes/routes.py:1179
 msgid "You don't have permission to export this programme."
 msgstr "このプログラムをエクスポートする権限がありません。"
 
-#: app/programmes/routes.py:1181
+#: app/programmes/routes.py:1185
 msgid "Unknown cohort slug for this programme."
 msgstr "このプログラムの不明なコホートスラッグ。"
 
@@ -2939,18 +3033,16 @@ msgstr "あなたの推論のための任意の短い説明"
 
 #: app/templates/about.html:55
 msgid "Using machine learning inspired by"
-msgstr ""
+msgstr "Pol.is にインスピレーションを受けた機械学習により、"
 
 #: app/templates/about.html:57
-#, fuzzy, python-format
 msgid ""
 "we analyse voting patterns to identify natural opinion clusters, without "
 "labels, ideological assumptions, or demographic bias. This reveals how views"
 " actually form and overlap, something polls and comment sections "
 "consistently fail to capture."
 msgstr ""
-"%(polis)s "
-"からインスピレーションを受けた機械学習を使用して、投票パターンを分析し、ラベル、イデオロギー的な仮定、人口統計学的バイアスなしに、自然な意見クラスターを識別します。これは、世論調査やコメントセクションが一貫して捉えられない、意見がどのように形成され重なるかを明らかにします。"
+"投票パターンを分析し、ラベル、イデオロギー的な仮定、人口統計学的バイアスなしに、自然な意見クラスターを識別します。これは、世論調査やコメントセクションが一貫して捉えられない、意見がどのように形成され重なるかを明らかにします。"
 
 #: app/templates/about.html:62
 msgid "What the System Reveals"
@@ -3185,9 +3277,8 @@ msgid "Daily Question"
 msgstr "デイリークエスチョン"
 
 #: app/templates/about.html:212
-#, fuzzy, python-format
 msgid "is the entry point."
-msgstr "%(daily_link)s がエントリーポイントです。"
+msgstr "がエントリーポイントです。"
 
 #: app/templates/about.html:220
 msgid "One carefully chosen question each day"
@@ -3472,12 +3563,10 @@ msgstr ""
 "埋め込みはデフォルトで<strong>投票/報告のみ</strong>です。パートナー所有者/管理者はオプションで、ディスカッションごとにインラインステートメント送信を有効にできます。シード・ステートメントは当社システムまたはパートナーによってAPI経由で提供されます。"
 
 #: app/templates/content-policy.html:45
-#, fuzzy, python-format
 msgid ""
 "For data we collect in the embed context (e.g. session fingerprint, partner "
 "ref), see our"
-msgstr ""
-"埋め込みコンテキストで収集するデータ（例：セッション・フィンガープリント、パートナー参照）については、%(privacy_link)sセクション1.3をご覧ください。"
+msgstr "埋め込みコンテキストで収集するデータ（例：セッション・フィンガープリント、パートナー参照）については、"
 
 #: app/templates/content-policy.html:46 app/templates/layout.html:1323
 #: app/templates/privacy-policy.html:7
@@ -3486,7 +3575,7 @@ msgstr "プライバシー・ポリシー"
 
 #: app/templates/content-policy.html:47
 msgid "section 1.3."
-msgstr ""
+msgstr "第1.3項。"
 
 #: app/templates/content-policy.html:51
 #: app/templates/partner/api_docs.html:1230
@@ -5816,7 +5905,7 @@ msgstr "クイックリンク"
 
 #: app/templates/layout.html:1330
 msgid "Terms of Service"
-msgstr ""
+msgstr "利用規約"
 
 #: app/templates/layout.html:1335
 #, fuzzy
@@ -5860,11 +5949,11 @@ msgstr ""
 #: app/templates/layout.html:1402
 #, python-format
 msgid "Made with %(heart)s by"
-msgstr ""
+msgstr "%(heart)s で作成されました"
 
 #: app/templates/layout.html:1403
 msgid "William Roberts"
-msgstr ""
+msgstr "ウィリアム・ロバーツ"
 
 #: app/templates/platform.html:5 app/templates/platform.html:7
 msgid "The Platform — Society Speaks"
@@ -6264,14 +6353,13 @@ msgid "We stand on the shoulders of pioneers"
 msgstr "先駆者たちの肩の上に立っている"
 
 #: app/templates/platform.html:443
-#, fuzzy, python-format
 msgid ""
 "pioneered this approach and used it for Taiwan's vTaiwan participatory "
 "democracy process — one of the most successful examples of digital "
 "deliberation in history. We are inspired by that work and the open-source "
 "research behind it."
 msgstr ""
-"%(polis)sはこのアプローチを開拓し、台湾のvTaiwan民主的参加プロセスで使用しました — "
+"このアプローチを開拓し、台湾のvTaiwan民主的参加プロセスで使用しました — "
 "デジタル審議の最も成功した例の1つです。私たちはその仕事と背後にあるオープンソース研究に触発されています。"
 
 #: app/templates/platform.html:445
@@ -6791,7 +6879,6 @@ msgid "Frequently asked questions"
 msgstr "よくある質問"
 
 #: app/templates/platform.html:1027
-#, fuzzy, python-format
 msgid ""
 "Yes — participating in discussions, creating discussions, and creating "
 "individual and organisation profiles are all free. Programmes are also free "
@@ -6799,7 +6886,7 @@ msgid ""
 " support, white-labelling, or advanced integrations,"
 msgstr ""
 "はい — "
-"議論への参加、議論の作成、個人および組織プロフィールの作成はすべて無料です。プログラムもほとんどのユースケースで無料です。専任サポート、ホワイトラベリング、高度な統合が必要な大規模機関導入については、%(get_in_touch)s。"
+"議論への参加、議論の作成、個人および組織プロフィールの作成はすべて無料です。プログラムもほとんどのユースケースで無料です。専任サポート、ホワイトラベリング、高度な統合が必要な大規模機関導入については、"
 
 #: app/templates/platform.html:1028
 msgid "get in touch"
@@ -6936,19 +7023,17 @@ msgid "More than a poll. Better than a comment section."
 msgstr "単なるポール以上。コメント欄より優れています。"
 
 #: app/templates/platform.html:1130
-#, fuzzy, python-format
 msgid ""
 "Traditional polling gives you percentages. Comment sections amplify the "
 "loudest voices. Society Speaks shows you how views actually cluster — and "
 "where genuine common ground lies. Inspired by"
 msgstr ""
 "従来のポーリングはパーセンテージを提供します。コメント欄は最も大きな声を増幅します。Society "
-"Speaksは、意見が実際にどのようにクラスター化するか — "
-"そして本当の共通点がどこにあるかを示します。%(polis)sにインスピレーションを受け、あらゆる規模の審議民主主義のために構築されました。"
+"Speaksは、意見が実際にどのようにクラスター化するか — そして本当の共通点がどこにあるかを示します。"
 
 #: app/templates/platform.html:1132
 msgid "built for deliberative democracy at any scale."
-msgstr ""
+msgstr "にインスピレーションを受け、あらゆる規模の審議民主主義のために構築されました。"
 
 #: app/templates/platform.html:1162
 msgid "Read the docs"
@@ -7150,18 +7235,16 @@ msgstr ""
 "<strong>保持期間：</strong>セッションフィンガープリントとパートナー参照は、レート制限と分析に必要な期間保持されます（例：イベントログの場合は90日）。IPログはセキュリティのために必要な期間のみ保持されます（例：30日）。"
 
 #: app/templates/privacy-policy.html:64
-#, fuzzy, python-format
 msgid ""
 "<strong>Your rights:</strong> You can request erasure or a copy of data we "
 "hold about you by contacting"
-msgstr ""
-"<strong>あなたの権利：</strong>%(contact)sに連絡することで、当社が保持するデータの削除またはコピーをリクエストできます。当社は30日以内に対応します。あなたの権利の詳細については、下記のセクション6を参照してください。"
+msgstr "<strong>あなたの権利：</strong>"
 
 #: app/templates/privacy-policy.html:66
 msgid ""
 "We will respond within 30 days. For more on your rights, see section 6 "
 "below."
-msgstr ""
+msgstr "30日以内にご返答させていただきます。お客様の権利の詳細については、以下のセクション 6 を参照してください。"
 
 #: app/templates/privacy-policy.html:68
 msgid "2. How We Use Your Information"
@@ -8294,7 +8377,7 @@ msgid ""
 msgstr "ブリーフ生成を開始しました。最大1分かかる場合があります。"
 
 #: app/templates/auth/dashboard.html:611
-#: app/templates/emails/trial_mid.html:104
+#: app/templates/emails/trial_mid.html:106
 #, fuzzy
 msgid "Go to My Briefings"
 msgstr "マイブリーフィングへ"
@@ -8304,6 +8387,8 @@ msgid ""
 "Get personalised AI briefings in your inbox. Start a free trial from My "
 "Briefings — one click to secure checkout."
 msgstr ""
+"パーソナライズされた AI ブリーフィングを受信トレイで受け取ります。 My Briefings "
+"から無料トライアルを開始してください。ワンクリックで安全にチェックアウトできます。"
 
 #: app/templates/auth/dashboard.html:621
 #, fuzzy
@@ -8320,7 +8405,7 @@ msgstr "マーケットパルス"
 msgid ""
 "Paid Briefings requires an active subscription. View plans to subscribe or "
 "resume."
-msgstr ""
+msgstr "有料ブリーフィングにはアクティブなサブスクリプションが必要です。購読または再開するプランを表示します。"
 
 #: app/templates/auth/dashboard.html:633
 #, fuzzy
@@ -8449,7 +8534,7 @@ msgstr "パスワードをお忘れですか？"
 #: app/templates/auth/login.html:54
 #: app/templates/auth/magic_link_request.html:37
 msgid "Email me a sign-in link"
-msgstr ""
+msgstr "サインインリンクをメールで送信してください"
 
 #: app/templates/auth/login.html:63
 msgid "Logging in…"
@@ -8474,12 +8559,12 @@ msgstr "Society Speaksにアクセス"
 
 #: app/templates/auth/magic_link_continue.html:11
 msgid "You're about to sign in as"
-msgstr ""
+msgstr "次のユーザーとしてサインインしようとしています"
 
 #: app/templates/auth/magic_link_continue.html:24
 msgid ""
 "If you didn't request this, close this page — no account change will happen."
-msgstr ""
+msgstr "これをリクエストしていない場合は、このページを閉じてください。アカウントは変更されません。"
 
 #: app/templates/auth/magic_link_continue.html:34
 #: app/templates/partner/portal/login.html:33
@@ -8520,18 +8605,18 @@ msgstr "お帰りなさい！受信トレイをご確認ください。"
 #, python-format
 msgid ""
 "If %(email)s has a Society Speaks account, we've sent you a sign-in link."
-msgstr ""
+msgstr "%(email)s が Society Speaks アカウントをお持ちの場合は、サインイン リンクを送信しました。"
 
 #: app/templates/auth/magic_link_sent.html:23
 msgid ""
 "If that email has a Society Speaks account, we've sent you a sign-in link."
-msgstr ""
+msgstr "そのメールに Society Speaks アカウントが含まれている場合は、サインイン リンクを送信しています。"
 
 #: app/templates/auth/magic_link_sent.html:28
 msgid ""
 "The link expires in 15 minutes and can only be used once. Didn't get it? "
 "Check your spam folder."
-msgstr ""
+msgstr "リンクは 15 分で期限切れになり、使用できるのは 1 回だけです。分かりませんでしたか？スパムフォルダーを確認してください。"
 
 #: app/templates/auth/magic_link_sent.html:34
 #, fuzzy
@@ -9094,9 +9179,8 @@ msgid "L/C/R breakdown"
 msgstr "左・中・右の内訳"
 
 #: app/templates/brief/landing.html:243
-#, fuzzy, python-format
 msgid "Bias ratings from"
-msgstr "%(allsides)s からのバイアス評価"
+msgstr ""
 
 #: app/templates/brief/landing.html:313
 msgid "Unlock Full Analysis"
@@ -9371,7 +9455,6 @@ msgid "Trusted Source Gathering"
 msgstr "信頼できるソースの収集"
 
 #: app/templates/brief/methodology.html:20
-#, fuzzy, python-format
 msgid ""
 "We continuously monitor <strong>140+ carefully selected news "
 "sources</strong>, including quality journalism outlets, policy publications,"
@@ -9379,7 +9462,6 @@ msgid ""
 "source is rated for political leaning using"
 msgstr ""
 "当社は、質の高いジャーナリズムアウトレット、政策出版物、シンクタンク、調査報道、知的ポッドキャストを含む<strong>140以上の厳選されたニュースソース</strong>を継続的に監視しています。各ソースは"
-" %(allsides_link)s を使用して政治的傾向に基づいて評価されます。"
 
 #: app/templates/brief/methodology.html:21
 #: app/templates/help/news_feed.html:131
@@ -9430,7 +9512,7 @@ msgstr "元のソースを読む"
 msgid ""
 "Official statistics bodies, international organisations, and sports outlets "
 "— monitored for data and context rather than editorial perspective."
-msgstr ""
+msgstr "公式統計機関、国際機関、スポーツ報道機関は、編集上の観点ではなく、データとコンテキストを監視されています。"
 
 #: app/templates/brief/methodology.html:215
 msgid ""
@@ -9526,13 +9608,10 @@ msgid "AllSides Media Bias Ratings"
 msgstr "AllSides メディア偏向評価"
 
 #: app/templates/brief/methodology.html:286
-#, fuzzy, python-format
 msgid ""
 "We show the balance not to say who's \"right,\" but to help you see blind "
 "spots in coverage."
-msgstr ""
-"ソースの評価は %(allsides_link)s "
-"から取得しています。誰が「正しい」かを示すためではなく、カバレッジの盲点を見つけるのに役立つよう、バランスを表示しています。"
+msgstr "ソースの評価は"
 
 #: app/templates/brief/methodology.html:293
 msgid "AI-Generated Summaries & Perspectives"
@@ -10412,9 +10491,8 @@ msgid "What's Missing"
 msgstr "不足しているもの"
 
 #: app/templates/brief/view.html:916
-#, fuzzy, python-format
 msgid "Source classifications based on"
-msgstr "%(allsides)sに基づくソース分類。%(methodology)s。"
+msgstr ""
 
 #: app/templates/brief/view.html:917
 #: app/templates/emails/daily_brief.html:2583
@@ -10653,7 +10731,7 @@ msgstr "送信"
 #: app/templates/briefing/analytics.html:36
 #: app/templates/briefing/analytics.html:40
 msgid "N/A"
-msgstr ""
+msgstr "該当なし"
 
 #: app/templates/briefing/analytics.html:35
 #, fuzzy
@@ -10662,7 +10740,7 @@ msgstr "中道"
 
 #: app/templates/briefing/analytics.html:39
 msgid "Click-to-open (CTOR)"
-msgstr ""
+msgstr "クリックして開く (CTOR)"
 
 #: app/templates/briefing/analytics.html:45
 msgid "Performance Over Time"
@@ -12621,7 +12699,7 @@ msgstr "または £49/年（18%% お得）"
 
 #: app/templates/briefing/landing.html:879
 #: app/templates/briefing/landing.html:1012
-#: app/templates/briefing/list.html:87 app/templates/emails/trial_mid.html:45
+#: app/templates/briefing/list.html:87 app/templates/emails/trial_mid.html:47
 msgid "Unlimited briefs"
 msgstr "無制限のブリーフ"
 
@@ -12956,7 +13034,7 @@ msgstr "無料トライアルが %(days)s 日以内に終了します"
 msgid ""
 "Your trial is active. Add a payment method anytime so briefings continue "
 "smoothly after it ends."
-msgstr ""
+msgstr "トライアルは有効です。いつでも支払い方法を追加できるので、説明会終了後もスムーズに継続できます。"
 
 #: app/templates/briefing/list.html:39
 msgid ""
@@ -12992,10 +13070,11 @@ msgid ""
 "All plans include the same 30-day free trial. Add a payment method before "
 "day 30 to keep your briefings running."
 msgstr ""
+"すべてのプランに同じ 30 日間の無料トライアルが含まれています。ブリーフィングを継続するには、30 日目までにお支払い方法を追加してください。"
 
 #: app/templates/briefing/list.html:91
 msgid "PDF uploads & custom sources"
-msgstr ""
+msgstr "PDF アップロードとカスタム ソース"
 
 #: app/templates/briefing/list.html:95
 #, fuzzy
@@ -13019,15 +13098,15 @@ msgstr "優先処理"
 
 #: app/templates/briefing/list.html:128
 msgid "Advanced source & filter controls"
-msgstr ""
+msgstr "高度なソースとフィルターのコントロール"
 
 #: app/templates/briefing/list.html:145
 msgid "Need a team or enterprise plan?"
-msgstr ""
+msgstr "チームプランまたはエンタープライズプランが必要ですか?"
 
 #: app/templates/briefing/list.html:146
 msgid "Compare all plans →"
-msgstr ""
+msgstr "全プランを比較→"
 
 #: app/templates/briefing/list.html:157
 msgid "Create and manage your personalised news briefs"
@@ -13040,7 +13119,7 @@ msgstr "ドメイン"
 
 #: app/templates/briefing/list.html:192
 msgid "Fix payment"
-msgstr ""
+msgstr "支払いの修正"
 
 #: app/templates/briefing/list.html:217
 msgid "Create Your First Briefing"
@@ -13072,6 +13151,7 @@ msgid ""
 "Start a free 30-day trial to create your first brief. Pick a template, add "
 "your sources, and get your first delivery tomorrow morning."
 msgstr ""
+"30 日間の無料トライアルを開始して、最初のブリーフを作成してください。テンプレートを選択し、ソースを追加すると、明日の朝に最初の配信が届きます。"
 
 #: app/templates/briefing/list.html:244
 #, fuzzy
@@ -13259,9 +13339,10 @@ msgstr "組織に参加するためのリンクが記載されたメールが送
 msgid ""
 "You've reached the maximum of %(max)s team members on your %(plan)s plan."
 msgstr ""
+
 #: app/templates/briefing/organization_settings.html:190
 msgid "Upgrade your plan"
-msgstr ""
+msgstr "プランをアップグレードする"
 
 #: app/templates/briefing/organization_settings.html:191
 #, fuzzy
@@ -14965,9 +15046,8 @@ msgid "Monthly — %(schedule)s"
 msgstr "月刊 — %(schedule)s"
 
 #: app/templates/daily/preferences.html:143
-#, fuzzy, python-format
 msgid "Don't want to receive any emails?"
-msgstr "メールを受け取りたくないですか？%(unsub_link)s"
+msgstr "メールを受け取りたくないですか？"
 
 #: app/templates/daily/preferences.html:151
 #: app/templates/daily/weekly_batch.html:225
@@ -15639,9 +15719,8 @@ msgid ""
 msgstr "メール配信の頻度、曜日、時刻、タイムゾーンはいつでも変更できます。送信するメールの設定リンクからアクセスしてください。"
 
 #: app/templates/daily/subscribe_success.html:45
-#, fuzzy, python-format
 msgid "If you are logged in, you can also"
-msgstr "ログイン中の場合は、%(open_prefs_link)sもできます。"
+msgstr "ログイン中の場合は、"
 
 #: app/templates/daily/subscribe_success.html:46
 msgid "open preferences now"
@@ -15897,7 +15976,7 @@ msgstr "テーマ"
 #: app/templates/discussions/_guided_journey_rail.html:41
 #, python-format
 msgid "~%(p)d%%"
-msgstr ""
+msgstr "~%(p)d%%"
 
 #: app/templates/discussions/_guided_journey_rail.html:42
 #, fuzzy
@@ -16342,7 +16421,7 @@ msgstr "より広い参加"
 
 #: app/templates/discussions/consensus_results.html:39
 msgid "Weak separation — opinions overlap heavily"
-msgstr ""
+msgstr "分離が弱い — 意見が重なり合う"
 
 #: app/templates/discussions/consensus_results.html:64
 #, fuzzy
@@ -16352,7 +16431,7 @@ msgstr "クラスター品質"
 #: app/templates/discussions/consensus_results.html:75
 #, python-format
 msgid "Stability ARI %(v)s"
-msgstr ""
+msgstr "安定性 ARI %(v)s"
 
 #: app/templates/discussions/consensus_results.html:81
 #, fuzzy
@@ -16363,17 +16442,17 @@ msgstr "分析"
 msgid ""
 "Re-seeded clustering runs used to measure reproducibility (Monti et al. "
 "2003)."
-msgstr ""
+msgstr "再現性を測定するために再シードされたクラスタリングの実行が使用されました (Monti et al. 2003)。"
 
 #: app/templates/discussions/consensus_results.html:84
 msgid "Reproducibility runs:"
-msgstr ""
+msgstr "再現性は次のとおりです。"
 
 #: app/templates/discussions/consensus_results.html:89
 msgid ""
 "Cluster count chosen by bootstrap stability (silhouette × mean-ARI), not "
 "silhouette alone."
-msgstr ""
+msgstr "クラスター数は、シルエットだけではなく、ブートストラップの安定性 (シルエット × 平均 ARI) によって選択されます。"
 
 #: app/templates/discussions/consensus_results.html:90
 #, fuzzy
@@ -16385,12 +16464,12 @@ msgstr "都市を選択してください"
 msgid ""
 "All reported percentages use Wilson 95%% score intervals; representativeness"
 " is FDR-controlled at q=0.05."
-msgstr ""
+msgstr "報告されるすべてのパーセンテージは、Wilson 95%% スコア間隔を使用します。代表性は q=0.05 で FDR 制御されます。"
 
 #: app/templates/discussions/consensus_results.html:94
 #, python-format
 msgid "95%% CIs · FDR q=0.05 (%(m)s)"
-msgstr ""
+msgstr "95%% CI · FDR q=0.05 (%(m)s)"
 
 #: app/templates/discussions/consensus_results.html:101
 #, fuzzy
@@ -16403,6 +16482,8 @@ msgid ""
 "This analysis covered %(analysed)d statements; %(current)d are live now. Ask"
 " the discussion owner to re-run to refresh the picture."
 msgstr ""
+"この分析では、%(analysed)d 個のステートメントが対象になりました。 %(current)d "
+"が現在ライブ中です。ディスカッションの所有者に再実行して画像を更新するよう依頼してください。"
 
 #: app/templates/discussions/consensus_results.html:185
 #, fuzzy
@@ -16411,7 +16492,7 @@ msgstr "✓ コンセンサス可視化"
 
 #: app/templates/discussions/consensus_results.html:191
 msgid "Horizontal axis"
-msgstr ""
+msgstr "横軸"
 
 #: app/templates/discussions/consensus_results.html:191
 #, fuzzy
@@ -16421,7 +16502,7 @@ msgstr "記事を表示"
 #: app/templates/discussions/consensus_results.html:199
 #: app/templates/discussions/consensus_results.html:206
 msgid "Agrees strongly with:"
-msgstr ""
+msgstr "以下に強く同意します:"
 
 #: app/templates/discussions/consensus_results.html:229
 #, python-format
@@ -16452,11 +16533,11 @@ msgstr "グループが近い = より似た意見"
 
 #: app/templates/discussions/consensus_results.html:240
 msgid "The larger ringed dot is you."
-msgstr ""
+msgstr "大きな輪っかの点があなたです。"
 
 #: app/templates/discussions/consensus_results.html:250
 msgid "View as accessible table"
-msgstr ""
+msgstr "アクセシブルなテーブルとして表示"
 
 #: app/templates/discussions/consensus_results.html:255
 #: app/templates/discussions/consensus_results.html:645
@@ -16466,11 +16547,11 @@ msgstr "グループC"
 
 #: app/templates/discussions/consensus_results.html:257
 msgid "Representative agreement"
-msgstr ""
+msgstr "代表者契約"
 
 #: app/templates/discussions/consensus_results.html:258
 msgid "Representative rejection"
-msgstr ""
+msgstr "代表者の拒否"
 
 #: app/templates/discussions/consensus_results.html:307
 #: app/templates/discussions/consensus_results.html:443
@@ -16483,33 +16564,33 @@ msgstr "反対"
 #: app/templates/discussions/consensus_results.html:317
 #, python-format
 msgid "Wilson 95%% score interval on the in-group agreement rate."
-msgstr ""
+msgstr "ウィルソンのグループ内一致率のスコア間隔は 95%% です。"
 
 #: app/templates/discussions/consensus_results.html:322
 msgid ""
 "How much more this group takes this position than everyone else (in-group "
 "rate ÷ out-group rate)."
-msgstr ""
+msgstr "このグループが他のグループよりもどの程度このポジションを占めているか (グループ内率 ÷ グループ外率)。"
 
 #: app/templates/discussions/consensus_results.html:323
 #, python-format
 msgid "%(x)sx vs others"
-msgstr ""
+msgstr "%(x)sx 対その他"
 
 #: app/templates/discussions/consensus_results.html:327
 msgid ""
 "Survives Benjamini–Hochberg FDR correction at q=0.05 across all "
 "cluster×statement tests."
-msgstr ""
+msgstr "すべてのクラスター×ステートメント テストにわたって、q=0.05 での Benjamini-Hochberg FDR 補正に耐えます。"
 
 #: app/templates/discussions/consensus_results.html:328
 #: app/templates/discussions/consensus_results.html:522
 msgid "FDR-significant"
-msgstr ""
+msgstr "FDR-重要"
 
 #: app/templates/discussions/consensus_results.html:331
 msgid "Below FDR threshold — treat as suggestive, not confirmed."
-msgstr ""
+msgstr "FDR のしきい値を下回る場合は、確認されておらず、示唆的なものとして扱います。"
 
 #: app/templates/discussions/consensus_results.html:335
 #, fuzzy
@@ -16527,11 +16608,13 @@ msgid ""
 "test, FDR-controlled at q=0.05. Re-running as more people vote sharpens "
 "these results."
 msgstr ""
+"各グループを残りのグループから区別するステートメント - リフト (グループ内一致 ÷ グループ外一致) によってランク付けされ、q=0.05 で "
+"FDR 管理されたフィッシャーの正確確率検定で確認されます。より多くの人が投票するにつれて再実行すると、これらの結果は鮮明になります。"
 
 #: app/templates/discussions/consensus_results.html:357
 msgid ""
 "Small sample — treat percentages as indicative, not statistically conclusive"
-msgstr ""
+msgstr "少数のサンプル — パーセンテージは統計的に決定的なものではなく、指標として扱います"
 
 #: app/templates/discussions/consensus_results.html:358
 #: app/templates/programmes/journey_recap.html:201
@@ -16543,11 +16626,11 @@ msgstr "すべてのテンプレート"
 msgid ""
 "No representative statements survived FDR correction yet — more votes will "
 "help."
-msgstr ""
+msgstr "FDR の修正で生き残った代表的な声明はまだありません。より多くの投票が役立ちます。"
 
 #: app/templates/discussions/consensus_results.html:363
 msgid "Suggestive only"
-msgstr ""
+msgstr "示唆的なもののみ"
 
 #: app/templates/discussions/consensus_results.html:367
 #, fuzzy
@@ -16557,7 +16640,7 @@ msgstr[0] "参加者"
 
 #: app/templates/discussions/consensus_results.html:381
 msgid "Not enough shared votes yet"
-msgstr ""
+msgstr "共有投票がまだ足りません"
 
 #: app/templates/discussions/consensus_results.html:383
 #, python-format
@@ -16580,18 +16663,18 @@ msgstr "すべてのグループが同意"
 
 #: app/templates/discussions/consensus_results.html:403
 msgid "This group rejects"
-msgstr ""
+msgstr "このグループは拒否します"
 
 #: app/templates/discussions/consensus_results.html:412
 #, python-format
 msgid ""
 "Near-even splits (40–60%%). Surfaced so you can see where the group is "
 "genuinely conflicted."
-msgstr ""
+msgstr "ほぼ均等な分割 (40 ～ 60%%)。グループがどこで本当に対立しているのかがわかるように表面化しました。"
 
 #: app/templates/discussions/consensus_results.html:413
 msgid "Group is split on"
-msgstr ""
+msgstr "グループが分割されています"
 
 #: app/templates/discussions/consensus_results.html:436
 #, python-format
@@ -16600,6 +16683,8 @@ msgid ""
 "AND every opinion group’s own lower bound clears 60%%. Small-sample noise "
 "cannot qualify."
 msgstr ""
+"全体的な合意に関するウィルソンの下限が 70%% を超え、かつ各意見グループ独自の下限が 60%% "
+"を超えているステートメント。サンプルが小さいノイズは認定できません。"
 
 #: app/templates/discussions/consensus_results.html:443
 #: app/templates/discussions/consensus_results.html:478
@@ -16616,7 +16701,7 @@ msgstr "一致"
 #: app/templates/discussions/consensus_results.html:448
 #, python-format
 msgid "Wilson 95%% score interval."
-msgstr ""
+msgstr "ウィルソン 95%% 得点間隔。"
 
 #: app/templates/discussions/consensus_results.html:465
 msgid ""
@@ -16624,6 +16709,8 @@ msgid ""
 " disagree) with low between-group variance. Shared rejection counts as "
 "common ground too."
 msgstr ""
+"グループ間の分散が低く、すべてのグループが同じ側に着く (すべてが同意するか、すべてが同意しない) "
+"ステートメント。共有された拒否も共通点としてカウントされます。"
 
 #: app/templates/discussions/consensus_results.html:473
 #, fuzzy
@@ -16638,12 +16725,12 @@ msgstr "一致"
 #: app/templates/discussions/consensus_results.html:480
 #, python-format
 msgid "Mean cross-group: %(v)s%%"
-msgstr ""
+msgstr "クロスグループの平均: %(v)s%%"
 
 #: app/templates/discussions/consensus_results.html:483
 #, python-format
 msgid "Wilson 95%% score interval on the dominant polarity."
-msgstr ""
+msgstr "ウィルソンの優勢極性での 95%% スコア間隔。"
 
 #: app/templates/discussions/consensus_results.html:500
 msgid ""
@@ -16651,37 +16738,39 @@ msgid ""
 "the FDR-corrected permutation χ² test across all clusters (a pre-specified "
 "omnibus test); the gap CI uses Newcombe’s MOVER-Wilson Method 10."
 msgstr ""
+"意見グループが互いに意見が異なる場合の発言。重要なのは、すべてのクラスターにわたる FDR 補正された順列 χ² テスト (事前に指定されたオムニバス "
+"テスト) です。ギャップ CI は Newcombe の MOVER-Wilson Method 10 を使用します。"
 
 #: app/templates/discussions/consensus_results.html:509
 msgid ""
 "Agreement-rate gap between the most- and least-agreeing opinion groups on "
 "this statement."
-msgstr ""
+msgstr "この声明に関して最も同意した意見グループと最も同意しなかった意見グループ間の同意率の差。"
 
 #: app/templates/discussions/consensus_results.html:510
 #, python-format
 msgid "Group gap %(v)s%%"
-msgstr ""
+msgstr "グループギャップ %(v)s%%"
 
 #: app/templates/discussions/consensus_results.html:516
 #, python-format
 msgid ""
 "Newcombe 95%% CI for the proportion difference (MOVER-Wilson, Method 10)."
-msgstr ""
+msgstr "割合の差に関する Newcombe 95%% CI (MOVER-Wilson、方法 10)。"
 
 #: app/templates/discussions/consensus_results.html:521
 msgid "Omnibus permutation χ² across all clusters survives FDR correction."
-msgstr ""
+msgstr "すべてのクラスターにわたるオムニバス順列 χ² は FDR 補正後に残ります。"
 
 #: app/templates/discussions/consensus_results.html:525
 msgid "Omnibus permutation χ² p-value (the FDR-screened test)."
-msgstr ""
+msgstr "オムニバス順列 χ² p 値 (FDR スクリーニング検定)。"
 
 #: app/templates/discussions/consensus_results.html:528
 msgid ""
 "Secondary one-sided Fisher check on the extreme pair — a post-hoc guard on "
 "the displayed gap, not a simultaneous test."
-msgstr ""
+msgstr "極端なペアに対する二次的な片側フィッシャー チェック。同時テストではなく、表示されたギャップに対する事後ガードです。"
 
 #: app/templates/discussions/consensus_results.html:540
 msgid "Export & Share"
@@ -16723,6 +16812,10 @@ msgid ""
 "by √(N_total/N_voted) — then %(method)s clustering with cosine distance. k "
 "is chosen by silhouette score over k ∈ [2, 10]."
 msgstr ""
+"参加者×ステートメント投票行列 ({-1, 0, +1} の値) "
+"を作成します。欠落票はステートメントの平均値で代入されるため、まばらな投票者によって主成分が歪められません。 PCA (2 コンポーネント) "
+"に続いてスパース性を意識したスケーリング — 投票数が少ない参加者は、重心から √(N_total/N_voted) だけ引き伸ばされます — "
+"その後、コサイン距離による %(method)s クラスタリング。 k は、k ∈ [2, 10] に対するシルエット スコアによって選択されます。"
 
 #: app/templates/discussions/consensus_results.html:590
 #, fuzzy
@@ -16737,6 +16830,9 @@ msgid ""
 "clears 60%%. Raw percentages alone are never sufficient — 7/10 agreement is "
 "not \"70%% consensus\" when its confidence interval starts at 40%%."
 msgstr ""
+"ステートメントは、全体的な合意に関するウィルソン 95%% スコア間隔が 70%% をクリアし、かつ各オピニオン グループ独自のウィルソン下限が "
+"60%% をクリアする場合にのみ表示されます。生のパーセンテージだけでは決して十分ではありません。信頼区間が 40%% から始まる場合、7/10 "
+"の一致は「70%% のコンセンサス」ではありません。"
 
 #: app/templates/discussions/consensus_results.html:594
 #, fuzzy
@@ -16752,6 +16848,9 @@ msgid ""
 "q=0.05. Only FDR-significant statements receive the ✓ badge; everything else"
 " is marked \"suggestive only\"."
 msgstr ""
+"すべての (グループ、ステートメント) ペアについて、リフト (P(同意 | グループ内) / P(同意 | グループ外) を計算します)。2×2 "
+"分割表で片側フィッシャーの正確確率検定を実行し、q=0.05 ですべての検定に %(fdr)s FDR 補正を適用します。 FDR "
+"に重要なステートメントのみに ✓ バッジが付けられます。それ以外はすべて「示唆のみ」とマークされています。"
 
 #: app/templates/discussions/consensus_results.html:599
 #, fuzzy
@@ -16770,10 +16869,15 @@ msgid ""
 "surfaced as a small-sample guard on the displayed gap, not a simultaneous "
 "test."
 msgstr ""
+"ブリッジでは、平均グループ間一致率 ≥65%% (または共有拒否率 ≤35%%)、グループ間分散 ≤0.15 "
+"が必要です。分裂的なステートメントでは、事前に指定されたオムニバス テストが使用されます。つまり、各ステートメントのすべてのクラスターにわたる並べ替え "
+"χ² が使用され、観察された極端なシャッフルされた割り当ての割合が p 値として報告されます。 FDR はこれらのオムニバス p "
+"値に適用されます。ギャップ CI は、Newcombe の MOVER-Wilson (1998) メソッド 10 を使用します。極端なペアのペアワイズ"
+" フィッシャー p は、同時テストではなく、表示されたギャップの小さなサンプル ガードとして表面化されます。"
 
 #: app/templates/discussions/consensus_results.html:603
 msgid "Reproducibility."
-msgstr ""
+msgstr "再現性。"
 
 #: app/templates/discussions/consensus_results.html:607
 #, python-format
@@ -16782,12 +16886,14 @@ msgid ""
 "Adjusted Rand Index between runs: %(ari)s (1.0 = identical, 0.0 = random). "
 "Representative-statement Jaccard overlap: %(jac)s."
 msgstr ""
+"この分析は、異なるランダム シードを使用して %(runs)d 回再実行されました。実行間の平均調整ランドインデックス: %(ari)s (1.0 = "
+"同一、0.0 = ランダム)。代表ステートメント Jaccard の重複: %(jac)s。"
 
 #: app/templates/discussions/consensus_results.html:609
 msgid ""
 "Stability metrics were not computed for this analysis. Re-running will "
 "attach them."
-msgstr ""
+msgstr "この分析では安定性メトリクスは計算されませんでした。再実行すると接続されます。"
 
 #: app/templates/discussions/consensus_results.html:613
 #, fuzzy
@@ -16806,6 +16912,11 @@ msgid ""
 "interval on the agreement gap uses Wilson bounds heuristically; a Newcombe "
 "interval would be tighter for a difference of proportions."
 msgstr ""
+"クラスタリングはグループの要約に使用されるのと同じ投票に適合するため、推論量は確認的なものではなく探索的なものになります。 Benjamini-"
+"Hochberg FDR は、独立または軽度の依存下で適切です。同じクラスタリングに関する多くのテストは相関しているため、q=0.05 "
+"を厳密な境界ではなく実用的なスクリーニングとして扱います。分裂的なステートメントは、そのステートメントで最も高い一致と最も低い一致を持つ 2 "
+"つのクラスターを比較します。フィッシャー p "
+"値は小さなサンプルのギャップを保護しますが、すべてのペアごとのクラスターの差を検定するものではありません。一致ギャップの区間には、ヒューリスティックにウィルソン境界が使用されます。比率の違いについては、ニューコム間隔の方が狭くなります。"
 
 #: app/templates/discussions/consensus_results.html:617
 #, fuzzy
@@ -16819,7 +16930,7 @@ msgstr "ディスカッションに戻る"
 
 #: app/templates/discussions/consensus_results.html:641
 msgid "Horizontal axis (PC1)"
-msgstr ""
+msgstr "横軸(PC1)"
 
 #: app/templates/discussions/consensus_results.html:642
 #, fuzzy
@@ -16833,7 +16944,7 @@ msgstr "投票パターンに基づく意見グループ"
 
 #: app/templates/discussions/consensus_results.html:644
 msgid "You"
-msgstr ""
+msgstr "あなた"
 
 #: app/templates/discussions/consensus_results.html:646
 #: app/templates/discussions/view_response.html:166
@@ -17801,9 +17912,10 @@ msgid "Search discussions on SocietySpeaks."
 msgstr "Society Speaks でのディスカッション作成"
 
 #: app/templates/discussions/search_discussions.html:12
-#, fuzzy, python-format
+#, python-format
 msgid "Results for %(term)s."
-msgstr ""
+msgstr "%(term)s の結果。"
+
 #: app/templates/discussions/search_discussions.html:21
 #, fuzzy
 msgid "Discussions, Society, Community Engagement"
@@ -18010,18 +18122,17 @@ msgid "Organiser and steward updates, outcomes, and next steps."
 msgstr "主催者とステワードのアップデート、成果、次のステップ。"
 
 #: app/templates/discussions/view_discussion.html:599
-#, fuzzy, python-format
 msgid ""
 "These posts are written by <strong>discussion organisers</strong> (for "
 "example policy outcomes, hearings, or next steps). They are "
 "<strong>not</strong> where you suggest new voting statements — use"
 msgstr ""
 "これらの投稿は<strong>ディスカッション主催者</strong>によって作成されます（例：政策成果、公聴会、次のステップ）。これは新しい投票ステートメントを提案する場所では<strong>ありません</strong>"
-" — 代わりに%(suggest_link)sを使用してください。提案は投票用に表示される前に%(mod_link)sを通過します。"
+" — 代わりに"
 
 #: app/templates/discussions/view_discussion.html:601
 msgid "instead. Suggestions go through the"
-msgstr ""
+msgstr "その代わり。提案は次のように行われます。"
 
 #: app/templates/discussions/view_discussion.html:603
 #: app/templates/discussions/view_discussion.html:605
@@ -18032,7 +18143,7 @@ msgstr "モデレーションキュー"
 
 #: app/templates/discussions/view_discussion.html:607
 msgid "before they appear for voting."
-msgstr ""
+msgstr "彼らが投票のために現れる前に。"
 
 #: app/templates/discussions/view_discussion.html:614
 #: app/templates/discussions/view_discussion.html:718
@@ -18072,15 +18183,15 @@ msgstr ""
 
 #: app/templates/discussions/view_discussion.html:678
 msgid "<strong>Want to propose a new statement</strong> for this theme? Use"
-msgstr ""
+msgstr "このテーマに対して<strong>新しいステートメントを提案したい</strong>ですか?使用"
 
 #: app/templates/discussions/view_discussion.html:680
 msgid "Your text is reviewed in the"
-msgstr ""
+msgstr "あなたのテキストは、"
 
 #: app/templates/discussions/view_discussion.html:686
 msgid "before it can appear for others to vote on."
-msgstr ""
+msgstr "他の人が投票できるようになる前に。"
 
 #: app/templates/discussions/view_discussion.html:690
 msgid ""
@@ -18136,9 +18247,9 @@ msgid "Theme complete!"
 msgstr "テーマ完了！"
 
 #: app/templates/discussions/view_native.html:96
-#, fuzzy, python-format
+#, python-format
 msgid "You voted on every statement in this theme (%(total)d)."
-msgstr "このテーマのすべてのステートメントの投票はすでに完了しています。"
+msgstr "このテーマのすべての表明に投票済みです（%(total)d）。"
 
 #: app/templates/discussions/view_native.html:172
 msgid "Analysis"
@@ -18916,11 +19027,6 @@ msgstr "その間、今すぐジャーニーを続けられます。アカウン
 msgid "This link works for 72 hours without a login."
 msgstr "このリンクはログインなしで72時間有効です。"
 
-#: app/templates/emails/magic_login.html:3
-#, fuzzy
-msgid "Your Society Speaks sign-in link"
-msgstr "✓ Society Speaks のみ"
-
 #: app/templates/emails/magic_login.html:5
 #, fuzzy
 msgid "Click to sign in to Society Speaks"
@@ -18930,7 +19036,7 @@ msgstr "Society Speaks へようこそ"
 msgid ""
 "Click the button below to sign in to your Society Speaks account. No "
 "password needed."
-msgstr ""
+msgstr "下のボタンをクリックして、Society Speaks アカウントにサインインしてください。パスワードは必要ありません。"
 
 #: app/templates/emails/magic_login.html:36
 #, fuzzy
@@ -19026,10 +19132,6 @@ msgstr "ボタンが機能しない場合は、このリンクをコピーして
 msgid "Reset Your Partner Portal Password - Society Speaks"
 msgstr "Partner Portal パスワードをリセット - Society Speaks"
 
-#: app/templates/emails/partner_password_reset.html:5
-msgid "Reset your Society Speaks Partner Portal password"
-msgstr "Society Speaks Partner Portal パスワードをリセット"
-
 #: app/templates/emails/partner_password_reset.html:7
 msgid "Partner Portal Password Reset"
 msgstr "Partner Portal パスワードリセット"
@@ -19052,10 +19154,6 @@ msgid ""
 "If you didn't request a password reset, you can safely ignore this email. "
 "Your password will not be changed."
 msgstr "パスワードリセットをリクエストしていない場合は、このメールを安全に削除できます。パスワードは変更されません。"
-
-#: app/templates/emails/password_reset.html:3
-msgid "Reset Your Password - Society Speaks"
-msgstr "パスワードをリセット - Society Speaks"
 
 #: app/templates/emails/password_reset.html:5
 msgid "Reset your Society Speaks password"
@@ -19161,7 +19259,7 @@ msgstr "サブスクリプションが終了しました"
 msgid ""
 "Your briefings are paused — your sources and settings are saved. Come back "
 "any time."
-msgstr ""
+msgstr "ブリーフィングは一時停止され、ソースと設定は保存されます。いつでも戻ってきてください。"
 
 #: app/templates/emails/subscription_cancelled.html:7
 msgid "Your subscription has ended"
@@ -19180,11 +19278,12 @@ msgid ""
 msgstr "Society Speaksのサブスクリプションが終了し、ブリーフィングが一時停止されました"
 
 #: app/templates/emails/subscription_cancelled.html:30
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your Society Speaks subscription has ended and your <strong>%(count)s "
 "briefings</strong> have been paused."
-msgstr "Society Speaksのサブスクリプションが終了し、ブリーフィングが一時停止されました"
+msgstr ""
+"Society Speaks のご契約が終了し、<strong>%(count)s 件のブリーフィング</strong>が一時停止されました。"
 
 #: app/templates/emails/subscription_cancelled.html:33
 #, fuzzy
@@ -19197,6 +19296,7 @@ msgid ""
 "Resubscribing takes less than a minute and your briefings will be back in "
 "your inbox the next morning."
 msgstr ""
+"ブリーフ、情報源、スケジュール、履歴など、すべてが保存されます。再購読には 1 分もかかりません。翌朝にはブリーフィングが受信箱に戻ります。"
 
 #: app/templates/emails/subscription_cancelled.html:49
 #, fuzzy
@@ -19205,15 +19305,15 @@ msgstr "ブリーフを受け取る時間"
 
 #: app/templates/emails/subscription_cancelled.html:56
 msgid "All your saved briefs and sources, instantly re-activated"
-msgstr ""
+msgstr "保存したすべてのブリーフとソースは即座に再アクティブ化されます"
 
 #: app/templates/emails/subscription_cancelled.html:66
 msgid "Briefings back in your inbox the next morning"
-msgstr ""
+msgstr "翌朝、ブリーフィングが受信箱に戻ってきます"
 
 #: app/templates/emails/subscription_cancelled.html:76
 msgid "Cancel again any time — no long-term commitment"
-msgstr ""
+msgstr "いつでも再度キャンセル可能 – 長期契約は不要"
 
 #: app/templates/emails/subscription_cancelled.html:92
 msgid "View plans &amp; resubscribe"
@@ -19222,13 +19322,13 @@ msgstr "プランを確認して再度サブスクリプション"
 #: app/templates/emails/subscription_cancelled.html:98
 msgid ""
 "Personal from £4.99/month · Professional from £25/month · cancel any time"
-msgstr ""
+msgstr "パーソナル £4.99/月から · プロフェッショナル £25/月から · いつでもキャンセル可能"
 
 #: app/templates/emails/subscription_cancelled.html:104
 msgid ""
 "Changed your mind or have a question? Just reply to this email — we read "
 "every one."
-msgstr ""
+msgstr "気が変わりましたか、それとも質問がありますか?このメールに返信してください。すべて読んでいます。"
 
 #: app/templates/emails/trial_ending.html:5
 #, python-format
@@ -19276,9 +19376,11 @@ msgid ""
 "Use the button below to open secure billing (you may be asked to sign in "
 "first). You can also compare plans if you want to change tier."
 msgstr ""
+"下のボタンを使用して安全な請求を開きます "
+"(最初にサインインするよう求められる場合があります)。レベルを変更したい場合は、プランを比較することもできます。"
 
 #: app/templates/emails/trial_ending.html:38
-#: app/templates/emails/trial_mid.html:96
+#: app/templates/emails/trial_mid.html:98
 #, fuzzy
 msgid "Add payment method"
 msgstr "支払い方法を更新"
@@ -19290,62 +19392,70 @@ msgstr "ご質問がありましたら、このメールに返信していただ
 
 #: app/templates/emails/trial_mid.html:3
 msgid "You're one week into your free trial"
-msgstr ""
+msgstr "無料トライアル開始から 1 週間が経過しました"
 
 #: app/templates/emails/trial_mid.html:5
 msgid ""
 "Here's what you've set up — and what's waiting when you add a payment "
 "method."
-msgstr ""
+msgstr "設定した内容と、支払い方法を追加すると何が待っているかは次のとおりです。"
 
 #: app/templates/emails/trial_mid.html:7
 msgid "One week in. How's it going?"
-msgstr ""
+msgstr "1週間が経ちました。調子はどうですか？"
 
 #: app/templates/emails/trial_mid.html:12
 #, python-format
 msgid "%(days_remaining)s days left in your free trial"
-msgstr ""
+msgstr "無料トライアル期間は残り %(days_remaining)s 日です"
 
 #: app/templates/emails/trial_mid.html:26
-#, python-format
 msgid ""
 "You're one week into your Personal Brief trial. We hope the briefings are "
-"already saving you time. You have <strong>%(days_remaining)s days "
-"left</strong> — here's a quick reminder of what your subscription includes."
+"already saving you time. You have"
 msgstr ""
+"Personal Brief Trial の開始から 1 週間が経過しました。この説明会ですでに時間の節約になっていると幸いです。あなたが持っている"
 
-#: app/templates/emails/trial_mid.html:45
+#: app/templates/emails/trial_mid.html:27
+#, python-format
+msgid "%(days_remaining)s days left"
+msgstr "残り %(days_remaining)s 日"
+
+#: app/templates/emails/trial_mid.html:28
+msgid "here's a quick reminder of what your subscription includes."
+msgstr "サブスクリプションに含まれるものを簡単に思い出してください。"
+
+#: app/templates/emails/trial_mid.html:47
 #, fuzzy
 msgid "create as many as you need, on any topic"
 msgstr "あなたのコンテンツとトピックの周りで議論を作成"
 
-#: app/templates/emails/trial_mid.html:59
+#: app/templates/emails/trial_mid.html:61
 #, fuzzy
 msgid "PDF uploads"
 msgstr "PDF アップロード"
 
-#: app/templates/emails/trial_mid.html:59
+#: app/templates/emails/trial_mid.html:61
 #, fuzzy
 msgid "add your own research documents alongside public sources"
 msgstr "研究資料とニュースを統合"
 
-#: app/templates/emails/trial_mid.html:73
+#: app/templates/emails/trial_mid.html:75
 #, fuzzy
 msgid "Scheduled delivery"
 msgstr "スケジュール済み"
 
-#: app/templates/emails/trial_mid.html:73
+#: app/templates/emails/trial_mid.html:75
 msgid "your brief arrives before your first meeting, every day"
-msgstr ""
+msgstr "毎日、最初の会議の前にブリーフが届きます"
 
-#: app/templates/emails/trial_mid.html:88
+#: app/templates/emails/trial_mid.html:90
 msgid ""
 "To keep your briefs running after the trial, add a payment method now — it "
 "takes 30 seconds and you will not be charged until day 30."
-msgstr ""
+msgstr "試用後もブリーフを継続するには、今すぐ支払い方法を追加してください。所要時間は 30 秒で、30 日目まで料金は請求されません。"
 
-#: app/templates/emails/trial_mid.html:111
+#: app/templates/emails/trial_mid.html:113
 #, fuzzy
 msgid ""
 "Questions about which plan is right for you? Reply to this email — we're "
@@ -20819,6 +20929,8 @@ msgid ""
 "statement feed. The formal \"Points of Division\" panel on the analysis page"
 " uses a stronger, cluster-aware test."
 msgstr ""
+"全体の投票が分かれる発言 - "
+"発言フィードで意見の相違が表面化します。分析ページの正式な「分割点」パネルでは、より強力なクラスター対応テストが使用されます。"
 
 #: app/templates/help/native_system.html:187
 msgid "🕐 Recent"
@@ -20869,10 +20981,14 @@ msgid ""
 "enough — 7/10 agreement is not \"70%% consensus\" when its confidence "
 "interval starts at 40%%."
 msgstr ""
+"ステートメントが合意として認められるのは、全体の合意に関する<strong>ウィルソン 95%% スコア間隔</strong>が 70%% "
+"を超え、かつ各オピニオン グループ独自のウィルソン下限が 60%% "
+"を超えている場合のみです。生のパーセンテージだけでは決して十分ではありません。信頼区間が 40%% から始まる場合、7/10 の一致は「70%% "
+"のコンセンサス」ではありません。"
 
 #: app/templates/help/native_system.html:224
 msgid "These represent common ground that stands up to small-sample scrutiny."
-msgstr ""
+msgstr "これらは、少数のサンプルの精査に耐えられる共通点を表しています。"
 
 #: app/templates/help/native_system.html:230
 msgid "🌉 Find Bridge Statements"
@@ -20885,6 +21001,8 @@ msgid ""
 "(≥65%% mean) OR all rejecting (≤35%% mean) — with low variance between "
 "groups. Shared rejection counts as common ground too."
 msgstr ""
+"すべてのグループが同じ側に着くステートメント (すべてが同意 (平均値 65%% 以上) またはすべてが拒否 (平均値 35%% 以下) "
+"のいずれかで、グループ間の分散が小さい。共有された拒否も共通点としてカウントされます。"
 
 #: app/templates/help/native_system.html:236
 msgid ""
@@ -20903,16 +21021,22 @@ msgid ""
 "clusters</strong>, not post-selection of extreme pairs. The gap CI uses "
 "<strong>Newcombe’s MOVER-Wilson Method 10</strong>."
 msgstr ""
+"異なるグループが異なる投票を行う声明 - "
+"最も同意したグループと最も同意しなかったグループ間の同意の差によって測定されます。有意性は、極端なペアの選択後のものではなく、 "
+"すべてのクラスターにわたる<strong>事前に指定された順列 χ² 検定</strong>によって得られます。ギャップ CI "
+"は<strong>Newcombe の MOVER-Wilson Method 10</strong> を使用します。"
 
 #: app/templates/help/native_system.html:248
 msgid ""
 "These reveal where dialogue is most needed. FDR-corrected results are marked"
 " ✓; uncorrected results are shown as \"suggestive only\"."
 msgstr ""
+"これらにより、対話が最も必要とされる場所が明らかになります。 FDR 補正された結果には ✓ "
+"のマークが付けられます。修正されていない結果は「示唆のみ」として表示されます。"
 
 #: app/templates/help/native_system.html:254
 msgid "🔬 Statistical rigour"
-msgstr ""
+msgstr "🔬 統計的厳密性"
 
 #: app/templates/help/native_system.html:257
 #, python-format
@@ -20920,12 +21044,14 @@ msgid ""
 "<strong>Wilson 95%% score intervals</strong> on every reported percentage — "
 "no more \"100%% agreement\" from 2 of 2 votes."
 msgstr ""
+"報告されたパーセンテージごとに<strong>ウィルソンの 95%% スコア間隔</strong> - 2 票中 2 票による「100%% "
+"の同意」はなくなりました。"
 
 #: app/templates/help/native_system.html:258
 msgid ""
 "<strong>One-sided Fisher’s exact test</strong> for representativeness (which"
 " statements distinguish a group from everyone else)."
-msgstr ""
+msgstr "代表性 (あるグループを他のグループから区別するステートメント) に関する<strong>片側フィッシャーの正確検定</strong>。"
 
 #: app/templates/help/native_system.html:259
 msgid ""
@@ -20933,6 +21059,8 @@ msgid ""
 "cluster×statement tests (or Benjamini–Yekutieli for strict peer review under"
 " dependence — configurable)."
 msgstr ""
+"すべてのクラスター×ステートメント テストにおける<strong>Benjamini-Hochberg FDR 補正は q=0.05 "
+"で</strong> (または、依存関係に基づく厳密なピアレビューの場合は Benjamini-Yekutieli — 構成可能)。"
 
 #: app/templates/help/native_system.html:260
 msgid ""
@@ -20940,6 +21068,8 @@ msgid ""
 "computed over re-seeded clustering runs; analyses whose clusters are not "
 "reproducible are withheld."
 msgstr ""
+"再シードされたクラスタリング実行で計算された<strong>安定性メトリクス</strong> (調整されたランドインデックス、Jaccard "
+"オーバーラップ)。クラスターが再現できない分析は差し控えられます。"
 
 #: app/templates/help/native_system.html:261
 msgid ""
@@ -20947,6 +21077,7 @@ msgid ""
 " results page: clustering is fit on the same votes used for group summaries,"
 " so all inferential quantities are exploratory rather than confirmatory."
 msgstr ""
+"各結果ページの方法論パネルでは<strong>制限</strong>が指摘されています。クラスタリングはグループの集計に使用されるのと同じ投票に適合するため、すべての推論量は確認的ではなく探索的です。"
 
 #: app/templates/help/native_system.html:267
 msgid "📊 Visualize with Interactive Charts"
@@ -21352,12 +21483,10 @@ msgid "<strong>Source ratings</strong> are based on"
 msgstr "<strong>無制限のソース</strong>"
 
 #: app/templates/help/news_feed.html:132
-#, fuzzy, python-format
 msgid ""
 "where available, with manual assessment for podcasts and newer publications."
 " We update ratings monthly."
-msgstr ""
-"<strong>ソース評価</strong>は利用可能な場合は%(allsides_link)sに基づいており、ポッドキャストと新しい出版物については手動での評価を行います。評価は月1回更新されます。"
+msgstr "<strong>ソース評価</strong>は利用可能な場合は"
 
 #: app/templates/help/news_feed.html:138
 msgid "How We Select Topics"
@@ -21503,15 +21632,13 @@ msgstr "私たちは透明性を信じています。トピックがどこから
 
 #: app/templates/help/news_feed.html:239
 msgid "Prefer to receive a curated summary? Subscribe to"
-msgstr ""
+msgstr "厳選された概要を受け取りたいですか?購読する"
 
 #: app/templates/help/news_feed.html:241
-#, fuzzy, python-format
 msgid ""
 "— our email newsletter that delivers the day's top stories with coverage "
 "analysis from multiple perspectives."
-msgstr ""
-"キュレーションされたサマリーを受け取ることを好みますか？%(brief_link)sを購読してください。複数の視点からのカバレッジ分析を含む、その日のトップストーリーを配信するメールニュースレターです。"
+msgstr "キュレーションされたサマリーを受け取ることを好みますか？"
 
 #: app/templates/help/news_feed.html:245
 msgid ""
@@ -22072,12 +22199,10 @@ msgid "public catalogue"
 msgstr "公開カタログ"
 
 #: app/templates/help/programmes.html:113
-#, fuzzy, python-format
 msgid ""
 "Anyone can browse and participate — no account required to read, an account "
 "is needed to vote or submit statements."
-msgstr ""
-"プログラムは%(catalogue_link)sに表示されます。誰でも閲覧して参加できます。読む場合はアカウントは不要ですが、投票または声明を送信するにはアカウントが必要です。"
+msgstr "プログラムは"
 
 #: app/templates/help/programmes.html:115
 msgid "Best for: open public consultations, transparent policy debates."
@@ -22180,12 +22305,10 @@ msgid "Creating a programme"
 msgstr "プログラムの作成"
 
 #: app/templates/help/programmes.html:186
-#, fuzzy, python-format
 msgid ""
 "<strong>Go to Programmes → New programme</strong> from the navigation menu, "
 "or visit"
-msgstr ""
-"ナビゲーションメニューから<strong>プログラム → 新規プログラム</strong>に移動するか、%(link)sにアクセスしてください。"
+msgstr "ナビゲーションメニューから<strong>プログラム → 新規プログラム</strong>に移動するか、"
 
 #: app/templates/help/programmes.html:192
 msgid ""
@@ -22962,23 +23085,17 @@ msgid "Create a portal"
 msgstr "ポータルを作成"
 
 #: app/templates/partner/api_docs.html:76
-#, fuzzy, python-format
 msgid "to get your test API key and DNS verification token."
-msgstr ""
-"<strong>Partner Portal:</strong> テスト API キーと DNS 検証トークンを取得するには %(link)s "
-"にアクセスしてください。"
+msgstr "<strong>Partner Portal:</strong> テスト API キーと DNS 検証トークンを取得するには"
 
 #: app/templates/partner/api_docs.html:77
 msgid "<strong>Interactive playground:</strong>"
-msgstr ""
+msgstr "<strong>インタラクティブな遊び場:</strong>"
 
 #: app/templates/partner/api_docs.html:79
-#, fuzzy, python-format
 msgid ""
 "to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI."
-msgstr ""
-"<strong>インタラクティブプレイグラウンド:</strong> %(link)s で Swagger UI "
-"からブラウザセーフなエンドポイント（lookup、snapshot、oEmbed）を試してください。"
+msgstr "<strong>インタラクティブプレイグラウンド:</strong>"
 
 #: app/templates/partner/api_docs.html:80
 msgid ""
@@ -23992,9 +24109,8 @@ msgid "Contact us"
 msgstr "お問い合わせ"
 
 #: app/templates/partner/api_docs.html:1231
-#, fuzzy, python-format
 msgid "or visit the"
-msgstr "または %(link)s をご覧ください。"
+msgstr "または"
 
 #: app/templates/partner/api_docs.html:1232
 msgid "Partner Dashboard"
@@ -24031,9 +24147,8 @@ msgstr ""
 "エンドポイントをお試しください。リクエストはこのサイトに送信されます。書き込み/管理エンドポイントはサーバー間通信のみです。"
 
 #: app/templates/partner/api_playground.html:28
-#, fuzzy, python-format
 msgid "Get test keys in the"
-msgstr "%(portal_link)s でテストキーを取得してください。"
+msgstr ""
 
 #: app/templates/partner/api_playground.html:32
 #, python-brace-format
@@ -25567,9 +25682,8 @@ msgid ""
 msgstr "問題を協力して解決したいと考えています。何が許可されているかわからない場合はお問い合わせください。"
 
 #: app/templates/partner/rules.html:243
-#, fuzzy, python-format
 msgid "for clarification on any of these rules."
-msgstr "これらのルールについて明確にする必要がある場合は %(email_link)s にメールでお問い合わせください。"
+msgstr "これらのルールについて明確にする必要がある場合は"
 
 #: app/templates/partner/components/_password_field.html:15
 msgid "8+ characters"
@@ -27735,14 +27849,14 @@ msgstr "このテーマではまだ投票がありません。"
 msgid ""
 "This analysis is based on fewer than 15 participants — treat its patterns as"
 " indicative."
-msgstr ""
+msgstr "この分析は 15 名未満の参加者に基づいています。そのパターンは指標として扱ってください。"
 
 #: app/templates/programmes/journey_recap.html:196
 #, python-format
 msgid ""
 "Cluster structure was not fully reproducible across re-seeded runs (ARI "
 "%(v)s)."
-msgstr ""
+msgstr "クラスター構造は、再シードされた実行間で完全には再現できませんでした (ARI %(v)s)。"
 
 #: app/templates/programmes/journey_recap.html:201
 #, fuzzy
@@ -27936,17 +28050,18 @@ msgstr "参加者アクセス権限はまだ付与されていません。"
 
 #: app/templates/programmes/view.html:201
 msgid "You've finished — amazing work."
-msgstr ""
+msgstr "素晴らしい仕事が終わりました。"
 
 #: app/templates/programmes/view.html:204
 #, fuzzy, python-format
 msgid "%(votes)s votes across %(total)d themes — see how you compare."
 msgstr ""
+
 #: app/templates/programmes/view.html:207
 msgid ""
 "People usually spread this across short sessions (~20–40 minutes per theme)."
 " There is no deadline."
-msgstr ""
+msgstr "通常、人々はこれを短いセッション (テーマごとに約 20 ～ 40 分) に分散させます。期限はありません。"
 
 #: app/templates/programmes/view.html:214
 #, fuzzy
@@ -27970,7 +28085,7 @@ msgstr "今日はこれで完了です"
 
 #: app/templates/programmes/view.html:247
 msgid "Almost there — one theme left!"
-msgstr ""
+msgstr "もうすぐ終わりです。残りのテーマは 1 つです。"
 
 #: app/templates/programmes/view.html:249
 #, fuzzy
@@ -27989,7 +28104,7 @@ msgstr "%(pct)d%% 右"
 #: app/templates/programmes/view.html:259
 #, python-format
 msgid "~%(mins)d min left at your pace"
-msgstr ""
+msgstr "あなたのペースで残り ~%(mins)d 分"
 
 #: app/templates/programmes/view.html:262
 #, fuzzy
@@ -28009,11 +28124,11 @@ msgstr "Big Questions Journeyにはいくつの声明がありますか？"
 msgid ""
 "Most people spread this across short sessions (~20–40 minutes per theme). "
 "Take breaks anytime — nothing is gated."
-msgstr ""
+msgstr "ほとんどの人は、これを短いセッション (テーマごとに約 20 ～ 40 分) に分散させます。いつでも休憩できます。制限はありません。"
 
 #: app/templates/programmes/view.html:290
 msgid "Begin:"
-msgstr ""
+msgstr "始める："
 
 #: app/templates/programmes/view.html:290
 #, fuzzy
@@ -28026,7 +28141,7 @@ msgstr "進捗の振り返りを見る"
 
 #: app/templates/programmes/view.html:301
 msgid "Share this journey — opens native share sheet or copies link"
-msgstr ""
+msgstr "このジャーニーを共有する — ネイティブ共有シートを開くか、リンクをコピーします"
 
 #: app/templates/programmes/view.html:304
 #, fuzzy
@@ -28034,18 +28149,17 @@ msgid "Share journey"
 msgstr "Xでシェア"
 
 #: app/templates/programmes/view.html:307
-#, fuzzy, python-format
 msgid "Copy journey overview link"
-msgstr "%(name)sのジャーニー概要に戻る"
+msgstr "ジャーニー概要へのリンクをコピーする"
 
 #: app/templates/programmes/view.html:384
 msgid "Want reminders to finish this journey?"
-msgstr ""
+msgstr "この旅を終えるためのリマインダーが必要ですか?"
 
 #: app/templates/programmes/view.html:385
 msgid ""
 "Short email nudges — pick cadence and time. One tap unsubscribe anytime."
-msgstr ""
+msgstr "短い電子メールのナッジ – 頻度と時間を選択します。いつでもワンタップで購読を解除できます。"
 
 #: app/templates/programmes/view.html:390
 #, fuzzy
@@ -28072,7 +28186,7 @@ msgstr "意味すること"
 
 #: app/templates/programmes/view.html:419
 msgid "(your device’s local time)"
-msgstr ""
+msgstr "(デバイスの現地時間)"
 
 #: app/templates/programmes/view.html:426
 msgid "Turn on reminders"
@@ -28080,11 +28194,11 @@ msgstr "リマインダーをオンにする"
 
 #: app/templates/programmes/view.html:428
 msgid "We only send journey nudges. Unsubscribe anytime from our emails."
-msgstr ""
+msgstr "私たちはジャーニーナッジのみを送信します。いつでもメールの購読を解除してください。"
 
 #: app/templates/programmes/view.html:432
 msgid "Dismiss reminder suggestion"
-msgstr ""
+msgstr "リマインダーの提案を無視する"
 
 #: app/templates/programmes/view.html:456
 #, python-format
@@ -28097,11 +28211,11 @@ msgstr "ディスカッションを追加"
 
 #: app/templates/programmes/view.html:637
 msgid "Twice a week — Tue and Thu"
-msgstr ""
+msgstr "週2回 - 火曜と木曜"
 
 #: app/templates/programmes/view.html:641
 msgid "Choose how often you want a reminder first."
-msgstr ""
+msgstr "最初にリマインダーを受け取る頻度を選択します。"
 
 #: app/templates/programmes/view.html:642
 #, fuzzy
@@ -28110,7 +28224,7 @@ msgstr "サインアップの際に使用したメールアドレスを入力し
 
 #: app/templates/programmes/view.html:643
 msgid "Reminders are scheduled:"
-msgstr ""
+msgstr "リマインダーがスケジュールされています:"
 
 #: app/templates/programmes/view.html:644
 #, fuzzy
@@ -29278,8 +29392,3 @@ msgstr "Xでシェア"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "BlueSkyは自動的に投稿されます。Xは新しいタブで事前入力されたテキストとともに開きます。"
-
-#: app/resend_client.py:183
-#, python-format
-msgid "Continue your journey: %(theme)s — Society Speaks"
-msgstr "ジャーニーを続ける：%(theme)s — Society Speaks"
