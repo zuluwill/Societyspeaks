@@ -7,30 +7,43 @@ from flask import Response
 from sqlalchemy import distinct, func
 
 from app import db
+from app.lib.participation_metrics import visible_statement_vote_filters
 from app.lib.time import utcnow_naive
-from app.models import ConsensusAnalysis, Discussion, StatementVote
+from app.models import ConsensusAnalysis, Discussion, Statement, StatementVote
 
 
 def _participant_count_for_cohort(discussion_id, cohort_slug):
     if not cohort_slug:
         return None
 
-    user_count = db.session.query(
-        func.count(distinct(StatementVote.user_id))
-    ).filter(
-        StatementVote.discussion_id == discussion_id,
-        StatementVote.cohort_slug == cohort_slug,
-        StatementVote.user_id.isnot(None)
-    ).scalar() or 0
+    _vis = visible_statement_vote_filters(Statement)
 
-    anon_count = db.session.query(
-        func.count(distinct(StatementVote.session_fingerprint))
-    ).filter(
-        StatementVote.discussion_id == discussion_id,
-        StatementVote.cohort_slug == cohort_slug,
-        StatementVote.user_id.is_(None),
-        StatementVote.session_fingerprint.isnot(None)
-    ).scalar() or 0
+    user_count = (
+        db.session.query(func.count(distinct(StatementVote.user_id)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id == discussion_id,
+            StatementVote.cohort_slug == cohort_slug,
+            StatementVote.user_id.isnot(None),
+            *_vis,
+        )
+        .scalar()
+        or 0
+    )
+
+    anon_count = (
+        db.session.query(func.count(distinct(StatementVote.session_fingerprint)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id == discussion_id,
+            StatementVote.cohort_slug == cohort_slug,
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.isnot(None),
+            *_vis,
+        )
+        .scalar()
+        or 0
+    )
     return user_count + anon_count
 
 

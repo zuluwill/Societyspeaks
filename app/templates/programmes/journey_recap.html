@@ -250,8 +250,8 @@
           </div>
         </div>
 
-        {# ── SECTION 2: Your personal votes (signed-in only) ──────── #}
-        {% if current_user.is_authenticated and personal_by_discussion.get(d.id) %}
+        {# ── SECTION 2: Your personal votes (signed-in or recognised browser session) ──────── #}
+        {% if personal_by_discussion.get(d.id) %}
         {% set _pv = personal_by_discussion.get(d.id, []) %}
         {% set _ua = _pv | selectattr('vote_label', 'equalto', 'agree') | list | length %}
         {% set _ud = _pv | selectattr('vote_label', 'equalto', 'disagree') | list | length %}

@@ -17,6 +17,12 @@ from app.programmes.utils import validate_cohort_for_discussion
 from app.discussions.sorting import apply_statement_sort
 from app.analytics.events import record_event
 from app.lib.counter_utils import increment_counter
+from app.lib.vote_identity import (
+    get_voter_fingerprint,
+    set_voter_client_cookies_if_needed,
+    LEGACY_STATEMENT_CLIENT_COOKIE_NAME,
+    VOTER_CLIENT_COOKIE_MAX_AGE,
+)
 from sqlalchemy import func, desc, or_, text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -36,8 +42,9 @@ except ImportError:
 
 statements_bp = Blueprint('statements', __name__)
 
-STATEMENT_CLIENT_COOKIE_NAME = 'statement_client_id'
-STATEMENT_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
+# Legacy cookie name (still written via unified voter cookie helper for backward compatibility).
+STATEMENT_CLIENT_COOKIE_NAME = LEGACY_STATEMENT_CLIENT_COOKIE_NAME
+STATEMENT_CLIENT_COOKIE_MAX_AGE = VOTER_CLIENT_COOKIE_MAX_AGE
 EMBED_FINGERPRINT_MAX_LENGTH = 128
 
 
@@ -282,13 +289,7 @@ def get_user_identifier():
             'session_fingerprint': None
         }
     else:
-        client_id, __ = get_or_create_statement_client_id()
-        fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
-        
-        if session.get('fingerprint') != fingerprint:
-            session['fingerprint'] = fingerprint
-            session.modified = True
-        
+        fingerprint = get_statement_vote_fingerprint()
         return {
             'user_id': None,
             'session_fingerprint': fingerprint
@@ -662,35 +663,15 @@ def create_statement_from_embed(discussion_id):
 
 
 def get_or_create_statement_client_id():
-    """Get the long-lived client ID from cookie, or generate a new one.
-    
-    Returns a tuple of (client_id, is_new) where is_new indicates if we need to set the cookie.
-    """
-    client_id = request.cookies.get(STATEMENT_CLIENT_COOKIE_NAME)
-    if client_id and len(client_id) == 64:
-        return client_id, False
-    new_id = secrets.token_hex(32)
-    return new_id, True
+    """Backward-compatible wrapper — unified voter client id (see app.lib.vote_identity)."""
+    from app.lib.vote_identity import get_or_create_voter_client_id
+
+    return get_or_create_voter_client_id()
 
 
 def get_statement_vote_fingerprint():
-    """Generate a unique fingerprint for anonymous statement voters.
-    
-    Uses a long-lived client ID cookie as the primary identifier to survive session restarts.
-    This prevents both:
-    1. Fingerprint collisions (multiple users getting the same fingerprint)
-    2. Easy vote duplication (clearing session cookies to vote again)
-    
-    The client ID is stored in a separate long-lived cookie that persists for 1 year.
-    """
-    client_id, __ = get_or_create_statement_client_id()
-    fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
-    
-    if session.get('statement_vote_fingerprint') != fingerprint:
-        session['statement_vote_fingerprint'] = fingerprint
-        session.modified = True
-    
-    return fingerprint
+    """Anonymous voter fingerprint; unified across statements + daily flows."""
+    return get_voter_fingerprint()
 
 
 def normalize_embed_fingerprint(value):
@@ -743,25 +724,15 @@ def get_vote_rate_limit_key():
 
 
 def set_statement_client_id_cookie_if_needed(response):
-    """Set the long-lived client ID cookie if it doesn't exist."""
-    client_id, is_new = get_or_create_statement_client_id()
-    if is_new:
-        response.set_cookie(
-            STATEMENT_CLIENT_COOKIE_NAME,
-            client_id,
-            max_age=STATEMENT_CLIENT_COOKIE_MAX_AGE,
-            httponly=True,
-            secure=True,
-            samesite='Lax'
-        )
-    return response
+    """Set unified voter cookies (canonical + legacy names) when anonymous."""
+    return set_voter_client_cookies_if_needed(response)
 
 
 @statements_bp.after_request
 def after_request_set_statement_cookie(response):
-    """Automatically set the long-lived client ID cookie on all statement blueprint responses."""
+    """Converge anonymous voter cookies on every statements blueprint response."""
     if not current_user.is_authenticated:
-        return set_statement_client_id_cookie_if_needed(response)
+        return set_voter_client_cookies_if_needed(response)
     return response
 
 
@@ -1191,12 +1162,17 @@ def vote_statement(statement_id):
     _record_vote_anomaly_signals(statement.discussion_id, session_fingerprint=session_fingerprint)
     from app.api.utils import invalidate_partner_snapshot_cache
     invalidate_partner_snapshot_cache(statement.discussion_id)
+    _disc_for_prog = statement.discussion
+    if _disc_for_prog and _disc_for_prog.programme_id:
+        from app.programmes.routes import invalidate_programme_summary_cache
+
+        invalidate_programme_summary_cache(_disc_for_prog.programme_id)
     try:
         cache.delete(f"statement-votes:{statement.id}")
     except Exception:
         pass
 
-    # Track vote with PostHog (background thread — does not block response)
+    # Track vote with PostHog (same request; flush ensures delivery under short-lived workers)
     if posthog and getattr(posthog, 'project_api_key', None):
         try:
             referer = request.headers.get('Referer', '') if hasattr(request, 'headers') else ''
@@ -1206,7 +1182,8 @@ def vote_statement(statement_id):
             if current_user.is_authenticated:
                 distinct_id = str(current_user.id)
             else:
-                distinct_id = get_statement_vote_fingerprint()
+                # Match StatementVote.session_fingerprint (embed fingerprint when supplied).
+                distinct_id = session_fingerprint or get_statement_vote_fingerprint()
 
             vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
             _disc = statement.discussion

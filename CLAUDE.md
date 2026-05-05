@@ -16,6 +16,11 @@ Guidance for AI tools and developers working in this repository (Flask, Flask-Ba
 - **Email templates** that pass HTML fragments into `gettext`: use `email_anchor_html` from `app/email_utils.py` (registered as Jinja global) so `href` / attributes are escaped and link bodies are `Markup` where needed. See existing email templates for patterns.
 - **babel:** `babel.cfg` documents where to look for `escape_i18n` when editing templates.
 
+## Participation & vote semantics
+
+- **Published vs audit:** Participant-facing counts and aligned aggregates exclude votes on deleted or negatively moderated statements (`visible_statement_vote_filters` in `app/lib/participation_metrics.py`). Raw `statement_vote` rows may still exist for audit; do not mix definitions without labelling the export or UI. Full rationale: [adr/0001-published-vs-audit-vote-semantics.md](./adr/0001-published-vs-audit-vote-semantics.md).
+- **Anonymous voters:** Use `anonymous_fingerprint_aliases_for_daily_lookup()` from `app/lib/vote_identity.py` for “this visitor’s votes” lookups (legacy cookies + embed fingerprint). Avoid `session_fingerprint == single_fp` for UX summaries unless you document why.
+
 ## Scope
 
 Project overview, setup, and feature list live in [README.md](./README.md). Keep this file limited to conventions that are easy to miss in code review.

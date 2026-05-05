@@ -174,7 +174,7 @@ node_modules/
 # Sensitive assets - screenshots, logs, and temporary files
 attached_assets/
 
-# Internal docs and planning (keep out of open-source repo; may contain sensitive/strategic info)
+# Internal docs and planning (keep out of open-source repo; see adr/ for tracked ADRs)
 docs/
 
 # Replit deployment/config (stays local; Replit still uses it from filesystem)

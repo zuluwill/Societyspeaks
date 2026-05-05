@@ -10,7 +10,7 @@ from app.daily.constants import (
     VALID_REASON_TAGS, VALID_CONFIDENCE_LEVELS
 )
 from app import db, limiter
-from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
+from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant, Statement, StatementVote
 from app.trending.conversion_tracking import track_social_click
 from app.daily.utils import (
     build_daily_subscribe_recap,
@@ -20,14 +20,15 @@ from app.daily.utils import (
     user_has_active_daily_question_subscription_for_preferences,
 )
 from app.lib.partner_portal_session import sync_partner_portal_session_for_email
+from app.lib.vote_identity import (
+    anonymous_fingerprint_aliases_for_daily_lookup,
+    get_voter_fingerprint,
+    set_voter_client_cookies_if_needed,
+)
 import hashlib
 import re
 import secrets
-import uuid
 from flask_babel import gettext as _
-
-DAILY_CLIENT_COOKIE_NAME = 'daily_client_id'
-DAILY_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
 
 def _parse_bool(value, default=False):
@@ -71,7 +72,7 @@ def _track_context_engagement(question, response, source='web'):
         if not posthog or not getattr(posthog, 'project_api_key', None):
             return
 
-        distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or str(uuid.uuid4())
+        distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint()
         posthog.capture(
             distinct_id=distinct_id,
             event='daily_question_context_engaged',
@@ -143,59 +144,16 @@ def get_related_discussions(question, limit=3):
     return related
 
 
-def get_or_create_client_id():
-    """Get the long-lived client ID from cookie, or generate a new one.
-    
-    Returns a tuple of (client_id, is_new) where is_new indicates if we need to set the cookie.
-    """
-    client_id = request.cookies.get(DAILY_CLIENT_COOKIE_NAME)
-    if client_id and len(client_id) == 64:
-        return client_id, False
-    new_id = secrets.token_hex(32)
-    return new_id, True
-
-
 def get_session_fingerprint():
-    """Generate a unique fingerprint for anonymous users.
-    
-    Uses a long-lived client ID cookie as the primary identifier to survive session restarts.
-    This prevents both:
-    1. Fingerprint collisions (multiple users getting the same fingerprint)
-    2. Easy vote duplication (clearing session cookies to vote again)
-    
-    The client ID is stored in a separate long-lived cookie that persists for 1 year.
-    Always regenerates from the client_id cookie to ensure consistency across session restarts.
-    """
-    client_id, is_new = get_or_create_client_id()
-    fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
-    
-    if session.get('daily_fingerprint') != fingerprint:
-        session['daily_fingerprint'] = fingerprint
-        session.modified = True
-    
-    return fingerprint
-
-
-def set_client_id_cookie_if_needed(response):
-    """Set the long-lived client ID cookie if it doesn't exist or needs refresh."""
-    client_id, is_new = get_or_create_client_id()
-    if is_new:
-        response.set_cookie(
-            DAILY_CLIENT_COOKIE_NAME,
-            client_id,
-            max_age=DAILY_CLIENT_COOKIE_MAX_AGE,
-            httponly=True,
-            secure=True,
-            samesite='Lax'
-        )
-    return response
+    """Anonymous pseudonymous id — unified with native StatementVote fingerprinting."""
+    return get_voter_fingerprint()
 
 
 @daily_bp.after_request
 def after_request_set_client_cookie(response):
-    """Automatically set the long-lived client ID cookie on all daily blueprint responses."""
+    """Anonymous voter cookies (canonical + legacy names) match statements blueprint."""
     if not current_user.is_authenticated:
-        return set_client_id_cookie_if_needed(response)
+        return set_voter_client_cookies_if_needed(response)
     return response
 
 
@@ -207,10 +165,12 @@ def has_user_voted(daily_question):
             user_id=current_user.id
         ).first() is not None
     else:
-        fingerprint = get_session_fingerprint()
-        return DailyQuestionResponse.query.filter_by(
-            daily_question_id=daily_question.id,
-            session_fingerprint=fingerprint
+        fps = anonymous_fingerprint_aliases_for_daily_lookup()
+        if not fps:
+            return False
+        return DailyQuestionResponse.query.filter(
+            DailyQuestionResponse.daily_question_id == daily_question.id,
+            DailyQuestionResponse.session_fingerprint.in_(fps),
         ).first() is not None
 
 
@@ -222,10 +182,12 @@ def get_user_response(daily_question):
             user_id=current_user.id
         ).first()
     else:
-        fingerprint = get_session_fingerprint()
-        return DailyQuestionResponse.query.filter_by(
-            daily_question_id=daily_question.id,
-            session_fingerprint=fingerprint
+        fps = anonymous_fingerprint_aliases_for_daily_lookup()
+        if not fps:
+            return None
+        return DailyQuestionResponse.query.filter(
+            DailyQuestionResponse.daily_question_id == daily_question.id,
+            DailyQuestionResponse.session_fingerprint.in_(fps),
         ).first()
 
 
@@ -274,71 +236,77 @@ def get_discussion_participation_data(question):
     """
     Get user's participation data for the linked discussion.
     Used to show progress toward unlocking consensus analysis.
-    
+
+    Vote and participant totals use only **visible** statements (not deleted,
+    mod_status >= 0). Authenticated users count both account votes and any
+    pre-login anonymous votes under any unified fingerprint alias (cookies + embed).
+
     Returns dict with:
-    - vote_count: number of statements voted on
+    - vote_count: distinct visible statements this viewer has voted on
     - votes_needed: votes needed to unlock consensus (0 if already unlocked)
-    - total_statements: total statements in discussion
-    - participant_count: total participants in discussion
+    - total_statements: visible statement count in discussion
+    - participant_count: distinct participants (logged-in + anonymous) on visible statements
     """
-    from app.models import StatementVote, Statement
+    from sqlalchemy import or_, and_, func
+
+    from app.api.utils import get_discussion_participant_count
+    from app.lib.participation_metrics import visible_statement_vote_filters
     from app.discussions.consensus import PARTICIPATION_THRESHOLD
-    
+
     if not question.source_discussion_id:
         return None
-    
+
     discussion = question.source_discussion
     if not discussion:
         return None
-    
-    # Get vote count for this user in the discussion
-    vote_count = 0
-    fingerprint = get_session_fingerprint()
-    
+
+    _vis = visible_statement_vote_filters(Statement)
+
+    fps_list = anonymous_fingerprint_aliases_for_daily_lookup()
+
     if current_user.is_authenticated:
-        vote_count = StatementVote.query.filter_by(
-            discussion_id=question.source_discussion_id,
-            user_id=current_user.id
-        ).count()
-        
-        # Also count fingerprint votes (for pre-login votes)
-        if fingerprint:
-            fingerprint_count = StatementVote.query.filter_by(
-                discussion_id=question.source_discussion_id,
-                session_fingerprint=fingerprint
-            ).filter(StatementVote.user_id.is_(None)).count()
-            vote_count += fingerprint_count
-    elif fingerprint:
-        vote_count = StatementVote.query.filter_by(
-            discussion_id=question.source_discussion_id,
-            session_fingerprint=fingerprint
-        ).count()
-    
-    # Count total statements and participants
-    total_statements = Statement.query.filter_by(
-        discussion_id=question.source_discussion_id
-    ).count()
-    
-    participant_count = db.session.query(
-        db.func.count(db.distinct(StatementVote.user_id))
-    ).filter(
-        StatementVote.discussion_id == question.source_discussion_id,
-        StatementVote.user_id.isnot(None)
-    ).scalar() or 0
-    
-    # Add anonymous participants
-    anon_count = db.session.query(
-        db.func.count(db.distinct(StatementVote.session_fingerprint))
-    ).filter(
-        StatementVote.discussion_id == question.source_discussion_id,
-        StatementVote.user_id.is_(None),
-        StatementVote.session_fingerprint.isnot(None)
-    ).scalar() or 0
-    
-    participant_count += anon_count
-    
+        voter_parts = [StatementVote.user_id == current_user.id]
+        if fps_list:
+            voter_parts.append(
+                and_(
+                    StatementVote.user_id.is_(None),
+                    StatementVote.session_fingerprint.in_(fps_list),
+                )
+            )
+        voter_clause = or_(*voter_parts)
+        vote_count = (
+            db.session.query(func.count(distinct(StatementVote.statement_id)))
+            .join(Statement, StatementVote.statement_id == Statement.id)
+            .filter(
+                StatementVote.discussion_id == discussion.id,
+                *_vis,
+                voter_clause,
+            )
+            .scalar()
+            or 0
+        )
+    elif fps_list:
+        vote_count = (
+            db.session.query(func.count(distinct(StatementVote.statement_id)))
+            .join(Statement, StatementVote.statement_id == Statement.id)
+            .filter(
+                StatementVote.discussion_id == discussion.id,
+                *_vis,
+                StatementVote.user_id.is_(None),
+                StatementVote.session_fingerprint.in_(fps_list),
+            )
+            .scalar()
+            or 0
+        )
+    else:
+        vote_count = 0
+
+    total_statements = Statement.query.filter_by(discussion_id=discussion.id).filter(*_vis).count()
+
+    participant_count = get_discussion_participant_count(discussion)
+
     votes_needed = max(0, PARTICIPATION_THRESHOLD - vote_count)
-    
+
     return {
         'vote_count': vote_count,
         'votes_needed': votes_needed,
@@ -720,12 +688,15 @@ def get_public_reasons_stats(question):
 def sync_vote_to_statement(question, vote_value, fingerprint):
     """
     Sync a daily question vote to the linked statement in the discussion.
-    
+
+    For anonymous voters, existing StatementVote rows are resolved using the same
+    fingerprint alias list as ``has_user_voted`` / journey progress (legacy cookies + embed).
+
     Args:
         question: DailyQuestion object with source_statement_id and source_discussion_id
         vote_value: Vote value (1=agree, -1=disagree, 0=unsure)
-        fingerprint: Session fingerprint for anonymous users
-        
+        fingerprint: Canonical anonymous fingerprint for new rows (typically ``get_session_fingerprint()``)
+
     Returns:
         tuple: (created_new_vote: bool, updated_existing: bool)
     """
@@ -746,10 +717,18 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
             user_id=current_user.id
         ).first()
     elif fingerprint:
-        existing_vote = StatementVote.query.filter_by(
-            statement_id=question.source_statement_id,
-            session_fingerprint=fingerprint
-        ).first()
+        fps = anonymous_fingerprint_aliases_for_daily_lookup()
+        if fingerprint not in fps:
+            fps = [*fps, fingerprint]
+        existing_vote = (
+            StatementVote.query.filter(
+                StatementVote.statement_id == question.source_statement_id,
+                StatementVote.user_id.is_(None),
+                StatementVote.session_fingerprint.in_(fps),
+            )
+            .order_by(StatementVote.id.desc())
+            .first()
+        )
     
     if existing_vote:
         # Update existing vote if different
@@ -793,6 +772,18 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
             statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
         
         return True, False
+
+
+def _invalidate_programme_summary_if_daily_question_synced(question):
+    """Bust programme summary cache when daily participation writes StatementVote rows."""
+    did = getattr(question, 'source_discussion_id', None)
+    if not did:
+        return
+    prog_id = db.session.query(Discussion.programme_id).filter(Discussion.id == did).scalar()
+    if prog_id:
+        from app.programmes.routes import invalidate_programme_summary_cache
+
+        invalidate_programme_summary_cache(prog_id)
 
 
 @daily_bp.route('/daily/subscribe', methods=['GET', 'POST'])
@@ -1185,28 +1176,16 @@ def weekly_batch():
             )
 
     # Build question data with vote status, discussion stats, and source articles
+    # Vote status: use shared helpers so legacy cookie / embed aliases match has_user_voted().
     questions_data = []
-    fingerprint = get_session_fingerprint() if not current_user.is_authenticated else None
-    
+
     for question in questions:
         # Check if already voted (with null safety)
         user_vote = None
         try:
-            if current_user.is_authenticated:
-                response = DailyQuestionResponse.query.filter_by(
-                    daily_question_id=question.id,
-                    user_id=current_user.id
-                ).first()
-                if response:
-                    user_vote = response.vote
-            else:
-                if fingerprint:
-                    response = DailyQuestionResponse.query.filter_by(
-                        daily_question_id=question.id,
-                        session_fingerprint=fingerprint
-                    ).first()
-                    if response:
-                        user_vote = response.vote
+            response = get_user_response(question)
+            if response:
+                user_vote = response.vote
         except Exception as e:
             current_app.logger.warning(f"Error checking vote status for question {question.id}: {e}")
 
@@ -1377,6 +1356,8 @@ def weekly_batch_vote():
         subscriber.update_participation_streak(has_reason=bool(reason))
 
         db.session.commit()
+
+        _invalidate_programme_summary_if_daily_question_synced(question)
 
         _track_context_engagement(question, response, source='weekly_batch')
 
@@ -1629,6 +1610,8 @@ def one_click_vote(token, vote_choice):
 
         db.session.commit()
 
+        _invalidate_programme_summary_if_daily_question_synced(question)
+
         _track_context_engagement(question, response, source='email_one_click')
 
         try:
@@ -1797,12 +1780,14 @@ def vote():
         
         db.session.commit()
 
+        _invalidate_programme_summary_if_daily_question_synced(question)
+
         _track_context_engagement(question, response, source='daily_web')
 
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or str(uuid.uuid4())
+                distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint()
                 posthog.capture(
                     distinct_id=distinct_id,
                     event='daily_question_participated',

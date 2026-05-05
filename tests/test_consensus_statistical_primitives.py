@@ -227,7 +227,7 @@ def test_consensus_results_template_renders_with_rigour_copy(app):
                 3: {'statement_id': 3, 'content': 'c', 'short': 'c'},
                 4: {'statement_id': 4, 'content': 'd', 'short': 'd'},
             },
-            viewer_participant_key='u_1',
+            viewer_participant_keys=['u_1'],
             is_stale_analysis=True,
             current_stmt_count=15,
             analysed_stmt_count=8,

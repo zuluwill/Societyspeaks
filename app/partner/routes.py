@@ -37,6 +37,7 @@ from app.models import (
 )
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
 from app.api.utils import invalidate_partner_snapshot_cache
+from app.lib.participation_metrics import visible_statement_vote_filters
 from app.admin.audit import write_admin_audit_event
 from app.lib.time import utcnow_naive
 from app.partner.permissions import (
@@ -932,9 +933,14 @@ def portal_discussions():
     d_ids = [d.id for d in discussions]
     vote_counts = {}
     if d_ids:
+        _vis = visible_statement_vote_filters(Statement)
         rows = (
             db.session.query(StatementVote.discussion_id, func.count(StatementVote.id))
-            .filter(StatementVote.discussion_id.in_(d_ids))
+            .join(Statement, StatementVote.statement_id == Statement.id)
+            .filter(
+                StatementVote.discussion_id.in_(d_ids),
+                *_vis,
+            )
             .group_by(StatementVote.discussion_id)
             .all()
         )

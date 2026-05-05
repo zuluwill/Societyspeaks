@@ -102,6 +102,32 @@ def _pop_pending_post_auth_redirect():
     return safe_next_url(session.pop('pending_post_auth_redirect', None))
 
 
+def merge_anonymous_statement_votes_into_user(user):
+    """
+    Attach anonymous StatementVote rows from this browser/session to ``user``.
+
+    Called after password login, magic-link login, and registration auto-login so
+    pre-account civic participation stays linked for analysis and UX.
+    """
+    from app.lib.vote_identity import fingerprints_for_anonymous_merge_on_login
+
+    merged_total = 0
+    seen_fp = set()
+    for fingerprint in fingerprints_for_anonymous_merge_on_login():
+        if not fingerprint or fingerprint in seen_fp:
+            continue
+        seen_fp.add(fingerprint)
+        merged_total += StatementVote.merge_anonymous_votes(fingerprint, user.id)
+
+    if merged_total > 0:
+        current_app.logger.info(
+            "Merged %s anonymous statement votes into user %s",
+            merged_total,
+            user.id,
+        )
+    return merged_total
+
+
 def _finalize_login(user, *, method, next_url=None):
     """Run all post-authentication side-effects and return the redirect Response.
 
@@ -140,11 +166,7 @@ def _finalize_login(user, *, method, next_url=None):
         flush=True,
     )
 
-    fingerprint = session.get('statement_vote_fingerprint')
-    if fingerprint:
-        merged = StatementVote.merge_anonymous_votes(fingerprint, user.id)
-        if merged > 0:
-            current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
+    merge_anonymous_statement_votes_into_user(user)
 
     pending_steward_token = session.pop('pending_steward_invite_token', None)
     if pending_steward_token:
@@ -588,6 +610,7 @@ def register():
 
         # Auto-login the new user for frictionless checkout flow
         login_user(new_user)
+        merge_anonymous_statement_votes_into_user(new_user)
         sync_partner_portal_session_for_email(new_user.email)
         _set_pending_post_auth_redirect(next_url)
         _consume_pending_discussion_follow(new_user)

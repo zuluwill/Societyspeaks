@@ -105,6 +105,10 @@ def get_discussion_insights(discussion, use_cache: bool = True) -> Dict:
         if cached is not None:
             return cached
 
+    from sqlalchemy import func
+
+    from app import db
+    from app.lib.participation_metrics import visible_statement_vote_filters
     from app.models import ConsensusAnalysis, Statement, StatementVote
 
     insights = {
@@ -205,10 +209,17 @@ def get_discussion_insights(discussion, use_cache: bool = True) -> Dict:
             'total_votes': stmt.total_votes
         })
     
-    # Calculate total votes (reuse existing relationship)
-    insights['total_votes'] = StatementVote.query.filter_by(
-        discussion_id=discussion.id
-    ).count()
+    # Vote rows on moderator-visible statements only (aligned with public aggregates)
+    insights['total_votes'] = (
+        db.session.query(func.count(StatementVote.id))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id == discussion.id,
+            *visible_statement_vote_filters(Statement),
+        )
+        .scalar()
+        or 0
+    )
     
     # Generate surprising findings (leverages existing data)
     insights['surprising_findings'] = _generate_surprising_findings(insights)

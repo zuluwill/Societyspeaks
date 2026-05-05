@@ -28,6 +28,7 @@ from app.discussions.thresholds import consensus_thresholds_dict
 from app.lib.db_utils import retry_on_db_disconnect
 from app.lib.url_utils import safe_next_url as _validate_next_url
 from app.lib.locale_utils import language_preference_cookie_params
+from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import and_, func, or_
 import json
@@ -71,12 +72,15 @@ def _statement_queries_for_discussion(discussion):
 
 
 def _build_user_votes_map(statement_ids):
-    """Return {statement_id: vote} for the current viewer (logged-in user or anon cookie)."""
+    """Return {statement_id: vote} for the current viewer (logged-in user or anon aliases).
+
+    Anonymous lookups use all fingerprint aliases (cookies + embed) so UI matches stored votes.
+    When multiple alias rows exist for one statement, the newest StatementVote row wins.
+    """
     if not statement_ids:
         return {}
 
     from app.models import StatementVote as SVModel
-    from app.discussions.statements import get_statement_vote_fingerprint
 
     if current_user.is_authenticated:
         rows = db.session.query(SVModel.statement_id, SVModel.vote).filter(
@@ -85,15 +89,24 @@ def _build_user_votes_map(statement_ids):
         ).all()
         return {row.statement_id: row.vote for row in rows}
 
-    fingerprint = get_statement_vote_fingerprint()
-    if not fingerprint:
+    fps = anonymous_fingerprint_aliases_for_daily_lookup()
+    if not fps:
         return {}
-    rows = db.session.query(SVModel.statement_id, SVModel.vote).filter(
-        SVModel.session_fingerprint == fingerprint,
-        SVModel.user_id.is_(None),
-        SVModel.statement_id.in_(statement_ids),
-    ).all()
-    return {row.statement_id: row.vote for row in rows}
+    rows = (
+        db.session.query(SVModel.statement_id, SVModel.vote, SVModel.id)
+        .filter(
+            SVModel.session_fingerprint.in_(fps),
+            SVModel.user_id.is_(None),
+            SVModel.statement_id.in_(statement_ids),
+        )
+        .all()
+    )
+    best: dict[int, tuple[int, int]] = {}
+    for sid, vote, vid in rows:
+        prev = best.get(sid)
+        if prev is None or vid > prev[1]:
+            best[sid] = (vote, vid)
+    return {sid: vote for sid, (vote, _) in best.items()}
 
 
 def _apply_statement_text_search(query, search_term):
@@ -901,8 +914,9 @@ def view_discussion(discussion_id, slug):
     guided_journey_context = None
     if discussion.has_native_statements:
         journey_uid = current_user.id if current_user.is_authenticated else None
+        journey_aliases = None if journey_uid else anonymous_fingerprint_aliases_for_daily_lookup()
         guided_journey_context = guided_journey_context_for_discussion(
-            discussion, journey_uid
+            discussion, journey_uid, anon_fingerprint_aliases=journey_aliases
         )
 
     from app.lib.translation import (

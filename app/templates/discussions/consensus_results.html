@@ -236,7 +236,7 @@
         <li>{{ _('Each dot represents a participant.') }}</li>
         <li>{{ _('Colours show different opinion groups.') }}</li>
         <li>{{ _('Closer dots = more similar voting patterns.') }}</li>
-        {% if viewer_participant_key %}
+        {% if viewer_participant_keys %}
         <li>{{ _('The larger ringed dot is you.') }}</li>
         {% endif %}
       </ul>
@@ -637,7 +637,7 @@
 <!-- Cluster Visualization Script -->
 <script nonce="{{ csp_nonce() }}" id="cluster-chart-config" type="application/json">
 {
-  "viewerKey": {{ (viewer_participant_key or '')|tojson }},
+  "viewerKeys": {{ viewer_participant_keys|default([])|tojson }},
   "pc1Label": {{ (_('Horizontal axis (PC1)'))|tojson }},
   "pc2Label": {{ (_('Vertical axis (PC2)'))|tojson }},
   "titleTemplate": {{ (_('{k} opinion groups across {n} participants'))|tojson }},
@@ -666,7 +666,9 @@
       const clusterAssignments = data.cluster_assignments;
       const pcaCoordinates = data.pca_coordinates;
       const metadata = data.metadata;
-      const viewerKey = CFG.viewerKey || null;
+      const viewerKeys = Array.isArray(CFG.viewerKeys)
+        ? CFG.viewerKeys.filter(Boolean)
+        : [];
 
       const colors = [
         "rgba(59, 130, 246, 0.8)",
@@ -687,7 +689,7 @@
         const coords = pcaCoordinates[userId];
         if (!coords) continue;
         const pt = { x: coords[0], y: coords[1], userId };
-        if (viewerKey && userId === viewerKey) {
+        if (viewerKeys.length && viewerKeys.includes(userId)) {
           viewerPoint = { ...pt, isViewer: true };
           viewerClusterId = clusterId;
         } else {

@@ -10,7 +10,8 @@ from typing import Any, List
 from sqlalchemy import func
 
 from app import db
-from app.models import Discussion, StatementVote, TrendingTopic
+from app.lib.participation_metrics import visible_statement_vote_filters
+from app.models import Discussion, Statement, StatementVote, TrendingTopic
 
 
 def compute_topic_rankings(limit: int = 15) -> List[dict[str, Any]]:
@@ -18,6 +19,7 @@ def compute_topic_rankings(limit: int = 15) -> List[dict[str, Any]]:
     Rank Discussion.topic by vote volume and participant breadth, with optional
     civic/quality signals from published TrendingTopic rows on the same primary_topic.
     """
+    _vis = visible_statement_vote_filters(Statement)
     vote_rows = (
         db.session.query(
             Discussion.topic.label("topic"),
@@ -25,9 +27,11 @@ def compute_topic_rankings(limit: int = 15) -> List[dict[str, Any]]:
             func.count(func.distinct(StatementVote.user_id)).label("distinct_users"),
         )
         .join(StatementVote, StatementVote.discussion_id == Discussion.id)
+        .join(Statement, StatementVote.statement_id == Statement.id)
         .filter(
             Discussion.topic.isnot(None),
             Discussion.partner_env != "test",
+            *_vis,
         )
         .group_by(Discussion.topic)
         .all()

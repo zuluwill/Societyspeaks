@@ -11,6 +11,8 @@ from typing import Optional
 from flask import request, current_app, url_for
 from flask_limiter.util import get_remote_address
 
+from app.lib.participation_metrics import visible_statement_vote_filters
+
 logger = logging.getLogger(__name__)
 
 # Partner ref: max length stored in DB (StatementVote.partner_ref)
@@ -208,20 +210,25 @@ def get_partner_allowed_origins(env: Optional[str] = None):
 
 def get_discussion_participant_count(
     discussion,
-    include_deleted_statement_votes=True,
-    min_mod_status=None,
+    include_deleted_statement_votes=False,
+    min_mod_status=0,
 ):
     """
     Get the number of unique participants in a discussion.
 
     Counts both authenticated users and anonymous participants (by fingerprint).
 
+    Defaults match programme summaries and ``batch_discussion_participant_counts``:
+    only votes on **visible** statements (not deleted, ``mod_status >= 0``).
+    Moderators needing broader totals should pass
+    ``include_deleted_statement_votes=True`` and/or ``min_mod_status=None``.
+
     Args:
         discussion: Discussion model instance
         include_deleted_statement_votes: If False, ignore votes attached to
             deleted statements.
-        min_mod_status: Optional minimum statement moderation status to include
-            (e.g., 0 to include only visible/approved statements).
+        min_mod_status: Minimum statement moderation status to include (default ``0``).
+            Pass ``None`` to include votes on statements in any moderation state.
 
     Returns:
         int: Number of unique participants
@@ -276,6 +283,9 @@ def batch_discussion_participant_counts(discussion_ids: list) -> dict:
     counts distinct user_ids (authenticated) + distinct session_fingerprints
     (anonymous) per discussion.
 
+    Only votes attached to visible statements are counted (`is_deleted` false,
+    `mod_status >= 0`), matching programme summaries and typical discussion UX.
+
     Args:
         discussion_ids: List of discussion IDs to count for.
 
@@ -287,26 +297,42 @@ def batch_discussion_participant_counts(discussion_ids: list) -> dict:
 
     from sqlalchemy import func, distinct
     from app import db
-    from app.models import StatementVote
+    from app.models import StatementVote, Statement
+
+    _visible_stmt = visible_statement_vote_filters(Statement)
 
     result = {int(did): 0 for did in discussion_ids}
 
-    auth_rows = db.session.query(
-        StatementVote.discussion_id,
-        func.count(distinct(StatementVote.user_id)),
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids),
-        StatementVote.user_id.isnot(None),
-    ).group_by(StatementVote.discussion_id).all()
+    auth_rows = (
+        db.session.query(
+            StatementVote.discussion_id,
+            func.count(distinct(StatementVote.user_id)),
+        )
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            StatementVote.user_id.isnot(None),
+            *_visible_stmt,
+        )
+        .group_by(StatementVote.discussion_id)
+        .all()
+    )
 
-    anon_rows = db.session.query(
-        StatementVote.discussion_id,
-        func.count(distinct(StatementVote.session_fingerprint)),
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids),
-        StatementVote.user_id.is_(None),
-        StatementVote.session_fingerprint.isnot(None),
-    ).group_by(StatementVote.discussion_id).all()
+    anon_rows = (
+        db.session.query(
+            StatementVote.discussion_id,
+            func.count(distinct(StatementVote.session_fingerprint)),
+        )
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.isnot(None),
+            *_visible_stmt,
+        )
+        .group_by(StatementVote.discussion_id)
+        .all()
+    )
 
     for did, cnt in auth_rows:
         result[int(did)] += int(cnt or 0)

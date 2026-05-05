@@ -3,12 +3,13 @@
 Utility functions for source profile statistics and data aggregation.
 """
 from app.lib.time import utcnow_naive
+from app.lib.participation_metrics import visible_statement_vote_filters
 from sqlalchemy import func, distinct
 from sqlalchemy.orm import joinedload
 from app import db
 from app.models import (
     NewsSource, NewsArticle, Discussion, DiscussionSourceArticle,
-    StatementVote, ConsensusAnalysis
+    StatementVote, Statement, ConsensusAnalysis
 )
 
 
@@ -56,6 +57,9 @@ def get_source_stats(source_id):
     """
     Calculate engagement statistics for a source.
 
+    Participant and vote row totals include only votes on visible statements
+    (not deleted, mod_status >= 0), aligned with programme summaries.
+
     Returns dict:
     {
         'discussion_count': int,
@@ -82,31 +86,48 @@ def get_source_stats(source_id):
     # Count discussions
     discussion_count = len(discussion_ids)
 
-    # Count unique participants (users who voted on statements in these discussions)
-    participant_count = db.session.query(
-        func.count(distinct(StatementVote.user_id))
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids),
-        StatementVote.user_id.isnot(None)
-    ).scalar() or 0
+    _vis_stmt = visible_statement_vote_filters(Statement)
+
+    # Count unique participants (users who voted on visible statements in these discussions)
+    participant_count = (
+        db.session.query(func.count(distinct(StatementVote.user_id)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            StatementVote.user_id.isnot(None),
+            *_vis_stmt,
+        )
+        .scalar()
+        or 0
+    )
 
     # Also count anonymous participants by session fingerprint
-    anonymous_count = db.session.query(
-        func.count(distinct(StatementVote.session_fingerprint))
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids),
-        StatementVote.user_id.is_(None),
-        StatementVote.session_fingerprint.isnot(None)
-    ).scalar() or 0
+    anonymous_count = (
+        db.session.query(func.count(distinct(StatementVote.session_fingerprint)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.isnot(None),
+            *_vis_stmt,
+        )
+        .scalar()
+        or 0
+    )
 
     total_participants = participant_count + anonymous_count
 
-    # Count total votes
-    total_votes = db.session.query(
-        func.count(StatementVote.id)
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids)
-    ).scalar() or 0
+    # Count total vote rows on visible statements only
+    total_votes = (
+        db.session.query(func.count(StatementVote.id))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            *_vis_stmt,
+        )
+        .scalar()
+        or 0
+    )
 
     # Get consensus analysis stats
     consensus_analyses = ConsensusAnalysis.query.filter(

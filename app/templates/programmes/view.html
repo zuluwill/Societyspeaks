@@ -177,13 +177,13 @@
 
   {% if journey_mode and journey_progress %}
   {% set jp = journey_progress %}
-  {# Estimated minutes remaining for in-progress banner (same heuristic as per-theme "~N min"). #}
+  {# Estimated minutes remaining — one quick heuristic minute-budget per unfinished theme. #}
   {% set jmin = namespace(v=0) %}
   {% for item in jp.theme_items %}
     {% if not item.is_complete and item.statement_total > 0 %}
       {% set left = item.statement_total - item.user_votes %}
       {% if left > 0 %}
-        {% set jmin.v = jmin.v + ([left * 2, 5] | max) %}
+        {% set jmin.v = jmin.v + 2 %}
       {% endif %}
     {% endif %}
   {% endfor %}
@@ -204,7 +204,7 @@
           {{ _('%(votes)s votes across %(total)d themes — see how you compare.', votes=jp.total_user_votes, total=jp.total_themes) }}
         </p>
         <p class="text-xs text-emerald-100/90 mt-2 max-w-xl">
-          {{ _('People usually spread this across short sessions (~20–40 minutes per theme). There is no deadline.') }}
+          {{ _('Each theme is quick (~2 minutes). Spread them across sessions — there is no deadline.') }}
         </p>
       </div>
       <div class="flex flex-col sm:items-end gap-2 shrink-0">
@@ -278,7 +278,7 @@
                data-journey-target="{{ journey_pct }}%"></div>
         </div>
         <p class="text-xs text-primary-200/95 mt-3 max-w-xl leading-relaxed">
-          {{ _('Most people spread this across short sessions (~20–40 minutes per theme). Take breaks anytime — nothing is gated.') }}
+          {{ _('Each theme is quick (~2 minutes). Take breaks anytime — nothing is gated.') }}
         </p>
       </div>
 
@@ -339,8 +339,7 @@
                   {{ item.discussion.programme_theme or item.discussion.title }}
                 </span>
                 {% if not item.is_complete %}
-                {% set _est = [(item.statement_total * 2), 5] | max %}
-                <span class="text-[10px] text-primary-300 whitespace-nowrap flex-shrink-0">~{{ _est }} min</span>
+                <span class="text-[10px] text-primary-300 whitespace-nowrap flex-shrink-0">{{ _('~2 min') }}</span>
                 {% endif %}
               </div>
               {% if not item.is_complete and item.user_votes > 0 %}

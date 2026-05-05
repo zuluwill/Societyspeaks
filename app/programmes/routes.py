@@ -10,6 +10,7 @@ from io import BytesIO
 
 from app import cache, csrf, db, limiter
 from app.lib.auth_utils import normalize_email
+from app.lib.participation_metrics import visible_statement_vote_filters
 from app.lib.time import utcnow_naive
 from app.models import (
     AnalyticsDailyAggregate,
@@ -21,6 +22,7 @@ from app.models import (
     ProgrammeAccessGrant,
     ProgrammeExportJob,
     ProgrammeSteward,
+    Statement,
     StatementVote,
 )
 from app.programmes.access import editable_company_profiles, programme_access_labels, query_accessible_programmes
@@ -39,12 +41,14 @@ from app.programmes.utils import (
     validate_cohort_for_discussion,
 )
 from app.lib.locale_utils import email_html_locale_kwargs, language_preference_cookie_params
+from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
 from app.lib.translation import (
     get_cached_programme_translations_map,
     get_cached_programme_translation,
     resolve_language,
 )
 from app.programmes.journey import (
+    anon_statement_votes_detail_batch,
     build_journey_progress,
     build_programme_recap_payload,
     is_guided_journey_programme,
@@ -86,20 +90,32 @@ def get_programme_summary(programme_id):
         Discussion.programme_id == programme_id
     ).scalar() or 0
 
-    authenticated_count = db.session.query(
-        func.count(distinct(StatementVote.user_id))
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids_subquery),
-        StatementVote.user_id.isnot(None)
-    ).scalar() or 0
+    # Count distinct voters only on visible statements (aligned with discussion UX thresholds).
+    _stmt_visible = visible_statement_vote_filters(Statement)
+    authenticated_count = (
+        db.session.query(func.count(distinct(StatementVote.user_id)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids_subquery),
+            StatementVote.user_id.isnot(None),
+            *_stmt_visible,
+        )
+        .scalar()
+        or 0
+    )
 
-    anonymous_count = db.session.query(
-        func.count(distinct(StatementVote.session_fingerprint))
-    ).filter(
-        StatementVote.discussion_id.in_(discussion_ids_subquery),
-        StatementVote.user_id.is_(None),
-        StatementVote.session_fingerprint.isnot(None)
-    ).scalar() or 0
+    anonymous_count = (
+        db.session.query(func.count(distinct(StatementVote.session_fingerprint)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids_subquery),
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.isnot(None),
+            *_stmt_visible,
+        )
+        .scalar()
+        or 0
+    )
 
     summary = {
         "discussion_count": int(discussion_count),
@@ -160,8 +176,11 @@ def _programme_nsp_dashboard_payload(programme):
         func.count(StatementVote.id).label('vote_count')
     ).join(
         Discussion, Discussion.id == StatementVote.discussion_id
+    ).join(
+        Statement, StatementVote.statement_id == Statement.id
     ).filter(
-        Discussion.programme_id == programme.id
+        Discussion.programme_id == programme.id,
+        *visible_statement_vote_filters(Statement),
     ).group_by(
         func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)),
         StatementVote.vote
@@ -200,9 +219,12 @@ def _programme_nsp_dashboard_payload(programme):
         func.count(StatementVote.id)
     ).join(
         Discussion, Discussion.id == StatementVote.discussion_id
+    ).join(
+        Statement, StatementVote.statement_id == Statement.id
     ).filter(
         Discussion.programme_id == programme.id,
-        StatementVote.confidence.isnot(None)
+        StatementVote.confidence.isnot(None),
+        *visible_statement_vote_filters(Statement),
     ).group_by(StatementVote.confidence).all()
 
     confidence_distribution = []
@@ -411,8 +433,11 @@ def view_programme(slug):
     journey_reminder_subscription = None
     if journey_mode:
         uid = current_user.id if current_user.is_authenticated else None
+        anon_aliases = None if uid else anonymous_fingerprint_aliases_for_daily_lookup()
         ordered = ordered_journey_discussions(programme)
-        journey_progress = build_journey_progress(programme, uid, discussions=ordered)
+        journey_progress = build_journey_progress(
+            programme, uid, discussions=ordered, anon_fingerprint_aliases=anon_aliases
+        )
         if uid:
             journey_reminder_subscription = JourneyReminderSubscription.query.filter_by(
                 programme_id=programme.id, user_id=uid
@@ -505,12 +530,17 @@ def programme_journey_recap(slug):
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     uid = current_user.id if current_user.is_authenticated else None
+    anon_aliases = None if uid else anonymous_fingerprint_aliases_for_daily_lookup()
     ordered_discussions = ordered_journey_discussions(programme)
-    recap = build_programme_recap_payload(programme, uid, discussions=ordered_discussions)
+    recap = build_programme_recap_payload(
+        programme, uid, discussions=ordered_discussions, anon_fingerprint_aliases=anon_aliases
+    )
     personal_by_discussion = {}
+    disc_ids = [d.id for d in ordered_discussions]
     if uid:
-        disc_ids = [d.id for d in ordered_discussions]
         personal_by_discussion = user_statement_votes_detail_batch(uid, disc_ids)
+    elif anon_aliases:
+        personal_by_discussion = anon_statement_votes_detail_batch(anon_aliases, disc_ids)
     recap_share_url = url_for(
         'programmes.programme_journey_recap',
         slug=programme.slug,

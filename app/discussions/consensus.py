@@ -8,7 +8,8 @@ from flask import abort, render_template, redirect, url_for, flash, request, Blu
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import Discussion, ConsensusAnalysis, ConsensusJob, Statement, StatementVote
-from app.discussions.statements import get_statement_vote_fingerprint
+from app.lib.participation_metrics import visible_statement_vote_filters
+from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
 from app.lib.consensus_engine import can_cluster, get_consensus_execution_plan
 from app.discussions.jobs import enqueue_consensus_job
 from app.discussions.thresholds import consensus_thresholds_dict, CONSENSUS_VIEW_RESULTS_MIN_VOTES
@@ -131,60 +132,74 @@ def get_user_vote_count(discussion_id):
     """
     Get the number of statements a user has voted on in this discussion.
     Works for both authenticated and anonymous users.
-    Only counts votes on non-deleted statements (aligned with consensus analysis).
-    
-    For authenticated users, also counts any votes made before login 
-    (via session fingerprint) to ensure votes persist across login.
-    
+    Counts only votes on visible statements (not deleted, mod_status >= 0),
+    aligned with published participation metrics.
+
+    For authenticated users, also counts any votes made before login
+    (via any unified anonymous fingerprint alias).
+
     Returns: (vote_count, identifier_type)
-        - vote_count: number of distinct (non-deleted) statements voted on
+        - vote_count: number of distinct visible statements voted on
         - identifier_type: 'user' or 'anonymous'
     """
-    # Only count votes on non-deleted statements (same as consensus analysis)
+    _vis = visible_statement_vote_filters(Statement)
+
     if current_user.is_authenticated:
-        # Count distinct statements voted on (avoid double-count if user had both anon and user votes before merge)
         user_stmt_ids = [
-            r[0] for r in StatementVote.query.filter_by(
+            r[0]
+            for r in StatementVote.query.filter_by(
                 discussion_id=discussion_id,
-                user_id=current_user.id
-            ).join(Statement, StatementVote.statement_id == Statement.id).filter(
-                Statement.is_deleted.is_(False)
-            ).with_entities(StatementVote.statement_id).distinct().all()
+                user_id=current_user.id,
+            )
+            .join(Statement, StatementVote.statement_id == Statement.id)
+            .filter(*_vis)
+            .with_entities(StatementVote.statement_id)
+            .distinct()
+            .all()
         ]
         user_set = set(user_stmt_ids)
         try:
-            fingerprint = get_statement_vote_fingerprint()
-            if fingerprint:
+            aliases = anonymous_fingerprint_aliases_for_daily_lookup()
+            if aliases:
                 anon_stmt_ids = [
-                    r[0] for r in StatementVote.query.filter_by(
-                        discussion_id=discussion_id,
-                        session_fingerprint=fingerprint
-                    ).filter(StatementVote.user_id.is_(None)).join(
-                        Statement, StatementVote.statement_id == Statement.id
-                    ).filter(Statement.is_deleted.is_(False)).with_entities(
-                        StatementVote.statement_id
-                    ).distinct().all()
+                    r[0]
+                    for r in StatementVote.query.filter(
+                        StatementVote.discussion_id == discussion_id,
+                        StatementVote.user_id.is_(None),
+                        StatementVote.session_fingerprint.in_(aliases),
+                    )
+                    .join(Statement, StatementVote.statement_id == Statement.id)
+                    .filter(*_vis)
+                    .with_entities(StatementVote.statement_id)
+                    .distinct()
+                    .all()
                 ]
-                user_set = user_set | set(anon_stmt_ids)
+                user_set |= set(anon_stmt_ids)
         except Exception as e:
-            logger.debug(f"Could not get fingerprint for auth user: {e}")
-        return len(user_set), 'user'
-    else:
-        try:
-            fingerprint = get_statement_vote_fingerprint()
-            if fingerprint:
-                anon_stmt_ids = [
-                    r[0] for r in StatementVote.query.filter_by(
-                        discussion_id=discussion_id,
-                        session_fingerprint=fingerprint
-                    ).join(Statement, StatementVote.statement_id == Statement.id).filter(
-                        Statement.is_deleted.is_(False)
-                    ).with_entities(StatementVote.statement_id).distinct().all()
-                ]
-                return len(anon_stmt_ids), 'anonymous'
-        except Exception as e:
-            logger.debug(f"Could not get fingerprint: {e}")
-        return 0, 'anonymous'
+            logger.debug(f"Could not merge anonymous aliases for auth user: {e}")
+        return len(user_set), "user"
+
+    try:
+        aliases = anonymous_fingerprint_aliases_for_daily_lookup()
+        if not aliases:
+            return 0, "anonymous"
+        anon_stmt_ids = [
+            r[0]
+            for r in StatementVote.query.filter(
+                StatementVote.discussion_id == discussion_id,
+                StatementVote.user_id.is_(None),
+                StatementVote.session_fingerprint.in_(aliases),
+            )
+            .join(Statement, StatementVote.statement_id == Statement.id)
+            .filter(*_vis)
+            .with_entities(StatementVote.statement_id)
+            .distinct()
+            .all()
+        ]
+        return len(anon_stmt_ids), "anonymous"
+    except Exception as e:
+        logger.debug(f"Could not get fingerprint aliases: {e}")
+        return 0, "anonymous"
 
 
 def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_count=None):
@@ -558,18 +573,20 @@ def view_results(discussion_id):
         for stmt in Statement.query.filter(Statement.id.in_(missing_ids)).all():
             axis_loading_stmts_map[stmt.id] = stmt
 
-    # ── "You are here": key that the scatter-plot JS uses to highlight
-    # the viewing participant's own dot. Matches build_vote_matrix's
-    # identifier convention (u_{id} for auth, a_{fp16} for anon).
-    viewer_participant_key = None
+    # ── "You are here": keys that the scatter-plot JS uses to highlight the viewer's dot.
+    # Matches build_vote_matrix's participant ids (u_{id} for auth, a_{fp16} for anon).
+    # Multiple anonymous aliases can yield multiple keys (legacy cookies / embed).
+    viewer_participant_keys: list[str] = []
     if current_user.is_authenticated:
-        viewer_participant_key = f"u_{current_user.id}"
+        viewer_participant_keys = [f"u_{current_user.id}"]
     else:
         try:
-            from app.discussions.statements import get_statement_vote_fingerprint
-            fp = get_statement_vote_fingerprint()
-            if fp:
-                viewer_participant_key = f"a_{fp[:16]}"
+            seen_dot_keys: set[str] = set()
+            for fp in anonymous_fingerprint_aliases_for_daily_lookup():
+                key = f"a_{fp[:16]}"
+                if key not in seen_dot_keys:
+                    seen_dot_keys.add(key)
+                    viewer_participant_keys.append(key)
         except Exception:
             pass
 
@@ -659,7 +676,7 @@ def view_results(discussion_id):
         current_lang=view_lang,
         axis_loadings=axis_loadings,
         axis_loading_map=axis_loading_map,
-        viewer_participant_key=viewer_participant_key,
+        viewer_participant_keys=viewer_participant_keys,
         is_stale_analysis=is_stale_analysis,
         current_stmt_count=current_stmt_count,
         analysed_stmt_count=analysed_stmt_count,

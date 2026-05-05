@@ -9,8 +9,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence
 
 from flask import current_app
-from sqlalchemy import func
+from sqlalchemy import distinct, func
 from app import db
+from app.lib.participation_metrics import visible_statement_vote_filters
 from app.models import ConsensusAnalysis, Discussion, Programme, Statement, StatementVote
 from app.api.utils import batch_discussion_participant_counts
 from app.programmes.journey_variants import VARIANT_METADATA
@@ -206,11 +207,45 @@ def _batch_statement_counts(discussion_ids: List[int]) -> dict[int, int]:
 def _batch_user_vote_counts(user_id: int, discussion_ids: List[int]) -> dict[int, int]:
     if not user_id or not discussion_ids:
         return {}
+    _vis = visible_statement_vote_filters(Statement)
     rows = (
         db.session.query(StatementVote.discussion_id, func.count(StatementVote.id))
+        .join(Statement, StatementVote.statement_id == Statement.id)
         .filter(
             StatementVote.user_id == user_id,
             StatementVote.discussion_id.in_(discussion_ids),
+            *_vis,
+        )
+        .group_by(StatementVote.discussion_id)
+        .all()
+    )
+    return {int(did): int(cnt) for did, cnt in rows}
+
+
+def _batch_anon_vote_counts(
+    fingerprint_aliases: Sequence[str], discussion_ids: List[int]
+) -> dict[int, int]:
+    """
+    Per-discussion count of distinct statements this anonymous browser voted on.
+
+    Uses fingerprint aliases (canonical + legacy cookies) so pre-unification rows
+    still count once per statement across aliases.
+    """
+    fps = [fp for fp in fingerprint_aliases if fp]
+    if not fps or not discussion_ids:
+        return {}
+    _vis = visible_statement_vote_filters(Statement)
+    rows = (
+        db.session.query(
+            StatementVote.discussion_id,
+            func.count(distinct(StatementVote.statement_id)),
+        )
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.in_(fps),
+            StatementVote.discussion_id.in_(discussion_ids),
+            *_vis,
         )
         .group_by(StatementVote.discussion_id)
         .all()
@@ -221,13 +256,18 @@ def _batch_user_vote_counts(user_id: int, discussion_ids: List[int]) -> dict[int
 def _batch_vote_distributions(discussion_ids: List[int]) -> dict[int, dict[str, int]]:
     if not discussion_ids:
         return {}
+    _vis = visible_statement_vote_filters(Statement)
     rows = (
         db.session.query(
             StatementVote.discussion_id,
             StatementVote.vote,
             func.count(StatementVote.id),
         )
-        .filter(StatementVote.discussion_id.in_(discussion_ids))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id.in_(discussion_ids),
+            *_vis,
+        )
         .group_by(StatementVote.discussion_id, StatementVote.vote)
         .all()
     )
@@ -290,19 +330,29 @@ def build_journey_progress(
     programme: Programme,
     user_id: Optional[int],
     discussions: Optional[List[Discussion]] = None,
+    anon_fingerprint_aliases: Optional[Sequence[str]] = None,
 ) -> dict[str, Any]:
     """
     Build per-theme and aggregate progress for the journey banner.
 
     Accepts an optional pre-fetched `discussions` list to avoid a duplicate
     DB hit when the caller already holds the ordered discussion list.
+
+    For anonymous visitors pass ``anon_fingerprint_aliases`` from
+    ``anonymous_fingerprint_aliases_for_daily_lookup()`` so progress matches
+    votes stored under any legacy cookie namespace.
     """
     if discussions is None:
         discussions = ordered_journey_discussions(programme)
     ids = [d.id for d in discussions]
 
     stmt_counts = _batch_statement_counts(ids)
-    user_vote_counts = _batch_user_vote_counts(user_id or 0, ids) if user_id else {}
+    if user_id:
+        user_vote_counts = _batch_user_vote_counts(user_id, ids)
+    elif anon_fingerprint_aliases:
+        user_vote_counts = _batch_anon_vote_counts(anon_fingerprint_aliases, ids)
+    else:
+        user_vote_counts = {}
 
     items: List[JourneyProgressItem] = []
     for d in discussions:
@@ -350,6 +400,7 @@ def build_programme_recap_payload(
     programme: Programme,
     user_id: Optional[int],
     discussions: Optional[List[Discussion]] = None,
+    anon_fingerprint_aliases: Optional[Sequence[str]] = None,
 ) -> dict[str, Any]:
     """
     Programme-level recap: per-theme consensus headlines, crowd vote mix, and
@@ -357,6 +408,8 @@ def build_programme_recap_payload(
 
     All DB work is done in 4 batch queries — no N+1.
     Pass `discussions` when the caller already fetched the ordered list (avoids a duplicate query).
+
+    Anonymous recap numerators use ``anon_fingerprint_aliases`` when ``user_id`` is None.
     """
     if discussions is None:
         discussions = ordered_journey_discussions(programme)
@@ -365,7 +418,12 @@ def build_programme_recap_payload(
     analyses = _batch_latest_analyses(ids)
     vote_dists = _batch_vote_distributions(ids)
     stmt_counts = _batch_statement_counts(ids)
-    user_vote_counts = _batch_user_vote_counts(user_id or 0, ids) if user_id else {}
+    if user_id:
+        user_vote_counts = _batch_user_vote_counts(user_id, ids)
+    elif anon_fingerprint_aliases:
+        user_vote_counts = _batch_anon_vote_counts(anon_fingerprint_aliases, ids)
+    else:
+        user_vote_counts = {}
     unique_participant_counts = batch_discussion_participant_counts(ids)
 
     themes_out: List[dict[str, Any]] = []
@@ -479,13 +537,14 @@ def user_statement_votes_detail_batch(
     """Agree/disagree/unsure per statement for multiple discussions — single query."""
     if not user_id or not discussion_ids:
         return {did: [] for did in discussion_ids}
+    _vis = visible_statement_vote_filters(Statement)
     rows = (
         db.session.query(Statement, StatementVote.vote)
         .join(StatementVote, StatementVote.statement_id == Statement.id)
         .filter(
             StatementVote.user_id == user_id,
             Statement.discussion_id.in_(discussion_ids),
-            Statement.is_deleted.is_(False),
+            *_vis,
         )
         .order_by(Statement.discussion_id, Statement.id.asc())
         .all()
@@ -496,6 +555,44 @@ def user_statement_votes_detail_batch(
         result[stmt.discussion_id].append(
             {
                 "statement_id": stmt.id,
+                "content": stmt.content,
+                "vote_label": labels.get(int(val or 0), "unsure"),
+            }
+        )
+    return result
+
+
+def anon_statement_votes_detail_batch(
+    fingerprint_aliases: Sequence[str], discussion_ids: List[int]
+) -> dict[int, List[dict[str, Any]]]:
+    """Anonymous viewer's votes per discussion — aliases cover legacy cookie namespaces."""
+    fps = [fp for fp in fingerprint_aliases if fp]
+    if not fps or not discussion_ids:
+        return {did: [] for did in discussion_ids}
+    _vis = visible_statement_vote_filters(Statement)
+    rows = (
+        db.session.query(Statement, StatementVote.vote)
+        .join(StatementVote, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.in_(fps),
+            Statement.discussion_id.in_(discussion_ids),
+            *_vis,
+        )
+        .order_by(Statement.discussion_id, Statement.id.asc())
+        .all()
+    )
+    labels = {-1: "disagree", 0: "unsure", 1: "agree"}
+    result: dict[int, List[dict[str, Any]]] = {did: [] for did in discussion_ids}
+    seen_statement_ids: set[int] = set()
+    for stmt, val in rows:
+        sid = stmt.id
+        if sid in seen_statement_ids:
+            continue
+        seen_statement_ids.add(sid)
+        result[stmt.discussion_id].append(
+            {
+                "statement_id": sid,
                 "content": stmt.content,
                 "vote_label": labels.get(int(val or 0), "unsure"),
             }
@@ -517,12 +614,18 @@ def discussion_has_linked_source_articles(discussion: Discussion) -> bool:
 def guided_journey_context_for_discussion(
     discussion: Discussion,
     user_id: Optional[int],
+    anon_fingerprint_aliases: Optional[Sequence[str]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     When a native discussion belongs to a guided flagship programme, return
     programme-level progress plus this discussion's position in the journey.
 
     Used for in-discussion orientation (rail UI) and the information-step copy.
+
+    For anonymous viewers pass ``anon_fingerprint_aliases`` from
+    ``anonymous_fingerprint_aliases_for_daily_lookup()`` so progress reflects
+    votes recorded under this browser (including legacy cookie namespaces).
+
     Dict keys include ``has_source_articles`` (whether linked source articles render
     above the optional-reading box), and ``next_theme_in_programme`` (the following
     theme in programme order for navigation — unlike ``progress["next_item"]``,
@@ -535,7 +638,12 @@ def guided_journey_context_for_discussion(
     if not is_guided_journey_programme(programme):
         return None
     ordered = ordered_journey_discussions(programme)
-    progress = build_journey_progress(programme, user_id, discussions=ordered)
+    progress = build_journey_progress(
+        programme,
+        user_id,
+        discussions=ordered,
+        anon_fingerprint_aliases=anon_fingerprint_aliases,
+    )
     theme_item = None
     theme_index: Optional[int] = None
     for i, it in enumerate(progress["theme_items"]):
