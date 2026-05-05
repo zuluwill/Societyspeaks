@@ -259,6 +259,14 @@ flask db upgrade
 
 **Alembic / multiple heads:** If `flask db upgrade` fails with "multiple head revisions", the migration history has branched. Merge heads before deploying: `flask db merge heads -m "merge_heads"`, then run `flask db upgrade` again.
 
+#### Replit production database
+
+Production PostgreSQL is provided by **Replit (Helium)**. The app expects a single **`DATABASE_URL`** (SQLAlchemy); it does not read split `PGHOST` / `PGPORT` variables.
+
+If you (re)publish from Replit and need a **dedicated production database** seeded from the Repl’s current development data, enable both in the Publishing UI: **Create production database**, and **Set up your production database with your current development data**. Replit may require migration away from legacy setups (for example an external Neon dev DB used as production); after migration, `DATABASE_URL` in production points at the Helium instance.
+
+`config.py` may still contain a **dormant Neon URL rewriter** (pooler rewrite for hosts containing `.neon.tech`). It only runs when the active `DATABASE_URL` matches that pattern and is harmless on Helium-only deployments.
+
 ## Project Structure
 
 ```

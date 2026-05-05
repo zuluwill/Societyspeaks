@@ -1,6 +1,10 @@
 {% extends "layout.html" %}
 {% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload, render_social_fields %}
 
+{% block extra_head %}
+{% include "profiles/_image_cropper_assets.html" %}
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -69,6 +73,7 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/image-upload.js') }}"></script>
 {% block form_scripts %}
 <script nonce="{{ csp_nonce() }}">
 function previewImage(input, previewId) {

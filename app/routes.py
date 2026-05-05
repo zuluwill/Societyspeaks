@@ -1,7 +1,7 @@
 import stripe
 from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response, send_from_directory, redirect, flash
 from flask_login import login_required, current_user
-from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief, Programme
+from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief, Programme, User
 from app.programmes.journey import (
     guided_journey_slug_set,
     infer_journey_country_from_accept_language,
@@ -162,6 +162,12 @@ def index():
             journey_personalisation = "chosen"
 
     if current_user.is_authenticated and not guided_journey_programme:
+        # One joined query populates profiles on the session User — avoids 1–2 lazy loads
+        # when reading .country for journey personalisation.
+        db.session.query(User).options(
+            joinedload(User.individual_profile),
+            joinedload(User.company_profile),
+        ).filter_by(id=current_user.id).first()
         profile_country = None
         pt = getattr(current_user, "profile_type", None)
         if pt == "company" and getattr(current_user, "company_profile", None):

@@ -94,12 +94,6 @@
       href="{{ url_for('static', filename='css/read-more-toggle.css') }}"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.1.1/compressor.min.js" crossorigin="anonymous"></script>
 
     <!-- Toast Notification Styles -->
     <style>
@@ -260,23 +254,26 @@
       }());
     </script>
 
-    <!-- Google Tag Manager -->
+    <!-- Google Tag Manager + PostHog: start after DOMContentLoaded so parser / first paint
+         are not competing with analytics setup and script fetch. Pageviews/events still fire
+         on normal loads; very fast bounces may occasionally miss a hit. -->
     <script nonce="{{ csp_nonce() }}">
-      (function (w, d, s, l, i) {
-        w[l] = w[l] || [];
-        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l != "dataLayer" ? "&l=" + l : "";
-        j.async = true;
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-        f.parentNode.insertBefore(j, f);
-      })(window, document, "script", "dataLayer", "GTM-TSWBW6TW");
-    </script>
-    <!-- End Google Tag Manager -->
+      (function () {
+        function ssStartAnalytics() {
+          if (window.__ssAnalyticsStarted) return;
+          window.__ssAnalyticsStarted = true;
 
-    <!-- PostHog Analytics -->
-    <script nonce="{{ csp_nonce() }}">
+          (function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+            var f = d.getElementsByTagName(s)[0],
+              j = d.createElement(s),
+              dl = l != "dataLayer" ? "&l=" + l : "";
+            j.async = true;
+            j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+            f.parentNode.insertBefore(j, f);
+          })(window, document, "script", "dataLayer", "GTM-TSWBW6TW");
+
       !(function (t, e) {
         var o, n, p, r;
         e.__SV ||
@@ -367,6 +364,16 @@
           return event;
         },
       });
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", ssStartAnalytics, {
+            once: true,
+          });
+        } else {
+          ssStartAnalytics();
+        }
+      })();
     </script>
 
     {# Site-wide Organization + WebApplication JSON-LD. Child templates that #}

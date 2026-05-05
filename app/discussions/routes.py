@@ -1271,8 +1271,9 @@ def mark_information_viewed(discussion_id):
 
 
 def fetch_discussions(search, country, city, topic, keywords, programme_id, page, per_page=9, sort='recent'):
-    from sqlalchemy import and_, or_
-    query = _exclude_test_discussions(Discussion.query).outerjoin(
+    query = _exclude_test_discussions(Discussion.query).options(
+        joinedload(Discussion.creator),
+    ).outerjoin(
         Programme, Discussion.programme_id == Programme.id
     ).filter(
         or_(
