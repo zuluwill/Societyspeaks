@@ -9899,7 +9899,7 @@ msgstr "L/C/R विश्लेषण"
 
 #: app/templates/brief/landing.html:243
 msgid "Bias ratings from"
-msgstr ""
+msgstr "से पूर्वाग्रह रेटिंग"
 
 #: app/templates/brief/landing.html:313
 msgid "Unlock Full Analysis"
@@ -25881,7 +25881,7 @@ msgstr ""
 
 #: app/templates/partner/api_playground.html:28
 msgid "Get test keys in the"
-msgstr ""
+msgstr "में परीक्षण कुंजी प्राप्त करें"
 
 #: app/templates/partner/api_playground.html:32
 #, python-brace-format

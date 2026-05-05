@@ -37,6 +37,7 @@ cachelib = "^0.13.0"
 markdown = ">=3.7"
 pypdf = ">=4.0.0"
 certifi = ">=2024.7.4"
+deep-translator = "^1.11.4"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md

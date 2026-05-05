@@ -8273,6 +8273,7 @@ msgstr[0] "\"%(query)s\"的%(num)d个结果"
 msgid "%(num)d discussion created by you"
 msgid_plural "%(num)d discussions created by you"
 msgstr[0] "您创建的%(num)d个讨论"
+msgstr[1] "您创建了 %(num)d 个讨论"
 
 #: app/templates/auth/discussions.html:44
 msgid "Search your discussions…"
@@ -8575,6 +8576,7 @@ msgstr "已有账户？"
 msgid "%(num)d saved discussion"
 msgid_plural "%(num)d saved discussions"
 msgstr[0] "%(num)d 个已保存的讨论"
+msgstr[1] "%(num)d 个已保存讨论"
 
 #: app/templates/auth/saved_discussions.html:26
 msgid "Browse discussions"
@@ -15738,6 +15740,7 @@ msgstr "还有 %(num)d 个"
 msgid "%(num)d statement"
 msgid_plural "%(num)d statements"
 msgstr[0] "%(num)d 条陈述"
+msgstr[1] "%(num)d 条语句"
 
 #: app/templates/discussions/_guided_journey_rail.html:61
 msgid "to track your progress"
@@ -15876,6 +15879,8 @@ msgid_plural ""
 "<span class=\"font-semibold text-slate-900\">%(num)d</span> total votes on "
 "this claim."
 msgstr[0] "对此主张的<span class=\"font-semibold text-slate-900\">%(num)d</span> 票总计。"
+msgstr[1] ""
+"对此声明的总投票数为 <span class=\"font-semibold text-slate-900\">%(num)d</span> 票。"
 
 #: app/templates/discussions/_statement_search_result.html:33
 msgid "Open the discussion to add your view."
@@ -16350,6 +16355,7 @@ msgstr "仅供参考"
 msgid "participant"
 msgid_plural "participants"
 msgstr[0] "参与者"
+msgstr[1] "参与者"
 
 #: app/templates/discussions/consensus_results.html:381
 msgid "Not enough shared votes yet"
@@ -16368,6 +16374,7 @@ msgstr ""
 msgid "member"
 msgid_plural "members"
 msgstr[0] "成员"
+msgstr[1] "会员"
 
 #: app/templates/discussions/consensus_results.html:394
 msgid "This group agrees with"
@@ -17187,6 +17194,7 @@ msgstr "此讨论已关闭。您仍然可以查看完整记录。"
 msgid "%(num)d statement to vote on"
 msgid_plural "%(num)d statements to vote on"
 msgstr[0] "%(num)d 条陈述可投票"
+msgstr[1] "%(num)d 个声明进行投票"
 
 #: app/templates/discussions/embed_discussion.html:897
 #: app/templates/emails/journey_reminder.html:82
@@ -17561,6 +17569,7 @@ msgstr[0] "找到 %(num)d 个关于「%(term)s」的结果"
 msgid "%(num)d discussion"
 msgid_plural "%(num)d discussions"
 msgstr[0] "%(num)d 场讨论"
+msgstr[1] "%(num)d 次讨论"
 
 #: app/templates/discussions/news_feed.html:304
 #, python-format
@@ -17714,6 +17723,7 @@ msgstr "清除筛选"
 msgid "%(num)d result"
 msgid_plural "%(num)d results"
 msgstr[0] "%(num)d 个结果"
+msgstr[1] "%(num)d 个结果"
 
 #: app/templates/discussions/search_statements.html:66
 #, python-format
@@ -25903,6 +25913,7 @@ msgstr "声明分析"
 msgid "%(num)d total vote"
 msgid_plural "%(num)d total votes"
 msgstr[0] "%(num)d个总投票"
+msgstr[1] "%(num)d 总票数"
 
 #: app/templates/partner/portal/discussion_detail.html:220
 msgid "Reader submitted"
@@ -25925,6 +25936,7 @@ msgstr "种子"
 msgid "%(num)d vote"
 msgid_plural "%(num)d votes"
 msgstr[0] "%(num)d个投票"
+msgstr[1] "%(num)d 票"
 
 #: app/templates/partner/portal/discussion_detail.html:261
 msgid "No statements yet — add the first one below."
@@ -27324,6 +27336,7 @@ msgstr "每个人的投票"
 msgid "%(num)d person"
 msgid_plural "%(num)d people"
 msgstr[0] "%(num)d 人"
+msgstr[1] "%(num)d 人"
 
 #: app/templates/programmes/journey_recap.html:186
 msgid "No votes yet on this theme."
@@ -27351,18 +27364,21 @@ msgstr "稳定性较低"
 msgid "%(num)d consensus point"
 msgid_plural "%(num)d consensus points"
 msgstr[0] "%(num)d 个共识点"
+msgstr[1] "%(num)d 个共识点"
 
 #: app/templates/programmes/journey_recap.html:213
 #, python-format
 msgid "%(num)d bridge idea"
 msgid_plural "%(num)d bridge ideas"
 msgstr[0] "%(num)d 个桥接想法"
+msgstr[1] "%(num)d 个桥梁想法"
 
 #: app/templates/programmes/journey_recap.html:219
 #, python-format
 msgid "%(num)d divisive point"
 msgid_plural "%(num)d divisive points"
 msgstr[0] "%(num)d 个分裂点"
+msgstr[1] "%(num)d 个分割点"
 
 #: app/templates/programmes/journey_recap.html:231
 msgid "View consensus map"
@@ -28601,6 +28617,7 @@ msgstr "审核队列"
 msgid "%(num)d source"
 msgid_plural "%(num)d sources"
 msgstr[0] "%(num)d 个来源"
+msgstr[1] "%(num)d 个来源"
 
 #: app/templates/trending/dashboard.html:157
 msgid "Civic:"
@@ -28728,6 +28745,7 @@ msgstr "从未抓取"
 msgid "%(num)d error"
 msgid_plural "%(num)d errors"
 msgstr[0] "%(num)d 个错误"
+msgstr[1] "%(num)d 个错误"
 
 #: app/templates/trending/sources.html:86
 msgid "Delete this source?"

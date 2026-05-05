@@ -8540,6 +8540,7 @@ msgstr[0] "\"%(query)s\"에 대한 %(num)d개 결과"
 msgid "%(num)d discussion created by you"
 msgid_plural "%(num)d discussions created by you"
 msgstr[0] "귀하가 만든 %(num)d개 토론"
+msgstr[1] "귀하가 만든 토론 %(num)d개"
 
 #: app/templates/auth/discussions.html:44
 msgid "Search your discussions…"
@@ -8851,6 +8852,7 @@ msgstr "이미 계정이 있으신가요?"
 msgid "%(num)d saved discussion"
 msgid_plural "%(num)d saved discussions"
 msgstr[0] "%(num)d개 저장된 토론"
+msgstr[1] "%(num)d개의 저장된 토론"
 
 #: app/templates/auth/saved_discussions.html:26
 msgid "Browse discussions"
@@ -9271,7 +9273,7 @@ msgstr "좌/중/우 분석"
 
 #: app/templates/brief/landing.html:243
 msgid "Bias ratings from"
-msgstr ""
+msgstr "바이어스 등급"
 
 #: app/templates/brief/landing.html:313
 msgid "Unlock Full Analysis"
@@ -16126,6 +16128,7 @@ msgstr "%(num)d개 남음"
 msgid "%(num)d statement"
 msgid_plural "%(num)d statements"
 msgstr[0] "%(num)d개 진술"
+msgstr[1] "%(num)d개의 문"
 
 #: app/templates/discussions/_guided_journey_rail.html:61
 msgid "to track your progress"
@@ -16270,6 +16273,9 @@ msgid_plural ""
 "this claim."
 msgstr[0] ""
 "이 주장에 대한 <span class=\"font-semibold text-slate-900\">%(num)d</span>개의 총 투표."
+msgstr[1] ""
+"이 소유권 주장에 대한 총 투표 수는 <span class=\"font-semibold text-"
+"slate-900\">%(num)d</span>개입니다."
 
 #: app/templates/discussions/_statement_search_result.html:33
 msgid "Open the discussion to add your view."
@@ -16764,10 +16770,10 @@ msgid "Suggestive only"
 msgstr "암시적인 내용만"
 
 #: app/templates/discussions/consensus_results.html:367
-#, fuzzy
 msgid "participant"
 msgid_plural "participants"
 msgstr[0] "참여자"
+msgstr[1] "참가자들"
 
 #: app/templates/discussions/consensus_results.html:381
 msgid "Not enough shared votes yet"
@@ -16784,10 +16790,10 @@ msgstr ""
 "더 많은 사람들이 참여할수록 이 섹션은 자동으로 채워집니다."
 
 #: app/templates/discussions/consensus_results.html:383
-#, fuzzy
 msgid "member"
 msgid_plural "members"
 msgstr[0] "Member"
+msgstr[1] "회원"
 
 #: app/templates/discussions/consensus_results.html:394
 #, fuzzy
@@ -17624,6 +17630,7 @@ msgstr "이 토론은 종료되었습니다. 전체 기록은 여전히 볼 수 
 msgid "%(num)d statement to vote on"
 msgid_plural "%(num)d statements to vote on"
 msgstr[0] "%(num)d 개의 진술에 투표"
+msgstr[1] "투표할 진술 %(num)d개"
 
 #: app/templates/discussions/embed_discussion.html:897
 #: app/templates/emails/journey_reminder.html:82
@@ -18007,6 +18014,7 @@ msgstr[0] "\"%(term)s\"에 대해 %(num)d개의 결과를 찾았습니다"
 msgid "%(num)d discussion"
 msgid_plural "%(num)d discussions"
 msgstr[0] "%(num)d개 토론"
+msgstr[1] "%(num)d개의 토론"
 
 #: app/templates/discussions/news_feed.html:304
 #, python-format
@@ -18162,6 +18170,7 @@ msgstr "필터 삭제"
 msgid "%(num)d result"
 msgid_plural "%(num)d results"
 msgstr[0] "%(num)d개 결과"
+msgstr[1] "%(num)d개의 결과"
 
 #: app/templates/discussions/search_statements.html:66
 #, python-format
@@ -24331,7 +24340,7 @@ msgstr ""
 
 #: app/templates/partner/api_playground.html:28
 msgid "Get test keys in the"
-msgstr ""
+msgstr "다음에서 테스트 키를 받으세요."
 
 #: app/templates/partner/api_playground.html:32
 #, python-brace-format
@@ -26589,6 +26598,7 @@ msgstr "의견 분석"
 msgid "%(num)d total vote"
 msgid_plural "%(num)d total votes"
 msgstr[0] "총 %(num)d투표"
+msgstr[1] "%(num)d 총 투표수"
 
 #: app/templates/partner/portal/discussion_detail.html:220
 msgid "Reader submitted"
@@ -26611,6 +26621,7 @@ msgstr "시드"
 msgid "%(num)d vote"
 msgid_plural "%(num)d votes"
 msgstr[0] "%(num)d투표"
+msgstr[1] "%(num)d표"
 
 #: app/templates/partner/portal/discussion_detail.html:261
 msgid "No statements yet — add the first one below."
@@ -28034,10 +28045,11 @@ msgid "Everyone's votes"
 msgstr "모두"
 
 #: app/templates/programmes/journey_recap.html:140
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d person"
 msgid_plural "%(num)d people"
 msgstr[0] "%(num)d 오류"
+msgstr[1] "%(num)d명"
 
 #: app/templates/programmes/journey_recap.html:186
 msgid "No votes yet on this theme."
@@ -28066,18 +28078,21 @@ msgstr "확장성"
 msgid "%(num)d consensus point"
 msgid_plural "%(num)d consensus points"
 msgstr[0] "%(num)d개의 합의점"
+msgstr[1] "%(num)d 합의점"
 
 #: app/templates/programmes/journey_recap.html:213
 #, python-format
 msgid "%(num)d bridge idea"
 msgid_plural "%(num)d bridge ideas"
 msgstr[0] "%(num)d개의 연결 아이디어"
+msgstr[1] "%(num)d개의 브리지 아이디어"
 
 #: app/templates/programmes/journey_recap.html:219
 #, python-format
 msgid "%(num)d divisive point"
 msgid_plural "%(num)d divisive points"
 msgstr[0] "%(num)d개의 분열점"
+msgstr[1] "%(num)d개의 분열 포인트"
 
 #: app/templates/programmes/journey_recap.html:231
 msgid "View consensus map"
@@ -29344,6 +29359,7 @@ msgstr "검토 대기열"
 msgid "%(num)d source"
 msgid_plural "%(num)d sources"
 msgstr[0] "%(num)d개 소스"
+msgstr[1] "%(num)d개의 소스"
 
 #: app/templates/trending/dashboard.html:157
 msgid "Civic:"
@@ -29471,6 +29487,7 @@ msgstr "아직 조회되지 않음"
 msgid "%(num)d error"
 msgid_plural "%(num)d errors"
 msgstr[0] "%(num)d 오류"
+msgstr[1] "%(num)d개의 오류"
 
 #: app/templates/trending/sources.html:86
 msgid "Delete this source?"
