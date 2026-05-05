@@ -71,17 +71,14 @@ msgid "Your Society Speaks sign-in link"
 msgstr "您的 Society Speaks 登录链接"
 
 #: app/email_subject_msgids_for_extract.py:26
-#, fuzzy
 msgid "Welcome to Society Speaks!"
-msgstr "欢迎来到 Society Speaks"
+msgstr "欢迎来到 Society Speaks！"
 
 #: app/email_subject_msgids_for_extract.py:27
-#, fuzzy
 msgid "Verify your Society Speaks email address"
-msgstr "验证您的电子邮件 - Society Speaks"
+msgstr "验证您的 Society Speaks 电子邮件地址"
 
 #: app/email_subject_msgids_for_extract.py:28
-#, fuzzy
 msgid "Activate Your Society Speaks Account"
 msgstr "激活您的 Society Speaks 帐户"
 
@@ -90,9 +87,8 @@ msgid "We've paused your briefings — come back any time"
 msgstr "我们已经暂停了您的简报——随时回来"
 
 #: app/resend_client.py:576
-#, fuzzy
 msgid "You're Subscribed to Daily Civic Questions!"
-msgstr "您已成功订阅每日公民问题！"
+msgstr "您已订阅每日公民议题！"
 
 #: app/resend_client.py:680 app/resend_client.py:952
 #, python-format
@@ -100,9 +96,8 @@ msgid "Daily Question #%(num)s: %(topic)s"
 msgstr "每日问题 %(num)s：%(topic)s"
 
 #: app/resend_client.py:680 app/resend_client.py:952
-#, fuzzy
 msgid "Civic"
-msgstr "公民:"
+msgstr "公民"
 
 #: app/resend_client.py:772
 #, python-format
@@ -161,19 +156,17 @@ msgid "There's been activity in your discussion '%(title)s'"
 msgstr "您参与的讨论'%(title)s'有新动态"
 
 #: app/resend_client.py:1323
-#, fuzzy, python-format
+#, python-format
 msgid "You've been invited to join %(org)s on Society Speaks"
-msgstr "您被邀请加入 Society Speaks 上的 %(org)s"
+msgstr "您已被邀请加入 %(org)s（Society Speaks 平台）"
 
 #: app/resend_client.py:1550
-#, fuzzy
 msgid "Complete Your Society Speaks Profile"
-msgstr "完成您的个人资料"
+msgstr "完善您的 Society Speaks 个人资料"
 
 #: app/resend_client.py:1617
-#, fuzzy
 msgid "Your Weekly Discussion Digest - Society Speaks"
-msgstr "您的每周讨论摘要"
+msgstr "您的每周讨论摘要 - Society Speaks"
 
 #: app/resend_client.py:1838
 #, python-format
@@ -19078,9 +19071,9 @@ msgid ""
 msgstr "您使用个人简报试用期已满一周。我们希望这些简报已在为您节省时间。接下来您还有"
 
 #: app/templates/emails/trial_mid.html:27
-#, fuzzy, python-format
+#, python-format
 msgid "%(days_remaining)s days left"
-msgstr "免费试用还剩 %(days_remaining)s 天"
+msgstr "还剩 %(days_remaining)s 天"
 
 #: app/templates/emails/trial_mid.html:28
 msgid "here's a quick reminder of what your subscription includes."

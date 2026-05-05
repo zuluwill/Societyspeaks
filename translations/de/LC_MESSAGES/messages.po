@@ -72,24 +72,20 @@ msgstr "Passwort zurücksetzen — Society Speaks"
 
 #: app/email_subject_msgids_for_extract.py:25
 #: app/templates/emails/magic_login.html:3
-#, fuzzy
 msgid "Your Society Speaks sign-in link"
-msgstr "✓ Nur Society Speaks"
+msgstr "Dein Society Speaks Anmeldelink"
 
 #: app/email_subject_msgids_for_extract.py:26
-#, fuzzy
 msgid "Welcome to Society Speaks!"
-msgstr "Willkommen bei Society Speaks"
+msgstr "Willkommen bei Society Speaks!"
 
 #: app/email_subject_msgids_for_extract.py:27
-#, fuzzy
 msgid "Verify your Society Speaks email address"
-msgstr "Bestätigen Sie Ihre E-Mail – Society Speaks"
+msgstr "Bestätige deine Society Speaks E-Mail-Adresse"
 
 #: app/email_subject_msgids_for_extract.py:28
-#, fuzzy
 msgid "Activate Your Society Speaks Account"
-msgstr "Aktiviere dein Society Speaks-Konto"
+msgstr "Aktiviere dein Society Speaks Konto"
 
 #: app/email_subject_msgids_for_extract.py:31
 msgid "We've paused your briefings — come back any time"
@@ -97,9 +93,8 @@ msgstr ""
 "Wir haben Ihre Briefings unterbrochen – Sie können jederzeit wiederkommen"
 
 #: app/resend_client.py:576
-#, fuzzy
 msgid "You're Subscribed to Daily Civic Questions!"
-msgstr "Sie haben sich erfolgreich für tägliche Bürgerfragen angemeldet!"
+msgstr "Du abonnierst tägliche Bürgerfragen!"
 
 #: app/resend_client.py:680 app/resend_client.py:952
 #, python-format
@@ -107,9 +102,8 @@ msgid "Daily Question #%(num)s: %(topic)s"
 msgstr "Tagesfrage Nr. %(num)s: %(topic)s"
 
 #: app/resend_client.py:680 app/resend_client.py:952
-#, fuzzy
 msgid "Civic"
-msgstr "Civic:"
+msgstr "Bürgerbeteiligung"
 
 #: app/resend_client.py:772
 #, python-format
@@ -169,19 +163,17 @@ msgid "There's been activity in your discussion '%(title)s'"
 msgstr "Es gab Aktivität in Ihrer Diskussion '%(title)s'"
 
 #: app/resend_client.py:1323
-#, fuzzy, python-format
+#, python-format
 msgid "You've been invited to join %(org)s on Society Speaks"
-msgstr "Du bist eingeladen zu %(org)s auf Society Speaks"
+msgstr "Du wurdest eingeladen, %(org)s auf Society Speaks beizutreten"
 
 #: app/resend_client.py:1550
-#, fuzzy
 msgid "Complete Your Society Speaks Profile"
-msgstr "Vervollständige dein Profil"
+msgstr "Vervollständige dein Society Speaks Profil"
 
 #: app/resend_client.py:1617
-#, fuzzy
 msgid "Your Weekly Discussion Digest - Society Speaks"
-msgstr "Ihre wöchentliche Diskussions-Zusammenfassung"
+msgstr "Deine wöchentliche Diskussionszusammenfassung – Society Speaks"
 
 #: app/resend_client.py:1838
 #, python-format
@@ -504,18 +496,18 @@ msgstr ""
 "Minuten ab."
 
 #: app/auth/routes.py:1172 app/auth/routes.py:1196
-#, fuzzy
 msgid ""
 "This sign-in link is invalid, expired, or has already been used. Request a "
 "new one below."
 msgstr ""
-"Dieser Zurücksetzen-Link ist ungültig oder abgelaufen. Bitte fordern Sie "
-"einen neuen an."
+"Dieser Anmeldelink ist ungültig, abgelaufen oder wurde bereits verwendet. "
+"Fordere unten einen neuen an."
 
 #: app/auth/routes.py:1211
-#, fuzzy
 msgid "Something went wrong signing you in. Please request a new link."
-msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut."
+msgstr ""
+"Bei der Anmeldung ist etwas schiefgelaufen. Bitte fordere einen neuen Link "
+"an."
 
 #: app/billing/enforcement.py:18 app/billing/enforcement.py:40
 msgid "Please log in to access this feature."
@@ -3579,9 +3571,8 @@ msgid "The Daily Question"
 msgstr "Die tägliche Frage"
 
 #: app/templates/about.html:210
-#, fuzzy
 msgid "The"
-msgstr "Sonstiges"
+msgstr "Die"
 
 #: app/templates/about.html:211 app/templates/auth/dashboard.html:460
 #: app/templates/daily/no_question.html:13
@@ -6276,9 +6267,8 @@ msgstr ""
 "öffentliche Meinung mit bewahrter Nuance."
 
 #: app/templates/layout.html:460
-#, fuzzy
 msgid "Skip to main content"
-msgstr "Markdown-Inhalt bearbeiten..."
+msgstr "Zum Hauptinhalt springen"
 
 #: app/templates/layout.html:466
 msgid "Top"
@@ -6432,14 +6422,12 @@ msgid "Donate"
 msgstr "Spenden"
 
 #: app/templates/layout.html:736 app/templates/layout.html:1131
-#, fuzzy
 msgid "Unlock Personal Briefs"
-msgstr "Persönliche Briefings"
+msgstr "Persönliche Zusammenfassungen freischalten"
 
 #: app/templates/layout.html:749
-#, fuzzy
 msgid "Open user menu"
-msgstr "Öffnungsrate"
+msgstr "Benutzermenü öffnen"
 
 #: app/templates/auth/dashboard.html:105 app/templates/layout.html:754
 #: app/templates/layout.html:1065
@@ -6563,9 +6551,8 @@ msgstr "Loslegen"
 
 #: app/templates/admin/_admin_base.html:73
 #: app/templates/admin/_admin_base.html:74 app/templates/layout.html:907
-#, fuzzy
 msgid "Open main menu"
-msgstr "Domänenname"
+msgstr "Hauptmenü öffnen"
 
 #: app/templates/layout.html:1016
 msgid "Language"
@@ -6605,9 +6592,8 @@ msgid "Terms of Service"
 msgstr "Nutzungsbedingungen"
 
 #: app/templates/layout.html:1335
-#, fuzzy
 msgid "SocietySpeaks inquiry"
-msgstr "✓ Nur Society Speaks"
+msgstr "Society Speaks Anfrage"
 
 #: app/templates/layout.html:1337 app/templates/partner/api_docs.html:40
 #: app/templates/partner/embed_generator.html:27
@@ -6615,24 +6601,20 @@ msgid "Contact"
 msgstr "Kontakt"
 
 #: app/templates/layout.html:1343
-#, fuzzy
 msgid "Connect"
-msgstr "Kontakt"
+msgstr "Verbinden"
 
 #: app/templates/layout.html:1351
-#, fuzzy
 msgid "X (formerly Twitter)"
-msgstr "X (Twitter)"
+msgstr "X (ehemals Twitter)"
 
 #: app/templates/layout.html:1364
-#, fuzzy
 msgid "Bluesky"
-msgstr "Auf Bluesky posten"
+msgstr "Bluesky"
 
 #: app/templates/layout.html:1377
-#, fuzzy
 msgid "GitHub"
-msgstr "Auf GitHub anschauen"
+msgstr "GitHub"
 
 #: app/templates/layout.html:1388
 msgid "Sponsor zuluwill"
@@ -8960,45 +8942,38 @@ msgstr ""
 "Wenn Sie Fragen zu diesen Bedingungen haben, kontaktieren Sie uns unter:"
 
 #: app/templates/admin/_admin_base.html:11
-#, fuzzy
 msgid "Admin Dashboard"
-msgstr "Dashboard anzeigen"
+msgstr "Admin-Dashboard"
 
 #: app/templates/admin/_admin_base.html:21
 #: app/templates/admin/_admin_base.html:97
-#, fuzzy
 msgid "Profiles"
-msgstr "Profil"
+msgstr "Profile"
 
 #: app/templates/admin/_admin_base.html:29
 #: app/templates/admin/_admin_base.html:105
-#, fuzzy
 msgid "Partners"
-msgstr "Partner-Ref"
+msgstr "Partner"
 
 #: app/templates/admin/_admin_base.html:33
 #: app/templates/admin/_admin_base.html:109
-#, fuzzy
 msgid "Partner Metrics"
-msgstr "Partner-Ref"
+msgstr "Partner-Metriken"
 
 #: app/templates/admin/_admin_base.html:37
 #: app/templates/admin/_admin_base.html:113
-#, fuzzy
 msgid "Users"
-msgstr "Benutzer B"
+msgstr "Benutzer"
 
 #: app/templates/admin/_admin_base.html:41
 #: app/templates/admin/_admin_base.html:117
-#, fuzzy
 msgid "Trending"
-msgstr "Ausstehend"
+msgstr "Trends"
 
 #: app/templates/admin/_admin_base.html:45
 #: app/templates/admin/_admin_base.html:121
-#, fuzzy
 msgid "Questions"
-msgstr "Fragen?"
+msgstr "Fragen"
 
 #: app/templates/admin/_admin_base.html:53
 #: app/templates/admin/_admin_base.html:129
@@ -9008,21 +8983,18 @@ msgstr "Briefings"
 
 #: app/templates/admin/_admin_base.html:57
 #: app/templates/admin/_admin_base.html:133
-#, fuzzy
 msgid "Flags"
-msgstr "Gekennzeichnet"
+msgstr "Meldungen"
 
 #: app/templates/admin/_admin_base.html:61
 #: app/templates/admin/_admin_base.html:137
-#, fuzzy
 msgid "Source Claims"
-msgstr "Quellenname"
+msgstr "Quellenangaben"
 
 #: app/templates/admin/_admin_base.html:65
 #: app/templates/admin/_admin_base.html:141
-#, fuzzy
 msgid "Polymarket"
-msgstr "Markt"
+msgstr "Polymarket"
 
 #: app/templates/auth/dashboard.html:19
 #, python-format
@@ -9365,35 +9337,33 @@ msgid "Manage Billing"
 msgstr "Abrechnung verwalten"
 
 #: app/templates/auth/dashboard.html:597
-#, fuzzy
 msgid "Payment needed"
-msgstr "Zahlung erforderlich."
+msgstr "Zahlung erforderlich"
 
 #: app/templates/auth/dashboard.html:598
-#, fuzzy
 msgid ""
 "We could not process your latest subscription payment. Update your payment "
 "method to keep briefings running."
 msgstr ""
-"Wir konnten Ihre letzte Zahlung nicht verarbeiten. Bitte aktualisieren Sie "
-"Ihre Zahlungsmethode, um Ihre Briefe weiterhin auszuführen."
+"Wir konnten deine letzte Abonnementzahlung nicht verarbeiten. Aktualisiere "
+"deine Zahlungsmethode, um deine Zusammenfassungen weiter zu erhalten."
 
 #: app/templates/auth/dashboard.html:603 app/templates/briefing/list.html:57
 msgid "Update payment method"
 msgstr "Zahlungsmethode aktualisieren"
 
 #: app/templates/auth/dashboard.html:607
-#, fuzzy
 msgid ""
 "Your Briefings subscription is activating. This usually takes under a "
 "minute."
-msgstr "Brief-Generierung gestartet. Dies kann bis zu einer Minute dauern."
+msgstr ""
+"Dein Briefings-Abonnement wird aktiviert. Das dauert normalerweise weniger "
+"als eine Minute."
 
 #: app/templates/auth/dashboard.html:611
 #: app/templates/emails/trial_mid.html:106
-#, fuzzy
 msgid "Go to My Briefings"
-msgstr "Zu meinen Briefings"
+msgstr "Zu Meine Briefings"
 
 #: app/templates/auth/dashboard.html:615
 msgid ""
@@ -9405,15 +9375,13 @@ msgstr ""
 "Bezahlen."
 
 #: app/templates/auth/dashboard.html:621
-#, fuzzy
 msgid "Start your free trial"
 msgstr "Kostenlose Testversion starten"
 
 #: app/templates/auth/dashboard.html:625
 #: app/templates/emails/trial_ending.html:46
-#, fuzzy
 msgid "Compare plans"
-msgstr "Marktpuls"
+msgstr "Pläne vergleichen"
 
 #: app/templates/auth/dashboard.html:629
 msgid ""
@@ -9424,9 +9392,8 @@ msgstr ""
 "Sehen Sie sich Pläne zum Abonnieren oder Fortsetzen an."
 
 #: app/templates/auth/dashboard.html:633
-#, fuzzy
 msgid "View subscription options"
-msgstr "Beschreibung (optional)"
+msgstr "Abonnementoptionen anzeigen"
 
 #: app/templates/auth/dashboard.html:645 app/templates/auth/discussions.html:3
 #: app/templates/auth/discussions.html:12
@@ -9573,9 +9540,8 @@ msgstr "Registrieren"
 #: app/templates/auth/magic_link_continue.html:9
 #: app/templates/emails/magic_login.html:7
 #: app/templates/emails/magic_login.html:27
-#, fuzzy
 msgid "Sign in to Society Speaks"
-msgstr "Society Speaks besuchen"
+msgstr "Melde dich bei Society Speaks an"
 
 #: app/templates/auth/magic_link_continue.html:11
 msgid "You're about to sign in as"
@@ -9594,34 +9560,29 @@ msgid "Signing in…"
 msgstr "Wird angemeldet…"
 
 #: app/templates/auth/magic_link_request.html:9
-#, fuzzy
 msgid "Sign in with email"
-msgstr "Test-E-Mail versenden"
+msgstr "Mit E-Mail anmelden"
 
 #: app/templates/auth/magic_link_request.html:10
-#, fuzzy
 msgid "We'll email you a one-time link. No password needed."
-msgstr "Magic Link — kein Passwort erforderlich"
+msgstr ""
+"Wir senden dir einen einmaligen Link per E-Mail. Kein Passwort erforderlich."
 
 #: app/templates/auth/magic_link_request.html:48
-#, fuzzy
 msgid "Sending…"
-msgstr "Ausstehend"
+msgstr "Wird gesendet…"
 
 #: app/templates/auth/magic_link_request.html:55
-#, fuzzy
 msgid "Prefer a password?"
-msgstr "Passwort zurücksetzen"
+msgstr "Bevorzugst du ein Passwort?"
 
 #: app/templates/auth/magic_link_request.html:57
-#, fuzzy
 msgid "Sign in with password"
-msgstr "Neues Passwort"
+msgstr "Mit Passwort anmelden"
 
 #: app/templates/auth/magic_link_sent.html:15
-#, fuzzy
 msgid "Check your inbox"
-msgstr "Willkommen zurück! Überprüfen Sie Ihren Posteingang."
+msgstr "Überprüfe deinen Posteingang"
 
 #: app/templates/auth/magic_link_sent.html:19
 #, python-format
@@ -9647,14 +9608,12 @@ msgstr ""
 "verstanden? Überprüfen Sie Ihren Spam-Ordner."
 
 #: app/templates/auth/magic_link_sent.html:34
-#, fuzzy
 msgid "Request another link"
-msgstr "Request-Header"
+msgstr "Weiteren Link anfordern"
 
 #: app/templates/auth/magic_link_sent.html:38
-#, fuzzy
 msgid "Sign in with password instead"
-msgstr "Magic Link — kein Passwort erforderlich"
+msgstr "Stattdessen mit Passwort anmelden"
 
 #: app/templates/auth/notifications.html:16
 #, python-format
@@ -10611,9 +10570,8 @@ msgid "Podcasts"
 msgstr "Podcasts"
 
 #: app/templates/brief/methodology.html:193
-#, fuzzy
 msgid "Data & Official Sources"
-msgstr "Originalquellen lesen"
+msgstr "Daten & Offizielle Quellen"
 
 #: app/templates/brief/methodology.html:194
 msgid ""
@@ -10724,9 +10682,8 @@ msgid "Right-leaning"
 msgstr "Rechts der politischen Mitte"
 
 #: app/templates/brief/methodology.html:284
-#, fuzzy
 msgid "Source ratings come from"
-msgstr "Quellartikel"
+msgstr "Quellenratings stammen von"
 
 #: app/templates/brief/methodology.html:285
 msgid "AllSides Media Bias Ratings"
@@ -11201,9 +11158,9 @@ msgid "The Contrast:"
 msgstr "Der Unterschied:"
 
 #: app/templates/brief/reader.html:439
-#, fuzzy, python-format
+#, python-format
 msgid "Published %(date)s by"
-msgstr "Veröffentlicht %(date)s"
+msgstr "Veröffentlicht %(date)s von"
 
 #: app/templates/brief/reader.html:441
 #: app/templates/briefing/public/run_reader.html:143
@@ -11917,15 +11874,13 @@ msgid "Unique Opens"
 msgstr "Eindeutige Öffnungen"
 
 #: app/templates/briefing/analytics.html:31
-#, fuzzy
 msgid "Open rate"
 msgstr "Öffnungsrate"
 
 #: app/templates/briefing/analytics.html:31
 #: app/templates/briefing/analytics.html:35
-#, fuzzy
 msgid "of sent"
-msgstr "Versendet"
+msgstr "von versendet"
 
 #: app/templates/briefing/analytics.html:32
 #: app/templates/briefing/analytics.html:36
@@ -11934,9 +11889,8 @@ msgid "N/A"
 msgstr "N / A"
 
 #: app/templates/briefing/analytics.html:35
-#, fuzzy
 msgid "CTR"
-msgstr "MITTE"
+msgstr "Klickrate"
 
 #: app/templates/briefing/analytics.html:39
 msgid "Click-to-open (CTOR)"
@@ -14425,14 +14379,12 @@ msgstr ""
 "Ihre Zahlungsmethode, um Ihre Briefe weiterhin auszuführen."
 
 #: app/templates/briefing/list.html:69
-#, fuzzy
 msgid "30-day free trial · no card required"
-msgstr "30 Tage kostenlos testen, jederzeit kündbar"
+msgstr "30 Tage kostenlos · keine Kartendaten erforderlich"
 
 #: app/templates/briefing/list.html:70
-#, fuzzy
 msgid "Choose your plan to get started"
-msgstr "Wählen Sie einen Plan, um live zu gehen:"
+msgstr "Wähle deinen Plan, um zu beginnen"
 
 #: app/templates/briefing/list.html:71
 msgid ""
@@ -14448,24 +14400,20 @@ msgid "PDF uploads & custom sources"
 msgstr "PDF-Uploads und benutzerdefinierte Quellen"
 
 #: app/templates/briefing/list.html:95
-#, fuzzy
 msgid "Scheduled daily delivery"
-msgstr "Flexible Zustellung"
+msgstr "Tägliche Lieferung nach Plan"
 
 #: app/templates/briefing/list.html:114
-#, fuzzy
 msgid "For researchers & analysts"
-msgstr "Forscher & Analysten"
+msgstr "Für Forscher & Analysten"
 
 #: app/templates/briefing/list.html:120
-#, fuzzy
 msgid "Everything in Personal"
-msgstr "Alles im Starter-Plan"
+msgstr "Alles aus Personal"
 
 #: app/templates/briefing/list.html:124
-#, fuzzy
 msgid "Priority processing & support"
-msgstr "Prioritätsbearbeitung"
+msgstr "Prioritätsverarbeitung & Support"
 
 #: app/templates/briefing/list.html:128
 msgid "Advanced source & filter controls"
@@ -14516,9 +14464,8 @@ msgid "Create from Scratch"
 msgstr "Von Grund auf erstellen"
 
 #: app/templates/briefing/list.html:236
-#, fuzzy
 msgid "Your briefs will appear here"
-msgstr "Vorschau wird hier angezeigt..."
+msgstr "Deine Briefs werden hier angezeigt"
 
 #: app/templates/briefing/list.html:237
 msgid ""
@@ -14530,9 +14477,8 @@ msgstr ""
 "erhalten Sie morgen früh Ihre erste Lieferung."
 
 #: app/templates/briefing/list.html:244
-#, fuzzy
 msgid "See plans & start free trial"
-msgstr "Kostenlos testen"
+msgstr "Pläne ansehen & kostenlos testen"
 
 #: app/templates/briefing/list.html:257
 msgid "Popular Templates"
@@ -14551,9 +14497,8 @@ msgid "Organisation Briefings"
 msgstr "Organisations-Briefings"
 
 #: app/templates/briefing/list.html:407
-#, fuzzy
 msgid "Redirecting to secure checkout..."
-msgstr "Wir leiten Sie zu Ihrem Brief weiter..."
+msgstr "Wird zur sicheren Kasse weitergeleitet…"
 
 #: app/templates/briefing/marketplace.html:4
 msgid "Template Marketplace - Briefings"
@@ -14728,9 +14673,8 @@ msgid "Upgrade your plan"
 msgstr "Aktualisieren Sie Ihren Plan"
 
 #: app/templates/briefing/organization_settings.html:191
-#, fuzzy
 msgid "to add more."
-msgstr "Mehr lesen"
+msgstr "um mehr hinzuzufügen."
 
 #: app/templates/briefing/organization_settings.html:202
 msgid "Plan Features"
@@ -15733,9 +15677,8 @@ msgid "Brief from %(date)s"
 msgstr "Brief vom %(date)s"
 
 #: app/templates/briefing/public/run_reader.html:141
-#, fuzzy
 msgid "Published by"
-msgstr "Veröffentlicht"
+msgstr "Veröffentlicht von"
 
 #: app/templates/briefing/public/run_reader.html:142
 #: app/templates/discussions/embed_discussion.html:1095
@@ -15748,9 +15691,8 @@ msgid "← Back to %(name)s Archive"
 msgstr "← Zurück zu %(name)s Archiv"
 
 #: app/templates/briefing/public/run_view.html:124
-#, fuzzy
 msgid "This briefing is powered by"
-msgstr "Dieses Briefing ist noch nicht öffentlich"
+msgstr "Dieses Briefing wird unterstützt durch"
 
 #: app/templates/components/_translation_pending.html:7
 #: app/templates/discussions/embed_discussion.html:878
@@ -16338,9 +16280,8 @@ msgid "Source"
 msgstr "Quelle"
 
 #: app/templates/daily/confirm_vote.html:64
-#, fuzzy
 msgid "You selected"
-msgstr "0 ausgewählt"
+msgstr "Du hast ausgewählt"
 
 #: app/templates/daily/confirm_vote.html:77
 msgid "Submit My Vote"
@@ -17276,9 +17217,8 @@ msgid "Try today's question"
 msgstr "Probiere heute's Frage"
 
 #: app/templates/daily/subscribe_success.html:82
-#, fuzzy
 msgid "Or"
-msgstr "oder"
+msgstr "Oder"
 
 #: app/templates/daily/subscribe_success.html:82
 msgid "explore more discussions"
@@ -17491,14 +17431,12 @@ msgstr ""
 "class=\"font-bold text-white\">%(total)d</span>"
 
 #: app/templates/discussions/_guided_journey_rail.html:35
-#, fuzzy
 msgid "Journey overview"
-msgstr "Reise-Zusammenfassung"
+msgstr "Journey-Übersicht"
 
 #: app/templates/discussions/_guided_journey_rail.html:40
-#, fuzzy
 msgid "themes done"
-msgstr "Themen"
+msgstr "Themen abgeschlossen"
 
 #: app/templates/discussions/_guided_journey_rail.html:41
 #, python-format
@@ -17506,9 +17444,8 @@ msgid "~%(p)d%%"
 msgstr "~%(p)d%%"
 
 #: app/templates/discussions/_guided_journey_rail.html:42
-#, fuzzy
 msgid "min left overall"
-msgstr "Keine Abdeckung von links"
+msgstr "min insgesamt verbleibend"
 
 #: app/templates/discussions/_guided_journey_rail.html:54
 msgid "All done ✓"
@@ -17544,9 +17481,8 @@ msgid "View recap"
 msgstr "Zusammenfassung anschauen"
 
 #: app/templates/discussions/_guided_journey_rail.html:86
-#, fuzzy
 msgid "Full recap →"
-msgstr "Deine Zusammenfassung"
+msgstr "Vollständige Zusammenfassung →"
 
 #: app/templates/discussions/_information_step.html:10
 msgid "This background may be machine-translated. Quality may vary."
@@ -17983,23 +17919,20 @@ msgid "Report generated by Society Speaks"
 msgstr "Bericht erstellt von Society Speaks"
 
 #: app/templates/discussions/consensus_results.html:33
-#, fuzzy
 msgid "Strong separation"
-msgstr "Sortieroptionen"
+msgstr "Starke Trennung"
 
 #: app/templates/discussions/consensus_results.html:36
-#, fuzzy
 msgid "Moderate separation"
-msgstr "Breitere Beteiligung"
+msgstr "Moderate Trennung"
 
 #: app/templates/discussions/consensus_results.html:39
 msgid "Weak separation — opinions overlap heavily"
 msgstr "Schwache Trennung – Meinungen überschneiden sich stark"
 
 #: app/templates/discussions/consensus_results.html:64
-#, fuzzy
 msgid "Cluster Quality (sampled)"
-msgstr "Cluster-Qualität"
+msgstr "Cluster-Qualität (Stichprobe)"
 
 #: app/templates/discussions/consensus_results.html:75
 #, python-format
@@ -18007,9 +17940,8 @@ msgid "Stability ARI %(v)s"
 msgstr "Stabilität ARI %(v)s"
 
 #: app/templates/discussions/consensus_results.html:81
-#, fuzzy
 msgid "Analysed:"
-msgstr "Analysieren"
+msgstr "Analysiert:"
 
 #: app/templates/discussions/consensus_results.html:83
 msgid ""
@@ -18032,9 +17964,8 @@ msgstr ""
 "Mittelwert-ARI) ausgewählt, nicht nur durch die Silhouette."
 
 #: app/templates/discussions/consensus_results.html:90
-#, fuzzy
 msgid "k selection: stability"
-msgstr "Wählen Sie eine Stadt"
+msgstr "k-Auswahl: Stabilität"
 
 #: app/templates/discussions/consensus_results.html:93
 #, python-format
@@ -18042,16 +17973,17 @@ msgid ""
 "All reported percentages use Wilson 95%% score intervals; representativeness"
 " is FDR-controlled at q=0.05."
 msgstr ""
+"Alle angegebenen Prozentsätze verwenden Wilson-95%%-Konfidenzintervalle; "
+"Repräsentativität ist FDR-kontrolliert bei q=0,05."
 
 #: app/templates/discussions/consensus_results.html:94
 #, python-format
 msgid "95%% CIs · FDR q=0.05 (%(m)s)"
-msgstr ""
+msgstr "95%% KI · FDR q=0,05 (%(m)s)"
 
 #: app/templates/discussions/consensus_results.html:101
-#, fuzzy
 msgid "Newer votes are in."
-msgstr "Was andere sagen"
+msgstr "Neuere Abstimmungen sind eingegangen."
 
 #: app/templates/discussions/consensus_results.html:102
 #, python-format
@@ -18059,20 +17991,21 @@ msgid ""
 "This analysis covered %(analysed)d statements; %(current)d are live now. Ask"
 " the discussion owner to re-run to refresh the picture."
 msgstr ""
+"Diese Analyse umfasste %(analysed)d Statements; %(current)d sind jetzt live."
+" Bitte den Diskussionseigentümer, eine Neuberechnung durchzuführen, um die "
+"Ansicht zu aktualisieren."
 
 #: app/templates/discussions/consensus_results.html:185
-#, fuzzy
 msgid "Opinion Groups Visualization"
-msgstr "✓ Konsensvisualisierung"
+msgstr "Visualisierung von Meinungsgruppen"
 
 #: app/templates/discussions/consensus_results.html:191
 msgid "Horizontal axis"
 msgstr "Horizontale Achse"
 
 #: app/templates/discussions/consensus_results.html:191
-#, fuzzy
 msgid "Vertical axis"
-msgstr "Artikel anzeigen"
+msgstr "Vertikale Achse"
 
 #: app/templates/discussions/consensus_results.html:199
 #: app/templates/discussions/consensus_results.html:206
@@ -18089,24 +18022,20 @@ msgstr ""
 "Unten folgt eine barrierefreie Tabelle."
 
 #: app/templates/discussions/consensus_results.html:234
-#, fuzzy
 msgid "How to read this chart:"
-msgstr "So lesen Sie diese Seite."
+msgstr "So lesen Sie dieses Diagramm:"
 
 #: app/templates/discussions/consensus_results.html:236
-#, fuzzy
 msgid "Each dot represents a participant."
-msgstr "Punkte, die einzelne Teilnehmende darstellen"
+msgstr "Jeder Punkt stellt einen Teilnehmer dar."
 
 #: app/templates/discussions/consensus_results.html:237
-#, fuzzy
 msgid "Colours show different opinion groups."
-msgstr "Sehen Sie, wie sich verschiedene Meinungsgruppen gebildet haben"
+msgstr "Farben zeigen verschiedene Meinungsgruppen."
 
 #: app/templates/discussions/consensus_results.html:238
-#, fuzzy
 msgid "Closer dots = more similar voting patterns."
-msgstr "Nähere Gruppen = ähnlichere Meinungen"
+msgstr "Nähere Punkte = ähnlichere Abstimmungsmuster."
 
 #: app/templates/discussions/consensus_results.html:240
 msgid "The larger ringed dot is you."
@@ -18118,9 +18047,8 @@ msgstr "Als barrierefreie Tabelle anzeigen"
 
 #: app/templates/discussions/consensus_results.html:255
 #: app/templates/discussions/consensus_results.html:645
-#, fuzzy
 msgid "Group"
-msgstr "Gruppe C"
+msgstr "Gruppe"
 
 #: app/templates/discussions/consensus_results.html:257
 msgid "Representative agreement"
@@ -18142,6 +18070,8 @@ msgstr "Ablehnung"
 #, python-format
 msgid "Wilson 95%% score interval on the in-group agreement rate."
 msgstr ""
+"Wilson-95%%-Konfidenzintervall für die Übereinkunftsrate innerhalb der "
+"Gruppe."
 
 #: app/templates/discussions/consensus_results.html:322
 msgid ""
@@ -18176,9 +18106,8 @@ msgstr ""
 "behandeln."
 
 #: app/templates/discussions/consensus_results.html:335
-#, fuzzy
 msgid "voted in group"
-msgstr "Meinungsgruppen"
+msgstr "hat in der Gruppe abgestimmt"
 
 #: app/templates/discussions/consensus_results.html:343
 msgid "What Each Group Believes"
@@ -18205,9 +18134,8 @@ msgstr ""
 
 #: app/templates/discussions/consensus_results.html:358
 #: app/templates/programmes/journey_recap.html:201
-#, fuzzy
 msgid "Small sample"
-msgstr "Alle Vorlagen"
+msgstr "Kleine Stichprobe"
 
 #: app/templates/discussions/consensus_results.html:362
 msgid ""
@@ -18249,9 +18177,8 @@ msgstr[0] "Mitglied"
 msgstr[1] "Mitglieder"
 
 #: app/templates/discussions/consensus_results.html:394
-#, fuzzy
 msgid "This group agrees with"
-msgstr "Alle Gruppen stimmen zu"
+msgstr "Diese Gruppe stimmt überein mit"
 
 #: app/templates/discussions/consensus_results.html:403
 msgid "This group rejects"
@@ -18263,6 +18190,8 @@ msgid ""
 "Near-even splits (40–60%%). Surfaced so you can see where the group is "
 "genuinely conflicted."
 msgstr ""
+"Nahezu gleichmäßige Aufteilungen (40–60%%). Angezeigt, damit Sie sehen, wo "
+"die Gruppe wirklich uneins ist."
 
 #: app/templates/discussions/consensus_results.html:413
 msgid "Group is split on"
@@ -18275,6 +18204,9 @@ msgid ""
 "AND every opinion group’s own lower bound clears 60%%. Small-sample noise "
 "cannot qualify."
 msgstr ""
+"Aussagen, bei denen die Wilson-Untergrenze für die Gesamtübereinkunft 70%% "
+"überschreitet UND die Untergrenze jeder Meinungsgruppe 60%% überschreitet. "
+"Kleine-Stichproben-Rauschen kann sich nicht qualifizieren."
 
 #: app/templates/discussions/consensus_results.html:443
 #: app/templates/discussions/consensus_results.html:478
@@ -18291,7 +18223,7 @@ msgstr "Übereinstimmung"
 #: app/templates/discussions/consensus_results.html:448
 #, python-format
 msgid "Wilson 95%% score interval."
-msgstr ""
+msgstr "Wilson-95%%-Konfidenzintervall."
 
 #: app/templates/discussions/consensus_results.html:465
 msgid ""
@@ -18304,14 +18236,12 @@ msgstr ""
 "Gruppen. Auch eine gemeinsame Ablehnung gilt als Gemeinsamkeit."
 
 #: app/templates/discussions/consensus_results.html:473
-#, fuzzy
 msgid "Shared rejection"
-msgstr "Reset-Link senden"
+msgstr "Gemeinsame Ablehnung"
 
 #: app/templates/discussions/consensus_results.html:473
-#, fuzzy
 msgid "Shared agreement"
-msgstr "Übereinstimmung"
+msgstr "Gemeinsame Zustimmung"
 
 #: app/templates/discussions/consensus_results.html:480
 #, python-format
@@ -18321,7 +18251,7 @@ msgstr "Mittelwert gruppenübergreifend: %(v)s%%"
 #: app/templates/discussions/consensus_results.html:483
 #, python-format
 msgid "Wilson 95%% score interval on the dominant polarity."
-msgstr ""
+msgstr "Wilson 95%% Konfidenzintervall zur dominanten Polarität."
 
 #: app/templates/discussions/consensus_results.html:500
 msgid ""
@@ -18352,6 +18282,7 @@ msgstr "Gruppenlücke %(v)s%%"
 msgid ""
 "Newcombe 95%% CI for the proportion difference (MOVER-Wilson, Method 10)."
 msgstr ""
+"Newcombe 95%% KI für die Proportionsdifferenz (MOVER-Wilson, Methode 10)."
 
 #: app/templates/discussions/consensus_results.html:521
 msgid "Omnibus permutation χ² across all clusters survives FDR correction."
@@ -18397,9 +18328,8 @@ msgid "Methodology"
 msgstr "Methodik"
 
 #: app/templates/discussions/consensus_results.html:586
-#, fuzzy
 msgid "Clustering pipeline."
-msgstr "Clustering"
+msgstr "Clustering-Pipeline."
 
 #: app/templates/discussions/consensus_results.html:587
 #, python-brace-format, python-format
@@ -18420,9 +18350,8 @@ msgstr ""
 "Silhouettenbewertung über k ∈ [2, 10] ausgewählt."
 
 #: app/templates/discussions/consensus_results.html:590
-#, fuzzy
 msgid "Consensus."
-msgstr "Konsens"
+msgstr "Konsens."
 
 #: app/templates/discussions/consensus_results.html:591
 #, python-format
@@ -18432,11 +18361,15 @@ msgid ""
 "clears 60%%. Raw percentages alone are never sufficient — 7/10 agreement is "
 "not \"70%% consensus\" when its confidence interval starts at 40%%."
 msgstr ""
+"Eine Aussage wird nur angezeigt, wenn das Wilson-95%%-Konfidenzintervall bei"
+" der Gesamtzustimmung 70%% überschreitet UND die untere Wilson-Grenze jeder "
+"Meinungsgruppe 60%% überschreitet. Rohe Prozentsätze allein sind nie "
+"ausreichend – 7/10 Zustimmung ist kein „70%%-Konsens“, wenn das "
+"Konfidenzintervall bei 40%% beginnt."
 
 #: app/templates/discussions/consensus_results.html:594
-#, fuzzy
 msgid "Representativeness (what each group believes)."
-msgstr "Was jede Gruppe glaubt"
+msgstr "Repräsentativität (was jede Gruppe glaubt)."
 
 #: app/templates/discussions/consensus_results.html:596
 #, python-format
@@ -18455,9 +18388,8 @@ msgstr ""
 "Veranschaulichung“ gekennzeichnet."
 
 #: app/templates/discussions/consensus_results.html:599
-#, fuzzy
 msgid "Bridges and divisions."
-msgstr "Echte Spaltungen"
+msgstr "Brücken und Spaltungen."
 
 #: app/templates/discussions/consensus_results.html:600
 #, python-format
@@ -18471,6 +18403,15 @@ msgid ""
 "surfaced as a small-sample guard on the displayed gap, not a simultaneous "
 "test."
 msgstr ""
+"Brücken erfordern eine durchschnittliche Übereinstimmung zwischen Gruppen "
+"≥65%% (oder gemeinsame Ablehnung ≤35%%) mit einer Varianz zwischen Gruppen "
+"≤0,15. Spaltende Aussagen verwenden einen vorgegebenen omnibus-Test: "
+"Permutations-χ² über ALLE Cluster für jede Aussage, wobei der Anteil der "
+"gemischten Zuordnungen, die genauso extrem sind wie beobachtet, als p-Wert "
+"angegeben wird. FDR wird auf diese omnibus-p-Werte angewendet. Gap-KIs "
+"verwenden Newcombes MOVER-Wilson (1998) Method 10. Der paarweise Fisher-p "
+"des extremen Paares wird als Schutz für kleine Stichproben auf der "
+"angezeigten Lücke angezeigt, nicht als simultaner Test."
 
 #: app/templates/discussions/consensus_results.html:603
 msgid "Reproducibility."
@@ -18497,9 +18438,8 @@ msgstr ""
 " Ausführen werden sie angehängt."
 
 #: app/templates/discussions/consensus_results.html:613
-#, fuzzy
 msgid "Limitations."
-msgstr "📖 Zitate"
+msgstr "Einschränkungen."
 
 #: app/templates/discussions/consensus_results.html:614
 msgid ""
@@ -18526,9 +18466,8 @@ msgstr ""
 "Intervall wäre für einen Unterschied in den Proportionen enger."
 
 #: app/templates/discussions/consensus_results.html:617
-#, fuzzy
 msgid "References."
-msgstr "Einstellungen"
+msgstr "Referenzen."
 
 #: app/templates/discussions/consensus_results.html:629
 #: app/templates/discussions/view_statement.html:25
@@ -18540,14 +18479,13 @@ msgid "Horizontal axis (PC1)"
 msgstr "Horizontale Achse (PC1)"
 
 #: app/templates/discussions/consensus_results.html:642
-#, fuzzy
 msgid "Vertical axis (PC2)"
-msgstr "Artikel (24h)"
+msgstr "Vertikale Achse (PC2)"
 
 #: app/templates/discussions/consensus_results.html:643
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{k} opinion groups across {n} participants"
-msgstr "Meinungsgruppen basierend auf Abstimmungsmustern"
+msgstr "{k} Meinungsgruppen über {n} Teilnehmer"
 
 #: app/templates/discussions/consensus_results.html:644
 msgid "You"
@@ -18560,9 +18498,8 @@ msgid "Position"
 msgstr "Position"
 
 #: app/templates/discussions/consensus_results.html:773
-#, fuzzy
 msgid "Error loading visualization"
-msgstr "Die Visualisierungen verstehen"
+msgstr "Fehler beim Laden der Visualisierung"
 
 #: app/templates/discussions/create_discussion.html:18
 msgid "Create a New Discussion"
@@ -19482,18 +19419,16 @@ msgid "News Discussions"
 msgstr "Nachrichtendiskussionen"
 
 #: app/templates/discussions/news_feed.html:29
-#, fuzzy
 msgid ""
 "Trending topics from trusted journalism, transformed into structured debates"
 " for nuanced conversation"
 msgstr ""
-"Aktuelle Nachrichten in strukturierte Debatten verwandelt. Beteiligen Sie "
-"sich am Gespräch über aktuelle Ereignisse."
+"Trendthemen aus vertrauenswürdiger Journalistik, in strukturierte Debatten "
+"für differenzierte Gespräche umgewandelt"
 
 #: app/templates/discussions/news_feed.html:38
-#, fuzzy
 msgid "Current Affairs Discussions"
-msgstr "Diskussion erstellen"
+msgstr "Aktuelle Diskussionen"
 
 #: app/templates/discussions/news_feed.html:88
 msgid ""
@@ -19613,9 +19548,8 @@ msgid "View All Topics"
 msgstr "Alle Themen anzeigen"
 
 #: app/templates/discussions/search_discussions.html:10
-#, fuzzy
 msgid "Search discussions on SocietySpeaks."
-msgstr "Diskussionen auf Society Speaks erstellen"
+msgstr "Durchsuchen Sie Diskussionen auf SocietySpeaks."
 
 #: app/templates/discussions/search_discussions.html:12
 #, python-format
@@ -19623,9 +19557,8 @@ msgid "Results for %(term)s."
 msgstr "Ergebnisse für %(term)s."
 
 #: app/templates/discussions/search_discussions.html:21
-#, fuzzy
 msgid "Discussions, Society, Community Engagement"
-msgstr "Top-Diskussionen nach Engagement"
+msgstr "Diskussionen, Gesellschaft, Gemeinschaftliches Engagement"
 
 #: app/templates/discussions/search_discussions.html:33
 msgid "Join conversations that matter to you"
@@ -19937,18 +19870,16 @@ msgstr ""
 " hier."
 
 #: app/templates/discussions/view_discussion.html:733
-#, fuzzy
 msgid "The discussion embed is not available."
-msgstr "Diese Diskussion ist nicht mehr verfügbar."
+msgstr "Die Diskussions-Einbettung ist nicht verfügbar."
 
 #: app/templates/discussions/view_discussion.html:734
 msgid "Click here"
 msgstr "Klicken Sie hier"
 
 #: app/templates/discussions/view_discussion.html:735
-#, fuzzy
 msgid "to open it in a new tab."
-msgstr "(wird in einem neuen Tab geöffnet)"
+msgstr "um sie in einem neuen Tab zu öffnen."
 
 #: app/templates/discussions/view_discussion.html:829
 msgid "Link copied to clipboard!"
@@ -20087,24 +20018,20 @@ msgstr ""
 "deine Ansichten mit denen aller anderen vergleichen."
 
 #: app/templates/discussions/view_native.html:1192
-#, fuzzy
 msgid "View your full recap"
-msgstr "Deine Zusammenfassung"
+msgstr "Sehen Sie Ihre vollständige Zusammenfassung"
 
 #: app/templates/discussions/view_native.html:1193
-#, fuzzy
 msgid "Continue to next theme"
-msgstr "Weiter zum nächsten Thema →"
+msgstr "Weiter zum nächsten Thema"
 
 #: app/templates/discussions/view_native.html:1194
-#, fuzzy
 msgid "Journey recap so far"
-msgstr "Reise-Zusammenfassung"
+msgstr "Ihre Reise bisher"
 
 #: app/templates/discussions/view_native.html:1195
-#, fuzzy
 msgid "View your recap"
-msgstr "Deine Zusammenfassung"
+msgstr "Sehen Sie Ihre Zusammenfassung"
 
 #: app/templates/discussions/view_response.html:26
 msgid "Thread Context:"
@@ -20819,9 +20746,8 @@ msgid "This link works for 72 hours without a login."
 msgstr "Dieser Link funktioniert 72 Stunden lang ohne Anmeldung."
 
 #: app/templates/emails/magic_login.html:5
-#, fuzzy
 msgid "Click to sign in to Society Speaks"
-msgstr "Willkommen bei Society Speaks"
+msgstr "Klicken Sie, um sich bei Society Speaks anzumelden"
 
 #: app/templates/emails/magic_login.html:18
 msgid ""
@@ -20832,18 +20758,17 @@ msgstr ""
 "Konto anzumelden. Kein Passwort erforderlich."
 
 #: app/templates/emails/magic_login.html:36
-#, fuzzy
 msgid "This link will expire in 15 minutes and can only be used once."
-msgstr "Dieser Link verfällt in 30 Minuten."
+msgstr ""
+"Dieser Link verfällt in 15 Minuten und kann nur einmal verwendet werden."
 
 #: app/templates/emails/magic_login.html:41
-#, fuzzy
 msgid ""
 "If you didn't request this link, you can safely ignore this email. Your "
 "account stays secure."
 msgstr ""
-"Falls du keine Passwort-Zurücksetzen-Anfrage gestellt hast, kannst du diese "
-"E-Mail getrost ignorieren. Dein Passwort wird nicht geändert."
+"Falls Sie diesen Link nicht angefordert haben, können Sie diese E-Mail "
+"einfach ignorieren. Ihr Konto bleibt sicher."
 
 #: app/templates/emails/org_member_invite.html:3
 #, python-format
@@ -21067,9 +20992,8 @@ msgstr ""
 "klicken Sie dann auf den Button unten."
 
 #: app/templates/emails/subscription_cancelled.html:3
-#, fuzzy
 msgid "Your Society Speaks subscription has ended"
-msgstr "Ihr Abonnement ist abgelaufen"
+msgstr "Ihr Society Speaks-Abonnement ist beendet"
 
 #: app/templates/emails/subscription_cancelled.html:5
 msgid ""
@@ -21084,20 +21008,17 @@ msgid "Your subscription has ended"
 msgstr "Ihr Abonnement ist abgelaufen"
 
 #: app/templates/emails/subscription_cancelled.html:12
-#, fuzzy
 msgid "Your briefings are paused — pick up where you left off any time"
 msgstr ""
-"Ihre Briefings sind pausiert – abonnieren Sie jederzeit erneut, um dort "
-"weiterzumachen, wo Sie aufgehört haben"
+"Ihre Briefings sind pausiert – setzen Sie jederzeit fort, wo Sie aufgehört "
+"haben"
 
 #: app/templates/emails/subscription_cancelled.html:28
-#, fuzzy
 msgid ""
 "Your Society Speaks subscription has ended and your briefing has been "
 "paused."
 msgstr ""
-"Ihr Society Speaks-Abonnement ist abgelaufen und Ihre Briefings wurden "
-"pausiert"
+"Ihr Society Speaks-Abonnement ist beendet und Ihr Briefing wurde pausiert."
 
 #: app/templates/emails/subscription_cancelled.html:30
 #, python-format
@@ -21109,9 +21030,8 @@ msgstr ""
 "Briefings</strong> wurden pausiert."
 
 #: app/templates/emails/subscription_cancelled.html:33
-#, fuzzy
 msgid "Your Society Speaks subscription has ended."
-msgstr "Ihr Abonnement ist abgelaufen"
+msgstr "Dein Society Speaks-Abonnement ist beendet."
 
 #: app/templates/emails/subscription_cancelled.html:39
 msgid ""
@@ -21124,9 +21044,8 @@ msgstr ""
 "sind am nächsten Morgen wieder in Ihrem Posteingang."
 
 #: app/templates/emails/subscription_cancelled.html:49
-#, fuzzy
 msgid "When you resubscribe you get back"
-msgstr "Wann Sie Ihren Brief erhalten"
+msgstr "Wenn du dich erneut anmeldest, erhältst du zurück"
 
 #: app/templates/emails/subscription_cancelled.html:56
 msgid "All your saved briefs and sources, instantly re-activated"
@@ -21186,25 +21105,24 @@ msgid "Keep your briefings running without interruption"
 msgstr "Halten Sie Ihre Briefings ohne Unterbrechung am Laufen"
 
 #: app/templates/emails/trial_ending.html:26
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your free trial of Society Speaks Briefings ends in <strong>%(days)s "
 "days</strong>. To keep your briefs running, add a payment method before "
 "then."
 msgstr ""
-"Ihre kostenlose Testphase von Society Speaks Briefings endet in "
-"<strong>%(days)s Tagen</strong>. Danach werden Ihre Briefings pausiert, bis "
-"Sie eine Zahlungsmethode hinzufügen."
+"Deine kostenlose Testversion von Society Speaks Briefings endet in "
+"<strong>%(days)s Tagen</strong>. Um deine Briefings weiterhin zu erhalten, "
+"füge vorher eine Zahlungsmethode hinzu."
 
 #: app/templates/emails/trial_ending.html:26
-#, fuzzy
 msgid ""
 "Your free trial of Society Speaks Briefings ends in <strong>1 day</strong>. "
 "To keep your briefs running, add a payment method before then."
 msgstr ""
-"Ihre kostenlose Testphase von Society Speaks Briefings endet in <strong>1 "
-"Tag</strong>. Danach werden Ihre Briefings pausiert, bis Sie eine "
-"Zahlungsmethode hinzufügen."
+"Ihre kostenlose Testversion von Society Speaks Briefings endet in <strong>1 "
+"Tag</strong>. Um Ihre Briefs weiterhin zu erhalten, fügen Sie vorher eine "
+"Zahlungsmethode hinzu."
 
 #: app/templates/emails/trial_ending.html:31
 msgid ""
@@ -21217,16 +21135,13 @@ msgstr ""
 
 #: app/templates/emails/trial_ending.html:38
 #: app/templates/emails/trial_mid.html:98
-#, fuzzy
 msgid "Add payment method"
-msgstr "Zahlungsmethode aktualisieren"
+msgstr "Zahlungsmethode hinzufügen"
 
 #: app/templates/emails/trial_ending.html:52
-#, fuzzy
 msgid "Questions? Reply to this email and we'll help."
 msgstr ""
-"Fragen? Antworten Sie auf diese E-Mail und wir helfen Ihnen, den richtigen "
-"Plan zu wählen."
+"Fragen? Antworten Sie auf diese E-Mail und wir helfen Ihnen gerne weiter."
 
 #: app/templates/emails/trial_mid.html:3
 msgid "You're one week into your free trial"
@@ -21267,24 +21182,21 @@ msgid "here's a quick reminder of what your subscription includes."
 msgstr "Hier ist eine kurze Erinnerung daran, was Ihr Abonnement beinhaltet."
 
 #: app/templates/emails/trial_mid.html:47
-#, fuzzy
 msgid "create as many as you need, on any topic"
-msgstr "Erstellen Sie Diskussionen zu Ihren Inhalten und Themen"
+msgstr "erstellen Sie so viele wie nötig, zu jedem Thema"
 
 #: app/templates/emails/trial_mid.html:61
-#, fuzzy
 msgid "PDF uploads"
-msgstr "PDF-Upload"
+msgstr "PDF-Uploads"
 
 #: app/templates/emails/trial_mid.html:61
-#, fuzzy
 msgid "add your own research documents alongside public sources"
-msgstr "Deine Recherchevorgänge neben den Nachrichten aufbereitet"
+msgstr ""
+"fügen Sie Ihre eigenen Forschungsdokumente neben öffentlichen Quellen hinzu"
 
 #: app/templates/emails/trial_mid.html:75
-#, fuzzy
 msgid "Scheduled delivery"
-msgstr "Geplant"
+msgstr "Geplante Zustellung"
 
 #: app/templates/emails/trial_mid.html:75
 msgid "your brief arrives before your first meeting, every day"
@@ -21300,13 +21212,12 @@ msgstr ""
 "30. Tag etwas in Rechnung gestellt."
 
 #: app/templates/emails/trial_mid.html:113
-#, fuzzy
 msgid ""
 "Questions about which plan is right for you? Reply to this email — we're "
 "happy to help."
 msgstr ""
-"Fragen zu Ihrem Konto? Antworten Sie auf diese E-Mail und wir helfen Ihnen "
-"gerne weiter."
+"Fragen dazu, welcher Plan zu Ihnen passt? Antworten Sie auf diese E-Mail – "
+"wir helfen gerne weiter."
 
 #: app/templates/emails/verify_email.html:3
 msgid "Verify Your Email - Society Speaks"
@@ -22982,6 +22893,11 @@ msgid ""
 "enough — 7/10 agreement is not \"70%% consensus\" when its confidence "
 "interval starts at 40%%."
 msgstr ""
+"Eine Aussage gilt als Konsens nur, wenn das "
+"<strong>Wilson-95%%-Konfidenzintervall</strong> bei der Gesamtzustimmung "
+"70%% überschreitet UND die untere Wilson-Grenze jeder Meinungsgruppe 60%% "
+"überschreitet. Rohe Prozentsätze allein reichen nie aus – 7/10 Zustimmung "
+"ist kein „70%%-Konsens“, wenn das Konfidenzintervall bei 40%% beginnt."
 
 #: app/templates/help/native_system.html:224
 msgid "These represent common ground that stands up to small-sample scrutiny."
@@ -23000,6 +22916,10 @@ msgid ""
 "(≥65%% mean) OR all rejecting (≤35%% mean) — with low variance between "
 "groups. Shared rejection counts as common ground too."
 msgstr ""
+"Aussagen, bei denen alle Gruppen auf der gleichen Seite landen – entweder "
+"alle zustimmen (≥65%% Mittelwert) ODER alle ablehnen (≤35%% Mittelwert) – "
+"mit geringer Abweichung zwischen Gruppen. Gemeinsame Ablehnung zählt "
+"ebenfalls als gemeinsamer Nenner."
 
 #: app/templates/help/native_system.html:236
 msgid ""
@@ -23046,6 +22966,8 @@ msgid ""
 "<strong>Wilson 95%% score intervals</strong> on every reported percentage — "
 "no more \"100%% agreement\" from 2 of 2 votes."
 msgstr ""
+"<strong>Wilson-95%%-Konfidenzintervalle</strong> bei jedem gemeldeten "
+"Prozentsatz – nicht mehr „100%% Zustimmung\" von 2 von 2 Stimmen."
 
 #: app/templates/help/native_system.html:258
 msgid ""
@@ -23533,9 +23455,8 @@ msgstr ""
 "Mitte zu finden – es geht darum, das volle Bild zu sehen."
 
 #: app/templates/help/news_feed.html:130
-#, fuzzy
 msgid "<strong>Source ratings</strong> are based on"
-msgstr "<strong>Unbegrenzte Quellen</strong>"
+msgstr "<strong>Quellenratings</strong> basieren auf"
 
 #: app/templates/help/news_feed.html:132
 msgid ""
@@ -24365,9 +24286,8 @@ msgstr ""
 "findet."
 
 #: app/templates/help/programmes.html:111
-#, fuzzy
 msgid "Your programme appears in the"
-msgstr "Noch keine Programme"
+msgstr "Ihr Programm erscheint in"
 
 #: app/templates/help/programmes.html:112
 msgid "public catalogue"
@@ -25369,9 +25289,8 @@ msgid "Testing the API"
 msgstr "API testen"
 
 #: app/templates/partner/api_docs.html:74
-#, fuzzy
 msgid "<strong>Partner Portal:</strong>"
-msgstr "Partnerportal"
+msgstr "<strong>Partner Portal:</strong>"
 
 #: app/templates/partner/api_docs.html:75
 msgid "Open your dashboard"
@@ -27819,9 +27738,8 @@ msgstr ""
 "erfordert."
 
 #: app/templates/partner/hub.html:991
-#, fuzzy
 msgid "See the"
-msgstr "ausgewählt"
+msgstr "Siehe"
 
 #: app/templates/partner/hub.html:992 app/templates/partner/rules.html:14
 #: app/templates/partner/rules.html:18
@@ -27887,18 +27805,16 @@ msgstr ""
 "Primär-/Hintergrundfarben und Schriften fest."
 
 #: app/templates/partner/hub.html:1018
-#, fuzzy
 msgid "See"
-msgstr "Anfangsstimme"
+msgstr "Ansehen"
 
 #: app/templates/partner/hub.html:1019
 msgid "embed parameters"
 msgstr "Embed-Parameter"
 
 #: app/templates/partner/hub.html:1020
-#, fuzzy
 msgid "in the API docs."
-msgstr "API-Dokumentation lesen"
+msgstr "in der API-Dokumentation."
 
 #: app/templates/partner/hub.html:1024
 msgid "Can we control teammate access by role?"
@@ -30060,9 +29976,8 @@ msgstr "Organisationsprofil erstellen"
 
 #: app/templates/profiles/create_company_profile.html:62
 #: app/templates/profiles/create_individual_profile.html:60
-#, fuzzy
 msgid "Saving..."
-msgstr "Wird gestartet..."
+msgstr "Wird gespeichert..."
 
 #: app/templates/profiles/create_company_profile.html:80
 msgid "Please upload a valid image file (JPG, JPEG, or PNG)"
@@ -30575,16 +30490,15 @@ msgid "Not started"
 msgstr "Nicht gestartet"
 
 #: app/templates/programmes/journey_recap.html:138
-#, fuzzy
 msgid "Everyone's votes"
-msgstr "Alle"
+msgstr "Alle Abstimmungen"
 
 #: app/templates/programmes/journey_recap.html:140
-#, fuzzy, python-format
+#, python-format
 msgid "%(num)d person"
 msgid_plural "%(num)d people"
-msgstr[0] "%(num)d Fehler"
-msgstr[1] "%(num)d Fehler"
+msgstr[0] "%(num)d Person"
+msgstr[1] "%(num)d Personen"
 
 #: app/templates/programmes/journey_recap.html:186
 msgid "No votes yet on this theme."
@@ -30608,9 +30522,8 @@ msgstr ""
 "vollständig reproduzierbar."
 
 #: app/templates/programmes/journey_recap.html:201
-#, fuzzy
 msgid "Low stability"
-msgstr "Skalierbarkeit"
+msgstr "Niedrige Stabilität"
 
 #: app/templates/programmes/journey_recap.html:207
 #, python-format
@@ -30650,34 +30563,32 @@ msgid "Start voting"
 msgstr "Abstimmung starten"
 
 #: app/templates/programmes/journey_recap.html:264
-#, fuzzy
 msgid "Your votes"
-msgstr "Du hast abgestimmt:"
+msgstr "Ihre Abstimmungen"
 
 #: app/templates/programmes/journey_recap.html:265
-#, fuzzy, python-format
+#, python-format
 msgid "%(voted)d of %(total)d statements"
-msgstr "%(voted)d von %(total)d Aussagen bewertet"
+msgstr "%(voted)d von %(total)d Aussagen"
 
 #: app/templates/programmes/journey_recap.html:272
-#, fuzzy, python-format
+#, python-format
 msgid "Agreed: %(num)d"
-msgstr "✓ Zugestimmt: %(num)d"
+msgstr "Zustimmung: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:276
-#, fuzzy, python-format
+#, python-format
 msgid "Disagreed: %(num)d"
-msgstr "✗ Nicht zugestimmt: %(num)d"
+msgstr "Ablehnung: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:281
-#, fuzzy, python-format
+#, python-format
 msgid "Unsure: %(num)d"
-msgstr "? Unsicher: %(num)d"
+msgstr "Unentschieden: %(num)d"
 
 #: app/templates/programmes/journey_recap.html:291
-#, fuzzy
 msgid "See how you voted on each statement"
-msgstr "Deine Abstimmungen zu jeder Aussage"
+msgstr "Sieh, wie du zu jeder Aussage abgestimmt hast"
 
 #: app/templates/programmes/journey_recap.html:322
 #, python-format
@@ -30828,42 +30739,37 @@ msgstr ""
 "Thema). Es gibt keine Frist."
 
 #: app/templates/programmes/view.html:214
-#, fuzzy
 msgid "View full recap"
-msgstr "Zusammenfassung anschauen"
+msgstr "Vollständige Zusammenfassung anzeigen"
 
 #: app/templates/programmes/view.html:239
-#, fuzzy
 msgid "Guided journey"
-msgstr "Geführte Bürgerbeteiligung"
+msgstr "Geführte Reise"
 
 #: app/templates/programmes/view.html:243
-#, fuzzy
 msgid "Start your civic journey"
-msgstr "Geführte Bürgerbeteiligung"
+msgstr "Starten Sie Ihre Bürgerbeteiligung"
 
 #: app/templates/programmes/view.html:245
-#, fuzzy
 msgid "You're on your way"
-msgstr "Du bist für heute fertig"
+msgstr "Du machst Fortschritte"
 
 #: app/templates/programmes/view.html:247
 msgid "Almost there — one theme left!"
 msgstr "Fast geschafft – nur noch ein Thema übrig!"
 
 #: app/templates/programmes/view.html:249
-#, fuzzy
 msgid "Pick up where you left off"
-msgstr "Dort Weitermachen, Wo Sie Aufgehört Haben"
+msgstr "Dort weitermachen, wo du aufgehört hast"
 
 #: app/templates/programmes/view.html:254
 msgid "themes completed"
 msgstr "Themen abgeschlossen"
 
 #: app/templates/programmes/view.html:256
-#, fuzzy, python-format
+#, python-format
 msgid "~%(pct)d%% through by votes"
-msgstr "%(pct)d%% Rechts"
+msgstr "~%(pct)d%% durch Abstimmungen"
 
 #: app/templates/programmes/view.html:259
 #, python-format
@@ -30871,18 +30777,16 @@ msgid "~%(mins)d min left at your pace"
 msgstr "Es verbleiben noch ~%(mins)d Minuten in deinem Tempo"
 
 #: app/templates/programmes/view.html:262
-#, fuzzy
 msgid "to save progress."
-msgstr "Ihr Fortschritt"
+msgstr "um Fortschritt zu speichern."
 
 #: app/templates/programmes/view.html:264
 msgid "votes cast"
 msgstr "abgegebene Stimmen"
 
 #: app/templates/programmes/view.html:274
-#, fuzzy
 msgid "Progress through all statements in this journey"
-msgstr "Wie viele Aussagen hat die Big Questions Journey?"
+msgstr "Machen Sie Fortschritte durch alle Aussagen in dieser Reise"
 
 #: app/templates/programmes/view.html:281
 msgid ""
@@ -30897,9 +30801,8 @@ msgid "Begin:"
 msgstr "Beginnen:"
 
 #: app/templates/programmes/view.html:290
-#, fuzzy
 msgid "Continue:"
-msgstr "Weiter"
+msgstr "Fortfahren:"
 
 #: app/templates/programmes/view.html:296
 msgid "View progress recap"
@@ -30912,9 +30815,8 @@ msgstr ""
 "Link"
 
 #: app/templates/programmes/view.html:304
-#, fuzzy
 msgid "Share journey"
-msgstr "Auf X teilen"
+msgstr "Reise teilen"
 
 #: app/templates/programmes/view.html:307
 msgid "Copy journey overview link"
@@ -30932,27 +30834,23 @@ msgstr ""
 "Fingertipp können Sie sich jederzeit abmelden."
 
 #: app/templates/programmes/view.html:390
-#, fuzzy
 msgid "Email for reminders"
-msgstr "Erinnerungen deaktivieren"
+msgstr "E-Mail für Erinnerungen"
 
 #: app/templates/programmes/view.html:408
 #: app/templates/programmes/view.html:441
-#, fuzzy
 msgid "Twice a week"
-msgstr "Einmal pro Woche"
+msgstr "Zweimal pro Woche"
 
 #: app/templates/programmes/view.html:413
 #: app/templates/programmes/view.html:441
 #: app/templates/programmes/view.html:638
-#, fuzzy
 msgid "Weekend mornings"
-msgstr "Jeden Morgen jetzt"
+msgstr "Samstagmorgens"
 
 #: app/templates/programmes/view.html:419
-#, fuzzy
 msgid "What time?"
-msgstr "Was es bedeutet"
+msgstr "Zu welcher Zeit?"
 
 #: app/templates/programmes/view.html:419
 msgid "(your device’s local time)"
@@ -30975,7 +30873,7 @@ msgstr "Erinnerungsvorschlag ablehnen"
 #: app/templates/programmes/view.html:456
 #, python-format
 msgid "Reminders on: %(cadence)s at %(time)s your time."
-msgstr ""
+msgstr "Erinnerungen: %(cadence)s um %(time)s in Ihrer Zeitzone."
 
 #: app/templates/programmes/view.html:528
 msgid "Add discussion"
@@ -30990,36 +30888,32 @@ msgid "Choose how often you want a reminder first."
 msgstr "Wählen Sie zunächst aus, wie oft Sie eine Erinnerung wünschen."
 
 #: app/templates/programmes/view.html:642
-#, fuzzy
 msgid "Enter the email address where we should send reminders."
 msgstr ""
-"Gib die E-Mail-Adresse ein, mit der du dich registriert hast, und wir senden"
-" dir einen Reset-Link."
+"Geben Sie die E-Mail-Adresse ein, an die wir Erinnerungen senden sollen."
 
 #: app/templates/programmes/view.html:643
 msgid "Reminders are scheduled:"
 msgstr "Erinnerungen sind geplant:"
 
 #: app/templates/programmes/view.html:644
-#, fuzzy
 msgid "at"
-msgstr "Datum"
+msgstr "um"
 
 #: app/templates/programmes/view.html:645
-#, fuzzy
 msgid ""
 "Check your inbox for a confirmation link to pick up where you left off."
-msgstr "Prüfen Sie Ihren Posteingang auf den Bestätigungslink."
+msgstr ""
+"Überprüfen Sie Ihren Posteingang auf einen Bestätigungslink, um dort "
+"fortzufahren, wo Sie aufgehört haben."
 
 #: app/templates/programmes/view.html:646
-#, fuzzy
 msgid "Reminders saved for your account."
-msgstr "Domänenverwaltung ist für Ihre Kontenrolle eingeschränkt."
+msgstr "Erinnerungen für Ihr Konto gespeichert."
 
 #: app/templates/programmes/view.html:843
-#, fuzzy
 msgid "Big Questions civic journey — Society Speaks"
-msgstr "Setzen Sie Ihre Bürgerbeteiligung fort — Society Speaks"
+msgstr "Big Questions civic journey — Society Speaks"
 
 #: app/templates/programmes/workspace.html:16
 msgid "Programmes you own, steward, or have been invited to participate in."
