@@ -419,6 +419,8 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
     Track a partner-related analytics event via PostHog.
 
     Automatically includes partner_ref and request context.
+    Uses safe_posthog_capture so $raw_user_agent is attached and PostHog's
+    "Filter Bot Events" Data Pipeline transformation drops crawler traffic.
 
     Args:
         event_name: The event name (e.g., 'partner_embed_loaded', 'partner_api_lookup')
@@ -432,12 +434,14 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
         - partner_consensus_view: When consensus page is viewed from partner context
     """
     try:
-        import posthog
+        import posthog as _posthog
     except ImportError:
         return
 
     if not current_app.config.get('POSTHOG_API_KEY'):
         return
+
+    from app.lib.posthog_utils import safe_posthog_capture
 
     partner_ref = get_partner_ref() or 'unknown'
 
@@ -445,7 +449,7 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
     event_properties = {
         'partner_ref': partner_ref,
         'ip_address': get_remote_address(),
-        'user_agent': request.headers.get('User-Agent', ''),
+        '$raw_user_agent': request.headers.get('User-Agent', ''),
         'referer': request.headers.get('Referer', ''),
     }
 
@@ -458,15 +462,12 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
     if properties:
         event_properties.update(properties)
 
-    try:
-        if posthog and getattr(posthog, 'project_api_key', None):
-            posthog.capture(
-                distinct_id=f"partner:{partner_ref}",
-                event=event_name,
-                properties=event_properties
-            )
-    except Exception as e:
-        logger.warning(f"PostHog tracking error for {event_name}: {e}")
+    safe_posthog_capture(
+        posthog_client=_posthog,
+        distinct_id=f"partner:{partner_ref}",
+        event=event_name,
+        properties=event_properties,
+    )
 
 
 def record_partner_usage(partner_slug: str, env: str, event_type: str, quantity: int = 1):
