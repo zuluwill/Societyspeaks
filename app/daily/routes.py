@@ -247,7 +247,7 @@ def get_discussion_participation_data(question):
     - total_statements: visible statement count in discussion
     - participant_count: distinct participants (logged-in + anonymous) on visible statements
     """
-    from sqlalchemy import or_, and_, func
+    from sqlalchemy import or_, and_, func, distinct
 
     from app.api.utils import get_discussion_participant_count
     from app.lib.participation_metrics import visible_statement_vote_filters
