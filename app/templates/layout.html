@@ -338,6 +338,21 @@
           {% endif %}
         },
         before_send: function (event) {
+          var ua = (navigator.userAgent || "").toLowerCase();
+          var botPatterns = [
+            "bot", "crawler", "spider", "crawling", "slurp", "archiver",
+            "googlebot", "bingbot", "yandex", "baiduspider", "duckduckbot",
+            "gptbot", "claudebot", "anthropic", "openai", "perplexity",
+            "semrushbot", "ahrefsbot", "mj12bot", "dotbot", "petalbot",
+            "bytespider", "applebot", "facebookexternalhit", "twitterbot",
+            "linkedinbot", "whatsapp", "go-http-client", "python-requests",
+            "curl/", "wget/", "libwww-perl", "headlesschrome", "phantomjs"
+          ];
+          for (var i = 0; i < botPatterns.length; i++) {
+            if (ua.indexOf(botPatterns[i]) !== -1) {
+              return null;
+            }
+          }
           if (event.event === "$exception") {
             var msg =
               (event.properties && event.properties.$exception_message) || "";
