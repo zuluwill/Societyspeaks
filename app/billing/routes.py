@@ -31,7 +31,7 @@ from flask_babel import gettext as _
 
 
 def _track_posthog(event, user_id, properties=None):
-    """Fire a PostHog billing event silently — always flushes, never raises."""
+    """Fire a PostHog billing event silently — never raises."""
     if not user_id:
         return
     safe_posthog_capture(
@@ -39,7 +39,6 @@ def _track_posthog(event, user_id, properties=None):
         distinct_id=str(user_id),
         event=event,
         properties=properties or {},
-        flush=True,
     )
 
 

@@ -43,7 +43,7 @@ from flask_babel import gettext as _
 logger = logging.getLogger(__name__)
 
 
-def _track_posthog(event, distinct_id, properties=None, flush=False):
+def _track_posthog(event, distinct_id, properties=None):
     """Fire a PostHog event silently — never raises."""
     if not distinct_id:
         return
@@ -52,7 +52,6 @@ def _track_posthog(event, distinct_id, properties=None, flush=False):
         distinct_id=str(distinct_id),
         event=event,
         properties=properties or {},
-        flush=flush,
     )
 
 
@@ -803,7 +802,7 @@ def use_template(template_id):
                 'from_template': True,
                 'template_id': template_id,
                 'sources_added': sources_added,
-            }, flush=True)
+            })
 
             # Show appropriate success message
             if sources_added > 0:
@@ -1033,7 +1032,7 @@ def create_briefing():
                 'from_template': bool(template_id),
                 'template_id': template_id,
                 'sources_added': sources_added,
-            }, flush=True)
+            })
 
             if sources_added > 0:
                 msg = f'Briefing "{name}" created successfully with {sources_added} sources from template!'
@@ -1327,7 +1326,7 @@ def edit(briefing_id):
                     'briefing_id': briefing.id,
                     'previous_cadence': old_cadence,
                     'new_cadence': briefing.cadence,
-                }, flush=True)
+                })
 
             flash(_('Briefing updated successfully'), 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
@@ -2092,7 +2091,7 @@ def unsubscribe(briefing_id, token):
             'briefing_id': briefing_id,
             'briefing_name': briefing.name,
             'recipient_id': recipient.id,
-        }, flush=True)
+        })
         flash(_('You have been unsubscribed from this briefing'), 'success')
 
     return render_template('briefing/unsubscribed.html', briefing=briefing, recipient=recipient)

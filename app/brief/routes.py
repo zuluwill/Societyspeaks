@@ -570,8 +570,9 @@ def unsubscribe(token):
                     'was_cadence': 'daily' if was_daily else 'weekly',
                 }
             )
-            posthog.flush()  # Ensure event is sent immediately
-            logger.info(f"PostHog event sent: daily_brief_unsubscribed for {subscriber.email}")
+            logger.info(
+                "PostHog: daily_brief_unsubscribed captured for %s", subscriber.email
+            )
     except Exception as e:
         logger.warning(f"PostHog tracking error: {e}")
 
@@ -657,7 +658,6 @@ def magic_link(token):
                         if _ph and getattr(_ph, 'project_api_key', None):
                             _ph.capture(distinct_id=str(expired_sub.user.id), event='user_logged_in',
                                         properties={'method': 'magic_link', 'source': 'brief_subscription'})
-                            _ph.flush()
                     except Exception:
                         pass
                 flash(_('Welcome back! Signed in as %(email)s', email=expired_sub.email), 'success')
@@ -679,7 +679,6 @@ def magic_link(token):
             if _ph and getattr(_ph, 'project_api_key', None):
                 _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'brief_subscription'})
-                _ph.flush()
         except Exception:
             pass
 

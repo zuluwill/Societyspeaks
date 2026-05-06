@@ -168,7 +168,6 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
             event='daily_question_subscribed',
             properties=props,
         )
-        posthog.flush()
     except Exception as e:
         from flask import current_app
         current_app.logger.warning(f'PostHog tracking error: {e}')

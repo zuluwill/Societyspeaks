@@ -53,7 +53,7 @@ def _stash_checkout_intent_from_querystring():
     session['pending_checkout_interval'] = interval
 
 
-def _track_posthog(event, user_id, properties=None, flush=False, identify_properties=None):
+def _track_posthog(event, user_id, properties=None, identify_properties=None):
     """Fire a PostHog event silently — never raises."""
     if not user_id:
         return
@@ -62,7 +62,6 @@ def _track_posthog(event, user_id, properties=None, flush=False, identify_proper
         distinct_id=str(user_id),
         event=event,
         properties=properties or {},
-        flush=flush,
         identify_properties=identify_properties,
     )
 
@@ -163,7 +162,6 @@ def _finalize_login(user, *, method, next_url=None):
         user.id,
         {'email': user.email, 'method': method},
         identify_properties={'email': user.email, 'username': user.username},
-        flush=True,
     )
 
     merge_anonymous_statement_votes_into_user(user)
@@ -417,7 +415,7 @@ def verify_email(token):
         if not user.email_verified:
             user.email_verified = True
             db.session.commit()
-            _track_posthog('email_verified', user.id, {'user_id': user.id}, flush=True)
+            _track_posthog('email_verified', user.id, {'user_id': user.id})
         flash(_('Your email has been verified! You can now log in.'), 'success')
         return redirect(url_for('auth.login'))
     return render_template(
@@ -599,7 +597,7 @@ def register():
         )
         
         # Track user signup with PostHog
-        _track_posthog('user_signed_up', new_user.id, {'username': username}, flush=True)
+        _track_posthog('user_signed_up', new_user.id, {'username': username})
 
         # Generate email verification token (24-hour expiry, separate salt from password reset)
         token = new_user.get_email_verification_token()

@@ -481,7 +481,6 @@ def view_programme(slug):
                             'is_authenticated': current_user.is_authenticated,
                         },
                     )
-                    _posthog.flush()
                     cache.set(_start_cache_key, True, timeout=86400)  # 24-hour dedup
             except Exception as _e:
                 current_app.logger.warning(f"PostHog journey_started error: {_e}")
@@ -580,7 +579,6 @@ def programme_journey_recap(slug):
                         'is_authenticated': current_user.is_authenticated,
                     },
                 )
-                _posthog.flush()
                 cache.set(_complete_cache_key, True, timeout=86400 * 30)  # 30-day dedup
         except Exception as _e:
             current_app.logger.warning(f"PostHog journey_completed error: {_e}")
@@ -738,7 +736,6 @@ def journey_reminder_subscribe(slug):
                         'is_authenticated': bool(user_id),
                     },
                 )
-                _posthog.flush()
             except Exception as _e:
                 current_app.logger.warning(f"PostHog journey_reminder_opt_in error: {_e}")
 
@@ -1415,7 +1412,6 @@ def journey_abandon():
         if isinstance(time_on_step_ms, (int, float)) and time_on_step_ms > 0:
             props['time_on_step_seconds'] = round(time_on_step_ms / 1000)
         _posthog.capture(distinct_id=ph_id, event='journey_abandoned', properties=props)
-        _posthog.flush()
         return jsonify({'ok': True})
     except Exception as e:
         current_app.logger.warning(f'PostHog journey_abandoned error: {e}')

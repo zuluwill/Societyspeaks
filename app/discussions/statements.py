@@ -1227,7 +1227,7 @@ def vote_statement(statement_id):
     except Exception:
         pass
 
-    # Track vote with PostHog (same request; flush ensures delivery under short-lived workers)
+    # Track vote with PostHog (batched by SDK consumer; avoid flush() blocking the response).
     if posthog and getattr(posthog, 'project_api_key', None):
         try:
             referer = request.headers.get('Referer', '') if hasattr(request, 'headers') else ''
@@ -1257,7 +1257,6 @@ def vote_statement(statement_id):
                 posthog.capture(distinct_id=distinct_id, event='discussion_participated_from_social', properties=properties)
 
             posthog.capture(distinct_id=distinct_id, event='statement_voted', properties=properties)
-            posthog.flush()
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
@@ -1325,7 +1324,6 @@ def vote_statement(statement_id):
                                     'is_authenticated': current_user.is_authenticated,
                                 },
                             )
-                            posthog.flush()
                             cache.set(_step_cache_key, True, timeout=86400)  # 24-hour dedup
         except Exception as _e:
             current_app.logger.warning(f"PostHog journey_step_completed error: {_e}")

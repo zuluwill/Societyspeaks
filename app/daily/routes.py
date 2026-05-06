@@ -899,7 +899,6 @@ def unsubscribe(token):
                     'reason': reason,
                 }
             )
-            posthog.flush()  # Ensure event is sent immediately
             current_app.logger.info(f"PostHog: daily_question_unsubscribed for {subscriber.email}")
     except Exception as e:
         current_app.logger.warning(f"PostHog tracking error: {e}")
@@ -1113,7 +1112,6 @@ def weekly_batch():
             if _ph and getattr(_ph, 'project_api_key', None):
                 _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'weekly_digest'})
-                _ph.flush()
         except Exception:
             pass
 
@@ -1296,7 +1294,6 @@ def weekly_batch_vote():
             if _ph and getattr(_ph, 'project_api_key', None):
                 _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'daily_question_api'})
-                _ph.flush()
         except Exception:
             pass
 
@@ -1456,7 +1453,6 @@ def magic_link(token):
             if _ph and getattr(_ph, 'project_api_key', None):
                 _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'daily_link'})
-                _ph.flush()
         except Exception:
             pass
     
@@ -1509,7 +1505,6 @@ def one_click_vote(token, vote_choice):
             if _ph and getattr(_ph, 'project_api_key', None):
                 _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'one_click_vote'})
-                _ph.flush()
         except Exception:
             pass
 

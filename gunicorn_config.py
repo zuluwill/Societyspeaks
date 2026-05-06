@@ -24,6 +24,23 @@ max_requests_jitter = 100
 preload_app = True
 
 
+def worker_exit(server, worker):
+    """Drain PostHog SDK queue when this worker process exits (graceful).
+
+    Complements :func:`app.lib.posthog_utils.register_posthog_atexit` — gunicorn
+    worker recycle (``max_requests``) and SIGTERM shutdown both benefit from an
+    explicit flush before the interpreter tears down.
+    """
+    try:
+        from app.lib.posthog_utils import shutdown_server_posthog
+
+        shutdown_server_posthog()
+    except Exception as exc:
+        logging.getLogger("gunicorn.error").warning(
+            "worker_exit [%s]: PostHog shutdown failed: %s", worker.pid, exc
+        )
+
+
 def post_fork(server, worker):
     """Reset all inherited connection pools in each worker after forking.
 
