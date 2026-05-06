@@ -1,7 +1,7 @@
 import logging
 
 bind = "0.0.0.0:5000"
-workers = 2
+workers = 4
 reuse_port = True
 timeout = 120
 worker_class = "gevent"
