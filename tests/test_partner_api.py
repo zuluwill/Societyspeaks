@@ -443,6 +443,22 @@ class TestFlagStatementFromEmbed:
         )
         assert resp.status_code == 201
 
+    def test_first_party_base_url_origin_succeeds_without_partner_domain_fixture(
+        self, app, client, statement,
+    ):
+        """Real embed POSTs use Origin = BASE_URL; must not depend on PartnerDomain rows."""
+        base = (app.config.get('BASE_URL') or '').rstrip('/')
+        resp = client.post(
+            '/api/embed/flag',
+            json={
+                'statement_id': statement.id,
+                'flag_reason': 'spam',
+                'embed_fingerprint': 'test-fp-base-url-flag',
+            },
+            headers={'Origin': base},
+        )
+        assert resp.status_code == 201
+
     def test_disabled_ref_returns_403(self, client, app, statement):
         app.config['DISABLED_PARTNER_REFS'] = ['banned-ref']
         resp = client.post('/api/embed/flag', json={
@@ -762,8 +778,113 @@ class TestEmbedStatementSubmissionPolicy:
         assert created.discussion_id == discussion.id
         assert created.source == 'user_submitted'
 
+    def test_embed_submission_actor_limit_is_per_fingerprint(self, app, client, db, discussion):
+        discussion.embed_statement_submissions_enabled = True
+        db.session.commit()
+        app.config['EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR'] = '2 per hour'
+        app.config['EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP'] = '1000 per hour'
 
-class TestPartnerUsageExport:
+        def post_statement(text, fp):
+            return client.post(
+                f'/api/embed/discussions/{discussion.id}/statements',
+                json={
+                    'content': text,
+                    'embed_fingerprint': fp,
+                },
+                headers={'X-Embed-Request': 'true'},
+            )
+
+        assert post_statement('aaaa' * 3, 'actor-rl-a').status_code == 201
+        assert post_statement('bbbb' * 3, 'actor-rl-a').status_code == 201
+        assert post_statement('cccc' * 3, 'actor-rl-a').status_code == 429
+        assert post_statement('dddd' * 3, 'actor-rl-b').status_code == 201
+
+    def test_partner_scoped_submit_requires_origin(self, client, db, discussion, partner):
+        discussion.partner_fk_id = partner.id
+        discussion.embed_statement_submissions_enabled = True
+        db.session.commit()
+
+        resp = client.post(
+            f'/api/embed/discussions/{discussion.id}/statements',
+            json={
+                'content': 'Policy requires origin verification.',
+                'embed_fingerprint': 'partner-origin-check-fp',
+            },
+            headers={'X-Embed-Request': 'true'},
+        )
+        assert resp.status_code == 403
+        assert resp.get_json()['error'] == 'origin_required'
+
+        base = (client.application.config.get('BASE_URL') or '').rstrip('/')
+        resp2 = client.post(
+            f'/api/embed/discussions/{discussion.id}/statements',
+            json={
+                'content': 'With valid origin fingerprint path.',
+                'embed_fingerprint': 'partner-origin-check-fp-2',
+            },
+            headers={
+                'X-Embed-Request': 'true',
+                'Origin': base,
+            },
+        )
+        assert resp2.status_code == 201
+
+
+class TestEffectiveEmbedParentOrigin:
+    """Unit tests for iframe parent origin resolution."""
+
+    def test_prefers_origin_header(self, app):
+        from app.api.utils import get_effective_embed_parent_origin
+
+        with app.test_request_context('/', headers=[('Origin', 'https://observer.com')]):
+            assert get_effective_embed_parent_origin() == 'https://observer.com'
+
+    def test_falls_back_to_referrer_scheme_host(self, app):
+        from app.api.utils import get_effective_embed_parent_origin
+
+        with app.test_request_context(
+            '/',
+            headers=[('Referer', 'https://www.observer.com/article?x=1')],
+        ):
+            assert get_effective_embed_parent_origin() == 'https://www.observer.com'
+
+    def test_empty_when_no_origin_or_referrer(self, app):
+        from app.api.utils import get_effective_embed_parent_origin
+
+        with app.test_request_context('/'):
+            assert get_effective_embed_parent_origin() is None
+
+    def test_origin_matches_app_base_url(self, app):
+        from app.api.utils import origin_matches_app_base_url
+
+        app.config['BASE_URL'] = 'https://discuss.example.org'
+        with app.test_request_context('/'):
+            assert origin_matches_app_base_url('https://discuss.example.org') is True
+            assert origin_matches_app_base_url('https://discuss.example.org:443') is False
+            assert origin_matches_app_base_url('http://discuss.example.org') is False
+
+
+class TestEmbedRouteDomainPolicy:
+    """Framing policy for partner-scoped vs public discussions."""
+
+    def test_public_discussion_allows_foreign_referrer(self, client, discussion, statement):
+        """Open embeds must not break when parent sends a non-allowlisted Referer."""
+        resp = client.get(
+            f'/discussions/{discussion.id}/embed',
+            headers={'Referer': 'https://unrelated-blog.example/post'},
+        )
+        assert resp.status_code == 200
+
+    def test_partner_scoped_embed_blocks_unlisted_referrer(
+        self, client, db, partner, partner_domain, discussion, statement
+    ):
+        discussion.partner_fk_id = partner.id
+        db.session.commit()
+        resp = client.get(
+            f'/discussions/{discussion.id}/embed',
+            headers={'Referer': 'https://evil.example/page'},
+        )
+        assert resp.status_code == 403
     """Tests for GET /api/partner/analytics/usage-export."""
 
     def test_usage_export_json_returns_events(self, client, db, partner):

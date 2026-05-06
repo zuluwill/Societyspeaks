@@ -532,9 +532,97 @@ def create_statement(discussion_id):
                          discussion=discussion)
 
 
+def get_or_create_statement_client_id():
+    """Backward-compatible wrapper — unified voter client id (see app.lib.vote_identity)."""
+    from app.lib.vote_identity import get_or_create_voter_client_id
+
+    return get_or_create_voter_client_id()
+
+
+def get_statement_vote_fingerprint():
+    """Anonymous voter fingerprint; unified across statements + daily flows."""
+    return get_voter_fingerprint()
+
+
+def normalize_embed_fingerprint(value):
+    """Normalize and hash an embed-provided fingerprint for anonymous tracking."""
+    if not value or not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if len(cleaned) > EMBED_FINGERPRINT_MAX_LENGTH:
+        cleaned = cleaned[:EMBED_FINGERPRINT_MAX_LENGTH]
+    return hashlib.sha256(cleaned.encode()).hexdigest()
+
+
+def extract_partner_ref_from_request():
+    """Extract partner ref from query params, JSON body, or form."""
+    ref = request.args.get('ref', '')
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        if isinstance(data, dict) and data.get('ref'):
+            ref = data.get('ref')
+    else:
+        form_ref = request.form.get('ref')
+        if form_ref:
+            ref = form_ref
+    from app.api.utils import sanitize_partner_ref
+    return sanitize_partner_ref(ref)
+
+
+def extract_embed_fingerprint_from_request():
+    """Extract embed fingerprint from JSON body or form."""
+    value = None
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        if isinstance(data, dict):
+            value = data.get('embed_fingerprint')
+    else:
+        value = request.form.get('embed_fingerprint')
+    return normalize_embed_fingerprint(value)
+
+
+def _embed_statement_submit_rate_limit_actor_string():
+    lim = current_app.config.get('EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR') or '25 per hour'
+    if isinstance(lim, str) and lim.strip():
+        return lim.strip()
+    return '25 per hour'
+
+
+def _embed_statement_submit_rate_limit_ip_string():
+    lim = current_app.config.get('EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP') or '600 per hour'
+    if isinstance(lim, str) and lim.strip():
+        return lim.strip()
+    return '600 per hour'
+
+
+def get_embed_statement_submit_actor_key():
+    """Fair per-reader key (discussion + ref + fingerprint); avoids carrier-NAT false positives."""
+    did = request.view_args.get('discussion_id') if request.view_args else None
+    ip = get_remote_address() or 'unknown'
+    if did is None:
+        return f"missing-discussion:{ip}"
+
+    if current_user.is_authenticated:
+        return f"d:{did}:u:{current_user.id}"
+
+    ref = extract_partner_ref_from_request() or 'unknown'
+    fp = extract_embed_fingerprint_from_request()
+    if fp:
+        return f"d:{did}:{ref}:a:{fp[:24]}"
+    return f"d:{did}:{ref}:nip:{ip}"
+
+
+def get_embed_statement_submit_burst_ip_key():
+    """Gross backstop across many synthetic identities from one egress IP."""
+    return get_remote_address() or 'unknown'
+
+
 @statements_bp.route('/api/embed/discussions/<int:discussion_id>/statements', methods=['POST'])
 @csrf.exempt
-@limiter.limit("20 per hour", key_func=get_remote_address)
+@limiter.limit(_embed_statement_submit_rate_limit_ip_string, key_func=get_embed_statement_submit_burst_ip_key)
+@limiter.limit(_embed_statement_submit_rate_limit_actor_string, key_func=get_embed_statement_submit_actor_key)
 def create_statement_from_embed(discussion_id):
     """Create a reader-submitted statement from embed when the discussion policy allows it."""
     is_embed_request = request.headers.get('X-Embed-Request', '').lower() in ('1', 'true', 'yes')
@@ -551,10 +639,28 @@ def create_statement_from_embed(discussion_id):
     if not embed_statement_submissions_allowed(discussion):
         return jsonify({'success': False, 'error': 'embed_statement_submissions_disabled'}), 403
 
-    if discussion.partner_fk_id or discussion.partner_id:
-        from app.api.utils import is_partner_origin_allowed
-        origin = request.headers.get('Origin')
-        if origin and not is_partner_origin_allowed(origin, env=discussion.partner_env):
+    embed_writes_need_origin_check = (
+        discussion.partner_fk_id is not None
+        or (discussion.partner_id and str(discussion.partner_id).strip())
+        or getattr(discussion, 'partner_env', None) == 'test'
+    )
+    if embed_writes_need_origin_check:
+        from app.api.utils import (
+            get_effective_embed_parent_origin,
+            is_partner_origin_allowed,
+            origin_matches_app_base_url,
+        )
+        effective = get_effective_embed_parent_origin()
+        if not effective:
+            return jsonify({
+                'success': False,
+                'error': 'origin_required',
+                'message': _('Origin or Referer is required so we can verify this request.'),
+            }), 403
+        if (
+            not origin_matches_app_base_url(effective)
+            and not is_partner_origin_allowed(effective, env=discussion.partner_env)
+        ):
             return jsonify({'success': False, 'error': 'origin_not_allowed'}), 403
 
     partner_ref = extract_partner_ref_from_request()
@@ -660,57 +766,6 @@ def create_statement_from_embed(discussion_id):
         'statement_id': statement.id,
         'message': _('Statement submitted.'),
     }), 201
-
-
-def get_or_create_statement_client_id():
-    """Backward-compatible wrapper — unified voter client id (see app.lib.vote_identity)."""
-    from app.lib.vote_identity import get_or_create_voter_client_id
-
-    return get_or_create_voter_client_id()
-
-
-def get_statement_vote_fingerprint():
-    """Anonymous voter fingerprint; unified across statements + daily flows."""
-    return get_voter_fingerprint()
-
-
-def normalize_embed_fingerprint(value):
-    """Normalize and hash an embed-provided fingerprint for anonymous tracking."""
-    if not value or not isinstance(value, str):
-        return None
-    cleaned = value.strip()
-    if not cleaned:
-        return None
-    if len(cleaned) > EMBED_FINGERPRINT_MAX_LENGTH:
-        cleaned = cleaned[:EMBED_FINGERPRINT_MAX_LENGTH]
-    return hashlib.sha256(cleaned.encode()).hexdigest()
-
-
-def extract_partner_ref_from_request():
-    """Extract partner ref from query params, JSON body, or form."""
-    ref = request.args.get('ref', '')
-    if request.is_json:
-        data = request.get_json(silent=True) or {}
-        if isinstance(data, dict) and data.get('ref'):
-            ref = data.get('ref')
-    else:
-        form_ref = request.form.get('ref')
-        if form_ref:
-            ref = form_ref
-    from app.api.utils import sanitize_partner_ref
-    return sanitize_partner_ref(ref)
-
-
-def extract_embed_fingerprint_from_request():
-    """Extract embed fingerprint from JSON body or form."""
-    value = None
-    if request.is_json:
-        data = request.get_json(silent=True) or {}
-        if isinstance(data, dict):
-            value = data.get('embed_fingerprint')
-    else:
-        value = request.form.get('embed_fingerprint')
-    return normalize_embed_fingerprint(value)
 
 
 def get_vote_rate_limit_key():

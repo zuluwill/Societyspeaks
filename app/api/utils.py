@@ -155,6 +155,60 @@ def append_ref_param(url: str, ref: str) -> str:
     return urlunparse(parsed._replace(query=new_query))
 
 
+def get_effective_embed_parent_origin():
+    """
+    Best-effort embedding page origin for iframe requests.
+
+    Prefer the ``Origin`` header. When it is absent (common on navigational GETs
+    inside iframes), derive ``scheme://netloc`` from ``Referer`` so partner
+    allowlists still apply and hotlinking from disallowed sites can be blocked.
+
+    Returns:
+        str or None
+    """
+    origin = (request.headers.get('Origin') or '').strip()
+    if origin:
+        return origin
+    ref = (request.referrer or '').strip()
+    if not ref:
+        return None
+    parsed = urlparse(ref)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def origin_matches_app_base_url(origin: Optional[str]) -> bool:
+    """
+    True when ``Origin`` equals this app's configured BASE_URL origin (scheme + host).
+
+    JavaScript ``fetch()`` from our embed iframe is same-origin to Society Speaks, so the
+    ``Origin`` header names this site—not the embedding publisher. Partner domains govern
+    *framing*, not legitimate first-party POSTs from embedded pages we serve.
+
+    Caller should still apply ``is_partner_origin_allowed`` for non-matching origins
+    when the caller is not first-party traffic.
+    """
+    if not origin or not isinstance(origin, str):
+        return False
+    base = (current_app.config.get('BASE_URL') or '').strip()
+    if not base:
+        return False
+    parsed_base = urlparse(base)
+    parsed_origin = urlparse(origin.strip())
+    if parsed_base.scheme not in ('http', 'https') or not parsed_base.netloc:
+        return False
+    if parsed_origin.scheme not in ('http', 'https') or not parsed_origin.netloc:
+        return False
+    return (
+        parsed_base.scheme,
+        parsed_base.netloc.lower(),
+    ) == (
+        parsed_origin.scheme,
+        parsed_origin.netloc.lower(),
+    )
+
+
 def is_partner_origin_allowed(origin, env: Optional[str] = None):
     """
     Check if the request origin is in the partner allowlist.

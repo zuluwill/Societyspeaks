@@ -8,7 +8,12 @@ from app.middleware import track_discussion_view
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
 from app.discussions.consensus import build_consensus_ui_state, PARTICIPATION_THRESHOLD
-from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins, get_discussion_participant_count
+from app.api.utils import (
+    is_partner_origin_allowed,
+    get_partner_allowed_origins,
+    get_discussion_participant_count,
+    get_effective_embed_parent_origin,
+)
 from app.trending.conversion_tracking import track_social_click
 from app.lib.time import utcnow_naive
 from app.programmes.permissions import can_add_discussion_to_programme
@@ -608,6 +613,10 @@ def embed_discussion(discussion_id):
         font: Font family from allowlist
 
     The route sets special CSP headers to allow framing from partner origins.
+
+    Partner-owned or test-key discussions enforce the partner domain allowlist against
+    Origin and (when present) Referer; public native discussions remain embeddable
+    from any parent even if Referer is sent.
     """
     from flask import make_response
     # Check if embed feature is enabled
@@ -615,6 +624,7 @@ def embed_discussion(discussion_id):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
             'discussions/embed_unavailable.html',
+            unavailable_reason='service_unavailable',
             base_url=base_url
         ), 503
 
@@ -643,9 +653,49 @@ def embed_discussion(discussion_id):
             base_url=base_url
         ), 403
 
-    # Restrict test embeds to verified test domains
-    origin = request.headers.get('Origin')
-    if origin and not is_partner_origin_allowed(origin, env=discussion.partner_env):
+    # Partner domain allowlist (Origin and/or Referer): only for partner-scoped or
+    # test-key discussions so open public embeds are not blocked when Referer is present.
+    effective_origin = get_effective_embed_parent_origin()
+    partner_env = getattr(discussion, 'partner_env', None) or 'live'
+    partner_domain_locked = (
+        discussion.partner_fk_id is not None
+        or (discussion.partner_id and str(discussion.partner_id).strip())
+        or partner_env == 'test'
+    )
+    if partner_domain_locked:
+        if effective_origin and not is_partner_origin_allowed(
+            effective_origin, env=discussion.partner_env
+        ):
+            base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+            return render_template(
+                'discussions/embed_unavailable.html',
+                unavailable_reason='domain_not_allowed',
+                base_url=base_url
+            ), 403
+
+    # Stricter: test-key discussions in production require a verifiable parent URL.
+    if (
+        partner_env == 'test'
+        and current_app.config.get('ENV') == 'production'
+        and not current_app.testing
+        and not effective_origin
+    ):
+        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+        return render_template(
+            'discussions/embed_unavailable.html',
+            unavailable_reason='domain_not_allowed',
+            base_url=base_url
+        ), 403
+
+    # Optional: live partner-scoped embeds require a resolved parent URL (Referer stripped = deny).
+    if (
+        partner_domain_locked
+        and partner_env != 'test'
+        and current_app.config.get('PARTNER_EMBED_REQUIRE_PARENT_ORIGIN')
+        and current_app.config.get('ENV') == 'production'
+        and not current_app.testing
+        and not effective_origin
+    ):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
             'discussions/embed_unavailable.html',

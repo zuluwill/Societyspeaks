@@ -10,6 +10,25 @@
       <h1 class="text-2xl font-bold text-gray-900">{{ _('Setup guide') }}</h1>
       <p class="text-gray-500 text-sm mt-1">{{ _('Follow the steps below to launch on your site.') }}</p>
     </div>
+
+    <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-5 mb-6">
+      <p class="text-sm font-semibold text-emerald-900 mb-2">{{ _('How this works — in plain terms') }}</p>
+      <p class="text-sm text-emerald-900 mb-3">{{ _('Society Speaks is a moderated voting box you place on pages you choose. You decide the headline question and the opening statements readers see first; we host the box, collect votes, and give you clear results — similar in spirit to a structured poll, not an open comment thread.') }}</p>
+      <div class="mt-4 rounded-lg border border-emerald-200 bg-white p-4">
+        <p class="text-xs font-semibold text-emerald-900 uppercase tracking-wide mb-2">{{ _('Quick vocabulary') }}</p>
+        <ul class="text-sm text-emerald-900 space-y-2 list-disc pl-5 marker:text-emerald-700">
+          <li>{{ _('<strong>Discussion</strong> — one voting topic tied to a single embed: the headline title, how it connects to your site, and one shared tally for that topic.')|safe }}</li>
+          <li>{{ _('<strong>Statements</strong> — the individual lines readers rate with agree / disagree / unsure inside that discussion; expect several per topic, not just one.')|safe }}</li>
+        </ul>
+      </div>
+      <ol class="text-sm text-emerald-900 space-y-1.5 list-decimal list-inside mt-4">
+        <li>{{ _('Tell us each website address where the voting box may appear — we prove you control it with a one-line DNS step (similar to verifying email).') }}</li>
+        <li>{{ _('You create each “discussion” yourself (in the portal or via your tech team’s automation): a title, a link to an article <em>and/or</em> your own stable CMS id, plus either statements your editors draft or a short excerpt so we can suggest balanced <strong>statements</strong> for that discussion. We do not crawl your site or invent topics for you.')|safe }}</li>
+        <li>{{ _('You paste a small embed snippet on the page. Readers vote without leaving your site; optional notifications can update your systems automatically.') }}</li>
+      </ol>
+      <p class="text-xs text-emerald-800 mt-3">{{ _('Not technical? Share this page with engineering and keep the DNS emails handy — they only need to do the domain step once per hostname.') }}</p>
+    </div>
+
     {% if is_admin_preview %}
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6">
       <p class="text-sm text-blue-900 font-medium">{{ _('Admin preview mode (read-only) — this is the partner guided setup experience.') }}</p>
@@ -29,9 +48,8 @@
 
     <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-6">
       <p class="text-sm font-semibold text-amber-900 mb-1">{{ _('Important setup note') }}</p>
-      <p class="text-sm text-amber-800">
-        {{ _('Write endpoints (<code>POST/PATCH /api/partner/...</code>) must be called from your backend only. Browser requests with an <code>Origin</code> header are rejected.')|safe }}
-      </p>
+      <p class="text-sm text-amber-800">{{ _('Anything that creates or changes discussions must run from <strong>your servers</strong>, not from a browser — that keeps your secret keys safe. Free “read” checks can still be tried from ordinary web tools.')|safe }}</p>
+      <p class="text-xs text-amber-900 mt-2 opacity-90">{{ _('Technical detail: <code>POST/PATCH /api/partner/...</code> rejects browser-origin requests.')|safe }}</p>
     </div>
 
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6">
@@ -73,6 +91,8 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Docs') }}</h3>
         <p class="text-sm text-gray-700 mb-3">{{ _('Everything you need to build quickly.') }}</p>
         <div class="flex flex-wrap gap-2">
+          <a href="{{ url_for('partner.api_docs') }}#discussion-and-statements" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('Discussion vs statements') }}</a>
+          <a href="{{ url_for('partner.api_docs') }}#publisher-checklist" class="inline-flex items-center rounded-md bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-800 shadow-sm ring-1 ring-inset ring-primary-200 hover:bg-primary-100">{{ _('Simple checklist (readable)') }}</a>
           <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('API reference') }}</a>
           <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('SDKs') }}</a>
           <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">{{ _('Embed generator') }}</a>
@@ -90,7 +110,7 @@
     <div class="grid gap-6 lg:grid-cols-2">
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ _('Step 1: Add and verify a test domain') }}</h2>
-        <p class="text-sm text-gray-600 mb-4">{{ _('Embeds only load on verified domains.') }}</p>
+        <p class="text-sm text-gray-600 mb-4">{{ _('Voting widgets you create through this account only appear on website addresses we have verified for you — <strong>test</strong> sites use your staging verification, live sites use production. If readers can open both <code>www.yoursite.com</code> and <code>yoursite.com</code>, register both.')|safe }}</p>
         <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input name="domain" type="text" placeholder="staging.example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
@@ -174,7 +194,7 @@
     <div class="grid gap-6 lg:grid-cols-2 mt-6">
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm min-w-0">
         <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ _('Step 3: Create or lookup a discussion') }}</h2>
-        <p class="text-sm text-gray-600 mb-3">{{ _('Store the discussion ID in your CMS for consistent embeds. Use an <code>Idempotency-Key</code> on create to safely retry failed requests. You can create discussions with either <code>article_url</code> or <code>external_id</code> (for non-article contexts such as campaign hubs or live blogs).')|safe }}</p>
+        <p class="text-sm text-gray-600 mb-3">{{ _('Each discussion represents one topic your readers vote on — usually an article, but it can equally be a campaign page, hub, or newsletter landing if you identify it with a stable <code>external_id</code>. After it exists, you refine the <strong>statements</strong> (the individual agree / disagree / unsure lines) from the Discussions screen or your automation. Store the discussion id in your CMS for consistent embeds. Use an <code>Idempotency-Key</code> on create to safely retry failed requests.')|safe }}</p>
         <p class="text-sm text-gray-600 mb-4">
           {{ _('Prefer Python or Node.js over raw HTTP?') }}
           <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="font-semibold text-primary-600 hover:underline">{{ _('Download our SDKs →') }}</a>
@@ -234,10 +254,15 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ _('Step 4: Embed on your page') }}</h2>
-        <p class="text-sm text-gray-600 mb-4">{{ _('Use the returned <code>embed_url</code> from lookup/create. This ensures you use the correct discussion and environment.')|safe }}</p>
+        <p class="text-sm text-gray-600 mb-3">{{ _('Use the returned <code>embed_url</code> from lookup/create. This ensures you use the correct discussion and environment.')|safe }}</p>
+        <ul class="text-sm text-gray-700 list-disc pl-5 space-y-1 mb-4">
+          <li>{{ _('Add your portal slug as the <code>ref</code> query parameter when you paste the iframe <code>src</code>, so dashboards and lookups stay attributable.')|safe }}</li>
+          <li><a href="{{ url_for('partner.api_docs') }}#publisher-checklist" class="text-primary-600 font-medium hover:underline">{{ _('Open the simple launch checklist →') }}</a></li>
+        </ul>
         <div class="code-block relative group">
           <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">&lt;iframe src="{{ base_url }}/discussions/{id}/embed" width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
+          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">&lt;iframe src="{{ base_url }}/discussions/{id}/embed?ref=YOUR_PORTAL_SLUG"
+  width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
         </div>
         <a href="{{ url_for('partner.portal_getting_started_success') }}" class="inline-flex items-center mt-4 text-sm font-semibold text-primary-600 hover:underline">
           {{ _('I embedded it successfully →') }}

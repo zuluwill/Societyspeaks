@@ -26,6 +26,10 @@
           <p class="text-lg text-gray-600">
             {{ _('Integrate Society Speaks programmatically. Power your embeds, snapshots, and editorial insights with JSON APIs built for newsroom workflows and developer velocity.') }}
           </p>
+          <p class="text-sm text-gray-600 max-w-3xl leading-relaxed">
+            {{ _('If you are new here: publishers start a <strong>discussion</strong> for each voting topic — most often aligned with one article URL, but you can instead use only your own <code>external_id</code> for hubs or tools without a permalink. Statements are yours to draft or they can be drafted from copy you supply; nothing is inferred from your homepage unless your integration asks for it.')|safe }}
+            {{ _('Formal definitions plus API field mapping: <a class="text-primary-600 font-medium hover:underline" href="#discussion-and-statements">Discussion vs statements</a>.')|safe }}
+          </p>
           <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
               {{ _('Open API Playground') }}
@@ -60,7 +64,7 @@
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For editorial leaders') }}</h3>
-          <p class="text-sm text-gray-600">{{ _('Reliable participation signals and a transparent, auditable methodology.') }}</p>
+          <p class="text-sm text-gray-600">{{ _('You choose each question, how it maps to your stories or ids, and whether reader-submitted lines appear in the embed.') }}</p>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('For governance') }}</h3>
@@ -97,7 +101,9 @@
         <a href="#auth" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Authentication') }}</a>
         <a href="#client-libraries" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Client Libraries') }}</a>
         <a href="#base-url" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Base URL') }}</a>
+        <a href="#discussion-and-statements" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Discussion vs statements') }}</a>
         <a href="#workflows" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Common Workflows') }}</a>
+        <a href="#publisher-checklist" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Simple launch checklist') }}</a>
         <a href="#lookup" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Lookup by Article URL') }}</a>
         <a href="#snapshot" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Discussion Snapshot') }}</a>
         <a href="#embed-url-parameters" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ _('Embed URL Parameters') }}</a>
@@ -117,7 +123,9 @@
         <a href="#auth" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Auth') }}</a>
         <a href="#client-libraries" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Client Libraries') }}</a>
         <a href="#base-url" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Base URL') }}</a>
+        <a href="#discussion-and-statements" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Glossary') }}</a>
         <a href="#workflows" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Workflows') }}</a>
+        <a href="#publisher-checklist" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Checklist') }}</a>
         <a href="#lookup" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Lookup') }}</a>
         <a href="#snapshot" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Snapshot') }}</a>
         <a href="#embed-url-parameters" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">{{ _('Embed Params') }}</a>
@@ -136,7 +144,7 @@
       <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Authentication & Environments') }}</h2>
       <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <p class="text-sm text-gray-700 mb-3">
-          {{ _('Use test keys for staging and live keys for production. Both run on the same base URL and are isolated by key type. Keys are issued in the Partner Portal.') }}
+          {{ _('Use test keys while you rehearse on staging; switch to live keys once billing is active. Keys are created in the Partner Portal.') }}
         </p>
         <div class="grid gap-3 md:grid-cols-2 text-sm text-gray-700">
           <div class="bg-gray-50 rounded-lg p-3">
@@ -147,8 +155,9 @@
           </div>
         </div>
         <p class="text-sm text-gray-600 mt-3">
-          {{ _('Domains must be verified via DNS TXT to allow embeds.') }}
+          {{ _('Each hostname where you host the iframe must appear under <strong>Domains</strong> after DNS verification — separately for rehearsal (<strong>test</strong>) and production (<strong>live</strong>). Typical news sites register both <code>www.</code> and the short domain if readers use either.')|safe }}
         </p>
+        <p class="text-sm text-gray-600 mt-2">{{ _('Readers always interact with Society Speaks over normal encrypted web traffic; your hosting team should keep our public web address (<code>BASE_URL</code> on our side) matching what browsers expect.')|safe }}</p>
         <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <p class="text-sm font-semibold text-amber-900 mb-1">{{ _('Server-to-server only for write operations') }}</p>
           <p class="text-sm text-amber-800">
@@ -325,16 +334,35 @@ try {
       </div>
     </section>
 
+    <section id="discussion-and-statements">
+      <h2 class="text-xl font-bold text-gray-900 mb-2">{{ _('Discussion vs statements') }}</h2>
+      <p class="text-sm text-gray-500 mb-4 max-w-3xl">{{ _('We use these words consistently in the Partner Portal, API responses, and support materials — skim this once and the rest of the docs stay predictable.') }}</p>
+      <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <dl class="grid gap-6 sm:grid-cols-2 text-sm text-gray-700">
+          <div>
+            <dt class="font-semibold text-gray-900 text-base mb-2">{{ _('Discussion') }}</dt>
+            <dd class="leading-relaxed break-words">{{ _('The umbrella for one reader-facing voting experience: headline title, how it anchors to your site (<code>article_url</code> and/or <code>external_id</code>), partner environment (test/live), one embed/consensus URLs, and the combined participation underneath it. Creating a discussion via API establishes this container first.')|safe }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-gray-900 text-base mb-2">{{ _('Statements') }}</dt>
+            <dd class="leading-relaxed break-words">{{ _('Individual prompts inside that umbrella — each collects its own agree / disagree / unsure counts. Populate them during creation with <code>seed_statements</code> or an <code>excerpt</code> that fuels AI seeds; add/edit them afterward in the portal; optionally allow anonymous readers to propose more when embed submissions are toggled on for that discussion.')|safe }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
     <!-- Common Workflows -->
     <section id="workflows">
       <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Common Workflows') }}</h2>
+      <p class="text-gray-600 mb-4 max-w-3xl">{{ _('The usual pattern is “one discussion per published URL,” but that is a choice, not a requirement. You can create discussions for article pages, attach a CMS id without a public article, or mix both so reporting stays consistent across your stack.') }}</p>
+      <p class="text-gray-600 mb-4 max-w-3xl">{{ _('Regardless of identifiers, remember the split: lookup/create returns <code>discussion_id</code>; statements are modeled separately and surfaced through the embed, portal statement tools, and snapshot payloads.')|safe }}</p>
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <h3 class="font-semibold text-gray-900 mb-2">{{ _('Programmatic embed (recommended)') }}</h3>
           <ol class="text-sm text-gray-700 space-y-2">
             <li>{{ _('1) Lookup discussion by article URL') }}</li>
-            <li>{{ _('2) If none exists, create discussion') }}</li>
-            <li>{{ _('3) Store <code>discussion_id</code> and use <code>embed_url</code>')|safe }}</li>
+            <li>{{ _('2) If none exists, create the discussion shell (seed statements optionally in the same call)') }}</li>
+            <li>{{ _('3) Store <code>discussion_id</code> and use <code>embed_url</code>; review statements inside the portal if you need tweaks')|safe }}</li>
           </ol>
           <div class="code-block relative group mt-4">
             <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">{{ _('Copy') }}</button>
@@ -363,10 +391,39 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
       </div>
     </section>
 
+    <!-- Newsroom launch checklist -->
+    <section id="publisher-checklist">
+      <h2 class="text-xl font-bold text-gray-900 mb-2">{{ _('Simple launch checklist') }}</h2>
+      <p class="text-sm text-gray-600 mb-4">{{ _('Editors and producers can skim the section below; share the engineering notes with IT.') }}</p>
+      <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm space-y-5">
+        <div>
+          <h3 class="font-semibold text-gray-900 text-sm mb-2">{{ _('For editorial & product teams') }}</h3>
+          <ul class="text-sm text-gray-700 space-y-2 list-disc pl-5">
+            <li>{{ _('Vocabulary cheat sheet: one <strong>discussion</strong> = one voting topic plus its embed wrapper; several <strong>statements</strong> sit underneath — the lines readers answer with agree / disagree / unsure.')|safe }} <a href="#discussion-and-statements" class="text-primary-600 font-medium hover:underline">{{ _('Longer explanation →') }}</a></li>
+            <li>{{ _('You decide what each voting topic is called and what readers see first — article tie-in is optional; live blogs, hubs, and special projects can use a stable id instead of a story URL.') }}</li>
+            <li>{{ _('Every web address where the snippet might load must be approved in your Partner Portal — rehearsal sites and live sites are separate.') }}</li>
+            <li>{{ _('If your readers type both <code>www.</code> and bare domain names, register <strong>two</strong> approvals.')|safe }}</li>
+            <li>{{ _('Ask engineering to add the short tracking tag (<code>?ref=…</code>) so reports stay attributable.')|safe }} <a href="#embed-url-parameters" class="text-primary-600 font-medium hover:underline">{{ _('What the tags mean →') }}</a></li>
+            <li>{{ _('Optional: ask for automatic height on the box so long articles do not clip (one small script on your side).') }} <a href="#postmessage" class="text-primary-600 font-medium hover:underline">{{ _('How it works →') }}</a></li>
+            <li>{{ _('Prefer automatic “something changed” pings to your systems over manual checking.') }} <a href="#webhooks-api" class="text-primary-600 font-medium hover:underline">{{ _('Webhooks overview →') }}</a></li>
+          </ul>
+        </div>
+        <div class="border-t border-gray-100 pt-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-2">{{ _('For engineering & hosting') }}</h3>
+          <ul class="text-sm text-gray-700 space-y-2 list-disc pl-5">
+            <li>{{ _('Match test API keys only with rehearsal domains; live keys only with verified production domains.') }}</li>
+            <li>{{ _('Rehearsal (<code>test</code>) embeds in production always need a resolvable parent page from the browser — even without <code>PARTNER_EMBED_REQUIRE_PARENT_ORIGIN</code>.')|safe }}</li>
+            <li>{{ _('Optional hardening env: <code>PARTNER_EMBED_REQUIRE_PARENT_ORIGIN=true</code> (production, live partner embeds only) blocks iframe HTML when we cannot resolve a parent page from <code>Origin</code> or <code>Referer</code> — stricter, and may affect uncommon browsers or privacy settings.')|safe }}</li>
+            <li>{{ _('Inline reader submissions from the embed honour <code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR</code> and <code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP</code> in configuration (plus per-person limits).')|safe }}</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- Lookup API -->
     <section id="lookup">
       <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Lookup by Article URL') }}</h2>
-      <p class="text-gray-600 mb-4">{{ _('Find a discussion by the URL of your article.') }}</p>
+      <p class="text-gray-600 mb-4">{{ _('Find a discussion by the URL of your article. The lookup returns discussion metadata (<code>discussion_id</code>, <code>embed_url</code>, etc.); the statements readers vote on arrive with that discussion’s embed and snapshot payloads.')|safe }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -627,6 +684,9 @@ const embedUrl = data.embed_url;</pre>
         <p class="text-sm text-gray-700">
           {{ _('The embed uses a first-party cookie to deduplicate anonymous votes across page loads. When the embed is loaded in a cross-domain iframe (the normal case for partner sites), browsers with strict privacy settings may block this cookie as a third-party cookie.') }}
         </p>
+        <p class="text-sm text-gray-700">
+          {{ _('Discussions created through your partner API are partner-scoped: the embed page checks the parent site origin (using <code>Origin</code> or <code>Referer</code> when needed) against your verified domains for the matching test/live environment. Native public discussions are not subject to that framing gate.')|safe }}
+        </p>
         <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
           <p class="text-sm text-green-900">
             {{ _('<strong>No action required.</strong> The embed automatically falls back to a <code>localStorage</code>-based session identifier (<code>embed_fingerprint</code>) when cookies are unavailable. Vote deduplication works in both modes.')|safe }}
@@ -770,7 +830,8 @@ const embedUrl = data.embed_url;</pre>
     <!-- Create Discussion API -->
     <section id="create-discussion">
       <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Create Discussion (Authenticated)') }}</h2>
-      <p class="text-gray-600 mb-4">{{ _('Create a discussion for a partner article or an internal CMS item. Requires API key.') }}</p>
+      <p class="text-gray-600 mb-4">{{ _('Create a discussion for a specific story, or for any editorial context you can name with a stable id. Supply <code>article_url</code> when you have a public link; use <code>external_id</code> when you do not (or use both for traceability). Requires API key.')|safe }}</p>
+      <p class="text-sm text-gray-500 mb-4 max-w-3xl">{{ _('This endpoint always creates the discussion first. Bundle initial <strong>statements</strong> in the same request via <code>seed_statements</code> or supply an <code>excerpt</code> so we can generate seeds; otherwise add statements afterward from the Partner Portal.')|safe }} <a href="#discussion-and-statements" class="text-primary-600 font-medium hover:underline">{{ _('Read how discussion vs statements map to fields →') }}</a></p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -1193,6 +1254,10 @@ app.post(
               <td class="py-3 text-gray-600">{{ _('Flag statement (from embed)') }}</td>
               <td class="py-3 font-mono text-gray-900">{{ _('10 req / min / IP') }}</td>
             </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">{{ _('Inline statement from embed (partner-scoped discussions)') }}</td>
+              <td class="py-3 font-mono text-gray-900">{{ _('Default 25 / reader / hour + IP ceiling; see env') }}</td>
+            </tr>
             <tr>
               <td class="py-3 text-gray-600">{{ _('Create discussion') }}</td>
               <td class="py-3 font-mono text-gray-900">{{ _('30 req / hr / key') }}</td>
@@ -1205,6 +1270,9 @@ app.post(
         </p>
         <p class="text-sm text-gray-500 mt-2">
           {{ _('<strong>Integrity mode:</strong> Some discussions have stricter vote rate limits enabled for integrity protection. The embed handles this transparently &mdash; users see a &ldquo;please slow down&rdquo; message.')|safe }}
+        </p>
+        <p class="text-sm text-gray-500 mt-2">
+          {{ _('<strong>Embed inline statements:</strong> Flask-Limiter uses <code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR</code> and <code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP</code> (see <code>config.py</code>). Per-user caps also apply before statements are stored.')|safe }}
         </p>
       </div>
     </section>

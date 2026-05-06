@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ discussion_translation.title if discussion_translation else discussion.title }} — {{ _('Society Speaks') }}</title>
   <meta name="robots" content="noindex">
+  {# Integrators: listen for postMessage type "societyspeaks:embed:resize" (height px) for dynamic iframe sizing. Same origin as snapshot/vote fetches — avoid third-party cookie reliance for anonymous users. #}
 
   <!-- Performance hints -->
   <link rel="preconnect" href="{{ request.url_root }}">
@@ -46,6 +47,17 @@
       {% endif %}
     }
 
+    @keyframes embed-content-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* Base styles */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -64,6 +76,13 @@
     .embed-container {
       max-width: 640px;
       margin: 0 auto;
+      animation: embed-content-in 0.35s ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .embed-container {
+        animation: none;
+      }
     }
 
     /* Header */

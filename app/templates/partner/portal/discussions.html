@@ -10,7 +10,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">{{ _('Discussions') }}</h1>
-        <p class="text-gray-500 text-sm mt-1">{{ _('All discussions created for your integration.') }}</p>
+        <p class="text-gray-500 text-sm mt-1 max-w-2xl break-words leading-relaxed">{{ _('Each row is one <strong>discussion</strong> (one voting topic + embed). Open it to view or add the <strong>statements</strong> — the agree/disagree lines readers see inside that topic.')|safe }}</p>
       </div>
       {% if can_create %}
       <a href="#new-discussion-form"
@@ -41,7 +41,7 @@
     {% if can_create %}
     <div id="new-discussion-form" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
       <h2 class="text-lg font-semibold text-gray-900 mb-1">{{ _('Create a discussion') }}</h2>
-      <p class="text-sm text-gray-500 mb-4">{{ _('Start a discussion from the portal without needing to call the API. Provide an article URL <em>or</em> an external ID — or both.')|safe }}</p>
+      <p class="text-sm text-gray-500 mb-4">{{ _('Each discussion is one voting topic you control — not something we import from your site. You are creating the wrapper first; add the <strong>statements</strong> (votable lines) afterward on the discussion page unless your API call already included seeds. Attach either an article web address <em>or</em> your own reference id (campaign codes, hubs, newsletters), optionally both.')|safe }}</p>
       <form method="POST" action="{{ url_for('partner.portal_create_discussion') }}" class="grid gap-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="grid gap-4 sm:grid-cols-2">

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-05-05 19:40+0100\n"
+"POT-Creation-Date: 2026-05-06 09:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -1489,7 +1489,7 @@ msgstr ""
 "Er is een fout opgetreden bij het registreren van uw stem. Probeer het "
 "opnieuw."
 
-#: app/daily/routes.py:1684 app/discussions/statements.py:977
+#: app/daily/routes.py:1684 app/discussions/statements.py:1014
 msgid "Automated requests are not allowed."
 msgstr "Geautomatiseerde aanvragen zijn niet toegestaan."
 
@@ -1713,27 +1713,27 @@ msgstr ""
 "U hebt geen toestemming om moderatiestatistieken voor deze discussie weer"
 " te geven."
 
-#: app/discussions/routes.py:247
+#: app/discussions/routes.py:252
 msgid "Please complete your profile before creating a discussion."
 msgstr "Vul uw profiel in voordat u een discussie maakt."
 
-#: app/discussions/routes.py:395
+#: app/discussions/routes.py:400
 msgid "You don't have permission to edit this discussion."
 msgstr "U hebt geen toestemming om deze discussie te bewerken."
 
-#: app/discussions/routes.py:568
+#: app/discussions/routes.py:573
 msgid "Discussion updated successfully."
 msgstr "Discussie succesvol bijgewerkt."
 
-#: app/discussions/routes.py:991
+#: app/discussions/routes.py:1025
 msgid "Discussion saved to your dashboard."
 msgstr "Discussie opgeslagen in uw dashboard."
 
-#: app/discussions/routes.py:993
+#: app/discussions/routes.py:1027
 msgid "This discussion is already saved."
 msgstr "Deze discussie is al opgeslagen."
 
-#: app/discussions/routes.py:1020
+#: app/discussions/routes.py:1054
 msgid ""
 "Create an account or sign in to save this discussion and follow future "
 "updates."
@@ -1741,75 +1741,75 @@ msgstr ""
 "Maak een account aan of meld u aan om deze discussie op te slaan en "
 "toekomstige updates te volgen."
 
-#: app/discussions/routes.py:1040
+#: app/discussions/routes.py:1074
 msgid "Discussion removed from your saved list."
 msgstr "Discussie verwijderd uit uw opgeslagen lijst."
 
-#: app/discussions/routes.py:1042
+#: app/discussions/routes.py:1076
 msgid "This discussion was not in your saved list."
 msgstr "Deze discussie stond niet in uw opgeslagen lijst."
 
-#: app/discussions/routes.py:1060
+#: app/discussions/routes.py:1094
 msgid "You don't have permission to add updates to this discussion."
 msgstr "U hebt geen toestemming om updates aan deze discussie toe te voegen."
 
-#: app/discussions/routes.py:1080
+#: app/discussions/routes.py:1114
 msgid "Discussion update published."
 msgstr "Discussie-update gepubliceerd."
 
-#: app/discussions/routes.py:1104
+#: app/discussions/routes.py:1138
 msgid "You don't have permission to edit updates for this discussion."
 msgstr "U hebt geen toestemming om updates voor deze discussie te bewerken."
 
-#: app/discussions/routes.py:1123
+#: app/discussions/routes.py:1157
 msgid "Discussion update saved."
 msgstr "Discussie-update opgeslagen."
 
-#: app/discussions/routes.py:1148
+#: app/discussions/routes.py:1182
 msgid "You don't have permission to delete updates for this discussion."
 msgstr "U hebt geen toestemming om updates voor deze discussie te verwijderen."
 
-#: app/discussions/routes.py:1153
+#: app/discussions/routes.py:1187
 msgid "Discussion update deleted."
 msgstr "Discussie-update verwijderd."
 
-#: app/discussions/routes.py:1393
+#: app/discussions/routes.py:1427
 msgid "Invalid page number"
 msgstr "Ongeldig paginanummer"
 
-#: app/discussions/routes.py:1394
+#: app/discussions/routes.py:1428
 msgid "Page number must be greater than 0"
 msgstr "Paginanummer moet groter zijn dan 0"
 
-#: app/discussions/routes.py:1445
+#: app/discussions/routes.py:1479
 msgid "Invalid parameter"
 msgstr "Ongeldig parameter"
 
-#: app/discussions/routes.py:1453 app/templates/errors/500.html:11
+#: app/discussions/routes.py:1487 app/templates/errors/500.html:11
 msgid "An internal server error occurred"
 msgstr "Een interne serverfout is opgetreden"
 
-#: app/discussions/routes.py:1454
+#: app/discussions/routes.py:1488
 msgid "Internal server error"
 msgstr "Interne serverfout"
 
-#: app/discussions/routes.py:1723
+#: app/discussions/routes.py:1757
 msgid "Activity tracked successfully"
 msgstr "Activiteit succesvol geregistreerd"
 
-#: app/discussions/routes.py:1730
+#: app/discussions/routes.py:1764
 msgid "Failed to track activity"
 msgstr "Activiteit kon niet worden geregistreerd"
 
-#: app/discussions/routes.py:1768
+#: app/discussions/routes.py:1802
 msgid "Participant tracked and notification sent"
 msgstr "Deelnemer geregistreerd en melding verzonden"
 
-#: app/discussions/routes.py:1775
+#: app/discussions/routes.py:1809
 msgid "Participant tracked"
 msgstr "Deelnemer geregistreerd"
 
-#: app/discussions/routes.py:1783
+#: app/discussions/routes.py:1817
 msgid "Failed to track participant"
 msgstr "Deelnemer kon niet worden geregistreerd"
 
@@ -1850,225 +1850,225 @@ msgstr ""
 "💡 Maak een gratis account aan om gedetailleerde reacties toe te voegen, "
 "bewijs te linken en je bijdragen bij te houden!"
 
-#: app/discussions/statements.py:575 app/partner/routes.py:1312
+#: app/discussions/statements.py:663 app/partner/routes.py:1312
 msgid "Statement must be at least 10 characters."
 msgstr "De stelling moet minimaal 10 tekens bevatten."
 
-#: app/discussions/statements.py:581 app/partner/routes.py:1315
+#: app/discussions/statements.py:669 app/partner/routes.py:1315
 msgid "Statement must be 500 characters or fewer."
 msgstr "De stelling mag maximaal 500 tekens bevatten."
 
-#: app/discussions/statements.py:608
+#: app/discussions/statements.py:696
 msgid "This discussion has reached its statement limit."
 msgstr "Deze discussie heeft het maximale aantal statements bereikt."
 
-#: app/discussions/statements.py:621 app/discussions/statements.py:640
+#: app/discussions/statements.py:709 app/discussions/statements.py:728
 msgid "This statement already exists in the discussion."
 msgstr "Dit statement bestaat al in de discussie."
 
-#: app/discussions/statements.py:648
+#: app/discussions/statements.py:736
 msgid "Could not submit statement at this time."
 msgstr "Statement kon op dit moment niet worden ingediend."
 
-#: app/discussions/statements.py:661
+#: app/discussions/statements.py:749
 msgid "Statement submitted."
 msgstr "Statement ingediend."
 
-#: app/discussions/statements.py:969
+#: app/discussions/statements.py:1006
 msgid "Your session has expired. Please refresh and try again."
 msgstr "Je sessie is verlopen. Vernieuw de pagina en probeer opnieuw."
 
-#: app/discussions/statements.py:979
+#: app/discussions/statements.py:1016
 msgid "Automated requests not allowed"
 msgstr "Geautomatiseerde verzoeken zijn niet toegestaan"
 
-#: app/discussions/statements.py:985
+#: app/discussions/statements.py:1022
 msgid "This discussion is closed and no longer accepts votes."
 msgstr "Deze discussie is gesloten en accepteert geen stemmen meer."
 
-#: app/discussions/statements.py:990
+#: app/discussions/statements.py:1027
 msgid "You do not have access to this programme discussion."
 msgstr "Je hebt geen toegang tot deze programma-discussie."
 
-#: app/discussions/statements.py:1020 app/discussions/statements.py:1048
+#: app/discussions/statements.py:1057 app/discussions/statements.py:1085
 msgid "Vote value is required."
 msgstr "Stemwaarde is vereist."
 
-#: app/discussions/statements.py:1022 app/discussions/statements.py:1050
+#: app/discussions/statements.py:1059 app/discussions/statements.py:1087
 msgid "Vote value is required"
 msgstr "Stemwaarde is vereist"
 
-#: app/discussions/statements.py:1027 app/discussions/statements.py:1055
+#: app/discussions/statements.py:1064 app/discussions/statements.py:1092
 msgid "Invalid vote value."
 msgstr "Ongeldige stemwaarde."
 
-#: app/discussions/statements.py:1029 app/discussions/statements.py:1057
+#: app/discussions/statements.py:1066 app/discussions/statements.py:1094
 msgid "Invalid vote value format"
 msgstr "Ongeldige stemwaarde-indeling"
 
-#: app/discussions/statements.py:1080
+#: app/discussions/statements.py:1117
 msgid "Voting from this partner is currently unavailable."
 msgstr "Stemmen van deze partner is momenteel niet beschikbaar."
 
-#: app/discussions/statements.py:1082
+#: app/discussions/statements.py:1119
 msgid "Embed and API access has been revoked for this partner."
 msgstr "Embed- en API-toegang is ingetrokken voor deze partner."
 
-#: app/discussions/statements.py:1086
+#: app/discussions/statements.py:1123
 msgid "Invalid vote value. Must be Agree, Disagree, or Unsure."
 msgstr "Ongeldige stemwaarde. Moet Akkoord, Oneens of Onzeker zijn."
 
-#: app/discussions/statements.py:1088
+#: app/discussions/statements.py:1125
 msgid "Invalid vote value. Must be -1, 0, or 1"
 msgstr "Ongeldige stemwaarde. Moet -1, 0 of 1 zijn"
 
-#: app/discussions/statements.py:1113
+#: app/discussions/statements.py:1150
 msgid "This Idempotency-Key was already used with a different payload."
 msgstr "Deze Idempotency-Key is al gebruikt met een ander payload."
 
-#: app/discussions/statements.py:1158
+#: app/discussions/statements.py:1195
 msgid "Vote could not be recorded due to a temporary conflict. Please try again."
 msgstr ""
 "Stem kon niet worden geregistreerd vanwege een tijdelijk conflict. "
 "Probeer het opnieuw."
 
-#: app/discussions/statements.py:1160
+#: app/discussions/statements.py:1197
 msgid "Temporary conflict while saving vote"
 msgstr "Tijdelijk conflict bij het opslaan van stem"
 
-#: app/discussions/statements.py:1335
+#: app/discussions/statements.py:1372
 msgid "Vote recorded."
 msgstr "Stem geregistreerd."
 
-#: app/discussions/statements.py:1434
+#: app/discussions/statements.py:1471
 msgid "You can only edit your own statements"
 msgstr "Je kunt alleen je eigen statements bewerken"
 
-#: app/discussions/statements.py:1439
+#: app/discussions/statements.py:1476
 msgid "Edit window expired (10 minutes)"
 msgstr "Bewerkingsvenster verlopen (10 minuten)"
 
-#: app/discussions/statements.py:1450
+#: app/discussions/statements.py:1487
 msgid "Statement updated successfully"
 msgstr "Statement succesvol bijgewerkt"
 
-#: app/discussions/statements.py:1467
+#: app/discussions/statements.py:1504
 msgid "You can only delete your own statements"
 msgstr "Je kunt alleen je eigen uitspraken verwijderen"
 
-#: app/discussions/statements.py:1475
+#: app/discussions/statements.py:1512
 msgid "Statement deleted"
 msgstr "Uitspraak verwijderd"
 
-#: app/discussions/statements.py:1496
+#: app/discussions/statements.py:1533
 msgid "You've already flagged this statement"
 msgstr "Je hebt deze uitspraak al gemarkt"
 
-#: app/discussions/statements.py:1511
+#: app/discussions/statements.py:1548
 msgid "Statement flagged for review"
 msgstr "Uitspraak gemarkeerd voor controle"
 
-#: app/discussions/statements.py:1621
+#: app/discussions/statements.py:1658
 msgid "Discussion not found"
 msgstr "Discussie niet gevonden"
 
-#: app/discussions/statements.py:1665
+#: app/discussions/statements.py:1702
 msgid "Your thought has been added!"
 msgstr "Je gedachte is toegevoegd!"
 
-#: app/discussions/statements.py:1669
+#: app/discussions/statements.py:1706
 msgid "Couldn't save your response. Try again?"
 msgstr "Kon je reactie niet opslaan. Probeer het opnieuw?"
 
-#: app/discussions/statements.py:1671
+#: app/discussions/statements.py:1708
 #, python-format
 msgid "Response must be at least %(min_length)s characters"
 msgstr "Reactie moet minstens %(min_length)s tekens lang zijn"
 
-#: app/discussions/statements.py:1728
+#: app/discussions/statements.py:1765
 msgid "Response posted successfully!"
 msgstr "Reactie succesvol geplaatst!"
 
-#: app/discussions/statements.py:1734
+#: app/discussions/statements.py:1771
 msgid "An error occurred while posting your response"
 msgstr "Er is een fout opgetreden bij het plaatsen van je reactie"
 
-#: app/discussions/statements.py:1748
+#: app/discussions/statements.py:1785
 msgid "This response has been deleted"
 msgstr "Deze reactie is verwijderd"
 
-#: app/discussions/statements.py:1782
+#: app/discussions/statements.py:1819
 msgid "You can only edit your own responses"
 msgstr "Je kunt alleen je eigen reacties bewerken"
 
-#: app/discussions/statements.py:1787
+#: app/discussions/statements.py:1824
 msgid "Cannot edit a deleted response"
 msgstr "Kan een verwijderde reactie niet bewerken"
 
-#: app/discussions/statements.py:1793
+#: app/discussions/statements.py:1830
 msgid "Edit window has expired (10 minutes)"
 msgstr "Bewerkingsvenster is verlopen (10 minuten)"
 
-#: app/discussions/statements.py:1805
+#: app/discussions/statements.py:1842
 msgid "Response updated successfully!"
 msgstr "Reactie succesvol bijgewerkt!"
 
-#: app/discussions/statements.py:1826
+#: app/discussions/statements.py:1863
 msgid "You don't have permission to delete this response"
 msgstr "Je hebt geen toestemming om deze reactie te verwijderen"
 
-#: app/discussions/statements.py:1832
+#: app/discussions/statements.py:1869
 msgid "Response deleted successfully"
 msgstr "Reactie succesvol verwijderd"
 
-#: app/discussions/statements.py:1963
+#: app/discussions/statements.py:2000
 msgid "You don't have permission to add evidence to this response"
 msgstr "Je hebt geen toestemming om bewijs aan deze reactie toe te voegen"
 
-#: app/discussions/statements.py:1988
+#: app/discussions/statements.py:2025
 msgid "File size must be under 10MB"
 msgstr "Bestandsgrootte moet onder de 10MB liggen"
 
-#: app/discussions/statements.py:2011
+#: app/discussions/statements.py:2048
 msgid "Error uploading file. Please try again."
 msgstr "Fout bij het uploaden van bestand. Probeer het opnieuw."
 
-#: app/discussions/statements.py:2017
+#: app/discussions/statements.py:2054
 msgid "Evidence added successfully!"
 msgstr "Bewijs succesvol toegevoegd!"
 
-#: app/discussions/statements.py:2024
+#: app/discussions/statements.py:2061
 msgid "An error occurred while adding evidence"
 msgstr "Er is een fout opgetreden bij het toevoegen van bewijs"
 
-#: app/discussions/statements.py:2045
+#: app/discussions/statements.py:2082
 msgid "You don't have permission to delete this evidence"
 msgstr "Je hebt geen toestemming om dit bewijs te verwijderen"
 
-#: app/discussions/statements.py:2061
+#: app/discussions/statements.py:2098
 msgid "Evidence deleted successfully"
 msgstr "Bewijs succesvol verwijderd"
 
-#: app/discussions/statements.py:2080
+#: app/discussions/statements.py:2117
 msgid "Only the discussion owner can update evidence quality"
 msgstr ""
 "Alleen de eigenaar van de discussie kan de kwaliteit van het bewijs "
 "bijwerken"
 
-#: app/discussions/statements.py:2085
+#: app/discussions/statements.py:2122
 msgid "Invalid quality status"
 msgstr "Ongeldige kwaliteitsstatus"
 
-#: app/discussions/statements.py:2091
+#: app/discussions/statements.py:2128
 #, python-format
 msgid "Evidence marked as %(quality_status)s"
 msgstr "Bewijs gemarkeerd als %(quality_status)s"
 
-#: app/discussions/statements.py:2108
+#: app/discussions/statements.py:2145
 msgid "No file attached to this evidence"
 msgstr "Geen bestand aan dit bewijs gekoppeld"
 
-#: app/discussions/statements.py:2131
+#: app/discussions/statements.py:2168
 msgid "Error downloading file"
 msgstr "Fout bij het downloaden van bestand"
 
@@ -3647,7 +3647,7 @@ msgstr ""
 "discussies en embedded widgets. Voor partners en deelnemers."
 
 #: app/templates/content-policy.html:9
-#: app/templates/discussions/embed_discussion.html:1096
+#: app/templates/discussions/embed_discussion.html:1115
 msgid "Content Policy"
 msgstr "Inhoudsbeleid"
 
@@ -5612,7 +5612,7 @@ msgstr "Linkse cluster"
 #: app/templates/discussions/consensus_results.html:443
 #: app/templates/discussions/consensus_results.html:478
 #: app/templates/discussions/consensus_results.html:507
-#: app/templates/discussions/embed_discussion.html:990
+#: app/templates/discussions/embed_discussion.html:1009
 #: app/templates/index.html:400 app/templates/index.html:408
 msgid "agree"
 msgstr "eens"
@@ -5742,7 +5742,7 @@ msgstr "Vraag van vandaag"
 #: app/templates/daily/weekly_batch.html:170
 #: app/templates/daily/weekly_batch.html:283
 #: app/templates/daily/weekly_batch.html:353
-#: app/templates/discussions/embed_discussion.html:944
+#: app/templates/discussions/embed_discussion.html:963
 #: app/templates/discussions/view_native.html:50
 #: app/templates/emails/daily_question.html:95
 #: app/templates/emails/daily_question.html:120
@@ -5766,7 +5766,7 @@ msgstr "Eens"
 #: app/templates/daily/weekly_batch.html:175
 #: app/templates/daily/weekly_batch.html:283
 #: app/templates/daily/weekly_batch.html:354
-#: app/templates/discussions/embed_discussion.html:963
+#: app/templates/discussions/embed_discussion.html:982
 #: app/templates/discussions/view_native.html:58
 #: app/templates/emails/daily_question.html:100
 #: app/templates/emails/daily_question.html:127
@@ -5789,7 +5789,7 @@ msgstr "Oneens"
 #: app/templates/daily/weekly_batch.html:180
 #: app/templates/daily/weekly_batch.html:283
 #: app/templates/daily/weekly_batch.html:355
-#: app/templates/discussions/embed_discussion.html:982
+#: app/templates/discussions/embed_discussion.html:1001
 #: app/templates/discussions/view_native.html:66
 #: app/templates/emails/daily_question.html:105
 #: app/templates/emails/daily_question.html:134
@@ -6263,7 +6263,7 @@ msgstr "Help"
 msgid "FAQ"
 msgstr "FAQ"
 
-#: app/templates/discussions/embed_discussion.html:865
+#: app/templates/discussions/embed_discussion.html:884
 #: app/templates/layout.html:710
 msgid "Select language"
 msgstr "Taal selecteren"
@@ -8984,7 +8984,7 @@ msgstr "Gestemd"
 #: app/templates/auth/dashboard.html:343
 #: app/templates/auth/participation.html:39
 #: app/templates/discussions/create_response.html:22
-#: app/templates/discussions/embed_discussion.html:1068
+#: app/templates/discussions/embed_discussion.html:1087
 #: app/templates/discussions/view_statement.html:3
 #: app/templates/discussions/view_statement.html:44
 #: app/templates/partner/portal/discussion_detail.html:285
@@ -9818,7 +9818,7 @@ msgid "%(count)d stories"
 msgstr "%(count)d verhalen"
 
 #: app/templates/brief/archive.html:73
-#: app/templates/discussions/embed_discussion.html:1044
+#: app/templates/discussions/embed_discussion.html:1063
 #: app/templates/discussions/news_feed.html:367
 #: app/templates/programmes/settings.html:140
 #: app/templates/sources/index.html:367
@@ -9829,7 +9829,7 @@ msgid "Previous"
 msgstr "Vorige"
 
 #: app/templates/brief/archive.html:78
-#: app/templates/discussions/embed_discussion.html:1035
+#: app/templates/discussions/embed_discussion.html:1054
 #: app/templates/programmes/settings.html:142
 #: app/templates/programmes/workspace.html:70
 #: app/templates/trending/articles.html:181
@@ -9840,7 +9840,7 @@ msgstr "Pagina %(page)d van %(pages)d"
 
 #: app/templates/brief/archive.html:84
 #: app/templates/discussions/create_discussion.html:468
-#: app/templates/discussions/embed_discussion.html:1054
+#: app/templates/discussions/embed_discussion.html:1073
 #: app/templates/discussions/news_feed.html:400
 #: app/templates/partner/portal/dashboard.html:84
 #: app/templates/programmes/settings.html:144
@@ -11562,7 +11562,7 @@ msgstr "Organisatie (%(name)s)"
 #: app/templates/discussions/edit_discussion.html:185
 #: app/templates/discussions/edit_response.html:50
 #: app/templates/discussions/edit_statement.html:70
-#: app/templates/discussions/embed_discussion.html:1129
+#: app/templates/discussions/embed_discussion.html:1148
 #: app/templates/discussions/flag_statement.html:62
 #: app/templates/profiles/_form_helpers.html:151
 #: app/templates/profiles/edit_company_profile.html:118
@@ -15359,7 +15359,7 @@ msgid "Published by"
 msgstr "Gepubliceerd door"
 
 #: app/templates/briefing/public/run_reader.html:142
-#: app/templates/discussions/embed_discussion.html:1095
+#: app/templates/discussions/embed_discussion.html:1114
 msgid "Powered by"
 msgstr "Mogelijk gemaakt door"
 
@@ -15373,7 +15373,7 @@ msgid "This briefing is powered by"
 msgstr "Deze briefing wordt aangestuurd door"
 
 #: app/templates/components/_translation_pending.html:7
-#: app/templates/discussions/embed_discussion.html:878
+#: app/templates/discussions/embed_discussion.html:897
 msgid ""
 "Translation in progress — this content is showing in English while your "
 "language version is being prepared."
@@ -15382,7 +15382,7 @@ msgstr ""
 "terwijl uw taalversie wordt voorbereid."
 
 #: app/templates/components/_translation_pending.html:8
-#: app/templates/discussions/embed_discussion.html:879
+#: app/templates/discussions/embed_discussion.html:898
 msgid "Reload to check"
 msgstr "Herladen om te controleren"
 
@@ -15694,7 +15694,7 @@ msgstr "Warm (Brits)"
 #: app/templates/components/vote_buttons.html:65
 #: app/templates/daily/question.html:130
 #: app/templates/daily/weekly_batch.html:169
-#: app/templates/discussions/embed_discussion.html:933
+#: app/templates/discussions/embed_discussion.html:952
 #: app/templates/discussions/view_native.html:47
 msgid "Agree with this statement"
 msgstr "Eens met deze stelling"
@@ -15703,7 +15703,7 @@ msgstr "Eens met deze stelling"
 #: app/templates/components/vote_buttons.html:66
 #: app/templates/daily/question.html:136
 #: app/templates/daily/weekly_batch.html:174
-#: app/templates/discussions/embed_discussion.html:952
+#: app/templates/discussions/embed_discussion.html:971
 #: app/templates/discussions/view_native.html:55
 msgid "Disagree with this statement"
 msgstr "Oneens met deze stelling"
@@ -15712,7 +15712,7 @@ msgstr "Oneens met deze stelling"
 #: app/templates/components/vote_buttons.html:67
 #: app/templates/daily/question.html:142
 #: app/templates/daily/weekly_batch.html:179
-#: app/templates/discussions/embed_discussion.html:971
+#: app/templates/discussions/embed_discussion.html:990
 #: app/templates/discussions/view_native.html:63
 msgid "Unsure about this statement"
 msgstr "Twijfel bij deze stelling"
@@ -16402,7 +16402,7 @@ msgid "View All %(count)d"
 msgstr "Bekijk Alle %(count)d"
 
 #: app/templates/daily/results.html:287 app/templates/daily/results.html:322
-#: app/templates/discussions/embed_discussion.html:1013
+#: app/templates/discussions/embed_discussion.html:1032
 msgid "Report"
 msgstr "Melden"
 
@@ -16627,7 +16627,7 @@ msgid "Abusive, threatening, or discriminatory content"
 msgstr "Beledigende, bedreigende of discriminerende inhoud"
 
 #: app/templates/daily/results.html:816
-#: app/templates/discussions/embed_discussion.html:1121
+#: app/templates/discussions/embed_discussion.html:1140
 msgid "Misinformation"
 msgstr "Desinformatie"
 
@@ -16648,7 +16648,7 @@ msgid "Provide any additional context..."
 msgstr "Geef aanvullende context..."
 
 #: app/templates/daily/results.html:846
-#: app/templates/discussions/embed_discussion.html:1130
+#: app/templates/discussions/embed_discussion.html:1149
 msgid "Submit Report"
 msgstr "Rapport indienen"
 
@@ -17235,17 +17235,17 @@ msgid "Posted by"
 msgstr "Geplaatst door"
 
 #: app/templates/discussions/_statement_card.html:29
-#: app/templates/discussions/embed_discussion.html:917
+#: app/templates/discussions/embed_discussion.html:936
 msgid "AI translated"
 msgstr "AI-vertaald"
 
 #: app/templates/discussions/_statement_card.html:29
-#: app/templates/discussions/embed_discussion.html:918
+#: app/templates/discussions/embed_discussion.html:937
 msgid "Show original"
 msgstr "Origineel tonen"
 
 #: app/templates/discussions/_statement_card.html:37
-#: app/templates/discussions/embed_discussion.html:924
+#: app/templates/discussions/embed_discussion.html:943
 msgid "Translation pending"
 msgstr "Vertaling in behandeling"
 
@@ -17716,7 +17716,7 @@ msgstr "Representatieve afwijzing"
 #: app/templates/discussions/consensus_results.html:443
 #: app/templates/discussions/consensus_results.html:478
 #: app/templates/discussions/consensus_results.html:507
-#: app/templates/discussions/embed_discussion.html:991
+#: app/templates/discussions/embed_discussion.html:1010
 msgid "disagree"
 msgstr "oneens"
 
@@ -17863,12 +17863,12 @@ msgstr ""
 #: app/templates/discussions/consensus_results.html:443
 #: app/templates/discussions/consensus_results.html:478
 #: app/templates/discussions/consensus_results.html:507
-#: app/templates/discussions/embed_discussion.html:992
+#: app/templates/discussions/embed_discussion.html:1011
 msgid "unsure"
 msgstr "twijfel"
 
 #: app/templates/discussions/consensus_results.html:445
-#: app/templates/discussions/embed_discussion.html:999
+#: app/templates/discussions/embed_discussion.html:1018
 msgid "agreement"
 msgstr "overeenstemming"
 
@@ -18706,106 +18706,106 @@ msgstr ""
 "integriteit van het gesprek te behouden."
 
 #: app/templates/discussions/embed_discussion.html:6
-#: app/templates/discussions/embed_discussion.html:1095
+#: app/templates/discussions/embed_discussion.html:1114
 #: app/templates/discussions/view_discussion.html:8
 #: app/templates/emails/base_email.html:9
 #: app/templates/emails/weekly_questions_digest.html:3
 msgid "Society Speaks"
 msgstr "Society Speaks"
 
-#: app/templates/discussions/embed_discussion.html:848
+#: app/templates/discussions/embed_discussion.html:867
 msgid "Skip to statements"
 msgstr "Naar stellingen"
 
-#: app/templates/discussions/embed_discussion.html:852
+#: app/templates/discussions/embed_discussion.html:871
 msgid "You're offline. Votes will be saved when you reconnect."
 msgstr ""
 "Je bent offline. Stemmen worden opgeslagen wanneer je opnieuw verbinding "
 "maakt.Je bent offline. Stemmen worden opgeslagen wanneer je opnieuw "
 "verbinding maakt."
 
-#: app/templates/discussions/embed_discussion.html:857
+#: app/templates/discussions/embed_discussion.html:876
 msgid "This discussion is closed. You can still view the full record."
 msgstr ""
 "Deze discussie is gesloten. Je kunt nog steeds het volledige overzicht "
 "bekijken.Deze discussie is gesloten. Je kunt nog steeds het volledige "
 "overzicht bekijken."
 
-#: app/templates/discussions/embed_discussion.html:889
+#: app/templates/discussions/embed_discussion.html:908
 #, python-format
 msgid "%(num)d statement to vote on"
 msgid_plural "%(num)d statements to vote on"
 msgstr[0] "%(num)d stelling om op te stemmen"
 msgstr[1] "%(num)d stellingen om op te stemmen"
 
-#: app/templates/discussions/embed_discussion.html:897
+#: app/templates/discussions/embed_discussion.html:916
 #: app/templates/emails/journey_reminder.html:82
 #: app/templates/programmes/journey_recap.html:52
 msgid "Your progress"
 msgstr "Jouw voortgang"
 
-#: app/templates/discussions/embed_discussion.html:898
+#: app/templates/discussions/embed_discussion.html:917
 #, python-format
 msgid "%(current)d / %(threshold)d votes"
 msgstr "%(current)d / %(threshold)d stemmen"
 
-#: app/templates/discussions/embed_discussion.html:903
+#: app/templates/discussions/embed_discussion.html:922
 msgid "Vote on statements to help build consensus"
 msgstr "Stem op stellingen om consensus te bouwen"
 
-#: app/templates/discussions/embed_discussion.html:909
+#: app/templates/discussions/embed_discussion.html:928
 msgid "Statements to vote on"
 msgstr "Stellingen om op te stemmen"
 
-#: app/templates/discussions/embed_discussion.html:918
+#: app/templates/discussions/embed_discussion.html:937
 msgid "Hide original"
 msgstr "Origineel verbergen"
 
-#: app/templates/discussions/embed_discussion.html:928
+#: app/templates/discussions/embed_discussion.html:947
 msgid "Vote options for this statement"
 msgstr "Stemopties voor deze stelling"
 
-#: app/templates/discussions/embed_discussion.html:988
+#: app/templates/discussions/embed_discussion.html:1007
 msgid "Vote to see how others split on this claim."
 msgstr "Stem om te zien hoe anderen over deze stelling denken."
 
-#: app/templates/discussions/embed_discussion.html:997
+#: app/templates/discussions/embed_discussion.html:1016
 msgid "total votes"
 msgstr "stemmen in totaal"
 
-#: app/templates/discussions/embed_discussion.html:1008
-#: app/templates/discussions/embed_discussion.html:1107
+#: app/templates/discussions/embed_discussion.html:1027
+#: app/templates/discussions/embed_discussion.html:1126
 msgid "Report this statement"
 msgstr "Stelling melden"
 
-#: app/templates/discussions/embed_discussion.html:1025
+#: app/templates/discussions/embed_discussion.html:1044
 msgid "No statements yet. Check back soon!"
 msgstr "Nog geen stellingen. Kom later terug!"
 
-#: app/templates/discussions/embed_discussion.html:1027
+#: app/templates/discussions/embed_discussion.html:1046
 msgid "This discussion is not currently available for embed voting."
 msgstr "Deze discussie is momenteel niet beschikbaar voor ingebedde stemming."
 
-#: app/templates/discussions/embed_discussion.html:1028
+#: app/templates/discussions/embed_discussion.html:1047
 msgid "View the full discussion on Society Speaks"
 msgstr "Bekijk de volledige discussie op Society Speaks"
 
-#: app/templates/discussions/embed_discussion.html:1034
+#: app/templates/discussions/embed_discussion.html:1053
 msgid "Statement pages"
 msgstr "Stellingenpagina's"
 
-#: app/templates/discussions/embed_discussion.html:1063
+#: app/templates/discussions/embed_discussion.html:1082
 #: app/templates/discussions/view_discussion.html:600
 #: app/templates/discussions/view_discussion.html:679
 #: app/templates/discussions/view_discussion.html:697
 msgid "Suggest a statement"
 msgstr "Stel een stelling voor"
 
-#: app/templates/discussions/embed_discussion.html:1065
+#: app/templates/discussions/embed_discussion.html:1084
 msgid "Your statement should be concise and debatable (10-500 characters)."
 msgstr "Je stelling moet beknopt en bespreekbaar zijn (10-500 tekens)."
 
-#: app/templates/discussions/embed_discussion.html:1076
+#: app/templates/discussions/embed_discussion.html:1095
 msgid ""
 "e.g. Expanding low-emission zones is worth short-term disruption for "
 "long-term health."
@@ -18813,32 +18813,32 @@ msgstr ""
 "Bijv. Het uitbreiden van zones met lage uitstoot is korte-termijnoverlast"
 " waard voor de gezondheid op lange termijn."
 
-#: app/templates/discussions/embed_discussion.html:1080
+#: app/templates/discussions/embed_discussion.html:1099
 #, python-format
 msgid "%(cur)d / %(max)d"
 msgstr "%(cur)d / %(max)d"
 
-#: app/templates/discussions/embed_discussion.html:1082
+#: app/templates/discussions/embed_discussion.html:1101
 msgid "Submit statement"
 msgstr "Stelling indienen"
 
-#: app/templates/discussions/embed_discussion.html:1092
+#: app/templates/discussions/embed_discussion.html:1111
 msgid "View Full Analysis"
 msgstr "Volledige analyse bekijken"
 
-#: app/templates/discussions/embed_discussion.html:1110
+#: app/templates/discussions/embed_discussion.html:1129
 msgid "Reason for reporting"
 msgstr "Reden voor melding"
 
-#: app/templates/discussions/embed_discussion.html:1113
+#: app/templates/discussions/embed_discussion.html:1132
 msgid "Spam or advertising"
 msgstr "Spam of reclame"
 
-#: app/templates/discussions/embed_discussion.html:1117
+#: app/templates/discussions/embed_discussion.html:1136
 msgid "Harassment or abuse"
 msgstr "Intimidatie of misbruik"
 
-#: app/templates/discussions/embed_discussion.html:1125
+#: app/templates/discussions/embed_discussion.html:1144
 msgid "Off-topic or irrelevant"
 msgstr "Niet relevant"
 
@@ -18846,35 +18846,51 @@ msgstr "Niet relevant"
 msgid "Embed Unavailable - Society Speaks"
 msgstr "Embed Niet beschikbaar - Society Speaks"
 
-#: app/templates/discussions/embed_unavailable.html:74
-msgid "Embed Temporarily Unavailable"
+#: app/templates/discussions/embed_unavailable.html:76
+#, fuzzy
+msgid "Service temporarily unavailable"
+msgstr "Service tijdelijk niet beschikbaar."
+
+#: app/templates/discussions/embed_unavailable.html:78
+#, fuzzy
+msgid "Embed temporarily unavailable"
 msgstr "Embed Tijdelijk niet beschikbaar"
 
-#: app/templates/discussions/embed_unavailable.html:77
+#: app/templates/discussions/embed_unavailable.html:83
 msgid "Embed access has been revoked for this partner."
 msgstr "Embed-toegang is ingetrokken voor deze partner."
 
-#: app/templates/discussions/embed_unavailable.html:79
+#: app/templates/discussions/embed_unavailable.html:85
 msgid ""
-"This domain is not verified for embeds. Please verify your domain in the "
-"Partner Portal."
+"This page is not authorised to show the voting widget here. If you are a "
+"publisher, verify your domains in the Partner Portal (www and apex may "
+"require separate verification). Readers can participate on Society "
+"Speaks."
 msgstr ""
-"Dit domein is niet geverifieerd voor embeds. Verifieer alstublieft je "
-"domein in het Partner Portal."
 
-#: app/templates/discussions/embed_unavailable.html:81
+#: app/templates/discussions/embed_unavailable.html:87
+#, fuzzy
+msgid "This discussion cannot be embedded on external sites."
+msgstr "Deze discussie stond niet in uw opgeslagen lijst."
+
+#: app/templates/discussions/embed_unavailable.html:89
 msgid "This discussion is no longer available."
 msgstr "Deze discussie is niet langer beschikbaar."
 
-#: app/templates/discussions/embed_unavailable.html:83
+#: app/templates/discussions/embed_unavailable.html:91
+msgid "The voting widget is temporarily unavailable while we restore service."
+msgstr ""
+
+#: app/templates/discussions/embed_unavailable.html:93
+#, fuzzy
 msgid ""
-"The voting widget is currently unavailable. Please visit Society Speaks "
-"directly to participate."
+"The voting widget is currently unavailable. You can continue on Society "
+"Speaks."
 msgstr ""
 "De stemwidget is momenteel niet beschikbaar. Bezoek Society Speaks "
 "rechtstreeks om deel te nemen."
 
-#: app/templates/discussions/embed_unavailable.html:87
+#: app/templates/discussions/embed_unavailable.html:97
 #: app/templates/emails/base_email.html:99
 #: app/templates/emails/discussion_notification.html:89
 msgid "Visit Society Speaks"
@@ -20239,8 +20255,7 @@ msgstr "Zet je civieke reis voort — Society Speaks"
 #: app/templates/emails/journey_reminder.html:5
 #, python-format
 msgid "%(done)s of %(total)d themes done. Up next: %(next)s (~%(mins)d mins)"
-msgstr ""
-"%(done)s van %(total)d thema's gedaan. Volgende: %(next)s (~%(mins)d min)"
+msgstr "%(done)s van %(total)d thema's gedaan. Volgende: %(next)s (~%(mins)d min)"
 
 #: app/templates/emails/journey_reminder.html:12
 #: app/templates/emails/journey_reminder_confirm.html:11
@@ -20293,7 +20308,8 @@ msgstr "Volgende"
 #, python-format
 msgid "About %(mins)d minutes &nbsp;·&nbsp; %(count)d statements to vote on"
 msgstr ""
-"Ongeveer %(mins)d minuten &nbsp;·&nbsp; %(count)d stellingen om over te stemmen"
+"Ongeveer %(mins)d minuten &nbsp;·&nbsp; %(count)d stellingen om over te "
+"stemmen"
 
 #: app/templates/emails/journey_reminder.html:68
 #: app/templates/emails/journey_reminder_confirm.html:28

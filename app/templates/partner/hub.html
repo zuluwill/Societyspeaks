@@ -3,7 +3,7 @@
 
 {% block title %}{{ _('For Publishers - Society Speaks') }}{% endblock %}
 
-{% block meta_description %}{{ _('Embed Society Speaks on your articles so readers can vote on key statements and discover where public opinion converges. A clean, moderated alternative to comments with clear, structured insight.') }}{% endblock %}
+{% block meta_description %}{{ _('Embed Society Speaks on articles or other pages you choose: you define each voting topic and opening statements yourself or via your CMS—we do not scrape your newsroom.') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gradient-to-b from-primary-50 to-white">
@@ -19,6 +19,10 @@
         <p class="text-lg text-gray-600">
           {{ _('Add a voting widget to any article in minutes. Readers vote on balanced statements, and you get a clear, data-driven picture of consensus, division, and common ground &mdash; with low moderation overhead.')|safe }}
         </p>
+        <div class="text-sm text-gray-600 max-w-xl space-y-2">
+          <p class="m-0 leading-relaxed">{{ _('Naming: a <strong>discussion</strong> is the topic wrapper and embed; several <strong>statements</strong> sit inside it — the individual lines people rate with agree / disagree / unsure.')|safe }}</p>
+          <p class="m-0 leading-relaxed">{{ _('You choose every topic and how it is labelled — we do not scrape your site. Link a discussion to a story URL, attach your own CMS reference, type opening statements, or paste a short excerpt so we can suggest wording; your team can automate any of that from your servers when you are ready.') }}</p>
+        </div>
         <div class="space-y-3 text-sm text-gray-700">
           <div class="flex items-start">
             <svg class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,6 +54,7 @@
             {{ _('Read the Docs') }}
           </a>
         </div>
+        <p class="text-xs text-gray-600 max-w-xl">{{ _('New to setup? Follow the') }} <a href="{{ url_for('partner.portal_getting_started') }}" class="text-primary-600 font-medium hover:underline">{{ _('guided setup') }}</a> {{ _('or the') }} <a href="{{ url_for('partner.api_docs') }}#publisher-checklist" class="text-primary-600 font-medium hover:underline">{{ _('simple checklist') }}</a> {{ _('in the reference docs.') }}</p>
         <p class="text-xs text-gray-500">{{ _('Free test environment. No credit card required. Live keys from &pound;49/mo.')|safe }}</p>
       </div>
       <div class="lg:col-span-6">

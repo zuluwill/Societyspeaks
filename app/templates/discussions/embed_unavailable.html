@@ -71,14 +71,24 @@
     <svg class="unavailable-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
     </svg>
-    <h1 class="unavailable-title">{{ _('Embed Temporarily Unavailable') }}</h1>
+    <h1 class="unavailable-title">
+      {% if unavailable_reason == 'service_unavailable' %}
+        {{ _('Service temporarily unavailable') }}
+      {% else %}
+        {{ _('Embed Temporarily Unavailable') }}
+      {% endif %}
+    </h1>
     <p class="unavailable-message">
       {% if unavailable_reason == 'disabled' %}
         {{ _('Embed access has been revoked for this partner.') }}
       {% elif unavailable_reason == 'domain_not_allowed' %}
-        {{ _('This domain is not verified for embeds. Please verify your domain in the Partner Portal.') }}
+        {{ _('This page is not authorised to show the voting widget here. If you are a publisher, verify your domains in the Partner Portal (www and apex may require separate verification). Readers can participate on Society Speaks.') }}
+      {% elif unavailable_reason == 'access_restricted' %}
+        {{ _('This discussion cannot be embedded on external sites.') }}
       {% elif unavailable_reason == 'deleted' %}
         {{ _('This discussion is no longer available.') }}
+      {% elif unavailable_reason == 'service_unavailable' %}
+        {{ _('The voting widget is temporarily unavailable while we restore service.') }}
       {% else %}
         {{ _('The voting widget is currently unavailable. Please visit Society Speaks directly to participate.') }}
       {% endif %}

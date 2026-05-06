@@ -30,6 +30,7 @@ from app.api.utils import (
     get_discussion_participant_count, get_discussion_statement_count,
     sanitize_partner_ref, partner_ref_is_disabled, track_partner_event, record_partner_usage,
     is_partner_origin_allowed, invalidate_partner_snapshot_cache,
+    get_effective_embed_parent_origin, origin_matches_app_base_url,
 )
 from app.partner.keys import find_partner_api_key
 from app.lib.counter_utils import increment_counter
@@ -1705,13 +1706,16 @@ def flag_statement_from_embed():
         POST /api/embed/flag
         {"statement_id": 123, "flag_reason": "spam"}
     """
-    # Validate request origin against partner allowlist
-    origin = request.headers.get('Origin')
-    if not origin:
-        return api_error('origin_required', 'Origin header is required for embed flagging.', 403)
-    if not is_partner_origin_allowed(origin):
-        current_app.logger.warning(f"Embed flag rejected: origin {origin} not in allowlist")
-        return api_error('origin_not_allowed', 'Origin not allowed.', 403)
+    # Same-origin POSTs name our site in Origin — allow first-party regardless of PartnerDomain rows.
+    # Otherwise require a verified partner origin for the discussion's env (fixtures may send Origin:
+    # as the embedding publisher for integration tests).
+    effective = get_effective_embed_parent_origin()
+    if not effective:
+        return api_error(
+            'origin_required',
+            'Origin or Referer is required for embed flagging.',
+            403,
+        )
 
     data = request.get_json()
     if not data:
@@ -1737,6 +1741,20 @@ def flag_statement_from_embed():
     statement = db.session.get(Statement, statement_id)
     if not statement:
         return api_error('statement_not_found', 'The requested statement does not exist.', 404)
+
+    discussion_env = getattr(statement.discussion, 'partner_env', None)
+    env_for_allowlist = discussion_env if discussion_env else 'live'
+    if origin_matches_app_base_url(effective):
+        pass
+    elif is_partner_origin_allowed(effective, env=env_for_allowlist):
+        pass
+    else:
+        current_app.logger.warning(
+            'Embed flag rejected: origin %s not allowlisted for env=%s',
+            effective,
+            env_for_allowlist,
+        )
+        return api_error('origin_not_allowed', 'Origin not allowed.', 403)
 
     # Get user identifier (required: at least one of user_id or session_fingerprint)
     user_id = current_user.id if current_user.is_authenticated else None

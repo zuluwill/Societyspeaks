@@ -465,6 +465,20 @@ class Config:
     # Discussion scale guardrails and pagination defaults.
     DISCUSSION_STATEMENTS_PER_PAGE = int(os.getenv('DISCUSSION_STATEMENTS_PER_PAGE', '20'))
     EMBED_STATEMENTS_PER_PAGE = int(os.getenv('EMBED_STATEMENTS_PER_PAGE', '25'))
+    # Embed "suggest a statement": per-reader + per-IP Flask-Limiter ceilings (statements.py).
+    # Actor limit uses discussion + partner ref + embed fingerprint (not shared-NAT IP alone).
+    EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR = (
+        os.getenv('EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR') or '25 per hour'
+    ).strip()
+    EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP = (
+        os.getenv('EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP') or '600 per hour'
+    ).strip()
+    # Partner-scoped iframe GET: when True, deny embed HTML if Origin/Referer cannot be resolved
+    # (production only; public discussions unaffected). Disabled by default to avoid breakage
+    # under strict referrer-stripping clients.
+    PARTNER_EMBED_REQUIRE_PARENT_ORIGIN = (
+        os.getenv('PARTNER_EMBED_REQUIRE_PARENT_ORIGIN', 'false').lower() == 'true'
+    )
     MAX_STATEMENTS_PER_DISCUSSION = int(os.getenv('MAX_STATEMENTS_PER_DISCUSSION', '5000'))
     # AgglomerativeClustering is O(n²) on participants. At n=5000 participants
     # the linkage matrix is ~200 MB and takes seconds; at n=50k it OOMs.
