@@ -75,12 +75,6 @@ def _daily_send_lock_key(target_date=None) -> str:
     return f"brief_send_lock:daily:{target_date.isoformat()}"
 
 
-def _post_publish_catchup_lock_key(target_date=None) -> str:
-    """Separate lock key for the post-publish catch-up send (different from hourly send lock)."""
-    if target_date is None:
-        target_date = utcnow_naive().date()
-    return f"brief_send_lock:daily_catchup:{target_date.isoformat()}"
-
 
 def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
     """
@@ -825,85 +819,6 @@ class BriefEmailScheduler:
             return results
         finally:
             release_daily_send_lock(lock_client, lock_key, lock_token)
-
-    def send_post_publish_catchup(self) -> Optional[dict]:
-        """
-        After today's brief publishes (BRIEF_PUBLISH_UTC_HOUR UTC), send it to
-        any active daily subscriber who hasn't received it yet.
-
-        Morning subscribers receive *yesterday's* brief at their preferred hour
-        (because today's isn't ready yet).  This job runs ~30 minutes after
-        publish and closes that gap: everyone gets today's brief the same day,
-        regardless of their preferred send time.
-
-        Uses a dedicated Redis lock so it never races with the hourly send job.
-        The can_receive_brief() check inside send_to_subscribers() prevents
-        anyone from getting a duplicate.
-        """
-        from datetime import date
-        import os, secrets
-
-        today = date.today()
-
-        redis_url = os.environ.get('REDIS_URL')
-        if not redis_url:
-            logger.warning("Post-publish catch-up skipped: no REDIS_URL configured")
-            return {'sent': 0, 'failed': 0, 'errors': []}
-
-        lock_key = _post_publish_catchup_lock_key(today)
-        lock_token = secrets.token_urlsafe(18)
-        redis_client = None
-
-        try:
-            from app.lib.redis_client import get_client
-            redis_client = get_client(decode_responses=False)
-            if not redis_client:
-                logger.warning("Post-publish catch-up skipped: Redis unavailable")
-                return {'sent': 0, 'failed': 0, 'errors': []}
-
-            acquired = redis_client.set(lock_key, lock_token, nx=True, ex=3500)
-            if not acquired:
-                logger.info("Post-publish catch-up: lock already held, skipping (another process is running)")
-                return {'sent': 0, 'failed': 0, 'errors': []}
-        except Exception as e:
-            logger.warning(f"Post-publish catch-up: Redis lock error ({e}), skipping")
-            return {'sent': 0, 'failed': 0, 'errors': []}
-
-        try:
-            brief = DailyBrief.get_today(brief_type='daily')
-            if not brief:
-                logger.info("Post-publish catch-up: no published brief for today, skipping")
-                return None
-
-            all_subs = DailyBriefSubscriber.query.filter(
-                DailyBriefSubscriber.status == 'active',
-                db.or_(
-                    DailyBriefSubscriber.cadence == 'daily',
-                    DailyBriefSubscriber.cadence == None,
-                )
-            ).all()
-
-            to_send = [s for s in all_subs if s.can_receive_brief(brief_id=brief.id)]
-
-            if not to_send:
-                logger.info("Post-publish catch-up: all subscribers have already received today's brief")
-                return {'sent': 0, 'failed': 0, 'errors': []}
-
-            logger.info(
-                f"Post-publish catch-up: sending today's brief to {len(to_send)} "
-                "subscriber(s) who missed the morning window"
-            )
-            return self.send_to_subscribers(to_send, brief)
-
-        finally:
-            try:
-                if redis_client and lock_key and lock_token:
-                    redis_client.eval(
-                        "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
-                        1, lock_key, lock_token,
-                    )
-            except Exception as e:
-                logger.warning(f"Post-publish catch-up: failed to release lock: {e}")
 
     def send_weekly_brief_hourly(self) -> Optional[dict]:
         """

@@ -3165,56 +3165,6 @@ def init_scheduler(app):
                 )
 
 
-    @scheduler.scheduled_job(
-        'cron',
-        hour=BRIEF_PUBLISH_UTC_HOUR,
-        minute=30,
-        id='send_brief_post_publish_catchup',
-        max_instances=1,
-        coalesce=True,
-        misfire_grace_time=7200,
-    )
-    def send_brief_post_publish_catchup():
-        """
-        Send today's brief to any daily subscriber who hasn't received it yet.
-
-        Morning subscribers always receive *yesterday's* brief at their preferred
-        hour (today's isn't ready then).  This job runs 30 minutes after the brief
-        publishes (BRIEF_PUBLISH_UTC_HOUR + 0:30 UTC) and closes that gap so
-        everyone gets today's edition the same day.
-
-        The can_receive_brief() dedup inside send_to_subscribers() ensures no
-        subscriber ever gets a duplicate.  Only runs in production.
-        """
-        if not _is_production_environment():
-            logger.info("Skipping post-publish catch-up send - development environment")
-            return
-
-        with app.app_context():
-            from app.brief.email_client import BriefEmailScheduler
-
-            logger.info("Starting post-publish daily brief catch-up send")
-            try:
-                scheduler_obj = BriefEmailScheduler()
-                results = scheduler_obj.send_post_publish_catchup()
-                if results:
-                    logger.info(
-                        f"Post-publish catch-up: {results['sent']} sent, "
-                        f"{results['failed']} failed"
-                    )
-                    if results['errors']:
-                        for err in results['errors'][:5]:
-                            logger.error(err)
-                else:
-                    logger.info("Post-publish catch-up: no brief available or nothing to send")
-            except Exception as e:
-                logger.error(f"Post-publish catch-up send failed: {e}", exc_info=True)
-                _send_ops_alert(
-                    "CRITICAL: Post-publish brief catch-up send failed. "
-                    "Morning subscribers may not receive today's edition. "
-                    "Check scheduler logs."
-                )
-
     @scheduler.scheduled_job('cron', hour=2, minute=0, id='vote_integrity_check', max_instances=1, coalesce=True)
     def vote_integrity_check():
         """
