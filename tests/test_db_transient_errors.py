@@ -114,3 +114,28 @@ def test_api_blueprint_db_handler_returns_json(app, client):
     data = json.loads(resp.data)
     assert data["error"] == "service_unavailable"
     assert resp.headers.get("Retry-After") == str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+
+
+def test_with_db_retry_catches_disconnection_error(app):
+    """with_db_retry must retry DisconnectionError (not a DBAPIError subclass).
+
+    DisconnectionError is a direct SQLAlchemyError subclass, completely outside
+    the OperationalError / DBAPIError hierarchy.  If the catch clause omits it,
+    a DisconnectionError raised mid-request escapes without retry.
+    """
+    from app.db_retry import with_db_retry
+
+    call_count = {"n": 0}
+
+    with app.app_context():
+        @with_db_retry(max_attempts=2, delay=0)
+        def flaky():
+            call_count["n"] += 1
+            if call_count["n"] < 2:
+                raise DisconnectionError("connection was closed")
+            return "ok"
+
+        result = flaky()
+
+    assert result == "ok"
+    assert call_count["n"] == 2, "Expected exactly one retry after DisconnectionError"

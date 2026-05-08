@@ -31,7 +31,7 @@ import functools
 from typing import TypeVar, Callable
 
 from flask import current_app
-from sqlalchemy.exc import OperationalError, DBAPIError
+from sqlalchemy.exc import OperationalError, DBAPIError, DisconnectionError
 from werkzeug.exceptions import HTTPException
 
 from app.lib.db_transient_errors import is_transient_db_connectivity_error
@@ -90,7 +90,7 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
                 try:
                     return func(*args, **kwargs)
 
-                except (OperationalError, DBAPIError) as e:
+                except (OperationalError, DBAPIError, DisconnectionError) as e:
                     last_exception = e
 
                     if not is_connection_error(e) or attempt == attempts:
