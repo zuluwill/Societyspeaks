@@ -172,9 +172,15 @@ def _force_exit_on_timeout(signum, frame):
     logger.warning("Redis lock release timed out after 5 s — forcing exit via os._exit(0)")
     os._exit(0)
 
+
+# SIGALRM is Unix-only; still attempt lock release without a hard timeout where
+# unsupported (e.g. Windows — not the production scheduler target).
+_LOCK_RELEASE_ALARM_ARMED = False
 try:
-    signal.signal(signal.SIGALRM, _force_exit_on_timeout)
-    signal.alarm(5)
+    if hasattr(signal, "SIGALRM"):
+        signal.signal(signal.SIGALRM, _force_exit_on_timeout)
+        signal.alarm(5)
+        _LOCK_RELEASE_ALARM_ARMED = True
     from app.lib.redis_client import get_client as _get_shared_redis
     _rc = _get_shared_redis(decode_responses=False)
     if _rc is not None:
@@ -194,9 +200,13 @@ end
                 "Scheduler Redis lock not held by this process (pid=%s) — nothing to release",
                 _owned_by,
             )
-    signal.alarm(0)
 except Exception as _lock_err:
-    signal.alarm(0)
     logger.warning("Could not release Redis lock before exit (non-fatal): %s", _lock_err)
+finally:
+    if _LOCK_RELEASE_ALARM_ARMED:
+        try:
+            signal.alarm(0)
+        except (OSError, ValueError, AttributeError):
+            pass
 
 sys.exit(0)

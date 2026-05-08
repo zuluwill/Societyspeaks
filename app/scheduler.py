@@ -28,6 +28,41 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+def _daily_brief_min_items_from_env(var: str, default: int) -> int:
+    """Parse a positive integer env override for daily-brief completeness thresholds."""
+    raw = os.environ.get(var, str(default))
+    try:
+        n = int(raw)
+        if n < 1:
+            logger.warning("Invalid %s=%r (must be >= 1), using %d", var, raw, default)
+            return default
+        return n
+    except ValueError:
+        logger.warning("Invalid %s=%r, using %d", var, raw, default)
+        return default
+
+
+# Item-count gates: when an existing daily brief has at least this many items
+# and is ready/published, skip (re)generation. Primary uses a *higher* bar than
+# safety nets so the 17:00 UTC path avoids redundant LLM/publish work; nets use
+# a *lower* bar (6 by default) so 19:30/21:30 still regenerate clearly thin
+# editions without fighting marginal cases. Tunable via env without redeploying code.
+DAILY_BRIEF_MIN_ITEMS_PRIMARY = _daily_brief_min_items_from_env(
+    "DAILY_BRIEF_MIN_ITEMS_PRIMARY", 8
+)
+DAILY_BRIEF_MIN_ITEMS_SAFETY_NET = _daily_brief_min_items_from_env(
+    "DAILY_BRIEF_MIN_ITEMS_SAFETY_NET", 6
+)
+
+if DAILY_BRIEF_MIN_ITEMS_SAFETY_NET > DAILY_BRIEF_MIN_ITEMS_PRIMARY:
+    logger.warning(
+        "DAILY_BRIEF_MIN_ITEMS_SAFETY_NET (%d) > DAILY_BRIEF_MIN_ITEMS_PRIMARY (%d): "
+        "safety nets treat more editions as 'complete' than the primary job — verify this is intentional.",
+        DAILY_BRIEF_MIN_ITEMS_SAFETY_NET,
+        DAILY_BRIEF_MIN_ITEMS_PRIMARY,
+    )
+
+
 def _job_error_listener(event):
     """
     Handle job errors gracefully, especially during shutdown.
@@ -1900,7 +1935,7 @@ def init_scheduler(app):
                 ).first()
                 if existing and existing.status in ('ready', 'published'):
                     existing_count = existing.item_count or 0
-                    if existing_count >= 8:
+                    if existing_count >= DAILY_BRIEF_MIN_ITEMS_PRIMARY:
                         logger.info(f"Brief already exists with status '{existing.status}' and {existing_count} items, skipping")
                         return
                     logger.warning(
@@ -2012,13 +2047,13 @@ def init_scheduler(app):
 
             if existing:
                 existing_count = existing.item_count or 0
-                if existing_count >= 6:
+                if existing_count >= DAILY_BRIEF_MIN_ITEMS_SAFETY_NET:
                     logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}, {existing_count} items), skipping")
                     return
                 # Brief exists but is under-populated — safety-net will regenerate it
                 msg = (
                     f"ALERT: Daily brief safety-net: brief for {today} has only {existing_count} item(s) "
-                    f"(minimum 6). Regenerating to replace under-populated brief."
+                    f"(minimum {DAILY_BRIEF_MIN_ITEMS_SAFETY_NET}). Regenerating to replace under-populated brief."
                 )
                 logger.warning(msg)
                 _send_ops_alert(msg)
@@ -2118,12 +2153,12 @@ def init_scheduler(app):
 
             if existing:
                 existing_count = existing.item_count or 0
-                if existing_count >= 6:
+                if existing_count >= DAILY_BRIEF_MIN_ITEMS_SAFETY_NET:
                     logger.debug(f"Daily brief safety-net-2: brief already exists ({existing.status}, {existing_count} items), skipping")
                     return
                 msg = (
                     f"CRITICAL: Daily brief safety-net-2: brief for {today} has only {existing_count} item(s) "
-                    f"(minimum 6). Regenerating to replace under-populated brief."
+                    f"(minimum {DAILY_BRIEF_MIN_ITEMS_SAFETY_NET}). Regenerating to replace under-populated brief."
                 )
                 logger.error(msg)
                 _send_ops_alert(msg)
