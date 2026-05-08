@@ -12,6 +12,64 @@ import logging
 load_dotenv()
 
 
+def _make_retry_creator(uri: str, connect_args: dict, max_attempts: int = 3, base_backoff_s: float = 0.3):
+    """Return a zero-argument psycopg2 connector with retry on transient network errors.
+
+    Passed as the ``creator`` argument to SQLAlchemy's ``create_engine`` so
+    that *every* physical DB connection attempt — pool-recycle reconnects,
+    startup checks, scheduler jobs, consensus workers — benefits from retry
+    without requiring per-route decorators.
+
+    Why this is at the engine level
+    --------------------------------
+    SQLAlchemy's ``pool_pre_ping`` catches *stale* connections before they are
+    handed to application code.  It cannot help when the creation of a *new*
+    physical connection fails (e.g. pool recycle, pool expansion under load).
+    Wrapping the creator is the only SQLAlchemy-endorsed way to add retry
+    semantics to new-connection establishment.
+
+    Retryable conditions
+    --------------------
+    - ``network is unreachable`` — DNS returned only IPv6 for a host in an
+      IPv4-only environment (Replit + Neon pooler transient DNS condition).
+    - ``could not connect to server`` — generic TCP-level refusal / timeout
+      that may self-heal on retry.
+    - ``connection timed out`` — network-level timeout on a healthy host.
+
+    Non-retryable errors (auth failures, SSL errors, bad DSN) are re-raised
+    immediately on the first attempt.
+    """
+    import psycopg2 as _psycopg2
+    import time as _time
+
+    _RETRYABLE = (
+        'network is unreachable',
+        'could not connect to server',
+        'connection timed out',
+    )
+
+    def _creator():
+        last_exc = None
+        for attempt in range(max_attempts):
+            try:
+                return _psycopg2.connect(uri, **connect_args)
+            except _psycopg2.OperationalError as exc:
+                msg = str(exc).lower()
+                if any(phrase in msg for phrase in _RETRYABLE) and attempt < max_attempts - 1:
+                    sleep_s = base_backoff_s * (attempt + 1)
+                    logging.warning(
+                        "DB connection attempt %d/%d failed (%s) — retrying in %.1fs",
+                        attempt + 1, max_attempts, msg[:120], sleep_s,
+                    )
+                    _time.sleep(sleep_s)
+                    last_exc = exc
+                    continue
+                raise
+        raise last_exc  # pragma: no cover — only reached if max_attempts == 0
+
+    return _creator
+
+
 def _env_int(name, default):
     """Parse an integer env var safely, logging and falling back on bad input."""
     raw = os.getenv(name)
@@ -232,13 +290,18 @@ class Config:
         'keepalives_count': 3,   # was 5 — fail faster on a dead link
     }
 
+    # Use a creator function so that every new physical DB connection —
+    # including pool-recycle reconnects, scheduler jobs, and consensus worker
+    # connections — gets retry logic for transient network errors.  When
+    # `creator` is set SQLAlchemy ignores `connect_args` (it calls creator()
+    # directly), so keepalive settings are embedded in _make_retry_creator.
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,  # Verify connections before use (prevents stale connection errors)
         'pool_recycle': DB_POOL_RECYCLE,
         'pool_size': DB_POOL_SIZE,
         'max_overflow': DB_MAX_OVERFLOW,
         'pool_timeout': DB_POOL_TIMEOUT,
-        'connect_args': _connect_args,
+        'creator': _make_retry_creator(SQLALCHEMY_DATABASE_URI, _connect_args),
     }
     
     
