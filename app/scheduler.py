@@ -1893,15 +1893,8 @@ def init_scheduler(app):
                     )
                     return
 
-                # Always publish pending topics before generating so this job is
-                # self-sufficient even if pre_brief_publish_job (16:00) was missed.
-                try:
-                    from app.trending.pipeline import auto_publish_daily
-                    _pre_published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
-                    logger.info(f"Pre-generation auto-publish: {_pre_published} additional topics published")
-                except Exception as _ap_err:
-                    logger.warning(f"Pre-generation auto-publish failed (non-fatal): {_ap_err}")
-
+                # Idempotency check first — skip auto_publish and generation
+                # entirely when a good brief already exists.
                 existing = DailyBrief.query.filter_by(
                     date=date.today(), brief_type='daily'
                 ).first()
@@ -1914,6 +1907,16 @@ def init_scheduler(app):
                         f"Brief exists with status '{existing.status}' but only {existing_count} item(s). "
                         f"Allowing regeneration."
                     )
+
+                # Publish pending topics so this job is self-sufficient even if
+                # pre_brief_publish_job (16:00) was missed.  Runs only when we
+                # are actually going to generate (or regenerate) the brief.
+                try:
+                    from app.trending.pipeline import auto_publish_daily
+                    _pre_published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
+                    logger.info(f"Pre-generation auto-publish: {_pre_published} additional topics published")
+                except Exception as _ap_err:
+                    logger.warning(f"Pre-generation auto-publish failed (non-fatal): {_ap_err}")
 
                 brief = generate_daily_brief(
                     brief_date=date.today(),

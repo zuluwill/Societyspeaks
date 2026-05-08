@@ -75,7 +75,6 @@ def _daily_send_lock_key(target_date=None) -> str:
     return f"brief_send_lock:daily:{target_date.isoformat()}"
 
 
-
 def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
     """
     Acquire Redis lock for daily brief sending.
