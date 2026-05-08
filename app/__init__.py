@@ -246,9 +246,24 @@ def create_app():
     # Check for production environment and initialize Sentry only in production
     if os.getenv("FLASK_ENV") == "production":
         def _sentry_before_send(event, hint):
-            """Drop known-harmless or expected errors (shutdown, migration heads, scanners, transient).
-            PendingRollbackError: dropped after fixing scheduler session cleanup; may also drop
-            non-scheduler occurrences (acceptable to reduce noise; fix session handling if seen elsewhere).
+            """Drop known-harmless or expected errors to reduce Sentry noise.
+
+            Policy for each suppressed class:
+            - APScheduler shutdown races: harmless, logged at DEBUG.
+            - Alembic multiple-head: ops/deploy noise, not a runtime error.
+            - Audio generation failures: degraded feature, not a crash.
+            - PHP/filemanager scanner 404s: bot noise.
+            - Gunicorn worker SIGTERM / exit-128: expected lifecycle events.
+            - PendingRollbackError: suppressed after fixing scheduler session
+              cleanup; may hide bugs elsewhere — revisit if frequency rises.
+            - OSError errno 5 (EIO): client disconnect during response write;
+              gunicorn handles worker lifecycle; no user impact.
+            - OperationalError "network is unreachable": engine-level creator
+              retries these automatically (config.py _make_retry_creator).
+              If all retries fail the error reaches the 503 handler and IS
+              logged via app.logger.error → captured via logging integration.
+              Suppress here to avoid double-counting the retried attempts that
+              surface via the logging integration with mechanism=logging.
             """
             def drop_if(msg, *phrases):
                 if not msg:
@@ -902,12 +917,30 @@ def create_app():
         app.logger.error(f"500 Internal Server Error: {e}")
         return render_template('errors/500.html', error_code=500, error_message=_("An internal server error occurred. Please try again later.")), 500
 
-    # Catch-all error handler for unhandled exceptions
+    # Database connectivity failure → 503 Service Unavailable.
+    # OperationalError after all engine-level retries are exhausted means the
+    # database is genuinely unreachable, not that the application code is broken.
+    # 503 is the correct HTTP status: it signals a temporary outage to clients,
+    # load balancers, uptime monitors, and Retry-After-aware HTTP consumers.
+    # Returning 500 here would falsely imply a code defect.
     @app.errorhandler(Exception)
     def handle_exception(e):
+        from sqlalchemy.exc import OperationalError as _SAOperationalError, DisconnectionError as _SADisconnectionError
         # Let HTTP exceptions (like 404, 403, etc.) be handled by their specific handlers
         if isinstance(e, HTTPException):
             return e
+        if isinstance(e, (_SAOperationalError, _SADisconnectionError)):
+            app.logger.error("Database connectivity error (503): %s", e)
+            resp = make_response(
+                render_template(
+                    'errors/503.html',
+                    error_code=503,
+                    error_message=_("The database is briefly unreachable. Please try again in a moment."),
+                ),
+                503,
+            )
+            resp.headers['Retry-After'] = '10'
+            return resp
         app.logger.error(f"Unhandled Exception: {e}", exc_info=True)  # Logs full stack trace
         return render_template('errors/general_error.html', error_code=500, error_message=_("An unexpected error occurred.")), 500
 
