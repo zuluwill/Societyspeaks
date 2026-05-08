@@ -167,7 +167,14 @@ except Exception as exc:
 # The Lua CAS script ensures we only delete the key if we still own it
 # (another process cannot accidentally release a lock it doesn't hold).
 _SCHEDULER_LOCK_KEY = 'scheduler_lock'
+
+def _force_exit_on_timeout(signum, frame):
+    logger.warning("Redis lock release timed out after 5 s — forcing exit via os._exit(0)")
+    os._exit(0)
+
 try:
+    signal.signal(signal.SIGALRM, _force_exit_on_timeout)
+    signal.alarm(5)
     from app.lib.redis_client import get_client as _get_shared_redis
     _rc = _get_shared_redis(decode_responses=False)
     if _rc is not None:
@@ -187,7 +194,9 @@ end
                 "Scheduler Redis lock not held by this process (pid=%s) — nothing to release",
                 _owned_by,
             )
+    signal.alarm(0)
 except Exception as _lock_err:
+    signal.alarm(0)
     logger.warning("Could not release Redis lock before exit (non-fatal): %s", _lock_err)
 
 sys.exit(0)

@@ -1893,12 +1893,21 @@ def init_scheduler(app):
                     )
                     return
 
+                # Always publish pending topics before generating so this job is
+                # self-sufficient even if pre_brief_publish_job (16:00) was missed.
+                try:
+                    from app.trending.pipeline import auto_publish_daily
+                    _pre_published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
+                    logger.info(f"Pre-generation auto-publish: {_pre_published} additional topics published")
+                except Exception as _ap_err:
+                    logger.warning(f"Pre-generation auto-publish failed (non-fatal): {_ap_err}")
+
                 existing = DailyBrief.query.filter_by(
                     date=date.today(), brief_type='daily'
                 ).first()
                 if existing and existing.status in ('ready', 'published'):
                     existing_count = existing.item_count or 0
-                    if existing_count >= 3:
+                    if existing_count >= 8:
                         logger.info(f"Brief already exists with status '{existing.status}' and {existing_count} items, skipping")
                         return
                     logger.warning(
@@ -2000,24 +2009,33 @@ def init_scheduler(app):
 
             if existing:
                 existing_count = existing.item_count or 0
-                if existing_count >= 3:
+                if existing_count >= 6:
                     logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}, {existing_count} items), skipping")
                     return
                 # Brief exists but is under-populated — safety-net will regenerate it
                 msg = (
                     f"ALERT: Daily brief safety-net: brief for {today} has only {existing_count} item(s) "
-                    f"(minimum 3). Regenerating to replace under-populated brief."
+                    f"(minimum 6). Regenerating to replace under-populated brief."
                 )
                 logger.warning(msg)
                 _send_ops_alert(msg)
 
             msg = (
                 f"ALERT: Daily brief safety-net triggered for {today}. "
-                "The primary 17:00 UTC generation job was missed (deployment restart, "
-                "Redis outage, or scheduler misfire). Generating now — check scheduler health."
+                "The primary 17:00 UTC generation job was missed or produced a low-quality brief "
+                "(deployment restart, Redis outage, or scheduler misfire). "
+                "Generating now — check scheduler health."
             )
             logger.warning(msg)
             _send_ops_alert(msg)
+
+            # Publish pending topics first so the brief has full coverage.
+            try:
+                from app.trending.pipeline import auto_publish_daily
+                _sn_published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
+                logger.info(f"Safety-net auto-publish: {_sn_published} additional topics published")
+            except Exception as _sn_ap_err:
+                logger.warning(f"Safety-net auto-publish failed (non-fatal): {_sn_ap_err}")
 
             # Run Polymarket matching first so the brief has fresh market signals.
             # Failure here must never block brief generation.
@@ -2096,17 +2114,33 @@ def init_scheduler(app):
                 return
 
             if existing:
-                logger.debug(f"Daily brief safety-net-2: brief already exists ({existing.status}), skipping")
-                return
+                existing_count = existing.item_count or 0
+                if existing_count >= 6:
+                    logger.debug(f"Daily brief safety-net-2: brief already exists ({existing.status}, {existing_count} items), skipping")
+                    return
+                msg = (
+                    f"CRITICAL: Daily brief safety-net-2: brief for {today} has only {existing_count} item(s) "
+                    f"(minimum 6). Regenerating to replace under-populated brief."
+                )
+                logger.error(msg)
+                _send_ops_alert(msg)
 
             msg = (
                 f"CRITICAL: Last-resort daily brief safety-net-2 triggered for {today}. "
-                "Both the primary 17:00 job and the 19:30 safety-net were missed "
-                "(possible causes: Redis outage, deployment restart, scheduler misfire). "
+                "Both the primary 17:00 job and the 19:30 safety-net were missed or produced a "
+                "low-quality brief (possible causes: Redis outage, deployment restart, scheduler misfire). "
                 "Check deployment history and scheduler health urgently."
             )
             logger.error(msg)
             _send_ops_alert(msg)
+
+            # Publish pending topics first so the brief has full coverage.
+            try:
+                from app.trending.pipeline import auto_publish_daily
+                _sn2_published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
+                logger.info(f"Safety-net-2 auto-publish: {_sn2_published} additional topics published")
+            except Exception as _sn2_ap_err:
+                logger.warning(f"Safety-net-2 auto-publish failed (non-fatal): {_sn2_ap_err}")
 
             # Run Polymarket matching first so the brief has fresh market signals.
             # Failure here must never block brief generation.
