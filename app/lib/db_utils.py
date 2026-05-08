@@ -14,6 +14,11 @@ _TRANSIENT_PHRASES = (
     'connection timed out',
     'connection reset by peer',
     'terminating connection due to administrator command',
+    # Raised when the DNS resolver returns only IPv6 addresses for a host
+    # (e.g. Neon pooler under transient DNS conditions) and the deployment
+    # environment has no outbound IPv6 connectivity.  A single retry gives
+    # the connection pool a fresh chance to resolve an IPv4 address.
+    'network is unreachable',
 )
 
 
