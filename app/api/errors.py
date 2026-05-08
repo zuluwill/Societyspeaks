@@ -7,6 +7,12 @@ All API errors return: {"error": "code", "message": "human readable message"}
 from flask import jsonify, current_app
 from flask_babel import gettext as _
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DisconnectionError, OperationalError
+
+from app.lib.db_transient_errors import (
+    HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC,
+    is_transient_db_connectivity_error,
+)
 
 
 # Werkzeug default descriptions that pass through `abort(code)` with no custom
@@ -153,6 +159,32 @@ def register_error_handlers(blueprint):
             500
         )
 
+    def _database_connectivity_api_error(exc):
+        """JSON errors for SQLAlchemy DB connectivity issues (Partner API only)."""
+        ra = str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+        if is_transient_db_connectivity_error(exc):
+            current_app.logger.error(
+                'Partner API database connectivity error (503): %s', exc, exc_info=True,
+            )
+            response = api_error(
+                'service_unavailable',
+                _('The database is briefly unreachable. Please try again in a moment.'),
+                503,
+            )
+            response.headers['Retry-After'] = ra
+            return response
+        current_app.logger.error(
+            'Partner API database error — non-transient (500): %s', exc, exc_info=True,
+        )
+        return api_error(
+            'internal_error',
+            _('An internal error occurred. Please try again later.'),
+            500,
+        )
+
+    blueprint.register_error_handler(OperationalError, _database_connectivity_api_error)
+    blueprint.register_error_handler(DisconnectionError, _database_connectivity_api_error)
+
     @blueprint.errorhandler(HTTPException)
     def handle_http_exception(e):
         """Handle any other HTTP exceptions with JSON response.
@@ -185,4 +217,5 @@ ERROR_CODES = {
     'forbidden': 'You do not have permission to access this resource.',
     'rate_limited': 'Too many requests. Please wait before retrying.',
     'internal_error': 'An internal server error occurred.',
+    'service_unavailable': 'The service is temporarily unavailable. Please retry shortly.',
 }

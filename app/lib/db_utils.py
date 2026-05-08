@@ -20,12 +20,7 @@ Layer 2 never sees new-connection failures.  Neither calls
 ``db.engine.dispose()`` — that nukes the entire shared pool and would degrade
 all concurrent requests for a single failure.
 
-Canonical transient phrases
-----------------------------
-``_TRANSIENT_PHRASES`` is the single source of truth for this module.
-``app/db_retry.py`` maintains a parallel list (``_TRANSIENT_INDICATORS``) for
-the ``@with_db_retry`` decorator used on non-view callables.  Keep them in
-sync when adding new phrases.
+Canonical transient phrases live in :mod:`app.lib.db_transient_errors`.
 """
 
 import time
@@ -33,31 +28,14 @@ import logging
 import functools
 from sqlalchemy.exc import OperationalError, DisconnectionError
 
-logger = logging.getLogger(__name__)
+from app.lib.db_transient_errors import is_transient_db_connectivity_error
 
-# Phrases that identify a *transient* connection failure — one that is safe to
-# retry because the underlying cause is a temporary network or server condition
-# rather than a code defect or a constraint violation.
-_TRANSIENT_PHRASES = (
-    'server closed the connection',
-    'connection was closed',
-    'lost connection',
-    'SSL connection has been closed',
-    'could not connect to server',
-    'connection timed out',
-    'connection reset by peer',
-    'terminating connection due to administrator command',
-    # DNS returned only IPv6 addresses in an environment with no IPv6 outbound
-    # connectivity (Replit + Neon pooler transient DNS condition).
-    # Added after Sentry issue #118342621.
-    'network is unreachable',
-)
+logger = logging.getLogger(__name__)
 
 
 def _is_transient_db_error(exc: Exception) -> bool:
     """Return True when ``exc`` is a recoverable connection drop worth retrying."""
-    msg = str(exc).lower()
-    return any(phrase in msg for phrase in _TRANSIENT_PHRASES)
+    return is_transient_db_connectivity_error(exc)
 
 
 def retry_on_db_disconnect(max_attempts: int = 2, backoff_s: float = 0.2):

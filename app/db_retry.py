@@ -21,6 +21,8 @@ successfully checked out, such as:
 will request a fresh connection on the next attempt.  It does NOT call
 ``db.engine.dispose()`` — that would nuke every connection in the shared
 pool, punishing all concurrent requests for one failure.
+
+Transient error substring matching is defined in :mod:`app.lib.db_transient_errors`.
 """
 
 import logging
@@ -32,28 +34,11 @@ from flask import current_app
 from sqlalchemy.exc import OperationalError, DBAPIError
 from werkzeug.exceptions import HTTPException
 
+from app.lib.db_transient_errors import is_transient_db_connectivity_error
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
-
-# Canonical set of substrings that identify a *transient* connection error
-# (one that is safe to retry).  Keep in sync with app/lib/db_utils.py.
-_TRANSIENT_INDICATORS = (
-    'ssl connection has been closed',
-    'ssl syscall',
-    'eof detected',
-    'connection reset',
-    'connection refused',
-    'connection timed out',
-    'server closed the connection',
-    'lost connection',
-    'could not connect',
-    'network error',
-    'broken pipe',
-    # DNS returned only IPv6 addresses in an IPv4-only deployment environment.
-    # Added after Sentry issue #118342621 (Neon pooler + Replit).
-    'network is unreachable',
-)
 
 
 def is_connection_error(exc: Exception) -> bool:
@@ -62,7 +47,7 @@ def is_connection_error(exc: Exception) -> bool:
     Non-transient errors (IntegrityError, programming errors, auth failures)
     return False so they propagate immediately without burning retry budget.
     """
-    return any(indicator in str(exc).lower() for indicator in _TRANSIENT_INDICATORS)
+    return is_transient_db_connectivity_error(exc)
 
 
 def with_db_retry(max_attempts: int = None, delay: float = None):

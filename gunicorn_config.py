@@ -1,7 +1,12 @@
 import logging
+import os
 
 bind = "0.0.0.0:5000"
-workers = 4
+_workers_raw = (os.getenv("WEB_CONCURRENCY") or os.getenv("GUNICORN_WORKERS") or "4").strip()
+try:
+    workers = max(1, int(_workers_raw))
+except ValueError:
+    workers = 4
 reuse_port = True
 timeout = 120
 worker_class = "gevent"

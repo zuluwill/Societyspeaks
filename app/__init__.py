@@ -37,6 +37,11 @@ from flask_compress import Compress
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+from app.lib.db_transient_errors import (
+    HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC,
+    is_transient_db_connectivity_error,
+)
+
 # Hardened CSP without unsafe-inline and unsafe-eval
 csp = {
     'default-src': ["'self'", "https:", "data:", "blob:"],
@@ -101,6 +106,21 @@ def try_connect_db(app, retries=3):
             app.logger.error(f"Database connection attempt {attempt + 1} failed: {e}")
             time.sleep(1)
     return False
+
+
+def request_wants_json_errors(req):
+    """Return True when HTML error pages should be skipped in favour of JSON.
+
+    Kept in sync with 429 handling: Partner API (`/api/...`), embed requests,
+    explicit JSON bodies, or clients that primarily accept ``application/json``.
+    """
+    best = req.accept_mimetypes.best
+    return bool(
+        req.is_json
+        or req.headers.get('X-Embed-Request')
+        or best == 'application/json'
+        or (req.path or '').startswith('/api/')
+    )
 
 
 def _validate_consensus_oversize_config(app):
@@ -258,12 +278,11 @@ def create_app():
               cleanup; may hide bugs elsewhere — revisit if frequency rises.
             - OSError errno 5 (EIO): client disconnect during response write;
               gunicorn handles worker lifecycle; no user impact.
-            - OperationalError "network is unreachable": engine-level creator
-              retries these automatically (config.py _make_retry_creator).
-              If all retries fail the error reaches the 503 handler and IS
-              logged via app.logger.error → captured via logging integration.
-              Suppress here to avoid double-counting the retried attempts that
-              surface via the logging integration with mechanism=logging.
+            - Transient database outages are logged at ERROR in the Flask
+              handler (with stack traces for non-transient OperationalError).
+              If Sentry logging integration duplicates noise for the same
+              incident, extend the filters below — do not document filters that
+              are not implemented.
             """
             def drop_if(msg, *phrases):
                 if not msg:
@@ -917,12 +936,7 @@ def create_app():
         app.logger.error(f"500 Internal Server Error: {e}")
         return render_template('errors/500.html', error_code=500, error_message=_("An internal server error occurred. Please try again later.")), 500
 
-    # Database connectivity failure → 503 Service Unavailable.
-    # OperationalError after all engine-level retries are exhausted means the
-    # database is genuinely unreachable, not that the application code is broken.
-    # 503 is the correct HTTP status: it signals a temporary outage to clients,
-    # load balancers, uptime monitors, and Retry-After-aware HTTP consumers.
-    # Returning 500 here would falsely imply a code defect.
+    # Transient database connectivity → 503; other DB operational errors → 500.
     @app.errorhandler(Exception)
     def handle_exception(e):
         from sqlalchemy.exc import OperationalError as _SAOperationalError, DisconnectionError as _SADisconnectionError
@@ -930,17 +944,43 @@ def create_app():
         if isinstance(e, HTTPException):
             return e
         if isinstance(e, (_SAOperationalError, _SADisconnectionError)):
-            app.logger.error("Database connectivity error (503): %s", e)
-            resp = make_response(
+            ra = str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+            if is_transient_db_connectivity_error(e):
+                app.logger.error("Database connectivity error (503): %s", e, exc_info=True)
+                if request_wants_json_errors(request):
+                    resp = jsonify({
+                        'error': 'service_unavailable',
+                        'message': _("The database is briefly unreachable. Please try again in a moment."),
+                    })
+                    resp.status_code = 503
+                    resp.headers['Retry-After'] = ra
+                    return resp
+                resp = make_response(
+                    render_template(
+                        'errors/503.html',
+                        error_code=503,
+                        error_message=_("The database is briefly unreachable. Please try again in a moment."),
+                    ),
+                    503,
+                )
+                resp.headers['Retry-After'] = ra
+                return resp
+            app.logger.error("Database error (non-transient operational): %s", e, exc_info=True)
+            if request_wants_json_errors(request):
+                resp = jsonify({
+                    'error': 'internal_error',
+                    'message': _("An internal error occurred. Please try again later."),
+                })
+                resp.status_code = 500
+                return resp
+            return (
                 render_template(
-                    'errors/503.html',
-                    error_code=503,
-                    error_message=_("The database is briefly unreachable. Please try again in a moment."),
+                    'errors/general_error.html',
+                    error_code=500,
+                    error_message=_("An unexpected error occurred."),
                 ),
-                503,
+                500,
             )
-            resp.headers['Retry-After'] = '10'
-            return resp
         app.logger.error(f"Unhandled Exception: {e}", exc_info=True)  # Logs full stack trace
         return render_template('errors/general_error.html', error_code=500, error_message=_("An unexpected error occurred.")), 500
 
@@ -971,13 +1011,7 @@ def create_app():
         app.logger.warning(f"429 Too Many Requests: {e}")
         from app.api.errors import _retry_after_seconds
         retry_after = _retry_after_seconds(e, 60)
-        is_json_client = (
-            request.is_json
-            or request.headers.get('X-Embed-Request')
-            or request.accept_mimetypes.best == 'application/json'
-            or request.path.startswith('/api/')
-        )
-        if is_json_client:
+        if request_wants_json_errors(request):
             resp = jsonify({'error': 'rate_limited', 'message': _('Too many requests. Please retry in %(retry_after)s seconds.', retry_after=retry_after)})
             resp.status_code = 429
             resp.headers['Retry-After'] = str(retry_after)
