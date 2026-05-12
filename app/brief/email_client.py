@@ -750,7 +750,10 @@ class BriefEmailScheduler:
                     results['sent'] += 1
                 else:
                     results['failed'] += 1
-                    results['errors'].append(f"Failed to send to {current_subscriber.email}")
+                    resend_error = getattr(self.client, 'last_send_error', None) or 'unknown error'
+                    results['errors'].append(
+                        f"Failed to send to {current_subscriber.email} [Resend: {resend_error}]"
+                    )
                     db.session.rollback()
 
             except Exception as e:
