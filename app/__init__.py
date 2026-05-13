@@ -480,6 +480,25 @@ def create_app():
         app.config['SESSION_CACHELIB'] = Config.SESSION_CACHELIB
         sess.init_app(app)
 
+    # Replace the Redis session interface with a resilient wrapper that catches
+    # TimeoutError / ConnectionError and serves an empty session rather than
+    # propagating a 500.  Only applied when Redis is actually in use.
+    if app.config.get('SESSION_TYPE') == 'redis' and app.config.get('SESSION_REDIS'):
+        try:
+            from app.lib.resilient_session import ResilientRedisSessionInterface
+            redis_client = app.config['SESSION_REDIS']
+            app.session_interface = ResilientRedisSessionInterface(
+                app=app,
+                client=redis_client,
+                key_prefix=app.config.get('SESSION_KEY_PREFIX', 'session:'),
+                use_signer=app.config.get('SESSION_USE_SIGNER', False),
+                permanent=app.config.get('SESSION_PERMANENT', True),
+                sid_length=app.config.get('SESSION_ID_LENGTH', 32),
+            )
+            app.logger.info("Resilient Redis session interface installed")
+        except Exception as e:
+            app.logger.warning(f"Failed to install resilient session interface: {e}")
+
     # Initialize cache — set config on app.config so flask-caching reads it reliably
     try:
         redis_url = os.getenv('REDIS_URL')
