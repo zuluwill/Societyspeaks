@@ -524,6 +524,60 @@
   </section>
 </div>
 
+<!-- Social proof / testimonials — real quotes from users.
+     Position: immediately after the pain section, before the solution reveal.
+     Classic high-conversion pattern: establish pain → validate with peers → present solution. -->
+<div class="bg-slate-50 border-y border-slate-100">
+  <section class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+    <p class="text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-400 mb-10">{{ _('What readers say') }}</p>
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <svg class="w-7 h-7 text-primary-200 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+        </svg>
+        <p class="text-slate-700 leading-relaxed mb-5">{{ _('"I love being able to synthesise news from across the globe and ensure I get different political perspectives."') }}</p>
+        <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
+          <div class="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-sm font-semibold text-cyan-700 flex-shrink-0">A</div>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">{{ _('Policy analyst') }}</p>
+            <p class="text-xs text-slate-500">{{ _('World Affairs reader') }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <svg class="w-7 h-7 text-primary-200 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+        </svg>
+        <p class="text-slate-700 leading-relaxed mb-5">{{ _('"This is a massive time saver whilst also being really informative."') }}</p>
+        <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
+          <div class="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-sm font-semibold text-violet-700 flex-shrink-0">J</div>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">{{ _('Startup founder') }}</p>
+            <p class="text-xs text-slate-500">{{ _('Tech & AI reader') }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <svg class="w-7 h-7 text-primary-200 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+        </svg>
+        <p class="text-slate-700 leading-relaxed mb-5">{{ _('"The briefing technology helps me stay on top of multiple different sources I need to track for work."') }}</p>
+        <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
+          <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-semibold text-emerald-700 flex-shrink-0">S</div>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">{{ _('Research analyst') }}</p>
+            <p class="text-xs text-slate-500">{{ _('Markets & Policy reader') }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
 <!-- Differentiation: free Daily Brief vs paid Personal Briefs -->
 <div class="bg-white">
   <section class="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
@@ -828,7 +882,7 @@
   <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-white mb-4">{{ _('See what a brief actually looks like') }}</h2>
-      <p class="text-slate-400">{{ _('This is a real brief from the Politics & Policy template.') }}</p>
+      <p class="text-slate-400">{{ _('A real brief from the World Affairs template — sources from four continents.') }}</p>
     </div>
 
     <div class="grid lg:grid-cols-5 gap-8 items-start">
@@ -840,9 +894,9 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-xs text-slate-400">{{ _('Monday, 20 January 2025') }}</p>
-                <h3 class="text-white font-bold text-lg">{{ _('Politics & Policy Brief') }}</h3>
+                <h3 class="text-white font-bold text-lg">{{ _('World Affairs Brief') }}</h3>
               </div>
-              <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">{{ _('8 sources') }}</span>
+              <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">{{ _('12 sources') }}</span>
             </div>
           </div>
 
@@ -855,12 +909,12 @@
                 <span class="text-xs text-slate-400">•</span>
                 <span class="text-xs text-slate-500">{{ _('4 sources covering this') }}</span>
               </div>
-              <h4 class="font-bold text-slate-900 text-lg mb-2">{{ _('Treasury announces Spring Statement date amid growth forecast revisions') }}</h4>
-              <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ _('The Chancellor confirmed the Spring Statement will take place on 26 March, with the OBR expected to revise growth forecasts downward. Markets anticipate the Bank Rate will remain at 4.5%% through Q2.') }}</p>
+              <h4 class="font-bold text-slate-900 text-lg mb-2">{{ _('IMF cuts global growth forecasts as US-China trade tensions and euro zone slowdown converge') }}</h4>
+              <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ _('The Fund revised its 2025 world growth estimate to 2.8%% — the weakest since 2009 outside the pandemic. Three divergent central bank paths (Fed holding, ECB cutting, BoJ tightening) are amplifying currency volatility across emerging markets.') }}</p>
               <div class="flex flex-wrap gap-2">
                 <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Financial Times</span>
-                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">The Times</span>
-                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">The Economist</span>
+                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Al Jazeera</span>
+                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Nikkei Asia</span>
               </div>
             </div>
 
@@ -871,8 +925,8 @@
               <div class="flex items-center gap-2 mb-2">
                 <span class="text-xs font-bold text-emerald-600 uppercase">{{ _('Policy Change') }}</span>
               </div>
-              <h4 class="font-bold text-slate-900 mb-2">{{ _('New planning reforms face Lords scrutiny this week') }}</h4>
-              <p class="text-slate-600 text-sm leading-relaxed">{{ _('The Levelling Up and Regeneration Bill enters committee stage with over 200 proposed amendments...') }}</p>
+              <h4 class="font-bold text-slate-900 mb-2">{{ _('G7 digital ministers agree AI safety framework — but enforcement gap remains') }}</h4>
+              <p class="text-slate-600 text-sm leading-relaxed">{{ _('Ministers from seven nations backed a voluntary disclosure standard for frontier AI models, with Deutsche Welle and France24 noting that the EU, US, and Japan have materially different implementation timelines...') }}</p>
             </div>
 
             <hr class="border-slate-200">
@@ -886,8 +940,8 @@
                 </svg>
                 <span class="text-xs font-bold text-amber-800 uppercase">{{ _('Under the Radar') }}</span>
               </div>
-              <h4 class="font-semibold text-amber-900 text-sm mb-1">{{ _('OECD publishes UK productivity analysis with policy recommendations') }}</h4>
-              <p class="text-xs text-amber-800">{{ _('High civic impact, low media coverage. Published yesterday, no major outlet has covered this yet.') }}</p>
+              <h4 class="font-semibold text-amber-900 text-sm mb-1">{{ _('Africa Confidential: three Sahel governments quietly resume IMF talks after 18-month freeze') }}</h4>
+              <p class="text-xs text-amber-800">{{ _('High geopolitical significance, minimal Western press coverage. Surfaced from Africa Confidential — not yet in any major English-language outlet.') }}</p>
             </div>
 
             <!-- More stories -->
@@ -907,7 +961,7 @@
             </svg>
             {{ _('Multi-source synthesis') }}
           </h4>
-          <p class="text-slate-300 text-sm">{{ _("We don't just summarise one article. We read coverage from multiple outlets and synthesise the key points, disagreements, and implications.") }}</p>
+          <p class="text-slate-300 text-sm">{{ _("We pull from multiple outlets across different countries and political perspectives — not just one wire service. You get a genuinely multi-angle view.") }}</p>
         </div>
 
         <div class="bg-slate-800 rounded-xl p-6">
