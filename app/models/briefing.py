@@ -468,6 +468,10 @@ class BriefRun(db.Model):
     edits = db.relationship('BriefEdit', backref='brief_run', lazy='dynamic', order_by='BriefEdit.created_at.desc()', passive_deletes=True)
     opens = db.relationship('BriefEmailOpen', backref='brief_run', cascade='all, delete-orphan')
 
+    @property
+    def item_count(self):
+        return len(self.items)
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -478,7 +482,7 @@ class BriefRun(db.Model):
             'sent_at': self.sent_at.isoformat() if self.sent_at else None,
             'approved_by_user_id': self.approved_by_user_id,
             'approved_at': self.approved_at.isoformat() if self.approved_at else None,
-            'item_count': len(self.items),
+            'item_count': self.item_count,
         }
 
     def __repr__(self):
