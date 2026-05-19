@@ -157,8 +157,8 @@
           {{ _('For people who need to know, not just read') }}
         </p>
         <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-5xl mb-6 leading-tight" style="color: white">
-          {{ _('Your Substacks, your PDFs, your topics.')|escape_i18n }}<br/>
-          <span style="color: #60a5fa">{{ _('One morning email.') }}</span>
+          {{ _('Your papers, your newsletters, your topics.')|escape_i18n }}<br/>
+          <span style="color: #60a5fa">{{ _('One brief, whenever you want it.') }}</span>
         </h1>
         <p class="text-xl mb-8 leading-relaxed" style="color: #e2e8f0">
           {{ _('Not our free Daily Brief — yours, from sources you choose. 30 days free, no card needed.') }}
@@ -170,7 +170,7 @@
             <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span>{{ _('5-minute read, every morning') }}</span>
+            <span>{{ _('5-minute read, every day') }}</span>
           </div>
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -198,7 +198,7 @@
 
         <div class="flex flex-col sm:flex-row gap-4">
           <a href="{{ primary_cta_url|default('#pricing') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-build-brief">
-            {{ _('Build your morning brief') }}
+            {{ _('Build your brief') }}
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
@@ -478,7 +478,7 @@
     <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
       <!-- Before -->
       <div class="bg-red-50 border border-red-100 rounded-xl p-6">
-        <p class="text-sm font-semibold text-red-800 mb-4 uppercase tracking-wide">{{ _('Every morning now') }}</p>
+        <p class="text-sm font-semibold text-red-800 mb-4 uppercase tracking-wide">{{ _('Right now') }}</p>
         <ul class="space-y-3 text-slate-700">
           <li class="flex items-start gap-3">
             <span class="text-red-400 mt-1">✗</span>
@@ -501,7 +501,7 @@
 
       <!-- After -->
       <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-6">
-        <p class="text-sm font-semibold text-emerald-800 mb-4 uppercase tracking-wide">{{ _('Every morning with a brief') }}</p>
+        <p class="text-sm font-semibold text-emerald-800 mb-4 uppercase tracking-wide">{{ _('With a brief') }}</p>
         <ul class="space-y-3 text-slate-700">
           <li class="flex items-start gap-3">
             <span class="text-emerald-500 mt-1">✓</span>
@@ -629,7 +629,7 @@
         <ul class="space-y-3 text-slate-200 mb-8 flex-1">
           <li class="flex items-start gap-3">
             <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
-            <span><strong class="text-white">{{ _('Your sources') }}</strong> — Substacks, FT, niche feeds, your trusted authors</span>
+            <span><strong class="text-white">{{ _('Your sources') }}</strong> — newspapers, magazines, newsletters, RSS feeds, PDFs</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
@@ -645,7 +645,7 @@
           </li>
         </ul>
         <a href="{{ primary_cta_url|default('#pricing') }}" class="block w-full text-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors" data-ph-capture-attribute-cta="comparison-start-trial">
-          {{ _('Build your morning brief') }} &rarr;
+          {{ _('Build your brief') }} &rarr;
         </a>
       </div>
     </div>
@@ -672,7 +672,7 @@
 <div class="bg-slate-50">
   <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ _('Whatever you need to stay on top of.') }}</h2>
+      <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ _('Built around what you follow.') }}</h2>
       <p class="text-lg text-slate-600 max-w-2xl mx-auto">{{ _('Pick a template to start, then make it yours — your sources, your topics, your schedule.') }}</p>
     </div>
 
@@ -844,7 +844,7 @@
       </a>
       {% else %}
       <a href="{{ primary_cta_url|default('#pricing') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-8 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-all" data-ph-capture-attribute-cta="audience-start-trial">
-        {{ _('Build your morning brief') }}
+        {{ _('Build your brief') }}
       </a>
       {% endif %}
     </div>
@@ -867,7 +867,7 @@
       <div class="text-center">
         <div class="w-14 h-14 rounded-full bg-primary-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
         <h3 class="font-semibold text-slate-900 mb-2">{{ _('Add your sources') }}</h3>
-        <p class="text-slate-600 text-sm">{{ _('RSS feeds, Substacks, PDFs, web pages. We synthesise them all.') }}</p>
+        <p class="text-slate-600 text-sm">{{ _('Newspapers, newsletters, magazines, RSS feeds, PDFs. We synthesise them all.') }}</p>
       </div>
       <div class="text-center">
         <div class="w-14 h-14 rounded-full bg-primary-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
@@ -1405,7 +1405,7 @@
           <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-3 py-1 rounded-full">{{ _('Start here') }}</span>
           <div class="mb-6">
             <h3 class="text-xl font-bold text-slate-900">{{ _('Personal') }}</h3>
-            <p class="text-slate-500 text-sm mt-1">{{ _('For individuals who want to stay informed without information overload') }}</p>
+            <p class="text-slate-500 text-sm mt-1">{{ _('For individuals who want less noise and more clarity') }}</p>
           </div>
           <div class="mb-6">
             <span class="text-4xl font-bold text-slate-900">£4.99</span>
@@ -1475,7 +1475,7 @@
         <div class="bg-white rounded-2xl border-2 border-slate-200 p-8 relative">
           <div class="mb-6">
             <h3 class="text-xl font-bold text-slate-900">{{ _('Professional') }}</h3>
-            <p class="text-slate-500 text-sm mt-1">{{ _('Stay on top of everything that matters') }}</p>
+            <p class="text-slate-500 text-sm mt-1">{{ _('Deeper coverage, more sources, easy to share with colleagues') }}</p>
           </div>
           <div class="mb-6">
             <span class="text-4xl font-bold text-slate-900">£25</span>
@@ -1724,7 +1724,7 @@
   <section class="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8 text-center">
     <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
       {{ _('Your Substacks. Your PDFs. Your topics.') }}<br>
-      <span class="text-primary-400">{{ _('One morning email.') }}</span>
+      <span class="text-primary-400">{{ _('One brief, whenever you want it.') }}</span>
     </h2>
     <p class="text-lg text-slate-300 max-w-xl mx-auto mb-10">
       {% if self_serve_on %}
@@ -1735,7 +1735,7 @@
     </p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
       <a href="{{ primary_cta_url|default('#pricing') }}" class="inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-base font-semibold text-slate-900 hover:bg-slate-100 transition-colors" data-ph-capture-attribute-cta="final-cta-start-trial">
-        {{ _('Build your morning brief') }} &rarr;
+        {{ _('Build your brief') }} &rarr;
       </a>
       <a href="{{ sample_cta_url|default('#see-example') }}" class="inline-flex items-center justify-center rounded-xl px-8 py-4 text-base font-medium text-slate-200 border border-slate-600 hover:bg-slate-800 transition-colors" data-ph-capture-attribute-cta="final-cta-see-sample">
         {{ _('See a real brief first') }}
@@ -1771,11 +1771,11 @@
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _('What sources can I add?') }}</h3>
-        <p class="text-slate-600">{{ _('RSS feeds, Substack newsletters, web pages, and PDF documents. We support 140+ curated sources out of the box, or add your own custom sources.') }}</p>
+        <p class="text-slate-600">{{ _('Newspapers, magazines, newsletters, RSS feeds, web pages and PDFs. We support 140+ curated sources out of the box, or add your own.') }}</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _('How long does setup take?') }}</h3>
-        <p class="text-slate-600">{{ _("About 2 minutes. Pick a template, customise your sources if you want, set your delivery time, and you're done. First brief arrives the next morning.") }}</p>
+        <p class="text-slate-600">{{ _("About 2 minutes. Pick a template, customise your sources if you want, set your delivery time, and you're done. Your first brief arrives the next day.") }}</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _("What's the difference between Personal and Professional?") }}</h3>
