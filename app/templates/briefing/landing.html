@@ -157,8 +157,8 @@
           {{ _('For people who need to know, not just read') }}
         </p>
         <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-5xl mb-6 leading-tight" style="color: white">
-          {{ _('Your papers, your newsletters, your topics.')|escape_i18n }}<br/>
-          <span style="color: #60a5fa">{{ _('One brief, whenever you want it.') }}</span>
+          <span class="block">{{ _('Your papers, your newsletters, your topics.')|escape_i18n }}</span>
+          <span class="block" style="color: #60a5fa">{{ _('One brief, whenever you want it.') }}</span>
         </h1>
         <p class="text-xl mb-8 leading-relaxed" style="color: #e2e8f0">
           {{ _('Not our free Daily Brief — yours, from sources you choose. 30 days free, no card needed.') }}
@@ -533,11 +533,11 @@
     <p class="text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-400 mb-10">{{ _('What readers say') }}</p>
     <div class="grid md:grid-cols-3 gap-6">
 
-      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <svg class="w-7 h-7 text-primary-200 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col">
+        <svg class="w-7 h-7 text-primary-200 mb-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
         </svg>
-        <p class="text-slate-700 leading-relaxed mb-5">{{ _('"I love being able to synthesise news from across the globe and ensure I get different political perspectives."') }}</p>
+        <p class="text-slate-700 leading-relaxed mb-5 flex-1">{{ _('"I love being able to synthesise news from across the globe and ensure I get different political perspectives."') }}</p>
         <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
           <div class="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-sm font-semibold text-cyan-700 flex-shrink-0">A</div>
           <div>
@@ -547,11 +547,11 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <svg class="w-7 h-7 text-primary-200 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col">
+        <svg class="w-7 h-7 text-primary-200 mb-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
         </svg>
-        <p class="text-slate-700 leading-relaxed mb-5">{{ _('"This is a massive time saver whilst also being really informative."') }}</p>
+        <p class="text-slate-700 leading-relaxed mb-5 flex-1">{{ _('"This is a massive time saver whilst also being really informative."') }}</p>
         <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
           <div class="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-sm font-semibold text-violet-700 flex-shrink-0">J</div>
           <div>
@@ -561,11 +561,11 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <svg class="w-7 h-7 text-primary-200 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col">
+        <svg class="w-7 h-7 text-primary-200 mb-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
         </svg>
-        <p class="text-slate-700 leading-relaxed mb-5">{{ _('"The briefing technology helps me stay on top of multiple different sources I need to track for work."') }}</p>
+        <p class="text-slate-700 leading-relaxed mb-5 flex-1">{{ _('"The briefing technology helps me stay on top of multiple different sources I need to track for work."') }}</p>
         <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
           <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-semibold text-emerald-700 flex-shrink-0">S</div>
           <div>
