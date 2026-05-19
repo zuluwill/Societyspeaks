@@ -16,6 +16,15 @@
         </a>
     </div>
 
+    <!-- Live health: one number, always visible at the top. -->
+    <div class="bg-primary-50 border border-primary-200 rounded-xl p-5 mb-8 flex items-center gap-5">
+        <div>
+            <p class="text-sm font-semibold text-primary-700 uppercase tracking-wide">Active self-serve trials right now</p>
+            <p class="text-4xl font-extrabold text-primary-700 mt-1">{{ trialing_self_serve_now }}</p>
+        </div>
+        <p class="text-sm text-primary-600 max-w-xs">Subscriptions currently in <code class="bg-primary-100 px-1 rounded">trialing</code> status — what the scheduler is actively sending briefs for. If this drops unexpectedly, check the scheduler logs.</p>
+    </div>
+
     <!-- Top line: trial volume.
          Self-serve is the primary success cohort — "all trials" mixes
          self-serve + Stripe + admin grants and isn't a clean KPI on its own. -->
@@ -111,15 +120,15 @@
     </div>
 
     <!-- Pause / resume -->
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Pause state (all time)</h2>
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Pause state — self-serve (all time)</h2>
     <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
         <div class="flex items-baseline gap-6 flex-wrap">
             <div>
-                <p class="text-sm text-gray-500">Subscriptions paused</p>
+                <p class="text-sm text-gray-500">Self-serve trials paused</p>
                 <p class="text-2xl font-bold text-amber-600">{{ paused_count }}</p>
             </div>
         </div>
-        <p class="text-xs text-gray-400 mt-2">A paused row is either an expired self-serve trial or a user who hit the in-app pause button. Resume happens via the existing Stripe checkout flow.</p>
+        <p class="text-xs text-gray-400 mt-2">Auto-paused at day-30 expiry without payment. In the winback window (days 12–21 after pause) the winback job emails these users. Resume is via Stripe checkout.</p>
     </div>
 
 </div>

@@ -143,15 +143,31 @@ def metrics():
         if trials_self_serve_month else None
     )
 
+    # ---- Live self-serve trial health -------------------------------------
+    # "How many people are actively on a self-serve trial right now?"
+    # Excludes canceled/paused rows so the number reflects what the scheduler
+    # is actually sending briefs for. This is the single most actionable
+    # daily-ops number — if it drops unexpectedly something is wrong.
+    trialing_self_serve_now = (
+        db.session.query(func.count(Subscription.id))
+        .filter(Subscription.status == 'trialing')
+        .filter(Subscription.extra_data['trial_source'].as_string() == 'self_serve')
+    ).scalar() or 0
+
     # ---- Pause / resume ---------------------------------------------------
+    # Scoped to self-serve only: Stripe-backed subs never get a paused_at flag
+    # from our code, but filtering keeps this metric honest if that ever changes.
     paused_count = (
         db.session.query(func.count(Subscription.id))
+        .filter(Subscription.status == 'canceled')
+        .filter(Subscription.extra_data['trial_source'].as_string() == 'self_serve')
         .filter(Subscription.extra_data['paused_at'].as_string().isnot(None))
     ).scalar() or 0
 
     return render_template(
         'admin/briefings/metrics.html',
         now=now,
+        trialing_self_serve_now=trialing_self_serve_now,
         trials_total_week=trials_total_week,
         trials_total_month=trials_total_month,
         trials_self_serve_week=trials_self_serve_week,

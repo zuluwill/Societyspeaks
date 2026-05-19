@@ -110,6 +110,7 @@ RESEND_REPLY_TO = "hello@societyspeaks.io"
 EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS = "false"
 
 [userenv.production]
+SELF_SERVE_TRIAL_ENABLED = "true"
 
 [userenv.development]
 

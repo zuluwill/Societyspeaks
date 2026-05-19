@@ -57,7 +57,7 @@
         {{ _('Your Substacks, your PDFs, your beat — one morning email. 30 days free, no card needed.') }}
       </p>
       <a
-        href="{{ url_for('briefing.start_trial') }}?utm_source=sample_page&utm_medium=web&utm_campaign=personal_briefs_cta"
+        href="{{ url_for('briefing.start_trial', utm_source='sample_page', utm_medium='web', utm_campaign='personal_briefs_cta') }}"
         class="inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-base font-semibold text-slate-900 hover:bg-slate-100 transition-colors"
         data-ph-capture-attribute-cta="sample-page-start-trial"
       >
