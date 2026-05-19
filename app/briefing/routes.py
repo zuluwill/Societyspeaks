@@ -834,6 +834,8 @@ def _handle_start_trial_post(featured_templates, default_slug):
         flash(_("You already have an active subscription."), 'info')
         return redirect(url_for('briefing.list_briefings'))
 
+    is_returning_email = user is not None  # set before potential creation
+
     if user is None:
         from app.lib.email_normalize import normalize_trial_email
         from werkzeug.security import generate_password_hash
@@ -853,6 +855,14 @@ def _handle_start_trial_post(featured_templates, default_slug):
             logger.error(f"Failed to create trial user for {email}: {exc}", exc_info=True)
             flash(_("Something went wrong — please try again in a moment."), 'error')
             return redirect(url_for('briefing.start_trial', template=template_slug))
+
+    # Intent signal — fires after abuse check + user find/create, before magic link.
+    from app.lib.utm import peek_utms
+    _track_posthog('paid_briefing_trial_signup_started', user.id, {
+        'template_slug': template_slug,
+        'is_returning_email': is_returning_email,
+        **peek_utms(),
+    })
 
     # Record campaign attribution + intent in session so the magic-link round
     # trip lands on the right destination and bypasses the profile gate.
@@ -888,6 +898,7 @@ def _handle_start_trial_post(featured_templates, default_slug):
         send_magic_login_email(user, magic_url)
         _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
             'template_slug': template_slug,
+            'is_returning_email': is_returning_email,
         })
     except Exception as exc:
         logger.error(f"Magic-link send failed for user {user.id}: {exc}", exc_info=True)
@@ -1046,6 +1057,7 @@ def start_trial_complete():
             locale=request.accept_languages.best,
             ip=request.remote_addr,
             timezone=timezone,
+            posthog=posthog,
         )
     except TrialStartError as exc:
         logger.warning(
@@ -1081,10 +1093,18 @@ def start_trial_complete():
         current_user.id,
         {
             'briefing_id': result.briefing.id,
+            'template_slug': template_slug,
             'status': first_brief.status,
             'elapsed_s': round(first_brief.elapsed_s, 2),
+            'generation_time_ms': round(first_brief.elapsed_s * 1000),
         },
     )
+    if first_brief.status == 'pending':
+        _track_posthog('paid_briefing_first_brief_timed_out', current_user.id, {
+            'briefing_id': result.briefing.id,
+            'template_slug': template_slug,
+            'elapsed_s': round(first_brief.elapsed_s, 2),
+        })
 
     if first_brief.status == 'ready':
         flash(

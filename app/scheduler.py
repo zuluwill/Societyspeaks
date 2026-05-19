@@ -1159,6 +1159,32 @@ def init_scheduler(app):
 
                     paused += 1
 
+                    # PostHog — trial expired / auto-paused.
+                    try:
+                        import posthog as _ph_exp
+                        if _ph_exp and getattr(_ph_exp, 'project_api_key', None):
+                            from app.models.daily_brief import Briefing as _ExpBriefing, BriefRun as _ExpBriefRun
+                            _exp_briefing = _ExpBriefing.query.filter_by(user_id=sub.user_id).order_by(_ExpBriefing.id.desc()).first()
+                            _exp_template_slug = None
+                            _exp_run_count = 0
+                            if _exp_briefing:
+                                if getattr(_exp_briefing, 'brief_template', None):
+                                    _exp_template_slug = _exp_briefing.brief_template.slug
+                                _exp_run_count = _ExpBriefRun.query.filter_by(briefing_id=_exp_briefing.id).count()
+                            _ph_exp.capture(
+                                distinct_id=str(sub.user_id),
+                                event='paid_briefing_trial_expired',
+                                properties={
+                                    'subscription_id': sub.id,
+                                    'template_slug': _exp_template_slug,
+                                    'trial_source': extra.get('trial_source'),
+                                    'had_first_brief': _exp_run_count > 0,
+                                    'brief_run_count': _exp_run_count,
+                                },
+                            )
+                    except Exception as _ph_exc:
+                        logger.warning('PostHog trial_expired capture failed for sub %s: %s', sub.id, _ph_exc)
+
                     user = db.session.get(User, sub.user_id)
                     if not user or not user.email:
                         continue

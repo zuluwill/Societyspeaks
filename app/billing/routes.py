@@ -621,11 +621,27 @@ def handle_subscription_updated(subscription_data):
             new_status = sub.status
 
             if prev_status == 'trialing' and new_status == 'active' and user_id:
+                _extra = sub.extra_data or {}
+                _days_into_trial = None
+                if sub.current_period_start:
+                    from datetime import datetime as _dt
+                    _days_into_trial = (_dt.utcnow() - sub.current_period_start).days
+                _template_slug = None
+                try:
+                    from app.models.daily_brief import Briefing as _Briefing
+                    _b = _Briefing.query.filter_by(user_id=user_id).order_by(_Briefing.id.desc()).first()
+                    if _b and getattr(_b, 'brief_template', None):
+                        _template_slug = _b.brief_template.slug
+                except Exception:
+                    pass
                 _track_posthog('paid_briefing_trial_converted', user_id, {
                     'subscription_id': sub.id,
                     'plan_name': sub.plan.name if sub.plan else None,
                     'plan_code': sub.plan.code if sub.plan else None,
                     'billing_interval': sub.billing_interval,
+                    'trial_source': _extra.get('trial_source'),
+                    'template_slug': _template_slug,
+                    'days_into_trial': _days_into_trial,
                 })
 
             if (prev_plan_id != new_plan_id or prev_interval != new_interval) and user_id:
