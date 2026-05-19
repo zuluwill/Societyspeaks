@@ -283,26 +283,186 @@
   </section>
 </div>
 
-<!-- Trust strip — honest numbers from PostHog traffic distribution. Quick
-     credibility signal between hero and problem section, where most landing
-     pages put logos. We have visitors from across 60+ countries (US, EU, Asia
-     long tail); 140+ curated sources is in seed_brief_templates.py. -->
-<div class="bg-white border-y border-slate-200">
-  <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-      <div>
-        <p class="text-2xl sm:text-3xl font-bold text-slate-900">{{ _('60+') }}</p>
-        <p class="text-sm text-slate-600 mt-1">{{ _('countries read Society Speaks') }}</p>
-      </div>
-      <div class="sm:border-l sm:border-r sm:border-slate-200">
-        <p class="text-2xl sm:text-3xl font-bold text-slate-900">{{ _('140+') }}</p>
-        <p class="text-sm text-slate-600 mt-1">{{ _('curated sources — plus the ones you add') }}</p>
-      </div>
-      <div>
-        <p class="text-2xl sm:text-3xl font-bold text-slate-900">{{ _('5 min') }}</p>
-        <p class="text-sm text-slate-600 mt-1">{{ _('per morning, synthesised from the rest') }}</p>
+<!-- GLOBAL SOURCES STRIP
+     Replaces the bare stats trio. A dual-row CSS marquee of the most
+     internationally recognisable sources signals global credibility in
+     the first scroll — no copy can do what recognition does.
+     Hover pauses animation. Edge fade via CSS mask. No JS required. -->
+<style>
+  /* Marquee — pure CSS, no JS */
+  .ss-mq-wrap {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  }
+  .ss-mq-track { display: flex; gap: 0.75rem; width: max-content; }
+  .ss-mq-fwd { animation: ss-fwd 55s linear infinite; }
+  .ss-mq-rev { animation: ss-rev 60s linear infinite; }
+  @keyframes ss-fwd { from { transform: translateX(0); }      to { transform: translateX(-50%); } }
+  @keyframes ss-rev { from { transform: translateX(-50%); }   to { transform: translateX(0); } }
+  .ss-mq-wrap:hover .ss-mq-fwd,
+  .ss-mq-wrap:hover .ss-mq-rev { animation-play-state: paused; }
+  .ss-badge {
+    display: inline-flex; align-items: center; white-space: nowrap;
+    padding: 0.375rem 1rem; border-radius: 9999px;
+    font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.01em;
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #cbd5e1; background: rgba(255,255,255,0.05);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .ss-badge:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(148,163,184,0.4);
+    color: #f1f5f9;
+  }
+</style>
+
+<div class="bg-slate-950">
+  <section class="py-14">
+
+    {# Section label + headline #}
+    <div class="text-center px-4 mb-10">
+      <p class="text-xs font-bold uppercase tracking-[0.18em] mb-3" style="color:#60a5fa">{{ _('Sources trusted worldwide') }}</p>
+      <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3 leading-tight">
+        {{ _('From Al Jazeera to Nikkei Asia.<br/>From Deutsche Welle to the FT.')|safe }}
+      </h2>
+      <p class="text-slate-400 max-w-lg mx-auto text-[0.9375rem] leading-relaxed">
+        {{ _('156 sources hand-picked across 20+ countries — from Tokyo to Doha, Berlin to São Paulo. Add your own on top.') }}
+      </p>
+    </div>
+
+    {# Row 1 — forward scroll (international outlets) #}
+    <div class="ss-mq-wrap mb-3" role="presentation" aria-hidden="true">
+      <div class="ss-mq-track ss-mq-fwd">
+        <span class="contents">
+          <span class="ss-badge">Financial Times</span>
+          <span class="ss-badge">Al Jazeera</span>
+          <span class="ss-badge">Deutsche Welle</span>
+          <span class="ss-badge">Nikkei Asia</span>
+          <span class="ss-badge">Le Monde</span>
+          <span class="ss-badge">The Economist</span>
+          <span class="ss-badge">France24</span>
+          <span class="ss-badge">BBC World Service</span>
+          <span class="ss-badge">El País</span>
+          <span class="ss-badge">Caixin Global</span>
+          <span class="ss-badge">Spiegel International</span>
+          <span class="ss-badge">Haaretz</span>
+          <span class="ss-badge">Channel NewsAsia</span>
+          <span class="ss-badge">Africa Confidential</span>
+          <span class="ss-badge">Euractiv</span>
+          <span class="ss-badge">Straits Times</span>
+          <span class="ss-badge">Daily Maverick</span>
+          <span class="ss-badge">The National</span>
+          <span class="ss-badge">Sixth Tone</span>
+          <span class="ss-badge">South China Morning Post</span>
+          <span class="ss-badge">Americas Quarterly</span>
+          <span class="ss-badge">Foreign Affairs</span>
+          <span class="ss-badge">International Crisis Group</span>
+          <span class="ss-badge">UN News</span>
+        </span>
+        <span class="contents">
+          <span class="ss-badge">Financial Times</span>
+          <span class="ss-badge">Al Jazeera</span>
+          <span class="ss-badge">Deutsche Welle</span>
+          <span class="ss-badge">Nikkei Asia</span>
+          <span class="ss-badge">Le Monde</span>
+          <span class="ss-badge">The Economist</span>
+          <span class="ss-badge">France24</span>
+          <span class="ss-badge">BBC World Service</span>
+          <span class="ss-badge">El País</span>
+          <span class="ss-badge">Caixin Global</span>
+          <span class="ss-badge">Spiegel International</span>
+          <span class="ss-badge">Haaretz</span>
+          <span class="ss-badge">Channel NewsAsia</span>
+          <span class="ss-badge">Africa Confidential</span>
+          <span class="ss-badge">Euractiv</span>
+          <span class="ss-badge">Straits Times</span>
+          <span class="ss-badge">Daily Maverick</span>
+          <span class="ss-badge">The National</span>
+          <span class="ss-badge">Sixth Tone</span>
+          <span class="ss-badge">South China Morning Post</span>
+          <span class="ss-badge">Americas Quarterly</span>
+          <span class="ss-badge">Foreign Affairs</span>
+          <span class="ss-badge">International Crisis Group</span>
+          <span class="ss-badge">UN News</span>
+        </span>
       </div>
     </div>
+
+    {# Row 2 — reverse scroll (quality analysis) #}
+    <div class="ss-mq-wrap" role="presentation" aria-hidden="true">
+      <div class="ss-mq-track ss-mq-rev">
+        <span class="contents">
+          <span class="ss-badge">Wall Street Journal</span>
+          <span class="ss-badge">The Guardian</span>
+          <span class="ss-badge">Bloomberg</span>
+          <span class="ss-badge">The Atlantic</span>
+          <span class="ss-badge">MIT Technology Review</span>
+          <span class="ss-badge">Foreign Policy</span>
+          <span class="ss-badge">Associated Press</span>
+          <span class="ss-badge">Nature News</span>
+          <span class="ss-badge">Not Boring</span>
+          <span class="ss-badge">Stratechery</span>
+          <span class="ss-badge">The New York Times</span>
+          <span class="ss-badge">Noahpinion</span>
+          <span class="ss-badge">Chatham House</span>
+          <span class="ss-badge">Brookings Institution</span>
+          <span class="ss-badge">Carnegie Endowment</span>
+          <span class="ss-badge">RAND Corporation</span>
+          <span class="ss-badge">The Lancet</span>
+          <span class="ss-badge">Science Magazine</span>
+          <span class="ss-badge">Politico EU</span>
+          <span class="ss-badge">Marginal Revolution</span>
+          <span class="ss-badge">ProPublica</span>
+          <span class="ss-badge">STAT News</span>
+          <span class="ss-badge">World Bank</span>
+          <span class="ss-badge">Our World in Data</span>
+        </span>
+        <span class="contents">
+          <span class="ss-badge">Wall Street Journal</span>
+          <span class="ss-badge">The Guardian</span>
+          <span class="ss-badge">Bloomberg</span>
+          <span class="ss-badge">The Atlantic</span>
+          <span class="ss-badge">MIT Technology Review</span>
+          <span class="ss-badge">Foreign Policy</span>
+          <span class="ss-badge">Associated Press</span>
+          <span class="ss-badge">Nature News</span>
+          <span class="ss-badge">Not Boring</span>
+          <span class="ss-badge">Stratechery</span>
+          <span class="ss-badge">The New York Times</span>
+          <span class="ss-badge">Noahpinion</span>
+          <span class="ss-badge">Chatham House</span>
+          <span class="ss-badge">Brookings Institution</span>
+          <span class="ss-badge">Carnegie Endowment</span>
+          <span class="ss-badge">RAND Corporation</span>
+          <span class="ss-badge">The Lancet</span>
+          <span class="ss-badge">Science Magazine</span>
+          <span class="ss-badge">Politico EU</span>
+          <span class="ss-badge">Marginal Revolution</span>
+          <span class="ss-badge">ProPublica</span>
+          <span class="ss-badge">STAT News</span>
+          <span class="ss-badge">World Bank</span>
+          <span class="ss-badge">Our World in Data</span>
+        </span>
+      </div>
+    </div>
+
+    {# Stats trio #}
+    <div class="flex justify-center gap-0 mt-12 px-4">
+      <div class="text-center px-8 border-r border-slate-800">
+        <p class="text-2xl font-bold text-white">20+</p>
+        <p class="text-xs text-slate-500 mt-1">{{ _('countries') }}</p>
+      </div>
+      <div class="text-center px-8 border-r border-slate-800">
+        <p class="text-2xl font-bold text-white">156</p>
+        <p class="text-xs text-slate-500 mt-1">{{ _('curated sources') }}</p>
+      </div>
+      <div class="text-center px-8">
+        <p class="text-2xl font-bold text-white">+</p>
+        <p class="text-xs text-slate-500 mt-1">{{ _('yours too') }}</p>
+      </div>
+    </div>
+
   </section>
 </div>
 
