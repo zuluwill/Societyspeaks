@@ -274,6 +274,7 @@ def checkout_success():
                     is_org_plan = True
                 # Track paid briefing subscription with PostHog (only when we just synced from this checkout)
                 if sub and sub.plan:
+                    from app.lib.utm import pop_utms_for_event
                     interval = _normalize_billing_interval(session_meta.get('billing_interval', 'month')) or 'month'
                     plan = sub.plan
                     price_pence = plan.price_yearly if interval == 'year' else plan.price_monthly
@@ -284,6 +285,7 @@ def checkout_success():
                         'billing_interval': interval,
                         'price_pence': price_pence,
                         'price': (price_pence / 100.0) if price_pence else None,
+                        **pop_utms_for_event(),
                     })
         except stripe.error.StripeError as e:
             current_app.logger.error(f"Stripe error retrieving checkout session: {e}")
@@ -568,10 +570,18 @@ def handle_subscription_created(subscription_data):
             _reactivate_user_briefings(user.id)
 
             stripe_status = subscription_data.get('status')
+            new_sub = Subscription.query.filter_by(
+                stripe_subscription_id=subscription_data['id']
+            ).first()
+            # Backfill cohort: every Stripe-created sub gets trial_source='stripe'
+            # so admin metrics can compare against self-serve trials.
+            if new_sub:
+                extra = dict(new_sub.extra_data or {})
+                if not extra.get('trial_source'):
+                    extra['trial_source'] = 'stripe'
+                    new_sub.extra_data = extra
+                    db.session.commit()
             if stripe_status == 'trialing':
-                new_sub = Subscription.query.filter_by(
-                    stripe_subscription_id=subscription_data['id']
-                ).first()
                 trial_end_ts = subscription_data.get('trial_end')
                 trial_end_date = None
                 if trial_end_ts:
@@ -583,6 +593,7 @@ def handle_subscription_created(subscription_data):
                     'plan_code': new_sub.plan.code if new_sub and new_sub.plan else None,
                     'billing_interval': new_sub.billing_interval if new_sub else None,
                     'trial_end': trial_end_date,
+                    'trial_source': 'stripe',
                 })
         except ValueError as e:
             current_app.logger.error(f"Failed to create subscription for user {user.id}: {e}")
@@ -1022,6 +1033,11 @@ def handle_subscription_resumed(subscription_data):
 @login_required
 def pending_checkout():
     """Handle pending checkout after registration/login."""
+    # Consume any session-stashed checkout intent now that the user has arrived
+    # at the checkout entry point. Auth callers (register/login) only use these
+    # as a transport — the plan/interval URL params are authoritative here.
+    session.pop('pending_checkout_plan', None)
+    session.pop('pending_checkout_interval', None)
     plan_code = request.args.get('plan', 'starter')
     billing_interval = _normalize_billing_interval(request.args.get('interval', 'month'))
     if not billing_interval:

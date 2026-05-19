@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Check your inbox') }} | Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+  <section class="mx-auto max-w-xl px-4 py-16 sm:py-24">
+
+    <div class="text-center">
+      <!-- Mail icon -->
+      <div class="mx-auto w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center mb-6">
+        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.74a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      </div>
+
+      <h1 class="text-3xl font-bold text-slate-900 mb-3">
+        {{ _('Check your inbox') }}
+      </h1>
+
+      <p class="text-lg text-slate-600 mb-2">
+        {{ _("We've sent a sign-in link to") }}
+      </p>
+      <p class="text-lg font-semibold text-slate-900 mb-8 break-all">
+        {{ email }}
+      </p>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-left mb-8">
+        <ol class="space-y-4 text-slate-700">
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold flex items-center justify-center">1</span>
+            <span>{{ _('Open the email from Society Speaks.') }}</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold flex items-center justify-center">2</span>
+            <span>{{ _('Click the sign-in link inside.') }}</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold flex items-center justify-center">3</span>
+            <span>
+              {% if template %}
+              {{ _('Your first %(name)s brief arrives in your inbox tomorrow morning.', name=template.name)|escape_i18n }}
+              {% else %}
+              {{ _('Your first brief arrives in your inbox tomorrow morning.') }}
+              {% endif %}
+            </span>
+          </li>
+        </ol>
+      </div>
+
+      <p class="text-sm text-slate-500 mb-2">
+        {{ _("Can't find it? Check your spam folder.") }}
+      </p>
+      <p class="text-sm text-slate-500">
+        <a href="{{ url_for('briefing.start_trial') }}" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">
+          {{ _('Use a different email') }}
+        </a>
+      </p>
+
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -30,6 +30,16 @@ if False:  # pragma: no cover — pybabel extract only (never runs)
     # --- _send_user_transactional_email(..., subject third positional) -----
     gettext("We've paused your briefings — come back any time")
 
+    # --- Paid-briefings self-serve trial lifecycle (Block B/C/D) -----------
+    # Subjects flow through _send_user_transactional_email's `subject=` arg,
+    # which calls _subject_for_user(user, subject) at send time. List the
+    # msgids here so pybabel extract catalogs them for translators.
+    gettext("Your first brief is two minutes away")
+    gettext("A quick note about Personal Briefs")
+    gettext("Keep your morning brief — your trial is ending soon")
+    gettext("Your briefs are paused — pick up where you left off any time")
+    gettext("Still here when you're ready")
+
     # --- Subjects built as f-strings today (not extractable as static msgids) ---
     # * send_trial_ending_email: day/plural copy is assembled in code.
     # * send_trial_mid_email: days_remaining interpolated in code.

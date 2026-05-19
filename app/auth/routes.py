@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import urlparse
 from app import db, cache
-from app.models import User, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber
+from app.models import User, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, generate_unique_slug
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func, or_
 from datetime import datetime, timedelta
@@ -127,6 +127,57 @@ def merge_anonymous_statement_votes_into_user(user):
     return merged_total
 
 
+def _is_briefing_trial_flow(pending_redirect: str | None) -> bool:
+    """Return True when the current login should bypass the profile gate.
+
+    Two signals — same-browser session flag set on /briefings/start POST, OR
+    a pending post-auth redirect that targets the trial flow (covers
+    cross-device magic-link clicks where the session flag was lost).
+    """
+    if session.get('briefing_trial_intent'):
+        return True
+    if pending_redirect:
+        # Compare against the raw path so a future hostname change doesn't break this.
+        from urllib.parse import urlparse
+        path = urlparse(pending_redirect).path or pending_redirect
+        if path.startswith('/briefings/start'):
+            return True
+    return False
+
+
+def _auto_create_individual_profile_for_trial(user) -> IndividualProfile:
+    """Create the minimal IndividualProfile required to bypass the profile gate.
+
+    Called when a user arrives via the self-serve paid-briefings trial flow.
+    Uses the user's username as ``full_name`` (best fallback available) and
+    infers ``country`` from ``Accept-Language``. The user can complete the
+    rest of the profile later from the dashboard — we never block the brief.
+    """
+    try:
+        from app.programmes.journey import infer_journey_country_from_accept_language
+        country = infer_journey_country_from_accept_language(
+            request.headers.get('Accept-Language')
+        )
+    except Exception:
+        country = None
+
+    full_name = user.username or (user.email.split('@', 1)[0] if user.email else 'New member')
+    profile = IndividualProfile(
+        user_id=user.id,
+        full_name=full_name,
+        country=country,
+        slug=generate_unique_slug(IndividualProfile, full_name, fallback='profile'),
+    )
+    user.profile_type = 'individual'
+    db.session.add(profile)
+    db.session.commit()
+    current_app.logger.info(
+        "Auto-created IndividualProfile for trial user %s (slug=%s, country=%s)",
+        user.id, profile.slug, country,
+    )
+    return profile
+
+
 def _finalize_login(user, *, method, next_url=None):
     """Run all post-authentication side-effects and return the redirect Response.
 
@@ -186,7 +237,11 @@ def _finalize_login(user, *, method, next_url=None):
 
     pending_plan = session.pop('pending_checkout_plan', None)
     pending_interval = session.pop('pending_checkout_interval', 'month')
-    if pending_plan:
+    # Self-serve trial flow takes precedence over a stale checkout intent.
+    if pending_plan and not (
+        session.get('briefing_trial_intent')
+        or (_peek_pending_post_auth_redirect() or '').startswith('/briefings/start')
+    ):
         if not get_active_subscription(user):
             current_app.logger.info(
                 f"Resuming checkout intent for user {user.id}: plan={pending_plan} interval={pending_interval}"
@@ -201,9 +256,27 @@ def _finalize_login(user, *, method, next_url=None):
     profile = user.individual_profile or user.company_profile
     if not profile:
         pending_redirect = _peek_pending_post_auth_redirect()
-        if pending_redirect:
-            return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
-        return redirect(url_for('profiles.select_profile_type'))
+        # Trial-flow bypass: paid-briefings self-serve flow auto-creates a
+        # minimal profile so the magic-link round-trip lands directly on the
+        # first-brief screen instead of the individual-vs-company picker.
+        if _is_briefing_trial_flow(pending_redirect):
+            try:
+                profile = _auto_create_individual_profile_for_trial(user)
+            except Exception as exc:
+                current_app.logger.error(
+                    f"Failed to auto-create profile for trial user {user.id}: {exc}",
+                    exc_info=True,
+                )
+                # Fall back to the normal profile gate rather than 500.
+                if pending_redirect:
+                    return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
+                return redirect(url_for('profiles.select_profile_type'))
+            # Clear the trial-intent flag — it's served its purpose.
+            session.pop('briefing_trial_intent', None)
+        else:
+            if pending_redirect:
+                return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
+            return redirect(url_for('profiles.select_profile_type'))
 
     # Fire profile-completion reminder at most once per 7 days if profile has gaps.
     missing_fields = (
@@ -507,6 +580,9 @@ def register():
 
     # Capture checkout intent from query params (for briefing signups)
     _stash_checkout_intent_from_querystring()
+    # Capture campaign attribution before any redirect.
+    from app.lib.utm import stash_utms_from_querystring
+    stash_utms_from_querystring()
     checkout_plan = request.args.get('checkout_plan')
 
     # If a logged-in user clicks "Start free trial", skip registration and go straight to Stripe
@@ -596,8 +672,14 @@ def register():
             event_metadata={'username': username}
         )
         
-        # Track user signup with PostHog
-        _track_posthog('user_signed_up', new_user.id, {'username': username})
+        # Track user signup with PostHog, attaching campaign attribution.
+        from app.lib.utm import peek_utms
+        _signup_utms = peek_utms()  # peek — keep for downstream trial events
+        _track_posthog(
+            'user_signed_up',
+            new_user.id,
+            {'username': username, **_signup_utms},
+        )
 
         # Generate email verification token (24-hour expiry, separate salt from password reset)
         token = new_user.get_email_verification_token()
@@ -674,9 +756,27 @@ def register():
 def login():
     next_url = _current_next_url()
     _stash_checkout_intent_from_querystring()
+    # Capture campaign attribution before any redirect.
+    from app.lib.utm import stash_utms_from_querystring
+    stash_utms_from_querystring()
     # Guard: if a concurrent/duplicate POST arrives after the first already
     # logged the user in, skip re-processing to prevent duplicate flash messages.
     if current_user.is_authenticated:
+        # If the visitor arrived with a checkout_plan in the query (e.g. Daily
+        # Brief CTA) and has no active subscription, resume the intent rather
+        # than dropping them on the dashboard. Read with .get so the intent
+        # survives if pending_checkout itself fails — billing.pending_checkout
+        # consumes the session keys on success.
+        if not next_url:
+            pending_plan = session.get('pending_checkout_plan')
+            pending_interval = session.get('pending_checkout_interval', 'month')
+            if pending_plan and not get_active_subscription(current_user):
+                current_app.logger.info(
+                    f"Resuming checkout intent for authenticated user {current_user.id}: plan={pending_plan} interval={pending_interval}"
+                )
+                return redirect(url_for('billing.pending_checkout',
+                                        plan=pending_plan,
+                                        interval=pending_interval))
         profile = current_user.individual_profile or current_user.company_profile
         if not profile:
             destination = next_url or _peek_pending_post_auth_redirect()
@@ -1188,6 +1288,13 @@ def magic_link_landing(token):
     Email scanners and prefetchers issue GET requests; keeping consume
     behind a POST means a one-shot token survives them.
     """
+    # Optional ``next`` query param survives cross-device email clicks.
+    next_from_link = safe_next_url(request.args.get('next'))
+    if next_from_link:
+        _set_pending_post_auth_redirect(next_from_link)
+        if next_from_link.startswith('/briefings/start'):
+            session['briefing_trial_intent'] = True
+
     user = User.verify_magic_login_token(token)
     if user is None:
         flash(_("This sign-in link is invalid, expired, or has already been used. Request a new one below."), 'warning')

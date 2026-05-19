@@ -23,6 +23,30 @@ VALID_BILLING_INTERVALS = {'month', 'year'}
 # Stripe-backed subs that still grant product access (past_due = grace while Stripe retries).
 SUBSCRIPTION_ACCESS_STATUSES = ('trialing', 'active', 'past_due')
 
+# Statuses that allow the scheduler to send briefs. Aliased to access for now;
+# split into a distinct tuple when product needs read-only access without sends.
+SUBSCRIPTION_SENDING_STATUSES = SUBSCRIPTION_ACCESS_STATUSES
+
+
+def subscription_allows_sending(sub) -> bool:
+    """Single source of truth for "may the scheduler send a brief for this sub?".
+
+    Used by every scheduler job that triggers a brief send. Gates on:
+      - subscription is not None
+      - status is in SUBSCRIPTION_SENDING_STATUSES
+      - extra_data.paused_at is not set (user or system paused the trial)
+
+    Stripe-backed and self-serve (manual) subscriptions are treated identically
+    here — the source of the trial doesn't change whether sends are allowed.
+    """
+    if sub is None:
+        return False
+    if sub.status not in SUBSCRIPTION_ACCESS_STATUSES:
+        return False
+    if (sub.extra_data or {}).get('paused_at'):
+        return False
+    return True
+
 _STRIPE_TRANSIENT_ERRORS = (OSError, IOError, ConnectionError, TimeoutError)
 
 _ca_bundle_lock = threading.Lock()

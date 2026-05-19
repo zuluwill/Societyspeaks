@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Sample brief — what a Personal Brief looks like') }} | Society Speaks{% endblock %}
+{% block meta_description %}{{ _('A real example of a Personal Brief: synthesised from your chosen sources, delivered every morning. No newsletter overload.') }}{% endblock %}
+{% block og_title %}{{ _('Sample Personal Brief') }}{% endblock %}
+{% block og_description %}{{ _('See what a Personal Brief looks like — synthesised from your sources, every morning.') }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+  <section class="mx-auto max-w-3xl px-4 py-12 sm:py-16">
+
+    <!-- Lede -->
+    <header class="mb-10 text-center">
+      <p class="text-sm font-semibold tracking-wide uppercase text-slate-500 mb-3">
+        {{ _('Example brief') }}
+      </p>
+      <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+        {% if template_name %}
+        {{ _('Today\'s %(name)s brief', name=template_name)|escape_i18n }}
+        {% else %}
+        {{ _("Today's brief") }}
+        {% endif %}
+      </h1>
+      <p class="text-lg text-slate-600 max-w-xl mx-auto">
+        {{ _('Synthesised from the sources our example reader trusts. Your version uses your sources, your beat, your sending time.') }}
+      </p>
+    </header>
+
+    <!-- Brief content card -->
+    <article class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-12">
+      <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.74a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <span>{{ _('Society Speaks · Personal Briefs') }}</span>
+        </div>
+        <span class="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+          {{ _('Example') }}
+        </span>
+      </div>
+      <div class="px-6 py-8 sm:px-10 sm:py-10 prose prose-slate max-w-none">
+        {% if sample_html %}
+        {{ sample_html|safe }}
+        {% else %}
+        <p class="text-slate-500">{{ _("Sample content is loading — please refresh.") }}</p>
+        {% endif %}
+      </div>
+    </article>
+
+    <!-- CTA -->
+    <div class="text-center bg-slate-900 rounded-2xl px-6 py-10 sm:px-10 sm:py-12 text-white">
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+        {{ _('Make this yours.') }}
+      </h2>
+      <p class="text-slate-300 text-lg max-w-md mx-auto mb-8">
+        {{ _('Your Substacks, your PDFs, your beat — one morning email. 30 days free, no card needed.') }}
+      </p>
+      <a
+        href="{{ url_for('briefing.start_trial') }}?utm_source=sample_page&utm_medium=web&utm_campaign=personal_briefs_cta"
+        class="inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-base font-semibold text-slate-900 hover:bg-slate-100 transition-colors"
+        data-ph-capture-attribute-cta="sample-page-start-trial"
+      >
+        {{ _('Build your morning brief') }} &rarr;
+      </a>
+    </div>
+
+    <!-- Footer note -->
+    <footer class="mt-10 text-center text-sm text-slate-500">
+      {% if sample_run and sample_run.sent_at %}
+      {{ _('Refreshed weekly from a live example briefing.') }}
+      {% else %}
+      {{ _('Example layout — your brief will be generated fresh from your chosen sources.') }}
+      {% endif %}
+    </footer>
+
+  </section>
+</div>
+{% endblock %}

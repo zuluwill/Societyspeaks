@@ -38,6 +38,137 @@ def _subscription_query():
     )
 
 
+@briefings_admin_bp.route('/metrics')
+@admin_required
+def metrics():
+    """Self-serve trial cohort metrics — pure DB queries, no PostHog dependency.
+
+    Each row is a single SQL count; refresh-on-load. Numbers come straight
+    from ``Subscription``/``Briefing`` so the source of truth matches what
+    the billing system actually sees.
+    """
+    now = utcnow_naive()
+    week_ago = now - timedelta(days=7)
+    month_ago = now - timedelta(days=30)
+    forty_eight_ago = now - timedelta(hours=48)
+
+    # ---- Helpers -----------------------------------------------------------
+
+    def _count(query):
+        return query.scalar() or 0
+
+    def _trials_in_window(since=None, until=None, source=None):
+        """Count Subscription rows matching the (window, source) cohort."""
+        q = db.session.query(func.count(Subscription.id))
+        if since is not None:
+            q = q.filter(Subscription.created_at >= since)
+        if until is not None:
+            q = q.filter(Subscription.created_at < until)
+        if source is not None:
+            # trial_source lives in extra_data JSON. SQLAlchemy's JSON op
+            # works on Postgres + SQLite via the compat shim in conftest.
+            q = q.filter(Subscription.extra_data['trial_source'].as_string() == source)
+        return _count(q)
+
+    # ---- Top-line trial volume --------------------------------------------
+
+    trials_total_week = _trials_in_window(since=week_ago)
+    trials_total_month = _trials_in_window(since=month_ago)
+    trials_self_serve_week = _trials_in_window(since=week_ago, source='self_serve')
+    trials_self_serve_month = _trials_in_window(since=month_ago, source='self_serve')
+    trials_stripe_month = _trials_in_window(since=month_ago, source='stripe')
+
+    # ---- Activation: ≥1 briefing within 48h of trial start ----------------
+    # Restrict the cohort denominator to "had at least 48h to activate" so we
+    # don't pollute the rate with users who just signed up.
+    eligible_for_activation_30d = (
+        db.session.query(Subscription)
+        .filter(Subscription.created_at >= month_ago)
+        .filter(Subscription.created_at <= forty_eight_ago)
+    )
+    eligible_count = eligible_for_activation_30d.count()
+
+    activated_count = (
+        db.session.query(func.count(func.distinct(Subscription.id)))
+        .join(User, Subscription.user_id == User.id)
+        .join(Briefing, db.and_(
+            Briefing.owner_type == 'user',
+            Briefing.owner_id == User.id,
+        ))
+        .filter(Subscription.created_at >= month_ago)
+        .filter(Subscription.created_at <= forty_eight_ago)
+        .filter(Briefing.created_at <= Subscription.created_at + timedelta(hours=48))
+    ).scalar() or 0
+
+    activation_pct = (
+        round((activated_count / eligible_count) * 100, 1) if eligible_count else None
+    )
+
+    # ---- First-brief delivery: % of new trials with a generated BriefRun -
+    first_brief_eligible = (
+        db.session.query(Subscription)
+        .filter(Subscription.created_at >= month_ago)
+    ).count()
+    first_brief_delivered = (
+        db.session.query(func.count(func.distinct(Subscription.id)))
+        .join(User, Subscription.user_id == User.id)
+        .join(Briefing, db.and_(
+            Briefing.owner_type == 'user',
+            Briefing.owner_id == User.id,
+        ))
+        .join(BriefRun, BriefRun.briefing_id == Briefing.id)
+        .filter(Subscription.created_at >= month_ago)
+    ).scalar() or 0
+    first_brief_pct = (
+        round((first_brief_delivered / first_brief_eligible) * 100, 1)
+        if first_brief_eligible else None
+    )
+
+    # ---- Conversion: self-serve trials that landed a Stripe sub ----------
+    conversion_count = (
+        db.session.query(func.count(func.distinct(User.id)))
+        .join(Subscription, Subscription.user_id == User.id)
+        .filter(Subscription.stripe_subscription_id.isnot(None))
+        .filter(Subscription.status == 'active')
+        .filter(
+            User.id.in_(
+                db.session.query(Subscription.user_id)
+                .filter(Subscription.extra_data['trial_source'].as_string() == 'self_serve')
+                .filter(Subscription.created_at >= month_ago)
+            )
+        )
+    ).scalar() or 0
+    conversion_pct = (
+        round((conversion_count / trials_self_serve_month) * 100, 1)
+        if trials_self_serve_month else None
+    )
+
+    # ---- Pause / resume ---------------------------------------------------
+    paused_count = (
+        db.session.query(func.count(Subscription.id))
+        .filter(Subscription.extra_data['paused_at'].as_string().isnot(None))
+    ).scalar() or 0
+
+    return render_template(
+        'admin/briefings/metrics.html',
+        now=now,
+        trials_total_week=trials_total_week,
+        trials_total_month=trials_total_month,
+        trials_self_serve_week=trials_self_serve_week,
+        trials_self_serve_month=trials_self_serve_month,
+        trials_stripe_month=trials_stripe_month,
+        eligible_count=eligible_count,
+        activated_count=activated_count,
+        activation_pct=activation_pct,
+        first_brief_eligible=first_brief_eligible,
+        first_brief_delivered=first_brief_delivered,
+        first_brief_pct=first_brief_pct,
+        conversion_count=conversion_count,
+        conversion_pct=conversion_pct,
+        paused_count=paused_count,
+    )
+
+
 @briefings_admin_bp.route('/')
 @admin_required
 def subscriptions():

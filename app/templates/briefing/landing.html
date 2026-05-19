@@ -154,50 +154,60 @@
       <!-- Left: Copy -->
       <div>
         <p class="text-sm font-semibold tracking-wide uppercase mb-4" style="color: #60a5fa">
-          {{ _('For professionals who think for a living') }}
+          {{ _('For people who need to know, not just read') }}
         </p>
         <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-5xl mb-6 leading-tight" style="color: white">
-          {{ _('Stop reading 15 newsletters.') }}<br/>
-          <span style="color: #60a5fa">{{ _('Start knowing what matters.') }}</span>
+          {{ _('Your Substacks, your PDFs, your beat.')|escape_i18n }}<br/>
+          <span style="color: #60a5fa">{{ _('One morning email.') }}</span>
         </h1>
         <p class="text-xl mb-8 leading-relaxed" style="color: #e2e8f0">
-          {{ _('One daily brief from the sources you actually trust. Politics, tech, policy, markets — synthesised and delivered before your first meeting.') }}
+          {{ _('Not our free Daily Brief — yours, from sources you choose. 30 days free, no card needed.') }}
         </p>
 
-        <!-- Specific proof points -->
+        <!-- Outcome-focused proof points — what you get, not what we built. -->
         <div class="flex flex-wrap gap-6 mb-8 text-sm" style="color: #94a3b8">
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span>{{ _('140+ curated sources') }}</span>
+            <span>{{ _('5-minute read, every morning') }}</span>
           </div>
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span>{{ _('Upload your own PDFs') }}</span>
+            <span>{{ _('Your sources, your beat — not ours') }}</span>
           </div>
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span>{{ _('No ads, no tracking') }}</span>
+            <span>{{ _('Synthesised, not aggregated') }}</span>
           </div>
         </div>
 
+        {# Unique-to-Society-Speaks differentiator — every paid sub funds civic
+           tech that anyone, anywhere, can use. Placed above the CTAs so a
+           skimmer sees the mission before they decide whether to click. #}
+        <div class="mb-6 inline-flex items-start gap-2 rounded-lg px-3 py-2 border border-emerald-400/20" style="background: rgba(16, 185, 129, 0.08)">
+          <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+          <span class="text-sm" style="color: #cbd5e1">{{ _('Every subscription funds open civic tech anyone, anywhere can use.') }}</span>
+        </div>
+
         <div class="flex flex-col sm:flex-row gap-4">
-          <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-start-trial">
-            {{ _('Start free 30-day trial') }}
+          <a href="{{ primary_cta_url|default('#pricing') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-500 transition-all" style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3)" data-ph-capture-attribute-cta="hero-build-brief">
+            {{ _('Build your morning brief') }}
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
           </a>
-          <a href="#see-example" class="inline-flex items-center justify-center rounded-lg px-6 py-4 text-base font-medium transition-all" style="color: #e2e8f0; border: 1px solid #475569" data-ph-capture-attribute-cta="hero-see-example">
+          <a href="{{ sample_cta_url|default('#see-example') }}" class="inline-flex items-center justify-center rounded-lg px-6 py-4 text-base font-medium transition-all" style="color: #e2e8f0; border: 1px solid #475569" data-ph-capture-attribute-cta="hero-see-example">
             {{ _('See an example brief') }}
           </a>
         </div>
-        <p class="text-sm mt-4" style="color: #64748b">{{ _('From £4.99/month. 30-day free trial.') }}</p>
+        <p class="text-sm mt-4" style="color: #64748b">{{ _('30 days free. No card needed.') }}</p>
       </div>
 
       <!-- Right: Brief preview that shows real value -->
@@ -208,37 +218,37 @@
             <div class="px-5 py-4" style="background: linear-gradient(to right, #1e293b, #334155)">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-xs font-medium" style="color: #94a3b8">{{ _('Tuesday, 21 January 2025 · 7:00am') }}</p>
-                  <h3 class="text-white text-lg font-bold mt-1">{{ _('Your Tech & Policy Brief') }}</h3>
+                  <p class="text-xs font-medium" style="color: #94a3b8">{{ _('Your morning · 7:00am') }}</p>
+                  <h3 class="text-white text-lg font-bold mt-1">{{ _('Your AI & Technology Brief')|escape_i18n }}</h3>
                 </div>
                 <span class="text-xs px-2 py-1 rounded-full" style="background: rgba(34, 197, 94, 0.2); color: #4ade80">{{ _('5 min read') }}</span>
               </div>
             </div>
 
-            <!-- Brief content - showing real synthesis -->
+            <!-- Brief content — globally-relevant AI & Tech example so US/EU/Asia visitors all see themselves. -->
             <div class="p-5 space-y-4">
               <!-- Lead story -->
               <div class="border-l-4 border-primary-500 pl-4 py-2">
                 <div class="flex items-center gap-2 mb-2">
                   <span class="text-xs font-bold uppercase text-primary-600">{{ _('Lead Story') }}</span>
                 </div>
-                <h4 class="font-bold text-slate-900 text-base mb-2">{{ _('EU AI Act enforcement begins: What changes for UK tech companies') }}</h4>
-                <p class="text-sm text-slate-600 leading-relaxed">{{ _('The first compliance deadlines under the EU AI Act take effect this week. Companies deploying high-risk AI systems must now document training data sources and implement human oversight mechanisms. <span class="text-primary-600 font-medium">Three implications for UK firms operating in EU markets...</span>')|safe }}</p>
+                <h4 class="font-bold text-slate-900 text-base mb-2">{{ _("Frontier labs publish updated capability disclosures — what changed and what's missing") }}</h4>
+                <p class="text-sm text-slate-600 leading-relaxed">{{ _('OpenAI, Anthropic and Google DeepMind each released new evaluation reports this week. Three patterns repeat across all three labs — and one notable omission. <span class="text-primary-600 font-medium">Why operators should care…</span>')|safe }}</p>
                 <div class="flex items-center gap-3 mt-3 text-xs text-slate-500">
-                  <span class="bg-slate-100 px-2 py-0.5 rounded">Financial Times</span>
-                  <span class="bg-slate-100 px-2 py-0.5 rounded">The Economist</span>
                   <span class="bg-slate-100 px-2 py-0.5 rounded">Stratechery</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">MIT Tech Review</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">The Information</span>
                 </div>
               </div>
 
-              <!-- Second story -->
+              <!-- Second story — features the PDF-upload differentiator -->
               <div class="border-l-4 border-emerald-500 pl-4 py-2">
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xs font-bold uppercase text-emerald-600">{{ _('From Your Research') }}</span>
-                  <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">{{ _('PDF Upload') }}</span>
+                  <span class="text-xs font-bold uppercase text-emerald-600">{{ _('From Your PDFs') }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">{{ _('Your upload') }}</span>
                 </div>
-                <h4 class="font-bold text-slate-900 text-base mb-1">{{ _('McKinsey quarterly: AI adoption rates by sector') }}</h4>
-                <p class="text-sm text-slate-600">{{ _('Key finding: Financial services leads at 42%% adoption, manufacturing lags at 18%%...') }}</p>
+                <h4 class="font-bold text-slate-900 text-base mb-1">{{ _('McKinsey: enterprise AI adoption crosses 50%% across all major regions') }}</h4>
+                <p class="text-sm text-slate-600">{{ _('Highest growth: APAC services (+18pp YoY). Slowest: European manufacturing (+4pp)…') }}</p>
               </div>
 
               <!-- Why this matters box -->
@@ -249,14 +259,14 @@
                   </svg>
                   <div>
                     <p class="text-sm font-semibold text-amber-900 mb-1">{{ _('Why this matters') }}</p>
-                    <p class="text-sm text-amber-800">{{ _('Regulatory pressure and adoption data suggest AI strategy decisions made in Q1 2025 will determine competitive positioning for the next 3-5 years.') }}</p>
+                    <p class="text-sm text-amber-800">{{ _("The labs are converging on similar safety disclosures but diverging on what they refuse to publish. Where you sit on that gap shapes how you read every new model release.") }}</p>
                   </div>
                 </div>
               </div>
 
               <!-- More stories indicator -->
               <div class="text-center py-2">
-                <span class="text-sm text-slate-400">{{ _('+ 3 more stories') }}</span>
+                <span class="text-sm text-slate-400">{{ _('+ 3 more stories across your sources') }}</span>
               </div>
             </div>
           </div>
@@ -268,6 +278,29 @@
             <p class="text-xs text-slate-600">{{ _('<span class="font-semibold text-slate-900">Your sources.</span> We pull from the publications you trust, not what\'s trending.')|safe }}</p>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Trust strip — honest numbers from PostHog traffic distribution. Quick
+     credibility signal between hero and problem section, where most landing
+     pages put logos. We have visitors from across 60+ countries (US, EU, Asia
+     long tail); 140+ curated sources is in seed_brief_templates.py. -->
+<div class="bg-white border-y border-slate-200">
+  <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+      <div>
+        <p class="text-2xl sm:text-3xl font-bold text-slate-900">{{ _('60+') }}</p>
+        <p class="text-sm text-slate-600 mt-1">{{ _('countries read Society Speaks') }}</p>
+      </div>
+      <div class="sm:border-l sm:border-r sm:border-slate-200">
+        <p class="text-2xl sm:text-3xl font-bold text-slate-900">{{ _('140+') }}</p>
+        <p class="text-sm text-slate-600 mt-1">{{ _('curated sources — plus the ones you add') }}</p>
+      </div>
+      <div>
+        <p class="text-2xl sm:text-3xl font-bold text-slate-900">{{ _('5 min') }}</p>
+        <p class="text-sm text-slate-600 mt-1">{{ _('per morning, synthesised from the rest') }}</p>
       </div>
     </div>
   </section>
@@ -331,14 +364,173 @@
   </section>
 </div>
 
-<!-- ICP Sections - Speak directly to who they are -->
-<div class="bg-slate-50">
-  <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ _('Built for people who need to know, not just read') }}</h2>
+<!-- Differentiation: free Daily Brief vs paid Personal Briefs -->
+<div class="bg-white">
+  <section class="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-slate-900 mb-3">{{ _("There's our brief. Then there's yours.") }}</h2>
+      <p class="text-lg text-slate-600">{{ _('Two different products solving two different problems.') }}</p>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-8">
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Free Daily Brief -->
+      <div class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-8 flex flex-col">
+        <div class="mb-6">
+          <span class="inline-block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">{{ _('Free') }}</span>
+          <h3 class="text-2xl font-bold text-slate-900 mb-2">{{ _('Daily Brief') }}</h3>
+          <p class="text-slate-600">{{ _('Our editorial team curates one global news brief. Everyone gets the same edition.') }}</p>
+        </div>
+        <ul class="space-y-3 text-slate-700 mb-8 flex-1">
+          <li class="flex items-start gap-3">
+            <span class="text-emerald-600 flex-shrink-0 mt-0.5">✓</span>
+            <span>{{ _('Curated by our editorial team') }}</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-emerald-600 flex-shrink-0 mt-0.5">✓</span>
+            <span>{{ _('Politics, tech, climate, markets — one daily edition') }}</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-slate-400 flex-shrink-0 mt-0.5">—</span>
+            <span class="text-slate-500">{{ _("You can't add your own sources or PDFs") }}</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-slate-400 flex-shrink-0 mt-0.5">—</span>
+            <span class="text-slate-500">{{ _('Single editorial perspective — same for every reader') }}</span>
+          </li>
+        </ul>
+        <a href="{{ url_for('brief.today') }}" class="block w-full text-center rounded-lg border-2 border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors">
+          {{ _("Read today's free brief") }}
+        </a>
+      </div>
+
+      <!-- Personal Briefs -->
+      <div class="bg-slate-900 rounded-2xl border-2 border-slate-900 p-8 flex flex-col relative">
+        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary-500 text-white text-xs font-semibold px-3 py-1 rounded-full">{{ _('What you build here') }}</span>
+        <div class="mb-6">
+          <span class="inline-block text-xs font-semibold uppercase tracking-wide text-primary-400 mb-2">{{ _('From £4.99/mo · 30 days free') }}</span>
+          <h3 class="text-2xl font-bold text-white mb-2">{{ _('Personal Briefs') }}</h3>
+          <p class="text-slate-300">{{ _('You pick the sources, the focus, and the delivery time. We synthesise it just for you.') }}</p>
+        </div>
+        <ul class="space-y-3 text-slate-200 mb-8 flex-1">
+          <li class="flex items-start gap-3">
+            <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+            <span><strong class="text-white">{{ _('Your sources') }}</strong> — Substacks, FT, niche feeds, your trusted authors</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+            <span><strong class="text-white">{{ _('Your PDFs') }}</strong> — internal docs, reports, papers</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+            <span><strong class="text-white">{{ _('Your beat') }}</strong> — AI, climate, geopolitics, longevity, whatever you care about</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+            <span><strong class="text-white">{{ _('Your schedule') }}</strong> — daily or weekly, your timezone, your inbox</span>
+          </li>
+        </ul>
+        <a href="{{ primary_cta_url|default('#pricing') }}" class="block w-full text-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors" data-ph-capture-attribute-cta="comparison-start-trial">
+          {{ _('Build your morning brief') }} &rarr;
+        </a>
+      </div>
+    </div>
+
+    {# Mission callout — what your money actually does. Visually a beat above
+       the small grey text it replaces, since this is the page's only unique
+       claim against generic AI newsletters. #}
+    <div class="mt-10 mx-auto max-w-3xl rounded-xl border border-slate-200 bg-slate-50 px-6 py-5 flex items-start gap-4">
+      <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+      </div>
+      <div class="text-sm text-slate-700 leading-relaxed">
+        <p class="font-semibold text-slate-900 mb-1">{{ _("Your subscription keeps the rest of Society Speaks free for everyone.") }}</p>
+        <p>{{ _("Personal Briefs funds the whole open source civic stack — the free Daily Brief, the deliberation platform anyone can use, and the bridge-finding tools that show where people actually agree.") }}</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Audience use-cases — maps to the 8 featured presets in /briefings/start.
+     Replaces the older 3-ICP grid that read UK-policy-flavoured. -->
+<div class="bg-slate-50">
+  <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ _('Whatever you need to stay on top of.') }}</h2>
+      <p class="text-lg text-slate-600 max-w-2xl mx-auto">{{ _('Pick a template to start, then make it yours — your sources, your beat, your time.') }}</p>
+    </div>
+
+    {# 8-card grid mirrors the /briefings/start picker. Each card uses a
+       pre-built URL with per-vertical UTM so we can read which audience
+       converts. When self_serve is off, audience_cards is empty and we fall
+       back to the #pricing anchor (single CTA — no template preselect). #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <a href="{{ audience_cards.get('technology-ai-regulation', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-ai">
+        <p class="text-xs font-semibold tracking-wide uppercase text-violet-600 mb-2">{{ _('AI & Technology')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('For tech workers who want signal over hype.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('Stratechery, MIT Tech Review, Ars Technica…') }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('startups-founders', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-startups">
+        <p class="text-xs font-semibold tracking-wide uppercase text-purple-600 mb-2">{{ _('Startups & Founders')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('For operators building companies — without the motivation churn.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _("Not Boring, Lenny's, First Round, The Information…") }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('world-affairs', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-world">
+        <p class="text-xs font-semibold tracking-wide uppercase text-cyan-700 mb-2">{{ _('World Affairs') }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('For globally-minded readers tired of one-national-press framing.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('Foreign Affairs, Reuters World, FT, Al Jazeera…') }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('economy-markets', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-markets">
+        <p class="text-xs font-semibold tracking-wide uppercase text-emerald-700 mb-2">{{ _('Markets & Business')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('Macro trends and implications — not daily price ticks.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('FT, Bloomberg, The Economist, Reuters…') }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('politics-public-policy', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-politics">
+        <p class="text-xs font-semibold tracking-wide uppercase text-blue-700 mb-2">{{ _('Politics & Policy')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('Policy researchers, analysts, civic-minded readers.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('Reuters, Politico, Guardian, Foreign Affairs…') }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('climate-energy-planet', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-climate">
+        <p class="text-xs font-semibold tracking-wide uppercase text-teal-700 mb-2">{{ _('Climate & Energy')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('For sustainability professionals, ESG investors, and the climate-curious.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('Carbon Brief, Clean Energy Wire, E&E News…')|escape_i18n }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('science-big-ideas', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-science">
+        <p class="text-xs font-semibold tracking-wide uppercase text-amber-700 mb-2">{{ _('Science & Big Ideas')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _("Frontier research and serious essays — the brief you wish your smartest friend wrote.") }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('Nature, Quanta, Asterisk, Marginal Revolution…') }}</p>
+      </a>
+
+      <a href="{{ audience_cards.get('health-science-medicine', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-health">
+        <p class="text-xs font-semibold tracking-wide uppercase text-rose-700 mb-2">{{ _('Health & Longevity')|escape_i18n }}</p>
+        <p class="text-sm text-slate-700 mb-3">{{ _('Translational medicine and longevity research — evidence over hype.') }}</p>
+        <p class="text-xs text-slate-500 italic">{{ _('STAT News, NEJM, Nature Medicine, The Lancet…') }}</p>
+      </a>
+    </div>
+
+    {# Org-tier "Need this for a team?" callout — keeps the Team/Enterprise audience visible
+       without polluting the consumer-grade picker above. #}
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+      <div class="flex-1">
+        <p class="text-xs font-semibold tracking-wide uppercase text-slate-500 mb-1">{{ _('For organisations') }}</p>
+        <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ _('Think tanks, NGOs, member organisations') }}</h3>
+        <p class="text-sm text-slate-600">{{ _('Approval workflows, custom branding, 500+ recipients, dedicated support. From £300/month.') }}</p>
+      </div>
+      <a href="#pricing-organisations" class="inline-flex items-center justify-center rounded-lg border-2 border-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-900 hover:text-white transition-colors whitespace-nowrap">
+        {{ _('See team plans') }} &rarr;
+      </a>
+    </div>
+
+    {# Old 3-card grid kept hidden — preserved here so any deep-link to its
+       structure (if used) still resolves. Remove after one release cycle. #}
+    <div class="hidden">
       <!-- ICP 1: Overloaded Professional -->
       <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-blue-100 text-primary-600 flex items-center justify-center mb-6">
@@ -435,8 +627,8 @@
         {{ _('Create your brief') }}
       </a>
       {% else %}
-      <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-8 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-all" data-ph-capture-attribute-cta="icp-start-trial">
-        {{ _('Start free 30-day trial') }}
+      <a href="{{ primary_cta_url|default('#pricing') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-8 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-all" data-ph-capture-attribute-cta="audience-start-trial">
+        {{ _('Build your morning brief') }}
       </a>
       {% endif %}
     </div>
@@ -844,7 +1036,7 @@
   <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ _('Simple pricing') }}</h2>
-      <p class="text-lg text-slate-600">{{ _('Personal and Professional for individuals. Team and Enterprise for organisations.') }}</p>
+      <p class="text-lg text-slate-600">{{ _('Personal and Professional for individuals. Team for organisations. 30 days free, no card needed.') }}</p>
     </div>
 
     <!-- Pricing toggle -->
@@ -863,7 +1055,8 @@
     <div id="pricing-individuals" class="pricing-tab">
       <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <!-- Personal -->
-        <div class="bg-white rounded-2xl border-2 border-slate-200 p-8">
+        <div class="bg-white rounded-2xl border-2 border-slate-900 p-8 relative">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-3 py-1 rounded-full">{{ _('Start here') }}</span>
           <div class="mb-6">
             <h3 class="text-xl font-bold text-slate-900">{{ _('Personal') }}</h3>
             <p class="text-slate-500 text-sm mt-1">{{ _('For individuals who want to stay informed without information overload') }}</p>
@@ -896,7 +1089,14 @@
             </li>
           </ul>
           <p class="text-sm text-slate-500 mb-4 italic">{{ _('"I want one calm daily brief that keeps me informed."') }}</p>
-          {% if current_user.is_authenticated %}
+          {% if self_serve_on %}
+          {# Self-serve trial flow: route both monthly and yearly intents through /briefings/start
+             via personal_briefs_cta_url (carries utm_source=landing for funnel attribution). #}
+          <a href="{{ pricing_personal_cta_url }}" class="block w-full text-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors mb-2">
+            {{ _('Start free trial') }}
+          </a>
+          <p class="text-xs text-slate-500 text-center">{{ _('Yearly £49 (save 18%%) — you can switch from your account.')|escape_i18n }}</p>
+          {% elif current_user.is_authenticated %}
           <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="plan" value="starter">
@@ -925,8 +1125,7 @@
         </div>
 
         <!-- Professional -->
-        <div class="bg-white rounded-2xl border-2 border-slate-900 p-8 relative">
-          <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-3 py-1 rounded-full">{{ _('Most popular') }}</span>
+        <div class="bg-white rounded-2xl border-2 border-slate-200 p-8 relative">
           <div class="mb-6">
             <h3 class="text-xl font-bold text-slate-900">{{ _('Professional') }}</h3>
             <p class="text-slate-500 text-sm mt-1">{{ _('Stay on top of everything that matters') }}</p>
@@ -995,7 +1194,7 @@
 
     <!-- Organisation pricing -->
     <div id="pricing-organisations" class="pricing-tab hidden">
-      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
         <!-- Team -->
         <div class="bg-white rounded-2xl border-2 border-slate-900 p-8">
           <div class="mb-6">
@@ -1050,58 +1249,33 @@
           <p class="text-xs text-slate-500 text-center mt-3">{{ _('30-day free trial, then £300/month') }}</p>
         </div>
 
-        <!-- Enterprise -->
-        <div class="bg-white rounded-2xl border-2 border-slate-200 p-8">
+        <!-- Enterprise — contact sales (no self-serve) -->
+        <div class="bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 p-8 flex flex-col">
           <div class="mb-6">
             <h3 class="text-xl font-bold text-slate-900">{{ _('Enterprise') }}</h3>
             <p class="text-slate-500 text-sm mt-1">{{ _('For larger organisations with custom requirements') }}</p>
           </div>
           <div class="mb-6">
-            <span class="text-4xl font-bold text-slate-900">£2,000</span>
-            <span class="text-slate-500">{{ _('/month') }}</span>
+            <span class="text-2xl font-semibold text-slate-900">{{ _('Let\'s talk') }}</span>
           </div>
-          <ul class="space-y-3 text-slate-700 mb-8">
+          <ul class="space-y-3 text-slate-700 mb-8 flex-1">
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('<strong>Unlimited everything</strong>')|safe }}</span>
+              <span>{{ _('Unlimited everything') }}</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('Custom sending domain (we set it up)') }}</span>
+              <span>{{ _('Custom sending domain, SSO, API access') }}</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('SSO / SAML integration') }}</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('API access') }}</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('Dedicated support + Slack channel') }}</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('99.9%% SLA') }}</span>
+              <span>{{ _('Dedicated support and SLA') }}</span>
             </li>
           </ul>
-          <p class="text-sm text-slate-500 mb-4 italic">{{ _('"We need a scalable intelligence infrastructure."') }}</p>
-          {% if current_user.is_authenticated %}
-          <form action="{{ url_for('billing.checkout') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="plan" value="enterprise">
-            <input type="hidden" name="interval" value="month">
-            <button type="submit" class="block w-full text-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-              {{ _('Start free trial') }}
-            </button>
-          </form>
-          {% else %}
-          <a href="{{ url_for('auth.register', checkout_plan='enterprise', checkout_interval='month') }}" class="block w-full text-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-            {{ _('Start free trial') }}
+          <a href="mailto:{{ enterprise_sales_email|default('will@societyspeaks.io') }}?subject=Personal%20Briefs%20Enterprise%20enquiry" class="block w-full text-center rounded-lg border-2 border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-900 hover:text-white transition-colors">
+            {{ _('Contact us') }}
           </a>
-          {% endif %}
-          <p class="text-xs text-slate-500 text-center mt-3">{{ _('30-day free trial, then £2,000/month') }}</p>
+          <p class="text-xs text-slate-500 text-center mt-3">{{ _('Custom pricing based on your scale and requirements') }}</p>
         </div>
       </div>
     </div>
@@ -1144,10 +1318,10 @@
             {{ _('We started Society Speaks to help citizens and communities find common ground through structured public participation. That work revealed a bigger problem: the people trying to understand society — researchers, analysts, policy wonks — are drowning in information.') }}
           </p>
           <p>
-            {{ _('Personal Briefs exists to solve that. But it also exists to <strong class="text-white">fund our open source civic platform</strong>.')|safe }}
+            {{ _('Personal Briefs exists to solve that. It also <strong class="text-white">funds the rest of Society Speaks — civic tech that anyone, anywhere, can use for free</strong>.')|safe }}
           </p>
           <p>
-            {{ _('Your subscription directly supports free tools for public discourse: discussion platforms, consensus-finding algorithms, and civic engagement infrastructure that anyone can use.') }}
+            {{ _("Every paid subscription keeps our open source platform running and free: a free Daily Brief for thousands of readers, deliberation tools councils and NGOs use to run real public consultations, and bridge-finding algorithms that show where people actually agree.") }}
           </p>
         </div>
         <div class="mt-8 flex items-center gap-4">
@@ -1169,8 +1343,8 @@
               </svg>
             </div>
             <div>
-              <p class="text-white font-medium">{{ _('Free civic discussions') }}</p>
-              <p class="text-slate-400 text-sm">{{ _('Open platforms for community deliberation') }}</p>
+              <p class="text-white font-medium">{{ _('Public deliberation tools') }}</p>
+              <p class="text-slate-400 text-sm">{{ _('Free for anyone to run a structured consultation — councils, NGOs, citizen groups.') }}</p>
             </div>
           </li>
           <li class="flex items-start gap-3">
@@ -1180,8 +1354,8 @@
               </svg>
             </div>
             <div>
-              <p class="text-white font-medium">{{ _('Consensus algorithms') }}</p>
-              <p class="text-slate-400 text-sm">{{ _('ML-powered opinion clustering and bridge-finding') }}</p>
+              <p class="text-white font-medium">{{ _('Bridge-finding algorithms') }}</p>
+              <p class="text-slate-400 text-sm">{{ _("Open source tools that surface what 1,000 strangers actually agree on, not what divides them.") }}</p>
             </div>
           </li>
           <li class="flex items-start gap-3">
@@ -1191,8 +1365,19 @@
               </svg>
             </div>
             <div>
-              <p class="text-white font-medium">{{ _('The Daily Brief') }}</p>
-              <p class="text-slate-400 text-sm">{{ _('Free public news synthesis for everyone') }}</p>
+              <p class="text-white font-medium">{{ _('The free Daily Brief') }}</p>
+              <p class="text-slate-400 text-sm">{{ _('One calm, synthesised news brief — free, every day, for everyone.') }}</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-white font-medium">{{ _('Civic question programmes') }}</p>
+              <p class="text-slate-400 text-sm">{{ _('Structured public consultations that take a community from question to consensus.') }}</p>
             </div>
           </li>
         </ul>
@@ -1261,6 +1446,58 @@
           {{ _('View organisation plans →') }}
         </a>
       </div>
+    </div>
+  </section>
+</div>
+
+<!-- Personal note from William — human trust signal in a sea of AI products -->
+<div class="bg-slate-50">
+  <section class="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm">
+      <p class="text-sm font-semibold tracking-wide uppercase text-slate-500 mb-4">{{ _('A note from the founder') }}</p>
+      <div class="space-y-5 text-slate-800" style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; line-height: 1.75;">
+        <p>{{ _("I built Personal Briefs because I was tired of reading fifteen newsletters to know what mattered.") }}</p>
+        <p>{{ _("So I made the brief I wanted to read every morning — from sources I actually trust, on the beats I actually care about. Now you can build yours.") }}</p>
+        <p>{{ _("If anything feels off when your first brief arrives — sources you'd add, framing you'd change — just reply to it. I read everything.") }}</p>
+        <p class="text-slate-600">{{ _("And every paid subscription is what keeps Society Speaks open and free for everyone else — the rest of our civic stack runs on it.") }}</p>
+      </div>
+      <div class="mt-8 flex items-center gap-4">
+        <img
+          src="{{ url_for('static', filename='images/founder/william-roberts.jpg') }}"
+          alt="{{ _('William Roberts, founder of Society Speaks') }}"
+          width="56" height="56" loading="lazy" decoding="async"
+          class="w-14 h-14 rounded-full object-cover ring-1 ring-slate-200"
+        >
+        <div>
+          <p class="font-semibold text-slate-900">{{ _('William Roberts') }}</p>
+          <p class="text-sm text-slate-500">{{ _('Founder, Society Speaks') }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Final CTA — last chance before FAQ -->
+<div class="bg-slate-900">
+  <section class="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
+      {{ _('Your Substacks. Your PDFs. Your beat.') }}<br>
+      <span class="text-primary-400">{{ _('One morning email.') }}</span>
+    </h2>
+    <p class="text-lg text-slate-300 max-w-xl mx-auto mb-10">
+      {% if self_serve_on %}
+      {{ _('30 days free. No card needed. Your first brief is ready in minutes.') }}
+      {% else %}
+      {{ _('30 days free. No card needed. First brief arrives tomorrow morning.') }}
+      {% endif %}
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="{{ primary_cta_url|default('#pricing') }}" class="inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-base font-semibold text-slate-900 hover:bg-slate-100 transition-colors" data-ph-capture-attribute-cta="final-cta-start-trial">
+        {{ _('Build your morning brief') }} &rarr;
+      </a>
+      <a href="{{ sample_cta_url|default('#see-example') }}" class="inline-flex items-center justify-center rounded-xl px-8 py-4 text-base font-medium text-slate-200 border border-slate-600 hover:bg-slate-800 transition-colors" data-ph-capture-attribute-cta="final-cta-see-sample">
+        {{ _('See a real brief first') }}
+      </a>
     </div>
   </section>
 </div>

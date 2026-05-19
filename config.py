@@ -267,6 +267,22 @@ class Config:
     )
     DONATION_MIN_AMOUNT_PENCE = int(os.getenv('DONATION_MIN_AMOUNT_PENCE', '100'))  # GBP 1.00 minimum
 
+    # Self-serve paid-briefings trial flow (magic link, DB-only trial, no Stripe at start).
+    # Gates the new /briefings/start route, /briefings/sample page, and the Daily Brief CTA destination.
+    # See docs/PAID_BRIEFINGS_WORLD_CLASS_BUILD.md.
+    SELF_SERVE_TRIAL_ENABLED = (
+        os.getenv('SELF_SERVE_TRIAL_ENABLED', 'false').lower() == 'true'
+    )
+    # Model override for first-brief synchronous generation. Falls back to the briefing's normal model.
+    FIRST_BRIEF_MODEL_OVERRIDE = os.getenv('FIRST_BRIEF_MODEL_OVERRIDE') or None
+    # Hard deadline (seconds) for synchronous first-brief generation before falling back to scheduled run.
+    FIRST_BRIEF_SYNC_DEADLINE_SECONDS = _env_int('FIRST_BRIEF_SYNC_DEADLINE_SECONDS', 30)
+    # /briefings/sample page demo briefing id (env-set after seeding a demo briefing).
+    BRIEFING_SAMPLE_DEMO_BRIEFING_ID = _env_int('BRIEFING_SAMPLE_DEMO_BRIEFING_ID', 0) or None
+    # Where Enterprise enquiries land. Configurable so staging / future handoff
+    # doesn't bake in a personal inbox.
+    ENTERPRISE_SALES_EMAIL = os.getenv('ENTERPRISE_SALES_EMAIL', 'will@societyspeaks.io')
+
     # Enhanced Database Connection Settings (configurable for scaling)
     # When using Neon's PgBouncer pooler ("-pooler" in DATABASE_URL hostname), SQLAlchemy's
     # own pool sits in front of PgBouncer, so smaller sizes are appropriate — the pooler

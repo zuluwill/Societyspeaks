@@ -496,19 +496,613 @@ def source_owner_required(f):
     return decorated_function
 
 
+# Re-exported from app.lib.personal_briefs_cta so route helpers, Daily Brief
+# email, and scheduler activation-nudge stay in sync on the global default.
+from app.lib.personal_briefs_cta import DEFAULT_TRIAL_TEMPLATE_SLUG as _DEFAULT_TRIAL_TEMPLATE_SLUG  # noqa: E402
+
+
+def _send_welcome_from_william_once(user, briefing):
+    """Fire the personal welcome email at most once per user.
+
+    Redis SETNX on ``personal_briefs_welcome_sent:<user_id>`` guards against
+    duplicate sends across retries / re-entry. If Redis is unavailable we
+    soft-fail open — the email may go out a second time, but never on the
+    happy path.
+    """
+    cache_key = f'personal_briefs_welcome_sent:{user.id}'
+    redis_client = None
+    try:
+        from app.lib.redis_client import get_client as _get_redis
+        redis_client = _get_redis(decode_responses=True)
+    except Exception:
+        redis_client = None
+
+    if redis_client:
+        try:
+            claimed = bool(redis_client.set(cache_key, '1', nx=True, ex=60 * 60 * 24 * 365))
+            if not claimed:
+                return
+        except Exception:
+            pass  # fall through and try to send anyway
+
+    try:
+        from app.resend_client import send_briefing_welcome_from_william_email
+        dashboard_url = url_for('briefing.detail', briefing_id=briefing.id, _external=True)
+        send_briefing_welcome_from_william_email(user, dashboard_url)
+    except Exception as exc:
+        logger.warning(
+            f"Welcome-from-William send failed for user {user.id}: {exc}",
+            exc_info=True,
+        )
+        # On failure: clear the Redis claim so a future retry has a chance.
+        if redis_client:
+            try:
+                redis_client.delete(cache_key)
+            except Exception:
+                pass
+
+
+def _validate_iana_timezone(tz):
+    """Return ``tz`` if it parses as a valid IANA timezone, else ``None``.
+
+    Used to sanitise client-supplied timezone hints from the trial signup
+    form before storing them on the briefing — junk values would otherwise
+    break the scheduler's math when computing the next send time.
+    """
+    from app.briefing.validators import validate_timezone
+    if not tz:
+        return None
+    ok, _err = validate_timezone(tz)
+    return tz if ok else None
+
+
 @briefing_bp.route('/landing')
 @limiter.limit("60/minute")
 def landing():
     """Public landing page for Briefing System - marketing/sales page.
     Users who already have subscription access (including ``past_due`` grace) go to
     their dashboard. Logged-in users without access still see pricing."""
+    # Capture UTMs from inbound campaign traffic before any redirect.
+    from app.lib.utm import stash_utms_from_querystring
+    stash_utms_from_querystring()
     if current_user.is_authenticated:
         if get_active_subscription(current_user):
             return redirect(url_for('briefing.list_briefings'))
     # priceValidUntil for SoftwareApplication JSON-LD — rolling 1 year so the schema
     # never advertises a stale/expired price to search engines.
     price_valid_until = (date.today() + timedelta(days=365)).isoformat()
-    return render_template('briefing/landing.html', price_valid_until=price_valid_until)
+    # Primary CTA target: new magic-link trial flow when enabled, else the pricing anchor.
+    # See docs/PAID_BRIEFINGS_WORLD_CLASS_BUILD.md.
+    self_serve_on = bool(current_app.config.get('SELF_SERVE_TRIAL_ENABLED'))
+    primary_cta_url = '#pricing'
+    pricing_personal_cta_url = '#pricing'
+    audience_cards = {}
+    if self_serve_on:
+        from app.lib.personal_briefs_cta import personal_briefs_cta_url
+        from app.storage_utils import get_base_url
+        _resolved_base = get_base_url() or request.url_root.rstrip('/')
+        primary_cta_url = personal_briefs_cta_url(
+            _resolved_base,
+            utm_source='landing',
+            utm_medium='web',
+            utm_campaign='briefing_landing_hero',
+            template_slug=_DEFAULT_TRIAL_TEMPLATE_SLUG,
+        )
+        # Pricing card uses the helper too so utm_source=landing attribution
+        # is consistent across hero / pricing / audience-grid clicks.
+        pricing_personal_cta_url = personal_briefs_cta_url(
+            _resolved_base,
+            utm_source='landing',
+            utm_medium='web',
+            utm_campaign='briefing_landing_pricing',
+            template_slug=_DEFAULT_TRIAL_TEMPLATE_SLUG,
+        )
+        # Audience-grid cards each carry a distinct utm_campaign so we can
+        # read which vertical the visitor self-identified with.
+        _audience_slugs = (
+            ('technology-ai-regulation', 'ai_tech'),
+            ('startups-founders', 'startups_founders'),
+            ('world-affairs', 'world_affairs'),
+            ('economy-markets', 'markets_business'),
+            ('politics-public-policy', 'politics_policy'),
+            ('climate-energy-planet', 'climate_energy'),
+            ('science-big-ideas', 'science_big_ideas'),
+            ('health-science-medicine', 'health_longevity'),
+        )
+        audience_cards = {
+            slug: personal_briefs_cta_url(
+                _resolved_base,
+                utm_source='landing',
+                utm_medium='web',
+                utm_campaign=f'audience_{campaign}',
+                template_slug=slug,
+            )
+            for slug, campaign in _audience_slugs
+        }
+    # Secondary "see an example brief" CTA: dedicated /briefings/sample page
+    # when self-serve is on, in-page mockup anchor otherwise.
+    sample_cta_url = '/briefings/sample' if self_serve_on else '#see-example'
+    enterprise_sales_email = current_app.config.get('ENTERPRISE_SALES_EMAIL', 'will@societyspeaks.io')
+    return render_template(
+        'briefing/landing.html',
+        price_valid_until=price_valid_until,
+        primary_cta_url=primary_cta_url,
+        sample_cta_url=sample_cta_url,
+        pricing_personal_cta_url=pricing_personal_cta_url,
+        audience_cards=audience_cards,
+        self_serve_on=self_serve_on,
+        enterprise_sales_email=enterprise_sales_email,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Self-serve paid-briefings trial flow (SELF_SERVE_TRIAL_ENABLED)
+# ---------------------------------------------------------------------------
+# Three URLs collaborate:
+#   GET  /briefings/start            — public; picks template + collects email
+#   POST /briefings/start            — sends magic-link, sets briefing_trial_intent
+#   GET  /briefings/start/complete   — after magic-link consume; creates trial
+#
+# See docs/PAID_BRIEFINGS_WORLD_CLASS_BUILD.md.
+
+
+# Locale → default template slug. Driven by PostHog traffic distribution
+# (US/IE/NL/UK/CN/DE/CA/SG/FR/HK in that order):
+#   - English-speaking + Asia-Pacific tech hubs → AI & Technology (default)
+#   - Continental EU + Japan → World Affairs (international-minded, English-fluent)
+#   - Fallback everywhere else → AI & Technology (highest global converter)
+# Keys are the lowercase country names returned by
+# infer_journey_country_from_accept_language (e.g. 'germany', 'netherlands').
+_LOCALE_DEFAULT_TEMPLATE_OVERRIDES: dict[str, str] = {
+    'netherlands': 'world-affairs',
+    'germany': 'world-affairs',
+    'france': 'world-affairs',
+    'japan': 'world-affairs',
+}
+_DEFAULT_TRIAL_TEMPLATE_BY_LOCALE_FALLBACK = _DEFAULT_TRIAL_TEMPLATE_SLUG
+
+
+def _resolve_default_template_slug():
+    """Return the best template slug for an arriving visitor.
+
+    Branches on ``Accept-Language`` so a German visitor sees World Affairs
+    pre-selected while a US visitor sees AI & Technology. Falls back to the
+    global default whenever locale is missing, unknown, or unmapped — a
+    misconfigured client never breaks the page.
+
+    See PostHog traffic split (US 50% / IE+NL ~20% / UK 10% / DE/FR/SG/HK long tail).
+    """
+    try:
+        from app.programmes.journey import infer_journey_country_from_accept_language
+        from flask import request
+        country = infer_journey_country_from_accept_language(
+            request.headers.get('Accept-Language')
+        )
+    except Exception:
+        country = None
+    return _LOCALE_DEFAULT_TEMPLATE_OVERRIDES.get(country or '', _DEFAULT_TRIAL_TEMPLATE_BY_LOCALE_FALLBACK)
+
+
+def _derive_unique_username(email: str) -> str:
+    """Derive a non-colliding username from the local part of ``email``.
+
+    Trial users don't pick a username; we synthesise one and let them edit it
+    later from the profile screen. Falls back to a random suffix on collision.
+    """
+    import re
+    import secrets
+    local = (email or '').split('@', 1)[0] or 'user'
+    base = re.sub(r'[^a-z0-9]+', '-', local.lower()).strip('-') or 'user'
+    candidate = base[:30]
+    if not User.query.filter_by(username=candidate).first():
+        return candidate
+    # Use ``_attempt`` not ``_`` — the latter is bound to gettext at module
+    # scope and rebinding it inside the loop confuses the i18n_check linter
+    # (and would break any gettext call added later inside this function).
+    for _attempt in range(5):
+        suffix = secrets.token_hex(3)
+        candidate = f"{base[:24]}-{suffix}"
+        if not User.query.filter_by(username=candidate).first():
+            return candidate
+    # Extremely unlikely; final fallback is fully random.
+    return f"user-{secrets.token_hex(6)}"
+
+
+@briefing_bp.route('/start', methods=['GET', 'POST'])
+@limiter.limit("60/minute", methods=['GET'])
+@limiter.limit("10/hour", methods=['POST'])
+def start_trial():
+    """Magic-link self-serve trial entry point.
+
+    GET renders the template picker + email field.
+    POST sends a magic-link and shows a "check your inbox" confirmation.
+
+    Hidden behind SELF_SERVE_TRIAL_ENABLED — falls back to /briefings/landing
+    until the flag flips on.
+    """
+    if not current_app.config.get('SELF_SERVE_TRIAL_ENABLED'):
+        return redirect(url_for('briefing.landing'))
+
+    from app.lib.utm import stash_utms_from_querystring
+    stash_utms_from_querystring()
+
+    default_slug = _resolve_default_template_slug()
+    requested_slug = request.args.get('template') or request.form.get('template') or default_slug
+
+    # Authenticated user → skip email step entirely.
+    if current_user.is_authenticated:
+        if get_active_subscription(current_user):
+            flash(_("You already have an active subscription."), 'info')
+            return redirect(url_for('briefing.list_briefings'))
+        session['briefing_trial_intent'] = True
+        # Optional ?tz= query lets a JS-aware caller pass the IANA timezone
+        # through the skip-email path; otherwise the briefing schedules in
+        # UTC and the user can change it later from the briefing settings.
+        raw_tz = (request.args.get('tz') or '').strip()[:64]
+        if raw_tz:
+            validated = _validate_iana_timezone(raw_tz)
+            if validated:
+                session['briefing_trial_timezone'] = validated
+        return redirect(url_for('briefing.start_trial_complete', template=requested_slug))
+
+    # Public picker shows only individual-friendly featured templates —
+    # organization-only templates (e.g. Policy Monitoring Brief) stay
+    # featured for the org marketplace but don't appear here.
+    featured_templates = (
+        BriefTemplate.query
+        .filter_by(is_active=True, is_featured=True)
+        .filter(BriefTemplate.audience_type.in_(('all', 'individual')))
+        .order_by(BriefTemplate.sort_order.asc(), BriefTemplate.name.asc())
+        .limit(8)
+        .all()
+    )
+
+    # Defensive guard: an empty seed would render a form with no radio
+    # buttons. Fail to the landing page rather than show a broken picker.
+    if not featured_templates:
+        logger.error("No featured BriefTemplates available — /briefings/start would render empty.")
+        flash(_("Trial signup is temporarily unavailable. Please try again shortly."), 'warning')
+        return redirect(url_for('briefing.landing'))
+
+    if request.method == 'POST':
+        return _handle_start_trial_post(featured_templates, default_slug)
+
+    return render_template(
+        'briefing/start.html',
+        featured_templates=featured_templates,
+        default_slug=default_slug,
+        selected_slug=requested_slug,
+    )
+
+
+def _handle_start_trial_post(featured_templates, default_slug):
+    """POST step 1 of /briefings/start — issue magic-link, render confirmation."""
+    from app.email_utils import extract_clean_email
+    from app.lib.trial_abuse import can_start_trial, find_user_by_canonical_email
+
+    email_raw = (request.form.get('email') or '').strip()
+    email = extract_clean_email(email_raw)
+    template_slug = (request.form.get('template') or default_slug).strip()
+    timezone = (request.form.get('timezone') or 'UTC').strip()[:64]
+    ip = request.remote_addr
+
+    # Stash timezone so the magic-link round-trip can use it on /complete.
+    # Defaults to UTC if the JS detection fell back or was tampered with.
+    session['briefing_trial_timezone'] = timezone
+
+    if not email:
+        flash(_("Please enter a valid email address."), 'error')
+        return render_template(
+            'briefing/start.html',
+            featured_templates=featured_templates,
+            default_slug=default_slug,
+            selected_slug=template_slug,
+        )
+
+    # Resolve template — must be active, featured, and individual-friendly.
+    # Mirrors the GET picker filter to block crafted POSTs targeting
+    # organization-only slugs.
+    template = (
+        BriefTemplate.query
+        .filter_by(slug=template_slug, is_active=True, is_featured=True)
+        .filter(BriefTemplate.audience_type.in_(('all', 'individual')))
+        .first()
+    )
+    if not template:
+        flash(_("Pick a brief template to start your trial."), 'error')
+        return redirect(url_for('briefing.start_trial'))
+
+    # Abuse-control gate. Generic UI reason — don't leak which check failed.
+    ok, reason = can_start_trial(email, ip)
+    if not ok:
+        logger.info(f"start_trial blocked: reason={reason} ip={ip} email_hint={email[:3] if email else ''}***")
+        flash(
+            _("We couldn't start a trial with that email. Try a different address — or contact us if this looks wrong."),
+            'warning',
+        )
+        return render_template(
+            'briefing/start.html',
+            featured_templates=featured_templates,
+            default_slug=default_slug,
+            selected_slug=template_slug,
+            blocked_reason='generic',
+        )
+
+    # Find-or-create User keyed by canonical email so Gmail aliases reuse one account.
+    user = find_user_by_canonical_email(email)
+    if user is not None and get_active_subscription(user):
+        flash(_("You already have an active subscription."), 'info')
+        return redirect(url_for('briefing.list_briefings'))
+
+    if user is None:
+        from app.lib.email_normalize import normalize_trial_email
+        from werkzeug.security import generate_password_hash
+        import secrets
+        canonical = normalize_trial_email(email)
+        try:
+            user = User(
+                username=_derive_unique_username(canonical),
+                email=canonical,
+                password=generate_password_hash(secrets.token_urlsafe(48)),
+                email_verified=False,  # magic-link consume sets this
+            )
+            db.session.add(user)
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            logger.error(f"Failed to create trial user for {email}: {exc}", exc_info=True)
+            flash(_("Something went wrong — please try again in a moment."), 'error')
+            return redirect(url_for('briefing.start_trial', template=template_slug))
+
+    # Record campaign attribution + intent in session so the magic-link round
+    # trip lands on the right destination and bypasses the profile gate.
+    # Clear any stale Stripe checkout intent — trial flow must not resume checkout.
+    session.pop('pending_checkout_plan', None)
+    session.pop('pending_checkout_interval', None)
+    session['briefing_trial_intent'] = True
+    next_url = url_for('briefing.start_trial_complete', template=template_slug)
+    from app.lib.url_utils import safe_next_url
+    safe_next = safe_next_url(next_url) or next_url
+    session['pending_post_auth_redirect'] = safe_next
+
+    # Generate magic-link + send email.
+    try:
+        token = user.get_magic_login_token()
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        logger.error(f"Magic-link token gen failed for user {user.id}: {exc}", exc_info=True)
+        flash(_("We had trouble sending the sign-in link. Try again in a moment."), 'error')
+        return redirect(url_for('briefing.start_trial', template=template_slug))
+
+    try:
+        # Embed ``next`` in the email link so cross-device clicks still reach
+        # /briefings/start/complete (session-only redirect is lost on another device).
+        magic_url = url_for(
+            'auth.magic_link_landing',
+            token=token,
+            next=safe_next,
+            _external=True,
+        )
+        from app.resend_client import send_magic_login_email
+        send_magic_login_email(user, magic_url)
+        _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
+            'template_slug': template_slug,
+        })
+    except Exception as exc:
+        logger.error(f"Magic-link send failed for user {user.id}: {exc}", exc_info=True)
+        flash(_("We couldn't send the sign-in email. Try again in a moment."), 'error')
+        return redirect(url_for('briefing.start_trial', template=template_slug))
+
+    return render_template(
+        'briefing/start_check_inbox.html',
+        email=user.email,
+        template=template,
+    )
+
+
+@briefing_bp.route('/<int:briefing_id>/refine', methods=['POST'])
+@login_required
+@limiter.limit("10/hour")
+def refine_briefing(briefing_id):
+    """Append a one-line refinement to the briefing's custom_prompt.
+
+    World-class retention lever: after seeing their first brief, the user
+    types "more X, less Y" and the next run reflects it. Doesn't regenerate
+    the currently-shown brief — the appended text affects future runs only.
+
+    Idempotent in the sense that re-submitting the same text just appends
+    again (the user gets to layer refinements). Length-capped so the prompt
+    doesn't grow without bound.
+    """
+    briefing = Briefing.query.filter_by(id=briefing_id).first_or_404()
+
+    is_allowed, redirect_response = check_briefing_permission(briefing)
+    if not is_allowed:
+        return redirect_response
+
+    note = (request.form.get('refinement') or '').strip()
+    if not note:
+        flash(_("Tell us what to change — a sentence is enough."), 'warning')
+        return redirect(url_for('briefing.detail', briefing_id=briefing.id))
+
+    # Defensive caps. Custom prompts longer than ~4000 chars start eating the
+    # model's context budget; bound the appendage and the total.
+    MAX_NOTE_CHARS = 500
+    MAX_PROMPT_CHARS = 4000
+    note = note[:MAX_NOTE_CHARS]
+
+    existing = (briefing.custom_prompt or '').strip()
+    separator = '\n\nRefinement: ' if existing else 'Refinement: '
+    combined = (existing + separator + note)[:MAX_PROMPT_CHARS]
+
+    try:
+        briefing.custom_prompt = combined
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        logger.error(f"Failed to save refinement for briefing {briefing.id}: {exc}", exc_info=True)
+        flash(_("Something went wrong. Try again in a moment."), 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing.id))
+
+    _track_posthog('paid_briefing_refinement_submitted', current_user.id, {
+        'briefing_id': briefing.id,
+        'note_length': len(note),
+        # Don't log note content — privacy.
+    })
+
+    flash(
+        _("Got it. Your next brief will reflect this — we don't regenerate the one you just saw."),
+        'success',
+    )
+    return redirect(url_for('briefing.detail', briefing_id=briefing.id))
+
+
+@briefing_bp.route('/sample')
+@limiter.limit("60/minute")
+def sample_brief():
+    """Public canonical-example brief page.
+
+    Two render paths:
+      1. ``BRIEFING_SAMPLE_DEMO_BRIEFING_ID`` is configured and that briefing
+         has a recent ``BriefRun`` — render the run's actual HTML output.
+         Pickled-content updates weekly via the existing scheduler.
+      2. Otherwise — fall back to the AI & Technology template's static
+         ``sample_output`` HTML. No DB writes; safe to serve to cold traffic.
+
+    Behind ``SELF_SERVE_TRIAL_ENABLED`` (returns 404 when off) since the
+    page exists to drive trial signups via ``/briefings/start`` and the
+    primary CTA points there.
+    """
+    if not current_app.config.get('SELF_SERVE_TRIAL_ENABLED'):
+        from flask import abort
+        abort(404)
+
+    demo_briefing_id = current_app.config.get('BRIEFING_SAMPLE_DEMO_BRIEFING_ID')
+    sample_html = None
+    sample_briefing = None
+    sample_run = None
+    template_name = None
+
+    if demo_briefing_id:
+        sample_briefing = db.session.get(Briefing, demo_briefing_id)
+        if sample_briefing and sample_briefing.status == 'active':
+            sample_run = (
+                BriefRun.query
+                .filter_by(briefing_id=sample_briefing.id, status='sent')
+                .order_by(BriefRun.sent_at.desc())
+                .first()
+            )
+            if sample_run:
+                # Prefer the approved (sent) HTML; fall back to draft so a
+                # demo run that bypassed approval still renders.
+                sample_html = sample_run.approved_html or sample_run.draft_html
+                template_name = sample_briefing.name
+
+    if not sample_html:
+        # Fall back to the AI & Technology template's seeded sample_output.
+        tpl = BriefTemplate.query.filter_by(
+            slug='technology-ai-regulation', is_active=True,
+        ).first()
+        if tpl and tpl.sample_output:
+            sample_html = tpl.sample_output
+            template_name = tpl.name
+
+    return render_template(
+        'briefing/sample.html',
+        sample_html=sample_html,
+        template_name=template_name,
+        sample_briefing=sample_briefing,
+        sample_run=sample_run,
+    )
+
+
+@briefing_bp.route('/start/complete')
+@login_required
+@limiter.limit("30/minute")
+def start_trial_complete():
+    """Magic-link landing destination. Creates the trial + first briefing.
+
+    Idempotent — repeat visits return the existing pair without re-creating.
+    Requires ``SELF_SERVE_TRIAL_ENABLED``.
+    """
+    if not current_app.config.get('SELF_SERVE_TRIAL_ENABLED'):
+        return redirect(url_for('briefing.list_briefings'))
+
+    template_slug = request.args.get('template') or _resolve_default_template_slug()
+
+    # Pull browser-detected timezone stashed on the POST step. Defaults UTC
+    # if the user came via a path that didn't set it (e.g. authed user GET
+    # redirect on /briefings/start). Validate to a known IANA zone so junk
+    # values don't break the briefing's scheduler math.
+    raw_tz = (session.pop('briefing_trial_timezone', None) or 'UTC')[:64]
+    timezone = _validate_iana_timezone(raw_tz) or 'UTC'
+
+    from app.briefing.onboarding import start_self_serve_trial, TrialStartError
+    try:
+        result = start_self_serve_trial(
+            current_user,
+            template_slug=template_slug,
+            locale=request.accept_languages.best,
+            ip=request.remote_addr,
+            timezone=timezone,
+        )
+    except TrialStartError as exc:
+        logger.warning(
+            "start_self_serve_trial blocked for user %s: reason=%s",
+            current_user.id, exc.reason,
+        )
+        if exc.reason == 'already_subscribed':
+            flash(_("You already have access — head to your briefings."), 'info')
+            return redirect(url_for('briefing.list_briefings'))
+        flash(
+            _("We couldn't start your trial. Please try again or contact us if this seems wrong."),
+            'error',
+        )
+        return redirect(url_for('briefing.start_trial'))
+
+    if result.already_existed:
+        flash(_("Welcome back — your brief is set up and ready."), 'info')
+        return redirect(url_for('briefing.detail', briefing_id=result.briefing.id))
+
+    # New trial — fire a one-shot "from William" welcome note (idempotent
+    # via Redis SETNX on user id) before sync generation starts; sending an
+    # email here is cheap and the user sees both the brief and the welcome
+    # in their inbox.
+    _send_welcome_from_william_once(current_user, result.briefing)
+
+    # Kick off synchronous first-brief generation. Bounded wait so the
+    # request never blocks longer than the deadline; worker keeps running
+    # on timeout and the scheduler will pick up the row.
+    from app.briefing.first_brief import generate_first_brief_sync
+    first_brief = generate_first_brief_sync(result.briefing.id)
+    _track_posthog(
+        'paid_briefing_first_brief_generated',
+        current_user.id,
+        {
+            'briefing_id': result.briefing.id,
+            'status': first_brief.status,
+            'elapsed_s': round(first_brief.elapsed_s, 2),
+        },
+    )
+
+    if first_brief.status == 'ready':
+        flash(
+            _("Your trial is live and your first brief is ready below."),
+            'success',
+        )
+    elif first_brief.status == 'pending':
+        flash(
+            _("Your trial is live. Your first brief is being built — refresh in a minute, or check your inbox tomorrow morning."),
+            'success',
+        )
+    else:  # 'failed'
+        flash(
+            _("Your trial is live. Your first brief arrives in your inbox tomorrow morning."),
+            'success',
+        )
+
+    return redirect(url_for('briefing.detail', briefing_id=result.briefing.id))
 
 
 @briefing_bp.route('/')

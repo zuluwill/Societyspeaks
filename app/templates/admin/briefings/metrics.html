@@ -1,0 +1,126 @@
+{% extends "admin/_admin_base.html" %}
+
+{% block title %}Paid Briefings Metrics - Society Speaks{% endblock %}
+
+{% block admin_content %}
+<div class="px-4 sm:px-0">
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Paid Briefings Metrics</h1>
+            <p class="mt-1 text-sm text-gray-500">DB-backed cohort view — refresh-on-load. Snapshot as of {{ now.strftime('%Y-%m-%d %H:%M') }} UTC.</p>
+        </div>
+        <a href="{{ url_for('briefings_admin.subscriptions') }}"
+           class="inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition w-full sm:w-auto">
+            Subscriptions →
+        </a>
+    </div>
+
+    <!-- Top line: trial volume.
+         Self-serve is the primary success cohort — "all trials" mixes
+         self-serve + Stripe + admin grants and isn't a clean KPI on its own. -->
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        Trial volume <span class="text-xs text-gray-400 normal-case">(primary KPI: self-serve)</span>
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-sm p-4 ring-2 ring-primary-400">
+            <p class="text-sm text-gray-500">Self-serve, 7d <span class="text-xs">★</span></p>
+            <p class="text-2xl font-bold text-primary-600">{{ trials_self_serve_week }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4 ring-2 ring-primary-400">
+            <p class="text-sm text-gray-500">Self-serve, 30d <span class="text-xs">★</span></p>
+            <p class="text-2xl font-bold text-primary-600">{{ trials_self_serve_month }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Stripe, 30d</p>
+            <p class="text-2xl font-bold text-gray-700">{{ trials_stripe_month }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">All trials, 7d</p>
+            <p class="text-2xl font-bold text-gray-900">{{ trials_total_week }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">All trials, 30d</p>
+            <p class="text-2xl font-bold text-gray-900">{{ trials_total_month }}</p>
+        </div>
+    </div>
+
+    <!-- Activation -->
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Activation (≥1 briefing within 48h)</h2>
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
+        <div class="flex items-baseline gap-6 flex-wrap">
+            <div>
+                <p class="text-sm text-gray-500">Eligible (subscribed ≥48h, last 30d)</p>
+                <p class="text-2xl font-bold text-gray-900">{{ eligible_count }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Activated</p>
+                <p class="text-2xl font-bold text-emerald-600">{{ activated_count }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Activation rate</p>
+                <p class="text-2xl font-bold text-emerald-600">
+                    {% if activation_pct is not none %}{{ activation_pct }}%{% else %}—{% endif %}
+                </p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Target ≥50%. Below that, the activation nudge job and onboarding copy are the levers.</p>
+    </div>
+
+    <!-- First-brief delivery -->
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">First-brief delivery (30d)</h2>
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
+        <div class="flex items-baseline gap-6 flex-wrap">
+            <div>
+                <p class="text-sm text-gray-500">Eligible trials</p>
+                <p class="text-2xl font-bold text-gray-900">{{ first_brief_eligible }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Got a BriefRun</p>
+                <p class="text-2xl font-bold text-emerald-600">{{ first_brief_delivered }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Delivery rate</p>
+                <p class="text-2xl font-bold text-emerald-600">
+                    {% if first_brief_pct is not none %}{{ first_brief_pct }}%{% else %}—{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion -->
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Conversion (self-serve → Stripe, 30d cohort)</h2>
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
+        <div class="flex items-baseline gap-6 flex-wrap">
+            <div>
+                <p class="text-sm text-gray-500">Self-serve trials, 30d</p>
+                <p class="text-2xl font-bold text-gray-900">{{ trials_self_serve_month }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Converted to active Stripe</p>
+                <p class="text-2xl font-bold text-emerald-600">{{ conversion_count }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Conversion rate</p>
+                <p class="text-2xl font-bold text-emerald-600">
+                    {% if conversion_pct is not none %}{{ conversion_pct }}%{% else %}—{% endif %}
+                </p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Target ≥20%. Below that, the day-25 payment-prompt email copy is the lever.</p>
+    </div>
+
+    <!-- Pause / resume -->
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Pause state (all time)</h2>
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
+        <div class="flex items-baseline gap-6 flex-wrap">
+            <div>
+                <p class="text-sm text-gray-500">Subscriptions paused</p>
+                <p class="text-2xl font-bold text-amber-600">{{ paused_count }}</p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">A paused row is either an expired self-serve trial or a user who hit the in-app pause button. Resume happens via the existing Stripe checkout flow.</p>
+    </div>
+
+</div>
+{% endblock %}

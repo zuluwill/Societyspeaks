@@ -2709,7 +2709,7 @@
                   <tr>
                     <td align="center">
                       <a
-                        href="{{ base_url }}/briefings/landing"
+                        href="{{ personal_briefs_cta_url or (base_url ~ '/briefings/landing?utm_source=daily_brief&utm_medium=email&utm_campaign=personal_briefs_cta') }}"
                         target="_blank"
                         style="
                           display: inline-block;

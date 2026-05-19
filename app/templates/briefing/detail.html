@@ -184,6 +184,33 @@
                                 {% endif %}
                             </dd>
                         </div>
+                        <div class="sm:col-span-2">
+                            {# One-line refinement: appends to custom_prompt so the
+                               next run reflects the change. World-class retention
+                               lever — no regeneration of the current brief. #}
+                            <form method="POST" action="{{ url_for('briefing.refine_briefing', briefing_id=briefing.id) }}" class="mt-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <label for="refinement-input" class="text-sm font-medium text-gray-500 mb-2 block">
+                                    {{ _('Want more or less of something?') }}
+                                </label>
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <input
+                                        id="refinement-input"
+                                        type="text"
+                                        name="refinement"
+                                        maxlength="500"
+                                        placeholder="{{ _('e.g. more on AI policy, less crypto') }}"
+                                        class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                    >
+                                    <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors whitespace-nowrap">
+                                        {{ _('Tune next brief') }}
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1.5">
+                                    {{ _("Applied to your next run — we don't regenerate this one.") }}
+                                </p>
+                            </form>
+                        </div>
                     </dl>
                 </div>
 

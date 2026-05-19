@@ -855,6 +855,466 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f'Mid-trial email job failed: {e}', exc_info=True)
 
+    @scheduler.scheduled_job('cron', hour='8,14,20', minute=15, id='briefing_activation_nudge', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def send_briefing_activation_nudge_job():
+        """
+        Send a one-shot "your first brief is two minutes away" email to users
+        who started a trial ~48h ago and still have zero briefings.
+
+        Targets subscriptions where:
+          - status IN ('trialing', 'active')
+          - created_at between 48h and 7 days ago (window narrows churned cohorts)
+          - the owning user has no Briefing rows (owner_type='user', owner_id=user.id)
+          - Redis key ``briefing:activation_nudge:<sub.id>`` (TTL 35 days) not set
+
+        Idempotent: Redis SETNX guard prevents duplicate sends across job runs.
+        Link target is computed via personal_briefs_cta_url (flag-aware).
+        """
+        with app.app_context():
+            try:
+                from datetime import timedelta
+                from app import db
+                from app.models.billing import Subscription
+                from app.models.briefing import Briefing
+                from app.models import User
+                from app.resend_client import send_briefing_activation_nudge_email
+                from app.lib.personal_briefs_cta import personal_briefs_cta_url
+
+                now = utcnow_naive()
+                window_max_age = now - timedelta(hours=48)  # at least 48h old
+                window_min_age = now - timedelta(days=7)    # not older than 7d
+                candidates_q = (
+                    Subscription.query.filter(
+                        Subscription.status.in_(('trialing', 'active')),
+                        Subscription.user_id.isnot(None),
+                        Subscription.created_at <= window_max_age,
+                        Subscription.created_at >= window_min_age,
+                    ).order_by(Subscription.id.asc())
+                )
+
+                try:
+                    from app.lib.redis_client import get_client as _get_redis
+                    redis_client = _get_redis(decode_responses=True)
+                except Exception:
+                    redis_client = None
+
+                from app.storage_utils import get_base_url as _get_base_url
+                base_url = _get_base_url() or 'https://societyspeaks.io'
+
+                sent = skipped = errors = 0
+                redis_warned = False
+
+                for sub in candidates_q.yield_per(200):
+                    # Skip if the user already has at least one briefing.
+                    has_briefing = (
+                        Briefing.query
+                        .filter_by(owner_type='user', owner_id=sub.user_id)
+                        .with_entities(Briefing.id)
+                        .first()
+                    )
+                    if has_briefing:
+                        skipped += 1
+                        continue
+
+                    user = db.session.get(User, sub.user_id)
+                    if not user or not user.email:
+                        skipped += 1
+                        continue
+
+                    cache_key = f'briefing:activation_nudge:{sub.id}'
+                    claimed_redis = False
+                    if redis_client:
+                        try:
+                            claimed_redis = bool(
+                                redis_client.set(cache_key, '1', nx=True, ex=60 * 60 * 24 * 35)
+                            )
+                            if not claimed_redis:
+                                skipped += 1
+                                continue
+                        except Exception as redis_exc:
+                            logger.warning(
+                                'Activation nudge: Redis SET NX failed for sub %s: %s',
+                                sub.id, redis_exc,
+                            )
+                    elif not redis_warned:
+                        redis_warned = True
+                        logger.warning(
+                            'Activation nudge job: Redis unavailable — send-once dedupe disabled'
+                        )
+
+                    from app.lib.personal_briefs_cta import DEFAULT_TRIAL_TEMPLATE_SLUG
+                    start_url = personal_briefs_cta_url(
+                        base_url,
+                        utm_source='activation_nudge',
+                        utm_medium='email',
+                        utm_campaign='briefing_activation',
+                        template_slug=DEFAULT_TRIAL_TEMPLATE_SLUG,
+                    )
+
+                    try:
+                        ok = send_briefing_activation_nudge_email(user, start_url)
+                        if ok:
+                            sent += 1
+                        else:
+                            errors += 1
+                            if redis_client and claimed_redis:
+                                try:
+                                    redis_client.delete(cache_key)
+                                except Exception:
+                                    pass
+                    except Exception as e:
+                        logger.error(f'Activation nudge failed for sub {sub.id}: {e}', exc_info=True)
+                        errors += 1
+                        if redis_client and claimed_redis:
+                            try:
+                                redis_client.delete(cache_key)
+                            except Exception:
+                                pass
+
+                logger.info(f'Briefing activation nudges: sent={sent} skipped={skipped} errors={errors}')
+            except Exception as e:
+                logger.error(f'Briefing activation nudge job failed: {e}', exc_info=True)
+
+    @scheduler.scheduled_job('cron', hour='10', minute=0, id='briefing_self_serve_payment_prompt', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def send_self_serve_payment_prompt_job():
+        """
+        Day-25 conversion prompt for self-serve paid-briefings trials.
+
+        Targets subscriptions where:
+          - extra_data.trial_source == 'self_serve'
+          - status == 'trialing'
+          - trial_end is within the next 5 days (i.e. ~25-30 days in)
+          - no stripe_customer_id (still no payment method)
+          - Redis key ``briefing:self_serve_payment_prompt:<sub.id>`` (TTL 35 days) not set
+
+        Single fire per subscription; the existing Stripe ``trial_will_end``
+        webhook covers Stripe-backed trials separately. Sends users to
+        /billing/pending-checkout?plan=starter so the existing
+        manual→Stripe supersession pattern can take over.
+        """
+        with app.app_context():
+            try:
+                from datetime import timedelta
+                from app import db
+                from app.models.billing import Subscription
+                from app.models import User
+                from app.resend_client import send_briefing_trial_payment_prompt_email
+                from app.storage_utils import get_base_url as _get_base_url
+
+                now = utcnow_naive()
+                horizon = now + timedelta(days=5)
+
+                candidates_q = (
+                    Subscription.query.filter(
+                        Subscription.status == 'trialing',
+                        Subscription.stripe_customer_id.is_(None),
+                        Subscription.trial_end <= horizon,
+                        Subscription.trial_end > now,
+                        Subscription.user_id.isnot(None),
+                    ).order_by(Subscription.id.asc())
+                )
+
+                try:
+                    from app.lib.redis_client import get_client as _get_redis
+                    redis_client = _get_redis(decode_responses=True)
+                except Exception:
+                    redis_client = None
+
+                base_url = _get_base_url() or 'https://societyspeaks.io'
+                sent = skipped = errors = 0
+                redis_warned = False
+
+                for sub in candidates_q.yield_per(200):
+                    if (sub.extra_data or {}).get('trial_source') != 'self_serve':
+                        skipped += 1
+                        continue
+
+                    user = db.session.get(User, sub.user_id)
+                    if not user or not user.email:
+                        skipped += 1
+                        continue
+                    # User-level customer id means checkout was started even if
+                    # the Subscription row is still manual/self-serve.
+                    if user.stripe_customer_id:
+                        skipped += 1
+                        continue
+
+                    cache_key = f'briefing:self_serve_payment_prompt:{sub.id}'
+                    claimed_redis = False
+                    if redis_client:
+                        try:
+                            claimed_redis = bool(
+                                redis_client.set(cache_key, '1', nx=True, ex=60 * 60 * 24 * 35)
+                            )
+                            if not claimed_redis:
+                                skipped += 1
+                                continue
+                        except Exception as redis_exc:
+                            logger.warning(
+                                'Self-serve payment prompt: Redis SET NX failed for sub %s: %s',
+                                sub.id, redis_exc,
+                            )
+                    elif not redis_warned:
+                        redis_warned = True
+                        logger.warning(
+                            'Self-serve payment prompt job: Redis unavailable — send-once dedupe disabled'
+                        )
+
+                    days_remaining = max(1, (sub.trial_end - now).days) if sub.trial_end else 5
+                    from app.lib.self_serve_trial_lifecycle import payment_resume_url
+                    checkout_url = payment_resume_url(base_url)
+
+                    try:
+                        ok = send_briefing_trial_payment_prompt_email(
+                            user, checkout_url, days_remaining,
+                        )
+                        if ok:
+                            sent += 1
+                        else:
+                            errors += 1
+                            if redis_client and claimed_redis:
+                                try:
+                                    redis_client.delete(cache_key)
+                                except Exception:
+                                    pass
+                    except Exception as e:
+                        logger.error(f'Self-serve payment prompt failed for sub {sub.id}: {e}', exc_info=True)
+                        errors += 1
+                        if redis_client and claimed_redis:
+                            try:
+                                redis_client.delete(cache_key)
+                            except Exception:
+                                pass
+
+                logger.info(f'Self-serve payment prompts: sent={sent} skipped={skipped} errors={errors}')
+            except Exception as e:
+                logger.error(f'Self-serve payment prompt job failed: {e}', exc_info=True)
+
+    @scheduler.scheduled_job('cron', hour='4', minute=30, id='briefing_self_serve_trial_expire', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def expire_self_serve_trials_job():
+        """
+        Pause self-serve trials once their wall-clock 30 days have elapsed
+        without a payment method on file.
+
+        Sets ``status='canceled'`` and ``extra_data.paused_at`` so the
+        scheduler's ``subscription_allows_sending`` gate stops generating /
+        sending new briefs. Briefings, sources, past BriefRuns all remain in
+        the DB — re-adding a card via the existing Stripe checkout flow
+        supersedes the row and the briefings re-activate automatically.
+
+        Sends a single "your briefs are paused" email per subscription
+        (idempotent via Redis SETNX, 90-day TTL — covers re-runs and
+        ensures we never spam a user after a long absence).
+        """
+        with app.app_context():
+            try:
+                from app import db
+                from app.models.billing import Subscription
+                from app.models import User
+                from app.resend_client import send_briefing_paused_email
+                from app.storage_utils import get_base_url as _get_base_url
+
+                now = utcnow_naive()
+                candidates_q = (
+                    Subscription.query.filter(
+                        Subscription.status == 'trialing',
+                        Subscription.stripe_customer_id.is_(None),
+                        Subscription.trial_end <= now,
+                        Subscription.user_id.isnot(None),
+                    ).order_by(Subscription.id.asc())
+                )
+
+                try:
+                    from app.lib.redis_client import get_client as _get_redis
+                    redis_client = _get_redis(decode_responses=True)
+                except Exception:
+                    redis_client = None
+
+                base_url = _get_base_url() or 'https://societyspeaks.io'
+                paused = skipped = errors = 0
+                redis_warned = False
+
+                for sub in candidates_q.yield_per(200):
+                    extra = sub.extra_data or {}
+                    if extra.get('trial_source') != 'self_serve':
+                        skipped += 1
+                        continue
+
+                    # Flip state + stamp paused_at atomically before email.
+                    try:
+                        new_extra = dict(extra)
+                        new_extra['paused_at'] = now.isoformat()
+                        sub.extra_data = new_extra
+                        sub.status = 'canceled'
+                        sub.canceled_at = now
+                        db.session.commit()
+                    except Exception as commit_exc:
+                        db.session.rollback()
+                        errors += 1
+                        logger.error(
+                            f'Failed to pause expired self-serve trial sub {sub.id}: {commit_exc}',
+                            exc_info=True,
+                        )
+                        continue
+
+                    paused += 1
+
+                    user = db.session.get(User, sub.user_id)
+                    if not user or not user.email:
+                        continue
+
+                    cache_key = f'briefing:self_serve_paused_email:{sub.id}'
+                    claimed_redis = False
+                    if redis_client:
+                        try:
+                            claimed_redis = bool(
+                                redis_client.set(cache_key, '1', nx=True, ex=60 * 60 * 24 * 90)
+                            )
+                            if not claimed_redis:
+                                continue
+                        except Exception as redis_exc:
+                            logger.warning(
+                                'Self-serve pause email: Redis SET NX failed for sub %s: %s',
+                                sub.id, redis_exc,
+                            )
+                    elif not redis_warned:
+                        redis_warned = True
+                        logger.warning(
+                            'Self-serve trial-expire job: Redis unavailable — send-once dedupe disabled'
+                        )
+
+                    from app.lib.self_serve_trial_lifecycle import payment_resume_url
+                    resume_url = payment_resume_url(base_url)
+                    try:
+                        send_briefing_paused_email(user, resume_url)
+                    except Exception as e:
+                        logger.error(f'Self-serve pause email failed for sub {sub.id}: {e}', exc_info=True)
+                        if redis_client and claimed_redis:
+                            try:
+                                redis_client.delete(cache_key)
+                            except Exception:
+                                pass
+
+                logger.info(
+                    f'Self-serve trial expire: paused={paused} skipped={skipped} errors={errors}'
+                )
+            except Exception as e:
+                logger.error(f'Self-serve trial expire job failed: {e}', exc_info=True)
+
+    @scheduler.scheduled_job('cron', hour='11', minute=0, id='briefing_self_serve_winback', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def send_self_serve_winback_job():
+        """
+        Day-45 winback for self-serve trials that auto-paused without
+        converting to a Stripe subscription.
+
+        Targets subscriptions where:
+          - extra_data.trial_source == 'self_serve'
+          - extra_data.paused_at is set (auto-paused at trial end)
+          - paused 12-21 days ago (~day 45 from original trial start;
+            window lets a re-run catch missed days without spamming)
+          - the user hasn't since started a Stripe subscription
+          - Redis key ``briefing:self_serve_winback:<sub.id>`` (TTL 120 days) not set
+
+        Single fire per subscription. If Redis is down, dedupe degrades
+        soft-open — acceptable v1 risk.
+        """
+        with app.app_context():
+            try:
+                from datetime import datetime as _dt, timedelta
+                from app import db
+                from app.models.billing import Subscription
+                from app.models import User
+                from app.resend_client import send_briefing_winback_email
+                from app.storage_utils import get_base_url as _get_base_url
+
+                now = utcnow_naive()
+                window_min = now - timedelta(days=21)
+                window_max = now - timedelta(days=12)
+
+                # Pull a broad candidate set; refine in Python because
+                # paused_at lives in JSON and full-text comparison
+                # cross-dialect would be fiddly.
+                candidates_q = (
+                    Subscription.query.filter(
+                        Subscription.status == 'canceled',
+                        Subscription.canceled_at >= window_min,
+                        Subscription.canceled_at <= window_max,
+                        Subscription.user_id.isnot(None),
+                    ).order_by(Subscription.id.asc())
+                )
+
+                try:
+                    from app.lib.redis_client import get_client as _get_redis
+                    redis_client = _get_redis(decode_responses=True)
+                except Exception:
+                    redis_client = None
+
+                base_url = _get_base_url() or 'https://societyspeaks.io'
+                sent = skipped = errors = 0
+                redis_warned = False
+
+                from app.lib.self_serve_trial_lifecycle import self_serve_winback_eligible
+
+                for sub in candidates_q.yield_per(200):
+                    if not self_serve_winback_eligible(sub, now=now):
+                        skipped += 1
+                        continue
+
+                    user = db.session.get(User, sub.user_id)
+                    if not user or not user.email:
+                        skipped += 1
+                        continue
+                    if user.stripe_customer_id:
+                        skipped += 1
+                        continue
+
+                    cache_key = f'briefing:self_serve_winback:{sub.id}'
+                    claimed_redis = False
+                    if redis_client:
+                        try:
+                            claimed_redis = bool(
+                                redis_client.set(cache_key, '1', nx=True, ex=60 * 60 * 24 * 120)
+                            )
+                            if not claimed_redis:
+                                skipped += 1
+                                continue
+                        except Exception as redis_exc:
+                            logger.warning(
+                                'Self-serve winback: Redis SET NX failed for sub %s: %s',
+                                sub.id, redis_exc,
+                            )
+                    elif not redis_warned:
+                        redis_warned = True
+                        logger.warning(
+                            'Self-serve winback job: Redis unavailable — send-once dedupe disabled'
+                        )
+
+                    from app.lib.self_serve_trial_lifecycle import payment_resume_url
+                    resume_url = payment_resume_url(base_url)
+                    try:
+                        ok = send_briefing_winback_email(user, resume_url)
+                        if ok:
+                            sent += 1
+                        else:
+                            errors += 1
+                            if redis_client and claimed_redis:
+                                try:
+                                    redis_client.delete(cache_key)
+                                except Exception:
+                                    pass
+                    except Exception as e:
+                        logger.error(f'Self-serve winback failed for sub {sub.id}: {e}', exc_info=True)
+                        errors += 1
+                        if redis_client and claimed_redis:
+                            try:
+                                redis_client.delete(cache_key)
+                            except Exception:
+                                pass
+
+                logger.info(f'Self-serve winback: sent={sent} skipped={skipped} errors={errors}')
+            except Exception as e:
+                logger.error(f'Self-serve winback job failed: {e}', exc_info=True)
+
     @scheduler.scheduled_job('cron', minute='0', id='pending_topic_catchup', max_instances=1, coalesce=True, misfire_grace_time=1800)
     def pending_topic_catchup_job():
         """
@@ -2614,11 +3074,15 @@ def init_scheduler(app):
                             )
                             continue
 
-                        from app.billing.service import get_active_subscription, SUBSCRIPTION_ACCESS_STATUSES
+                        from app.billing.service import (
+                            get_active_subscription,
+                            subscription_allows_sending,
+                            SUBSCRIPTION_ACCESS_STATUSES,
+                        )
                         from app.models import User, Subscription
-                        
+
                         has_active_subscription = False
-                        
+
                         if briefing.owner_type == 'user':
                             user = db.session.get(User, briefing.owner_id)
                             if user:
@@ -2626,17 +3090,20 @@ def init_scheduler(app):
                                     has_active_subscription = True
                                 else:
                                     sub = get_active_subscription(user)
-                                    has_active_subscription = sub is not None
+                                    # Gates on status + extra_data.paused_at —
+                                    # paused self-serve trials stay in the DB but
+                                    # don't generate sends.
+                                    has_active_subscription = subscription_allows_sending(sub)
                         elif briefing.owner_type == 'org':
                             sub = Subscription.query.filter(
                                 Subscription.org_id == briefing.owner_id,
                                 Subscription.status.in_(SUBSCRIPTION_ACCESS_STATUSES)
                             ).first()
-                            has_active_subscription = sub is not None
-                        
+                            has_active_subscription = subscription_allows_sending(sub)
+
                         if not has_active_subscription:
                             logger.info(
-                                f"Skipping briefing {briefing.id} - owner has no active subscription "
+                                f"Skipping briefing {briefing.id} - owner subscription does not allow sending "
                                 f"(owner_type={briefing.owner_type}, owner_id={briefing.owner_id})"
                             )
                             continue
@@ -2952,9 +3419,44 @@ def init_scheduler(app):
                 
                 if approved_runs:
                     logger.info(f"Found {len(approved_runs)} approved BriefRuns to send")
-                    
+
+                    # Subscription-state gate: re-check at send time so a user
+                    # who paused after their run was approved doesn't still
+                    # receive it. Defense in depth — the generation phase
+                    # also gates, but pauses can happen between generation
+                    # and send.
+                    from app.billing.service import (
+                        get_active_subscription,
+                        subscription_allows_sending,
+                        SUBSCRIPTION_ACCESS_STATUSES,
+                    )
+                    from app.models import Subscription as _Sub, User as _User
+
+                    def _briefing_allows_send(briefing):
+                        if not briefing:
+                            return False
+                        if briefing.owner_type == 'user':
+                            user = db.session.get(_User, briefing.owner_id)
+                            if not user:
+                                return False
+                            if getattr(user, 'is_admin', False):
+                                return True
+                            return subscription_allows_sending(get_active_subscription(user))
+                        elif briefing.owner_type == 'org':
+                            sub = _Sub.query.filter(
+                                _Sub.org_id == briefing.owner_id,
+                                _Sub.status.in_(SUBSCRIPTION_ACCESS_STATUSES),
+                            ).first()
+                            return subscription_allows_sending(sub)
+                        return False
+
                     import posthog as _posthog_mod
                     for brief_run in approved_runs:
+                        if not _briefing_allows_send(brief_run.briefing):
+                            logger.info(
+                                f"Skipping BriefRun {brief_run.id} send — owner subscription is paused or inactive"
+                            )
+                            continue
                         try:
                             result = send_brief_run_emails(brief_run.id)
                             logger.info(

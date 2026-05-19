@@ -445,6 +445,19 @@ class ResendClient:
         # locale. Pass None to _render_for_user so it pins the locale
         # explicitly rather than inheriting from an unrelated request context.
         from app.resend_client import _render_for_user as _render_email_for_user
+        from app.lib.personal_briefs_cta import (
+            personal_briefs_cta_url,
+            DEFAULT_TRIAL_TEMPLATE_SLUG,
+        )
+        # Default to the global trial template for cold-traffic conversion
+        # when the self-serve flow is enabled. See build doc Block C item 16.
+        personal_briefs_url = personal_briefs_cta_url(
+            base_url,
+            utm_source='daily_brief',
+            utm_medium='email',
+            utm_campaign='personal_briefs_cta',
+            template_slug=DEFAULT_TRIAL_TEMPLATE_SLUG,
+        )
         try:
             html = _render_email_for_user(
                 None,
@@ -456,6 +469,7 @@ class ResendClient:
                 unsubscribe_url=unsubscribe_url,
                 preferences_url=preferences_url,
                 base_url=base_url,
+                personal_briefs_cta_url=personal_briefs_url,
                 SECTIONS=SECTIONS,
                 TOPIC_DISPLAY_LABELS=TOPIC_DISPLAY_LABELS,
                 TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS

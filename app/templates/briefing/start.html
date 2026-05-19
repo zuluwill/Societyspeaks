@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Build your morning brief') }} | Society Speaks{% endblock %}
+{% block meta_description %}{{ _('Pick a template, give us your email, and your first brief lands tomorrow morning. 30 days free, no card needed.') }}{% endblock %}
+{% block og_title %}{{ _('Build your morning brief') }}{% endblock %}
+{% block og_description %}{{ _('Your Substacks, your PDFs, your beat — one morning email. 30 days free, no card needed.') }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+  <section class="mx-auto max-w-3xl px-4 py-12 sm:py-16">
+
+    <!-- Step indicator + back link -->
+    <nav class="flex items-center justify-between mb-8 text-sm">
+      <a href="{{ url_for('briefing.landing') }}" class="text-slate-500 hover:text-slate-900 inline-flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        {{ _('Back') }}
+      </a>
+      <span class="text-slate-400 font-medium">{{ _('Step 1 of 2') }}</span>
+    </nav>
+
+    <!-- Heading -->
+    <header class="mb-10 text-center">
+      <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+        {{ _('Build your morning brief') }}
+      </h1>
+      <p class="text-lg text-slate-600 max-w-xl mx-auto">
+        {{ _('Pick what you want to follow. We synthesise it from your sources, every morning.') }}
+      </p>
+    </header>
+
+    <form method="POST" action="{{ url_for('briefing.start_trial') }}" class="space-y-8" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {# Browser-detected IANA timezone — defaults UTC if JS is disabled. #}
+      <input type="hidden" id="trial-timezone" name="timezone" value="UTC">
+
+      <!-- Template picker -->
+      <fieldset>
+        <legend class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-4">
+          {{ _('Pick a template') }}
+        </legend>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="{{ _('Template') }}">
+          {% for tpl in featured_templates %}
+          <label
+            class="relative flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all hover:border-slate-400 has-[:checked]:border-slate-900 has-[:checked]:bg-white has-[:checked]:shadow-sm bg-white border-slate-200"
+            data-template-slug="{{ tpl.slug }}"
+          >
+            <input
+              type="radio"
+              name="template"
+              value="{{ tpl.slug }}"
+              {% if tpl.slug == selected_slug %}checked{% endif %}
+              class="mt-1 h-4 w-4 border-slate-300 text-slate-900 focus:ring-slate-900 focus:ring-offset-0"
+              required
+            >
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-semibold text-slate-900">{{ tpl.name }}</span>
+                {% if tpl.slug == default_slug %}
+                <span class="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">{{ _('Popular') }}</span>
+                {% endif %}
+              </div>
+              {% if tpl.description %}
+              <p class="text-sm text-slate-500 mt-1 line-clamp-2">{{ tpl.description }}</p>
+              {% endif %}
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        {% if not featured_templates %}
+        <p class="text-sm text-slate-500">{{ _('Templates loading — please refresh.') }}</p>
+        {% endif %}
+      </fieldset>
+
+      <!-- Email -->
+      <div>
+        <label for="trial-email" class="block text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">
+          {{ _('Where should we send it?') }}
+        </label>
+        <input
+          id="trial-email"
+          type="email"
+          name="email"
+          required
+          autocomplete="email"
+          inputmode="email"
+          spellcheck="false"
+          autocapitalize="off"
+          placeholder="{{ _('you@example.com') }}"
+          class="block w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-base text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-0 transition-colors"
+        >
+        <p class="text-xs text-slate-500 mt-2">
+          {{ _("We'll email you a one-click sign-in link. No password to remember.") }}
+        </p>
+      </div>
+
+      <!-- Submit -->
+      <div>
+        <button
+          type="submit"
+          class="block w-full rounded-xl bg-slate-900 px-6 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+          data-ph-capture-attribute-cta="start-trial-submit"
+        >
+          {{ _('Send my sign-in link') }} &rarr;
+        </button>
+        <p class="text-xs text-slate-500 text-center mt-4">
+          {{ _('30 days free. No card needed. One email — that\'s it.')|escape_i18n }}
+        </p>
+      </div>
+    </form>
+
+    <!-- Footer reassurance -->
+    <footer class="mt-12 pt-8 border-t border-slate-200 text-center">
+      <p class="text-xs text-slate-500">
+        {{ _('Your subscription funds our open source civic platform.') }}
+        <a href="{{ url_for('briefing.landing') }}#why" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">{{ _('Why we built this') }}</a>
+      </p>
+    </footer>
+  </section>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+  // Populate the hidden timezone field with the browser's IANA zone so the
+  // backend can schedule the first brief at a sensible local hour. Falls
+  // back to UTC if Intl is unavailable.
+  (function () {
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      var field = document.getElementById('trial-timezone');
+      if (tz && field) field.value = tz;
+    } catch (e) { /* keep UTC default */ }
+  })();
+</script>
+{% endblock %}

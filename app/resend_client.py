@@ -1384,6 +1384,145 @@ def _send_user_transactional_email(
         return False
 
 
+def send_briefing_winback_email(
+    user,
+    resume_url: str,
+) -> bool:
+    """Day-45 winback for self-serve trials that auto-paused without converting.
+
+    Sent once, ~15 days after the pause. Soft tone — emphasises data is
+    preserved and resuming is one click. Idempotency enforced upstream
+    via Redis SETNX on subscription id with a long (120-day) TTL.
+
+    Args:
+        user:        Recipient.
+        resume_url:  Absolute URL of /billing/pending-checkout?plan=starter.
+
+    Returns:
+        True if the message was accepted for delivery.
+    """
+    return _send_user_transactional_email(
+        user,
+        'emails/briefing_winback.html',
+        "Still here when you're ready",
+        {'resume_url': resume_url},
+    )
+
+
+def send_briefing_welcome_from_william_email(
+    user,
+    dashboard_url: str,
+) -> bool:
+    """One-shot "from William" welcome note for self-serve trial signups.
+
+    Sent once, immediately after :func:`start_self_serve_trial` returns a
+    freshly-created subscription. Deliberately short and human-toned — the
+    "feature grid" emails fire later in the lifecycle (trial mid, payment
+    prompt). Idempotency is enforced upstream via a Redis SETNX on the
+    user id.
+
+    Args:
+        user:           Recipient.
+        dashboard_url:  Absolute URL to the user's briefing detail page.
+
+    Returns:
+        True if the message was accepted for delivery.
+    """
+    return _send_user_transactional_email(
+        user,
+        'emails/briefing_welcome_william.html',
+        "A quick note about Personal Briefs",
+        {'dashboard_url': dashboard_url},
+    )
+
+
+def send_briefing_trial_payment_prompt_email(
+    user,
+    checkout_url: str,
+    days_remaining: int,
+) -> bool:
+    """Day-25 conversion prompt for self-serve trial users.
+
+    Sent ~5 days before trial end if the user has no payment method on
+    file. Pitches "keep your briefs coming" with a single CTA to the
+    Stripe pending_checkout entry point.
+
+    Idempotency is enforced upstream via a Redis SETNX on the subscription
+    id — this function never checks for duplicates.
+
+    Args:
+        user:            Recipient (must have ``email`` and ``username``).
+        checkout_url:    Absolute URL of /billing/pending-checkout?plan=starter.
+        days_remaining:  Days left in the trial (typically 5 when this fires).
+
+    Returns:
+        True if the message was accepted for delivery.
+    """
+    return _send_user_transactional_email(
+        user,
+        'emails/briefing_trial_payment.html',
+        # Subject is a static msgid (translator-friendly); day count lives in
+        # the body. F-string subjects don't extract into messages.pot and the
+        # variant-per-day pattern means no translation ever matches at runtime.
+        "Keep your morning brief — your trial is ending soon",
+        {
+            'checkout_url': checkout_url,
+            'days_remaining': days_remaining,
+        },
+    )
+
+
+def send_briefing_paused_email(
+    user,
+    resume_url: str,
+) -> bool:
+    """One-shot "your briefs are paused" email after self-serve trial expiry.
+
+    Soft framing — emphasises that data is preserved and resuming is one
+    click. No charges, no scary warnings.
+
+    Args:
+        user:        Recipient.
+        resume_url:  Absolute URL of /billing/pending-checkout?plan=starter
+                     so a single click takes them to Stripe Checkout.
+
+    Returns:
+        True if the message was accepted for delivery.
+    """
+    return _send_user_transactional_email(
+        user,
+        'emails/briefing_paused.html',
+        "Your briefs are paused — pick up where you left off any time",
+        {'resume_url': resume_url},
+    )
+
+
+def send_briefing_activation_nudge_email(
+    user,
+    start_url: str,
+) -> bool:
+    """
+    Activation nudge sent ~48h after subscription if the user still has zero
+    briefings. One-shot, fired by the scheduler; idempotency is enforced
+    upstream via a Redis key on the subscription id.
+
+    Args:
+        user:      Recipient (must have ``email`` and ``username``).
+        start_url: Absolute URL of the template-selection / first-brief entry
+                   point (either /briefings/start or /briefings/ depending on
+                   the SELF_SERVE_TRIAL_ENABLED flag).
+
+    Returns:
+        True if the message was accepted for delivery.
+    """
+    return _send_user_transactional_email(
+        user,
+        'emails/briefing_activation_nudge.html',
+        "Your first brief is two minutes away",
+        {'start_url': start_url},
+    )
+
+
 def send_trial_ending_email(
     user,
     days_remaining: int = 3,

@@ -1,0 +1,47 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}{{ _("Finish setting up your first brief") }}{% endblock %}
+
+{% block preheader %}{{ _("Two minutes to pick a template and your first brief lands tomorrow morning.") }}{% endblock %}
+
+{% block header_title %}{{ _("Your first brief is two minutes away") }}{% endblock %}
+
+{% block header_subtitle %}
+<tr>
+    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #bfdbfe; padding-top: 6px;">
+        {{ _("Pick a template, choose your sources, and we'll do the rest.") }}
+    </td>
+</tr>
+{% endblock %}
+
+{% block content %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 20px;">
+            {{ _('Hi %(username)s,', username=username)|escape_i18n }}
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 24px;">
+            {{ _("You started a free trial but haven't built your first brief yet — and that's the moment everything clicks. It takes about two minutes: pick a template, confirm the sources, and your first brief arrives in tomorrow's inbox.") }}
+        </td>
+    </tr>
+    <tr>
+        <td align="center" style="padding-bottom: 28px;">
+            <a href="{{ start_url }}" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; background-color: #1e40af; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
+                {{ _('Build your first brief') }} &rarr;
+            </a>
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #64748b; padding-bottom: 12px;">
+            {{ _("Not sure where to start? Most people pick the AI & Technology or Markets & Business template — they're the fastest path to something useful.")|escape_i18n }}
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #64748b;">
+            {{ _("Your trial is still active. No charge until you add a payment method.") }}
+        </td>
+    </tr>
+</table>
+{% endblock %}

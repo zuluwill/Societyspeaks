@@ -1,0 +1,44 @@
+{% extends "emails/base_email.html" %}
+
+{# Short, plain-styled "from William" welcome — sent once when a self-serve
+   trial is created. Deliberately spare: no banner, no feature grid, no
+   marketing voice. The goal is a human signal in a sea of AI products. #}
+
+{% block title %}{{ _("Welcome to Personal Briefs") }}{% endblock %}
+
+{% block preheader %}{{ _("A quick note from William.") }}{% endblock %}
+
+{% block header_title %}{{ _("A quick note") }}{% endblock %}
+
+{% block content %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.7; color: #1f2937; padding-bottom: 20px;">
+            {{ _('Hi %(username)s,', username=username)|escape_i18n }}
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.7; color: #1f2937; padding-bottom: 20px;">
+            {{ _("Thank you for trying Personal Briefs. I built this because I was tired of reading fifteen newsletters to know what mattered — so I made the brief I wanted to read every morning, from sources I actually trust.") }}
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.7; color: #1f2937; padding-bottom: 20px;">
+            {{ _("Your first brief is on the way. If anything feels off — sources you'd add, framing you'd change — just reply to this email. I read everything.") }}
+        </td>
+    </tr>
+    <tr>
+        <td style="padding-bottom: 28px;">
+            <a href="{{ dashboard_url }}" style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #1e40af; text-decoration: underline; text-underline-offset: 3px;">
+                {{ _('See your brief') }} &rarr;
+            </a>
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.7; color: #1f2937;">
+            {{ _("— William") }}<br>
+            <span style="color: #6b7280; font-size: 14px;">{{ _("Founder, Society Speaks") }}</span>
+        </td>
+    </tr>
+</table>
+{% endblock %}
