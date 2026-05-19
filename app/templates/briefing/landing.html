@@ -465,50 +465,51 @@
        pre-built URL with per-vertical UTM so we can read which audience
        converts. When self_serve is off, audience_cards is empty and we fall
        back to the #pricing anchor (single CTA — no template preselect). #}
+    {%- set _ac = audience_cards | default({}) %}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-      <a href="{{ audience_cards.get('technology-ai-regulation', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-ai">
+      <a href="{{ _ac.get('technology-ai-regulation', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-ai">
         <p class="text-xs font-semibold tracking-wide uppercase text-violet-600 mb-2">{{ _('AI & Technology')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('For tech workers who want signal over hype.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('Stratechery, MIT Tech Review, Ars Technica…') }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('startups-founders', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-startups">
+      <a href="{{ _ac.get('startups-founders', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-startups">
         <p class="text-xs font-semibold tracking-wide uppercase text-purple-600 mb-2">{{ _('Startups & Founders')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('For operators building companies — without the motivation churn.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _("Not Boring, Lenny's, First Round, The Information…") }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('world-affairs', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-world">
+      <a href="{{ _ac.get('world-affairs', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-world">
         <p class="text-xs font-semibold tracking-wide uppercase text-cyan-700 mb-2">{{ _('World Affairs') }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('For globally-minded readers tired of one-national-press framing.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('Foreign Affairs, Reuters World, FT, Al Jazeera…') }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('economy-markets', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-markets">
+      <a href="{{ _ac.get('economy-markets', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-markets">
         <p class="text-xs font-semibold tracking-wide uppercase text-emerald-700 mb-2">{{ _('Markets & Business')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('Macro trends and implications — not daily price ticks.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('FT, Bloomberg, The Economist, Reuters…') }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('politics-public-policy', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-politics">
+      <a href="{{ _ac.get('politics-public-policy', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-politics">
         <p class="text-xs font-semibold tracking-wide uppercase text-blue-700 mb-2">{{ _('Politics & Policy')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('Policy researchers, analysts, civic-minded readers.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('Reuters, Politico, Guardian, Foreign Affairs…') }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('climate-energy-planet', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-climate">
+      <a href="{{ _ac.get('climate-energy-planet', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-climate">
         <p class="text-xs font-semibold tracking-wide uppercase text-teal-700 mb-2">{{ _('Climate & Energy')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('For sustainability professionals, ESG investors, and the climate-curious.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('Carbon Brief, Clean Energy Wire, E&E News…')|escape_i18n }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('science-big-ideas', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-science">
+      <a href="{{ _ac.get('science-big-ideas', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-science">
         <p class="text-xs font-semibold tracking-wide uppercase text-amber-700 mb-2">{{ _('Science & Big Ideas')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _("Frontier research and serious essays — the brief you wish your smartest friend wrote.") }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('Nature, Quanta, Asterisk, Marginal Revolution…') }}</p>
       </a>
 
-      <a href="{{ audience_cards.get('health-science-medicine', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-health">
+      <a href="{{ _ac.get('health-science-medicine', '#pricing') }}" class="group bg-white rounded-xl border-2 border-slate-200 p-6 hover:border-slate-900 hover:shadow-md transition-all" data-ph-capture-attribute-cta="use-case-health">
         <p class="text-xs font-semibold tracking-wide uppercase text-rose-700 mb-2">{{ _('Health & Longevity')|escape_i18n }}</p>
         <p class="text-sm text-slate-700 mb-3">{{ _('Translational medicine and longevity research — evidence over hype.') }}</p>
         <p class="text-xs text-slate-500 italic">{{ _('STAT News, NEJM, Nature Medicine, The Lancet…') }}</p>
