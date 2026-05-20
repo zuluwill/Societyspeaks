@@ -393,7 +393,27 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-sm text-gray-500">{{ _('No briefs generated yet. Add sources and generate a test brief to see results here.') }}</p>
+                    <div id="brief-preparing-banner" class="flex items-start gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <svg id="brief-spinner" class="w-5 h-5 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-blue-900">{{ _('Your first brief is being prepared…') }}</p>
+                            <p class="text-sm text-blue-700 mt-0.5">{{ _('This usually takes under a minute. This page will refresh automatically.') }}</p>
+                        </div>
+                    </div>
+                    <script>
+                    (function () {
+                        var reloaded = sessionStorage.getItem('brief-auto-reloaded');
+                        if (!reloaded) {
+                            sessionStorage.setItem('brief-auto-reloaded', '1');
+                            setTimeout(function () { location.reload(); }, 20000);
+                        }
+                    }());
+                    </script>
                     {% endif %}
                 </div>
             </div>

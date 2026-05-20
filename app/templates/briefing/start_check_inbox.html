@@ -48,6 +48,15 @@
         </ol>
       </div>
 
+      {% if is_returning_email %}
+      <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 text-left">
+        <p class="text-sm text-blue-800">
+          <span class="font-semibold">{{ _('Existing account detected.') }}</span>
+          {{ _('This email address already has a Society Speaks account — we\'ve sent the sign-in link to it. Your briefing will be added when you sign in.') }}
+        </p>
+      </div>
+      {% endif %}
+
       <p class="text-sm text-slate-500 mb-2">
         {{ _("Can't find it? Check your spam folder.") }}
       </p>

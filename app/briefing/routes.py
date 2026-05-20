@@ -1079,26 +1079,32 @@ def start_trial_complete():
         flash(_("Welcome back — your brief is set up and ready."), 'info')
         return redirect(url_for('briefing.detail', briefing_id=result.briefing.id))
 
-    # New trial — if we collected a first name on the sign-up form, create a
-    # minimal IndividualProfile so the nav shows their name and initials rather
-    # than a generic username/stock avatar. Skipped if they already have a profile.
+    # New trial — if we collected a first name on the sign-up form, update the
+    # IndividualProfile that was auto-created by the auth route using username as
+    # a placeholder. Replacing it with the real name means the nav shows "Hi
+    # Alex" and the initials avatar is correct from the very first page view.
     first_name = session.pop('briefing_trial_first_name', None)
-    if first_name and not current_user.profile_type:
+    if first_name:
         try:
             from app.models import IndividualProfile
-            from app.models._base import generate_unique_slug
-            unique_slug = generate_unique_slug(IndividualProfile, first_name, fallback='user')
-            profile = IndividualProfile(
-                user_id=current_user.id,
-                full_name=first_name,
-                slug=unique_slug,
-            )
-            current_user.profile_type = 'individual'
-            db.session.add(profile)
-            db.session.commit()
+            profile = IndividualProfile.query.filter_by(user_id=current_user.id).first()
+            if profile:
+                profile.full_name = first_name
+                db.session.commit()
+            elif not current_user.profile_type:
+                from app.models._base import generate_unique_slug
+                unique_slug = generate_unique_slug(IndividualProfile, first_name, fallback='user')
+                profile = IndividualProfile(
+                    user_id=current_user.id,
+                    full_name=first_name,
+                    slug=unique_slug,
+                )
+                current_user.profile_type = 'individual'
+                db.session.add(profile)
+                db.session.commit()
         except Exception as exc:
             db.session.rollback()
-            logger.warning(f"Could not create trial profile for user {current_user.id}: {exc}")
+            logger.warning(f"Could not set trial profile name for user {current_user.id}: {exc}")
 
     # New trial — fire a one-shot "from William" welcome note (idempotent
     # via Redis SETNX on user id) before sync generation starts; sending an
@@ -1110,7 +1116,7 @@ def start_trial_complete():
     # request never blocks longer than the deadline; worker keeps running
     # on timeout and the scheduler will pick up the row.
     from app.briefing.first_brief import generate_first_brief_sync
-    first_brief = generate_first_brief_sync(result.briefing.id)
+    first_brief = generate_first_brief_sync(result.briefing.id, deadline_seconds=3)
     _track_posthog(
         'paid_briefing_first_brief_generated',
         current_user.id,
