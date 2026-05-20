@@ -905,12 +905,18 @@ def _handle_start_trial_post(featured_templates, default_slug):
         flash(_("We couldn't send the sign-in email. Try again in a moment."), 'error')
         return redirect(url_for('briefing.start_trial', template=template_slug))
 
+    account_notice = None
+    if is_returning_email:
+        if email.lower() != (user.email or '').lower():
+            account_notice = {'kind': 'alias', 'stored': user.email}
+        else:
+            account_notice = {'kind': 'returning'}
+
     return render_template(
         'briefing/start_check_inbox.html',
         email=email,
-        stored_email=user.email if is_returning_email and email.lower() != (user.email or '').lower() else None,
         template=template,
-        is_returning_email=is_returning_email,
+        account_notice=account_notice,
     )
 
 

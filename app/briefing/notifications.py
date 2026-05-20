@@ -191,7 +191,8 @@ def _send_draft_notification_email(
     """
 
     try:
-        from_email = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
+        from app.lib.brief_from_email import brief_from_email_address
+        from_email = brief_from_email_address()
         from_name = os.environ.get('BRIEF_FROM_NAME', 'Society Speaks Briefings')
 
         email_data = {

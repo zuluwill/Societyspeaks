@@ -35,8 +35,13 @@ def _render_for_user(user, template, **ctx) -> str:
     """
     locale_str = resolve_user_locale(user)
     with force_locale(locale_str):
+        from app.lib.brief_from_email import brief_from_email_for_templates
         base_ctx = email_html_locale_kwargs(locale_str)
-        merged = {**base_ctx, **ctx}
+        merged = {
+            **base_ctx,
+            'brief_from_email': brief_from_email_for_templates(),
+            **ctx,
+        }
         return render_template(template, **merged)
 
 

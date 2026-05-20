@@ -1,0 +1,17 @@
+{# Deliverability copy — requires ``brief_from_email`` in context (config / context processor). #}
+
+{% macro inbox_contacts_line() %}
+<li>{{ _('Add <strong>%(email)s</strong> to your contacts or safe-senders list.', email=brief_from_email)|safe }}</li>
+{% endmacro %}
+
+{% macro magic_login_spam_paragraph() %}
+{{ _('Mark it as "Not Spam" and add <strong>%(email)s</strong> to your contacts — that ensures your daily brief lands in your inbox every morning.', email=brief_from_email)|safe }}
+{% endmacro %}
+
+{% macro welcome_practical_note() %}
+{{ _('<strong>One practical note:</strong> to make sure your brief arrives every morning, add <strong>%(email)s</strong> to your contacts or safe-senders list.', email=brief_from_email)|safe }}
+{% endmacro %}
+
+{% macro subscribe_success_contacts_line() %}
+<li>{{ _('2. Add <strong>%(email)s</strong> to your contacts', email=brief_from_email)|safe }}</li>
+{% endmacro %}

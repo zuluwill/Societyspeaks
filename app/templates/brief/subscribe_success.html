@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from 'components/brief_safe_sender_copy.html' import subscribe_success_contacts_line %}
 
 {% set cadence = cadence|default('daily') %}
 {% set cadence_label = _('Weekly Brief') if cadence == 'weekly' else _('Daily Brief') %}
@@ -45,7 +46,7 @@
                     <p class="text-sm text-amber-700 mb-2">{{ _('Our emails sometimes land in spam or promotions folders. To make sure you receive every brief:') }}</p>
                     <ul class="text-sm text-amber-700 space-y-1">
                         <li>{{ _('1. Check your spam/junk folder for the welcome email') }}</li>
-                        <li>{{ _('2. Add <strong>hello@brief.societyspeaks.io</strong> to your contacts')|safe }}</li>
+                        {{ subscribe_success_contacts_line() }}
                         <li>{{ _('3. If you find our email in spam, mark it as "Not Spam"') }}</li>
                     </ul>
                 </div>

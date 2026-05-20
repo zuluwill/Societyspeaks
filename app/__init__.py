@@ -600,6 +600,11 @@ def create_app():
         return dict(current_lang=lang, supported_languages=SUPPORTED_LANGUAGES)
 
     @app.context_processor
+    def inject_brief_from_email():
+        from app.lib.brief_from_email import brief_from_email_for_templates
+        return {'brief_from_email': brief_from_email_for_templates()}
+
+    @app.context_processor
     def inject_briefings_subscription_nav():
         """Expose Paid Briefings funnel state for nav, dashboard, and list banners."""
         from flask import session

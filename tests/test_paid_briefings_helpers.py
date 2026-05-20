@@ -276,3 +276,32 @@ def test_is_auto_generated_profile_detects_username_placeholder():
 def test_initials_from_name():
     assert initials_from_name('William Roberts') == 'WR'
     assert initials_from_name('Alex') == 'A'
+
+
+# ---------------------------------------------------------------------------
+# brief_from_email_address
+# ---------------------------------------------------------------------------
+
+def test_brief_from_email_address_default():
+    from app.lib.brief_from_email import (
+        DEFAULT_BRIEF_FROM_EMAIL,
+        brief_from_email_address,
+    )
+
+    assert brief_from_email_address({'BRIEF_FROM_EMAIL': DEFAULT_BRIEF_FROM_EMAIL}) == DEFAULT_BRIEF_FROM_EMAIL
+
+
+def test_brief_from_email_address_parses_display_name_format():
+    from app.lib.brief_from_email import brief_from_email_address
+
+    assert brief_from_email_address({
+        'BRIEF_FROM_EMAIL': 'Daily Brief <brief@example.com>',
+    }) == 'brief@example.com'
+
+
+def test_brief_from_email_for_templates_uses_app_config(app):
+    from app.lib.brief_from_email import brief_from_email_for_templates
+
+    app.config['BRIEF_FROM_EMAIL'] = 'Custom <custom@brief.test>'
+    with app.app_context():
+        assert brief_from_email_for_templates() == 'custom@brief.test'

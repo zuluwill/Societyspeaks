@@ -273,6 +273,8 @@ class Config:
     SELF_SERVE_TRIAL_ENABLED = (
         os.getenv('SELF_SERVE_TRIAL_ENABLED', 'false').lower() == 'true'
     )
+    # Bare or "Name <addr>" — used by brief senders and safe-sender UI/email copy.
+    BRIEF_FROM_EMAIL = os.getenv('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
     # Model override for first-brief synchronous generation. Falls back to the briefing's normal model.
     FIRST_BRIEF_MODEL_OVERRIDE = os.getenv('FIRST_BRIEF_MODEL_OVERRIDE') or None
     # Hard deadline (seconds) for synchronous first-brief generation before falling back to scheduled run.

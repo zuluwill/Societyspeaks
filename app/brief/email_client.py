@@ -155,8 +155,8 @@ class ResendClient:
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
         self.last_send_error: Optional[str] = None
-        # Get email address from env and format with name
-        self._from_email_addr = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
+        from app.lib.brief_from_email import brief_from_email_address
+        self._from_email_addr = brief_from_email_address()
         # Handle case where env var might already include name (for backwards compat)
         if '<' in self._from_email_addr and '>' in self._from_email_addr:
             self.from_email = self._from_email_addr

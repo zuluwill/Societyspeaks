@@ -1,4 +1,5 @@
 {% extends "emails/base_email.html" %}
+{% from 'components/brief_safe_sender_copy.html' import magic_login_spam_paragraph %}
 
 {% block title %}{{ _('Your Society Speaks sign-in link') }}{% endblock %}
 
@@ -47,7 +48,7 @@
                 {{ _('Found this in spam?') }}
             </p>
             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.5; color: #92400e; margin: 0;">
-                {{ _('Mark it as "Not Spam" and add <strong>hello@brief.societyspeaks.io</strong> to your contacts — that ensures your daily brief lands in your inbox every morning.')|safe }}
+                {{ magic_login_spam_paragraph() }}
             </p>
         </td>
     </tr>

@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from 'components/brief_safe_sender_copy.html' import inbox_contacts_line %}
 
 {% block title %}{{ _('Check your inbox') }} | Society Speaks{% endblock %}
 
@@ -19,15 +20,32 @@
       </h1>
 
       <p class="text-lg text-slate-600 mb-2">
+        {% if account_notice and account_notice.kind == 'alias' %}
+        {{ _("We've sent a sign-in link to your existing account at") }}
+        {% else %}
         {{ _("We've sent a sign-in link to") }}
+        {% endif %}
       </p>
-      <p class="text-lg font-semibold text-slate-900 {% if stored_email %}mb-2{% else %}mb-8{% endif %} break-all">
+      <p class="text-lg font-semibold text-slate-900 {% if account_notice and account_notice.kind == 'alias' %}mb-2{% else %}mb-8{% endif %} break-all">
+        {% if account_notice and account_notice.kind == 'alias' %}
+        {{ account_notice.stored }}
+        {% else %}
         {{ email }}
+        {% endif %}
       </p>
-      {% if stored_email %}
+      {% if account_notice and account_notice.kind == 'alias' %}
       <p class="text-sm text-slate-500 mb-8">
-        {{ _('Linked to your existing account (%(email)s).', email=stored_email) }}
+        {{ _('You entered %(typed)s — it matches that account.', typed=email) }}
       </p>
+      {% endif %}
+
+      {% if account_notice and account_notice.kind == 'returning' %}
+      <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-8 text-left">
+        <p class="text-sm text-blue-800">
+          <span class="font-semibold">{{ _('Existing account detected.') }}</span>
+          {{ _('This email already has a Society Speaks account. Your briefing will be added when you sign in.') }}
+        </p>
+      </div>
       {% endif %}
 
       <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-left mb-8">
@@ -44,7 +62,7 @@
             <span class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold flex items-center justify-center">3</span>
             <span>
               {% if template %}
-              {{ _('Your first %(name)s brief arrives in your inbox tomorrow morning.', name=template.name) }}
+              {{ _('Your first %(name)s brief arrives in your inbox tomorrow morning.', name=(template.name|escape_i18n)) }}
               {% else %}
               {{ _('Your first brief arrives in your inbox tomorrow morning.') }}
               {% endif %}
@@ -52,15 +70,6 @@
           </li>
         </ol>
       </div>
-
-      {% if is_returning_email %}
-      <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 text-left">
-        <p class="text-sm text-blue-800">
-          <span class="font-semibold">{{ _('Existing account detected.') }}</span>
-          {{ _('This email address already has a Society Speaks account — we\'ve sent the sign-in link to it. Your briefing will be added when you sign in.') }}
-        </p>
-      </div>
-      {% endif %}
 
       <!-- Spam / deliverability tip -->
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-left">
@@ -72,7 +81,7 @@
             <p class="text-sm font-semibold text-amber-800 mb-1">{{ _("Can't find it? Check your spam folder.") }}</p>
             <ul class="text-sm text-amber-700 space-y-1">
               <li>{{ _('If it\'s there, mark it as <strong>"Not Spam"</strong> so future briefs arrive safely.')|safe }}</li>
-              <li>{{ _('Add <strong>hello@brief.societyspeaks.io</strong> to your contacts or safe-senders list.')|safe }}</li>
+              {{ inbox_contacts_line() }}
             </ul>
           </div>
         </div>
