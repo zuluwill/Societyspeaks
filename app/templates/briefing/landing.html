@@ -307,27 +307,28 @@
     display: inline-flex; align-items: center; white-space: nowrap;
     padding: 0.375rem 1rem; border-radius: 9999px;
     font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.01em;
-    border: 1px solid rgba(148,163,184,0.18);
-    color: #cbd5e1; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(71,85,105,0.18);
+    color: #475569; background: #ffffff;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
   }
   .ss-badge:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(148,163,184,0.4);
-    color: #f1f5f9;
+    background: #f8fafc;
+    border-color: rgba(71,85,105,0.35);
+    color: #1e293b;
   }
 </style>
 
-<div class="bg-slate-950">
+<div class="bg-white border-y border-slate-100">
   <section class="py-14">
 
     {# Section label + headline #}
     <div class="text-center px-4 mb-10">
-      <p class="text-xs font-bold uppercase tracking-[0.18em] mb-3" style="color:#60a5fa">{{ _('Sources trusted worldwide') }}</p>
-      <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3 leading-tight">
+      <p class="text-xs font-bold uppercase tracking-[0.18em] mb-3 text-primary-600">{{ _('Sources trusted worldwide') }}</p>
+      <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 leading-tight">
         {{ _('From Al Jazeera to Nikkei Asia.<br/>From Deutsche Welle to the FT.')|safe }}
       </h2>
-      <p class="text-slate-400 max-w-lg mx-auto text-[0.9375rem] leading-relaxed">
+      <p class="text-slate-500 max-w-lg mx-auto text-[0.9375rem] leading-relaxed">
         {{ _('156 sources hand-picked across 20+ countries — from Tokyo to Doha, Berlin to São Paulo. Add your own on top.') }}
       </p>
     </div>
@@ -450,16 +451,16 @@
 
     {# Stats trio #}
     <div class="flex justify-center gap-0 mt-12 px-4">
-      <div class="text-center px-8 border-r border-slate-800">
-        <p class="text-2xl font-bold text-white">20+</p>
+      <div class="text-center px-8 border-r border-slate-200">
+        <p class="text-2xl font-bold text-slate-900">20+</p>
         <p class="text-xs text-slate-500 mt-1">{{ _('countries') }}</p>
       </div>
-      <div class="text-center px-8 border-r border-slate-800">
-        <p class="text-2xl font-bold text-white">156</p>
+      <div class="text-center px-8 border-r border-slate-200">
+        <p class="text-2xl font-bold text-slate-900">156</p>
         <p class="text-xs text-slate-500 mt-1">{{ _('curated sources') }}</p>
       </div>
       <div class="text-center px-8">
-        <p class="text-2xl font-bold text-white">+</p>
+        <p class="text-2xl font-bold text-slate-900">+</p>
         <p class="text-xs text-slate-500 mt-1">{{ _('yours too') }}</p>
       </div>
     </div>
@@ -468,7 +469,7 @@
 </div>
 
 <!-- Problem Section - Make it visceral -->
-<div class="bg-white">
+<div class="bg-slate-50">
   <section class="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ _("You're subscribed to everything.<br/>You still feel behind.")|safe }}</h2>
