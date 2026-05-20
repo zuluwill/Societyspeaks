@@ -70,20 +70,17 @@ def _parse_context(markdown: str) -> tuple[str | None, str | None, str]:
 
 
 def upgrade():
-    op.add_column(
-        'brief_run_item',
-        sa.Column('cluster_also_covered', JSONB(), nullable=True),
-    )
-    op.add_column(
-        'brief_run_item',
-        sa.Column('context_label', sa.String(100), nullable=True),
-    )
-    op.add_column(
-        'brief_run_item',
-        sa.Column('context_insight', sa.Text(), nullable=True),
-    )
-
     bind = op.get_bind()
+    bind.execute(sa.text(
+        "ALTER TABLE brief_run_item ADD COLUMN IF NOT EXISTS cluster_also_covered JSONB"
+    ))
+    bind.execute(sa.text(
+        "ALTER TABLE brief_run_item ADD COLUMN IF NOT EXISTS context_label VARCHAR(100)"
+    ))
+    bind.execute(sa.text(
+        "ALTER TABLE brief_run_item ADD COLUMN IF NOT EXISTS context_insight TEXT"
+    ))
+
     rows = bind.execute(sa.text(
         "SELECT id, content_markdown FROM brief_run_item "
         "WHERE content_markdown LIKE '[%' "
