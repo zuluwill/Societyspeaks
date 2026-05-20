@@ -54,7 +54,7 @@
                            class="inline-flex items-center px-3 sm:px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-md hover:bg-amber-700 transition-colors">
                             {{ _('Browse Sources') }}
                         </a>
-                        <a href="{{ url_for('briefing.add_rss_source') }}"
+                        <a href="{{ url_for('briefing.add_rss_source', briefing_id=briefing.id) }}"
                            class="inline-flex items-center px-3 sm:px-4 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-md hover:bg-amber-50 transition-colors">
                             {{ _('Add RSS Feed') }}
                         </a>
@@ -315,7 +315,7 @@
                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                                 {{ _('Browse Sources') }}
                             </a>
-                            <a href="{{ url_for('briefing.add_rss_source') }}"
+                            <a href="{{ url_for('briefing.add_rss_source', briefing_id=briefing.id) }}"
                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                                 {{ _('Add RSS Feed') }}
                             </a>
@@ -355,7 +355,7 @@
                         </form>
                         {% else %}
                         <p class="text-xs text-gray-500 mb-2">{{ _('All available sources have been added.') }}</p>
-                        <a href="{{ url_for('briefing.add_rss_source') }}"
+                        <a href="{{ url_for('briefing.add_rss_source', briefing_id=briefing.id) }}"
                            class="text-xs text-primary-600 hover:text-primary-800">{{ _('Add a new RSS feed →') }}</a>
                         {% endif %}
                     </div>

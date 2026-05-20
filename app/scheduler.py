@@ -3251,7 +3251,8 @@ def init_scheduler(app):
                         
                         brief_run = generate_brief_run_for_briefing(
                             briefing.id,
-                            scheduled_at=scheduled_utc
+                            scheduled_at=scheduled_utc,
+                            skip_warmup=True,
                         )
                         
                         if brief_run:

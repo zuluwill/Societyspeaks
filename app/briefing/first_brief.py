@@ -67,6 +67,7 @@ def generate_first_brief_sync(
     briefing_id: int,
     *,
     deadline_seconds: Optional[float] = None,
+    warmup_budget_seconds: Optional[float] = None,
     app: Optional[Flask] = None,
     generator: Optional[Callable[[int], Optional[int]]] = None,
 ) -> FirstBriefResult:
@@ -78,17 +79,23 @@ def generate_first_brief_sync(
     even if the worker dies mid-flight.
 
     Args:
-        briefing_id:       Newly-created :class:`Briefing` to generate for.
-        deadline_seconds:  Wall-clock seconds to wait. Defaults to the value
-                           of ``FIRST_BRIEF_SYNC_DEADLINE_SECONDS`` from
-                           Flask config (30s when unset).
-        app:               Flask app to bind in the worker thread. Defaults
-                           to ``current_app._get_current_object()``; must be
-                           called from inside a request or app context unless
-                           explicitly provided (e.g. in tests).
-        generator:         Override the BriefRun generator. Takes a briefing
-                           id and returns the committed BriefRun id (or
-                           ``None``). Used by tests to avoid LLM calls.
+        briefing_id:          Newly-created :class:`Briefing` to generate for.
+        deadline_seconds:     Wall-clock seconds the *route* waits for the
+                              worker. Defaults to
+                              ``FIRST_BRIEF_SYNC_DEADLINE_SECONDS``. Keep this
+                              below the platform's HTTP request timeout
+                              (typically 30-60s) — the worker still finishes
+                              in the background past the deadline.
+        warmup_budget_seconds: How long the worker spends ingesting sources
+                              before generation. Defaults to
+                              ``BRIEFING_SOURCE_WARMUP_SECONDS``. For the
+                              trial signup path, pass a value smaller than
+                              ``deadline_seconds`` so generation gets a fair
+                              shot at completing within the wait window.
+        app:                  Flask app to bind in the worker thread.
+        generator:            Override for tests. Takes (briefing_id) and
+                              returns the committed BriefRun id or None.
+                              When set, ``warmup_budget_seconds`` is ignored.
 
     Returns:
         :class:`FirstBriefResult` describing the outcome.
@@ -103,7 +110,14 @@ def generate_first_brief_sync(
     if deadline_seconds is None:
         deadline_seconds = float(bound_app.config.get('FIRST_BRIEF_SYNC_DEADLINE_SECONDS', 30))
 
-    work_fn = generator or _default_generate_brief_run
+    if generator is not None:
+        work_fn = generator
+    else:
+        # Bind the warmup budget so the worker thread sees the caller's choice.
+        def work_fn(bid: int) -> Optional[int]:
+            return _default_generate_brief_run(
+                bid, warmup_budget_seconds=warmup_budget_seconds,
+            )
 
     started = time.monotonic()
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='first-brief')
@@ -155,14 +169,32 @@ def generate_first_brief_sync(
     return FirstBriefResult(status='ready', brief_run_id=brief_run_id, elapsed_s=elapsed)
 
 
-def _default_generate_brief_run(briefing_id: int) -> Optional[int]:
-    """Production generator: call into :mod:`app.briefing.generator`.
+def _default_generate_brief_run(
+    briefing_id: int, *, warmup_budget_seconds: Optional[float] = None,
+) -> Optional[int]:
+    """Production generator: warm up sources, then generate the BriefRun.
 
-    Returns the committed BriefRun id, or ``None`` if generation produced no
-    row (e.g. briefing missing or inactive). The generator commits its own
-    work — we only handle the thread-safety boundary here.
+    Args:
+        briefing_id:           Briefing to generate for.
+        warmup_budget_seconds: Cap on synchronous ingestion before generation.
+                               When ``None``, falls back to the global
+                               ``BRIEFING_SOURCE_WARMUP_SECONDS`` config. The
+                               trial signup path passes a short value (e.g.
+                               20s) so the *page* doesn't block on slow feeds
+                               — the worker is still allowed to finish
+                               afterward, the brief simply uses whatever
+                               content was available at generation time.
+
+    Returns:
+        Committed ``BriefRun`` id, or ``None`` when generation produced no
+        row (briefing missing/inactive/no items).
     """
     from app.briefing.generator import generate_brief_run_for_briefing
+    from app.briefing.source_warmup import warm_up_briefing_by_id
 
-    brief_run = generate_brief_run_for_briefing(briefing_id)
+    warm_up_briefing_by_id(briefing_id, budget_seconds=warmup_budget_seconds)
+    brief_run = generate_brief_run_for_briefing(
+        briefing_id,
+        skip_warmup=True,
+    )
     return brief_run.id if brief_run else None

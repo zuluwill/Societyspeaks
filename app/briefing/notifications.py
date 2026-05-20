@@ -43,7 +43,9 @@ def notify_draft_ready(brief_run_id: int) -> dict:
     Returns:
         Dict with keys: success, sent_to, error
     """
+    from app import db
     from app.models import BriefRun, Briefing, User
+    from app.briefing.briefing_locale import resolve_briefing_locale
     from flask import url_for, current_app
 
     try:
@@ -55,10 +57,18 @@ def notify_draft_ready(brief_run_id: int) -> dict:
         if not briefing:
             return {'success': False, 'error': _('Briefing not found')}
 
-        # Only notify if approval is required
-        if briefing.mode != 'approval_required':
-            logger.debug(f"Skipping notification for briefing {briefing.id} - auto_send mode")
-            return {'success': True, 'sent_to': [], 'skipped': 'auto_send mode'}
+        # Notify whenever a brief is sitting in the approval queue and the
+        # owner needs to act on it. That covers two cases:
+        #   1. mode='approval_required' — every run waits for approval.
+        #   2. mode='auto_send' — quality gate has *held* a run that would
+        #      otherwise have shipped; the owner needs to know it's there.
+        # Approved runs and silent failures are handled elsewhere.
+        if brief_run.status not in ('generated_draft', 'awaiting_approval'):
+            logger.debug(
+                f"Skipping draft notification for BriefRun {brief_run.id} — "
+                f"status is {brief_run.status}, nothing to action."
+            )
+            return {'success': True, 'sent_to': [], 'skipped': f'status:{brief_run.status}'}
 
         # Find users to notify (owner or org members)
         recipients = []
@@ -99,6 +109,11 @@ def notify_draft_ready(brief_run_id: int) -> dict:
 
         # Send notification emails
         sent_to = []
+        # Only the quality-gate hold path populates failure_reason on an
+        # otherwise-readable run; pass it through so the email can explain
+        # *why* this is in the approval queue rather than just "draft ready".
+        hold_reason = brief_run.failure_reason if brief_run.status == 'awaiting_approval' else None
+        locale_str = resolve_briefing_locale(briefing)
         for recipient in recipients:
             success = _send_draft_notification_email(
                 recipient_email=recipient['email'],
@@ -106,7 +121,9 @@ def notify_draft_ready(brief_run_id: int) -> dict:
                 briefing_name=briefing.name,
                 scheduled_date=brief_run.scheduled_at,
                 edit_url=edit_url,
-                item_count=len(brief_run.items) if brief_run.items else 0
+                item_count=len(brief_run.items) if brief_run.items else 0,
+                hold_reason=hold_reason,
+                locale_str=locale_str,
             )
             if success:
                 sent_to.append(recipient['email'])
@@ -125,70 +142,54 @@ def _send_draft_notification_email(
     briefing_name: str,
     scheduled_date: Optional[datetime],
     edit_url: str,
-    item_count: int
+    item_count: int,
+    hold_reason: Optional[str] = None,
+    locale_str: str = 'en',
 ) -> bool:
-    """
-    Send the actual draft notification email using shared ResendClient.
+    """Send the draft/held-brief notification using a gettext-aware template."""
+    from flask import render_template
+    from flask_babel import force_locale, gettext as _, format_datetime
+    from app.lib.locale_utils import email_html_locale_kwargs
 
-    Returns:
-        True if sent successfully, False otherwise
-    """
     client = get_resend_client()
     if not client:
         logger.error("ResendClient not available for draft notification")
         return False
 
-    # Format date
-    date_str = scheduled_date.strftime('%B %d, %Y') if scheduled_date else 'your scheduled time'
+    is_held = bool(hold_reason)
 
-    # Build email content
-    subject = f"Draft Ready: {briefing_name} - {date_str}"
+    with force_locale(locale_str):
+        date_str = (
+            format_datetime(scheduled_date, format='long')
+            if scheduled_date else _('your scheduled time')
+        )
+        if is_held:
+            headline = _('Brief held for your review')
+            sub_headline = _(
+                "We held today's brief back because the quality gate caught a problem."
+            )
+            subject = _('Action needed: %(briefing)s — %(date)s', briefing=briefing_name, date=date_str)
+            cta_text = _('Review and send (or skip)')
+        else:
+            headline = _('Draft ready for review')
+            sub_headline = _('Your briefing needs your approval before sending.')
+            subject = _('Draft ready: %(briefing)s — %(date)s', briefing=briefing_name, date=date_str)
+            cta_text = _('Review & Approve Draft')
 
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-            <h1 style="margin: 0 0 8px 0; font-size: 24px; color: #1e40af;">Draft Ready for Review</h1>
-            <p style="margin: 0; color: #64748b;">Your briefing needs your approval before sending.</p>
-        </div>
-
-        <p>Hi {recipient_name},</p>
-
-        <p>A new draft of <strong>{briefing_name}</strong> is ready for your review.</p>
-
-        <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; margin: 24px 0;">
-            <p style="margin: 0 0 8px 0;"><strong>Scheduled for:</strong> {date_str}</p>
-            <p style="margin: 0;"><strong>Topics covered:</strong> {item_count} items</p>
-        </div>
-
-        <p>Please review the draft, make any necessary edits, and approve it for sending.</p>
-
-        <div style="text-align: center; margin: 32px 0;">
-            <a href="{edit_url}"
-               style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
-                Review & Approve Draft
-            </a>
-        </div>
-
-        <p style="color: #64748b; font-size: 14px;">
-            If the button doesn't work, copy and paste this link into your browser:<br>
-            <a href="{edit_url}" style="color: #2563eb;">{edit_url}</a>
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-
-        <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-            This notification was sent because you have approval required enabled for this briefing.
-            You can change this in your briefing settings.
-        </p>
-    </body>
-    </html>
-    """
+        html_content = render_template(
+            'emails/brief_draft_ready.html',
+            **email_html_locale_kwargs(locale_str),
+            recipient_name=recipient_name,
+            briefing_name=briefing_name,
+            date_str=date_str,
+            item_count=item_count,
+            hold_reason=hold_reason,
+            edit_url=edit_url,
+            headline=headline,
+            sub_headline=sub_headline,
+            cta_text=cta_text,
+            is_held=is_held,
+        )
 
     try:
         from app.lib.brief_from_email import brief_from_email_address
@@ -199,10 +200,9 @@ def _send_draft_notification_email(
             'from': f'{from_name} <{from_email}>',
             'to': [recipient_email],
             'subject': subject,
-            'html': html_content
+            'html': html_content,
         }
 
-        # Use ResendClient's retry logic
         success = client._send_with_retry(email_data)
 
         if success:

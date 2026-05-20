@@ -18,6 +18,7 @@ from flask import current_app
 
 from app import db
 from app.billing.service import get_active_subscription
+from app.briefing.template_config import apply_template_config_to_briefing
 from app.lib.posthog_utils import safe_posthog_capture
 from app.lib.time import utcnow_naive
 from app.lib.trial_abuse import can_start_trial, record_trial_start
@@ -94,6 +95,7 @@ def _create_briefing_from_template(
         accent_color=template.default_accent_color or '#3B82F6',
         status='active',
     )
+    apply_template_config_to_briefing(briefing, template)
     db.session.add(briefing)
     db.session.flush()
 

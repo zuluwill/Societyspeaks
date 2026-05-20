@@ -434,7 +434,7 @@ class BriefRun(db.Model):
     briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), nullable=False)
 
     # Status workflow
-    status = db.Column(db.String(30), default='generated_draft')  # 'generated_draft' | 'awaiting_approval' | 'approved' | 'sent' | 'failed'
+    status = db.Column(db.String(30), default='generated_draft')  # generated_draft | awaiting_approval | approved | sent | skipped | failed
 
     # Content (markdown + HTML)
     draft_markdown = db.Column(db.Text)
@@ -529,6 +529,12 @@ class BriefRunItem(db.Model):
 
     # Deeper context for "Want more detail?" feature
     deeper_context = db.Column(db.Text)  # Extended analysis and background
+
+    # Editorial: cluster of sibling stories the same headline appeared in,
+    # and the per-item context box (label + insight) the email/web template renders.
+    cluster_also_covered = db.Column(JSONB, nullable=True)  # [{name, url}, ...]
+    context_label = db.Column(db.String(100), nullable=True)  # e.g. "Market Impact"
+    context_insight = db.Column(db.Text, nullable=True)
 
     # Audio/TTS integration (XTTS v2 - open source)
     audio_url = db.Column(db.String(500))  # URL to generated audio file

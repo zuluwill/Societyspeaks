@@ -381,7 +381,7 @@ def process_generation_job(job_id: str) -> bool:
     """
     from app import db
     from app.models import Briefing, BriefRun
-    from app.briefing.generator import BriefingGenerator
+    from app.briefing.generator import generate_brief_run_for_briefing
     import random
 
     client = get_redis_client()
@@ -432,17 +432,16 @@ def process_generation_job(job_id: str) -> bool:
             _log_metrics('job_failed_permanent', {'job_id': job_id, 'reason': 'no_sources'})
             return False
 
-        job.update_status('processing', 'Selecting content from sources...')
+        job.update_status('processing', 'Fetching the latest stories from your sources...')
 
-        generator = BriefingGenerator()
         test_scheduled_at = utcnow_naive() + timedelta(microseconds=random.randint(1, 999999))
 
-        job.update_status('processing', 'Generating brief content with AI...')
-
-        brief_run = generator.generate_brief_run(
-            briefing=briefing,
+        # Routes through the single canonical entry point so source warm-up
+        # runs before selection — keeps test briefs in parity with scheduled
+        # runs and avoids the "one feed dominates" failure mode.
+        brief_run = generate_brief_run_for_briefing(
+            briefing.id,
             scheduled_at=test_scheduled_at,
-            ingested_items=None
         )
 
         if brief_run is None:

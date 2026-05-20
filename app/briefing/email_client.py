@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 from flask import render_template, current_app
 from sqlalchemy import update, func
 from app import db
-from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain, BriefEmailSend
+from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain, BriefEmailSend, User
 from app.resend_client import ResendEmailClient as BaseResendClient
 from app.storage_utils import get_base_url
 from app.briefing.link_tracker import wrap_links, recipient_hash as make_recipient_hash
@@ -315,22 +315,46 @@ class BriefingEmailClient:
         # Check if any items have audio
         has_audio = any(item.audio_url for item in items)
         
+        # Extract editorial intro for preheader (first prose block in markdown)
+        intro_text = ''
+        if content_markdown:
+            for block in content_markdown.split('\n\n'):
+                block = block.strip()
+                if block and not block.startswith('#'):
+                    intro_text = block
+                    break
+        
         # Try to render template, fallback to simple HTML
         try:
-            html = render_template(
-                'emails/brief_run.html',
-                brief_run=brief_run,
-                briefing=briefing,
-                recipient=recipient,
-                content_html=content_html,
-                view_url=view_url,
-                reader_url=reader_url,
-                unsubscribe_url=unsubscribe_url,
-                base_url=base_url,
-                company_logo_url=company_logo_url,
-                items=items,
-                has_audio=has_audio,
+            from flask_babel import force_locale
+            from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
+            from app.briefing.briefing_locale import resolve_briefing_locale
+
+            recipient_user = None
+            if recipient.email:
+                recipient_user = User.query.filter_by(email=recipient.email).first()
+            locale_str = (
+                resolve_user_locale(recipient_user)
+                if recipient_user else resolve_briefing_locale(briefing)
             )
+
+            with force_locale(locale_str):
+                html = render_template(
+                    'emails/brief_run.html',
+                    **email_html_locale_kwargs(locale_str),
+                    brief_run=brief_run,
+                    briefing=briefing,
+                    recipient=recipient,
+                    content_html=content_html,
+                    intro_text=intro_text,
+                    view_url=view_url,
+                    reader_url=reader_url,
+                    unsubscribe_url=unsubscribe_url,
+                    base_url=base_url,
+                    company_logo_url=company_logo_url,
+                    items=items,
+                    has_audio=has_audio,
+                )
         except Exception as e:
             logger.warning(f"Could not render brief_run email template: {e}, using fallback")
             html = self._fallback_html(brief_run, briefing, recipient, content_html, unsubscribe_url)

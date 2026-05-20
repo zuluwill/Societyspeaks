@@ -4,23 +4,42 @@ Briefing Generator
 Generalized brief generator for multi-tenant briefings.
 Works with IngestedItem instead of TrendingTopic.
 Creates BriefRun instead of DailyBrief.
+
+Editorial output is produced as **structured data** on ``BriefRunItem``
+columns (``cluster_also_covered``, ``context_label``, ``context_insight``)
+and rendered via the ``emails/paid_brief.html`` Jinja template. The
+generator no longer concatenates HTML strings; the template is the single
+source of truth for visual design across email and the web reader.
 """
 
-import os
 import logging
-from html import escape as html_escape
 from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.exc import IntegrityError
+from flask import render_template
+from flask_babel import lazy_gettext as _l
 from app import db
 from app.models import (
     Briefing, BriefRun, BriefRunItem, IngestedItem, InputSource
 )
 from app.trending.scorer import extract_json, get_system_api_key
+from app.briefing.story_clustering import (
+    StoryCluster,
+    attach_cluster_metadata,
+    cluster_scored_items,
+)
+from app.briefing.template_config import get_sections_for_briefing
+from app.lib.editorial import (
+    CoverageBlock,
+    QualityVerdict,
+    UnderreportedPick,
+    assess_brief_quality,
+    coverage_block_for_items,
+    find_underreported_story,
+)
 
 logger = logging.getLogger(__name__)
-
 
 class BriefingGenerator:
     """
@@ -37,7 +56,13 @@ class BriefingGenerator:
         self.api_key, self.provider = get_system_api_key()
         self.llm_available = bool(self.api_key)
         self._current_user_id = None
-        
+        # Locale and natural-language instruction the LLM should follow when
+        # writing content for the current run. Set per-run by
+        # ``generate_brief_run``; defaults keep the fallback content path
+        # working when nothing else has been set.
+        self._current_locale: Optional[str] = 'en'
+        self._llm_language: str = 'British English (analyse, centre, organisation)'
+
         if not self.llm_available:
             logger.warning("No LLM API key found. Brief will use fallback content generation.")
 
@@ -49,6 +74,44 @@ class BriefingGenerator:
                 record_token_spend(self._current_user_id, tokens_used, cost_usd, model)
             except Exception as e:
                 logger.debug(f"Could not record token spend: {e}")
+
+    def _track_quality_hold(
+        self, briefing: Briefing, brief_run: BriefRun, quality: QualityVerdict,
+    ) -> None:
+        """Emit a PostHog event whenever the quality gate holds a brief.
+
+        Visibility into how often this fires (per template, per user) is the
+        signal we need to decide whether to invest in better source coverage,
+        widen the warmup budget, or tune the thresholds in
+        ``app.lib.editorial.quality``. Best-effort — never raises into the
+        generator.
+        """
+        try:
+            from app.lib.posthog_utils import safe_posthog_capture
+            try:
+                import posthog as _posthog
+            except ImportError:
+                _posthog = None
+            distinct_id = (
+                str(self._current_user_id) if self._current_user_id else f'briefing-{briefing.id}'
+            )
+            safe_posthog_capture(
+                posthog_client=_posthog,
+                distinct_id=distinct_id,
+                event='paid_brief_held_for_quality',
+                properties={
+                    'briefing_id': briefing.id,
+                    'brief_run_id': brief_run.id,
+                    'template_slug': briefing.template.slug if briefing.template else None,
+                    'hold_reason': quality.hold_reason,
+                    'item_count': quality.item_count,
+                    'distinct_sources': quality.distinct_sources,
+                    'dominance': round(quality.dominance, 3),
+                    'configured_sources': len(briefing.sources or []),
+                },
+            )
+        except Exception as exc:
+            logger.debug(f"Could not emit quality-hold event: {exc}")
 
     def _call_llm(self, prompt: str, system_prompt: str = "You are a helpful assistant.", max_tokens: int = 500, temperature: float = 0.7, max_retries: int = 3) -> Optional[str]:
         """Call LLM API with retry logic for transient errors."""
@@ -192,9 +255,24 @@ class BriefingGenerator:
                 if admin_member:
                     self._current_user_id = admin_member.user_id
 
+            # Cache the briefing's preferred LLM-output language for the rest
+            # of this generation run. Every prompt (intro, item summary,
+            # takeaways, deeper context) reads from this so a French- or
+            # Korean-speaking owner gets content in their language, not just
+            # translated UI chrome around English prose.
+            from app.briefing.briefing_locale import (
+                llm_language_instruction, resolve_briefing_locale,
+            )
+            self._current_locale = resolve_briefing_locale(briefing)
+            self._llm_language = llm_language_instruction(self._current_locale)
+
+            selection_pool: List[IngestedItem] = []
+            cluster_source_counts: Dict[int, int] = {}
             if ingested_items is None:
-                ingested_items = self._select_items_for_briefing(briefing)
-            
+                ingested_items, selection_pool, cluster_source_counts = (
+                    self._select_items_for_briefing(briefing)
+                )
+
             if not ingested_items:
                 logger.warning(f"No items available for briefing {briefing.id}")
                 return None
@@ -233,46 +311,86 @@ class BriefingGenerator:
                 # If still not found, re-raise the error
                 raise
             
-            # Generate content
-            title = self._generate_brief_title(briefing, ingested_items)
-            intro_text = self._generate_intro_text(briefing, ingested_items)
+            # Generate content — title is briefing-level; intro/takeaways
+            # must reflect items that actually rendered (see created_items).
             
             # Use briefing's max_items setting (default 10, capped at 20)
             max_items = min(briefing.max_items or 10, 20)
-            items_created = 0
-            for position, item in enumerate(ingested_items[:max_items], start=1):
+            # Track items that actually generated cleanly. A mid-loop failure
+            # means the failed item isn't in BriefRunItem — using ``ingested_items[:N]``
+            # would mis-align downstream coverage / quality / takeaway inputs
+            # with what the reader actually sees.
+            created_items: List[IngestedItem] = []
+            for item in ingested_items[:max_items]:
+                position = len(created_items) + 1
                 try:
                     run_item = self._generate_brief_item(brief_run, item, position, briefing)
                     db.session.add(run_item)
-                    items_created += 1
+                    created_items.append(item)
                 except Exception as e:
                     logger.error(f"Failed to generate item for IngestedItem {item.id}: {e}")
                     continue
-            
-            if items_created == 0:
+
+            if not created_items:
                 logger.warning(f"No items generated for BriefRun {brief_run.id}")
                 db.session.rollback()
                 return None
-            
-            # Generate key takeaways synthesis (cross-item insights)
-            key_takeaways = self._generate_key_takeaways(briefing, ingested_items[:max_items])
-            
-            # Generate markdown and HTML with improved structure
-            brief_run.draft_markdown = self._generate_markdown(brief_run, title, intro_text, key_takeaways)
-            brief_run.draft_html = self._generate_structured_html(brief_run, title, intro_text, key_takeaways, briefing)
-            
-            # If auto_send, also set approved content
-            if briefing.mode == 'auto_send':
-                brief_run.approved_markdown = brief_run.draft_markdown
-                brief_run.approved_html = brief_run.draft_html
-                brief_run.status = 'approved'
-            
+
+            items_created = len(created_items)
+
+            from flask_babel import force_locale
+
+            with force_locale(self._current_locale):
+                title = self._generate_brief_title(briefing, created_items)
+                intro_text = self._generate_intro_text(briefing, created_items)
+                key_takeaways = self._generate_key_takeaways(briefing, created_items)
+                coverage_block = coverage_block_for_items(created_items)
+                underreported = find_underreported_story(
+                    candidates=selection_pool or ingested_items,
+                    selected_ids=[i.id for i in created_items],
+                    cluster_source_counts=cluster_source_counts,
+                )
+                brief_run.draft_markdown = self._render_markdown(
+                    title, intro_text, key_takeaways, brief_run,
+                )
+                brief_run.draft_html = self._render_html(
+                    brief_run=brief_run,
+                    briefing=briefing,
+                    intro_text=intro_text,
+                    key_takeaways=key_takeaways,
+                    coverage_block=coverage_block,
+                    underreported=underreported,
+                )
+                quality = assess_brief_quality(created_items)
+                if briefing.mode == 'auto_send':
+                    if quality.should_hold:
+                        brief_run.status = 'awaiting_approval'
+                        brief_run.failure_reason = quality.hold_reason
+                        logger.warning(
+                            "BriefRun %s held for review (briefing=%s): %s "
+                            "[items=%s sources=%s dominance=%.2f]",
+                            brief_run.id, briefing.id, quality.hold_reason,
+                            quality.item_count, quality.distinct_sources,
+                            quality.dominance,
+                        )
+                        self._track_quality_hold(briefing, brief_run, quality)
+                    else:
+                        brief_run.approved_markdown = brief_run.draft_markdown
+                        brief_run.approved_html = brief_run.draft_html
+                        brief_run.status = 'approved'
+
             db.session.commit()
 
-            logger.info(f"Generated BriefRun {brief_run.id} for briefing {briefing.name} ({items_created} items)")
+            logger.info(
+                "Generated BriefRun %s for briefing %s (%s items, %s sources, status=%s)",
+                brief_run.id, briefing.name, items_created,
+                quality.distinct_sources, brief_run.status,
+            )
 
-            # Send notification if approval is required
-            if briefing.mode == 'approval_required':
+            # Notify the owner whenever a brief is sitting in the approval
+            # queue — that includes runs the quality gate held back from
+            # auto_send. They need to know it's there to act on it.
+            if brief_run.status in ('awaiting_approval', 'generated_draft'):
                 try:
                     from app.briefing.notifications import notify_draft_ready
                     notify_draft_ready(brief_run.id)
@@ -286,19 +404,22 @@ class BriefingGenerator:
             db.session.rollback()
             return None
     
-    def _select_items_for_briefing(self, briefing: Briefing, limit: int = None) -> List[IngestedItem]:
+    def _select_items_for_briefing(
+        self, briefing: Briefing, limit: int = None,
+    ) -> Tuple[List[IngestedItem], List[IngestedItem], Dict[int, int]]:
         """
         Select items from briefing's sources using an advanced multi-factor scoring approach:
         1. Global ranking with recency decay, topic preferences, keywords, source priority, and credibility
         2. Fair selection with source diversity and discovery quota
         3. Empty results fallback with graceful degradation
-        
-        Args:
-            briefing: Briefing configuration
-            limit: Maximum number of items to select
-        
+
         Returns:
-            List of IngestedItem instances with diverse sources, prioritized by user preferences
+            Tuple of ``(selected_items, candidate_pool, cluster_source_counts)``:
+              - selected_items: items chosen for the brief (length ≤ limit)
+              - candidate_pool: every item considered (after exclude filter)
+                so the underreported finder can pick from rejects
+              - cluster_source_counts: ``{item.id -> source_count}`` so the
+                underreported finder can skip well-covered stories
         """
         from datetime import timedelta
         from collections import defaultdict
@@ -309,7 +430,7 @@ class BriefingGenerator:
         source_priorities = {bs.source_id: getattr(bs, 'priority', 1) or 1 for bs in briefing.sources}
         source_ids = list(source_priorities.keys())
         if not source_ids:
-            return []
+            return [], [], {}
         
         # Use briefing's max_items setting, or default to 10
         if limit is None:
@@ -466,45 +587,88 @@ class BriefingGenerator:
         discovery_items.sort(key=lambda x: x[1], reverse=True)
         all_unfiltered.sort(key=lambda x: x[1], reverse=True)
         
-        # Phase 2: Fair selection with diversity constraints
-        selected_items = []
-        seen_headlines = set()
-        source_counts = defaultdict(int)
+        # Phase 2: Cluster similar stories, then select with source diversity
+        clusters = cluster_scored_items(all_unfiltered)
+        preference_clusters = [
+            c for c in clusters
+            if matches_include(get_text(c.primary)) or matches_any_topic(get_text(c.primary))
+        ]
+        preference_set = set(id(c) for c in preference_clusters)
+        discovery_clusters = [c for c in clusters if id(c) not in preference_set]
+
+        selected_items: List[IngestedItem] = []
+        seen_headlines: set = set()
+        source_counts: dict = defaultdict(int)
         max_per_source = max(2, (limit // len(source_ids)) + 1) if source_ids else limit
-        
-        def select_from_pool(pool: list, max_items: int, relax_source_limit: bool = False) -> int:
-            """Select items from a pool with diversity constraints. Returns count added."""
+        min_distinct_sources = min(
+            max(3, limit // 3),
+            len(source_ids),
+        ) if source_ids else 1
+
+        def _cluster_headline(cluster: StoryCluster) -> str:
+            return normalize_headline(cluster.primary.title or '')
+
+        def _pick_cluster(cluster: StoryCluster, relax_source_limit: bool = False) -> bool:
+            if len(selected_items) >= limit:
+                return False
+            normalized = _cluster_headline(cluster)
+            if normalized in seen_headlines:
+                return False
+            primary = cluster.primary
+            if not relax_source_limit and source_counts[primary.source_id] >= max_per_source:
+                return False
+            seen_headlines.add(normalized)
+            primary._selection_score = cluster.score  # type: ignore[attr-defined]
+            attach_cluster_metadata(cluster)
+            selected_items.append(primary)
+            source_counts[primary.source_id] += 1
+            return True
+
+        def select_clusters_from_pool(
+            pool: List[StoryCluster],
+            max_items: int,
+            *,
+            relax_source_limit: bool = False,
+            diversity_first: bool = False,
+        ) -> int:
             added = 0
-            for item, score in pool:
-                if len(selected_items) >= limit or added >= max_items:
+            if diversity_first and len(set(source_counts.keys())) < min_distinct_sources:
+                represented = set(source_counts.keys())
+                for cluster in pool:
+                    if added >= max_items or len(selected_items) >= limit:
+                        break
+                    sid = cluster.primary.source_id
+                    if sid in represented:
+                        continue
+                    if _pick_cluster(cluster, relax_source_limit=relax_source_limit):
+                        represented.add(sid)
+                        added += 1
+            for cluster in pool:
+                if added >= max_items or len(selected_items) >= limit:
                     break
-                
-                normalized = normalize_headline(item.title)
-                if normalized in seen_headlines:
-                    continue
-                
-                # Enforce source diversity unless relaxed
-                if not relax_source_limit and source_counts[item.source_id] >= max_per_source:
-                    continue
-                
-                seen_headlines.add(normalized)
-                # Attach score to item for later storage
-                item._selection_score = score
-                selected_items.append(item)
-                source_counts[item.source_id] += 1
-                added += 1
+                if _pick_cluster(cluster, relax_source_limit=relax_source_limit):
+                    added += 1
             return added
-        
-        # First: select from preference pool
-        preference_selected = select_from_pool(preference_items, preference_quota)
-        
-        # Second: fill discovery quota from non-preference items
-        discovery_selected = select_from_pool(discovery_items, discovery_quota)
-        
-        # Third: if we still need more, fill from all items (keep source diversity)
+
+        preference_selected = select_clusters_from_pool(
+            preference_clusters,
+            preference_quota,
+            diversity_first=True,
+        )
+        discovery_selected = select_clusters_from_pool(
+            discovery_clusters,
+            discovery_quota,
+            diversity_first=len(set(source_counts.keys())) < min_distinct_sources,
+        )
+
         if len(selected_items) < limit:
             remaining = limit - len(selected_items)
-            select_from_pool(all_unfiltered, remaining, relax_source_limit=False)
+            select_clusters_from_pool(
+                clusters,
+                remaining,
+                relax_source_limit=False,
+                diversity_first=len(set(source_counts.keys())) < min_distinct_sources,
+            )
         
         # Empty results fallback: if filters are too aggressive, provide feedback
         filters_applied = bool(include_keywords or exclude_keywords or topic_preferences)
@@ -517,47 +681,121 @@ class BriefingGenerator:
             for item in all_items:
                 score = calculate_recency_score(item) + source_priorities.get(item.source_id, 1)
                 fallback_items.append((item, score))
-            fallback_items.sort(key=lambda x: x[1], reverse=True)
-            
-            # Apply source diversity in fallback too
+            fallback_clusters = cluster_scored_items(fallback_items)
             fallback_source_counts = defaultdict(int)
-            for item, score in fallback_items:
+            for cluster in fallback_clusters:
                 if len(selected_items) >= limit:
                     break
-                normalized = normalize_headline(item.title)
+                normalized = normalize_headline(cluster.primary.title or '')
                 if normalized in seen_headlines:
                     continue
-                # Enforce source diversity even in fallback
-                if fallback_source_counts[item.source_id] >= max_per_source:
+                if fallback_source_counts[cluster.primary.source_id] >= max_per_source:
                     continue
                 seen_headlines.add(normalized)
-                item._selection_score = score
-                selected_items.append(item)
-                fallback_source_counts[item.source_id] += 1
+                cluster.primary._selection_score = cluster.score  # type: ignore[attr-defined]
+                attach_cluster_metadata(cluster)
+                selected_items.append(cluster.primary)
+                fallback_source_counts[cluster.primary.source_id] += 1
             
             # Mark that fallback was used (can be shown to user)
             briefing._selection_fallback_used = True
         
         logger.info(
             f"Selected {len(selected_items)} items ({preference_selected} pref, {discovery_selected} discovery) "
-            f"from {len(set(i.source_id for i in selected_items))} sources for briefing {briefing.id}"
+            f"from {len(set(i.source_id for i in selected_items))} sources "
+            f"({len(clusters)} story clusters) for briefing {briefing.id}"
         )
-        
-        return selected_items
+
+        # Map each candidate item -> how many sources covered its cluster, so
+        # the underreported finder can avoid surfacing well-covered stories.
+        cluster_source_counts: Dict[int, int] = {}
+        for cluster in clusters:
+            count = len(cluster.source_names)
+            for member in cluster.all_items:
+                if member.id is not None:
+                    cluster_source_counts[member.id] = count
+
+        candidate_pool = [pair[0] for pair in all_unfiltered]
+
+        return selected_items, candidate_pool, cluster_source_counts
     
     def _generate_brief_title(self, briefing: Briefing, items: List[IngestedItem]) -> str:
-        """Generate brief title"""
-        day_name = datetime.now().strftime('%A')
+        """Generate brief title with a locale-aware day name."""
+        from datetime import date as date_cls
+        from flask_babel import format_date
+
+        day_name = format_date(date_cls.today(), format='EEEE')
         return f"{briefing.name} - {day_name}"
     
     def _generate_intro_text(self, briefing: Briefing, items: List[IngestedItem]) -> str:
-        """Generate intro text based on briefing tone"""
+        """Generate an editorial intro previewing today's stories.
+
+        Runs inside the briefing-owner's locale (set by ``generate_brief_run``
+        via ``force_locale``) so ``gettext`` resolves to the right language
+        for both the deterministic fallbacks and any user-visible chrome.
+        """
+        from flask_babel import gettext as _
+
         count = len(items)
-        
-        if briefing.template and briefing.template.default_tone == 'calm_neutral':
-            return f"Your {briefing.cadence} brief covers {count} stories from your selected sources. Focused on clarity and context."
-        
-        return f"Your {briefing.cadence} brief: {count} stories from your sources."
+        if count == 0:
+            return _("Your brief is being prepared. Check back shortly.")
+
+        distinct_sources = len({i.source_id for i in items})
+        fallback = _(
+            "Today's brief: %(count)d stories from %(sources)d of your sources, "
+            "clustered for clarity — not a raw feed dump.",
+            count=count, sources=distinct_sources,
+        )
+
+        if not self.llm_available:
+            if briefing.template and briefing.template.default_tone == 'calm_neutral':
+                return _(
+                    "Your %(cadence)s brief covers %(count)d stories from "
+                    "%(sources)d sources. Focused on clarity and context.",
+                    cadence=briefing.cadence, count=count, sources=distinct_sources,
+                )
+            return fallback
+
+        headlines = []
+        for item in items[:12]:
+            source = item.source.name if item.source else 'Unknown'
+            also = getattr(item, '_cluster_also_covered', None) or []
+            if also:
+                extra = ', '.join(n for n, _ in also[:3])
+                headlines.append(f"- [{source} + {extra}] {item.title}")
+            else:
+                headlines.append(f"- [{source}] {item.title}")
+
+        tone = briefing.tone or 'calm_neutral'
+        tone_instructions = self._get_tone_instructions(tone)
+        custom_prompt = briefing.custom_prompt or ''
+
+        prompt = f"""Write a 2-sentence editorial intro for a personalised news brief named "{briefing.name}".
+
+STORIES SELECTED TODAY:
+{chr(10).join(headlines)}
+
+Requirements:
+- Preview the themes connecting these stories (not a generic "here are N stories")
+- Calm, authoritative tone — no hype or clickbait
+- WRITE IN: {self._llm_language}
+- Do NOT list every headline; synthesise the day's through-line
+- Max 45 words
+
+WRITING STYLE: {tone_instructions}
+{f'EDITORIAL FOCUS: {custom_prompt}' if custom_prompt else ''}
+
+Return ONLY the intro prose, no labels."""
+
+        content = self._call_llm(
+            prompt,
+            system_prompt="You are an editor writing the opening of a premium newsletter.",
+            max_tokens=120,
+            temperature=0.6,
+        )
+        if content and content.strip():
+            return content.strip()
+        return fallback
     
     def _generate_brief_item(
         self,
@@ -578,44 +816,51 @@ class BriefingGenerator:
         Returns:
             BriefRunItem instance
         """
-        # Generate content via LLM
         llm_content = self._generate_item_content(ingested_item, briefing)
-        
-        # Generate deeper context (for "Want more detail?" feature)
         deeper_context = self._generate_deeper_context(ingested_item, briefing, llm_content)
-        
-        # Get source name for denormalized storage
+
         source_name = llm_content.get('source_name', '')
         if not source_name and ingested_item.source:
             source_name = ingested_item.source.name
-        
-        # Store category and context with the content for premium styling
-        category = llm_content.get('category', 'UPDATE')
-        context_label = llm_content.get('context_label', 'What This Means')
-        context_insight = llm_content.get('context_insight', '')
-        
-        # Store metadata in markdown for later use in HTML generation
-        enhanced_markdown = llm_content.get('markdown', ingested_item.content_text or '')
-        if context_insight:
-            enhanced_markdown = f"[{context_label}] {context_insight}\n\n{enhanced_markdown}"
-        
-        # Create item with category info embedded
-        run_item = BriefRunItem(
+
+        category = (llm_content.get('category') or 'UPDATE').upper()
+        context_label = llm_content.get('context_label') or None
+        context_insight = (llm_content.get('context_insight') or '').strip() or None
+
+        # Cluster metadata lives on a real column now (cluster_also_covered)
+        # instead of being marker-encoded into content_markdown.
+        also_covered_raw = getattr(ingested_item, '_cluster_also_covered', None) or []
+        cluster_also_covered = [
+            {'name': name, 'url': url}
+            for name, url in also_covered_raw
+            if name
+        ] or None
+
+        # topic_category stores the raw category, and we *also* prefix the
+        # headline with [CATEGORY] because the Jinja template and the markdown
+        # output both rely on it as a stable, parseable label.
+        headline = llm_content.get('headline', (ingested_item.title or '')[:200])
+
+        return BriefRunItem(
             brief_run_id=brief_run.id,
             position=position,
             ingested_item_id=ingested_item.id,
-            headline=f"[{category}] " + llm_content.get('headline', ingested_item.title[:200]),
-            summary_bullets=llm_content.get('bullets', [ingested_item.content_text[:200] if ingested_item.content_text else '']),
-            content_markdown=enhanced_markdown,
+            headline=f"[{category}] {headline}",
+            summary_bullets=llm_content.get(
+                'bullets',
+                [ingested_item.content_text[:200] if ingested_item.content_text else ''],
+            ),
+            content_markdown=llm_content.get('markdown', ingested_item.content_text or ''),
             content_html=llm_content.get('html', ''),
             source_name=source_name,
-            source_url=ingested_item.url,  # Link to original article
-            topic_category=category,  # Store category for analytics and diversity tracking
-            selection_score=getattr(ingested_item, '_selection_score', None),  # Score at time of selection
-            deeper_context=deeper_context
+            source_url=ingested_item.url,
+            topic_category=category,
+            selection_score=getattr(ingested_item, '_selection_score', None),
+            deeper_context=deeper_context,
+            cluster_also_covered=cluster_also_covered,
+            context_label=context_label,
+            context_insight=context_insight,
         )
-        
-        return run_item
     
     def _get_tone_instructions(self, tone: str) -> str:
         """Get writing style instructions based on tone setting."""
@@ -639,6 +884,12 @@ class BriefingGenerator:
         """
         # Get source name for attribution
         source_name = ingested_item.source.name if ingested_item.source else 'Unknown Source'
+        also_covered = getattr(ingested_item, '_cluster_also_covered', None) or []
+        also_line = ''
+        if also_covered:
+            names = [n for n, _ in also_covered if n]
+            if names:
+                also_line = f"\nALSO COVERED BY: {', '.join(names[:5])}"
         
         if not self.llm_available:
             # Fallback content
@@ -657,20 +908,23 @@ class BriefingGenerator:
         tone_instructions = self._get_tone_instructions(tone)
         custom_prompt = briefing.custom_prompt or ''
         
-        prompt = f"""Analyze this content and create an insightful brief summary:
+        prompt = f"""Analyze this content and create an insightful brief summary.
 
-SOURCE: {source_name}
+WRITE THE OUTPUT IN: {self._llm_language}
+(The category label and JSON keys stay in English — they are internal identifiers, not display copy.)
+
+SOURCE: {source_name}{also_line}
 TITLE: {ingested_item.title}
 CONTENT: {ingested_item.content_text[:3000] if ingested_item.content_text else 'No content available'}
 
 Create a summary that goes beyond just restating facts. Include:
 1. A compelling headline (max 100 chars) that captures the key insight
-2. A category label (1-2 words, uppercase) like: POLICY, REGULATION, TECHNOLOGY, MARKETS, INFRASTRUCTURE, RESEARCH, ANALYSIS, SECURITY, SUSTAINABILITY, INNOVATION
+2. A category label in ENGLISH (1-2 words, uppercase) like: POLICY, REGULATION, TECHNOLOGY, MARKETS, INFRASTRUCTURE, RESEARCH, ANALYSIS, SECURITY, SUSTAINABILITY, INNOVATION
 3. 2-3 bullet points with:
    - The key facts
    - Why this matters (implications/significance)
    - What to watch for next (if applicable)
-4. A brief "context" insight (1-2 sentences) explaining broader implications - label it as one of: "What This Means", "Key Challenge", "Market Impact", "Policy Context", or "Why It Matters"
+4. A brief "context" insight (1-2 sentences). The ``context_insight`` text is in the OUTPUT language. The ``context_label`` MUST stay in English and be one of exactly: "What This Means", "Key Challenge", "Market Impact", "Policy Context", "Why It Matters" — these are lookup keys, not display copy.
 5. A brief analysis paragraph (2-3 sentences) explaining the broader context
 
 WRITING STYLE: {tone_instructions}
@@ -745,6 +999,8 @@ Respond in JSON format:
         
         prompt = f"""Based on these news stories, identify 3-5 KEY TAKEAWAYS - the overarching themes, patterns, or insights that emerge when looking at these stories together.
 
+WRITE THE TAKEAWAYS IN: {self._llm_language}
+
 STORIES:
 {chr(10).join(items_summary)}
 
@@ -779,215 +1035,187 @@ Respond in JSON format:
         
         return []
     
-    def _generate_markdown(self, brief_run: BriefRun, title: str, intro: str, key_takeaways: List[str] = None) -> str:
-        """Generate markdown content for the brief run with key takeaways"""
+    def _render_markdown(
+        self,
+        title: str,
+        intro: str,
+        key_takeaways: List[str],
+        brief_run: BriefRun,
+    ) -> str:
+        """Render plain-text/markdown rendition of the brief — used as the
+        editorial source for the email preheader and any text-only consumers."""
         lines = [f"# {title}", "", intro, ""]
-        
-        # Add key takeaways section if available
+
         if key_takeaways:
             lines.append("## Key Takeaways")
             lines.append("")
             for takeaway in key_takeaways:
                 lines.append(f"- {takeaway}")
             lines.append("")
-        
+
         lines.append("## Today's Stories")
         lines.append("")
-        
+
         for item in sorted(brief_run.items, key=lambda x: x.position or 0):
-            lines.append(f"### {item.headline}")
+            # ``_category`` discarded; ``_`` is reserved for gettext at module scope.
+            _category, headline = self._parse_item_category_headline(item)
+            lines.append(f"### {headline}")
             if item.summary_bullets:
                 for bullet in item.summary_bullets:
                     lines.append(f"- {bullet}")
+            if item.context_insight:
+                lines.append("")
+                lines.append(
+                    f"_{item.context_label or 'What This Means'}:_ {item.context_insight}"
+                )
             if item.content_markdown:
                 lines.append("")
                 lines.append(item.content_markdown)
+            if item.cluster_also_covered:
+                names = ', '.join(
+                    c.get('name', '') for c in item.cluster_also_covered if c.get('name')
+                )
+                if names:
+                    lines.append("")
+                    lines.append(f"_Also covered by: {names}_")
             lines.append("")
-        
+
         return "\n".join(lines)
-    
-    def _generate_structured_html(
+
+    @staticmethod
+    def _parse_item_category_headline(item: BriefRunItem) -> tuple[str, str]:
+        headline = item.headline or ''
+        category = (item.topic_category or 'UPDATE').upper()
+        if headline.startswith('[') and ']' in headline:
+            bracket_end = headline.index(']')
+            category = headline[1:bracket_end].upper()
+            headline = headline[bracket_end + 2:].strip()
+        return category, headline
+
+    # Editorial palette used by the Jinja template. Keep these together with
+    # the generator so a designer changing colours has one obvious place to
+    # look — the template just renders against `category_colors[item.category]`.
+    CATEGORY_COLORS = {
+        'POLICY': '#1e40af', 'REGULATION': '#dc2626', 'TECHNOLOGY': '#7c3aed',
+        'MARKETS': '#059669', 'INFRASTRUCTURE': '#d97706', 'RESEARCH': '#0891b2',
+        'ANALYSIS': '#6366f1', 'SECURITY': '#be123c', 'SUSTAINABILITY': '#059669',
+        'INNOVATION': '#7c3aed', 'UPDATE': None,  # filled in with accent_color at render time
+    }
+    CONTEXT_BOX_COLORS = {
+        'What This Means': ('#f0fdfa', '#115e59'),
+        'Key Challenge':   ('#fffbeb', '#92400e'),
+        'Market Impact':   ('#f0fdf4', '#166534'),
+        'Policy Context':  ('#eff6ff', '#1e40af'),
+        'Why It Matters':  ('#faf5ff', '#6b21a8'),
+    }
+
+    def _build_section_buckets(
+        self, brief_run: BriefRun, briefing: Briefing,
+    ) -> List[Tuple[str, List[BriefRunItem]]]:
+        """Bucket items into editorial sections per the template config.
+
+        Returns ordered ``[(section_name, [items])]``. When the template
+        defines no sections (or items don't match any), returns a single
+        ``("Today's Stories", items)`` bucket so the renderer stays simple.
+        """
+        items = sorted(brief_run.items, key=lambda x: x.position or 0)
+        sections = get_sections_for_briefing(briefing)
+        if not sections:
+            return [(_l("Today's Stories"), items)] if items else []
+
+        buckets: Dict[str, List[BriefRunItem]] = {name: [] for name, _labels in sections}
+        other: List[BriefRunItem] = []
+        for item in items:
+            # ``_headline`` discarded; we only need the category for bucketing.
+            category, _headline = self._parse_item_category_headline(item)
+            placed = False
+            for section_name, labels in sections:
+                if category in labels:
+                    buckets[section_name].append(item)
+                    placed = True
+                    break
+            if not placed:
+                other.append(item)
+
+        result: List[Tuple[str, List[BriefRunItem]]] = []
+        for section_name, _labels in sections:
+            if buckets[section_name]:
+                result.append((section_name, buckets[section_name]))
+        if other:
+            result.append((_l("More Stories"), other))
+        return result
+
+    def _build_source_roster(
+        self, brief_run: BriefRun, briefing: Briefing,
+    ) -> Dict[str, Any]:
+        """Aggregate the source list shown in the email footer.
+
+        Counts each distinct source name across selected items and their
+        clusters; ``configured`` is the count the user set up. Templates
+        only render this when ``used`` is non-empty.
+        """
+        used_names: List[str] = []
+        seen: set = set()
+
+        def _add(name: Optional[str]) -> None:
+            if not name:
+                return
+            key = name.lower()
+            if key in seen:
+                return
+            seen.add(key)
+            used_names.append(name)
+
+        for item in brief_run.items:
+            name = item.source_name or ''
+            if not name and item.ingested_item and item.ingested_item.source:
+                name = item.ingested_item.source.name
+            _add(name)
+            for sibling in (item.cluster_also_covered or []):
+                _add(sibling.get('name'))
+
+        return {
+            'used': used_names,
+            'configured': len(briefing.sources or []),
+        }
+
+    def _render_html(
         self,
+        *,
         brief_run: BriefRun,
-        title: str,
-        intro: str,
+        briefing: Briefing,
+        intro_text: str,
         key_takeaways: List[str],
-        briefing: Briefing
+        coverage_block: Optional[CoverageBlock],
+        underreported: Optional[UnderreportedPick],
     ) -> str:
-        """Generate premium-styled HTML matching world-class newsletter standards"""
-        accent_color = briefing.accent_color or '#1e40af'
-        
-        # Category color palette for visual variety
-        category_colors = {
-            'POLICY': '#1e40af', 'REGULATION': '#dc2626', 'TECHNOLOGY': '#7c3aed',
-            'MARKETS': '#059669', 'INFRASTRUCTURE': '#d97706', 'RESEARCH': '#0891b2',
-            'ANALYSIS': '#6366f1', 'SECURITY': '#be123c', 'SUSTAINABILITY': '#059669',
-            'INNOVATION': '#7c3aed', 'UPDATE': accent_color
-        }
-        
-        # Context box color palette
-        context_box_colors = {
-            'What This Means': ('#f0fdfa', '#115e59'),
-            'Key Challenge': ('#fffbeb', '#92400e'),
-            'Market Impact': ('#f0fdf4', '#166534'),
-            'Policy Context': ('#eff6ff', '#1e40af'),
-            'Why It Matters': ('#faf5ff', '#6b21a8'),
-        }
-        
-        # Build key takeaways HTML with premium styling
-        takeaways_html = ''
-        if key_takeaways:
-            takeaways_items = ''.join([f'<li style="margin-bottom: 10px; padding-left: 8px; color: #1f2937;">{html_escape(t)}</li>' for t in key_takeaways])
-            takeaways_html = f'''
-            <div style="background-color: #f8fafc; border-left: 4px solid {accent_color}; padding: 20px 24px; margin-bottom: 28px; border-radius: 0 8px 8px 0;">
-                <h2 style="font-family: Georgia, 'Times New Roman', serif; color: {accent_color}; font-size: 18px; font-weight: 700; margin: 0 0 14px 0;">Key Takeaways</h2>
-                <ul style="margin: 0; padding-left: 20px; line-height: 1.7; font-size: 15px;">
-                    {takeaways_items}
-                </ul>
-            </div>
-            '''
-        
-        # Build stories HTML with premium newsletter styling
-        stories_html = ''
-        for idx, item in enumerate(sorted(brief_run.items, key=lambda x: x.position or 0)):
-            # Get source name
-            source_name = item.source_name or ''
-            if not source_name and item.ingested_item and item.ingested_item.source:
-                source_name = item.ingested_item.source.name
-            
-            # Extract category from headline if embedded (format: "[CATEGORY] headline")
-            headline = item.headline or ''
-            category = 'UPDATE'
-            if headline.startswith('[') and ']' in headline:
-                bracket_end = headline.index(']')
-                category = headline[1:bracket_end].upper()
-                headline = headline[bracket_end + 2:].strip()  # Remove "[CATEGORY] " prefix
-            
-            category_color = category_colors.get(category, accent_color)
-            
-            # Escape content to prevent XSS
-            safe_category = html_escape(category)
-            safe_headline = html_escape(headline)
-            safe_source_name = html_escape(source_name)
-            
-            # Category label with premium styling
-            category_html = f'''
-            <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {category_color};">{safe_category}</p>
-            '''
-            
-            # Headline with Georgia serif font
-            headline_html = f'''
-            <h3 style="margin: 0 0 12px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.3;">{safe_headline}</h3>
-            '''
-            
-            # Bullets with enhanced styling
-            bullets_html = ''
-            if item.summary_bullets:
-                bullets_items = ''.join([f'<li style="margin-bottom: 8px; color: #374151;">{html_escape(b)}</li>' for b in item.summary_bullets])
-                bullets_html = f'<ul style="margin: 0 0 16px 0; padding-left: 20px; line-height: 1.65; font-size: 15px;">{bullets_items}</ul>'
-            
-            # Extract context from content_markdown if embedded (format: "[Label] insight\n\nrest")
-            context_html = ''
-            content_markdown = item.content_markdown or ''
-            context_label = 'What This Means'
-            context_insight = ''
-            
-            if content_markdown.startswith('[') and ']' in content_markdown:
-                bracket_end = content_markdown.index(']')
-                context_label = content_markdown[1:bracket_end]
-                rest = content_markdown[bracket_end + 2:]
-                if '\n\n' in rest:
-                    context_insight, content_markdown = rest.split('\n\n', 1)
-                else:
-                    context_insight = rest
-                    content_markdown = ''
-            
-            bg_color, text_color = context_box_colors.get(context_label, ('#f0fdfa', '#115e59'))
-            
-            if context_insight:
-                # Create premium callout box with extracted context
-                safe_context_label = html_escape(context_label)
-                safe_context_insight = html_escape(context_insight[:300])
-                context_html = f'''
-                <div style="background-color: {bg_color}; border-radius: 6px; padding: 14px 16px; margin: 16px 0 0 0;">
-                    <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: {text_color}; text-transform: uppercase;">{safe_context_label}</p>
-                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">{safe_context_insight}</p>
-                </div>
-                '''
-            
-            # Render remaining analysis/narrative body if available
-            analysis_html = ''
-            if content_markdown and content_markdown.strip():
-                # Convert markdown to simple HTML paragraphs
-                safe_analysis_text = html_escape(content_markdown.strip()[:500])
-                analysis_html = f'''
-                <p style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 16px 0 0 0; font-style: italic;">
-                    {safe_analysis_text}
-                </p>
-                '''
-            elif item.content_html and item.content_html.strip():
-                # Use pre-rendered HTML if available - already sanitized on ingest
-                analysis_html = f'''
-                <div style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 16px 0 0 0; font-style: italic;">
-                    {item.content_html}
-                </div>
-                '''
-            
-            # Source attribution with clickable link
-            source_html = ''
-            source_url = item.source_url or ''
-            if not source_url and item.ingested_item:
-                source_url = item.ingested_item.url or ''
-            
-            # Escape URL for href attribute
-            safe_source_url = html_escape(source_url)
-            
-            if source_name:
-                if source_url:
-                    source_html = f'''
-                <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
-                    Source: <a href="{safe_source_url}" style="color: {accent_color}; text-decoration: underline;" target="_blank">{safe_source_name}</a>
-                </p>
-                '''
-                else:
-                    source_html = f'''
-                <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
-                    Source: <span style="color: #374151;">{safe_source_name}</span>
-                </p>
-                '''
-            
-            stories_html += f'''
-            <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 24px; margin-bottom: 24px;">
-                {category_html}
-                {headline_html}
-                {bullets_html}
-                {context_html}
-                {analysis_html}
-                {source_html}
-            </div>
-            '''
-        
-        # Full HTML structure with premium styling
-        safe_intro = html_escape(intro) if intro else ''
-        html = f'''
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <p style="color: #4b5563; font-size: 16px; line-height: 1.75; margin-bottom: 28px;">{safe_intro}</p>
-            {takeaways_html}
-            <h2 style="font-family: Georgia, 'Times New Roman', serif; color: #0f172a; font-size: 22px; font-weight: 700; margin: 28px 0 20px 0; padding-bottom: 12px; border-bottom: 2px solid {accent_color};">Today's Stories</h2>
-            {stories_html}
-        </div>
-        '''
-        
-        return html
-    
-    def _markdown_to_html(self, markdown: str) -> str:
-        """Convert markdown to HTML (simple implementation)"""
-        # Simple markdown to HTML (can be enhanced with markdown library)
-        html = markdown.replace('\n# ', '\n<h1>').replace('\n## ', '\n<h2>')
-        html = html.replace('\n- ', '\n<li>')
-        # Wrap in basic structure
-        return f"<div class='brief-content'>{html}</div>"
-    
+        """Render the brief body via the canonical Jinja partial.
+
+        The body is stored in ``brief_run.draft_html``. The email shell
+        (``emails/brief_run.html``) embeds it; the web reader renders
+        the same partial. One source of truth for visual design.
+        """
+        from flask_babel import force_locale
+        from app.briefing.briefing_locale import resolve_briefing_locale
+
+        locale_str = resolve_briefing_locale(briefing)
+        with force_locale(locale_str):
+            return render_template(
+                'briefing/_paid_brief_body.html',
+                brief_run=brief_run,
+                briefing=briefing,
+                accent_color=briefing.accent_color or '#1e40af',
+                intro_text=intro_text or '',
+                key_takeaways=key_takeaways or [],
+                coverage_block=coverage_block,
+                underreported=underreported,
+                section_buckets=self._build_section_buckets(brief_run, briefing),
+                source_roster=self._build_source_roster(brief_run, briefing),
+                category_colors=self.CATEGORY_COLORS,
+                context_box_colors=self.CONTEXT_BOX_COLORS,
+                parse_item_headline=self._parse_item_category_headline,
+            )
+
     def _generate_deeper_context(
         self,
         ingested_item: IngestedItem,
@@ -1043,7 +1271,7 @@ Generate a deeper dive (3-4 paragraphs) that provides:
 WRITING STYLE: {tone_instructions}
 
 Guidelines:
-- Use British English (analyse, centre, organisation)
+- Write in: {self._llm_language}
 - Be specific with numbers, dates, and names
 - Provide genuine insight, not just restate the summary
 - Connect this story to larger trends or patterns
@@ -1084,10 +1312,11 @@ Return ONLY the deeper context text (no JSON, no labels, just the prose)."""
         html = markdown.replace('\n', '<br>')
         return f"<p>{html}</p>"
 
-
 def generate_brief_run_for_briefing(
     briefing_id: int,
-    scheduled_at: Optional[datetime] = None
+    scheduled_at: Optional[datetime] = None,
+    *,
+    skip_warmup: bool = False,
 ) -> Optional[BriefRun]:
     """
     Convenience function to generate a BriefRun for a briefing.
@@ -1095,10 +1324,14 @@ def generate_brief_run_for_briefing(
     Args:
         briefing_id: Briefing ID
         scheduled_at: When to schedule (defaults to now)
+        skip_warmup: Set when caller already ran source warm-up (first-brief path).
     
     Returns:
         BriefRun instance or None
     """
+    from flask import current_app
+    from app.briefing.source_warmup import warm_up_briefing_sources
+
     briefing = db.session.get(Briefing, briefing_id)
     if not briefing:
         logger.error(f"Briefing {briefing_id} not found")
@@ -1107,6 +1340,10 @@ def generate_brief_run_for_briefing(
     if briefing.status != 'active':
         logger.info(f"Briefing {briefing_id} is not active, skipping")
         return None
+
+    if not skip_warmup:
+        budget = float(current_app.config.get('BRIEFING_SOURCE_WARMUP_SECONDS', 60))
+        warm_up_briefing_sources(briefing, budget_seconds=budget)
     
     if scheduled_at is None:
         scheduled_at = utcnow_naive()

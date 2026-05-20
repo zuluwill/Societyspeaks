@@ -10,6 +10,7 @@ from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
 from app.briefing import briefing_bp
+from app.briefing.template_config import apply_template_config_to_briefing
 from app.briefing.validators import (
     validate_email, validate_briefing_name, validate_rss_url,
     validate_file_upload, validate_timezone, validate_cadence,
@@ -229,6 +230,8 @@ def create_input_source_from_news_source(news_source_id, user):
     Returns:
         InputSource instance (existing or newly created)
     """
+    from app.briefing.source_bridge import apply_news_source_metadata
+
     news_source = db.get_or_404(NewsSource, news_source_id)
     
     # Check if InputSource already exists for this NewsSource
@@ -238,6 +241,8 @@ def create_input_source_from_news_source(news_source_id, user):
     ).first()
     
     if existing:
+        # Backfill metadata on legacy rows created before the bridge existed.
+        apply_news_source_metadata(existing, news_source)
         return existing
     
     # Create new InputSource from NewsSource
@@ -251,6 +256,7 @@ def create_input_source_from_news_source(news_source_id, user):
         status='ready',
         last_fetched_at=news_source.last_fetched_at
     )
+    apply_news_source_metadata(input_source, news_source)
     
     db.session.add(input_source)
     db.session.flush()  # Use flush instead of commit to keep transaction atomic
@@ -464,7 +470,7 @@ def check_briefing_permission(briefing, error_message=None, redirect_to='detail'
         tuple: (is_allowed: bool, redirect_response or None)
     """
     if not can_access_briefing(current_user, briefing):
-        msg = error_message or 'You do not have permission to access this briefing'
+        msg = error_message or _('You do not have permission to access this briefing')
         flash(msg, 'error')
         
         if redirect_to == 'detail':
@@ -475,6 +481,32 @@ def check_briefing_permission(briefing, error_message=None, redirect_to='detail'
             return False, redirect(url_for(redirect_to, briefing_id=briefing.id))
     
     return True, None
+
+
+def attach_source_to_briefing(
+    briefing: Briefing, source: InputSource, *, allow_extracting: bool = False,
+) -> bool:
+    """Attach ``source`` to ``briefing``. Returns True when newly linked."""
+    existing = BriefingSource.query.filter_by(
+        briefing_id=briefing.id, source_id=source.id,
+    ).first()
+    if existing:
+        return False
+    if source.status == 'failed':
+        return False
+    if source.status == 'extracting' and not allow_extracting:
+        return False
+    db.session.add(BriefingSource(briefing_id=briefing.id, source_id=source.id))
+    return True
+
+
+def _redirect_after_source_action(briefing_id: int | None = None):
+    """Return users to their briefing when they started from one."""
+    if briefing_id:
+        briefing = db.session.get(Briefing, briefing_id)
+        if briefing and can_access_briefing(current_user, briefing):
+            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    return redirect(url_for('briefing.list_sources'))
 
 
 def source_owner_required(f):
@@ -1106,12 +1138,18 @@ def start_trial_complete():
     # in their inbox.
     _send_welcome_from_william_once(current_user, result.briefing)
 
-    # Kick off synchronous first-brief generation. Bounded wait so the
-    # request never blocks longer than the deadline; worker keeps running
-    # on timeout and the scheduler will pick up the row.
+    # Kick off synchronous first-brief generation. We bound *both* the
+    # warmup ingest (20s) and the route's wait (25s) so the signup page
+    # never hangs longer than a typical HTTP proxy timeout (~30s on most
+    # platforms). When the worker isn't done by the deadline we return
+    # status='pending' and the worker finishes in the background — the
+    # "preparing" banner on the detail page tells the user to refresh.
     from app.briefing.first_brief import generate_first_brief_sync
-    # Return immediately; worker continues in background (see detail preparing banner).
-    first_brief = generate_first_brief_sync(result.briefing.id, deadline_seconds=0)
+    first_brief = generate_first_brief_sync(
+        result.briefing.id,
+        deadline_seconds=25,
+        warmup_budget_seconds=20,
+    )
     _track_posthog(
         'paid_briefing_first_brief_generated',
         current_user.id,
@@ -1132,17 +1170,17 @@ def start_trial_complete():
 
     if first_brief.status == 'ready':
         flash(
-            _("Your trial is live and your first brief is ready below."),
+            _("Your trial is live — your first brief is ready below. Tomorrow's full edition arrives at your chosen time."),
             'success',
         )
     elif first_brief.status == 'pending':
         flash(
-            _("Your trial is live. Your first brief is being built — refresh in a minute, or check your inbox tomorrow morning."),
+            _("Your trial is live. We're fetching your sources and building your first brief — refresh in a minute, or check your inbox tomorrow morning."),
             'success',
         )
     else:  # 'failed'
         flash(
-            _("Your trial is live. Your first brief arrives in your inbox tomorrow morning."),
+            _("Your trial is live. Your first full brief arrives tomorrow morning once all your sources have been fetched."),
             'success',
         )
 
@@ -1423,7 +1461,8 @@ def use_template(template_id):
                 accent_color=template.default_accent_color or '#3B82F6',
                 status='active'
             )
-            
+            apply_template_config_to_briefing(briefing, template)
+
             db.session.add(briefing)
             db.session.flush()  # Get briefing.id for source linking
 
@@ -1521,6 +1560,9 @@ def create_briefing():
                 preferred_send_minute = 0
             mode = request.form.get('mode', 'auto_send')
             visibility = request.form.get('visibility', 'private')
+            form_tone = request.form.get('tone', 'calm_neutral')
+            form_max_items = request.form.get('max_items', type=int) or 10
+            form_accent_color = (request.form.get('accent_color') or '#1e40af').strip()
 
             # Validate inputs
             is_valid, error = validate_briefing_name(name)
@@ -1639,12 +1681,14 @@ def create_briefing():
                 from_name=from_name if owner_type == 'org' else None,
                 from_email=from_email if (owner_type == 'org' and sending_domain_id) else None,
                 sending_domain_id=sending_domain_id if owner_type == 'org' else None,
-                tone=template_tone,
-                max_items=template_max_items,
+                tone=template_tone or form_tone,
+                max_items=template_max_items or form_max_items,
                 custom_prompt=template_custom_prompt,
                 guardrails=template_guardrails if template_guardrails else None,
-                accent_color=template_accent_color
+                accent_color=template_accent_color or form_accent_color,
             )
+            if template:
+                apply_template_config_to_briefing(briefing, template)
 
             db.session.add(briefing)
             db.session.flush()  # Get briefing.id
@@ -1681,9 +1725,9 @@ def create_briefing():
             })
 
             if sources_added > 0:
-                msg = f'Briefing "{name}" created successfully with {sources_added} sources from template!'
+                msg = _('Briefing "%(name)s" created successfully with %(count)d sources from template!', name=name, count=sources_added)
                 if sources_failed > 0:
-                    msg += f' ({sources_failed} sources could not be added)'
+                    msg += ' ' + _('(%(count)d sources could not be added)', count=sources_failed)
                 flash(msg, 'success')
             else:
                 if sources_failed > 0:
@@ -2161,61 +2205,78 @@ def delete_source(source_id):
 @limiter.limit("10/minute")
 def add_rss_source():
     """Add RSS feed source"""
+    briefing_id = request.args.get('briefing_id', type=int) or request.form.get('briefing_id', type=int)
+
     if request.method == 'POST':
         try:
             name = request.form.get('name', '').strip()
             url = request.form.get('url', '').strip()
             owner_type = request.form.get('owner_type', 'user')
-            
-            # Validate inputs
+
             is_valid, error = validate_briefing_name(name)
             if not is_valid:
                 flash(error, 'error')
-                return redirect(url_for('briefing.add_rss_source'))
-            
+                return redirect(url_for('briefing.add_rss_source', briefing_id=briefing_id))
+
             is_valid, error = validate_rss_url(url)
             if not is_valid:
                 flash(error, 'error')
-                return redirect(url_for('briefing.add_rss_source'))
-            
-            # Determine owner_id
+                return redirect(url_for('briefing.add_rss_source', briefing_id=briefing_id))
+
             owner_id = current_user.id
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
                     flash(_('You need to be part of an organization to create org sources'), 'error')
-                    return redirect(url_for('briefing.add_rss_source'))
+                    return redirect(url_for('briefing.add_rss_source', briefing_id=briefing_id))
                 owner_id = user_org.id
-            
-            # Check for duplicate URL to prevent multi-click duplicates
+
             existing_source = InputSource.query.filter_by(
                 owner_type=owner_type,
                 owner_id=owner_id,
-                type='rss'
+                type='rss',
             ).filter(
-                InputSource.config_json['url'].astext == url
+                InputSource.config_json['url'].astext == url,
             ).first()
-            
+
             if existing_source:
                 flash(_('A source with this RSS feed URL already exists: "%(name)s"', name=existing_source.name), 'info')
+                if briefing_id:
+                    briefing = db.session.get(Briefing, briefing_id)
+                    if briefing and can_access_briefing(current_user, briefing):
+                        if attach_source_to_briefing(briefing, existing_source):
+                            db.session.commit()
+                            flash(_('Added to your briefing.'), 'success')
+                        return _redirect_after_source_action(briefing_id)
                 return redirect(url_for('briefing.list_sources'))
-            
-            # Check if we already have this URL as a system source or curated news source
+
             system_source = InputSource.query.filter_by(
-                owner_type='system',
-                type='rss'
+                owner_type='system', type='rss',
             ).filter(
-                InputSource.config_json['url'].astext == url
+                InputSource.config_json['url'].astext == url,
             ).first()
-            
-            if not system_source:
-                # Also check NewsSource table for curated sources
-                news_source = NewsSource.query.filter_by(feed_url=url).first()
+            news_source = NewsSource.query.filter_by(feed_url=url).first()
+
+            if news_source or system_source:
                 if news_source:
-                    flash(_('This feed is already available as a curated source: "%(name)s". You can add it directly from the source library.', name=news_source.name), 'info')
-            elif system_source:
-                flash(_('This feed is already available as a system source: "%(name)s". You can add it directly from the source library.', name=system_source.name), 'info')
-            
+                    source = create_input_source_from_news_source(news_source.id, current_user)
+                else:
+                    source = system_source
+                flash(
+                    _('This feed is already in our curated library as "%(name)s" — we added that instead of creating a duplicate.',
+                      name=source.name),
+                    'info',
+                )
+                if briefing_id:
+                    briefing = db.session.get(Briefing, briefing_id)
+                    if briefing and can_access_briefing(current_user, briefing):
+                        if attach_source_to_briefing(briefing, source):
+                            flash(_('Added to your briefing.'), 'success')
+                        db.session.commit()
+                        return _redirect_after_source_action(briefing_id)
+                db.session.commit()
+                return redirect(url_for('briefing.browse_sources', briefing_id=briefing_id) if briefing_id else url_for('briefing.list_sources'))
+
             source = InputSource(
                 owner_type=owner_type,
                 owner_id=owner_id,
@@ -2223,21 +2284,26 @@ def add_rss_source():
                 type='rss',
                 config_json={'url': url},
                 status='ready',
-                enabled=True
+                enabled=True,
             )
-            
             db.session.add(source)
+            db.session.flush()
+
+            if briefing_id:
+                briefing = db.session.get(Briefing, briefing_id)
+                if briefing and can_access_briefing(current_user, briefing):
+                    attach_source_to_briefing(briefing, source)
+
             db.session.commit()
-            
             flash(_('RSS source "%(name)s" added successfully', name=name), 'success')
-            return redirect(url_for('briefing.list_sources'))
-            
+            return _redirect_after_source_action(briefing_id)
+
         except Exception as e:
             logger.error(f"Error adding RSS source: {e}", exc_info=True)
             db.session.rollback()
             flash(_('An error occurred while adding the source'), 'error')
-    
-    return render_template('briefing/add_rss_source.html')
+
+    return render_template('briefing/add_rss_source.html', briefing_id=briefing_id)
 
 
 @briefing_bp.route('/sources/upload', methods=['GET', 'POST'])
@@ -2308,6 +2374,17 @@ def upload_source():
             
             record_upload(current_user.id, file_size)
             
+            if briefing_id:
+                briefing = db.session.get(Briefing, briefing_id)
+                if briefing and can_access_briefing(current_user, briefing):
+                    if attach_source_to_briefing(briefing, source, allow_extracting=True):
+                        db.session.commit()
+                        flash(
+                            _('File uploaded and added to your briefing. Text extraction is in progress — stories will appear once processing finishes.'),
+                            'success',
+                        )
+                        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+
             flash(_('File uploaded successfully. Text extraction in progress...'), 'success')
             
             # Redirect back to briefing if provided, otherwise to sources list
@@ -2824,7 +2901,7 @@ def edit_run(briefing_id, run_id):
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
         briefing,
-        error_message='You do not have permission to edit this run',
+        error_message=_('You do not have permission to edit this run'),
         redirect_to='detail'
     )
     if not is_allowed:
@@ -2842,6 +2919,7 @@ def edit_run(briefing_id, run_id):
                 brief_run.approved_by_user_id = current_user.id
                 brief_run.approved_at = utcnow_naive()
                 brief_run.status = 'approved'
+                brief_run.failure_reason = None
                 
                 db.session.commit()
                 
@@ -2849,18 +2927,28 @@ def edit_run(briefing_id, run_id):
                 if briefing.mode == 'auto_send' or request.form.get('send_now') == 'true':
                     from app.briefing.email_client import send_brief_run_emails
                     result = send_brief_run_emails(brief_run.id)
-                    flash(f'Brief approved and sent to {result["sent"]} recipients', 'success')
+                    flash(_('Brief approved and sent to %(count)d recipients', count=result['sent']), 'success')
                 else:
                     flash(_('Brief approved (ready to send)'), 'success')
                 
                 return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
+
+            elif action == 'skip':
+                brief_run.status = 'skipped'
+                brief_run.failure_reason = None
+                db.session.commit()
+                flash(_("Skipped today's edition. Nothing will be sent."), 'success')
+                return redirect(url_for('briefing.detail', briefing_id=briefing_id))
             
             elif action == 'edit':
                 # Update draft content
                 brief_run.draft_markdown = request.form.get('content_markdown', brief_run.draft_markdown)
-                # Regenerate HTML from markdown (simple)
-                draft_md = brief_run.draft_markdown or ''
-                brief_run.draft_html = draft_md.replace('\n', '<br>')
+                # Preserve rich HTML from the Jinja renderer — manual markdown
+                # edits are stored for audit/history but must not replace the
+                # designed brief body with newline-to-<br> conversion.
+                if not brief_run.draft_html:
+                    draft_md = brief_run.draft_markdown or ''
+                    brief_run.draft_html = draft_md.replace('\n', '<br>')
                 
                 # Save edit history
                 from app.models import BriefEdit
@@ -3398,17 +3486,18 @@ def test_generate(briefing_id):
         
         # Fallback to synchronous generation (Redis not available or queue failed)
         logger.info(f"Falling back to synchronous generation for briefing {briefing_id}")
-        from app.briefing.generator import BriefingGenerator
+        from app.briefing.generator import generate_brief_run_for_briefing
         from datetime import timedelta
         import random
-        
-        generator = BriefingGenerator()
+
         test_scheduled_at = utcnow_naive() + timedelta(microseconds=random.randint(1, 999999))
-        
-        brief_run = generator.generate_brief_run(
-            briefing=briefing,
+
+        # Single entry point — warm-up runs before selection so the fallback
+        # path doesn't ship the same "one feed dominates" brief the async
+        # path was fixed for.
+        brief_run = generate_brief_run_for_briefing(
+            briefing_id,
             scheduled_at=test_scheduled_at,
-            ingested_items=None
         )
         
         if brief_run is None:
@@ -3625,7 +3714,9 @@ def duplicate_briefing(briefing_id):
         return redirect_response
     
     try:
-        # Create new briefing
+        # Create new briefing — copy editorial config so the duplicate behaves
+        # like the original (filters, keywords, tone, branding). Without this
+        # the copy silently degrades to a generic recency-only feed.
         new_briefing = Briefing(
             owner_type=briefing.owner_type,
             owner_id=briefing.owner_id,
@@ -3638,7 +3729,17 @@ def duplicate_briefing(briefing_id):
             preferred_send_minute=getattr(briefing, 'preferred_send_minute', 0),
             mode=briefing.mode,
             visibility='private',  # Default to private for copies
-            status='active'
+            status='active',
+            tone=briefing.tone,
+            max_items=briefing.max_items,
+            include_summaries=briefing.include_summaries,
+            custom_prompt=briefing.custom_prompt,
+            guardrails=briefing.guardrails,
+            topic_preferences=briefing.topic_preferences,
+            filters_json=briefing.filters_json,
+            accent_color=briefing.accent_color,
+            header_text=briefing.header_text,
+            logo_url=briefing.logo_url,
         )
         db.session.add(new_briefing)
         db.session.flush()  # Get new_briefing.id

@@ -278,7 +278,9 @@ class Config:
     # Model override for first-brief synchronous generation. Falls back to the briefing's normal model.
     FIRST_BRIEF_MODEL_OVERRIDE = os.getenv('FIRST_BRIEF_MODEL_OVERRIDE') or None
     # Hard deadline (seconds) for synchronous first-brief generation before falling back to scheduled run.
-    FIRST_BRIEF_SYNC_DEADLINE_SECONDS = _env_int('FIRST_BRIEF_SYNC_DEADLINE_SECONDS', 30)
+    FIRST_BRIEF_SYNC_DEADLINE_SECONDS = _env_int('FIRST_BRIEF_SYNC_DEADLINE_SECONDS', 90)
+    # Seconds to synchronously ingest briefing sources before each generation run.
+    BRIEFING_SOURCE_WARMUP_SECONDS = _env_int('BRIEFING_SOURCE_WARMUP_SECONDS', 60)
     # /briefings/sample page demo briefing id (env-set after seeding a demo briefing).
     BRIEFING_SAMPLE_DEMO_BRIEFING_ID = _env_int('BRIEFING_SAMPLE_DEMO_BRIEFING_ID', 0) or None
     # Where Enterprise enquiries land. Configurable so staging / future handoff

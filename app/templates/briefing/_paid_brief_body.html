@@ -1,0 +1,228 @@
+{# ============================================================================
+   Paid Brief — canonical editorial body partial.
+
+   One source of truth for the inner body of every paid Briefing, used by:
+     - emails/brief_run.html  (the email shell wraps this with header/footer)
+     - briefing/run_view.html (the web reader embeds this directly)
+
+   Generator builds the data, this template renders it. No HTML lives in
+   Python any more. Inline styles only — the email rendering path strips
+   stylesheets, so anything that needs to survive Gmail must be inline.
+
+   Static labels use gettext; dynamic LLM/user copy uses |escape_i18n.
+============================================================================ #}
+
+{# ---------- Editorial intro --------------------------------------------- #}
+{% if intro_text %}
+<p style="color: #4b5563; font-size: 16px; line-height: 1.75; margin: 0 0 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    {{ intro_text|escape_i18n }}
+</p>
+{% endif %}
+
+{# ---------- Key Takeaways ----------------------------------------------- #}
+{% if key_takeaways %}
+<div style="background-color: #f8fafc; border-left: 4px solid {{ accent_color }}; padding: 20px 24px; margin: 0 0 28px 0; border-radius: 0 8px 8px 0;">
+    <h2 style="font-family: Georgia, 'Times New Roman', serif; color: {{ accent_color }}; font-size: 18px; font-weight: 700; margin: 0 0 14px 0; letter-spacing: 0.2px;">
+        {{ _('Key Takeaways') }}
+    </h2>
+    <ul style="margin: 0; padding: 0 0 0 20px; line-height: 1.7; font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {% for takeaway in key_takeaways %}
+        <li style="margin-bottom: 10px; padding-left: 4px; color: #1f2937;">{{ takeaway|escape_i18n }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{# ---------- Coverage Perspective ---------------------------------------- #}
+{% if coverage_block and coverage_block.has_signal %}
+<div style="margin: 0 0 28px 0; padding: 18px 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+    <p style="margin: 0 0 12px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ accent_color }}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ _('Coverage perspective') }}
+    </p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0 0 10px 0; border-collapse: collapse;">
+        <tr style="height: 10px;">
+            {% if coverage_block.left_pct > 0 %}
+            <td style="background-color: #0066CC; width: {{ coverage_block.left_pct }}%; font-size: 0; line-height: 0;">&nbsp;</td>
+            {% endif %}
+            {% if coverage_block.center_pct > 0 %}
+            <td style="background-color: #9933CC; width: {{ coverage_block.center_pct }}%; font-size: 0; line-height: 0;">&nbsp;</td>
+            {% endif %}
+            {% if coverage_block.right_pct > 0 %}
+            <td style="background-color: #CC0000; width: {{ coverage_block.right_pct }}%; font-size: 0; line-height: 0;">&nbsp;</td>
+            {% endif %}
+        </tr>
+    </table>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0 0 10px 0;">
+        <tr>
+            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569;">
+                <span style="display: inline-block; width: 8px; height: 8px; background-color: #0066CC; border-radius: 50%; margin-right: 6px; vertical-align: middle;"></span>
+                <strong style="color: #1f2937;">{{ coverage_block.left_pct }}%</strong> {{ _('left') }}
+                <span style="color: #cbd5e1; margin: 0 8px;">·</span>
+                <span style="display: inline-block; width: 8px; height: 8px; background-color: #9933CC; border-radius: 50%; margin-right: 6px; vertical-align: middle;"></span>
+                <strong style="color: #1f2937;">{{ coverage_block.center_pct }}%</strong> {{ _('centre') }}
+                <span style="color: #cbd5e1; margin: 0 8px;">·</span>
+                <span style="display: inline-block; width: 8px; height: 8px; background-color: #CC0000; border-radius: 50%; margin-right: 6px; vertical-align: middle;"></span>
+                <strong style="color: #1f2937;">{{ coverage_block.right_pct }}%</strong> {{ _('right') }}
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.55; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ coverage_block.notes|escape_i18n }}
+    </p>
+
+    {% if coverage_block.blindspot %}
+    <div style="margin-top: 12px; padding: 10px 14px; background-color: #fffbeb; border-left: 3px solid #d97706; border-radius: 0 4px 4px 0;">
+        <p style="margin: 0; font-size: 12px; color: #78350f; line-height: 1.55; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <strong>{{ _('Blindspot:') }}</strong>
+            {%- if coverage_block.blindspot == 'left' %}
+            {{ _('Your sources today underrepresent left-leaning perspectives. Worth checking how that side framed these stories before forming a view.') }}
+            {%- else %}
+            {{ _('Your sources today underrepresent right-leaning perspectives. Worth checking how that side framed these stories before forming a view.') }}
+            {%- endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{# ---------- Under the Radar -------------------------------------------- #}
+{% if underreported %}
+<div style="margin: 0 0 28px 0; padding: 18px 20px; background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px;">
+    <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #92400e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ _('Under the radar') }}
+    </p>
+    <p style="margin: 0 0 6px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 17px; font-weight: 700; color: #78350f; line-height: 1.35;">
+        {% if underreported.url %}
+        <a href="{{ underreported.url|e }}" style="color: #78350f; text-decoration: none;" target="_blank" rel="noopener">{{ underreported.title|escape_i18n }}</a>
+        {% else %}
+        {{ underreported.title|escape_i18n }}
+        {% endif %}
+    </p>
+    <p style="margin: 0 0 8px 0; font-size: 12px; color: #92400e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ _('Only %(source)s in your feed covered this.', source=underreported.source_name) }}
+    </p>
+    {% if underreported.summary %}
+    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #78350f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ underreported.summary|escape_i18n }}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{# ---------- Stories by section ----------------------------------------- #}
+{% for section_name, section_items in section_buckets %}
+    {# section_name is a lazy_gettext proxy from template_config — stringifies
+       to the translated label under the currently-forced locale. #}
+    <h2 style="font-family: Georgia, 'Times New Roman', serif; color: #0f172a; font-size: 22px; font-weight: 700; margin: 28px 0 16px 0; padding: 0 0 10px 0; border-bottom: 2px solid {{ accent_color }}; letter-spacing: 0.2px;">
+        {{ section_name }}
+    </h2>
+
+    {% for item in section_items %}
+        {% set parsed = parse_item_headline(item) %}
+        {% set category = parsed[0] %}
+        {% set headline = parsed[1] %}
+        {% set category_color = category_colors.get(category) or accent_color %}
+        {% set context_colors = context_box_colors.get(item.context_label, ('#f0fdfa', '#115e59')) %}
+
+        <div style="border-bottom: 1px solid #e5e7eb; padding: 0 0 24px 0; margin: 0 0 24px 0;">
+            <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ category_color }}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                {{ category|escape_i18n }}
+            </p>
+
+            <h3 style="margin: 0 0 12px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+                {% if item.source_url %}
+                <a href="{{ item.source_url|e }}" style="color: #0f172a; text-decoration: none;" target="_blank" rel="noopener">{{ headline|escape_i18n }}</a>
+                {% else %}
+                {{ headline|escape_i18n }}
+                {% endif %}
+            </h3>
+
+            {% if item.summary_bullets %}
+            <ul style="margin: 0 0 16px 0; padding: 0 0 0 20px; line-height: 1.65; font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                {% for bullet in item.summary_bullets %}
+                <li style="margin-bottom: 8px; color: #374151;">{{ bullet|escape_i18n }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if item.context_insight %}
+            {# context_label is stored as an English lookup key (LLM is told to
+               keep it that way so palette lookup works). Translate it for
+               display via gettext against the known English msgids. #}
+            {% set label_translations = {
+                'What This Means': _('What This Means'),
+                'Key Challenge':   _('Key Challenge'),
+                'Market Impact':   _('Market Impact'),
+                'Policy Context':  _('Policy Context'),
+                'Why It Matters':  _('Why It Matters'),
+            } %}
+            {% set context_label_display = label_translations.get(item.context_label, _('What This Means')) %}
+            <div style="background-color: {{ context_colors[0] }}; border-radius: 6px; padding: 14px 16px; margin: 0 0 16px 0;">
+                <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: {{ context_colors[1] }}; text-transform: uppercase; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                    {{ context_label_display|escape_i18n }}
+                </p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                    {{ item.context_insight[:300]|escape_i18n }}
+                </p>
+            </div>
+            {% endif %}
+
+            {% if item.content_markdown and item.content_markdown.strip() %}
+            <p style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 0; font-style: italic; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                {{ item.content_markdown.strip()[:500]|escape_i18n }}
+            </p>
+            {% endif %}
+
+            {% set source_name = item.source_name %}
+            {% if not source_name and item.ingested_item and item.ingested_item.source %}
+                {% set source_name = item.ingested_item.source.name %}
+            {% endif %}
+            {% set source_url = item.source_url or (item.ingested_item.url if item.ingested_item else '') %}
+
+            {% if source_name %}
+            <p style="margin: 14px 0 0 0; font-size: 12px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                {{ _('Source:') }}
+                {% if source_url %}
+                <a href="{{ source_url|e }}" style="color: {{ accent_color }}; text-decoration: underline;" target="_blank" rel="noopener">{{ source_name|escape_i18n }}</a>
+                {% else %}
+                <span style="color: #374151;">{{ source_name|escape_i18n }}</span>
+                {% endif %}
+            </p>
+            {% endif %}
+
+            {% if item.cluster_also_covered %}
+            <p style="margin: 6px 0 0 0; font-size: 12px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                {{ _('Also covered by:') }}
+                {% for sibling in item.cluster_also_covered[:4] %}
+                    {% if sibling.url %}
+                    <a href="{{ sibling.url|e }}" style="color: {{ accent_color }}; text-decoration: underline;" target="_blank" rel="noopener">{{ sibling.name|escape_i18n }}</a>
+                    {% else %}
+                    <span style="color: #374151;">{{ sibling.name|escape_i18n }}</span>
+                    {% endif %}
+                    {%- if not loop.last %} <span style="color: #cbd5e1;">·</span> {% endif %}
+                {% endfor %}
+            </p>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{# ---------- Source roster footer --------------------------------------- #}
+{% if source_roster.used %}
+<div style="margin: 32px 0 0 0; padding: 18px 20px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+    <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ accent_color }}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ _('Sources today') }}
+    </p>
+    <p style="margin: 0 0 6px 0; font-size: 13px; line-height: 1.6; color: #475569; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {{ source_roster.used | join(' · ') | escape_i18n }}
+    </p>
+    <p style="margin: 0; font-size: 12px; color: #94a3b8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        {% set used_count = source_roster.used|length %}
+        {{ ngettext('%(num)d source in today\'s brief', '%(num)d sources in today\'s brief', used_count, num=used_count) }}
+        {%- if source_roster.configured %} · {{ ngettext('%(num)d source configured', '%(num)d sources configured', source_roster.configured, num=source_roster.configured) }}{% endif -%}.
+    </p>
+</div>
+{% endif %}

@@ -179,3 +179,6 @@ docs/
 
 # Replit deployment/config (stays local; Replit still uses it from filesystem)
 replit.md
+
+# Dev preview output from tests/test_paid_brief_preview.py — not for commit
+tmp_paid_brief_*.html

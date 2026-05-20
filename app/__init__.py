@@ -643,6 +643,15 @@ def create_app():
     from app.email_utils import email_anchor_html
     app.jinja_env.globals['email_anchor_html'] = email_anchor_html
 
+    # Flask-Babel only auto-registers its formatters on request context; email
+    # templates render under bare ``app.app_context()`` and would otherwise
+    # raise ``UndefinedError: 'format_datetime' is undefined``. Register
+    # explicitly so the same templates work in both contexts.
+    from flask_babel import format_datetime, format_date, format_time
+    app.jinja_env.globals['format_datetime'] = format_datetime
+    app.jinja_env.globals['format_date'] = format_date
+    app.jinja_env.globals['format_time'] = format_time
+
     from app.lib.jinja_i18n import escape_i18n
     app.jinja_env.filters['escape_i18n'] = escape_i18n
 

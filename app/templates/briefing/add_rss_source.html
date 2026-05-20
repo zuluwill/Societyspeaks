@@ -25,7 +25,7 @@
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-primary-800">{{ _('How it works') }}</h3>
                     <div class="mt-2 text-sm text-primary-700">
-                        <p>{{ _('After adding your RSS feed, it will appear in your sources list. Content from the feed will be pulled automatically when your briefing runs. This typically happens within 15 minutes of your scheduled delivery time.') }}</p>
+                        <p>{{ _('After adding your RSS feed, content is fetched automatically before each brief is generated — usually within a minute of your first brief or scheduled delivery.') }}</p>
                     </div>
                 </div>
             </div>
@@ -34,6 +34,9 @@
         <div class="bg-white shadow rounded-lg">
             <form method="POST" class="p-6 space-y-6" id="add-rss-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if briefing_id %}
+                <input type="hidden" name="briefing_id" value="{{ briefing_id }}">
+                {% endif %}
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">{{ _('Source Name *') }}</label>
                     <input type="text" name="name" id="name" required
@@ -61,7 +64,7 @@
                 </div>
 
                 <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                    <a href="{{ url_for('briefing.list_sources') }}"
+                    <a href="{{ url_for('briefing.detail', briefing_id=briefing_id) if briefing_id else url_for('briefing.list_sources') }}"
                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         {{ _('Cancel') }}
                     </a>
