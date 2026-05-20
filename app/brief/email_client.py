@@ -247,8 +247,6 @@ class ResendClient:
 
     def _from_for_brief(self, brief: DailyBrief = None) -> str:
         """Return from address with cadence-appropriate display name."""
-        if '<' in self._from_email_addr and '>' in self._from_email_addr:
-            return self._from_email_addr
         if brief and getattr(brief, 'brief_type', 'daily') == 'weekly':
             return f'Weekly Brief <{self._from_email_addr}>'
         return self.from_email
