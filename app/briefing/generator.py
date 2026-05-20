@@ -13,6 +13,7 @@ source of truth for visual design across email and the web reader.
 """
 
 import logging
+import re
 from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
 from typing import List, Optional, Dict, Any, Tuple
@@ -40,6 +41,26 @@ from app.lib.editorial import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _strip_html(text: str | None) -> str:
+    """Strip HTML tags from text, returning clean plain text.
+
+    Uses a simple regex rather than a full parser so it works without
+    any extra dependencies.  The regex covers the vast majority of
+    real-world cases produced by RSS feeds and article scrapers:
+    complete tags, self-closing tags, and CDATA/comment blocks.
+    Decoded HTML entities are left intact (they are plain-text safe).
+    """
+    if not text:
+        return ''
+    # Remove complete and self-closing tags: <tag ...> </tag> <!-- ... -->
+    clean = re.sub(r'<[^>]+>', ' ', text)
+    # Collapse multiple whitespace/newlines introduced by tag removal
+    clean = re.sub(r'[ \t]+', ' ', clean)
+    clean = re.sub(r'\n{3,}', '\n\n', clean)
+    return clean.strip()
+
 
 class BriefingGenerator:
     """
@@ -893,13 +914,12 @@ Return ONLY the intro prose, no labels."""
         
         if not self.llm_available:
             # Fallback content
+            clean_text = _strip_html(ingested_item.content_text) or ingested_item.title
             return {
                 'headline': ingested_item.title[:200],
-                'bullets': [
-                    ingested_item.content_text[:200] if ingested_item.content_text else ingested_item.title
-                ],
-                'markdown': ingested_item.content_text or ingested_item.title,
-                'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>",
+                'bullets': [clean_text[:200]],
+                'markdown': clean_text,
+                'html': f"<p>{clean_text}</p>",
                 'source_name': source_name
             }
         
@@ -915,7 +935,7 @@ WRITE THE OUTPUT IN: {self._llm_language}
 
 SOURCE: {source_name}{also_line}
 TITLE: {ingested_item.title}
-CONTENT: {ingested_item.content_text[:3000] if ingested_item.content_text else 'No content available'}
+CONTENT: {_strip_html(ingested_item.content_text)[:3000] if ingested_item.content_text else 'No content available'}
 
 Create a summary that goes beyond just restating facts. Include:
 1. A compelling headline (max 100 chars) that captures the key insight
@@ -962,14 +982,15 @@ Respond in JSON format:
                 logger.error(f"LLM generation failed: {e}")
         
         # Fallback with premium structure
+        clean_text = _strip_html(ingested_item.content_text) or ingested_item.title
         return {
             'headline': ingested_item.title[:200],
             'category': 'UPDATE',
-            'bullets': [ingested_item.content_text[:200] if ingested_item.content_text else ingested_item.title],
+            'bullets': [clean_text[:200]],
             'context_label': 'What This Means',
             'context_insight': '',
-            'markdown': ingested_item.content_text or ingested_item.title,
-            'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>",
+            'markdown': clean_text,
+            'html': f"<p>{clean_text}</p>",
             'source_name': source_name
         }
     
