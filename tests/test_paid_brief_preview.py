@@ -187,9 +187,9 @@ def test_render_preview_full_email(app, db, tmp_path):
         has_audio=False,
     )
 
-    with open('/Users/williamroberts/Code/personal/Societyspeaks/tmp_paid_brief_preview.html', 'w') as f:
+    with open('/tmp/paid_brief_preview.html', 'w') as f:
         f.write(full_email)
-    with open('/Users/williamroberts/Code/personal/Societyspeaks/tmp_paid_brief_body_only.html', 'w') as f:
+    with open('/tmp/paid_brief_body_only.html', 'w') as f:
         f.write('<!doctype html><html><head><meta charset="utf-8"><title>Body preview</title></head>'
                 '<body style="margin:0;padding:40px;background:#f1f5f9;">'
                 '<div style="max-width:640px;margin:0 auto;background:#ffffff;padding:32px 28px;border-radius:8px;">'
