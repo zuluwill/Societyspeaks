@@ -17,22 +17,12 @@ is itself a strong editorial signal.
 """
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Iterable, List, Optional, Sequence
 
 from app.lib.time import utcnow_naive
-
-
-def _strip_html(text: str) -> str:
-    """Strip HTML tags and collapse whitespace to plain text."""
-    clean = re.sub(r'<[^>]+>', ' ', text)
-    clean = re.sub(r'[ \t]+', ' ', clean)
-    return clean.strip()
-
-
-# Stories older than this aren't "under the radar," they're "missed."
+from app.utils.text_processing import strip_html_tags
 MAX_AGE_HOURS = 36
 
 
@@ -98,9 +88,9 @@ def find_underreported_story(
     if best is None:
         return None
 
-    summary = _strip_html((getattr(best, 'content_text', None) or '').strip())
-    if summary:
-        summary = summary[:280].rsplit(' ', 1)[0] + ('…' if len(summary) > 280 else '')
+    summary = strip_html_tags((getattr(best, 'content_text', None) or '').strip())
+    if summary and len(summary) > 280:
+        summary = summary[:280].rsplit(' ', 1)[0] + '…'
 
     source_name = getattr(best, 'source_name', None) or ''
     if not source_name:
