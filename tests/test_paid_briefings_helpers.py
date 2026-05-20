@@ -11,6 +11,12 @@ from unittest.mock import patch
 import pytest
 
 from app.lib.email_normalize import normalize_trial_email
+from app.lib.user_display import (
+    derive_profile_from_email,
+    friendly_display_name,
+    initials_from_name,
+    is_auto_generated_profile,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -213,3 +219,60 @@ def test_can_start_trial_ip_rate_limit_blocks_after_threshold(app):
 
     assert ok is False
     assert reason == 'ip_rate_limit'
+
+
+# ---------------------------------------------------------------------------
+# user_display (trial greetings + profile names)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize('email, expected_name', [
+    ('william.roberts@gmail.com', 'William Roberts'),
+    ('williamjlroberts+testbrief@gmail.com', 'Williamjlroberts'),
+    ('alice@example.com', 'Alice'),
+    ('test@gmail.com', 'New member'),
+    ('x@example.com', 'New member'),
+])
+def test_derive_profile_from_email(email, expected_name):
+    assert derive_profile_from_email(email)['full_name'] == expected_name
+
+
+def test_friendly_display_name_uses_profile_first(app, db):
+    from app.models import User, IndividualProfile
+
+    with app.app_context():
+        user = User(username='testuser', email='test@example.com', password='x')
+        db.session.add(user)
+        db.session.flush()
+        profile = IndividualProfile(user_id=user.id, full_name='Eric Smith', slug='eric-smith')
+        user.profile_type = 'individual'
+        db.session.add(profile)
+        db.session.commit()
+        assert friendly_display_name(user) == 'Eric'
+
+
+def test_friendly_display_name_generic_email_says_there(app, db):
+    from app.models import User
+
+    with app.app_context():
+        user = User(username='test', email='test@gmail.com', password='x')
+        db.session.add(user)
+        db.session.commit()
+        assert friendly_display_name(user) == 'there'
+
+
+def test_is_auto_generated_profile_detects_username_placeholder():
+    class _Profile:
+        full_name = 'testuser'
+
+    class _User:
+        username = 'testuser'
+        email = 'alice@example.com'
+
+    assert is_auto_generated_profile(_Profile(), _User()) is True
+    _Profile.full_name = 'Eric Smith'
+    assert is_auto_generated_profile(_Profile(), _User()) is False
+
+
+def test_initials_from_name():
+    assert initials_from_name('William Roberts') == 'WR'
+    assert initials_from_name('Alex') == 'A'

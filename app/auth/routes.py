@@ -149,10 +149,12 @@ def _auto_create_individual_profile_for_trial(user) -> IndividualProfile:
     """Create the minimal IndividualProfile required to bypass the profile gate.
 
     Called when a user arrives via the self-serve paid-briefings trial flow.
-    Uses the user's username as ``full_name`` (best fallback available) and
-    infers ``country`` from ``Accept-Language``. The user can complete the
-    rest of the profile later from the dashboard — we never block the brief.
+    ``full_name`` is derived from the signup email (see ``user_display``), not
+    from ``username``. The user can complete the rest of the profile later —
+    we never block the brief.
     """
+    from app.lib.user_display import derive_profile_from_email
+
     try:
         from app.programmes.journey import infer_journey_country_from_accept_language
         country = infer_journey_country_from_accept_language(
@@ -161,7 +163,8 @@ def _auto_create_individual_profile_for_trial(user) -> IndividualProfile:
     except Exception:
         country = None
 
-    full_name = user.username or (user.email.split('@', 1)[0] if user.email else 'New member')
+    submitted = session.get('briefing_trial_submitted_email')
+    full_name = derive_profile_from_email(submitted or user.email)['full_name']
     profile = IndividualProfile(
         user_id=user.id,
         full_name=full_name,

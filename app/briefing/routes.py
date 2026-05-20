@@ -784,13 +784,11 @@ def _handle_start_trial_post(featured_templates, default_slug):
     email = extract_clean_email(email_raw)
     template_slug = (request.form.get('template') or default_slug).strip()
     timezone = (request.form.get('timezone') or 'UTC').strip()[:64]
-    first_name = (request.form.get('first_name') or '').strip()[:100]
     ip = request.remote_addr
 
-    # Stash timezone and first name so the magic-link round-trip can use them on /complete.
-    # Defaults to UTC if the JS detection fell back or was tampered with.
+    # Stash timezone and the typed email for profile derivation on magic-link consume.
     session['briefing_trial_timezone'] = timezone
-    session['briefing_trial_first_name'] = first_name
+    session['briefing_trial_submitted_email'] = email
 
     if not email:
         flash(_("Please enter a valid email address."), 'error')
@@ -897,7 +895,7 @@ def _handle_start_trial_post(featured_templates, default_slug):
             _external=True,
         )
         from app.resend_client import send_magic_login_email
-        send_magic_login_email(user, magic_url, display_name=first_name or None)
+        send_magic_login_email(user, magic_url, submitted_email=email)
         _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
             'template_slug': template_slug,
             'is_returning_email': is_returning_email,
@@ -909,8 +907,10 @@ def _handle_start_trial_post(featured_templates, default_slug):
 
     return render_template(
         'briefing/start_check_inbox.html',
-        email=user.email,
+        email=email,
+        stored_email=user.email if is_returning_email and email.lower() != (user.email or '').lower() else None,
         template=template,
+        is_returning_email=is_returning_email,
     )
 
 
@@ -1079,32 +1079,20 @@ def start_trial_complete():
         flash(_("Welcome back — your brief is set up and ready."), 'info')
         return redirect(url_for('briefing.detail', briefing_id=result.briefing.id))
 
-    # New trial — if we collected a first name on the sign-up form, update the
-    # IndividualProfile that was auto-created by the auth route using username as
-    # a placeholder. Replacing it with the real name means the nav shows "Hi
-    # Alex" and the initials avatar is correct from the very first page view.
-    first_name = session.pop('briefing_trial_first_name', None)
-    if first_name:
-        try:
-            from app.models import IndividualProfile
-            profile = IndividualProfile.query.filter_by(user_id=current_user.id).first()
-            if profile:
-                profile.full_name = first_name
-                db.session.commit()
-            elif not current_user.profile_type:
-                from app.models._base import generate_unique_slug
-                unique_slug = generate_unique_slug(IndividualProfile, first_name, fallback='user')
-                profile = IndividualProfile(
-                    user_id=current_user.id,
-                    full_name=first_name,
-                    slug=unique_slug,
-                )
-                current_user.profile_type = 'individual'
-                db.session.add(profile)
-                db.session.commit()
-        except Exception as exc:
-            db.session.rollback()
-            logger.warning(f"Could not set trial profile name for user {current_user.id}: {exc}")
+    # Refresh auto-generated profile names from the signup email (returning
+    # users with placeholder profiles, or cross-device if auth already ran).
+    submitted_email = session.pop('briefing_trial_submitted_email', None)
+    try:
+        from app.lib.user_display import apply_trial_profile_display_name
+        apply_trial_profile_display_name(
+            current_user, submitted_email=submitted_email,
+        )
+    except Exception as exc:
+        db.session.rollback()
+        logger.warning(
+            "Could not apply trial profile display name for user %s: %s",
+            current_user.id, exc,
+        )
 
     # New trial — fire a one-shot "from William" welcome note (idempotent
     # via Redis SETNX on user id) before sync generation starts; sending an
@@ -1116,7 +1104,8 @@ def start_trial_complete():
     # request never blocks longer than the deadline; worker keeps running
     # on timeout and the scheduler will pick up the row.
     from app.briefing.first_brief import generate_first_brief_sync
-    first_brief = generate_first_brief_sync(result.briefing.id, deadline_seconds=3)
+    # Return immediately; worker continues in background (see detail preparing banner).
+    first_brief = generate_first_brief_sync(result.briefing.id, deadline_seconds=0)
     _track_posthog(
         'paid_briefing_first_brief_generated',
         current_user.id,
@@ -1211,6 +1200,13 @@ def list_briefings():
         ).first())
     )
 
+    is_self_serve_trial = bool(
+        active_sub
+        and active_sub.status == 'trialing'
+        and (active_sub.extra_data or {}).get('trial_source') == 'self_serve'
+        and not active_sub.stripe_subscription_id
+    )
+
     return render_template(
         'briefing/list.html',
         user_briefings=user_briefings,
@@ -1220,6 +1216,7 @@ def list_briefings():
         activation_pending=activation_pending,
         trial_days_remaining=trial_days_remaining,
         is_past_due=is_past_due,
+        is_self_serve_trial=is_self_serve_trial,
     )
 
 

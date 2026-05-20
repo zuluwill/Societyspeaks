@@ -464,16 +464,18 @@ class ResendEmailClient:
             base_url=self.base_url,
         )
 
-    def send_magic_login_link(self, user, magic_url: str, display_name: str = None) -> bool:
+    def send_magic_login_link(self, user, magic_url: str, *, submitted_email: str = None) -> bool:
         """Send a magic-link sign-in email.
 
         The URL points at the landing page (GET), which shows a Continue button
         that POSTs to consume the token — defeats email-scanner prefetchers
         that would otherwise burn a one-shot token before the user clicks.
         """
+        from app.lib.user_display import friendly_display_name
+
         # Tail of the URL is the signed token; use a short prefix as dedup key.
         _token_tail = magic_url.rstrip('/').rsplit('/', 1)[-1][:16]
-        greeting_name = display_name or user.username or 'User'
+        greeting_name = friendly_display_name(user, submitted_email=submitted_email)
         return self._send_transactional_email(
             user,
             template_stem='emails/magic_login',
@@ -1138,11 +1140,11 @@ def send_welcome_email(user, verification_url: Optional[str] = None) -> bool:
         return False
 
 
-def send_magic_login_email(user, magic_url: str, display_name: str = None) -> bool:
+def send_magic_login_email(user, magic_url: str, *, submitted_email: str = None) -> bool:
     """Send a magic-link sign-in email. Never raises."""
     try:
         client = get_resend_client()
-        return client.send_magic_login_link(user, magic_url, display_name=display_name)
+        return client.send_magic_login_link(user, magic_url, submitted_email=submitted_email)
     except Exception as e:
         logger.error(f"Failed to send magic-login email: {e}")
         return False
@@ -1353,13 +1355,15 @@ def _send_user_transactional_email(
         logger.error(f"Failed to send '{subject}': user has no email")
         return False
 
-    username = getattr(user, 'username', None) or 'there'
+    from app.lib.user_display import friendly_display_name
+
+    greeting_name = context.pop('username', None) or friendly_display_name(user)
     try:
         client = client or get_resend_client()
         html = _render_for_user(
             user,
             template,
-            username=username,
+            username=greeting_name,
             base_url=client.base_url,
             **context,
         )

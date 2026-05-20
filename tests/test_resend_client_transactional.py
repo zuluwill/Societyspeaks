@@ -74,7 +74,11 @@ def test_send_user_transactional_email_uses_given_client_and_renders(monkeypatch
     assert len(render_calls) == 1
     template_name, kwargs = render_calls[0]
     assert template_name == 'emails/trial_ending.html'
-    assert kwargs['username'] == 'alice'
+    # Templates receive the friendly display name (derived via
+    # app.lib.user_display.friendly_display_name), not the raw username —
+    # 'alice@example.com' → 'Alice' so the greeting in trial emails is
+    # title-cased even when the User row's username is lowercase.
+    assert kwargs['username'] == 'Alice'
     assert kwargs['base_url'] == client.base_url
     assert kwargs['days_remaining'] == 3
     assert kwargs['manage_billing_url'] == 'https://example.com/billing/card-update'

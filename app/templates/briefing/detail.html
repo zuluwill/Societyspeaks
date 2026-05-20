@@ -405,7 +405,7 @@
                             <p class="text-sm text-blue-700 mt-0.5">{{ _('This usually takes under a minute. This page will refresh automatically.') }}</p>
                         </div>
                     </div>
-                    <script>
+                    <script nonce="{{ csp_nonce() }}">
                     (function () {
                         var reloaded = sessionStorage.getItem('brief-auto-reloaded');
                         if (!reloaded) {

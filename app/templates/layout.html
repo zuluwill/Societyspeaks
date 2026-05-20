@@ -759,6 +759,7 @@
             {% endif %}
 
             {% if current_user.is_authenticated %}
+            {% from 'components/profile_avatar.html' import profile_avatar %}
             <!-- Authenticated Desktop Menu -->
             <div class="relative ml-3">
               <button
@@ -769,48 +770,16 @@
                 aria-haspopup="true"
               >
                 <span class="sr-only">{{ _('Open user menu') }}</span>
-                {% if current_user.profile_type == 'individual' %}
-                {% if current_user.individual_profile and current_user.individual_profile.profile_image %}
-                <img
-                  class="h-8 w-8 rounded-full object-cover"
-                  src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) }}"
-                  alt="{{ _('Profile photo') }}"
-                />
-                {% else %}
-                {% set _nav_full = current_user.individual_profile.full_name if current_user.individual_profile else current_user.username %}
-                {% set _nav_parts = _nav_full.split() %}
-                {% set _nav_init = (_nav_parts[0][0] + _nav_parts[-1][0])|upper if _nav_parts|length > 1 else _nav_parts[0][0]|upper %}
-                <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                  <span class="text-sm font-medium text-white">{{ _nav_init }}</span>
-                </div>
-                {% endif %}
-                <span class="ml-2"
-                  >{{ current_user.individual_profile.full_name if
-                  current_user.individual_profile else current_user.username
-                  }}</span
-                >
-                {% elif current_user.profile_type == 'company' %}
-                <img
-                  class="h-8 w-8 rounded-lg object-cover"
-                  src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
-                  alt="{{ _('Company logo') }}"
-                  onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
-                />
-                <span class="ml-2"
-                  >{{ current_user.company_profile.company_name if
-                  current_user.company_profile else current_user.username
-                  }}</span
-                >
-                {% else %}
-                <div
-                  class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center"
-                >
-                  <span class="text-sm font-medium text-white">
-                    {{ current_user.username[:1].upper() }}
-                  </span>
-                </div>
-                <span class="ml-2">{{ current_user.username }}</span>
-                {% endif %}
+                {{ profile_avatar(current_user) }}
+                <span class="ml-2">
+                  {% if current_user.profile_type == 'individual' and current_user.individual_profile %}
+                    {{ current_user.individual_profile.full_name }}
+                  {% elif current_user.profile_type == 'company' and current_user.company_profile %}
+                    {{ current_user.company_profile.company_name }}
+                  {% else %}
+                    {{ current_user.username }}
+                  {% endif %}
+                </span>
                 <svg
                   class="ml-2 h-5 w-5"
                   viewBox="0 0 20 20"
@@ -1088,37 +1057,7 @@
             <div class="border-t border-primary-500 pt-4 pb-3">
               <div class="flex items-center px-5">
                 <div class="flex-shrink-0">
-                  {% if current_user.profile_type == 'individual' %}
-                  {% if current_user.individual_profile and current_user.individual_profile.profile_image %}
-                  <img
-                    class="h-8 w-8 rounded-full object-cover"
-                    src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) }}"
-                    alt="{{ _('Profile photo') }}"
-                  />
-                  {% else %}
-                  {% set _mnav_full = current_user.individual_profile.full_name if current_user.individual_profile else current_user.username %}
-                  {% set _mnav_parts = _mnav_full.split() %}
-                  {% set _mnav_init = (_mnav_parts[0][0] + _mnav_parts[-1][0])|upper if _mnav_parts|length > 1 else _mnav_parts[0][0]|upper %}
-                  <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                    <span class="text-sm font-medium text-white">{{ _mnav_init }}</span>
-                  </div>
-                  {% endif %}
-                  {% elif current_user.profile_type == 'company' %}
-                  <img
-                    class="h-8 w-8 rounded-lg object-cover"
-                    src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
-                    alt="{{ _('Company logo') }}"
-                    onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
-                  />
-                  {% else %}
-                  <div
-                    class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center"
-                  >
-                    <span class="text-sm font-medium text-white">
-                      {{ current_user.username[:1].upper() }}
-                    </span>
-                  </div>
-                  {% endif %}
+                  {{ profile_avatar(current_user) }}
                 </div>
                 <div class="ml-3">
                   <div class="text-base font-medium text-white">

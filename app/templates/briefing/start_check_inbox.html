@@ -21,9 +21,14 @@
       <p class="text-lg text-slate-600 mb-2">
         {{ _("We've sent a sign-in link to") }}
       </p>
-      <p class="text-lg font-semibold text-slate-900 mb-8 break-all">
+      <p class="text-lg font-semibold text-slate-900 {% if stored_email %}mb-2{% else %}mb-8{% endif %} break-all">
         {{ email }}
       </p>
+      {% if stored_email %}
+      <p class="text-sm text-slate-500 mb-8">
+        {{ _('Linked to your existing account (%(email)s).', email=stored_email) }}
+      </p>
+      {% endif %}
 
       <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-left mb-8">
         <ol class="space-y-4 text-slate-700">

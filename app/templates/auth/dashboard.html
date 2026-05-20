@@ -2,6 +2,7 @@
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
 {% from "components/timezone_select.html" import timezone_select %}
+{% from "components/profile_avatar.html" import profile_avatar %}
 {% block content %}
 
 {# Derive a friendly display name — fall back to username if anything is missing/empty #}
@@ -101,10 +102,7 @@
             {% if profile %}
                 <div class="flex items-center mb-5">
                     {% if current_user.profile_type == 'individual' %}
-                        <img src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
-                             alt="{{ _('Profile photo') }}"
-                             class="w-14 h-14 rounded-full object-cover ring-2 ring-primary-100"
-                             onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';">
+                        {{ profile_avatar(current_user, size_class='w-14 h-14', text_size='text-lg', img_extra_class='ring-2 ring-primary-100') }}
                         <div class="ml-3">
                             <p class="font-semibold text-gray-900 leading-tight">{{ current_user.individual_profile.full_name }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ _('Individual') }}</p>

@@ -169,8 +169,13 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
     client = trial_app.test_client()
     sent = []
 
-    def _fake_send(user, magic_url):
-        sent.append({'user_id': user.id, 'email': user.email, 'url': magic_url})
+    def _fake_send(user, magic_url, **kwargs):
+        sent.append({
+            'user_id': user.id,
+            'email': user.email,
+            'url': magic_url,
+            'submitted_email': kwargs.get('submitted_email'),
+        })
         return True
 
     with patch('app.briefing.routes.send_magic_login_email', _fake_send, create=True):
@@ -196,6 +201,7 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
 
     with client.session_transaction() as sess:
         assert sess.get('briefing_trial_intent') is True
+        assert sess.get('briefing_trial_submitted_email') == 'newperson@example.com'
         assert sess.get('pending_post_auth_redirect', '').startswith('/briefings/start/complete')
 
     # And the User was created.
