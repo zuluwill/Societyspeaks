@@ -39,7 +39,9 @@
                         {{ _('Add a payment method now to keep your briefs running without interruption.') }}
                         {% endif %}
                     </p>
+                    {% if active_sub and active_sub.stripe_subscription_id %}
                     <a href="{{ url_for('billing.customer_portal') }}" class="inline-flex items-center mt-2 text-sm font-medium text-primary-800 hover:text-primary-900 underline">{{ _('Manage subscription') }} <span aria-hidden="true">&rarr;</span></a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -54,7 +56,9 @@
                 <div>
                     <h3 class="text-sm font-semibold text-amber-800">{{ _('Payment issue') }}</h3>
                     <p class="text-sm text-amber-700 mt-1">{{ _("We couldn't process your latest payment. Please update your payment method to keep your briefs running.") }}</p>
+                    {% if active_sub and active_sub.stripe_subscription_id %}
                     <a href="{{ url_for('billing.customer_portal') }}" class="inline-flex items-center mt-2 text-sm font-medium text-amber-800 hover:text-amber-900 underline">{{ _('Update payment method') }} <span aria-hidden="true">&rarr;</span></a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -157,7 +161,7 @@
                     <p class="mt-2 text-gray-600">{{ _('Create and manage your personalised news briefs') }}</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
-                    {% if active_sub %}
+                    {% if active_sub and active_sub.stripe_subscription_id %}
                     <a href="{{ url_for('billing.customer_portal') }}"
                        class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">

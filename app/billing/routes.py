@@ -333,14 +333,39 @@ def checkout_success():
 @login_required
 def customer_portal():
     """Redirect to Stripe Customer Portal for billing management."""
+    # Users on admin-granted manual subscriptions have no Stripe customer record.
+    # Opening the portal would be meaningless and raises a confusing error.
+    if not current_user.stripe_customer_id:
+        active_sub = get_active_subscription(current_user)
+        if active_sub and active_sub.stripe_subscription_id:
+            # Stripe sub exists but customer ID is missing on the user row —
+            # attempt to recover it before opening the portal.
+            try:
+                from app.billing.service import get_or_create_stripe_customer
+                get_or_create_stripe_customer(current_user)
+            except Exception as exc:
+                current_app.logger.error(
+                    f"Could not recover Stripe customer for user {current_user.id}: {exc}"
+                )
+                flash(_('Unable to access billing portal. Please contact support.'), 'error')
+                return redirect(url_for('briefing.list_briefings'))
+        else:
+            # Manual/admin-granted subscription — no Stripe portal available.
+            flash(
+                _('Your subscription is managed by Society Speaks directly. '
+                  'Please contact us if you have any billing questions.'),
+                'info',
+            )
+            return redirect(url_for('briefing.list_briefings'))
+
     try:
         portal_session = create_portal_session(current_user)
         return redirect(portal_session.url, code=303)
-    except ValueError as e:
-        flash(str(e), 'error')
+    except ValueError:
+        flash(_('Unable to access billing portal. Please contact support.'), 'error')
         return redirect(url_for('briefing.list_briefings'))
     except stripe.error.StripeError as e:
-        current_app.logger.error(f"Stripe portal error: {e}")
+        current_app.logger.error(f"Stripe portal error for user {current_user.id}: {e}")
         flash(_('Unable to access billing portal. Please try again.'), 'error')
         return redirect(url_for('briefing.list_briefings'))
 
