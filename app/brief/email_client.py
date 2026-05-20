@@ -157,11 +157,7 @@ class ResendClient:
         self.last_send_error: Optional[str] = None
         from app.lib.brief_from_email import brief_from_email_address
         self._from_email_addr = brief_from_email_address()
-        # Handle case where env var might already include name (for backwards compat)
-        if '<' in self._from_email_addr and '>' in self._from_email_addr:
-            self.from_email = self._from_email_addr
-        else:
-            self.from_email = f'Daily Brief <{self._from_email_addr}>'
+        self.from_email = f'Daily Brief <{self._from_email_addr}>'
         self.reply_to = os.environ.get('BRIEF_REPLY_TO', self._from_email_addr)
 
     def _extract_email_domain(self, address: Optional[str]) -> str:
