@@ -7,7 +7,7 @@
       alt="{{ _('Profile photo') }}"
     />
   {% elif user.profile_type == 'individual' %}
-    {% set _full = user.individual_profile.full_name if user.individual_profile else user.username %}
+    {% set _full = ((user.individual_profile.full_name if user.individual_profile else None) or user.username or '') | string %}
     {% set _parts = _full.split() %}
     {% set _init = (_parts[0][0] + _parts[-1][0])|upper if _parts|length > 1 and _parts[0] and _parts[-1] else (_parts[0][0]|upper if _parts and _parts[0] else '?') %}
     <div class="{{ size_class }} {{ shape }} bg-blue-500 flex items-center justify-center flex-shrink-0 {{ img_extra_class }}">
