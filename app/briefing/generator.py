@@ -851,9 +851,9 @@ Return ONLY the intro prose, no labels."""
             headline=f"[{category}] {headline}",
             summary_bullets=llm_content.get(
                 'bullets',
-                [ingested_item.content_text[:200] if ingested_item.content_text else ''],
+                [strip_html_tags(ingested_item.content_text or '')[:200]],
             ),
-            content_markdown=llm_content.get('markdown', ingested_item.content_text or ''),
+            content_markdown=llm_content.get('markdown', strip_html_tags(ingested_item.content_text or '')),
             content_html=llm_content.get('html', ''),
             source_name=source_name,
             source_url=ingested_item.url,
