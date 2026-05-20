@@ -1311,9 +1311,11 @@ def magic_link_landing(token):
             db.session.rollback()
         return redirect(_pop_pending_post_auth_redirect() or url_for('auth.dashboard'))
 
+    is_briefing_setup = bool(next_from_link and next_from_link.startswith('/briefings/start'))
     return render_template('auth/magic_link_continue.html',
                            token=token,
-                           email=user.email)
+                           email=user.email,
+                           is_briefing_setup=is_briefing_setup)
 
 
 @auth_bp.route('/login/magic-link/<token>', methods=['POST'])

@@ -784,11 +784,13 @@ def _handle_start_trial_post(featured_templates, default_slug):
     email = extract_clean_email(email_raw)
     template_slug = (request.form.get('template') or default_slug).strip()
     timezone = (request.form.get('timezone') or 'UTC').strip()[:64]
+    first_name = (request.form.get('first_name') or '').strip()[:100]
     ip = request.remote_addr
 
-    # Stash timezone so the magic-link round-trip can use it on /complete.
+    # Stash timezone and first name so the magic-link round-trip can use them on /complete.
     # Defaults to UTC if the JS detection fell back or was tampered with.
     session['briefing_trial_timezone'] = timezone
+    session['briefing_trial_first_name'] = first_name
 
     if not email:
         flash(_("Please enter a valid email address."), 'error')
@@ -895,7 +897,7 @@ def _handle_start_trial_post(featured_templates, default_slug):
             _external=True,
         )
         from app.resend_client import send_magic_login_email
-        send_magic_login_email(user, magic_url)
+        send_magic_login_email(user, magic_url, display_name=first_name or None)
         _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
             'template_slug': template_slug,
             'is_returning_email': is_returning_email,
@@ -1076,6 +1078,27 @@ def start_trial_complete():
     if result.already_existed:
         flash(_("Welcome back — your brief is set up and ready."), 'info')
         return redirect(url_for('briefing.detail', briefing_id=result.briefing.id))
+
+    # New trial — if we collected a first name on the sign-up form, create a
+    # minimal IndividualProfile so the nav shows their name and initials rather
+    # than a generic username/stock avatar. Skipped if they already have a profile.
+    first_name = session.pop('briefing_trial_first_name', None)
+    if first_name and not current_user.profile_type:
+        try:
+            from app.models import IndividualProfile
+            from app.models._base import generate_unique_slug
+            unique_slug = generate_unique_slug(IndividualProfile, first_name, fallback='user')
+            profile = IndividualProfile(
+                user_id=current_user.id,
+                full_name=first_name,
+                slug=unique_slug,
+            )
+            current_user.profile_type = 'individual'
+            db.session.add(profile)
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            logger.warning(f"Could not create trial profile for user {current_user.id}: {exc}")
 
     # New trial — fire a one-shot "from William" welcome note (idempotent
     # via Redis SETNX on user id) before sync generation starts; sending an

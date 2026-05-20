@@ -16,9 +16,24 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" id="magic-link-continue-btn"
                 class="w-full bg-blue-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition min-h-11">
-            {{ _('Continue') }}
+            {{ _('Sign in to Society Speaks') }}
         </button>
     </form>
+
+    {% if is_briefing_setup %}
+    <div id="magic-link-loading-msg" class="hidden mt-5 rounded-xl bg-blue-50 border border-blue-200 px-4 py-4 text-left">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <div>
+                <p class="text-sm font-semibold text-blue-800">{{ _('Setting up your brief…') }}</p>
+                <p class="text-sm text-blue-700 mt-1">{{ _('We\'re generating your first brief in the background. This takes about 30 seconds — please keep this tab open.') }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <p class="mt-6 text-xs text-gray-500">
         {{ _("If you didn't request this, close this page — no account change will happen.") }}
@@ -28,10 +43,12 @@
       (function () {
         var form = document.querySelector('form[action*="magic-link"]');
         var btn  = document.getElementById('magic-link-continue-btn');
+        var msg  = document.getElementById('magic-link-loading-msg');
         if (form && btn) {
           form.addEventListener('submit', function () {
             btn.disabled = true;
             btn.textContent = '{{ _("Signing in…") }}';
+            if (msg) msg.classList.remove('hidden');
           });
         }
       })();

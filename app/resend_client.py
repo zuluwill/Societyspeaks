@@ -464,7 +464,7 @@ class ResendEmailClient:
             base_url=self.base_url,
         )
 
-    def send_magic_login_link(self, user, magic_url: str) -> bool:
+    def send_magic_login_link(self, user, magic_url: str, display_name: str = None) -> bool:
         """Send a magic-link sign-in email.
 
         The URL points at the landing page (GET), which shows a Continue button
@@ -473,13 +473,14 @@ class ResendEmailClient:
         """
         # Tail of the URL is the signed token; use a short prefix as dedup key.
         _token_tail = magic_url.rstrip('/').rsplit('/', 1)[-1][:16]
+        greeting_name = display_name or user.username or 'User'
         return self._send_transactional_email(
             user,
             template_stem='emails/magic_login',
             subject_msgid='Your Society Speaks sign-in link',
             entity_ref_id=f"magic-login:{user.id}:{_token_tail}",
             log_label='Magic-login',
-            username=user.username or 'User',
+            username=greeting_name,
             magic_url=magic_url,
             base_url=self.base_url,
         )
@@ -1137,11 +1138,11 @@ def send_welcome_email(user, verification_url: Optional[str] = None) -> bool:
         return False
 
 
-def send_magic_login_email(user, magic_url: str) -> bool:
+def send_magic_login_email(user, magic_url: str, display_name: str = None) -> bool:
     """Send a magic-link sign-in email. Never raises."""
     try:
         client = get_resend_client()
-        return client.send_magic_login_link(user, magic_url)
+        return client.send_magic_login_link(user, magic_url, display_name=display_name)
     except Exception as e:
         logger.error(f"Failed to send magic-login email: {e}")
         return False

@@ -39,7 +39,7 @@
             <span class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-900 text-sm font-semibold flex items-center justify-center">3</span>
             <span>
               {% if template %}
-              {{ _('Your first %(name)s brief arrives in your inbox tomorrow morning.', name=template.name)|escape_i18n }}
+              {{ _('Your first %(name)s brief arrives in your inbox tomorrow morning.', name=template.name) }}
               {% else %}
               {{ _('Your first brief arrives in your inbox tomorrow morning.') }}
               {% endif %}
