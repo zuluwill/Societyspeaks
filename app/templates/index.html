@@ -512,7 +512,7 @@
                         <h3 class="text-xl font-bold text-gray-900">{{ _('The Daily Question') }}</h3>
                     </div>
                 </div>
-                <p class="text-gray-600 mb-5 flex-grow">
+                <p class="text-gray-600 mb-5">
                     {{ _('One carefully chosen question every day. Vote, share your reasoning, then see how others responded. Over time, this creates a longitudinal view of how public opinion evolves.') }}
                 </p>
                 {% if daily_question %}
@@ -553,7 +553,8 @@
                     </div>
                 </div>
                 {% endif %}
-                <div class="flex flex-wrap gap-3 mt-auto">
+                <div class="flex-1"></div>
+                <div class="flex flex-wrap gap-3 mt-4">
                     <a href="{{ url_for('daily.today') }}"
                        class="{{ btn_primary_md() }}">
                         {{ _("Answer Today's Question") }}
@@ -581,7 +582,7 @@
                         <h3 class="text-xl font-bold text-gray-900">{{ _('The Daily Brief') }}</h3>
                     </div>
                 </div>
-                <p class="text-gray-600 mb-5 flex-grow">
+                <p class="text-gray-600 mb-5">
                     {{ _('3–5 stories daily, vetted for civic impact, analysed for partisan spin, and explained in plain language. Multi-source coverage with left/centre/right breakdown. No ads. No outrage.') }}
                 </p>
                 {% if daily_brief and brief_items %}
@@ -640,7 +641,8 @@
                     <p class="text-xs text-slate-500 mt-3">{{ _('3–5 stories · left/centre/right breakdown · Why it matters') }}</p>
                 </div>
                 {% endif %}
-                <div class="flex flex-wrap gap-3 mt-auto">
+                <div class="flex-1"></div>
+                <div class="flex flex-wrap gap-3 mt-4">
                     <a href="{{ url_for('brief.today') }}"
                        class="inline-flex items-center rounded-lg bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-600 transition-colors">
                         {{ _("Read Today's Brief") }}
@@ -672,7 +674,7 @@
                         <h3 class="text-xl font-bold text-gray-900" style="font-family: 'Fraunces', Georgia, serif; letter-spacing: -0.01em;">{{ _('Tradeoffs') }}</h3>
                     </div>
                 </div>
-                <p class="text-gray-600 mb-5 flex-grow">
+                <p class="text-gray-600 mb-5">
                     {{ _('Five turns. Three choices each. Every move costs something — and reveals the kind of leader you become under pressure. No right answers; just the society you leave behind.') }}
                 </p>
                 <div class="rounded-xl p-4 mb-5" style="background: #0c0f14; border: 1px solid #2a3444;">
@@ -700,7 +702,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-3 mt-auto">
+                <div class="flex-1"></div>
+                <div class="flex flex-wrap gap-3 mt-4">
                     <a href="{{ url_for('game.index') }}"
                        class="inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors hover:brightness-110"
                        style="background: #d4a853; color: #0c0f14;">
