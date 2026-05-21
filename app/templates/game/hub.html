@@ -117,7 +117,7 @@
       {% endfor %}
     </div>
   </section>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
     // Carry the society name typed on the hub through to Quick Run links.
     // Pure progressive enhancement — links work without JS, just without the name.
     (function () {

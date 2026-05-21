@@ -47,14 +47,15 @@ csp = {
     'default-src': ["'self'", "https:", "data:", "blob:"],
     'img-src': ["'self'", "data:", "https:", "blob:"],
     'connect-src': ["'self'", "https:", "wss:", "https://cdn.jsdelivr.net", "https://*.posthog.com", "https://us.i.posthog.com", "https://eu.i.posthog.com"],
-    'font-src': ["'self'", "data:", "https:"],
+    'font-src': ["'self'", "data:", "https://fonts.gstatic.com", "https:"],
     'frame-src': ["'self'", "https:"],
     'style-src': [
         "'self'",
         "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
-        "https://cdn-cookieyes.com"
+        "https://cdn-cookieyes.com",
+        "https://fonts.googleapis.com"
     ],
     'script-src': [
         "'self'",
