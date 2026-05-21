@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img">
+  <title>{{ headline }}</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c0f14"/>
+      <stop offset="100%" stop-color="#151a22"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="78%" cy="22%" r="55%">
+      <stop offset="0%" stop-color="{{ emblem.accent }}" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="{{ emblem.accent }}" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .display { font-family: 'Fraunces', 'Times New Roman', Georgia, serif; font-weight: 700; }
+      .body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .muted { fill: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; }
+      .accent { fill: {{ emblem.accent }}; letter-spacing: 0.18em; text-transform: uppercase; }
+      .text { fill: #f0f4f8; }
+      .axis-bg { fill: #151a22; stroke: #2a3444; stroke-width: 2; }
+      .axis-grid { stroke: rgba(148, 163, 184, 0.16); stroke-width: 1; }
+      .axis-cross { stroke: rgba(148, 163, 184, 0.35); stroke-width: 1; }
+      .axis-label { fill: #94a3b8; font-size: 16px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .dot { fill: {{ emblem.accent }}; stroke: #0c0f14; stroke-width: 4; filter: drop-shadow(0 0 24px {{ emblem.accent }}); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#halo)"/>
+
+  {# Left column: headline + meta #}
+  <g transform="translate(72, 96)">
+    <text class="accent body" font-size="20">TRADEOFFS · SOCIETY SPEAKS</text>
+
+    <g transform="translate(0, 64)">
+      {# Wrap headline at ~24 chars/line, max 4 lines #}
+      {% set words = headline.split(' ') %}
+      {% set lines = [] %}
+      {% set current = [] %}
+      {% for w in words %}
+        {% if (current | join(' ') | length) + w | length + 1 <= 28 %}
+          {% set _ = current.append(w) %}
+        {% else %}
+          {% set _ = lines.append(current | join(' ')) %}
+          {% set current = [w] %}
+        {% endif %}
+      {% endfor %}
+      {% if current %}{% set _ = lines.append(current | join(' ')) %}{% endif %}
+      {% for line in lines[:4] %}
+      <text class="display text" font-size="60" x="0" y="{{ 60 + loop.index0 * 76 }}">{{ line }}</text>
+      {% endfor %}
+    </g>
+
+    <g transform="translate(0, {{ 60 + (lines[:4] | length) * 76 + 40 }})">
+      {% if governance_label %}
+      <text class="body muted" font-size="18">{{ governance_label }}</text>
+      {% endif %}
+      <text class="body" fill="#94a3b8" font-size="20" y="36">{{ run.society_name }}</text>
+      <text class="body" fill="#94a3b8" font-size="18" y="64">{{ scenario.title }}</text>
+    </g>
+  </g>
+
+  {# Right column: 2-axis plot #}
+  <g transform="translate(760, 130)">
+    {% set plot_size = 360 %}
+    <rect class="axis-bg" width="{{ plot_size }}" height="{{ plot_size }}" rx="20"/>
+
+    {# Quartile grid lines #}
+    {% for i in range(1, 4) %}
+    <line class="axis-grid" x1="{{ (plot_size / 4) * i }}" y1="0" x2="{{ (plot_size / 4) * i }}" y2="{{ plot_size }}"/>
+    <line class="axis-grid" x1="0" y1="{{ (plot_size / 4) * i }}" x2="{{ plot_size }}" y2="{{ (plot_size / 4) * i }}"/>
+    {% endfor %}
+
+    {# Crosshairs #}
+    <line class="axis-cross" x1="0" y1="{{ plot_size / 2 }}" x2="{{ plot_size }}" y2="{{ plot_size / 2 }}"/>
+    <line class="axis-cross" x1="{{ plot_size / 2 }}" y1="0" x2="{{ plot_size / 2 }}" y2="{{ plot_size }}"/>
+
+    {# Axis labels #}
+    <text class="axis-label body" x="{{ plot_size / 2 }}" y="-12" text-anchor="middle">PROSPERITY</text>
+    <text class="axis-label body" x="{{ plot_size / 2 }}" y="{{ plot_size + 24 }}" text-anchor="middle">FAIRNESS</text>
+    <text class="axis-label body" x="-12" y="{{ plot_size / 2 + 6 }}" text-anchor="end">TRUST</text>
+    <text class="axis-label body" x="{{ plot_size + 12 }}" y="{{ plot_size / 2 + 6 }}" text-anchor="start">AUTONOMY</text>
+
+    {# Position dot — clamp to plot bounds #}
+    {% set cx = (axis.trust_autonomy / 100) * plot_size %}
+    {% set cy = (axis.prosperity_fairness / 100) * plot_size %}
+    <circle class="dot" cx="{{ cx }}" cy="{{ cy }}" r="14"/>
+  </g>
+</svg>

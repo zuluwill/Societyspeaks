@@ -1,0 +1,160 @@
+{% extends "game/base.html" %}
+{% from "game/components/stat_bars.html" import stat_bars %}
+{% from "game/components/emblem.html" import society_emblem %}
+
+{% block game_title %}{{ headline }}{% endblock %}
+
+{% block game_head %}
+{% set og_alt = _('%(headline)s — Tradeoffs on Society Speaks', headline=headline) %}
+<meta property="og:site_name" content="Society Speaks">
+<meta property="og:title" content="{{ headline }}">
+<meta property="og:description" content="{{ governance_label or _('Tradeoffs on Society Speaks') }}">
+<meta property="og:image" content="{{ url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) }}">
+<meta property="og:image:secure_url" content="{{ url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ og_alt }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ share_url }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ headline }}">
+<meta name="twitter:description" content="{{ governance_label or _('Tradeoffs on Society Speaks') }}">
+<meta name="twitter:image" content="{{ url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) }}">
+<meta name="twitter:image:alt" content="{{ og_alt }}">
+{% endblock %}
+
+{% block game_content %}
+<div class="game-outcome" style="--emblem-accent: {{ emblem.accent }}; --emblem-soft: {{ emblem.accent_soft }};">
+  <div class="flex items-start gap-4 mb-6">
+    {{ society_emblem(emblem, size='lg') }}
+    <div>
+      <p class="text-xs uppercase tracking-wider text-game-accent mb-1">{{ scenario.title }}</p>
+      <p class="text-sm text-game-muted">{{ run.society_name }}</p>
+    </div>
+  </div>
+
+  <h1 class="font-display text-2xl sm:text-3xl leading-tight text-game-text mb-3">
+    {{ headline }}
+  </h1>
+
+  {% if governance_label %}
+  <p class="text-sm font-medium text-game-muted mb-6">{{ governance_label }}</p>
+  {% endif %}
+
+  {% if trait_chips %}
+  <div class="flex flex-wrap gap-2 mb-8">
+    {% for chip in trait_chips %}
+    <span class="game-chip">{{ chip }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if streak and streak.current >= 2 and not is_quick_run %}
+  <section class="game-streak-banner mb-6 p-4 rounded-xl border border-game-accent/40 bg-game-accent/10">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl" aria-hidden="true">🔥</span>
+      <div>
+        <p class="text-sm font-semibold text-game-text">
+          {{ ngettext('%(num)d-day streak', '%(num)d-day streak', streak.current) }}
+        </p>
+        {% if streak.current >= streak.longest %}
+        <p class="text-xs text-game-muted">{{ _('Your longest run yet.') }}</p>
+        {% else %}
+        <p class="text-xs text-game-muted">{{ _('Longest: %(n)d days', n=streak.longest) }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if is_quick_run %}
+  <p class="text-xs uppercase tracking-widest text-game-muted mb-6">{{ _('Quick Run · no streak credit') }}</p>
+  {% endif %}
+
+  {% if contradiction %}
+  <section class="game-contradiction mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
+    <p class="text-xs uppercase tracking-wider text-game-accent font-semibold mb-2">{{ contradiction.headline or _('Under pressure') }}</p>
+    <p class="text-sm text-game-text leading-relaxed">{{ contradiction.summary }}</p>
+  </section>
+  {% endif %}
+
+  <section class="mb-8">
+    <p class="text-xs uppercase tracking-wider text-game-muted mb-3">{{ _('Where you landed') }}</p>
+    <div class="game-axis-plot" role="img" aria-label="{{ _('Your society on the trust–autonomy and prosperity–fairness axes') }}">
+      <div class="game-axis-grid"></div>
+      <div class="game-axis-cross"></div>
+      <span class="game-axis-label game-axis-label--top">{{ _('Prosperity') }}</span>
+      <span class="game-axis-label game-axis-label--bottom">{{ _('Fairness') }}</span>
+      <span class="game-axis-label game-axis-label--left">{{ _('Trust') }}</span>
+      <span class="game-axis-label game-axis-label--right">{{ _('Autonomy') }}</span>
+      <span class="game-axis-dot" style="left: {{ axis.trust_autonomy }}%; top: {{ axis.prosperity_fairness }}%;"></span>
+    </div>
+  </section>
+
+  <section class="mb-8">
+    <p class="text-xs uppercase tracking-wider text-game-muted mb-3">{{ _('Final state') }}</p>
+    {{ stat_bars(visible_stats) }}
+  </section>
+
+  {% if ss_bridge %}
+  <section class="game-bridge mb-8 p-5 rounded-xl border border-game-border/60 bg-game-elevated/40">
+    <p class="text-xs uppercase tracking-widest text-game-muted mb-1">{{ _('Take this further') }}</p>
+    <p class="text-xs text-game-accent mb-2">{{ ss_bridge.subtitle }}</p>
+    <p class="text-sm text-game-text leading-relaxed mb-4">{{ ss_bridge.title }}</p>
+    <a href="{{ ss_bridge.url }}"
+       id="ss-bridge-link"
+       class="game-btn-secondary w-full text-center inline-block"
+       data-bridge-type="{{ ss_bridge.bridge_type }}"
+       data-bridge-target-id="{{ ss_bridge.target_id }}"
+       data-run-uuid="{{ run.uuid }}">
+      {{ _('Join the conversation') }}
+    </a>
+  </section>
+  {% endif %}
+
+  <section class="game-share-card mb-6 p-6 rounded-2xl border border-game-border">
+    <div class="flex items-center gap-3 mb-3 relative">
+      {{ society_emblem(emblem, size='sm') }}
+      <p class="text-xs uppercase tracking-wider text-game-muted">{{ run.society_name }}</p>
+    </div>
+    <p class="font-display text-lg text-game-text mb-2 relative">{{ headline }}</p>
+    <p class="text-xs text-game-muted relative">{{ governance_label }} · {{ scenario.title }}</p>
+    <p class="text-xs text-game-muted mt-4 relative">Tradeoffs · Society Speaks</p>
+  </section>
+
+  <div class="flex flex-col sm:flex-row gap-3">
+    <button type="button" id="share-native" class="game-btn-primary flex-1"
+            data-share-url="{{ share_url }}"
+            data-share-title="{{ headline }}"
+            data-run-uuid="{{ run.uuid }}"
+            data-copied-label="{{ _('Link copied') }}"
+            data-default-label="{{ _('Share') }}">
+      {{ _('Share') }}
+    </button>
+    <a href="{{ url_for('game.index') }}" class="game-btn-secondary flex-1 text-center">
+      {{ _('Play again') }}
+    </a>
+  </div>
+
+  {% if not is_authenticated %}
+  <section class="game-outcome-signin mt-6 p-4 rounded-xl border border-game-border bg-game-surface/60">
+    <p class="text-sm text-game-text mb-1">{{ _('Save your societies.') }}</p>
+    <p class="text-xs text-game-muted mb-3">{{ _('Without an account, your streak and archive only live on this browser. Sign in to keep them.') }}</p>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('auth.register') }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
+      <a href="{{ url_for('auth.login') }}" class="game-btn-secondary text-sm py-2">{{ _('Sign in') }}</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <p class="mt-8 text-center text-xs text-game-muted">
+    <a href="{{ url_for('game.editorial_principles') }}" class="underline hover:text-game-text">{{ _('How we write scenarios') }}</a>
+  </p>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script src="{{ url_for('static', filename='js/game/analytics.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', filename='js/game/outcome.js') }}?v=3" defer></script>
+{% endblock %}

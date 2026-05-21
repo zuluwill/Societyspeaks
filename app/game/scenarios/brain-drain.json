@@ -1,0 +1,227 @@
+{
+  "slug": "brain-drain",
+  "title": "The Brain Drain",
+  "subtitle": "Your best minds pack their bags.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["education", "migration", "innovation"],
+  "initial_state": {
+    "prosperity": 46,
+    "trust": 42,
+    "fairness": 44,
+    "stability": 48,
+    "future": 52,
+    "debt_stress": 40,
+    "autonomy": 58,
+    "fragility": 9
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Graduates leave in record numbers for higher pay and cleaner governance abroad. Hospitals and labs report critical shortages.",
+      "choices": [
+        {
+          "id": "stay_bonuses",
+          "label": "Offer tax breaks and stay bonuses for graduates",
+          "flavour": "Pay them not to go.",
+          "memory_label": "graduate stay bonuses",
+          "tags": ["growth", "welfare"],
+          "effects": {
+            "immediate": { "future": 6, "debt_stress": 10, "prosperity": -4, "trust": 4 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "debt_stress": 6, "prosperity": 4 },
+              "headline": "Stay bonuses drain budgets as talent still leaks abroad"
+            }
+          },
+          "reaction": "Some accept offers. Others compare salaries and leave anyway."
+        },
+        {
+          "id": "fund_universities",
+          "label": "Borrow to fund world-class universities and research",
+          "flavour": "Build the place worth staying for.",
+          "memory_label": "university investment drive",
+          "tags": ["borrow", "future"],
+          "effects": {
+            "immediate": { "future": 14, "debt_stress": 12, "trust": 6, "prosperity": -3 }
+          },
+          "reaction": "Campuses gleam. Results take a generation."
+        },
+        {
+          "id": "diaspora_network",
+          "label": "Build a diaspora network — tax remittances lightly",
+          "flavour": "Keep ties with those who left.",
+          "memory_label": "diaspora engagement",
+          "tags": ["open", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 6, "autonomy": -6, "future": 4, "trust": 2 }
+          },
+          "reaction": "Remittances rise. Critics say you exported your future — the wire transfers say otherwise."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Tech firms abroad recruit directly on campuses. Your flagship hospital loses an entire surgical team.",
+      "choices": [
+        {
+          "id": "ban_poaching",
+          "label": "Restrict foreign recruiters on campuses",
+          "flavour": "Stop the poachers at the gate.",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "stability": 4, "autonomy": 4, "trust": -8, "future": -4 }
+          },
+          "reaction": "Campus job fairs shrink. Students VPN to apply abroad."
+        },
+        {
+          "id": "public_sector_pay",
+          "label": "Raise public-sector pay for doctors and teachers",
+          "flavour": "Match dignity with salary.",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "debt_stress": 10, "future": 4 }
+          },
+          "reaction": "Essential workers stay — some. Taxpayers gulp."
+        },
+        {
+          "id": "startup_ecosystem",
+          "label": "Fund a startup ecosystem with equity for founders",
+          "flavour": "Create the jobs they chase abroad.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 6, "future": 8, "fairness": -4, "fragility": 8 }
+          },
+          "reaction": "Incubators open. Most ventures still fail quietly — the brochure never mentions that."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A breakthrough patent is filed overseas by emigré researchers you trained. National pride stings.",
+      "choices": [
+        {
+          "id": "repatriation_grants",
+          "label": "Offer repatriation grants for expatriate experts",
+          "flavour": "Pay for the return ticket.",
+          "tags": ["welfare", "open"],
+          "effects": {
+            "immediate": { "future": 8, "debt_stress": 8, "trust": 4, "prosperity": -4 }
+          },
+          "reaction": "A trickle returns. Many demand conditions you struggle to meet."
+        },
+        {
+          "id": "tie_funding",
+          "label": "Tie public funding to mandatory domestic service years",
+          "flavour": "Bond graduates to the country that paid.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "future": 4, "autonomy": -8, "trust": -6, "stability": 4 }
+          },
+          "reaction": "Contracts bind new graduates. Enthusiasm dims."
+        },
+        {
+          "id": "joint_labs",
+          "label": "Create joint labs with foreign universities",
+          "flavour": "Share credit, keep some talent.",
+          "tags": ["open", "future"],
+          "effects": {
+            "immediate": { "future": 10, "autonomy": -8, "prosperity": 2, "trust": 4 }
+          },
+          "reaction": "Collaborations bloom. IP ownership gets messy."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "Critical infrastructure projects stall for lack of engineers. Every earlier choice failed to stop the bleed.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "ban_poaching",
+          "text": "Recruitment bans you imposed did not stop online hiring abroad."
+        },
+        {
+          "requires_choice": "stay_bonuses",
+          "text": "Stay bonuses were not enough to offset governance concerns."
+        },
+        {
+          "requires_choice": "fund_universities",
+          "text": "Universities you funded graduate students into the same exit queue."
+        }
+      ],
+      "choices": [
+        {
+          "id": "emergency_visas",
+          "label": "Emergency visas for foreign specialists",
+          "flavour": "Import the brains you exported.",
+          "tags": ["open", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "stability": 6, "trust": -6, "fairness": -6 }
+          },
+          "reaction": "Projects resume. Irony is not lost on anyone."
+        },
+        {
+          "id": "austerity_brain",
+          "label": "Scale back projects to match available talent",
+          "flavour": "Accept a smaller, slower country.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -8, "future": -10, "stability": 4, "trust": -8 }
+          },
+          "reaction": "Ambition shrinks to fit capacity."
+        },
+        {
+          "id": "governance_reform",
+          "label": "Radical governance reform to restore confidence",
+          "flavour": "Fix why they left, not just the salary.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 10, "stability": -10, "future": 8, "autonomy": 4 }
+          },
+          "reaction": "Reform passes — narrowly. Departures slow."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What talent ecosystem did you leave?",
+      "choices": [
+        {
+          "id": "innovation_hub",
+          "label": "Build a genuine innovation hub at any fiscal cost",
+          "flavour": "Brains over balances.",
+          "tags": ["future", "borrow"],
+          "effects": {
+            "immediate": { "future": 14, "debt_stress": 12, "prosperity": -4, "trust": 4 }
+          },
+          "reaction": "Research clusters grow. Inequality widens around them."
+        },
+        {
+          "id": "stable_exodus",
+          "label": "Accept steady emigration with strong remittance ties",
+          "flavour": "Export people, import money.",
+          "tags": ["open", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 6, "future": -10, "autonomy": -6, "trust": -4 }
+          },
+          "reaction": "Families split across borders. Budgets rely on wires home."
+        },
+        {
+          "id": "root_and_branch",
+          "label": "Rebuild institutions so talent chooses to stay",
+          "flavour": "Slow repair of the whole stack.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "trust": 8, "future": 10, "prosperity": -6, "stability": 4 }
+          },
+          "reaction": "Departures plateau. Recovery takes years — but at least the airport lounge knows your name."
+        }
+      ]
+    }
+  ]
+}

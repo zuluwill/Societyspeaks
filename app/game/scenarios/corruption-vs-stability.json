@@ -1,0 +1,227 @@
+{
+  "slug": "corruption-vs-stability",
+  "title": "Corruption vs Stability",
+  "subtitle": "The scandal is real. So is the fear of what comes next.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["governance", "corruption", "institutions"],
+  "initial_state": {
+    "prosperity": 48,
+    "trust": 28,
+    "fairness": 38,
+    "stability": 46,
+    "future": 44,
+    "debt_stress": 42,
+    "autonomy": 54,
+    "fragility": 15
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Leaked documents tie senior officials to kickbacks on major contracts. Markets wobble. Allies urge caution.",
+      "choices": [
+        {
+          "id": "independent_inquiry",
+          "label": "Launch a fully independent public inquiry",
+          "flavour": "Sunlight, witnesses, subpoenas.",
+          "memory_label": "independent corruption inquiry",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 10, "stability": -10, "fairness": 8, "prosperity": -4 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "stability": -4, "trust": 4 },
+              "headline": "Inquiry revelations keep institutions in crisis"
+            }
+          },
+          "reaction": "Headlines explode. Investors wait for names."
+        },
+        {
+          "id": "limited_internal",
+          "label": "Handle it internally with a quiet internal review",
+          "flavour": "Control the narrative.",
+          "memory_label": "internal review cover",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": -12, "fairness": -8, "fragility": 10 }
+          },
+          "reaction": "Markets steady. Whistleblowers leak anyway."
+        },
+        {
+          "id": "sacrifice_ministers",
+          "label": "Sacrifice implicated ministers immediately",
+          "flavour": "Cut off the rot — publicly.",
+          "memory_label": "ministerial sacrifices",
+          "tags": ["centralise", "redistribute"],
+          "effects": {
+            "immediate": { "trust": 6, "stability": -6, "fairness": 4, "autonomy": -4 }
+          },
+          "reaction": "Resignations dominate news. Questions remain about who knew."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Investigations widen. Foreign partners ask whether contracts will be honoured.",
+      "choices": [
+        {
+          "id": "freeze_contracts",
+          "label": "Freeze suspicious contracts pending review",
+          "flavour": "Stop the bleeding in procurement.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "fairness": 6, "prosperity": -8, "stability": -4, "trust": 4 }
+          },
+          "reaction": "Infrastructure stalls. Clean vendors wait in line."
+        },
+        {
+          "id": "immunity_deals",
+          "label": "Offer immunity for testimony against ringleaders",
+          "flavour": "Trade leniency for truth.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 6, "fairness": 4, "stability": -6, "autonomy": -4 }
+          },
+          "reaction": "Witnesses step forward. Public outrage mixes with relief."
+        },
+        {
+          "id": "business_as_usual",
+          "label": "Reassure markets — business as usual",
+          "flavour": "Stability is the product.",
+          "tags": ["growth", "centralise"],
+          "effects": {
+            "immediate": { "prosperity": 6, "trust": -10, "fragility": 12, "fairness": -6 }
+          },
+          "reaction": "Stock indices recover. Street vendors sell scandal papers — and umbrellas."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Prosecutors circle your party. Civil servants threaten strikes. The opposition demands early elections.",
+      "choices": [
+        {
+          "id": "electoral_reform",
+          "label": "Push electoral and party-finance reform",
+          "flavour": "Change the rules that enabled this.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 8, "stability": -8, "future": 6 }
+          },
+          "reaction": "Reform bills crawl through committee — three party donors quietly retire mid-debate."
+        },
+        {
+          "id": "pack_courts",
+          "label": "Appoint loyalists to key judicial posts",
+          "flavour": "Win the cases before they start.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": -14, "autonomy": -8, "fairness": -10 }
+          },
+          "reaction": "Cases slow down. The constitutional law department orders new textbooks — backdated by a decade."
+        },
+        {
+          "id": "early_election",
+          "label": "Call an early election to reset legitimacy",
+          "flavour": "Ask voters to absolve or expel you.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 4, "stability": -12, "fragility": 14, "prosperity": -4 }
+          },
+          "reaction": "Campaigns turn vicious. Allies defect."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "A major ally freezes aid. Domestic banks restrict lending. Corruption and stability can no longer coexist.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "limited_internal",
+          "text": "The cover-up you chose is now the bigger scandal."
+        },
+        {
+          "requires_choice": "business_as_usual",
+          "text": "Markets trusted your calm — voters did not."
+        },
+        {
+          "requires_choice": "independent_inquiry",
+          "text": "The inquiry you opened keeps finding names you hoped would stay buried."
+        }
+      ],
+      "choices": [
+        {
+          "id": "full_prosecutions",
+          "label": "Prosecute everyone implicated, regardless of rank",
+          "flavour": "No sacred cows.",
+          "tags": ["decentralise", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 12, "stability": -14, "trust": 6, "prosperity": -8 }
+          },
+          "reaction": "Handcuffs on evening news. Three ministries forget how to sign off a budget."
+        },
+        {
+          "id": "stability_pact",
+          "label": "Negotiate a stability pact — reforms without prosecutions",
+          "flavour": "Order over accountability.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 10, "trust": -12, "fairness": -10, "autonomy": -6 }
+          },
+          "reaction": "Aid resumes. Cynicism hardens."
+        },
+        {
+          "id": "technocratic_caretaker",
+          "label": "Hand power to a technocratic caretaker government",
+          "flavour": "Step aside for neutral managers.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "trust": 6, "autonomy": -10, "stability": 6, "prosperity": -4 }
+          },
+          "reaction": "Career civil servants take the wheel. Elections wait."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What kind of institutions did you leave?",
+      "choices": [
+        {
+          "id": "clean_institutions",
+          "label": "Leave cleaner institutions, however painful the path",
+          "flavour": "Trust rebuilt slowly.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 12, "fairness": 8, "stability": -6, "prosperity": -4 }
+          },
+          "reaction": "Handshakes get rarer in contract rooms. Power learns new manners — slowly."
+        },
+        {
+          "id": "stable_cynicism",
+          "label": "Preserve stability at the cost of deep reform",
+          "flavour": "Functional corruption.",
+          "tags": ["centralise", "growth"],
+          "effects": {
+            "immediate": { "stability": 10, "trust": -8, "fairness": -10, "prosperity": 4 }
+          },
+          "reaction": "Deals flow again. Young professionals plan their exit — quietly, on LinkedIn."
+        },
+        {
+          "id": "citizen_oversight",
+          "label": "Enshrine permanent citizen oversight of public money",
+          "flavour": "Never again in the dark.",
+          "tags": ["decentralise", "redistribute"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 10, "future": 6, "fragility": 6 }
+          },
+          "reaction": "Budgets go live online by Tuesday. By Friday, a student-built dashboard has more readers than the official one."
+        }
+      ]
+    }
+  ]
+}

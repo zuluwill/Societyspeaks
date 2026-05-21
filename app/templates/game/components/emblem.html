@@ -1,0 +1,15 @@
+{% macro society_emblem(emblem, size='md') %}
+<div class="game-emblem game-emblem--{{ size }}" style="--emblem-accent: {{ emblem.accent }}; --emblem-soft: {{ emblem.accent_soft }};">
+  <svg viewBox="0 0 48 48" class="w-full h-full" aria-hidden="true">
+    {% if emblem.shape == 0 %}
+    <circle cx="24" cy="24" r="18" fill="var(--emblem-soft)" stroke="var(--emblem-accent)" stroke-width="2"/>
+    {% elif emblem.shape == 1 %}
+    <rect x="10" y="10" width="28" height="28" rx="6" fill="var(--emblem-soft)" stroke="var(--emblem-accent)" stroke-width="2"/>
+    {% elif emblem.shape == 2 %}
+    <polygon points="24,6 42,38 6,38" fill="var(--emblem-soft)" stroke="var(--emblem-accent)" stroke-width="2"/>
+    {% else %}
+    <path d="M24 8 L38 24 L24 40 L10 24 Z" fill="var(--emblem-soft)" stroke="var(--emblem-accent)" stroke-width="2"/>
+    {% endif %}
+  </svg>
+</div>
+{% endmacro %}

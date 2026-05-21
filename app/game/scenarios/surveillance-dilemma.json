@@ -1,0 +1,227 @@
+{
+  "slug": "surveillance-dilemma",
+  "title": "The Surveillance Dilemma",
+  "subtitle": "Safety demands watching. Freedom demands privacy.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["security", "privacy", "technology"],
+  "initial_state": {
+    "prosperity": 50,
+    "trust": 38,
+    "fairness": 48,
+    "stability": 42,
+    "future": 50,
+    "debt_stress": 40,
+    "autonomy": 62,
+    "fragility": 14
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "A coordinated attack kills dozens. Fear spreads faster than facts. Security services demand new powers.",
+      "choices": [
+        {
+          "id": "mass_surveillance",
+          "label": "Expand mass digital surveillance",
+          "flavour": "Watch everything to catch anything.",
+          "memory_label": "mass surveillance expansion",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -14, "trust": -8, "future": -4 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "trust": -6, "fragility": 8 },
+              "headline": "Leaked databases erode public trust in security services"
+            }
+          },
+          "reaction": "Arrests rise. Privacy advocates take to the streets."
+        },
+        {
+          "id": "community_policing",
+          "label": "Invest in community policing and prevention",
+          "flavour": "Trust before tracking.",
+          "memory_label": "community policing investment",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "debt_stress": 8, "stability": 4 }
+          },
+          "reaction": "Officers walk beats again. Results are slow — and crime statistics learn new arithmetic."
+        },
+        {
+          "id": "encryption_backdoors",
+          "label": "Mandate encryption backdoors for investigators",
+          "flavour": "Read every message — in theory.",
+          "memory_label": "encryption backdoors",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "autonomy": -12, "future": -8, "prosperity": -4 }
+          },
+          "reaction": "Tech firms warn of vulnerabilities. Intelligence agencies celebrate."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Threat levels drop — or seem to. Debate shifts from emergency to permanence.",
+      "choices": [
+        {
+          "id": "facial_recognition",
+          "label": "Deploy facial recognition in public spaces",
+          "flavour": "Identify faces in crowds.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "autonomy": -10, "trust": -6, "fairness": -4 }
+          },
+          "reaction": "Cameras multiply. False matches hit minority communities hardest."
+        },
+        {
+          "id": "judicial_oversight",
+          "label": "Strengthen judicial oversight of surveillance",
+          "flavour": "Warrants before wiretaps.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "stability": -4, "autonomy": 4 }
+          },
+          "reaction": "Courts gain power. Security services complain of delays."
+        },
+        {
+          "id": "private_security",
+          "label": "Outsource monitoring to private security firms",
+          "flavour": "Let the market watch.",
+          "tags": ["decentralise", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "trust": -8, "autonomy": -6, "fragility": 8 }
+          },
+          "reaction": "Contracts swell. Accountability blurs."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A whistleblower leaks files showing surveillance beyond what was promised. Protests return to the streets.",
+      "choices": [
+        {
+          "id": "crackdown_protests",
+          "label": "Crack down on protests and media leaks",
+          "flavour": "Order over transparency.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": -14, "autonomy": -8, "fairness": -8 }
+          },
+          "reaction": "Streets clear. Journalism grows cautious."
+        },
+        {
+          "id": "surveillance_inquiry",
+          "label": "Launch an independent surveillance inquiry",
+          "flavour": "Sunlight as disinfectant.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 10, "stability": -8, "fairness": 6, "autonomy": 4 }
+          },
+          "reaction": "Headlines dominate for weeks. Reforms feel possible."
+        },
+        {
+          "id": "sunset_powers",
+          "label": "Sunset emergency powers on a fixed timeline",
+          "flavour": "Temporary means temporary.",
+          "tags": ["decentralise", "restrict"],
+          "effects": {
+            "immediate": { "autonomy": 8, "stability": -6, "trust": 6, "fragility": 6 }
+          },
+          "reaction": "Calendars are marked. Agencies lobby for extensions."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "Another plot is foiled — or missed. Every choice about watching is judged in hindsight.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "mass_surveillance",
+          "text": "The surveillance net you expanded still missed the cell everyone feared."
+        },
+        {
+          "requires_choice": "encryption_backdoors",
+          "text": "Criminals migrated to tools your backdoors cannot reach."
+        },
+        {
+          "requires_choice": "community_policing",
+          "text": "Community policing you funded cannot scale to the threat everyone fears."
+        }
+      ],
+      "choices": [
+        {
+          "id": "total_monitoring",
+          "label": "Authorize total communications monitoring",
+          "flavour": "Leave no channel unwatched.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -18, "trust": -12, "future": -8 }
+          },
+          "reaction": "Threats dip — maybe. Citizens feel permanently observed."
+        },
+        {
+          "id": "privacy_charter",
+          "label": "Enshrine a constitutional privacy charter",
+          "flavour": "Rights over convenience.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "autonomy": 14, "trust": 8, "stability": -10, "fairness": 6 }
+          },
+          "reaction": "Courts gain new teeth. Security agencies fume."
+        },
+        {
+          "id": "biometric_ids",
+          "label": "Roll out mandatory biometric ID cards",
+          "flavour": "Prove who you are, everywhere.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -14, "prosperity": 4, "trust": -8 }
+          },
+          "reaction": "Queues move faster. Forgery becomes harder — so does anonymity."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What balance of safety and freedom did you leave?",
+      "choices": [
+        {
+          "id": "security_state",
+          "label": "Build a permanent security state",
+          "flavour": "Safety above privacy.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -16, "trust": -8 }
+          },
+          "reaction": "Incidents fall. Dissent goes underground."
+        },
+        {
+          "id": "free_society",
+          "label": "Choose an open society with accepted risk",
+          "flavour": "Freedom with eyes open.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "autonomy": 14, "trust": 8, "stability": -10, "fragility": 8 }
+          },
+          "reaction": "Life feels less watched. Vulnerabilities remain — and so do the headlines."
+        },
+        {
+          "id": "balanced_framework",
+          "label": "Codify a balanced framework with regular review",
+          "flavour": "Neither extreme wins forever.",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "trust": 6, "stability": 4, "autonomy": 4, "fairness": 4 }
+          },
+          "reaction": "Liberty and safety share a desk — and a permanent grudge."
+        }
+      ]
+    }
+  ]
+}

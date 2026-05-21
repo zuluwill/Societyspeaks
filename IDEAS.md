@@ -46,5 +46,6 @@ Future plans and how we think the business works. See also [docs/](docs/) for im
 
 ## Roadmap & future plans
 
+- **Society Play (game):** master product & engineering plan — [docs/SOCIETY_PLAY_PLAN.md](docs/SOCIETY_PLAY_PLAN.md).
 - Native debate & consensus system: see [.cursor/plans/native-debate-system-cc8e25cf.plan.md](.cursor/plans/native-debate-system-cc8e25cf.plan.md).
 - Feature and implementation docs: [docs/](docs/) (briefing, daily, pricing, outreach, etc.).

@@ -899,6 +899,10 @@ def create_app():
     app.register_blueprint(daily_bp)
     app.logger.debug("Daily question blueprint registered")
 
+    from app.game import game_bp
+    app.register_blueprint(game_bp)
+    app.logger.debug("Society Play blueprint registered")
+
     # Register daily brief blueprints (Evening Sense-Making Brief)
     from app.brief import brief_bp
     app.register_blueprint(brief_bp)

@@ -1,0 +1,227 @@
+{
+  "slug": "young-vs-old",
+  "title": "Young vs Old",
+  "subtitle": "Pensions rise. Paychecks stall. Generations stare across the table.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["demographics", "pensions", "intergenerational"],
+  "initial_state": {
+    "prosperity": 46,
+    "trust": 44,
+    "fairness": 42,
+    "stability": 50,
+    "future": 40,
+    "debt_stress": 55,
+    "autonomy": 54,
+    "fragility": 8
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Pension costs consume a third of the budget. Youth unemployment hits a decade high. Both generations demand priority.",
+      "choices": [
+        {
+          "id": "raise_retirement",
+          "label": "Raise the retirement age",
+          "flavour": "Work longer, pay less.",
+          "memory_label": "raised retirement age",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -10, "stability": -8, "fairness": -6, "trust": -4, "prosperity": 4 }
+          },
+          "reaction": "Older workers protest. Fiscal projections improve. Labour participation ticks up."
+        },
+        {
+          "id": "youth_jobs_guarantee",
+          "label": "Guarantee a first job for every young adult",
+          "flavour": "Payroll promises for the next generation.",
+          "memory_label": "youth jobs guarantee",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 8, "debt_stress": 12, "future": 6 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "debt_stress": 6, "prosperity": 4 },
+              "headline": "Youth programme costs compound as cohorts age"
+            }
+          },
+          "reaction": "Graduates sign contracts. Retirees ask who pays."
+        },
+        {
+          "id": "wealth_transfer_tax",
+          "label": "Tax inherited wealth to fund both pensions and youth",
+          "flavour": "Transfer from estates to budgets.",
+          "memory_label": "inheritance tax rise",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": -8, "stability": -4, "trust": 4 }
+          },
+          "reaction": "Young activists cheer. Family businesses warn of closure — then quietly relocate the patriarch's villa abroad."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Early reforms land. Social media fills with generational memes — funny until they aren't.",
+      "choices": [
+        {
+          "id": "pension_top_up",
+          "label": "Top up pensions for the poorest retirees",
+          "flavour": "Protect those who cannot work longer.",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "fairness": 8, "debt_stress": 8, "trust": 6, "prosperity": -4 }
+          },
+          "reaction": "Fuel poverty eases for elders. Workers notice their own bills."
+        },
+        {
+          "id": "student_debt_relief",
+          "label": "Cancel a portion of student debt",
+          "flavour": "Give young adults a running start.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "debt_stress": 10, "future": 4 }
+          },
+          "reaction": "Graduates celebrate. Taxpayers who never went to university grumble — then stop answering surveys."
+        },
+        {
+          "id": "immigration_youth",
+          "label": "Import young workers through expanded visas",
+          "flavour": "Import the tax base you aren't birthing.",
+          "tags": ["open", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "future": 6, "stability": -8, "trust": -4 }
+          },
+          "reaction": "Payroll taxes rise. Cultural friction follows."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A viral clip shows a retiree and a graduate arguing in a clinic queue. Healthcare becomes the generational battlefield.",
+      "choices": [
+        {
+          "id": "means_test_pensions",
+          "label": "Means-test pension benefits for wealthy retirees",
+          "flavour": "Ask those who can afford it to give back.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 8, "stability": -8, "debt_stress": -8, "trust": -4 }
+          },
+          "reaction": "Comfortable retirees feel punished. Savings rates shift."
+        },
+        {
+          "id": "health_co_payments",
+          "label": "Introduce co-payments for non-urgent care",
+          "flavour": "Share the cost at the point of use.",
+          "tags": ["austerity", "decentralise"],
+          "effects": {
+            "immediate": { "debt_stress": -6, "fairness": -8, "trust": -6, "prosperity": 4 }
+          },
+          "reaction": "Waiting rooms thin for minor issues. Emergency demand stays high."
+        },
+        {
+          "id": "intergenerational_council",
+          "label": "Fund an intergenerational council with real budget power",
+          "flavour": "Let both sides negotiate openly.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "debt_stress": 4, "stability": 4 }
+          },
+          "reaction": "Talks drag — but violence fades from headlines."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "Demographic projections worsen. There are fewer workers than promised when today's pensions were designed.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "raise_retirement",
+          "text": "Raising the retirement age bought time — not enough workers."
+        },
+        {
+          "requires_choice": "youth_jobs_guarantee",
+          "text": "The jobs guarantee you funded did not grow the tax base fast enough."
+        },
+        {
+          "requires_choice": "wealth_transfer_tax",
+          "text": "The inheritance tax you raised froze family transfers — and housing turnover."
+        }
+      ],
+      "choices": [
+        {
+          "id": "cut_pension_index",
+          "label": "Cut pension indexation to inflation",
+          "flavour": "Silent cuts through math.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -12, "stability": -12, "fairness": -10, "trust": -8 }
+          },
+          "reaction": "Spreadsheets look better. Retirees feel betrayed — and vote accordingly."
+        },
+        {
+          "id": "payroll_tax_hike",
+          "label": "Raise payroll taxes on working-age adults",
+          "flavour": "Young workers fund old promises.",
+          "tags": ["redistribute", "borrow"],
+          "effects": {
+            "immediate": { "debt_stress": -8, "fairness": -8, "trust": -6, "prosperity": -6 }
+          },
+          "reaction": "Pension funds stabilise. Paychecks shrink."
+        },
+        {
+          "id": "sovereign_wealth",
+          "label": "Tap sovereign wealth to cover the gap",
+          "flavour": "Spend the nest egg.",
+          "tags": ["borrow", "welfare"],
+          "effects": {
+            "immediate": { "debt_stress": -10, "future": -12, "trust": 4, "stability": 6 }
+          },
+          "reaction": "Both generations breathe easier — briefly. The demographic clock does not pause."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What contract did you leave between generations?",
+      "choices": [
+        {
+          "id": "protect_elderly",
+          "label": "Protect the elderly at the expense of future budgets",
+          "flavour": "Promises to retirees are sacred.",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "trust": 6, "future": -12, "debt_stress": 10, "fairness": -6 }
+          },
+          "reaction": "Grandparents secure. Grandchildren inherit the bill."
+        },
+        {
+          "id": "invest_youth",
+          "label": "Prioritise investment in the young",
+          "flavour": "Future over past.",
+          "tags": ["future", "welfare"],
+          "effects": {
+            "immediate": { "future": 12, "trust": 4, "stability": -8, "fairness": 6 }
+          },
+          "reaction": "Schools and startups flourish. Pensioners discover they have to ask their grandchildren how to apply for benefits online."
+        },
+        {
+          "id": "shared_sacrifice",
+          "label": "Formalise shared sacrifice across age groups",
+          "flavour": "Everyone gives something.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "trust": 6, "prosperity": -6, "stability": 4 }
+          },
+          "reaction": "Nobody is happy. The system holds."
+        }
+      ]
+    }
+  ]
+}

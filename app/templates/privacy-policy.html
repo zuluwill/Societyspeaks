@@ -65,6 +65,45 @@
     <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">info@societyspeaks.io</a>.
     {{ _('We will respond within 30 days. For more on your rights, see section 6 below.') }}</p>
 
+    <h3 class="text-xl font-bold text-gray-800 mt-6 mb-3">{{ _('1.4 Society Play (Tradeoffs) Game Data') }}</h3>
+
+    <p>{{ _("When you play Tradeoffs at /play, the game stores your choices and the state of the society you build. This is behavioural data about how you respond to fictional pressure — not your political views, not your real-world beliefs.") }}</p>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>{{ _('<strong>Choice log</strong> — the sequence of choices you made through a scenario, including a timestamp for each turn and an identifier for the scenario. We use this to compute your outcome, your streak, and to detect patterns the game can reflect back to you on the outcome screen.')|safe }}</li>
+      <li>{{ _('<strong>Society state</strong> — the running stats (prosperity, trust, fairness, stability, plus four hidden stats) updated by your choices. This is derived from your choice log and is reset at the start of each new run.')|safe }}</li>
+      <li>{{ _('<strong>Optional society name</strong> — a short text you can choose to label your society. Stored against your run only; never shared in analytics or with third parties.')|safe }}</li>
+      <li>{{ _('<strong>Session fingerprint</strong> — the same hashed value used for anonymous voting elsewhere on Society Speaks (see 1.3). It lets us recognise you across plays in the same browser so your streak persists, without requiring an account.')|safe }}</li>
+      <li>{{ _('<strong>User ID</strong> — if you have signed in, your runs are attached to your account so they survive cookie clears and follow you across devices.')|safe }}</li>
+    </ul>
+
+    <p>{{ _('<strong>What we do not store:</strong>')|safe }}</p>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>{{ _('We do not store your real political opinions. Your in-game choices reflect a five-minute thought experiment, not your views.') }}</li>
+      <li>{{ _('We do not link your game data to your activity on partner news sites or to advertising profiles. Tradeoffs has no advertising.') }}</li>
+      <li>{{ _('We do not send the optional society name you type into our analytics pipeline (PostHog). Only a boolean flag (named or default) is recorded.') }}</li>
+    </ul>
+
+    <p>{{ _('<strong>Lawful basis:</strong> Legitimate interest for anonymous play (so the game functions, streaks persist, and we can improve scenario balance from aggregate patterns) and contract performance for logged-in accounts (so we can deliver the features tied to your account).')|safe }}</p>
+
+    <p>{{ _('<strong>Retention:</strong>')|safe }}</p>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>{{ _('In-progress runs that go inactive are marked abandoned after 24 hours. Their data is kept for 30 days for debugging, then deleted.') }}</li>
+      <li>{{ _('Completed runs are retained for 24 months so the streak, the outcome screen, and any share link you posted continue to work. After 24 months we anonymise (drop the fingerprint and user link) and keep only aggregated, non-identifying outcome data.') }}</li>
+      <li>{{ _('Account-linked runs are kept for the lifetime of your account. They are deleted when you delete your account.') }}</li>
+      <li>{{ _('Aggregate cohort statistics (e.g. "27 percent of players chose to borrow today") are derived from completed runs and stored indefinitely in non-identifying form.') }}</li>
+    </ul>
+
+    <p>{{ _('<strong>Your rights:</strong>')|safe }}</p>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>{{ _('<strong>Logged-in players:</strong> Delete your account and we cascade-delete every run, outcome, and streak record attached to it within 30 days.')|safe }}</li>
+      <li>{{ _('<strong>Anonymous players:</strong> Email')|safe }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline">info@societyspeaks.io</a> {{ _('with the run UUID from any share link, or your browser fingerprint cookie value (visible in your browser developer tools as the ss_voter_client_id cookie). We will purge the associated runs within 30 days.') }}</li>
+      <li>{{ _('<strong>Export:</strong> Email the address above and we will return a copy of every run and outcome attached to your account or fingerprint, in JSON format, within 30 days.') }}</li>
+    </ul>
+
+    <p>{{ _('<strong>Sharing your outcome:</strong> When you click "Share" on the outcome screen, the link contains your run UUID. Anyone with that link can view your outcome page. Treat the share URL the same way you would treat a private link — it is unguessable but not encrypted.')|safe }}</p>
+
+    <p>{{ _('<strong>Bridge to discussions:</strong> The outcome screen may link to a related Daily Question or Discussion on Society Speaks. Following that link is a normal page visit; it does not transfer your game data to the discussion side of the platform.') }}</p>
+
     <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('2. How We Use Your Information') }}</h2>
 
     <p>{{ _('We use your information to:') }}</p>

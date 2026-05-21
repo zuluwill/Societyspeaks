@@ -1,0 +1,227 @@
+{
+  "slug": "tax-cuts-public-services",
+  "title": "Tax Cuts or Public Services",
+  "subtitle": "Campaign promises meet arithmetic.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["taxation", "public_services", "fiscal"],
+  "initial_state": {
+    "prosperity": 50,
+    "trust": 52,
+    "fairness": 46,
+    "stability": 48,
+    "future": 44,
+    "debt_stress": 48,
+    "autonomy": 56,
+    "fragility": 7
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "You won on a promise to cut taxes. Voters expect relief. Schools, hospitals, and roads expect funding.",
+      "choices": [
+        {
+          "id": "cut_services",
+          "label": "Cut public services to fund tax reductions",
+          "flavour": "Smaller state, lighter wallet.",
+          "memory_label": "service cuts for tax cuts",
+          "tags": ["austerity", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "trust": -8, "fairness": -8, "debt_stress": -6 }
+          },
+          "reaction": "Paychecks grow. Waiting lists lengthen."
+        },
+        {
+          "id": "borrow_gap",
+          "label": "Cut taxes and borrow to cover the gap",
+          "flavour": "Have the cake. Eat it. Invoice later.",
+          "memory_label": "tax cuts funded by borrowing",
+          "tags": ["borrow", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "trust": 6, "debt_stress": 14, "future": -6 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "debt_stress": 8, "stability": -4 },
+              "headline": "Borrowing to fund tax cuts starts to spook markets"
+            }
+          },
+          "reaction": "Consumers spend. Bond traders reach for their spreadsheets."
+        },
+        {
+          "id": "wealth_tax_instead",
+          "label": "Shift the burden with a wealth tax instead of income cuts",
+          "flavour": "Cut middle taxes, charge assets.",
+          "memory_label": "wealth tax swap",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": -6, "trust": 4, "stability": -4 }
+          },
+          "reaction": "Middle earners cheer. Asset holders threaten exit."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Tax cuts appear in payslips. Approval rises — until the first service failures hit the news.",
+      "choices": [
+        {
+          "id": "privatise_services",
+          "label": "Privatise underperforming services",
+          "flavour": "Let markets deliver efficiency.",
+          "tags": ["decentralise", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "fairness": -10, "trust": -6, "autonomy": 6 }
+          },
+          "reaction": "Queues shorten for those who can pay. Others fall behind."
+        },
+        {
+          "id": "efficiency_drive",
+          "label": "Launch a public-sector efficiency drive",
+          "flavour": "Do more with less — on paper.",
+          "tags": ["austerity", "centralise"],
+          "effects": {
+            "immediate": { "debt_stress": -6, "trust": -4, "prosperity": 2, "fragility": 6 }
+          },
+          "reaction": "Consultants arrive with slide decks. Frontline staff update their out-of-office."
+        },
+        {
+          "id": "targeted_relief",
+          "label": "Retarget tax relief to low earners only",
+          "flavour": "Regressive cuts become progressive ones.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 8, "trust": 6, "prosperity": -4, "debt_stress": 4 }
+          },
+          "reaction": "Poorest households gain. High earners feel misled."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Credit agencies warn: revenue falls short of projections. Something must give before the next budget.",
+      "choices": [
+        {
+          "id": "reverse_cuts",
+          "label": "Partially reverse tax cuts to stabilise finances",
+          "flavour": "Break a promise to keep the books.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "debt_stress": -10, "trust": -12, "stability": -6, "prosperity": -4 }
+          },
+          "reaction": "Markets calm. Voters feel duped."
+        },
+        {
+          "id": "sell_assets",
+          "label": "Sell state assets to plug the hole",
+          "flavour": "Privatise the silver.",
+          "tags": ["decentralise", "borrow"],
+          "effects": {
+            "immediate": { "debt_stress": -8, "prosperity": 4, "autonomy": -8, "future": -6 }
+          },
+          "reaction": "One-off cash arrives. Strategic capacity leaves."
+        },
+        {
+          "id": "growth_gamble",
+          "label": "Double down — cut taxes further to spur growth",
+          "flavour": "Laffer curve faith.",
+          "tags": ["growth", "borrow"],
+          "effects": {
+            "immediate": { "prosperity": 6, "debt_stress": 12, "future": -8, "fragility": 10 }
+          },
+          "reaction": "Shopping tills ring. Economists argue on television — nobody changes channel."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "A school roof collapses. A hospital cancels surgeries. The trade-off is no longer abstract.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "cut_services",
+          "text": "The service cuts you made to fund tax relief are now headline tragedies."
+        },
+        {
+          "requires_choice": "borrow_gap",
+          "text": "Borrowing you used to defer pain is now due with interest."
+        },
+        {
+          "requires_choice": "wealth_tax_instead",
+          "text": "The wealth tax you introduced drove capital offshore before revenue landed."
+        }
+      ],
+      "choices": [
+        {
+          "id": "emergency_levy",
+          "label": "Emergency levy to restore critical services",
+          "flavour": "Take back with one hand what you gave with the other.",
+          "tags": ["redistribute", "welfare"],
+          "effects": {
+            "immediate": { "trust": -8, "debt_stress": -8, "fairness": 4, "stability": 6 }
+          },
+          "reaction": "Services reopen. The mandate feels damaged."
+        },
+        {
+          "id": "service_collapse",
+          "label": "Accept service collapse in poorer regions",
+          "flavour": "Geography determines quality.",
+          "tags": ["austerity", "decentralise"],
+          "effects": {
+            "immediate": { "debt_stress": -6, "fairness": -14, "stability": -10, "prosperity": 4 }
+          },
+          "reaction": "Wealthy districts cope. Others empty out."
+        },
+        {
+          "id": "nationalise_failures",
+          "label": "Nationalise failing privatised providers",
+          "flavour": "Take back control — again.",
+          "tags": ["centralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 4, "debt_stress": 10, "prosperity": -6, "autonomy": 6 }
+          },
+          "reaction": "State managers return. Shareholders sue."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What size of state did you leave?",
+      "choices": [
+        {
+          "id": "small_state",
+          "label": "Entrench a small-state, low-tax model",
+          "flavour": "Keep taxes low forever.",
+          "tags": ["growth", "austerity"],
+          "effects": {
+            "immediate": { "prosperity": 10, "trust": -6, "fairness": -10, "debt_stress": -4 }
+          },
+          "reaction": "Entrepreneurs pop champagne. The library closes on Tuesdays — permanently."
+        },
+        {
+          "id": "strong_services",
+          "label": "Rebuild robust public services even if taxes rise",
+          "flavour": "Collective provision wins.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "trust": 10, "fairness": 8, "prosperity": -8, "debt_stress": 6 }
+          },
+          "reaction": "Institutions recover. Paychecks shrink — and so does patience."
+        },
+        {
+          "id": "mixed_model",
+          "label": "Settle on a mixed public-private model",
+          "flavour": "Neither pure market nor pure state.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 4, "prosperity": 2, "fairness": 2, "stability": 4 }
+          },
+          "reaction": "Your postcode now predicts your life chances. Politicians call it pragmatism."
+        }
+      ]
+    }
+  ]
+}

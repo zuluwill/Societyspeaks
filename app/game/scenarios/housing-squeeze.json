@@ -1,0 +1,232 @@
+{
+  "slug": "housing-squeeze",
+  "title": "The Housing Squeeze",
+  "subtitle": "Everyone needs a roof. Not everyone agrees how to build one.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["housing", "economy", "demographics"],
+  "initial_state": {
+    "prosperity": 48,
+    "trust": 44,
+    "fairness": 38,
+    "stability": 52,
+    "future": 42,
+    "debt_stress": 55,
+    "autonomy": 62,
+    "fragility": 8
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Rents hit record highs. Young workers are priced out of every major city. Protesters occupy empty office blocks.",
+      "choices": [
+        {
+          "id": "build_outward",
+          "label": "Rezone greenbelt land for housing",
+          "flavour": "Build your way out.",
+          "memory_label": "greenbelt rezoning",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 6, "trust": -4, "future": 8, "stability": -5 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "prosperity": 5, "trust": -6 },
+              "headline": "New suburbs sprawl faster than services can follow"
+            }
+          },
+          "reaction": "Developers celebrate. Environmental groups block roads — then get sued."
+        },
+        {
+          "id": "rent_cap",
+          "label": "Cap rents in pressured cities",
+          "flavour": "Relief now for tenants.",
+          "memory_label": "rent caps",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "trust": 6, "prosperity": -5, "autonomy": -4 }
+          },
+          "reaction": "Tenants breathe easier. Landlords threaten to sell up."
+        },
+        {
+          "id": "buyer_subsidy",
+          "label": "Subsidise first-time buyers",
+          "flavour": "Help people onto the ladder.",
+          "memory_label": "buyer subsidies",
+          "tags": ["borrow", "growth"],
+          "effects": {
+            "immediate": { "trust": 5, "debt_stress": 10, "prosperity": 4, "fairness": -3 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": 3, "fairness": -5 },
+              "headline": "Subsidies inflate prices — sellers win, buyers still struggle"
+            }
+          },
+          "reaction": "Estate agents report a rush. Economists update their bubble charts — again."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Headlines soften. A few projects break ground. Approval ticks up — for now.",
+      "choices": [
+        {
+          "id": "social_housing",
+          "label": "Launch a public housing programme",
+          "flavour": "The state builds directly.",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "fairness": 8, "trust": 5, "debt_stress": 12, "future": 6 }
+          },
+          "reaction": "Waiting lists shorten — slowly. The treasury groans."
+        },
+        {
+          "id": "fast_track",
+          "label": "Fast-track planning for developers",
+          "flavour": "Speed over scrutiny.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "trust": -3, "stability": -4, "fragility": 6 }
+          },
+          "reaction": "Cranes multiply. Neighbours sue over every permit."
+        },
+        {
+          "id": "empty_homes_tax",
+          "label": "Tax empty and second homes",
+          "flavour": "Use it or lose it.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 7, "prosperity": -4, "trust": 3, "autonomy": -2 }
+          },
+          "reaction": "Holiday-home owners protest. Some properties hit the market."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Prices are still rising. Construction costs spike. Something has to give.",
+      "choices": [
+        {
+          "id": "import_labour",
+          "label": "Ease visas for construction workers",
+          "flavour": "Build faster with imported labour.",
+          "tags": ["growth", "open"],
+          "effects": {
+            "immediate": { "prosperity": 6, "stability": -8, "trust": -4, "future": 5 }
+          },
+          "reaction": "Sites fill with new crews. Cultural backlash builds in the press."
+        },
+        {
+          "id": "cut_benefits",
+          "label": "Cut housing benefits to force affordability",
+          "flavour": "The market must adjust.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -8, "fairness": -10, "trust": -8, "stability": -6 }
+          },
+          "reaction": "Landlords drop rents — in some areas. Homelessness rises in others."
+        },
+        {
+          "id": "ban_foreign_buyers",
+          "label": "Ban non-resident property purchases",
+          "flavour": "Homes for people who live here.",
+          "tags": ["restrict", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 6, "prosperity": -6, "trust": 4, "autonomy": 4 }
+          },
+          "reaction": "Investors pull capital. Locals cheer — then notice fewer new builds."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The trade-offs from earlier choices collide. There are no clean fixes left.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "rent_cap",
+          "text": "Rent caps you introduced are now shrinking the rental supply you promised to protect."
+        },
+        {
+          "requires_choice": "build_outward",
+          "text": "The sprawl you approved is choking commutes — and your approval with it."
+        },
+        {
+          "requires_choice": "buyer_subsidy",
+          "text": "Buyer subsidies you funded are still pumping prices upward."
+        }
+      ],
+      "choices": [
+        {
+          "id": "emergency_build",
+          "label": "Emergency modular housing blitz",
+          "flavour": "Ugly, fast, necessary.",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 6, "debt_stress": 14, "stability": -5, "future": -4 }
+          },
+          "reaction": "Families move in. Architects wince. Markets watch the borrowing."
+        },
+        {
+          "id": "privatise_land",
+          "label": "Sell public land to fund builds",
+          "flavour": "Liquidate assets to build.",
+          "tags": ["growth", "austerity"],
+          "effects": {
+            "immediate": { "prosperity": 8, "debt_stress": -10, "fairness": -8, "future": -6 }
+          },
+          "reaction": "Treasury breathes. Future generations inherit less — and know it."
+        },
+        {
+          "id": "do_nothing",
+          "label": "Hold the line and weather the storm",
+          "flavour": "Hope inertia counts as strategy.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "trust": -10, "stability": -12, "debt_stress": -6, "fragility": 10 }
+          },
+          "reaction": "Markets appreciate the discipline. Tent cities grow quietly."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What kind of housing market did you leave behind?",
+      "choices": [
+        {
+          "id": "homeowner_society",
+          "label": "Prioritise homeowners and builders",
+          "flavour": "Property wins.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fairness": -12, "trust": -4 }
+          },
+          "reaction": "Asset owners celebrate. Renters write angry op-eds."
+        },
+        {
+          "id": "renter_protections",
+          "label": "Lock in tenant protections forever",
+          "flavour": "Renters first, markets second.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 12, "prosperity": -8, "trust": 4, "debt_stress": 6 }
+          },
+          "reaction": "Tenants feel seen. Investment in new housing dries up — then rents rise anyway."
+        },
+        {
+          "id": "market_free",
+          "label": "Deregulate and let the market reset",
+          "flavour": "Creative destruction.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 6, "stability": -10, "autonomy": 10, "fairness": -8 }
+          },
+          "reaction": "Prices gyrate. Some win big. Many learn what collateral means."
+        }
+      ]
+    }
+  ]
+}

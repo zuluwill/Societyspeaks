@@ -60,6 +60,9 @@ Unidecode>=1.3.0
 # Analytics
 posthog>=7.4.2
 
+# Image rendering (Society Play OG share cards)
+Pillow>=10.4.0
+
 # CORS for API endpoints
 flask-cors>=6.0.2
 

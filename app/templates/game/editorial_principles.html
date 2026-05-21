@@ -1,0 +1,144 @@
+{% extends "game/base.html" %}
+
+{% block game_title %}{{ _('How Tradeoffs is written') }}{% endblock %}
+
+{% block game_main_width %}max-w-2xl{% endblock %}
+
+{% block game_head %}
+<meta name="description" content="{{ _('How Tradeoffs is written — the editorial principles behind a five-minute civic game that simulates pressure, not ideology.') }}">
+{% endblock %}
+
+{% block game_content %}
+<article class="game-editorial">
+
+  <header class="game-editorial-hero">
+    <p class="game-editorial-eyebrow">{{ _('How Tradeoffs is written') }}</p>
+    <h1 class="game-editorial-title">
+      {{ _('The game holds up a mirror; it never grades the reflection.') }}
+    </h1>
+    <p class="game-editorial-deck">
+      {{ _("Every scenario is designed to make you feel a real trade-off, not to teach you what to think. Here is the editorial discipline that keeps it honest.") }}
+    </p>
+  </header>
+
+  <hr class="game-editorial-rule">
+
+  <section class="game-editorial-section">
+    <h2 class="game-editorial-h2">{{ _('What Tradeoffs is') }}</h2>
+    <p>
+      {{ _("Tradeoffs is a five-turn game about governing. You face one crisis with no good answers. Borrow now and pay later, or cut now and lose trust. Build fast and fracture the country, or move slowly while the queues grow.") }}
+    </p>
+    <p>
+      {{ _("Each turn presents three choices. Every choice helps at least one part of society and hurts another. Some come due immediately. Some come due later, the way real policy does. After five turns, you see what kind of leader you became under pressure — and what kind of society you left behind.") }}
+    </p>
+  </section>
+
+  <section class="game-editorial-section">
+    <h2 class="game-editorial-h2">{{ _('What Tradeoffs is not') }}</h2>
+    <ul class="game-editorial-anti-list">
+      <li>{{ _('It is not a policy simulator. Real economies have hundreds of levers; we abstract to the dozen that show up in the news.') }}</li>
+      <li>{{ _('It is not a quiz with right answers. The headlines you collect describe what happened — they do not grade the choice.') }}</li>
+      <li>{{ _('It is not a partisan litmus test. Every choice is written so a thoughtful person could defend it from inside a real political tradition.') }}</li>
+      <li>{{ _('It is not an opinion piece. We use real research, but every scenario is fiction, set in no country you can name.') }}</li>
+    </ul>
+  </section>
+
+  <hr class="game-editorial-rule">
+
+  <section class="game-editorial-section">
+    <h2 class="game-editorial-h2">{{ _('Ten principles') }}</h2>
+
+    <ol class="game-editorial-principles">
+      <li>
+        <h3>{{ _('We simulate pressure, not ideology.') }}</h3>
+        <p>{{ _("The game is about the feeling of tradeoffs — relief and regret, urgency and unintended consequence. It is not about whether you should be a centrist or a leftist or a libertarian. The same scenario is written so any of those starting points can navigate it without feeling cornered.") }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Multiple paths remain viable.') }}</h3>
+        <p>{{ _("If one choice in a turn is strictly better than the others — no real-world cost, no plausible downside — that turn is broken and we rewrite it. The interesting tension lives in choices that are all defensible from somewhere.") }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Consequences describe, never judge.') }}</h3>
+        <p>{{ _('We say "Retirees protest. Bond yields fall — slightly." We do not say "The cruel pension cut sparked outrage." The verbs are observational. The verdict belongs to the player.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Systems, not tribes.') }}</h3>
+        <p>{{ _('No choice is tagged with a party label, a personality, or a country. The pressures are universal — debt, housing, energy, migration — and the actors are descriptive: unions, investors, retirees, regulators. If a reaction would only make sense inside one political tradition, we cut it.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Framing is audited for balance.') }}</h3>
+        <p>{{ _('Every scenario goes through a checklist: are the choices labelled neutrally? Do the reactions name real stakeholders without mocking them? Does any single choice feel written to be wrong? When the answer is yes to that last one, the scenario fails the validator and goes back for rewrite.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Causality is simplified, not claimed as truth.') }}</h3>
+        <p>{{ _('A choice that lowers public spending will lower debt pressure in the game. In the real world it depends on a hundred variables. We make the mechanic legible so the lesson lands: every lever has weight.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Global first.') }}</h3>
+        <p>{{ _('Scenarios are written so they read clearly in São Paulo, Lagos, Mumbai, Berlin, and Iowa. If a scenario needs a footnote about a country-specific institution to make sense, we rewrite the scenario.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('Players discover contradictions; we never accuse.') }}</h3>
+        <p>{{ _('If you start by protecting fairness and end by cutting benefits twice, the game will gently note that — not as a moral failing, but as an observation. "Under pressure" is the word for it. Politicians do this. Ordinary people do this. The mirror is the point.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('We show tradeoffs, not purity.') }}</h3>
+        <p>{{ _('There is no path through any scenario that improves every stat. The best runs are the most interesting — the ones where you can articulate what you protected and what you sacrificed.') }}</p>
+      </li>
+      <li>
+        <h3>{{ _('When in doubt, cut the lecture.') }}</h3>
+        <p>{{ _('The five turns are short on purpose. If a line of prose is teaching rather than evoking, it goes. If a consequence headline reads like a press release, it goes. The game is a feeling, not a class.') }}</p>
+      </li>
+    </ol>
+  </section>
+
+  <hr class="game-editorial-rule">
+
+  <section class="game-editorial-section">
+    <h2 class="game-editorial-h2">{{ _('What the validator catches') }}</h2>
+    <p>{{ _('Every scenario passes through a publish gate before it can appear in the rotation. The gate enforces — automatically, in the codebase, with tests — the rules that the prose alone cannot guarantee:') }}</p>
+    <ul class="game-editorial-list">
+      <li>{{ _('Five turns, in the order hook → confidence → crack → oh no → legacy. The emotional shape is fixed; the content varies.') }}</li>
+      <li>{{ _('Three choices per turn, every choice must help at least one stat that the player can see.') }}</li>
+      <li>{{ _('At least one delayed consequence per scenario, because the "oh no" beat only lands when an early choice comes due later.') }}</li>
+      <li>{{ _('Three memory callbacks on turn four — the run is only yours if turn four references your earlier moves by name.') }}</li>
+      <li>{{ _('No choice can sit on both sides of an opposing axis (welfare and austerity, centralise and decentralise) — that would confuse the engine that tracks your value shifts across the run.') }}</li>
+      <li>{{ _('No turn where every choice shows only down-arrows to the player. If a turn reads as picked-on, the scenario fails.') }}</li>
+    </ul>
+    <p class="game-editorial-aside">
+      {{ _("These rules are not aspirations. They are the conditions under which a scenario can be published. The corpus you play has all passed them.") }}
+    </p>
+  </section>
+
+  <section class="game-editorial-section">
+    <h2 class="game-editorial-h2">{{ _('Who writes the scenarios') }}</h2>
+    <p>
+      {{ _("Tradeoffs is written by a small team using AI as a drafting partner. The founder makes every balance decision, sets every tag, audits every consequence headline, and signs off on every publish. AI helps with the first pass — the policy lever search, the dramatic shape, the phrasing — and is never trusted to make the choice about whether a scenario is fair.") }}
+    </p>
+    <p>
+      {{ _("Every scenario gets a self-sensitivity audit against the principles above before it ships. Where the topic is delicate — migration, populism, surveillance, corruption — we look for outside reads from people whose lives the topic actually touches.") }}
+    </p>
+  </section>
+
+  <section class="game-editorial-section">
+    <h2 class="game-editorial-h2">{{ _('When we get it wrong') }}</h2>
+    <p>
+      {{ _('We will. Five turns and three choices is a tight budget for handling complex topics, and a writer with a perspective will leak through, no matter how hard we audit.') }}
+    </p>
+    <p>
+      {{ _('If you finish a scenario and feel cornered into one ideology — if any single choice reads to you as a straw man written by the other side — tell us. The fix is usually a rewrite, not an argument. Reach us at') }}
+      <a href="mailto:info@societyspeaks.io" class="game-editorial-link">info@societyspeaks.io</a>{{ _(' with the scenario name and the choice that landed wrong.') }}
+    </p>
+  </section>
+
+  <hr class="game-editorial-rule">
+
+  <footer class="game-editorial-footer">
+    <p class="game-editorial-tagline">{{ _('Every choice costs something.') }}</p>
+    <div class="game-editorial-cta">
+      <a href="{{ url_for('game.index') }}" class="game-btn-primary">{{ _("Play today's scenario") }}</a>
+    </div>
+  </footer>
+
+</article>
+{% endblock %}

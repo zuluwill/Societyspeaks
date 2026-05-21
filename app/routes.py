@@ -113,6 +113,19 @@ def index():
     if daily_brief:
         brief_items = daily_brief.items.order_by(db.text('position')).limit(5).all()
 
+    # Today's Tradeoffs scenario for the homepage Three Ways card. Resilient:
+    # if the game module fails (config off, missing scenario, etc.) the card
+    # falls back to a generic copy block in the template.
+    play_meta = None
+    if current_app.config.get('GAME_ENABLED', True):
+        try:
+            from app.game.services.daily_service import daily_meta as _daily_meta
+            play_meta = _daily_meta()
+        except Exception:  # noqa: BLE001 — homepage must never break on game errors
+            current_app.logger.warning(
+                'Homepage: failed to load Tradeoffs daily meta', exc_info=True
+            )
+
     journey_slugs = guided_journey_slug_set()
     _jp_cache_key = "homepage_journey_programmes"
     _slug_fp = ",".join(sorted(journey_slugs))
@@ -209,6 +222,7 @@ def index():
                          daily_question=daily_question,
                          daily_brief=daily_brief,
                          brief_items=brief_items,
+                         play_meta=play_meta,
                          guided_journey_programme=guided_journey_programme,
                          journey_personalisation=journey_personalisation,
                          all_journey_programmes=all_journey_programmes,

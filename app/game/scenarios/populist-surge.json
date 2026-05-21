@@ -1,0 +1,227 @@
+{
+  "slug": "populist-surge",
+  "title": "The Populist Surge",
+  "subtitle": "The crowd wants simple answers. Reality refuses.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["democracy", "populism", "trust"],
+  "initial_state": {
+    "prosperity": 44,
+    "trust": 32,
+    "fairness": 40,
+    "stability": 38,
+    "future": 42,
+    "debt_stress": 50,
+    "autonomy": 50,
+    "fragility": 16
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Mass rallies demand instant fixes: lower prices, higher wages, fewer outsiders. Your approval sits at a record low.",
+      "choices": [
+        {
+          "id": "promise_everything",
+          "label": "Promise immediate relief — wages, prices, benefits",
+          "flavour": "Give the crowd what it asks for.",
+          "memory_label": "blanket relief promises",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 12, "debt_stress": 14, "future": -8, "fragility": 10 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": -6, "stability": -4 },
+              "headline": "Relief spending fuels inflation faster than hoped"
+            }
+          },
+          "reaction": "Cheers in the square. Economists reach for aspirin."
+        },
+        {
+          "id": "crack_down",
+          "label": "Crack down on protests and restrict gatherings",
+          "flavour": "Order before dialogue.",
+          "memory_label": "protest restrictions",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": -14, "autonomy": -8, "fairness": -8 }
+          },
+          "reaction": "Streets empty. Underground anger grows."
+        },
+        {
+          "id": "snap_election",
+          "label": "Call a snap election to seek a fresh mandate",
+          "flavour": "Let voters decide — again.",
+          "memory_label": "snap election",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 6, "stability": -10, "fragility": 12, "prosperity": -4 }
+          },
+          "reaction": "Campaigns ignite. Markets hold their breath."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Short-term gestures buy time. Opposition leaders offer even simpler promises.",
+      "choices": [
+        {
+          "id": "price_controls",
+          "label": "Impose price controls on essentials",
+          "flavour": "Cap what people pay at the shelf.",
+          "tags": ["centralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "prosperity": -8, "fragility": 10, "fairness": 4 }
+          },
+          "reaction": "Shelves stay stocked — until they don't."
+        },
+        {
+          "id": "blame_elites",
+          "label": "Launch inquiries into elite corruption and privilege",
+          "flavour": "Channel anger upward.",
+          "tags": ["redistribute", "decentralise"],
+          "effects": {
+            "immediate": { "trust": 6, "fairness": 6, "stability": -6, "prosperity": -4 }
+          },
+          "reaction": "Headlines satisfy the crowd. Convictions are slow."
+        },
+        {
+          "id": "coalition_opposition",
+          "label": "Invite opposition leaders into a unity coalition",
+          "flavour": "Share power to share blame.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 4, "autonomy": -6, "fragility": 8 }
+          },
+          "reaction": "Cabinet photos look diverse. Decisions slow down."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Empty shelves and job losses spread. The movement that lifted you now threatens to consume you.",
+      "choices": [
+        {
+          "id": "print_and_spend",
+          "label": "Print money and spend on public works",
+          "flavour": "Jobs today, inflation tomorrow.",
+          "tags": ["borrow", "welfare"],
+          "effects": {
+            "immediate": { "prosperity": 8, "trust": 6, "stability": -8, "future": -12 }
+          },
+          "reaction": "Shovels hit dirt. Prices follow upward."
+        },
+        {
+          "id": "blame_outsiders",
+          "label": "Blame external groups and tighten borders",
+          "flavour": "Find someone to point at.",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "stability": 6, "fairness": -14, "trust": -6, "autonomy": 4 }
+          },
+          "reaction": "Rallies roar approval. Minorities fear tomorrow."
+        },
+        {
+          "id": "technocrat_cabinet",
+          "label": "Replace political appointees with technocrats",
+          "flavour": "Competence over charisma.",
+          "tags": ["centralise", "austerity"],
+          "effects": {
+            "immediate": { "trust": -6, "prosperity": 4, "stability": 4, "future": 6 }
+          },
+          "reaction": "Spreadsheets improve. The base feels ignored."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The simple answers collide with compound problems. There is no speech that fixes the ledger.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "promise_everything",
+          "text": "Every promise you made now demands payment at once."
+        },
+        {
+          "requires_choice": "price_controls",
+          "text": "Price caps you imposed created shortages nobody queued for politely."
+        },
+        {
+          "requires_choice": "crack_down",
+          "text": "The protest restrictions you imposed are now the story, not the fixes."
+        }
+      ],
+      "choices": [
+        {
+          "id": "default_promises",
+          "label": "Quietly default on the most expensive promises",
+          "flavour": "Hope nobody reads the fine print.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "trust": -14, "debt_stress": -8, "stability": -10, "prosperity": -4 }
+          },
+          "reaction": "Riots return. Bond markets exhale slightly."
+        },
+        {
+          "id": "rule_by_decree",
+          "label": "Govern by emergency decree until stability returns",
+          "flavour": "Democracy paused for safety.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -16, "trust": -10, "fairness": -8 }
+          },
+          "reaction": "Decisions speed up. Legitimacy frays."
+        },
+        {
+          "id": "citizens_assembly",
+          "label": "Convene a citizens' assembly on hard trade-offs",
+          "flavour": "Let ordinary people choose the pain.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "stability": -6, "fairness": 6, "prosperity": -4 }
+          },
+          "reaction": "Deliberation takes months. Violence slows."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What did you leave democracy looking like?",
+      "choices": [
+        {
+          "id": "order_first_legacy",
+          "label": "Leave a centralised, order-first legacy",
+          "flavour": "Stability over participation.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -12, "trust": -8 }
+          },
+          "reaction": "Streets are calm. Voices stay quiet."
+        },
+        {
+          "id": "renewed_democracy",
+          "label": "Rebuild institutions and democratic trust",
+          "flavour": "Slow repair over quick fixes.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 12, "stability": -6, "future": 8, "prosperity": -4 }
+          },
+          "reaction": "Participation rises. Problems remain — openly debated, rarely solved."
+        },
+        {
+          "id": "managed_decline",
+          "label": "Accept managed decline with targeted support",
+          "flavour": "Honesty without spectacle.",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 2, "prosperity": -6, "fairness": 4 }
+          },
+          "reaction": "Expectations fall to match reality. Cynicism softens — one headline at a time."
+        }
+      ]
+    }
+  ]
+}

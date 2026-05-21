@@ -582,6 +582,15 @@ class Config:
     # Async programme export queue controls.
     EXPORT_QUEUE_PROCESS_IN_SCHEDULER = os.getenv('EXPORT_QUEUE_PROCESS_IN_SCHEDULER', 'false').lower() == 'true'
     EXPORT_DOWNLOAD_TOKEN_MAX_AGE_SECONDS = int(os.getenv('EXPORT_DOWNLOAD_TOKEN_MAX_AGE_SECONDS', '3600'))
+
+    # Society Play (Tradeoffs game)
+    GAME_ENABLED = os.getenv('GAME_ENABLED', 'true').lower() == 'true'
+    GAME_DAILY_PUBLISH_HOUR_UTC = _env_int('GAME_DAILY_PUBLISH_HOUR_UTC', 7)
+    GAME_CAMPAIGN_SAVE_DAYS = _env_int('GAME_CAMPAIGN_SAVE_DAYS', 7)
+    GAME_DAILY_RUN_EXPIRY_HOURS = _env_int('GAME_DAILY_RUN_EXPIRY_HOURS', 24)
+    GAME_SCHEDULE_BUFFER_DAYS = _env_int('GAME_SCHEDULE_BUFFER_DAYS', 14)
+    GAME_COHORT_MIN_N = _env_int('GAME_COHORT_MIN_N', 200)
+    GAME_RATE_LIMIT_CHOOSE = os.getenv('GAME_RATE_LIMIT_CHOOSE', '30 per minute')
     
 class DevelopmentConfig(Config):
     FLASK_ENV = 'development'

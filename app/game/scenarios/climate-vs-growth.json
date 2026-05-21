@@ -1,0 +1,232 @@
+{
+  "slug": "climate-vs-growth",
+  "title": "Climate vs Growth",
+  "subtitle": "The targets are binding. The factories are hiring.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["climate", "economy", "regulation"],
+  "initial_state": {
+    "prosperity": 54,
+    "trust": 42,
+    "fairness": 50,
+    "stability": 46,
+    "future": 35,
+    "debt_stress": 38,
+    "autonomy": 58,
+    "fragility": 9
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "International treaty deadlines arrive. Emissions must fall 40% this decade — or face trade penalties.",
+      "choices": [
+        {
+          "id": "strict_cap",
+          "label": "Enforce a strict emissions cap immediately",
+          "flavour": "Meet the target on schedule.",
+          "memory_label": "strict emissions cap",
+          "tags": ["environment", "restrict"],
+          "effects": {
+            "immediate": { "future": 14, "prosperity": -10, "stability": -6, "trust": 4 }
+          },
+          "reaction": "Smokestacks idle. Workers march in industrial towns."
+        },
+        {
+          "id": "delay_targets",
+          "label": "Negotiate a delay to protect jobs",
+          "flavour": "Growth first, climate later.",
+          "memory_label": "delayed climate targets",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "future": -14, "trust": -6, "autonomy": 4 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "trust": -6, "future": -6 },
+              "headline": "Treaty partners signal carbon border tariffs in retaliation"
+            }
+          },
+          "reaction": "Factories keep running. Diplomats warn of sanctions."
+        },
+        {
+          "id": "carbon_tax_rebate",
+          "label": "Carbon tax with rebates for low earners",
+          "flavour": "Price pollution, protect the vulnerable.",
+          "memory_label": "carbon tax with rebates",
+          "tags": ["redistribute", "environment"],
+          "effects": {
+            "immediate": { "fairness": 8, "future": 8, "prosperity": -6, "trust": 2 }
+          },
+          "reaction": "Fuel prices rise. Rebate cheques soften the blow — for some."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Early data shows emissions dipping — or stalling. Both sides claim vindication.",
+      "choices": [
+        {
+          "id": "green_jobs",
+          "label": "Fund a green jobs transition programme",
+          "flavour": "Retrain workers into clean industries.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "future": 10, "trust": 6, "debt_stress": 10, "prosperity": -2 }
+          },
+          "reaction": "Solar installers hire. Coal towns watch warily — then vote."
+        },
+        {
+          "id": "export_credits",
+          "label": "Buy carbon credits abroad instead of cutting at home",
+          "flavour": "Pay others to pollute less for you.",
+          "tags": ["open", "borrow"],
+          "effects": {
+            "immediate": { "prosperity": 4, "future": 4, "debt_stress": 8, "autonomy": -6 }
+          },
+          "reaction": "Spreadsheets show compliance. Activists call it cheating."
+        },
+        {
+          "id": "deregulate_industry",
+          "label": "Cut environmental rules to boost output",
+          "flavour": "Compete while others hesitate.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 10, "future": -10, "trust": -8, "fragility": 8 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": -6, "trust": -4 },
+              "headline": "Lawsuits and clean-up costs eat into the growth dividend"
+            }
+          },
+          "reaction": "GDP ticks up. Hospital admissions for respiratory illness follow."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Extreme weather destroys infrastructure. Insurers raise premiums nationwide. The cost of inaction arrives early.",
+      "choices": [
+        {
+          "id": "climate_adaptation",
+          "label": "Borrow heavily for climate adaptation",
+          "flavour": "Build walls, grids, and backups.",
+          "tags": ["borrow", "future"],
+          "effects": {
+            "immediate": { "future": 8, "debt_stress": 14, "stability": 6, "prosperity": -4 }
+          },
+          "reaction": "Flood barriers rise. Interest payments loom."
+        },
+        {
+          "id": "fossil_subsidies",
+          "label": "Subsidise fossil fuel to keep prices down",
+          "flavour": "Affordable energy wins elections.",
+          "tags": ["growth", "welfare"],
+          "effects": {
+            "immediate": { "trust": 6, "future": -12, "debt_stress": 10, "prosperity": 4 }
+          },
+          "reaction": "Pump prices fall. Climate goals slip further."
+        },
+        {
+          "id": "litigate_polluters",
+          "label": "Sue major polluters for disaster costs",
+          "flavour": "Make them pay for the damage.",
+          "tags": ["redistribute", "restrict"],
+          "effects": {
+            "immediate": { "fairness": 8, "prosperity": -8, "trust": 4, "stability": -4 }
+          },
+          "reaction": "Courts clog with cases. Investors flee carbon-heavy sectors."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "Trade partners announce carbon border taxes. Your earlier choices determine who pays.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "delay_targets",
+          "text": "Partners remember every year you asked for more time."
+        },
+        {
+          "requires_choice": "deregulate_industry",
+          "text": "The world now prices your exports like a high-carbon pariah."
+        },
+        {
+          "requires_choice": "strict_cap",
+          "text": "The cap you enforced early left no slack when disaster struck."
+        }
+      ],
+      "choices": [
+        {
+          "id": "emergency_pivot",
+          "label": "Emergency pivot — shut dirty plants within a year",
+          "flavour": "Crash compliance.",
+          "tags": ["environment", "restrict"],
+          "effects": {
+            "immediate": { "future": 12, "prosperity": -14, "stability": -10, "trust": -4 }
+          },
+          "reaction": "Emissions plunge. Unemployment spikes overnight."
+        },
+        {
+          "id": "retaliate_tariffs",
+          "label": "Retaliate with tariffs of your own",
+          "flavour": "Trade war as climate policy.",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "autonomy": 8, "prosperity": -12, "stability": -8, "trust": -4 }
+          },
+          "reaction": "Shelves empty of imports. Nationalists cheer."
+        },
+        {
+          "id": "accept_penalties",
+          "label": "Accept penalties and protect domestic jobs",
+          "flavour": "Pay the fine, keep the factories.",
+          "tags": ["borrow", "growth"],
+          "effects": {
+            "immediate": { "debt_stress": 14, "prosperity": 4, "future": -8, "autonomy": -6 }
+          },
+          "reaction": "Treasury wires payments abroad. Jobs stay — for now."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What balance did you strike between planet and paycheck?",
+      "choices": [
+        {
+          "id": "climate_leader",
+          "label": "Lead on climate regardless of short-term cost",
+          "flavour": "Be the example.",
+          "tags": ["environment", "future"],
+          "effects": {
+            "immediate": { "future": 16, "prosperity": -10, "trust": 6 }
+          },
+          "reaction": "Summits cite your name. Heavy industry scales down."
+        },
+        {
+          "id": "growth_first",
+          "label": "Put economic growth first",
+          "flavour": "Jobs today over degrees tomorrow.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 12, "future": -14, "trust": -4, "fragility": 10 }
+          },
+          "reaction": "Payrolls swell. Weather grows stranger — and insurance premiums notice."
+        },
+        {
+          "id": "just_transition",
+          "label": "Pursue a just transition with shared sacrifice",
+          "flavour": "Everyone moves together.",
+          "tags": ["welfare", "environment"],
+          "effects": {
+            "immediate": { "fairness": 10, "future": 8, "prosperity": -6, "trust": 6 }
+          },
+          "reaction": "The transition is just — on paper. Coal towns read the footnotes."
+        }
+      ]
+    }
+  ]
+}

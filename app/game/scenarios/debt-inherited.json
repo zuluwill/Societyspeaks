@@ -1,0 +1,227 @@
+{
+  "slug": "debt-inherited",
+  "title": "The Debt You Inherited",
+  "subtitle": "Prosperity is fragile. Trust is precious.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["fiscal", "healthcare", "debt"],
+  "initial_state": {
+    "prosperity": 52,
+    "trust": 48,
+    "fairness": 50,
+    "stability": 55,
+    "future": 45,
+    "debt_stress": 62,
+    "autonomy": 58,
+    "fragility": 5
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Hospital waiting lists hit record highs. Debt is already high. Everyone expects action.",
+      "choices": [
+        {
+          "id": "borrow_hospitals",
+          "label": "Borrow to fund hospitals",
+          "flavour": "Relief now. Bills later.",
+          "memory_label": "emergency hospital borrowing",
+          "tags": ["borrow", "welfare"],
+          "effects": {
+            "immediate": { "trust": 10, "debt_stress": 15, "future": -6 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "debt_stress": 8, "prosperity": -5 },
+              "headline": "Debt servicing starts to squeeze other budgets"
+            }
+          },
+          "reaction": "Waiting lists shrink. Bond markets watch closely."
+        },
+        {
+          "id": "raise_taxes",
+          "label": "Raise taxes on high earners",
+          "flavour": "Fairness funded upfront.",
+          "memory_label": "tax rises on high earners",
+          "tags": ["redistribute", "welfare"],
+          "effects": {
+            "immediate": { "fairness": 8, "prosperity": -6, "trust": 4 }
+          },
+          "reaction": "Public sector unions cautiously approve. Business lobbies fume."
+        },
+        {
+          "id": "cut_defence",
+          "label": "Cut military spending to fund health",
+          "flavour": "Rob Peter to pay Paul.",
+          "memory_label": "military cuts for health",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "stability": -8, "prosperity": 4, "debt_stress": -6, "fairness": 3 }
+          },
+          "reaction": "Military leaders warn of vulnerability. Health unions celebrate."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Early signs of relief — waiting times dip. Approval ticks up.",
+      "choices": [
+        {
+          "id": "invest_primary",
+          "label": "Invest in primary care",
+          "flavour": "Fix the pipeline, not just the queue.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "future": 10, "trust": 5, "debt_stress": 5 }
+          },
+          "reaction": "Doctors praise long-term thinking. The finance ministry updates the overdraft."
+        },
+        {
+          "id": "declare_victory",
+          "label": "Declare victory and move on",
+          "flavour": "Look competent. Hope it holds.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "trust": 6, "fragility": 12, "future": -4 }
+          },
+          "reaction": "Headlines turn favourable. The backlog moves to someone else's term."
+        },
+        {
+          "id": "expand_private",
+          "label": "Expand private healthcare options",
+          "flavour": "Markets deliver speed.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "fairness": -8, "autonomy": 6 }
+          },
+          "reaction": "Wealthy patients skip queues. Others notice the two-tier system."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Credit agencies warn: borrowing costs are rising. Something has to give.",
+      "choices": [
+        {
+          "id": "freeze_spending",
+          "label": "Freeze spending across government",
+          "flavour": "Stop the bleeding.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "trust": -6, "debt_stress": -10, "fairness": -5, "stability": -4 }
+          },
+          "reaction": "Bond traders exhale. Public servants update their CVs."
+        },
+        {
+          "id": "borrow_more",
+          "label": "Borrow more and hope growth follows",
+          "flavour": "Kick the can. Hard.",
+          "tags": ["borrow", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "debt_stress": 14, "future": -8 }
+          },
+          "reaction": "Investors hesitate. Consumers feel a brief boost."
+        },
+        {
+          "id": "wealth_tax",
+          "label": "Emergency wealth tax",
+          "flavour": "Make the comfortable pay.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": -10, "stability": -5, "autonomy": -3 }
+          },
+          "reaction": "Crowds cheer in town squares. Capital flight whispers begin."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The bills from earlier choices come due. There are no good options left.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "borrow_hospitals",
+          "text": "The hospital borrowing you approved is now crowding out everything else."
+        },
+        {
+          "requires_choice": "borrow_more",
+          "text": "Markets remember every promise to borrow your way out."
+        },
+        {
+          "requires_choice": "cut_defence",
+          "text": "The military cuts you made left allies questioning your commitments."
+        }
+      ],
+      "choices": [
+        {
+          "id": "cut_pensions",
+          "label": "Cut pension increases",
+          "flavour": "Anger retirees to placate the markets.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "stability": -12, "debt_stress": -12, "fairness": -14, "trust": -6 }
+          },
+          "reaction": "Retirees protest outside ministries in winter coats. Bond yields fall — slightly."
+        },
+        {
+          "id": "emergency_tax",
+          "label": "Emergency broad tax rise",
+          "flavour": "Everyone pays. Everyone groans.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "trust": -8, "prosperity": -6, "debt_stress": -10, "fairness": 2 }
+          },
+          "reaction": "Competence questioned. Fiscal breathing room returns — on borrowed time."
+        },
+        {
+          "id": "print_money",
+          "label": "Let the central bank loose",
+          "flavour": "Inflate away the problem.",
+          "tags": ["borrow", "centralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "stability": -10, "debt_stress": 4, "future": -15, "autonomy": -8 }
+          },
+          "reaction": "Short-term boom feeling. Long-term trust erodes."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What kind of society did you leave behind?",
+      "choices": [
+        {
+          "id": "protect_health",
+          "label": "Protect health at all costs",
+          "flavour": "Public health survives. The ledger does not.",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "trust": 10, "debt_stress": 10, "future": -5 }
+          },
+          "reaction": "The sick get treated. The treasury gets haunted."
+        },
+        {
+          "id": "protect_economy",
+          "label": "Protect the economy first",
+          "flavour": "Growth above all.",
+          "tags": ["growth", "austerity"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fairness": -10, "trust": -4 }
+          },
+          "reaction": "GDP charts smile. Waiting lists don't."
+        },
+        {
+          "id": "beg_creditors",
+          "label": "Beg creditors for relief",
+          "flavour": "Sovereignty for stability.",
+          "tags": ["austerity", "centralise"],
+          "effects": {
+            "immediate": { "debt_stress": -14, "autonomy": -18, "trust": -6, "stability": 4 }
+          },
+          "reaction": "The ledger clears. The flag hangs a little lower."
+        }
+      ]
+    }
+  ]
+}

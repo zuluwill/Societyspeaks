@@ -1,0 +1,21 @@
+{% macro stat_bars(stats) %}
+{% set labels = {
+  'prosperity': _('Prosperity'),
+  'trust': _('Trust'),
+  'fairness': _('Fairness'),
+  'stability': _('Stability'),
+} %}
+<div class="game-stats space-y-3" id="stat-bars" data-stat-labels='{{ labels|tojson }}'>
+  {% for key in ['prosperity', 'trust', 'fairness', 'stability'] %}
+  <div class="game-stat-row" data-stat="{{ key }}">
+    <div class="flex justify-between text-xs mb-1">
+      <span class="text-game-muted">{{ labels[key] }}</span>
+      <span class="stat-value tabular-nums text-game-text">{{ stats.get(key, 50) }}</span>
+    </div>
+    <div class="game-stat-track" role="progressbar" aria-valuenow="{{ stats.get(key, 50) }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ labels[key] }}">
+      <div class="game-stat-fill game-stat-fill--{{ key }}" style="width: {{ stats.get(key, 50) }}%"></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

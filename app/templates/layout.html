@@ -516,6 +516,13 @@
               class="text-base font-medium text-white hover:text-primary-50 transition"
               >{{ _('Home') }}</a
             >
+            {% if config.get('GAME_ENABLED', true) %}
+            <a
+              href="{{ url_for('game.index') }}"
+              class="text-base font-medium text-white hover:text-primary-50 transition"
+              >{{ _('Play') }}</a
+            >
+            {% endif %}
 
             <!-- Participate Dropdown -->
             <div class="relative" id="products-dropdown-container">
@@ -930,6 +937,13 @@
               class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >{{ _('Home') }}</a
             >
+            {% if config.get('GAME_ENABLED', true) %}
+            <a
+              href="{{ url_for('game.index') }}"
+              class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
+              >{{ _('Play') }}</a
+            >
+            {% endif %}
 
             <!-- Participate Section -->
             <div class="border-t border-primary-500/30 pt-2 mt-2">
@@ -1249,6 +1263,15 @@
                   >{{ _('Daily Brief') }}</a
                 >
               </li>
+              {% if config.get('GAME_ENABLED', true) %}
+              <li>
+                <a
+                  href="{{ url_for('game.index') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >{{ _('Tradeoffs') }}</a
+                >
+              </li>
+              {% endif %}
               <li>
                 <a
                   href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
@@ -1613,5 +1636,6 @@
       });
     })();
     </script>
+    {% block scripts %}{% endblock %}
   </body>
 </html>

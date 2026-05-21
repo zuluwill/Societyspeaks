@@ -1,0 +1,227 @@
+{
+  "slug": "currency-crisis",
+  "title": "The Currency Crisis",
+  "subtitle": "The exchange rate falls. Confidence follows.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["finance", "sovereignty", "austerity"],
+  "initial_state": {
+    "prosperity": 42,
+    "trust": 36,
+    "fairness": 46,
+    "stability": 40,
+    "future": 38,
+    "debt_stress": 68,
+    "autonomy": 48,
+    "fragility": 18
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "The currency drops 30% in a week. Import prices surge. Savers rush to convert holdings to foreign cash.",
+      "choices": [
+        {
+          "id": "imf_bailout",
+          "label": "Seek an IMF bailout with strict conditions",
+          "flavour": "Cash now. Austerity later.",
+          "memory_label": "IMF bailout",
+          "tags": ["borrow", "centralise"],
+          "effects": {
+            "immediate": { "debt_stress": -12, "autonomy": -14, "stability": 6, "trust": -8 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": -8, "fairness": -6 },
+              "headline": "IMF conditions bite — subsidies and wages cut"
+            }
+          },
+          "reaction": "Reserves stabilise. National pride stings."
+        },
+        {
+          "id": "capital_controls",
+          "label": "Impose capital controls and limit withdrawals",
+          "flavour": "Lock money inside the border.",
+          "memory_label": "capital controls",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": 6, "prosperity": -10, "trust": -10 }
+          },
+          "reaction": "Bank queues form. Black markets flourish."
+        },
+        {
+          "id": "default_debt",
+          "label": "Default on foreign debt and reset",
+          "flavour": "Refuse to pay. Start again.",
+          "memory_label": "foreign debt default",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "debt_stress": -18, "autonomy": 10, "stability": -12, "prosperity": -8 }
+          },
+          "reaction": "Bondholders rage. Borrowing costs spike globally for your name."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Inflation accelerates. Supermarket prices change between morning and evening.",
+      "choices": [
+        {
+          "id": "hike_rates",
+          "label": "Hike interest rates aggressively",
+          "flavour": "Pain now to save the currency.",
+          "tags": ["austerity", "centralise"],
+          "effects": {
+            "immediate": { "debt_stress": -8, "prosperity": -10, "stability": -6, "future": 4 }
+          },
+          "reaction": "Currency steadies slightly. Mortgages break households."
+        },
+        {
+          "id": "subsidise_imports",
+          "label": "Subsidise essential imports — food and medicine",
+          "flavour": "Shield shelves from the exchange rate.",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 6, "fairness": 4, "debt_stress": 14, "stability": 4 }
+          },
+          "reaction": "Basic goods stay affordable — briefly. Reserves drain."
+        },
+        {
+          "id": "dollarise",
+          "label": "Allow dollarisation for contracts and savings",
+          "flavour": "Let foreign money become official money.",
+          "tags": ["open", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 4, "autonomy": -12, "trust": -4, "stability": 6 }
+          },
+          "reaction": "Dollars circulate openly. Policy levers shrink."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "General strike. Small businesses cannot import inputs. The middle class empties savings accounts.",
+      "choices": [
+        {
+          "id": "wage_index",
+          "label": "Index wages partially to inflation",
+          "flavour": "Share the pain formulaically.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 6, "debt_stress": 10, "prosperity": -6, "trust": 4 }
+          },
+          "reaction": "Payday feels normal. Employers quietly halve hiring plans."
+        },
+        {
+          "id": "sell_reserves",
+          "label": "Sell national gold and strategic reserves",
+          "flavour": "Liquidate the family silver.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "stability": 6, "future": -12, "debt_stress": -6, "autonomy": -6 }
+          },
+          "reaction": "Markets rally — for a day. Strategic weakness lingers."
+        },
+        {
+          "id": "export_push",
+          "label": "Crash devalue to boost exports",
+          "flavour": "Sell cheap to the world.",
+          "tags": ["growth", "restrict"],
+          "effects": {
+            "immediate": { "prosperity": 6, "trust": -8, "fairness": -8, "stability": -6 }
+          },
+          "reaction": "Factories receive orders. Import-dependent cities suffer."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "Foreign suppliers demand payment upfront in hard currency. There is nowhere left to hide from the balance sheet.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "imf_bailout",
+          "text": "IMF conditions you accepted now forbid the subsidies people need."
+        },
+        {
+          "requires_choice": "default_debt",
+          "text": "Nobody will lend after the default — at any rate you can afford."
+        },
+        {
+          "requires_choice": "capital_controls",
+          "text": "Capital controls you imposed are strangling the importers you need."
+        }
+      ],
+      "choices": [
+        {
+          "id": "emergency_austerity",
+          "label": "Emergency austerity — cut everything non-essential",
+          "flavour": "Scorched-earth budgeting.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -14, "trust": -12, "stability": -10, "fairness": -8 }
+          },
+          "reaction": "Spreadsheets balance. Streets do not."
+        },
+        {
+          "id": "peg_currency",
+          "label": "Peg the currency and defend it with reserves",
+          "flavour": "Draw a line in the sand.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "debt_stress": 10, "prosperity": -10, "future": -6 }
+          },
+          "reaction": "Confidence returns — until reserves run out."
+        },
+        {
+          "id": "currency_union",
+          "label": "Join a regional currency union",
+          "flavour": "Share a coin, share control.",
+          "tags": ["open", "centralise"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -16, "trust": -4, "prosperity": -4 }
+          },
+          "reaction": "Exchange volatility fades. Policy moves to a committee abroad."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What monetary future did you leave?",
+      "choices": [
+        {
+          "id": "fiscal_discipline",
+          "label": "Enshrine fiscal discipline and independent central banking",
+          "flavour": "Never again this loose.",
+          "tags": ["austerity", "decentralise"],
+          "effects": {
+            "immediate": { "debt_stress": -10, "trust": 6, "prosperity": -6, "future": 6 }
+          },
+          "reaction": "Inflation memories fade slowly. Growth stays cautious — like everyone else."
+        },
+        {
+          "id": "managed_float",
+          "label": "Accept a weaker currency with active management",
+          "flavour": "Live with a smaller coin.",
+          "tags": ["growth", "centralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "autonomy": 4, "trust": -4, "fairness": -6 }
+          },
+          "reaction": "Exports hum. Imported goods stay expensive."
+        },
+        {
+          "id": "shared_sovereignty",
+          "label": "Trade sovereignty for stability in a larger bloc",
+          "flavour": "Pooled fate.",
+          "tags": ["open", "centralise"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -14, "debt_stress": -6, "trust": 2 }
+          },
+          "reaction": "Crises become collective problems. Voice feels diluted — but at least it's shared."
+        }
+      ]
+    }
+  ]
+}

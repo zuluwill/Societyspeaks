@@ -1,0 +1,227 @@
+{
+  "slug": "ai-takes-jobs",
+  "title": "AI Takes the Jobs",
+  "subtitle": "Productivity soars. Livelihoods vanish.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["technology", "labour", "automation"],
+  "initial_state": {
+    "prosperity": 58,
+    "trust": 44,
+    "fairness": 46,
+    "stability": 50,
+    "future": 55,
+    "debt_stress": 40,
+    "autonomy": 52,
+    "fragility": 8
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Automation displaces a fifth of the workforce in months. Productivity charts spike while queues at job centres stretch around the block.",
+      "choices": [
+        {
+          "id": "national_retraining",
+          "label": "Launch a national retraining programme",
+          "flavour": "Reskill now, hope the new jobs exist.",
+          "memory_label": "mass retraining pledge",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "future": 12, "trust": 6, "debt_stress": 10 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "prosperity": 4, "debt_stress": 6 },
+              "headline": "Retraining bills land as graduates hunt for roles"
+            }
+          },
+          "reaction": "Campuses fill with mid-career students. Employers wait to see if skills match demand."
+        },
+        {
+          "id": "robot_tax",
+          "label": "Tax automation and fund displaced workers",
+          "flavour": "Make the machines pay.",
+          "memory_label": "automation tax",
+          "tags": ["redistribute", "restrict"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": -8, "autonomy": -4 }
+          },
+          "reaction": "Tech firms threaten to relocate. Workers' unions cautiously applaud."
+        },
+        {
+          "id": "attract_ai_hubs",
+          "label": "Cut red tape to attract AI investment",
+          "flavour": "Ride the wave, don't fight it.",
+          "memory_label": "AI investment drive",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fairness": -6, "future": 8, "fragility": 6 }
+          },
+          "reaction": "Venture capital arrives. Former factory towns watch from the sidelines — then the train leaves without them."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "New AI tools spread through offices and warehouses. Output per worker climbs. So does anxiety.",
+      "choices": [
+        {
+          "id": "ubi_pilot",
+          "label": "Pilot a basic income for affected regions",
+          "flavour": "Cash while the economy rewires.",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "debt_stress": 12, "stability": 4 }
+          },
+          "reaction": "Direct deposits calm some households. Fiscal hawks sharpen their pens."
+        },
+        {
+          "id": "ban_public_ai",
+          "label": "Ban AI in essential public services",
+          "flavour": "Humans decide life-and-death calls.",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "trust": 6, "prosperity": -6, "future": -4, "autonomy": 4 }
+          },
+          "reaction": "Queues lengthen in clinics and courts. Staff feel protected — for now."
+        },
+        {
+          "id": "tech_partnership",
+          "label": "Partner with leading tech firms on job creation",
+          "flavour": "Co-opt the disruptors.",
+          "tags": ["growth", "centralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "autonomy": -8, "future": 6, "trust": -4 }
+          },
+          "reaction": "Shiny innovation centres open. Critics ask who owns the upside — and who cleans the floors."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Protests spread in industrial cities. Productivity gains are real — so is the human cost.",
+      "choices": [
+        {
+          "id": "hiring_subsidies",
+          "label": "Subsidise firms that hire humans over bots",
+          "flavour": "Pay employers to keep people on payroll.",
+          "tags": ["welfare", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 4, "debt_stress": 10, "fairness": 5, "future": -3 }
+          },
+          "reaction": "Some firms hire humans again. Others automate the compliance paperwork instead."
+        },
+        {
+          "id": "human_quotas",
+          "label": "Mandate minimum human staffing in key sectors",
+          "flavour": "Set floors on flesh-and-blood work.",
+          "tags": ["restrict", "welfare"],
+          "effects": {
+            "immediate": { "fairness": 8, "prosperity": -10, "stability": 6, "autonomy": 3 }
+          },
+          "reaction": "Service costs rise. Workers feel seen again."
+        },
+        {
+          "id": "import_talent",
+          "label": "Fast-track visas for AI specialists",
+          "flavour": "Import the skills you cannot grow fast enough.",
+          "tags": ["open", "growth"],
+          "effects": {
+            "immediate": { "future": 10, "prosperity": 6, "stability": -8, "trust": -4 }
+          },
+          "reaction": "Labs fill with newcomers. Local graduates ask where they fit."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The transformation outruns your plans. Every lever you pulled has a bill attached.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "robot_tax",
+          "text": "Firms you taxed on automation are now routing work through friendlier jurisdictions."
+        },
+        {
+          "requires_choice": "attract_ai_hubs",
+          "text": "The investment boom you chased left whole regions behind."
+        },
+        {
+          "requires_choice": "national_retraining",
+          "text": "Retraining centres graduate thousands into a market that still shrinks."
+        }
+      ],
+      "choices": [
+        {
+          "id": "emergency_wage_fund",
+          "label": "Emergency wage fund for displaced workers",
+          "flavour": "Buy time with public money.",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 6, "debt_stress": 14, "stability": 8, "future": -6 }
+          },
+          "reaction": "Paychecks continue. The ledger groans."
+        },
+        {
+          "id": "break_up_platforms",
+          "label": "Break up dominant AI platforms",
+          "flavour": "Smash concentration, invite chaos.",
+          "tags": ["decentralise", "restrict"],
+          "effects": {
+            "immediate": { "fairness": 8, "prosperity": -12, "autonomy": 10, "stability": -8 }
+          },
+          "reaction": "Markets convulse. Smaller firms scramble for pieces."
+        },
+        {
+          "id": "ai_sovereignty",
+          "label": "Declare national control over critical AI systems",
+          "flavour": "Own the infrastructure of tomorrow.",
+          "tags": ["centralise", "future"],
+          "effects": {
+            "immediate": { "autonomy": 12, "prosperity": -8, "trust": -6, "debt_stress": 8 }
+          },
+          "reaction": "State engineers take the keys. Investors pull back."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What kind of work did you leave for the next generation?",
+      "choices": [
+        {
+          "id": "human_first",
+          "label": "Put human livelihoods above efficiency",
+          "flavour": "Jobs over algorithms.",
+          "tags": ["welfare", "restrict"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": -8, "trust": 6 }
+          },
+          "reaction": "Communities breathe easier. Growth forecasts soften."
+        },
+        {
+          "id": "ai_leader",
+          "label": "Bet everything on becoming an AI leader",
+          "flavour": "Win the future race.",
+          "tags": ["growth", "future"],
+          "effects": {
+            "immediate": { "prosperity": 12, "fairness": -10, "future": 8, "fragility": 8 }
+          },
+          "reaction": "Exports of AI services rise. Inequality hardens — politely, on LinkedIn."
+        },
+        {
+          "id": "managed_decline",
+          "label": "Accept slower growth and protect the vulnerable",
+          "flavour": "Stability over spectacle.",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "stability": 10, "prosperity": -6, "trust": 4, "future": -4 }
+          },
+          "reaction": "Life feels predictable. Ambition dims quietly."
+        }
+      ]
+    }
+  ]
+}

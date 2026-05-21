@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}{% block game_title %}Tradeoffs{% endblock %} · Society Speaks{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;500&display=swap" as="style">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/game.css') }}?v=3" rel="stylesheet">
+{% block game_head %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="game-shell min-h-screen text-game-text">
+  <header class="game-header px-4 py-5 sm:px-6">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+      <a href="{{ url_for('game.index') }}" class="game-brand text-sm font-semibold tracking-wide text-game-muted hover:text-game-text transition">
+        Tradeoffs
+      </a>
+      <span class="text-xs text-game-muted">on Society Speaks</span>
+    </div>
+  </header>
+  <main class="game-main px-4 pb-12 sm:px-6">
+    <div class="{% block game_main_width %}max-w-md{% endblock %} mx-auto">
+      {% block game_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% block game_scripts %}{% endblock %}
+{% endblock %}

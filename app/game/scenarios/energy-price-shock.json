@@ -1,0 +1,227 @@
+{
+  "slug": "energy-price-shock",
+  "title": "The Energy Price Shock",
+  "subtitle": "Heat, light, and the price of keeping both.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["energy", "cost_of_living", "climate"],
+  "initial_state": {
+    "prosperity": 50,
+    "trust": 46,
+    "fairness": 48,
+    "stability": 52,
+    "future": 42,
+    "debt_stress": 45,
+    "autonomy": 55,
+    "fragility": 10
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Gas and electricity prices triple overnight. Families choose between heating and eating. Industry warns of shutdowns.",
+      "choices": [
+        {
+          "id": "bill_subsidy",
+          "label": "Subsidise household energy bills",
+          "flavour": "Shield voters from the spike.",
+          "memory_label": "energy bill subsidies",
+          "tags": ["welfare", "borrow"],
+          "effects": {
+            "immediate": { "trust": 10, "fairness": 6, "debt_stress": 14 },
+            "delayed": {
+              "turn_offset": 3,
+              "effects": { "debt_stress": 8, "prosperity": -4 },
+              "headline": "Energy subsidies strain the treasury"
+            }
+          },
+          "reaction": "Meters spin slower for households. The finance ministry sweats."
+        },
+        {
+          "id": "renewables_crash",
+          "label": "Crash-build wind and solar capacity",
+          "flavour": "Build your way out of import dependence.",
+          "memory_label": "renewables crash programme",
+          "tags": ["environment", "borrow", "future"],
+          "effects": {
+            "immediate": { "future": 14, "debt_stress": 12, "prosperity": -4 }
+          },
+          "reaction": "Turbines go up on hillsides. Today's bills stay painfully high."
+        },
+        {
+          "id": "expand_drilling",
+          "label": "Fast-track domestic fossil fuel extraction",
+          "flavour": "Drill now, argue later.",
+          "memory_label": "domestic drilling push",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "future": -12, "autonomy": 6, "trust": -4 }
+          },
+          "reaction": "Fuel flows sooner than expected. Climate campaigners mobilise."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Short-term relief measures land. Winter approaches. Storage levels look thin.",
+      "choices": [
+        {
+          "id": "price_cap",
+          "label": "Cap energy prices for households",
+          "flavour": "Politically popular, fiscally opaque.",
+          "tags": ["welfare", "centralise"],
+          "effects": {
+            "immediate": { "trust": 8, "debt_stress": 10, "prosperity": -5 }
+          },
+          "reaction": "Bills flatten on statements. Suppliers warn of losses."
+        },
+        {
+          "id": "efficiency_grants",
+          "label": "Fund home insulation and efficiency",
+          "flavour": "Fix the leak, not just the bill.",
+          "tags": ["environment", "future"],
+          "effects": {
+            "immediate": { "future": 10, "fairness": 4, "debt_stress": 6 }
+          },
+          "reaction": "Tradespeople get busy. Results take months to feel."
+        },
+        {
+          "id": "industry_bailout",
+          "label": "Bail out energy-intensive industry",
+          "flavour": "Save jobs on the factory floor.",
+          "tags": ["growth", "borrow"],
+          "effects": {
+            "immediate": { "prosperity": 8, "debt_stress": 10, "fairness": -6 }
+          },
+          "reaction": "Factories stay lit. Small businesses ask why they were skipped."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A cold snap hits. Grid operators warn of rolling blackouts. Protesters gather outside power companies.",
+      "choices": [
+        {
+          "id": "ration_energy",
+          "label": "Introduce temporary energy rationing",
+          "flavour": "Fair shares of a scarce supply.",
+          "tags": ["centralise", "austerity"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": -8, "prosperity": -6, "fairness": 4 }
+          },
+          "reaction": "Blackouts become scheduled. Complaints flood hotlines."
+        },
+        {
+          "id": "emergency_imports",
+          "label": "Pay premium for emergency imports",
+          "flavour": "Buy power at any price.",
+          "tags": ["borrow", "open"],
+          "effects": {
+            "immediate": { "stability": 8, "debt_stress": 14, "autonomy": -6 }
+          },
+          "reaction": "Lights stay on. Sovereignty feels negotiable."
+        },
+        {
+          "id": "windfall_tax",
+          "label": "Windfall tax on energy producers",
+          "flavour": "Take from those who profited from pain.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": -8, "trust": 4, "stability": -4 }
+          },
+          "reaction": "Treasury coffers swell. Investment in new supply slows."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The crisis exposes every shortcut. There is no cheap way through a cold, dark winter.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "expand_drilling",
+          "text": "The drilling you rushed online cannot fill the gap this winter."
+        },
+        {
+          "requires_choice": "bill_subsidy",
+          "text": "Subsidies you promised now collide with empty reserves."
+        },
+        {
+          "requires_choice": "renewables_crash",
+          "text": "Renewables you rushed online cannot heat homes this winter."
+        }
+      ],
+      "choices": [
+        {
+          "id": "nationalise_grid",
+          "label": "Nationalise the grid operator",
+          "flavour": "Take direct control of supply.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": 8, "prosperity": -10, "debt_stress": 10 }
+          },
+          "reaction": "State engineers run the switches. Private capital retreats."
+        },
+        {
+          "id": "austerity_energy",
+          "label": "Cut other budgets to keep the lights on",
+          "flavour": "Energy above everything else.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": -10, "debt_stress": -8, "fairness": -8 }
+          },
+          "reaction": "Schools and clinics feel the squeeze. Homes stay warm."
+        },
+        {
+          "id": "appeal_neighbors",
+          "label": "Beg neighbouring countries for shared supply",
+          "flavour": "Interdependence as survival.",
+          "tags": ["open", "centralise"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -14, "trust": -4, "prosperity": -4 }
+          },
+          "reaction": "Power flows across borders. Pride takes a hit."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What energy system did you leave behind?",
+      "choices": [
+        {
+          "id": "green_transition",
+          "label": "Commit to a renewable future regardless of cost",
+          "flavour": "Never depend like this again.",
+          "tags": ["environment", "future"],
+          "effects": {
+            "immediate": { "future": 14, "debt_stress": 10, "prosperity": -6 }
+          },
+          "reaction": "Clean power ramps up. Today's bills remain a memory."
+        },
+        {
+          "id": "cheap_energy",
+          "label": "Prioritise cheap energy above all else",
+          "flavour": "Affordability wins.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 10, "future": -10, "trust": 4, "fragility": 6 }
+          },
+          "reaction": "Factories hum. Climate targets slip quietly."
+        },
+        {
+          "id": "energy_sovereignty",
+          "label": "Build full domestic energy independence",
+          "flavour": "Never beg again.",
+          "tags": ["centralise", "borrow"],
+          "effects": {
+            "immediate": { "autonomy": 14, "debt_stress": 12, "prosperity": -4, "stability": 6 }
+          },
+          "reaction": "Import bills shrink. The build-out takes years — and patience runs out first."
+        }
+      ]
+    }
+  ]
+}

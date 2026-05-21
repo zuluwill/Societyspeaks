@@ -1,0 +1,100 @@
+{% extends "game/base.html" %}
+{% from "game/components/stat_bars.html" import stat_bars %}
+{% from "game/components/emblem.html" import society_emblem %}
+{% from "game/components/mood_grid.html" import mood_grid %}
+
+{% block game_title %}{{ scenario.title }}{% endblock %}
+
+{% set beat_labels = {
+  'hook': _('Beginning'),
+  'confidence': _('Settling in'),
+  'crack': _('First cracks'),
+  'oh_no': _('Oh no…'),
+  'legacy': _('Legacy'),
+} %}
+
+{% block game_content %}
+<div id="game-app"
+     data-run-uuid="{{ run.uuid }}"
+     data-csrf="{{ csrf_token() }}"
+     data-outcome-base="{{ url_for('game.outcome', run_uuid='__UUID__') }}"
+     data-beat-labels='{{ beat_labels|tojson }}'
+     data-progress-template="{{ _('Turn {n} of {total}') }}">
+
+  <header class="mb-6 flex items-center gap-3">
+    {{ society_emblem(emblem, size='sm') }}
+    <div class="flex-1 min-w-0">
+      <p class="text-xs uppercase tracking-wider text-game-muted font-medium truncate">
+        {{ scenario.title }}{% if is_quick_run %} <span class="text-game-accent">· {{ _('Quick Run') }}</span>{% endif %}
+      </p>
+      <h1 class="font-display text-lg text-game-text truncate">{{ society_name }}</h1>
+    </div>
+    {{ mood_grid(view.mood_level) }}
+  </header>
+
+  <div id="headline-ticker" class="game-ticker mb-5 min-h-[2.5rem] text-sm text-game-muted italic" aria-live="polite">
+    {% for h in view.headlines %}
+    <p class="ticker-line">{{ h }}</p>
+    {% endfor %}
+  </div>
+
+  {{ stat_bars(view.visible_stats) }}
+
+  <div id="turn-panel" class="mt-8 game-turn-panel">
+    <p id="beat-label" class="text-xs uppercase tracking-widest text-game-accent mb-2">
+      {{ beat_labels.get(view.beat, _('Turn %(n)d', n=view.turn_index + 1)) }}
+      <span class="text-game-muted">· {{ _('Turn %(n)d of %(total)d', n=view.turn_index + 1, total=view.total_turns) }}</span>
+    </p>
+    <h2 id="turn-prompt" class="font-display text-2xl sm:text-3xl leading-snug text-game-text mb-6">
+      {{ view.prompt }}
+    </h2>
+
+    <div id="choices" class="space-y-3" role="group" aria-label="{{ _('Your options') }}">
+      {% for choice in view.choices %}
+      <button type="button"
+              class="game-choice w-full text-left"
+              data-choice-id="{{ choice.id }}">
+        <span class="game-choice-label">{{ choice.label }}</span>
+        {% if choice.flavour %}
+        <span class="game-choice-flavour">{{ choice.flavour }}</span>
+        {% endif %}
+        {% if choice.preview %}
+        <span class="game-choice-arrows mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="{{ _('Likely effects') }}">
+          {% for stat, dir in choice.preview.items() %}
+          <span class="text-xs text-game-muted">
+            {% if dir == 'up' %}<span class="text-game-trust">↑</span>{% elif dir == 'down' %}<span class="text-game-warn">↓</span>{% else %}→{% endif %}
+            <span data-stat-label="{{ stat }}">{{ stat | replace('_', ' ') | title }}</span>
+          </span>
+          {% endfor %}
+        </span>
+        {% endif %}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="consequence-overlay"
+       class="game-consequence hidden"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="consequence-headline"
+       tabindex="-1">
+    <div class="game-consequence-inner">
+      <p id="consequence-headline" class="font-display text-xl text-game-text mb-4"></p>
+      <div id="consequence-deltas" class="text-sm text-game-muted mb-6 space-y-1" aria-live="polite"></div>
+      <button type="button" id="consequence-continue" class="game-btn-primary w-full">{{ _('Continue') }}</button>
+    </div>
+  </div>
+
+  <div id="toast" class="game-toast hidden" role="status" aria-live="polite"></div>
+
+  <p class="mt-8 text-center text-xs text-game-muted">
+    {{ _('Every choice costs something') }}
+  </p>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script src="{{ url_for('static', filename='js/game/analytics.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', filename='js/game/play.js') }}?v=3" defer></script>
+{% endblock %}

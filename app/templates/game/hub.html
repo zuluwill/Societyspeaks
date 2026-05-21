@@ -1,0 +1,175 @@
+{% extends "game/base.html" %}
+
+{% block game_title %}{{ _('Tradeoffs') }}{% endblock %}
+
+{% block game_head %}
+<meta name="description" content="{{ _('Five minutes. Five choices. Every choice costs something — the societal strategy game on Society Speaks.') }}">
+{% endblock %}
+
+{% block game_content %}
+<div class="game-hub">
+  {% if is_first_time %}
+  <section class="game-hub-explainer mb-8 p-6 rounded-2xl border border-game-accent/30 bg-game-accent/5">
+    <p class="text-xs uppercase tracking-widest text-game-accent mb-2">{{ _('New to Tradeoffs?') }}</p>
+    <h2 class="font-display text-xl text-game-text mb-3 leading-snug">
+      {{ _('Five minutes. Five choices. Every choice costs something.') }}
+    </h2>
+    <p class="text-sm text-game-muted leading-relaxed mb-4">
+      {{ _("You'll face one crisis with no good answers. Borrow now and pay later, or cut now and lose trust. Build fast and fracture the country, or move slowly while the queues grow. The game holds up a mirror; it never grades the reflection.") }}
+    </p>
+    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+      <div class="game-explainer-step">
+        <p class="text-2xl font-display text-game-accent">5</p>
+        <p class="text-xs text-game-muted leading-tight">{{ _('turns, one crisis') }}</p>
+      </div>
+      <div class="game-explainer-step">
+        <p class="text-2xl font-display text-game-accent">3</p>
+        <p class="text-xs text-game-muted leading-tight">{{ _('choices each turn') }}</p>
+      </div>
+      <div class="game-explainer-step">
+        <p class="text-2xl font-display text-game-accent">0</p>
+        <p class="text-xs text-game-muted leading-tight">{{ _('right answers') }}</p>
+      </div>
+    </div>
+    <p class="text-xs text-game-muted italic">
+      {{ _('Your society is yours: name it, watch its emblem form from your choices, share what kind of leader you become.') }}
+    </p>
+  </section>
+  {% endif %}
+
+  <header class="game-hub-hero mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <p class="text-xs uppercase tracking-widest text-game-accent">{{ _("Today's scenario") }}</p>
+      {% if streak and streak.current >= 1 %}
+      <span class="game-streak-chip" title="{{ _('Longest: %(n)d', n=streak.longest) }}">
+        <span aria-hidden="true">🔥</span>
+        {{ ngettext('%(num)d-day streak', '%(num)d-day streak', streak.current) }}
+      </span>
+      {% endif %}
+    </div>
+    <p class="text-xs text-game-muted mb-3">
+      {{ _('UTC %(date)s · %(hour)02d:00 publish', date=today.schedule_date.isoformat(), hour=today.publish_hour_utc) }}
+    </p>
+    <h1 class="font-display text-3xl sm:text-4xl leading-tight text-game-text mb-2">
+      {{ today.title }}
+    </h1>
+    <p class="text-sm text-game-muted leading-relaxed max-w-prose">
+      {{ today.subtitle }}
+    </p>
+    <p class="mt-2 text-xs text-game-muted italic">{{ today.teaser }}</p>
+  </header>
+
+  <section class="game-hub-card mb-8 p-6 rounded-2xl border border-game-border bg-game-surface/80">
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="game-chip">{{ today.category }}</span>
+      <span class="game-chip game-chip--muted">{{ ngettext('%(num)d turn', '%(num)d turns', today.total_turns) }}</span>
+    </div>
+
+    {% if in_progress %}
+    <p class="text-sm text-game-muted mb-4">
+      {{ _("You're on turn %(current)d of %(total)d.", current=in_progress.turn_index + 1, total=in_progress.total_turns) }}
+    </p>
+    <a href="{{ url_for('game.daily') }}" class="game-btn-primary w-full text-center">
+      {{ _('Continue') }}
+    </a>
+    {% elif completed_today_uuid %}
+    <p class="text-sm text-game-muted mb-4">
+      {{ _("You've already played today's scenario. Come back at %(hour)02d:00 UTC for the next one.", hour=tomorrow.publish_hour_utc) }}
+    </p>
+    <a href="{{ url_for('game.outcome', run_uuid=completed_today_uuid) }}" class="game-btn-primary w-full text-center">
+      {{ _("View today's outcome") }}
+    </a>
+    {% else %}
+    <form method="get" action="{{ url_for('game.daily') }}" class="game-name-form mb-3">
+      <label for="society-name" class="block text-xs uppercase tracking-wider text-game-muted mb-1">
+        {{ _('Name your society (optional)') }}
+      </label>
+      <input
+        type="text"
+        id="society-name"
+        name="name"
+        maxlength="48"
+        placeholder="{{ _('e.g. Atlas, Riverlands, Your Republic') }}"
+        autocomplete="off"
+        class="game-input mb-3"
+      >
+      <button type="submit" class="game-btn-primary w-full">
+        {{ _("Play today's scenario") }}
+      </button>
+    </form>
+    {% endif %}
+  </section>
+
+  {% if quick_pool %}
+  <section class="game-hub-quick mb-8" id="quick-run-pool">
+    <p class="text-xs uppercase tracking-widest text-game-muted mb-3">{{ _('Quick Run') }} <span class="text-game-muted normal-case tracking-normal">· {{ _('replay anytime — no streak') }}</span></p>
+    <div class="space-y-2">
+      {% for entry in quick_pool[:6] %}
+      <a href="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"
+         data-quick-run-base="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"
+         class="game-quick-card block p-4 rounded-xl border border-game-border bg-game-surface/60 hover:border-game-accent transition">
+        <div class="flex items-baseline justify-between gap-3">
+          <p class="font-display text-base text-game-text truncate">{{ entry.title }}</p>
+          <span class="text-xs text-game-muted whitespace-nowrap">{{ entry.category }}</span>
+        </div>
+        <p class="text-xs text-game-muted mt-1 truncate">{{ entry.teaser }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  <script>
+    // Carry the society name typed on the hub through to Quick Run links.
+    // Pure progressive enhancement — links work without JS, just without the name.
+    (function () {
+      var input = document.getElementById('society-name');
+      var pool = document.getElementById('quick-run-pool');
+      if (!pool) return;
+      function syncLinks() {
+        var raw = (input && input.value || '').trim();
+        var nameQS = raw ? '?name=' + encodeURIComponent(raw) : '';
+        pool.querySelectorAll('a[data-quick-run-base]').forEach(function (a) {
+          a.href = a.dataset.quickRunBase + nameQS;
+        });
+      }
+      if (input) {
+        input.addEventListener('input', syncLinks);
+        syncLinks();
+      }
+    })();
+  </script>
+  {% endif %}
+
+  <section class="game-hub-tomorrow mb-8 p-5 rounded-xl border border-game-border/60 bg-game-elevated/40">
+    <p class="text-xs uppercase tracking-widest text-game-muted mb-1">{{ _('Tomorrow') }}</p>
+    <p class="font-display text-lg text-game-text">
+      {{ tomorrow.category }}
+    </p>
+    <p class="text-xs text-game-muted mt-2">
+      {{ _('New scenario unlocks at %(hour)02d:00 UTC', hour=tomorrow.publish_hour_utc) }}
+    </p>
+  </section>
+
+  {% if not is_authenticated %}
+  <section class="game-hub-signin mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
+    <p class="text-sm text-game-text mb-3">
+      {{ _('Sign in to save your societies across devices and keep your streak when this browser forgets.') }}
+    </p>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('auth.register') }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
+      <a href="{{ url_for('auth.login') }}" class="game-btn-secondary text-sm py-2">{{ _('Sign in') }}</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="game-hub-foot text-center space-y-3">
+    <p class="text-xs text-game-muted leading-relaxed max-w-sm mx-auto">
+      {{ _('The game holds up a mirror; it never grades the reflection.') }}
+    </p>
+    <p class="text-xs">
+      <a href="{{ url_for('game.editorial_principles') }}" class="text-game-muted underline hover:text-game-text transition">
+        {{ _('How we write scenarios') }}
+      </a>
+    </p>
+  </section>
+</div>
+{% endblock %}

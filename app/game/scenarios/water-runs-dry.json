@@ -1,0 +1,227 @@
+{
+  "slug": "water-runs-dry",
+  "title": "Water Runs Dry",
+  "subtitle": "Rivers shrink. Cities thirst.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["water", "climate", "infrastructure"],
+  "initial_state": {
+    "prosperity": 52,
+    "trust": 50,
+    "fairness": 44,
+    "stability": 48,
+    "future": 38,
+    "debt_stress": 42,
+    "autonomy": 56,
+    "fragility": 12
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "The worst drought in a century. Reservoirs fall to critical levels. Farmers watch crops wither.",
+      "choices": [
+        {
+          "id": "water_rationing",
+          "label": "Introduce strict water rationing",
+          "flavour": "Equal misery, managed.",
+          "memory_label": "strict water rationing",
+          "tags": ["centralise", "austerity"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": -6, "fairness": 5, "prosperity": -4 }
+          },
+          "reaction": "Meters and penalties appear. Gardens go brown."
+        },
+        {
+          "id": "desalination",
+          "label": "Fast-track desalination plants",
+          "flavour": "Turn the sea into survival.",
+          "memory_label": "desalination build",
+          "tags": ["borrow", "future", "growth"],
+          "effects": {
+            "immediate": { "future": 12, "debt_stress": 14, "prosperity": -3 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": 6, "debt_stress": 4 },
+              "headline": "Desalination plants come online — at a price"
+            }
+          },
+          "reaction": "Construction cranes line the coast. Bills will rise."
+        },
+        {
+          "id": "fine_heavy_users",
+          "label": "Fine heavy industrial water users",
+          "flavour": "Make the biggest guzzlers pay.",
+          "memory_label": "industrial water fines",
+          "tags": ["redistribute", "restrict"],
+          "effects": {
+            "immediate": { "fairness": 8, "prosperity": -8, "trust": 4, "stability": -4 }
+          },
+          "reaction": "Factories cut shifts. Smallholders ask why they were first cut off."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Rain finally comes — but not enough. Groundwater keeps falling. Urban taps sputter.",
+      "choices": [
+        {
+          "id": "repair_pipes",
+          "label": "Emergency investment in leaky pipe networks",
+          "flavour": "Stop losing what you still have.",
+          "tags": ["future", "borrow"],
+          "effects": {
+            "immediate": { "future": 8, "debt_stress": 8, "trust": 5 }
+          },
+          "reaction": "Roads open up for repairs. Waste drops — slowly."
+        },
+        {
+          "id": "import_water",
+          "label": "Import water by tanker and pipeline",
+          "flavour": "Buy survival from neighbours.",
+          "tags": ["open", "borrow"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -10, "debt_stress": 10 }
+          },
+          "reaction": "Convoys arrive. Dependence feels uncomfortably real."
+        },
+        {
+          "id": "prioritise_cities",
+          "label": "Prioritise urban supply over agriculture",
+          "flavour": "Cities vote. Fields don't.",
+          "tags": ["centralise", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "fairness": -10, "stability": 4, "trust": -4 }
+          },
+          "reaction": "Apartment blocks stay supplied. Rural anger simmers."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Protests block highways. A neighbouring region cuts shared river flows. Diplomacy fails.",
+      "choices": [
+        {
+          "id": "water_diplomacy",
+          "label": "Offer cash and trade deals for water access",
+          "flavour": "Pay for every drop.",
+          "tags": ["open", "borrow"],
+          "effects": {
+            "immediate": { "stability": 6, "debt_stress": 10, "autonomy": -8, "prosperity": -4 }
+          },
+          "reaction": "Flows resume — barely. Neighbours remember the price."
+        },
+        {
+          "id": "cloud_seeding",
+          "label": "Fund controversial cloud-seeding experiments",
+          "flavour": "Engineer rain from the sky.",
+          "tags": ["future", "centralise"],
+          "effects": {
+            "immediate": { "future": 6, "trust": -4, "debt_stress": 6, "fragility": 8 }
+          },
+          "reaction": "Skies darken on schedule — sometimes. Sceptics grow louder."
+        },
+        {
+          "id": "military_convoys",
+          "label": "Escort water convoys with security forces",
+          "flavour": "Treat water like a strategic asset.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": -10, "autonomy": 4, "fairness": -6 }
+          },
+          "reaction": "Supplies arrive under guard. The mood turns authoritarian."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The aquifer collapses faster than models predicted. Every earlier choice left someone thirsty.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "prioritise_cities",
+          "text": "Rural communities you sidelined now block the roads into the capital."
+        },
+        {
+          "requires_choice": "desalination",
+          "text": "Desalination cannot scale fast enough for the inland cities."
+        },
+        {
+          "requires_choice": "fine_heavy_users",
+          "text": "Industrial fines you levied closed plants that supplied the cities."
+        }
+      ],
+      "choices": [
+        {
+          "id": "evacuate_regions",
+          "label": "Evacuate the driest regions",
+          "flavour": "Abandon land that cannot sustain people.",
+          "tags": ["centralise", "welfare"],
+          "effects": {
+            "immediate": { "stability": -10, "trust": -8, "future": 4, "fairness": -6 }
+          },
+          "reaction": "Relocation camps swell. Ghost towns spread."
+        },
+        {
+          "id": "emergency_marshall",
+          "label": "Declare a water emergency with martial powers",
+          "flavour": "Centralise every decision.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -12, "trust": -12, "fairness": 4 }
+          },
+          "reaction": "Queues become orderly. Freedom feels distant."
+        },
+        {
+          "id": "international_appeal",
+          "label": "Launch an international humanitarian appeal",
+          "flavour": "Admit you cannot solve this alone.",
+          "tags": ["open", "welfare"],
+          "effects": {
+            "immediate": { "trust": 4, "autonomy": -14, "stability": 6, "debt_stress": 8 }
+          },
+          "reaction": "Aid arrives with cameras. National pride bruises."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "Final reckoning. What water future did you leave?",
+      "choices": [
+        {
+          "id": "conservation_first",
+          "label": "Rebuild around conservation and reuse",
+          "flavour": "Live within the rain you get.",
+          "tags": ["environment", "future"],
+          "effects": {
+            "immediate": { "future": 12, "prosperity": -6, "trust": 6 }
+          },
+          "reaction": "Usage falls permanently. Growth slows — deliberately."
+        },
+        {
+          "id": "engineering_fix",
+          "label": "Bet on mega-engineering to control supply",
+          "flavour": "Dam, pipe, and pump your way out.",
+          "tags": ["growth", "borrow"],
+          "effects": {
+            "immediate": { "prosperity": 8, "debt_stress": 14, "future": 4, "fragility": 8 }
+          },
+          "reaction": "Infrastructure sprawls. Ecologists warn of new risks."
+        },
+        {
+          "id": "share_scarcity",
+          "label": "Formalise fair sharing with neighbouring regions",
+          "flavour": "Treaties over tanks.",
+          "tags": ["open", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 10, "autonomy": -8, "stability": 8, "trust": 4 }
+          },
+          "reaction": "Rivers flow under rules. Sovereignty feels shared — and the meter reader agrees."
+        }
+      ]
+    }
+  ]
+}

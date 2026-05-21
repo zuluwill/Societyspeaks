@@ -40,6 +40,25 @@ def generate_sitemap():
         '    <priority>0.9</priority>',
         '    <changefreq>hourly</changefreq>',
         '  </url>',
+    ]
+
+    if current_app.config.get('GAME_ENABLED', True):
+        xml_content.extend([
+            '',
+            '  <!-- Society Play (Tradeoffs) -->',
+            '  <url>',
+            f'    <loc>{base_url}/play</loc>',
+            '    <priority>0.9</priority>',
+            '    <changefreq>daily</changefreq>',
+            '  </url>',
+            '  <url>',
+            f'    <loc>{base_url}/play/editorial-principles</loc>',
+            '    <priority>0.6</priority>',
+            '    <changefreq>monthly</changefreq>',
+            '  </url>',
+        ])
+
+    xml_content.extend([
 
         '  <!-- Donation -->',
         '  <url>',
@@ -111,7 +130,7 @@ def generate_sitemap():
         '    <priority>0.6</priority>',
         '    <changefreq>monthly</changefreq>',
         '  </url>',
-    ]
+    ])
 
     # Add dynamic discussions if they exist
     try:

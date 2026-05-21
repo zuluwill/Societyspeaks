@@ -124,6 +124,25 @@ def merge_anonymous_statement_votes_into_user(user):
             merged_total,
             user.id,
         )
+
+    # Society Play (Tradeoffs): claim anonymous game runs for this browser.
+    # Same fingerprint list as the vote merge so signing up doesn't strand
+    # a player's streak, archive, or in-progress run on the anonymous side.
+    try:
+        from app.game.services.identity_service import merge_anonymous_game_runs
+
+        merged_runs = merge_anonymous_game_runs(
+            user.id, fingerprints_for_anonymous_merge_on_login()
+        )
+        if merged_runs > 0:
+            current_app.logger.info(
+                "Merged %s anonymous game runs into user %s", merged_runs, user.id
+            )
+    except Exception:  # noqa: BLE001 — game-run merge must never block auth
+        current_app.logger.exception(
+            "Anonymous game-run merge failed for user %s", user.id
+        )
+
     return merged_total
 
 
