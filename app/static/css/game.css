@@ -16,7 +16,7 @@
   background: var(--game-bg);
   color: var(--game-text);
   font-family: 'Inter', system-ui, sans-serif;
-  margin: -1rem -0.5rem 0;
+  margin: -1rem 0 0;
   /* iOS Safari: 100vh includes the collapsing URL bar, causing a dark-shell
      gap at the bottom on scroll. Use dynamic viewport units where supported
      and fall back to 100vh for older browsers. */
