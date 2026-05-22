@@ -426,18 +426,21 @@ body.is-leaving {
   display: block;
   width: 100%;
   padding: 0.75rem 0.875rem;
-  background: var(--game-elevated);
+  background: #1e2633;
+  background-color: #1e2633;
   border: 1px solid var(--game-border);
   border-radius: 0.625rem;
-  color: var(--game-text);
+  color: #f0f4f8;
+  -webkit-text-fill-color: #f0f4f8;
   font-size: 0.9375rem;
   font-family: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .game-input::placeholder {
-  color: var(--game-muted);
-  opacity: 0.7;
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+  opacity: 1;
 }
 
 .game-input:focus {
