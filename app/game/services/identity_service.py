@@ -17,6 +17,20 @@ from app.game.services.daily_service import utc_game_date
 from app.models.game import GameRun
 
 
+def visitor_owns_run(
+    run: GameRun,
+    *,
+    user_id: Optional[int],
+    session_fingerprint: Optional[str],
+) -> bool:
+    """True when this visitor owns the run via account or browser fingerprint."""
+    if user_id is not None and run.user_id == user_id:
+        return True
+    if session_fingerprint and run.session_fingerprint == session_fingerprint:
+        return True
+    return False
+
+
 def merge_anonymous_game_runs(user_id: int, fingerprints: Iterable[str]) -> int:
     """Attach orphaned anonymous game_runs for these fingerprints to ``user_id``.
 

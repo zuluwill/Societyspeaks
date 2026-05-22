@@ -102,7 +102,12 @@ class GameChallenge(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(48), nullable=False, unique=True)
-    creator_run_id = db.Column(db.Integer, db.ForeignKey('game_run.id'), nullable=False, unique=True)
+    creator_run_id = db.Column(
+        db.Integer,
+        db.ForeignKey('game_run.id', ondelete='CASCADE'),
+        nullable=False,
+        unique=True,
+    )
     scenario_slug = db.Column(db.String(80), nullable=False)
     mode = db.Column(db.String(20), nullable=False)
     schedule_date = db.Column(db.Date, nullable=True)

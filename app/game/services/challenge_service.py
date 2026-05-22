@@ -6,6 +6,7 @@ import secrets
 from typing import Any, Dict, Optional
 
 from flask import url_for
+from flask_babel import _
 
 from app import db
 from app.game.constants import DEFAULT_SOCIETY_NAME, GAME_RUN_STATUS_COMPLETED
@@ -13,12 +14,24 @@ from app.game.services.daily_service import utc_game_date
 from app.lib.time import utcnow_naive
 from app.models.game import GameChallenge, GameRun
 
+# Sentinel stored in the DB when the creator kept the default society name.
+# The challenge-view path renders this through gettext at request time so the
+# label localises to the viewer's language rather than the creator's.
+_ANONYMOUS_CREATOR_TOKEN = '__anon__'
+
 
 def _creator_display_name(run: GameRun) -> str:
     name = (run.society_name or '').strip()
     if name and name != DEFAULT_SOCIETY_NAME:
         return name[:48]
-    return 'Someone'
+    return _ANONYMOUS_CREATOR_TOKEN
+
+
+def _localised_display_name(stored: Optional[str]) -> str:
+    """Resolve the stored display name to the viewer's locale at render time."""
+    if not stored or stored == _ANONYMOUS_CREATOR_TOKEN:
+        return _('Someone')
+    return stored
 
 
 def get_or_create_challenge(run: GameRun) -> Optional[GameChallenge]:
@@ -86,7 +99,7 @@ def challenge_reveal_for_run(
         return None
 
     return {
-        'display_name': challenge.creator_display_name or 'Someone',
+        'display_name': _localised_display_name(challenge.creator_display_name),
         'headline': challenge.creator_headline or '',
         'scenario_slug': challenge.scenario_slug,
     }

@@ -7,6 +7,7 @@ from flask_login import current_user
 
 from app import limiter
 from app.game import game_bp
+from app.game.services.identity_service import visitor_owns_run
 from app.game.services.run_service import (
     GameRunNotFound,
     InvalidChoice,
@@ -24,15 +25,12 @@ def _assert_game_enabled() -> None:
 
 
 def _assert_run_owner(run) -> bool:
-    """True when this visitor owns the run via user_id or session fingerprint."""
-    fp = get_voter_fingerprint()
-    if current_user.is_authenticated:
-        if run.user_id == current_user.id:
-            return True
-        return bool(fp and run.session_fingerprint == fp)
-    if not fp:
-        return False
-    return run.session_fingerprint == fp
+    user_id = current_user.id if current_user.is_authenticated else None
+    return visitor_owns_run(
+        run,
+        user_id=user_id,
+        session_fingerprint=get_voter_fingerprint(),
+    )
 
 
 @game_bp.route('/api/run/<run_uuid>/choose', methods=['POST'])

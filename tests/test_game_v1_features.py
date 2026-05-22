@@ -486,6 +486,83 @@ def test_hub_quick_run_links_carry_name_via_data_attr(app, client, db):
     assert b'data-quick-run-base' in resp.data
 
 
+def test_hub_signin_offers_magic_link_with_play_next(app, client, db):
+    """Hub sign-in CTA routes to magic-link request, not password login,
+    and pre-fills next=/play/ so users land back on the hub after signing in."""
+    with app.app_context():
+        db.create_all()
+    client.set_cookie('ss_voter_client_id', 'm' * 64)
+    resp = client.get('/play/')
+    assert resp.status_code == 200
+    body = resp.data
+    # Magic-link CTA wording present
+    assert b'Email me a sign-in link' in body
+    assert b'Already have an account?' in body
+    # Link targets the magic-link request with next=/play/
+    assert b'/auth/login/magic-link?next=%2Fplay%2F' in body or b'/auth/login/magic-link?next=/play/' in body
+    # Sign-up CTA preserves the destination
+    assert b'/auth/register?next=' in body
+    # The bare password "Sign in" button is gone from the hub
+    sign_in_section_start = body.find(b'game-hub-signin')
+    assert sign_in_section_start > 0
+    sign_in_section_end = body.find(b'</section>', sign_in_section_start)
+    sign_in_block = body[sign_in_section_start:sign_in_section_end]
+    assert b'/auth/login"' not in sign_in_block and b'/auth/login?' not in sign_in_block
+
+
+def test_outcome_signin_offers_magic_link_with_outcome_next_for_owner(app, client, db):
+    """Run owner signing in from their outcome returns to that outcome page."""
+    run_uuid = _play_to_completion_via_route(app, db, client, 'n' * 64)
+    resp = client.get(f'/play/outcome/{run_uuid}')
+    assert resp.status_code == 200
+    body = resp.data
+    assert b'Email me a sign-in link' in body
+    assert b'Already have an account?' in body
+    encoded_next = f'/auth/login/magic-link?next=%2Fplay%2Foutcome%2F{run_uuid}'.encode()
+    plain_next = f'/auth/login/magic-link?next=/play/outcome/{run_uuid}'.encode()
+    assert encoded_next in body or plain_next in body
+    reg_encoded = f'/auth/register?next=%2Fplay%2Foutcome%2F{run_uuid}'.encode()
+    reg_plain = f'/auth/register?next=/play/outcome/{run_uuid}'.encode()
+    assert reg_encoded in body or reg_plain in body
+
+
+def test_outcome_signin_returns_hub_for_shared_link_viewer(app, client, db):
+    """A visitor reading someone else's shared outcome lands on /play/ after sign-in."""
+    run_uuid = _play_to_completion_via_route(app, db, client, 'a' * 64)
+    client.set_cookie('ss_voter_client_id', 'b' * 64)
+    resp = client.get(f'/play/outcome/{run_uuid}')
+    assert resp.status_code == 200
+    body = resp.data
+    assert b'/auth/login/magic-link?next=%2Fplay%2F' in body or b'/auth/login/magic-link?next=/play/' in body
+    assert f'/auth/login/magic-link?next=%2Fplay%2Foutcome%2F{run_uuid}'.encode() not in body
+    assert f'/auth/login/magic-link?next=/play/outcome/{run_uuid}'.encode() not in body
+
+
+def _play_to_completion_via_route(app, db, client, client_id):
+    """Helper — play today's daily through the test client, return outcome UUID."""
+    from app.game.engine.scenario import load_scenario
+    from app.game.services.daily_service import scheduled_scenario_slug
+    from app.lib.vote_identity import fingerprint_from_client_id
+
+    fp = fingerprint_from_client_id(client_id)
+    with app.app_context():
+        db.create_all()
+        run = get_or_start_daily_run(
+            scenario_slug=scheduled_scenario_slug(),
+            user_id=None,
+            session_fingerprint=fp,
+        )
+        scenario = load_scenario(run.scenario_slug)
+        for turn in scenario['turns']:
+            result = apply_run_choice(run, turn['choices'][0]['id'])
+            run = db.session.get(GameRun, run.id)
+            if result['game_complete']:
+                break
+        run_uuid = run.uuid
+    client.set_cookie('ss_voter_client_id', client_id)
+    return run_uuid
+
+
 def test_hub_shows_first_time_explainer_for_new_visitor(app, client, db):
     """A visitor with no game history sees the explainer panel."""
     with app.app_context():
@@ -729,6 +806,101 @@ def test_friend_challenge_reveals_creator_headline(app, client, db):
     body = resp.data.decode('utf-8')
     assert 'Same scenario · different path' in body
     assert creator_headline in body
+
+
+def test_challenge_anonymous_creator_localises_to_someone(app, db):
+    """A default-name creator stores a sentinel, not literal 'Someone' — so the
+    label renders in the viewer's locale, not the creator's."""
+    from app.game.engine.scenario import load_scenario
+    from app.game.services.challenge_service import (
+        _ANONYMOUS_CREATOR_TOKEN,
+        challenge_reveal_for_run,
+        get_or_create_challenge,
+    )
+    from app.game.services.run_service import apply_run_choice, get_or_start_slice_run
+
+    fp = fingerprint_from_client_id('a' * 64)
+    with app.app_context():
+        db.create_all()
+
+        # Creator with default society name.
+        creator = get_or_start_slice_run(user_id=None, session_fingerprint=fp)
+        # society_name comes out as the default
+        scenario = load_scenario(creator.scenario_slug)
+        for turn in scenario['turns']:
+            r = apply_run_choice(creator, turn['choices'][0]['id'])
+            creator = db.session.get(GameRun, creator.id)
+            if r['game_complete']:
+                break
+        challenge = get_or_create_challenge(creator)
+        # Sentinel stored in DB — viewer's gettext renders the localised label.
+        assert challenge.creator_display_name == _ANONYMOUS_CREATOR_TOKEN
+
+        # A friend playing the challenge gets the localised label on reveal.
+        friend_fp = fingerprint_from_client_id('b' * 64)
+        friend = get_or_start_slice_run(user_id=None, session_fingerprint=friend_fp)
+        for turn in load_scenario(friend.scenario_slug)['turns']:
+            r = apply_run_choice(friend, turn['choices'][0]['id'])
+            friend = db.session.get(GameRun, friend.id)
+            if r['game_complete']:
+                break
+
+        reveal = challenge_reveal_for_run(
+            completed_run=friend,
+            pending_token=challenge.token,
+        )
+        assert reveal is not None
+        # Default English locale resolves to "Someone".
+        assert reveal['display_name'] == 'Someone'
+
+
+def test_challenge_named_creator_preserves_society_name(app, db):
+    """A creator who named their society stores the literal name (no localisation)."""
+    from app.game.engine.scenario import load_scenario
+    from app.game.services.challenge_service import (
+        challenge_reveal_for_run,
+        get_or_create_challenge,
+    )
+    from app.game.services.run_service import (
+        apply_run_choice,
+        get_or_start_daily_run,
+    )
+    from app.game.services.daily_service import scheduled_scenario_slug
+
+    fp = fingerprint_from_client_id('c' * 64)
+    with app.app_context():
+        db.create_all()
+        creator = get_or_start_daily_run(
+            scenario_slug=scheduled_scenario_slug(),
+            user_id=None,
+            session_fingerprint=fp,
+            society_name='Atlas Republic',
+        )
+        for turn in load_scenario(creator.scenario_slug)['turns']:
+            r = apply_run_choice(creator, turn['choices'][0]['id'])
+            creator = db.session.get(GameRun, creator.id)
+            if r['game_complete']:
+                break
+        challenge = get_or_create_challenge(creator)
+        assert challenge.creator_display_name == 'Atlas Republic'
+
+        friend_fp = fingerprint_from_client_id('d' * 64)
+        friend = get_or_start_daily_run(
+            scenario_slug=creator.scenario_slug,
+            user_id=None,
+            session_fingerprint=friend_fp,
+        )
+        for turn in load_scenario(friend.scenario_slug)['turns']:
+            r = apply_run_choice(friend, turn['choices'][0]['id'])
+            friend = db.session.get(GameRun, friend.id)
+            if r['game_complete']:
+                break
+
+        reveal = challenge_reveal_for_run(
+            completed_run=friend,
+            pending_token=challenge.token,
+        )
+        assert reveal['display_name'] == 'Atlas Republic'
 
 
 def test_challenge_link_redirects_to_play(app, client, db):

@@ -152,12 +152,13 @@
   {% if not is_authenticated %}
   <section class="game-hub-signin mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
     <p class="text-sm text-game-text mb-3">
-      {{ _('Sign in to save your societies across devices and keep your streak when this browser forgets.') }}
+      {{ _('Save your societies across devices and keep your streak when this browser forgets.') }}
     </p>
     <div class="flex flex-wrap gap-2">
-      <a href="{{ url_for('auth.register') }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
-      <a href="{{ url_for('auth.login') }}" class="game-btn-secondary text-sm py-2">{{ _('Sign in') }}</a>
+      <a href="{{ url_for('auth.register', next=url_for('game.index')) }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
+      <a href="{{ url_for('auth.magic_link_request', next=url_for('game.index')) }}" class="game-btn-secondary text-sm py-2">{{ _('Email me a sign-in link') }}</a>
     </div>
+    <p class="text-xs text-game-muted mt-3">{{ _('Already have an account? We email a one-click sign-in link — no password needed.') }}</p>
   </section>
   {% endif %}
 

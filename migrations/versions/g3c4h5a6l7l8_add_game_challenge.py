@@ -27,7 +27,9 @@ def upgrade():
         sa.Column('creator_display_name', sa.String(length=48), nullable=False),
         sa.Column('creator_headline', sa.String(length=300), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['creator_run_id'], ['game_run.id']),
+        sa.ForeignKeyConstraint(
+            ['creator_run_id'], ['game_run.id'], ondelete='CASCADE'
+        ),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('creator_run_id'),
         sa.UniqueConstraint('token'),

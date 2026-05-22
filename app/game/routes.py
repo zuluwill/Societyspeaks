@@ -31,7 +31,11 @@ from app.game.services.daily_service import (
     tomorrow_teaser,
     utc_game_date,
 )
-from app.game.services.identity_service import compute_daily_streak, player_has_game_history
+from app.game.services.identity_service import (
+    compute_daily_streak,
+    player_has_game_history,
+    visitor_owns_run,
+)
 from app.game.services.quick_run_service import (
     is_quick_run_slug,
     quick_run_entry,
@@ -322,6 +326,14 @@ def outcome(run_uuid: str):
         played_at=run.completed_at or run.started_at,
     )
 
+    user_id, fingerprint = _player_identity()
+    if visitor_owns_run(run, user_id=user_id, session_fingerprint=fingerprint):
+        signin_return = url_for('game.outcome', run_uuid=run.uuid)
+    else:
+        # Shared links are public — sign-in should land on the hub, not someone
+        # else's outcome card, even though login-merge still claims this browser's runs.
+        signin_return = url_for('game.index')
+
     response = make_response(
         render_template(
             'game/outcome.html',
@@ -333,6 +345,7 @@ def outcome(run_uuid: str):
             challenge_link=challenge_link,
             challenge_reveal=challenge_reveal,
             is_authenticated=current_user.is_authenticated,
+            signin_return=signin_return,
         )
     )
     return set_voter_client_cookies_if_needed(response)
