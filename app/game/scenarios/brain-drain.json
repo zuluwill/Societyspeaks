@@ -64,7 +64,7 @@
     {
       "id": "turn_2",
       "beat": "confidence",
-      "prompt": "Tech firms abroad recruit directly on campuses. Your flagship hospital loses an entire surgical team.",
+      "prompt": "Overseas recruiters are on your university campuses offering immediate contracts. Across the country, hospitals and schools are posting the same vacancies for the third year running — the pay gap with abroad has become a chasm.",
       "choices": [
         {
           "id": "ban_poaching",
