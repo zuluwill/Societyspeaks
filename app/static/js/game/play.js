@@ -47,6 +47,7 @@
 
   var lastFocusedBeforeDialog = null;
   var toastTimer = null;
+  var closeDialogTimer = null;
 
   function showToast(message) {
     if (!toast) return;
@@ -117,6 +118,7 @@
   // ----- Accessible consequence dialog -----
 
   function openDialog() {
+    if (closeDialogTimer) { clearTimeout(closeDialogTimer); closeDialogTimer = null; }
     lastFocusedBeforeDialog = document.activeElement;
     overlay.classList.remove('hidden');
     requestAnimationFrame(function () {
@@ -129,7 +131,8 @@
   function closeDialog() {
     overlay.classList.remove('is-visible');
     document.removeEventListener('keydown', dialogKeyHandler);
-    setTimeout(function () {
+    closeDialogTimer = setTimeout(function () {
+      closeDialogTimer = null;
       overlay.classList.add('hidden');
       if (lastFocusedBeforeDialog && lastFocusedBeforeDialog.focus) {
         lastFocusedBeforeDialog.focus();
