@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import logging
 import secrets
 from typing import Any, Dict, Optional
 
 from flask import url_for
 from flask_babel import _
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.game.constants import DEFAULT_SOCIETY_NAME, GAME_RUN_STATUS_COMPLETED
 from app.game.services.daily_service import utc_game_date
 from app.lib.time import utcnow_naive
 from app.models.game import GameChallenge, GameRun
+
+logger = logging.getLogger(__name__)
 
 # Sentinel stored in the DB when the creator kept the default society name.
 # The challenge-view path renders this through gettext at request time so the
@@ -39,27 +43,32 @@ def get_or_create_challenge(run: GameRun) -> Optional[GameChallenge]:
     if run.status != GAME_RUN_STATUS_COMPLETED or not run.outcome:
         return None
 
-    existing = GameChallenge.query.filter_by(creator_run_id=run.id).first()
-    if existing:
-        return existing
+    try:
+        existing = GameChallenge.query.filter_by(creator_run_id=run.id).first()
+        if existing:
+            return existing
 
-    schedule_date = None
-    if run.mode == 'daily' and run.started_at:
-        schedule_date = run.started_at.date()
+        schedule_date = None
+        if run.mode == 'daily' and run.started_at:
+            schedule_date = run.started_at.date()
 
-    challenge = GameChallenge(
-        token=secrets.token_urlsafe(18),
-        creator_run_id=run.id,
-        scenario_slug=run.scenario_slug,
-        mode=run.mode,
-        schedule_date=schedule_date,
-        creator_display_name=_creator_display_name(run),
-        creator_headline=run.outcome.headline,
-        created_at=utcnow_naive(),
-    )
-    db.session.add(challenge)
-    db.session.commit()
-    return challenge
+        challenge = GameChallenge(
+            token=secrets.token_urlsafe(18),
+            creator_run_id=run.id,
+            scenario_slug=run.scenario_slug,
+            mode=run.mode,
+            schedule_date=schedule_date,
+            creator_display_name=_creator_display_name(run),
+            creator_headline=(run.outcome.headline or '')[:300],
+            created_at=utcnow_naive(),
+        )
+        db.session.add(challenge)
+        db.session.commit()
+        return challenge
+    except SQLAlchemyError as exc:
+        logger.error('get_or_create_challenge failed for run %s: %s', run.uuid, exc)
+        db.session.rollback()
+        return None
 
 
 def challenge_url(challenge: GameChallenge, *, _external: bool = True) -> str:

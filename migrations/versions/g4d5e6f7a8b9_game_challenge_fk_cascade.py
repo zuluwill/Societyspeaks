@@ -21,28 +21,33 @@ depends_on = None
 
 
 def upgrade():
-    with op.batch_alter_table('game_challenge') as batch_op:
-        # Drop the constraint regardless of its auto-generated name.
-        batch_op.drop_constraint(
-            'game_challenge_creator_run_id_fkey', type_='foreignkey'
-        )
-        batch_op.create_foreign_key(
-            'game_challenge_creator_run_id_fkey',
-            'game_run',
-            ['creator_run_id'],
-            ['id'],
-            ondelete='CASCADE',
-        )
+    # Use direct ALTER TABLE operations — batch_alter_table triggered table
+    # recreation on PostgreSQL in some Alembic versions, which dropped the table.
+    op.drop_constraint(
+        'game_challenge_creator_run_id_fkey',
+        'game_challenge',
+        type_='foreignkey',
+    )
+    op.create_foreign_key(
+        'game_challenge_creator_run_id_fkey',
+        'game_challenge',
+        'game_run',
+        ['creator_run_id'],
+        ['id'],
+        ondelete='CASCADE',
+    )
 
 
 def downgrade():
-    with op.batch_alter_table('game_challenge') as batch_op:
-        batch_op.drop_constraint(
-            'game_challenge_creator_run_id_fkey', type_='foreignkey'
-        )
-        batch_op.create_foreign_key(
-            'game_challenge_creator_run_id_fkey',
-            'game_run',
-            ['creator_run_id'],
-            ['id'],
-        )
+    op.drop_constraint(
+        'game_challenge_creator_run_id_fkey',
+        'game_challenge',
+        type_='foreignkey',
+    )
+    op.create_foreign_key(
+        'game_challenge_creator_run_id_fkey',
+        'game_challenge',
+        'game_run',
+        ['creator_run_id'],
+        ['id'],
+    )
