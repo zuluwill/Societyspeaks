@@ -1,47 +1,125 @@
 (function () {
   'use strict';
 
-  var btn = document.getElementById('share-native');
-  if (!btn) return;
+  var payloadEl = document.getElementById('game-share-payload');
+  var btn = document.getElementById('share-results');
+  var statusEl = document.getElementById('share-status');
+  if (!btn || !payloadEl) return;
 
-  var defaultLabel = btn.dataset.defaultLabel || btn.textContent.trim() || 'Share';
-  var copiedLabel = btn.dataset.copiedLabel || 'Link copied';
+  var payload;
+  try {
+    payload = JSON.parse(payloadEl.textContent || '{}');
+  } catch (e) {
+    return;
+  }
 
-  function flashLabel(text) {
-    var original = btn.textContent;
-    btn.textContent = text;
-    setTimeout(function () {
-      btn.textContent = original === text ? defaultLabel : original;
-    }, 1800);
+  var shareText = (payload.text || '').trim();
+  var shareUrl = (payload.url || '').trim();
+  var shareTitle = (payload.title || 'Tradeoffs on Society Speaks').trim();
+  if (!shareText && shareUrl) {
+    shareText = shareUrl;
+  }
+  if (!shareText) return;
+
+  var defaultLabel = btn.dataset.defaultLabel || btn.textContent.trim() || 'Share results';
+  var copiedLabel = btn.dataset.copiedLabel || 'Copied!';
+  var failedLabel = btn.dataset.failedLabel || 'Could not copy';
+  var runUuid = btn.dataset.runUuid;
+  var resetTimer = null;
+
+  function setStatus(message) {
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+  }
+
+  function flashButton(label) {
+    if (resetTimer) clearTimeout(resetTimer);
+    btn.textContent = label;
+    resetTimer = setTimeout(function () {
+      btn.textContent = defaultLabel;
+      resetTimer = null;
+    }, 2200);
+  }
+
+  function trackShare(method) {
+    if (!window.gameAnalytics) return;
+    window.gameAnalytics.capture('game_share_initiated', {
+      run_uuid: runUuid,
+      share_url: shareUrl,
+      share_format: 'results',
+      share_method: method,
+    });
+  }
+
+  function copyToClipboard() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(shareText).then(function () {
+        trackShare('clipboard');
+        flashButton(copiedLabel);
+        setStatus(copiedLabel);
+        return true;
+      });
+    }
+    return Promise.resolve(false);
+  }
+
+  function legacyCopy() {
+    var preview = document.getElementById('share-preview');
+    if (!preview) return false;
+    var range = document.createRange();
+    range.selectNodeContents(preview);
+    var selection = window.getSelection();
+    if (!selection) return false;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    var ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch (err) {
+      ok = false;
+    }
+    selection.removeAllRanges();
+    if (ok) {
+      trackShare('selection');
+      flashButton(copiedLabel);
+      setStatus(copiedLabel);
+    }
+    return ok;
   }
 
   btn.addEventListener('click', function () {
-    var url = btn.dataset.shareUrl || window.location.href;
-    var title = btn.dataset.shareTitle || 'Tradeoffs on Society Speaks';
-    var runUuid = btn.dataset.runUuid;
-
-    if (window.gameAnalytics) {
-      window.gameAnalytics.capture('game_share_initiated', {
-        run_uuid: runUuid,
-        share_url: url,
-      });
-    }
+    setStatus('');
 
     if (navigator.share) {
-      navigator.share({ title: title, url: url }).catch(function () {});
-      return;
-    }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(function () {
-        flashLabel(copiedLabel);
-      }).catch(function () {
-        flashLabel('Copy failed');
+      navigator.share({
+        title: shareTitle,
+        text: shareText,
+      }).then(function () {
+        trackShare('native');
+        setStatus(defaultLabel);
+      }).catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        copyToClipboard().then(function (ok) {
+          if (!ok && !legacyCopy()) {
+            flashButton(failedLabel);
+            setStatus(failedLabel);
+          }
+        });
       });
       return;
     }
 
-    window.prompt('Copy this link:', url);
+    copyToClipboard().then(function (ok) {
+      if (!ok && !legacyCopy()) {
+        flashButton(failedLabel);
+        setStatus(failedLabel);
+      }
+    }).catch(function () {
+      if (!legacyCopy()) {
+        flashButton(failedLabel);
+        setStatus(failedLabel);
+      }
+    });
   });
 
   var bridge = document.getElementById('ss-bridge-link');

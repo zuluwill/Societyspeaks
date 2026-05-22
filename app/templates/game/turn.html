@@ -16,7 +16,6 @@
 <div id="game-app"
      data-run-uuid="{{ run.uuid }}"
      data-csrf="{{ csrf_token() }}"
-     data-outcome-base="{{ url_for('game.outcome', run_uuid='__UUID__') }}"
      data-beat-labels='{{ beat_labels|tojson }}'
      data-progress-template="{{ _('Turn {n} of {total}') }}">
 

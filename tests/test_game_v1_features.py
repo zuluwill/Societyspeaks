@@ -494,7 +494,7 @@ def test_hub_shows_first_time_explainer_for_new_visitor(app, client, db):
     resp = client.get('/play/')
     assert resp.status_code == 200
     assert b'New to Tradeoffs?' in resp.data
-    assert b'Five minutes. Five choices.' in resp.data
+    assert b"You're in charge. Every decision costs something." in resp.data
 
 
 def test_hub_hides_explainer_after_first_play(app, client, db):
@@ -628,3 +628,133 @@ def test_homepage_tradeoffs_card_falls_back_without_play_meta(app, client, db, m
     assert resp.status_code == 200
     # Generic fallback copy appears when play_meta is None
     assert b'A new crisis. Five choices.' in resp.data
+
+
+def test_build_share_text_contains_identity_stats_and_url(app):
+    from app.game.services.share_text_service import build_share_text
+
+    with app.app_context():
+        text = build_share_text(
+            society_name='Riverlands',
+            headline='Everyone trusted you. The country ran out of money.',
+            governance_label='Short-Term Fixer',
+            scenario_title='Debt inherited',
+            visible_stats={'prosperity': 41, 'trust': 72, 'fairness': 58, 'stability': 63},
+            trait_chips=['High-trust', 'Debt-heavy'],
+            streak_current=3,
+            contradiction_summary='You chose growth twice. Fairness never recovered.',
+            share_url='https://societyspeaks.io/play/outcome/abc-123',
+            challenge_url='https://societyspeaks.io/play/challenge/xyz',
+        )
+    assert 'Riverlands' in text
+    assert 'Everyone trusted you' in text
+    assert 'Short-Term Fixer' in text
+    assert '72 🤝' in text
+    assert 'Challenge a friend' in text
+    assert 'https://societyspeaks.io/play/challenge/xyz' in text
+
+
+def test_outcome_page_renders_share_results_block(app, client, db):
+    from app.game.engine.scenario import load_scenario
+    from app.game.services.run_service import apply_run_choice, get_or_start_slice_run
+    from app.lib.vote_identity import fingerprint_from_client_id
+
+    client_id = 's' * 64
+    fp = fingerprint_from_client_id(client_id)
+    with app.app_context():
+        db.create_all()
+        run = get_or_start_slice_run(user_id=None, session_fingerprint=fp)
+        scenario = load_scenario(run.scenario_slug)
+        for turn in scenario['turns']:
+            result = apply_run_choice(run, turn['choices'][0]['id'])
+            run = db.session.get(type(run), run.id)
+            if result['game_complete']:
+                break
+        run_uuid = run.uuid
+
+    client.set_cookie('ss_voter_client_id', client_id)
+    resp = client.get(f'/play/outcome/{run_uuid}')
+    assert resp.status_code == 200
+    body = resp.data.decode('utf-8')
+    assert 'Share your results' in body
+    assert 'Share results' in body
+    assert 'game-share-preview' in body
+    assert 'game-share-payload' in body
+    assert 'What kind of leader would you be?' in body
+    assert f'/play/outcome/{run_uuid}' in body
+    assert 'outcome.js?v=4' in body
+    assert '/play/challenge/' in body
+
+
+def test_friend_challenge_reveals_creator_headline(app, client, db):
+    from app.game.engine.scenario import load_scenario
+    from app.game.services.challenge_service import get_or_create_challenge
+    from app.game.services.run_service import apply_run_choice, get_or_start_slice_run
+    from app.lib.vote_identity import fingerprint_from_client_id
+
+    creator_id = 'c1' * 32
+    friend_id = 'f1' * 32
+    creator_fp = fingerprint_from_client_id(creator_id)
+    friend_fp = fingerprint_from_client_id(friend_id)
+
+    with app.app_context():
+        db.create_all()
+        creator_run = get_or_start_slice_run(user_id=None, session_fingerprint=creator_fp)
+        scenario = load_scenario(creator_run.scenario_slug)
+        for turn in scenario['turns']:
+            result = apply_run_choice(creator_run, turn['choices'][0]['id'])
+            creator_run = db.session.get(type(creator_run), creator_run.id)
+            if result['game_complete']:
+                break
+        challenge = get_or_create_challenge(creator_run)
+        assert challenge is not None
+        token = challenge.token
+        creator_headline = creator_run.outcome.headline
+        slug = creator_run.scenario_slug
+
+        friend_run = get_or_start_slice_run(user_id=None, session_fingerprint=friend_fp)
+        assert friend_run.scenario_slug == slug
+        for turn in scenario['turns']:
+            result = apply_run_choice(friend_run, turn['choices'][1]['id'] if len(turn['choices']) > 1 else turn['choices'][0]['id'])
+            friend_run = db.session.get(type(friend_run), friend_run.id)
+            if result['game_complete']:
+                break
+        friend_uuid = friend_run.uuid
+
+    client.set_cookie('ss_voter_client_id', friend_id)
+    with client.session_transaction() as sess:
+        sess['pending_game_challenge'] = token
+    resp = client.get(f'/play/outcome/{friend_uuid}')
+    assert resp.status_code == 200
+    body = resp.data.decode('utf-8')
+    assert 'Same scenario · different path' in body
+    assert creator_headline in body
+
+
+def test_challenge_link_redirects_to_play(app, client, db):
+    from app.game.services.challenge_service import get_or_create_challenge
+    from app.game.services.run_service import apply_run_choice, get_or_start_slice_run
+    from app.lib.vote_identity import fingerprint_from_client_id
+
+    client_id = 'z' * 64
+    fp = fingerprint_from_client_id(client_id)
+    with app.app_context():
+        db.create_all()
+        from app.game.engine.scenario import load_scenario
+
+        run = get_or_start_slice_run(user_id=None, session_fingerprint=fp)
+        scenario = load_scenario(run.scenario_slug)
+        for turn in scenario['turns']:
+            result = apply_run_choice(run, turn['choices'][0]['id'])
+            run = db.session.get(type(run), run.id)
+            if result['game_complete']:
+                break
+        challenge = get_or_create_challenge(run)
+        token = challenge.token
+
+    client.set_cookie('ss_voter_client_id', client_id)
+    resp = client.get(f'/play/challenge/{token}', follow_redirects=False)
+    assert resp.status_code == 302
+    assert '/play/daily/' in resp.headers['Location'] or '/play/run/' in resp.headers['Location']
+    with client.session_transaction() as sess:
+        assert sess.get('pending_game_challenge') == token

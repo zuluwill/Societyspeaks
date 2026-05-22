@@ -89,3 +89,25 @@ class GameDailySchedule(db.Model):
     scenario_slug = db.Column(db.String(80), nullable=False)
     category_label = db.Column(db.String(80), nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
+
+
+class GameChallenge(db.Model):
+    """Shareable friend challenge — creator headline revealed after friend completes."""
+
+    __tablename__ = 'game_challenge'
+    __table_args__ = (
+        db.Index('idx_game_challenge_token', 'token', unique=True),
+        db.Index('idx_game_challenge_creator_run', 'creator_run_id', unique=True),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(48), nullable=False, unique=True)
+    creator_run_id = db.Column(db.Integer, db.ForeignKey('game_run.id'), nullable=False, unique=True)
+    scenario_slug = db.Column(db.String(80), nullable=False)
+    mode = db.Column(db.String(20), nullable=False)
+    schedule_date = db.Column(db.Date, nullable=True)
+    creator_display_name = db.Column(db.String(48), nullable=False, default='Someone')
+    creator_headline = db.Column(db.String(300), nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+
+    creator_run = db.relationship('GameRun', foreign_keys=[creator_run_id])

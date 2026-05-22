@@ -11,9 +11,12 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 from flask_login import current_user
+
+from flask_babel import gettext as _
 
 from app import limiter
 from app.game import game_bp
@@ -34,6 +37,13 @@ from app.game.services.quick_run_service import (
     quick_run_entry,
     quick_run_pool,
 )
+from app.game.services.challenge_service import (
+    challenge_play_target,
+    challenge_reveal_for_run,
+    challenge_url,
+    get_or_create_challenge,
+)
+from app.game.services.share_text_service import build_share_text
 from app.game.services.run_service import (
     GameRunNotFound,
     build_outcome_view,
@@ -42,6 +52,7 @@ from app.game.services.run_service import (
     get_run_by_uuid,
     start_quick_run,
 )
+from app.models.game import GameChallenge
 from app.lib.vote_identity import (
     get_voter_fingerprint,
     set_voter_client_cookies_if_needed,
@@ -250,6 +261,24 @@ def quick_run(scenario_slug: str):
     return set_voter_client_cookies_if_needed(response)
 
 
+@game_bp.route('/challenge/<token>')
+@limiter.limit('60 per minute')
+def challenge(token: str):
+    """Friend challenge entry — plan §6.2."""
+    if not current_app.config.get('GAME_ENABLED', True):
+        abort(404)
+
+    row = GameChallenge.query.filter_by(token=token).first()
+    if not row:
+        abort(404)
+
+    session['pending_game_challenge'] = row.token
+    target = challenge_play_target(row)
+    if target['endpoint'] == 'daily':
+        return redirect(url_for('game.daily', schedule_date=target['schedule_date']))
+    return redirect(url_for('game.quick_run', scenario_slug=target['scenario_slug']))
+
+
 @game_bp.route('/outcome/<run_uuid>')
 @limiter.limit('120 per minute')
 def outcome(run_uuid: str):
@@ -267,6 +296,31 @@ def outcome(run_uuid: str):
     view = build_outcome_view(run)
     emblem = emblem_style(run.emblem_seed or run.uuid)
     ss_bridge = find_ss_bridge(run.scenario_slug)
+    share_url = url_for('game.outcome', run_uuid=run.uuid, _external=True)
+    contradiction = view.get('contradiction') or {}
+
+    challenge_row = get_or_create_challenge(run)
+    challenge_link = challenge_url(challenge_row) if challenge_row else None
+
+    pending_token = session.pop('pending_game_challenge', None)
+    challenge_reveal = challenge_reveal_for_run(
+        completed_run=run,
+        pending_token=pending_token,
+    )
+
+    share_text = build_share_text(
+        society_name=run.society_name or '',
+        headline=view['headline'],
+        governance_label=view.get('governance_label'),
+        scenario_title=view['scenario'].get('title', run.scenario_slug),
+        visible_stats=view['visible_stats'],
+        trait_chips=view.get('trait_chips'),
+        streak_current=int((view.get('streak') or {}).get('current') or 0),
+        contradiction_summary=contradiction.get('summary'),
+        share_url=share_url,
+        challenge_url=challenge_link,
+        played_at=run.completed_at or run.started_at,
+    )
 
     response = make_response(
         render_template(
@@ -274,7 +328,10 @@ def outcome(run_uuid: str):
             **view,
             emblem=emblem,
             ss_bridge=ss_bridge,
-            share_url=url_for('game.outcome', run_uuid=run.uuid, _external=True),
+            share_url=share_url,
+            share_text=share_text,
+            challenge_link=challenge_link,
+            challenge_reveal=challenge_reveal,
             is_authenticated=current_user.is_authenticated,
         )
     )

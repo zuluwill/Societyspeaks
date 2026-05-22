@@ -48,7 +48,7 @@
       {% endif %}
     </div>
     <p class="text-xs text-game-muted mb-3">
-      {{ _('UTC %(date)s · %(hour)02d:00 publish', date=today.schedule_date.isoformat(), hour=today.publish_hour_utc) }}
+      {{ _('UTC %(date)s · %(time)s publish', date=today.schedule_date.isoformat(), time=('%02d:00' % today.publish_hour_utc)) }}
     </p>
     <h1 class="font-display text-3xl sm:text-4xl leading-tight text-game-text mb-2">
       {{ today.title }}
@@ -74,7 +74,7 @@
     </a>
     {% elif completed_today_uuid %}
     <p class="text-sm text-game-muted mb-4">
-      {{ _("You've already played today's scenario. Come back at %(hour)02d:00 UTC for the next one.", hour=tomorrow.publish_hour_utc) }}
+      {{ _("You've already played today's scenario. Come back at %(time)s UTC for the next one.", time=('%02d:00' % tomorrow.publish_hour_utc)) }}
     </p>
     <a href="{{ url_for('game.outcome', run_uuid=completed_today_uuid) }}" class="game-btn-primary w-full text-center">
       {{ _("View today's outcome") }}
@@ -145,7 +145,7 @@
       {{ tomorrow.category }}
     </p>
     <p class="text-xs text-game-muted mt-2">
-      {{ _('New scenario unlocks at %(hour)02d:00 UTC', hour=tomorrow.publish_hour_utc) }}
+      {{ _('New scenario unlocks at %(time)s UTC', time=('%02d:00' % tomorrow.publish_hour_utc)) }}
     </p>
   </section>
 

@@ -106,4 +106,4 @@ from app.models.discussions import (  # noqa: F401
     StatementFlag,
 )
 from app.models.users import User, UserAPIKey  # noqa: F401
-from app.models.game import GameDailySchedule, GameRun, GameRunOutcome  # noqa: F401
+from app.models.game import GameChallenge, GameDailySchedule, GameRun, GameRunOutcome  # noqa: F401
