@@ -6,7 +6,6 @@
 
   var runUuid = app.dataset.runUuid;
   var csrf = app.dataset.csrf;
-  var outcomeBase = app.dataset.outcomeBase || '/play/outcome/__UUID__';
 
   var overlay = document.getElementById('consequence-overlay');
   var headlineEl = document.getElementById('consequence-headline');
@@ -17,13 +16,12 @@
   var turnPanel = document.getElementById('turn-panel');
   var promptEl = document.getElementById('turn-prompt');
   var beatLabelEl = document.getElementById('beat-label');
-  var moodGrid = document.querySelector('.game-mood-grid');
   var toast = document.getElementById('toast');
   var statBars = document.getElementById('stat-bars');
 
   var statLabels = (function () {
     try {
-      return JSON.parse(statBars.dataset.statLabels || '{}');
+      return JSON.parse((statBars && statBars.dataset.statLabels) || '{}');
     } catch (e) {
       return {};
     }
@@ -99,20 +97,6 @@
       lines[0].remove();
       lines = ticker.querySelectorAll('.ticker-line');
     }
-  }
-
-  function updateMoodGrid(level) {
-    if (!moodGrid || typeof level !== 'number') return;
-    moodGrid.dataset.moodLevel = String(level);
-    var dots = moodGrid.querySelectorAll('.game-mood-dot');
-    dots.forEach(function (dot, idx) {
-      var row = Math.floor(idx / 5);
-      var col = idx % 5;
-      var distance = Math.abs(row - 2) + Math.abs(col - 2);
-      var threshold = 4 - level;
-      if (distance >= threshold) dot.classList.add('is-filled');
-      else dot.classList.remove('is-filled');
-    });
   }
 
   // ----- Accessible consequence dialog -----
@@ -281,7 +265,6 @@
         }
         var data = result.data;
         animateStatBars(data.visible_stats);
-        updateMoodGrid(data.mood_level);
 
         if (data.consequence && data.consequence.headline) {
           appendTickerLine(data.consequence.headline);
@@ -307,9 +290,6 @@
           if (data.next_consequence) {
             var headlines = (data.next_consequence.headlines || []).filter(Boolean);
             headlines.forEach(appendTickerLine);
-            if (data.next_consequence.mood_level !== undefined) {
-              updateMoodGrid(data.next_consequence.mood_level);
-            }
             showConsequence(
               {
                 headline: headlines.length ? headlines.join(' ') : 'A delayed cost arrives.',
