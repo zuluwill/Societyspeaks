@@ -3,7 +3,7 @@
 {% block game_title %}{{ _('Tradeoffs') }}{% endblock %}
 
 {% block game_head %}
-<meta name="description" content="{{ _('Five minutes. Five choices. Every choice costs something — the societal strategy game on Society Speaks.') }}">
+<meta name="description" content="{{ _('Govern a nation under pressure. Five turns, three choices each — every decision trades one value against another. The societal strategy game on Society Speaks.') }}">
 {% endblock %}
 
 {% block game_content %}
@@ -12,27 +12,27 @@
   <section class="game-hub-explainer mb-8 p-6 rounded-2xl border border-game-accent/30 bg-game-accent/5">
     <p class="text-xs uppercase tracking-widest text-game-accent mb-2">{{ _('New to Tradeoffs?') }}</p>
     <h2 class="font-display text-xl text-game-text mb-3 leading-snug">
-      {{ _('Five minutes. Five choices. Every choice costs something.') }}
+      {{ _("You're in charge. Every decision costs something.") }}
     </h2>
     <p class="text-sm text-game-muted leading-relaxed mb-4">
-      {{ _("You'll face one crisis with no good answers. Borrow now and pay later, or cut now and lose trust. Build fast and fracture the country, or move slowly while the queues grow. The game holds up a mirror; it never grades the reflection.") }}
+      {{ _("A crisis lands on your desk — and every path forward sacrifices something real. Cut now and lose public trust. Borrow now and burden the next generation. Build fast and fracture communities. Move slowly and watch the problems grow. Five turns to govern a nation. Your choices shape the society you leave behind.") }}
     </p>
     <div class="grid grid-cols-3 gap-3 mb-4 text-center">
       <div class="game-explainer-step">
         <p class="text-2xl font-display text-game-accent">5</p>
-        <p class="text-xs text-game-muted leading-tight">{{ _('turns, one crisis') }}</p>
+        <p class="text-xs text-game-muted leading-tight">{{ _('turns to govern') }}</p>
       </div>
       <div class="game-explainer-step">
         <p class="text-2xl font-display text-game-accent">3</p>
-        <p class="text-xs text-game-muted leading-tight">{{ _('choices each turn') }}</p>
+        <p class="text-xs text-game-muted leading-tight">{{ _('paths each turn') }}</p>
       </div>
       <div class="game-explainer-step">
-        <p class="text-2xl font-display text-game-accent">0</p>
-        <p class="text-xs text-game-muted leading-tight">{{ _('right answers') }}</p>
+        <p class="text-2xl font-display text-game-accent">∞</p>
+        <p class="text-xs text-game-muted leading-tight">{{ _('possible outcomes') }}</p>
       </div>
     </div>
     <p class="text-xs text-game-muted italic">
-      {{ _('Your society is yours: name it, watch its emblem form from your choices, share what kind of leader you become.') }}
+      {{ _('Your society is yours: name it, watch its emblem take shape from your choices, and discover the kind of leader you become.') }}
     </p>
   </section>
   {% endif %}
@@ -163,7 +163,7 @@
 
   <section class="game-hub-foot text-center space-y-3">
     <p class="text-xs text-game-muted leading-relaxed max-w-sm mx-auto">
-      {{ _('The game holds up a mirror; it never grades the reflection.') }}
+      {{ _('Every scenario reflects a real governing dilemma. There are no easy answers — only the values you choose to prioritise.') }}
     </p>
     <p class="text-xs">
       <a href="{{ url_for('game.editorial_principles') }}" class="text-game-muted underline hover:text-game-text transition">
