@@ -107,7 +107,7 @@ _CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('NEON_DATABASE_URL') or os.getenv('DATABASE_URL')
 
     # Flask-Babel: absolute path so catalogs resolve regardless of process CWD
     BABEL_TRANSLATION_DIRECTORIES = os.path.join(_CONFIG_DIR, 'translations')
