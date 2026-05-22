@@ -76,7 +76,7 @@ LAUNCH_SCENARIO_ROTATION: List[Dict[str, str]] = [
     {
         'slug': 'brain-drain',
         'category': 'Talent & education',
-        'teaser': 'Your best minds pack their bags.',
+        'teaser': 'Talent, migration, and who your country keeps.',
     },
     {
         'slug': 'currency-crisis',

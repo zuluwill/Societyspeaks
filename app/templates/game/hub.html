@@ -56,7 +56,7 @@
     <p class="text-sm text-game-muted leading-relaxed max-w-prose">
       {{ today.subtitle }}
     </p>
-    <p class="mt-2 text-xs text-game-muted italic">{{ today.teaser }}</p>
+    {% if today.teaser and today.teaser != today.subtitle %}<p class="mt-2 text-xs text-game-muted italic">{{ today.teaser }}</p>{% endif %}
   </header>
 
   <section class="game-hub-card mb-8 p-6 rounded-2xl border border-game-border bg-game-surface/80">
