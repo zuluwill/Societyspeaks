@@ -10,8 +10,10 @@ from alembic import context
 config = context.config
 
 # Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
+# Guard against programmatic invocation (e.g. flask db upgrade called from
+# application code) where no .ini file is provided and config_file_name is None.
+if config.config_file_name:
+    fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
 
