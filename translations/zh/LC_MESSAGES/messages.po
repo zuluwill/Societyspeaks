@@ -8239,7 +8239,7 @@ msgid ""
 "Aggregate cohort statistics (e.g. \"27 percent of players chose to borrow "
 "today\") are derived from completed runs and stored indefinitely in non-"
 "identifying form."
-msgstr "汇总队列统计数据（例如「今天27%的玩家选择借款」）来自已完成的运行，以不可识别的形式无限期保存。"
+msgstr "汇总队列统计数据（例如「今天27％的玩家选择借款」）来自已完成的运行，以不可识别的形式无限期保存。"
 
 #: app/templates/privacy-policy.html:96
 msgid "<strong>Your rights:</strong>"
