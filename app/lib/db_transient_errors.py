@@ -39,6 +39,10 @@ TRANSIENT_DB_ERROR_PHRASES: tuple[str, ...] = (
     "broken pipe",
     "terminating connection due to administrator command",
     "network is unreachable",
+    # Neon serverless: compute node is waking from sleep (cold start).
+    # Typically resolves within 1-3 s; always safe to retry.
+    "couldn't connect to compute node",
+    "compute node",
 )
 
 

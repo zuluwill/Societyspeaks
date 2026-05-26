@@ -46,6 +46,10 @@ def _make_retry_creator(uri: str, connect_args: dict, max_attempts: int = 3, bas
         'network is unreachable',
         'could not connect to server',
         'connection timed out',
+        # Neon serverless: compute node waking from sleep (cold start).
+        # Typically self-heals within 1-3 s; always safe to retry.
+        "couldn't connect to compute node",
+        'compute node',
     )
 
     def _creator():
