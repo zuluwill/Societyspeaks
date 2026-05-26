@@ -1948,12 +1948,15 @@ def daily_track_click(question_id):
         subscriber_id = int(subscriber_id_str)
         subscriber = db.session.get(DailyQuestionSubscriber, subscriber_id)
         if subscriber:
+            # Verify the question still exists — old emails may be clicked long after
+            # the DailyQuestion row is deleted, which would violate the FK constraint.
+            question_exists = db.session.get(DailyQuestion, question_id) is not None
             EmailAnalytics.record_click(
                 email=subscriber.email,
                 category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
                 click_url=target_url[:500],
                 question_subscriber_id=subscriber.id,
-                daily_question_id=question_id,
+                daily_question_id=question_id if question_exists else None,
                 user_agent=request.headers.get('User-Agent', '')[:500],
                 ip_address=request.remote_addr,
             )
