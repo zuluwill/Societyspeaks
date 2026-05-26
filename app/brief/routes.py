@@ -1176,12 +1176,15 @@ def brief_track_click(brief_id):
         subscriber_id = int(subscriber_id_str)
         subscriber = db.session.get(DailyBriefSubscriber, subscriber_id)
         if subscriber:
+            # Verify the brief still exists — old emails may be clicked long after
+            # the brief row is deleted, which would violate the FK constraint.
+            brief_exists = db.session.get(DailyBrief, brief_id) is not None
             EmailAnalytics.record_click(
                 email=subscriber.email,
                 category=EmailAnalytics.CATEGORY_DAILY_BRIEF,
                 click_url=target_url[:500],
                 brief_subscriber_id=subscriber.id,
-                brief_id=brief_id,
+                brief_id=brief_id if brief_exists else None,
                 user_agent=request.headers.get('User-Agent', '')[:500],
                 ip_address=request.remote_addr,
             )
