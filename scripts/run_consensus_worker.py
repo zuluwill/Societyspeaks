@@ -129,8 +129,21 @@ def main():
                 time.sleep(active_sleep if processed else idle_sleep)
             except Exception as exc:
                 logger.error(f"Consensus worker loop error: {exc}", exc_info=True)
-                db.session.rollback()
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
                 time.sleep(idle_sleep)
+            finally:
+                # Return the connection to the pool after every iteration so it
+                # is not held open during sleep.  pool_pre_ping will then
+                # validate it on the next checkout, preventing "server closed
+                # the connection unexpectedly" errors caused by Neon's idle
+                # connection timeout firing while the session sleeps.
+                try:
+                    db.session.remove()
+                except Exception:
+                    pass
 
     logger.info(f"Consensus worker stopped (id={worker_id}).")
     return 0
