@@ -97,6 +97,15 @@ def _is_rate_limit_error(error: Exception) -> bool:
     )
 
 
+def _is_timeout_error(error: Exception) -> bool:
+    text = str(error).lower()
+    return (
+        "timed out" in text
+        or "timeout" in text
+        or type(error).__name__ in ("APITimeoutError", "ReadTimeout", "ConnectTimeout")
+    )
+
+
 def _fallback_seed_statements(
     title: Optional[str],
     excerpt: Optional[str],
@@ -290,7 +299,7 @@ def _generate_with_openai(
         return []
 
     try:
-        client = openai.OpenAI(api_key=api_key, timeout=60.0)
+        client = openai.OpenAI(api_key=api_key, timeout=30.0, max_retries=1)
     except Exception as e:
         logger.error(f"Failed to create OpenAI client: {e}")
         return []
@@ -305,7 +314,8 @@ def _generate_with_openai(
                 {"role": "user", "content": prompt}
             ],
             max_tokens=800,
-            temperature=0.8
+            temperature=0.8,
+            timeout=30.0
         )
         
         content = response.choices[0].message.content
@@ -317,6 +327,8 @@ def _generate_with_openai(
     except Exception as e:
         if _is_rate_limit_error(e):
             logger.warning(f"OpenAI seed generation rate-limited/quota-limited: {e}")
+        elif _is_timeout_error(e):
+            logger.warning(f"OpenAI seed generation timed out (transient): {e}")
         else:
             logger.error(f"Seed generation failed: {e}")
         return []
@@ -338,7 +350,7 @@ def _generate_with_anthropic(
         return []
 
     try:
-        client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
+        client = anthropic.Anthropic(api_key=api_key, timeout=30.0)
     except Exception as e:
         logger.error(f"Failed to create Anthropic client: {e}")
         return []
@@ -361,6 +373,8 @@ def _generate_with_anthropic(
     except Exception as e:
         if _is_rate_limit_error(e):
             logger.warning(f"Anthropic seed generation rate-limited/quota-limited: {e}")
+        elif _is_timeout_error(e):
+            logger.warning(f"Anthropic seed generation timed out (transient): {e}")
         else:
             logger.error(f"Seed generation failed: {e}")
         return []
