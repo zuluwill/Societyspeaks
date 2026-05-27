@@ -299,7 +299,7 @@ def _generate_with_openai(
         return []
 
     try:
-        client = openai.OpenAI(api_key=api_key, timeout=30.0, max_retries=1)
+        client = openai.OpenAI(api_key=api_key, timeout=60.0)
     except Exception as e:
         logger.error(f"Failed to create OpenAI client: {e}")
         return []
@@ -314,8 +314,7 @@ def _generate_with_openai(
                 {"role": "user", "content": prompt}
             ],
             max_tokens=800,
-            temperature=0.8,
-            timeout=30.0
+            temperature=0.8
         )
         
         content = response.choices[0].message.content
@@ -350,7 +349,7 @@ def _generate_with_anthropic(
         return []
 
     try:
-        client = anthropic.Anthropic(api_key=api_key, timeout=30.0)
+        client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
     except Exception as e:
         logger.error(f"Failed to create Anthropic client: {e}")
         return []
