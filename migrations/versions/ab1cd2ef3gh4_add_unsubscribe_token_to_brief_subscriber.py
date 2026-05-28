@@ -27,9 +27,13 @@ def upgrade():
         sa.Column('unsubscribe_token', sa.String(64), nullable=True, unique=True)
     )
 
+    # gen_random_uuid() is built into PostgreSQL 13+ (no extension needed).
+    # Replacing hyphens gives a 32-char cryptographically random hex string.
+    # This must NOT be deterministic — a predictable token based on id+email
+    # would let anyone who knows those values silently unsubscribe someone else.
     op.execute("""
         UPDATE daily_brief_subscriber
-        SET unsubscribe_token = md5(id::text || '.' || email || '.ss-unsub')
+        SET unsubscribe_token = replace(gen_random_uuid()::text, '-', '')
         WHERE unsubscribe_token IS NULL
     """)
 

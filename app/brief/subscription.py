@@ -90,6 +90,7 @@ def process_subscription(
             existing.cadence = cadence
             existing.preferred_weekly_day = preferred_weekly_day
         existing.generate_magic_token()
+        existing.ensure_unsubscribe_token()
         existing.grant_free_access()
         existing.welcome_email_sent_at = None
         try:

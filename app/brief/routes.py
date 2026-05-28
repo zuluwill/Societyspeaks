@@ -541,9 +541,15 @@ def subscribe_inline():
         return redirect(request.referrer or url_for('brief.today'))
 
 
-@brief_bp.route('/brief/unsubscribe/<token>')
+@brief_bp.route('/brief/unsubscribe/<token>', methods=['GET', 'POST'])
 def unsubscribe(token):
-    """Unsubscribe from daily brief emails"""
+    """Unsubscribe from daily brief emails.
+
+    Accepts both GET (human click from email) and POST (RFC 8058 one-click
+    unsubscribe triggered by Gmail/Yahoo mail clients that honour the paired
+    List-Unsubscribe + List-Unsubscribe-Post: List-Unsubscribe=One-Click
+    headers — required by Gmail for bulk senders).
+    """
     # Try stable unsubscribe_token first; fall back to magic_token for links
     # sent before the unsubscribe_token column was added.
     subscriber = DailyBriefSubscriber.query.filter_by(unsubscribe_token=token).first()
@@ -551,36 +557,48 @@ def unsubscribe(token):
         subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
+        if request.method == 'POST':
+            return '', 200  # RFC 8058: silently accept, never error to mail client
         flash(_('Invalid unsubscribe link.'), 'error')
         return redirect(url_for('brief.today'))
 
     # Track whether they were on daily (to offer weekly as alternative)
     was_daily = (not subscriber.cadence or subscriber.cadence == 'daily')
 
-    # Update database
-    subscriber.status = 'unsubscribed'
-    subscriber.unsubscribed_at = utcnow_naive()
-    db.session.commit()
+    # Update database — idempotent: safe to call even if already unsubscribed
+    already_unsubscribed = subscriber.status == 'unsubscribed'
+    if not already_unsubscribed:
+        subscriber.status = 'unsubscribed'
+        subscriber.unsubscribed_at = utcnow_naive()
+        db.session.commit()
 
-    try:
-        import posthog
-        if posthog and getattr(posthog, 'project_api_key', None):
-            distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
-            posthog.capture(
-                distinct_id=distinct_id,
-                event='daily_brief_unsubscribed',
-                properties={
-                    'email': subscriber.email,
-                    'was_cadence': 'daily' if was_daily else 'weekly',
-                }
-            )
-            logger.info(
-                "PostHog: daily_brief_unsubscribed captured for %s", subscriber.email
-            )
-    except Exception as e:
-        logger.warning(f"PostHog tracking error: {e}")
+    # Track the event for all methods (GET human click AND POST one-click)
+    if not already_unsubscribed:
+        try:
+            import posthog
+            if posthog and getattr(posthog, 'project_api_key', None):
+                distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
+                posthog.capture(
+                    distinct_id=distinct_id,
+                    event='daily_brief_unsubscribed',
+                    properties={
+                        'email': subscriber.email,
+                        'was_cadence': 'daily' if was_daily else 'weekly',
+                        'method': 'one_click' if request.method == 'POST' else 'link',
+                    }
+                )
+                logger.info(
+                    "PostHog: daily_brief_unsubscribed captured for %s (method=%s)",
+                    subscriber.email, request.method
+                )
+        except Exception as e:
+            logger.warning(f"PostHog tracking error: {e}")
 
-    logger.info(f"Brief unsubscribe: {subscriber.email}")
+        logger.info(f"Brief unsubscribe ({request.method}): {subscriber.email}")
+
+    # RFC 8058 one-click POST — mail client expects 200 with no body
+    if request.method == 'POST':
+        return '', 200
 
     flash(_('You have been unsubscribed from the daily brief.'), 'success')
     return render_template(
@@ -595,7 +613,11 @@ def unsubscribe(token):
 @limiter.limit("5 per minute")
 def switch_to_weekly(token):
     """Switch an unsubscribed daily subscriber to weekly cadence instead"""
-    subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+    # Unsubscribe page passes the unsubscribe_token; fall back to magic_token for
+    # legacy links that pre-date the stable unsubscribe_token column.
+    subscriber = DailyBriefSubscriber.query.filter_by(unsubscribe_token=token).first()
+    if not subscriber:
+        subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
         flash(_('Invalid link.'), 'error')

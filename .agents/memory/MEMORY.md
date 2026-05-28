@@ -1,0 +1,1 @@
+- [Brief unsubscribe token design](brief-unsubscribe-token.md) — stable `unsubscribe_token` on DailyBriefSubscriber; never use rotating magic_token for unsubscribe URLs.
