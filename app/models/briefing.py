@@ -664,6 +664,7 @@ class BriefRecipient(db.Model):
         db.UniqueConstraint('briefing_id', 'email', name='uq_briefing_recipient'),
         db.Index('idx_brief_recipient_status', 'briefing_id', 'status'),
         db.Index('idx_brief_recipient_token', 'magic_token'),
+        db.Index('idx_brief_recipient_unsubscribe_token', 'unsubscribe_token'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -678,6 +679,7 @@ class BriefRecipient(db.Model):
     # Magic link auth (reuse pattern from DailyBriefSubscriber)
     magic_token = db.Column(db.String(64), unique=True, nullable=True)
     magic_token_expires_at = db.Column(db.DateTime, nullable=True)
+    unsubscribe_token = db.Column(db.String(64), unique=True, nullable=True)
 
     created_at = db.Column(db.DateTime, default=utcnow_naive)
 
@@ -688,6 +690,19 @@ class BriefRecipient(db.Model):
         self.magic_token = secrets.token_urlsafe(32)
         self.magic_token_expires_at = utcnow_naive() + timedelta(hours=expires_hours)
         return self.magic_token
+
+    def ensure_unsubscribe_token(self):
+        """
+        Ensure this recipient has a stable unsubscribe token.
+
+        Unlike magic_token (rotated before every email send), unsubscribe_token
+        is set once and never changes — so unsubscribe links in old emails remain
+        valid indefinitely.
+        """
+        if not self.unsubscribe_token:
+            import secrets
+            self.unsubscribe_token = secrets.token_hex(32)
+        return self.unsubscribe_token
 
     def is_magic_token_valid(self) -> bool:
         """Check if magic token is still valid (not expired)"""

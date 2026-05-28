@@ -333,6 +333,7 @@ def add_auto_recipient_for_user(briefing, user):
         status='active'
     )
     auto_recipient.generate_magic_token()
+    auto_recipient.ensure_unsubscribe_token()
     db.session.add(auto_recipient)
     return auto_recipient
 
@@ -2615,6 +2616,7 @@ def manage_recipients(briefing_id):
                         existing.status = 'active'
                         existing.unsubscribed_at = None
                         existing.generate_magic_token()
+                        existing.ensure_unsubscribe_token()
                         db.session.commit()
                         flash(_('Recipient %(email)s reactivated', email=email), 'success')
                     else:
@@ -2639,6 +2641,7 @@ def manage_recipients(briefing_id):
                         status='active'
                     )
                     recipient.generate_magic_token()
+                    recipient.ensure_unsubscribe_token()
                     db.session.add(recipient)
                     db.session.commit()
                     _track_posthog('briefing_recipient_added', current_user.id, {
@@ -2694,6 +2697,7 @@ def manage_recipients(briefing_id):
                             existing.status = 'active'
                             existing.unsubscribed_at = None
                             existing.generate_magic_token()
+                            existing.ensure_unsubscribe_token()
                             added += 1
                         else:
                             skipped += 1
@@ -2706,6 +2710,7 @@ def manage_recipients(briefing_id):
                             status='active'
                         )
                         recipient.generate_magic_token()
+                        recipient.ensure_unsubscribe_token()
                         db.session.add(recipient)
                         added += 1
                 
@@ -2793,29 +2798,47 @@ def unsubscribe(briefing_id, token):
     """
     briefing = db.get_or_404(Briefing, briefing_id)
 
+    # Try stable unsubscribe_token first; fall back to magic_token for links
+    # sent before the unsubscribe_token column was added.
     recipient = BriefRecipient.query.filter_by(
         briefing_id=briefing_id,
-        magic_token=token
+        unsubscribe_token=token
     ).first()
+    if not recipient:
+        recipient = BriefRecipient.query.filter_by(
+            briefing_id=briefing_id,
+            magic_token=token
+        ).first()
 
     if not recipient:
+        if request.method == 'POST':
+            return '', 200  # RFC 8058: silently accept, never error to mail client
         flash(_('Invalid unsubscribe link'), 'error')
         return redirect(url_for('main.index'))
 
-    if recipient.status == 'unsubscribed':
-        flash(_('You are already unsubscribed'), 'info')
-    else:
+    already_unsubscribed = recipient.status == 'unsubscribed'
+    if not already_unsubscribed:
         recipient.status = 'unsubscribed'
         recipient.unsubscribed_at = utcnow_naive()
-        # Regenerate token to invalidate any other links (security)
-        recipient.generate_magic_token(expires_hours=0)  # Immediately expired
+        # Invalidate magic_token for auth security; unsubscribe_token stays valid
+        # so clicking the link again gracefully shows "already unsubscribed".
+        recipient.generate_magic_token(expires_hours=0)
         db.session.commit()
         _track_posthog('briefing_recipient_unsubscribed', recipient.email, {
             'briefing_id': briefing_id,
             'briefing_name': briefing.name,
             'recipient_id': recipient.id,
+            'method': 'one_click' if request.method == 'POST' else 'link',
         })
+
+    # RFC 8058 one-click POST — mail client expects 200 with no body
+    if request.method == 'POST':
+        return '', 200
+
+    if not already_unsubscribed:
         flash(_('You have been unsubscribed from this briefing'), 'success')
+    else:
+        flash(_('You are already unsubscribed from this briefing'), 'info')
 
     return render_template('briefing/unsubscribed.html', briefing=briefing, recipient=recipient)
 
@@ -3671,6 +3694,7 @@ def test_send(briefing_id):
                 status='active'
             )
             test_recipient.generate_magic_token()
+            test_recipient.ensure_unsubscribe_token()
             db.session.add(test_recipient)
             db.session.commit()
         

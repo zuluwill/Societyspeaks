@@ -1866,9 +1866,10 @@ def send_daily_question_to_all_subscribers() -> int:
             offset += CHUNK_SIZE
             continue
 
-        # Generate magic tokens for eligible subscribers in this chunk
+        # Refresh magic tokens and ensure stable unsubscribe tokens for this chunk
         for subscriber in eligible_subscribers:
             subscriber.generate_magic_token()
+            subscriber.ensure_unsubscribe_token()
         
         try:
             db.session.commit()

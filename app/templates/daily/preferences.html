@@ -141,7 +141,7 @@
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-500">
                 {{ _("Don't want to receive any emails?") }}
-                <a href="{{ url_for('daily.unsubscribe', token=token) }}" class="text-red-600 hover:text-red-700 underline">{{ _('Unsubscribe') }}</a>
+                <a href="{{ url_for('daily.unsubscribe', token=subscriber.unsubscribe_token or subscriber.magic_token) }}" class="text-red-600 hover:text-red-700 underline">{{ _('Unsubscribe') }}</a>
             </p>
         </div>
 

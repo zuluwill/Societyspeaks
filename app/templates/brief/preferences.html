@@ -165,7 +165,7 @@
             <div class="px-6 pb-6">
                 <div class="pt-6 border-t border-gray-200">
                     <p class="text-sm text-gray-500 mb-3">{{ _("Don't want to receive the %(label)s anymore?", label=cadence_label) }}</p>
-                    <a href="{{ url_for('brief.unsubscribe', token=token) }}"
+                    <a href="{{ url_for('brief.unsubscribe', token=subscriber.unsubscribe_token or subscriber.magic_token) }}"
                        class="text-sm text-red-600 hover:text-red-800 hover:underline">
                         {{ _('Unsubscribe from %(label)s', label=cadence_label) }}
                     </a>

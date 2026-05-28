@@ -164,6 +164,7 @@ class BriefingEmailClient:
             
             # Refresh magic token so email links are always valid
             recipient.generate_magic_token(expires_hours=48)
+            recipient.ensure_unsubscribe_token()
             db.session.commit()
             
             # Determine from_email (custom domain or default)
@@ -173,9 +174,10 @@ class BriefingEmailClient:
             # Render email HTML
             html_content = self._render_brief_run_email(brief_run, recipient, briefing)
             
-            # Build unsubscribe URL
+            # Build unsubscribe URL using stable token; fall back to magic_token for
+            # recipients whose unsubscribe_token was not yet set (pre-migration window).
             base_url = get_base_url()
-            unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
+            unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.unsubscribe_token or recipient.magic_token or ''}"
             
             # Prepare email data
             email_data = {
@@ -832,8 +834,9 @@ class BriefingEmailClient:
             for recipient in claimed_recipients:
                 try:
                     recipient.generate_magic_token(expires_hours=48)
+                    recipient.ensure_unsubscribe_token()
                     html_content = self._render_brief_run_email(brief_run, recipient, briefing)
-                    unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
+                    unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.unsubscribe_token or recipient.magic_token or ''}"
 
                     email_data = {
                         'from': f"{from_name} <{from_email}>",
