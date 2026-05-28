@@ -293,6 +293,7 @@ def bulk_subscribe_existing_users(exclude_patterns=None):
                 is_active=True
             )
             subscriber.generate_magic_token()
+            subscriber.ensure_unsubscribe_token()
             db.session.add(subscriber)
             db.session.commit()
             subscribed += 1

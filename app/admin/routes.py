@@ -1824,6 +1824,7 @@ def add_subscriber():
             if existing:
                 if not existing.is_active:
                     existing.is_active = True
+                    existing.ensure_unsubscribe_token()
                     db.session.commit()
                     added += 1
                 continue
@@ -1834,6 +1835,7 @@ def add_subscriber():
                 is_active=True
             )
             subscriber.generate_magic_token()
+            subscriber.ensure_unsubscribe_token()
             db.session.add(subscriber)
             db.session.commit()
             added += 1
@@ -1987,6 +1989,7 @@ def bulk_import_subscribers():
                 is_active=True
             )
             subscriber.generate_magic_token()
+            subscriber.ensure_unsubscribe_token()
             db.session.add(subscriber)
             db.session.commit()
             added += 1

@@ -560,7 +560,7 @@ class ResendEmailClient:
         """
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         daily_question_url = f"{self.base_url}/daily"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
         
         try:
             # Build preferences URL for managing frequency
@@ -632,7 +632,7 @@ class ResendEmailClient:
         """
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
 
         # Generate question-specific vote URLs using helper
         vote_urls = self._build_vote_urls(subscriber, question.id)
@@ -735,7 +735,7 @@ class ResendEmailClient:
         question_ids = ','.join(str(q.id) for q in questions)
         batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
 
         # Build question data with vote URLs, discussion stats, and source articles
         from app.daily.utils import build_question_email_data
@@ -832,7 +832,7 @@ class ResendEmailClient:
         question_ids = ','.join(str(q.id) for q in questions)
         batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
 
         # Build question data with vote URLs, discussion stats, and source articles
         from app.daily.utils import build_question_email_data
@@ -919,7 +919,7 @@ class ResendEmailClient:
         """
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
 
         # Generate question-specific vote URLs using helper (DRY)
         vote_urls = self._build_vote_urls(subscriber, question.id)

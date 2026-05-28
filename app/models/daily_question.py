@@ -415,6 +415,7 @@ class DailyQuestionSubscriber(db.Model):
     __table_args__ = (
         db.Index('idx_dqs_email', 'email'),
         db.Index('idx_dqs_token', 'magic_token'),
+        db.Index('idx_dqs_unsubscribe_token', 'unsubscribe_token'),
         db.Index('idx_dqs_frequency', 'email_frequency', 'is_active'),
         db.Index('idx_dqs_send_day', 'preferred_send_day', 'is_active'),
     )
@@ -428,6 +429,7 @@ class DailyQuestionSubscriber(db.Model):
 
     magic_token = db.Column(db.String(64), unique=True)
     token_expires_at = db.Column(db.DateTime)
+    unsubscribe_token = db.Column(db.String(64), unique=True, nullable=True)
 
     current_streak = db.Column(db.Integer, default=0)
     longest_streak = db.Column(db.Integer, default=0)
@@ -457,6 +459,19 @@ class DailyQuestionSubscriber(db.Model):
         self.magic_token = secrets.token_urlsafe(32)
         self.token_expires_at = utcnow_naive() + timedelta(hours=expires_hours)
         return self.magic_token
+
+    def ensure_unsubscribe_token(self):
+        """
+        Ensure this subscriber has a stable unsubscribe token.
+
+        Unlike magic_token (which rotates on each email send), unsubscribe_token
+        is set once and never changes — so unsubscribe links in old emails remain
+        valid indefinitely regardless of how many times magic_token has rotated.
+        """
+        if not self.unsubscribe_token:
+            import secrets
+            self.unsubscribe_token = secrets.token_hex(32)
+        return self.unsubscribe_token
 
     def generate_vote_token(self, question_id, expires_hours=None):
         """

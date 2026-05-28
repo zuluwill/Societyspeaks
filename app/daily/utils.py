@@ -216,6 +216,7 @@ def process_daily_question_subscription(
             existing.preferred_send_day = day
             existing.preferred_send_hour = hr
         existing.generate_magic_token()
+        existing.ensure_unsubscribe_token()
         try:
             db.session.commit()
         except Exception as e:
@@ -245,6 +246,7 @@ def process_daily_question_subscription(
             preferred_send_hour=hr,
         )
         subscriber.generate_magic_token()
+        subscriber.ensure_unsubscribe_token()
         db.session.add(subscriber)
         db.session.commit()
 

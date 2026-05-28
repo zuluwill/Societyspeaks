@@ -857,31 +857,54 @@ def subscribe_success():
 
 @daily_bp.route('/daily/unsubscribe/<token>', methods=['GET', 'POST'])
 def unsubscribe(token):
-    """Unsubscribe from daily question emails with optional reason tracking"""
-    subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
+    """
+    Unsubscribe from daily question emails with optional reason tracking.
+
+    Accepts:
+    - GET  — human click from email; shows a confirmation form so the user can
+             optionally record a reason.
+    - POST — either the reason form (submitted by the user) or an RFC 8058
+             one-click request from Gmail/Yahoo mail clients (body contains
+             List-Unsubscribe=One-Click).  The two cases are distinguished by
+             the presence of the 'List-Unsubscribe' form field.
+    """
+    # Try stable unsubscribe_token first; fall back to magic_token for links
+    # sent before the unsubscribe_token column was added.
+    subscriber = DailyQuestionSubscriber.query.filter_by(unsubscribe_token=token).first()
+    if not subscriber:
+        subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
+        if request.method == 'POST':
+            return '', 200  # RFC 8058: silently accept, never error to mail client
         flash(_('Invalid unsubscribe link.'), 'error')
         return redirect(url_for('daily.today'))
 
-    # If already unsubscribed, just show confirmation
+    # RFC 8058 one-click POST — mail client body contains List-Unsubscribe=One-Click
+    is_one_click = (
+        request.method == 'POST'
+        and request.form.get('List-Unsubscribe') == 'One-Click'
+    )
+
+    # If already unsubscribed, return appropriate response
     if not subscriber.is_active:
+        if is_one_click or request.method == 'POST' and not request.form.get('reason'):
+            return '', 200
         return render_template('daily/unsubscribed.html', email=subscriber.email)
 
     # GET: Show unsubscribe confirmation form with reason options
     if request.method == 'GET':
         return render_template('daily/unsubscribe_confirm.html',
-                             email=subscriber.email,
-                             token=token)
+                               email=subscriber.email,
+                               token=token)
 
-    # POST: Process unsubscribe with reason
-    reason = request.form.get('reason', 'not_specified')
+    # POST path — either RFC 8058 one-click or human form submission
+    reason = 'not_specified' if is_one_click else request.form.get('reason', 'not_specified')
 
-    # Validate reason using constants
     if reason not in VALID_UNSUBSCRIBE_REASONS:
         reason = 'not_specified'
 
-    # Update database (source of truth for subscription status)
+    # Update database — idempotent
     subscriber.is_active = False
     subscriber.unsubscribe_reason = reason
     subscriber.unsubscribed_at = utcnow_naive()
@@ -897,18 +920,25 @@ def unsubscribe(token):
                 properties={
                     'email': subscriber.email,
                     'reason': reason,
+                    'method': 'one_click' if is_one_click else 'form',
                 }
             )
-            current_app.logger.info(f"PostHog: daily_question_unsubscribed for {subscriber.email}")
+            current_app.logger.info(
+                "PostHog: daily_question_unsubscribed for %s (method=%s)",
+                subscriber.email, 'one_click' if is_one_click else 'form'
+            )
     except Exception as e:
         current_app.logger.warning(f"PostHog tracking error: {e}")
 
     current_app.logger.info(
-        f"Subscriber {subscriber.id} ({subscriber.email}) unsubscribed. Reason: {reason}"
+        "Subscriber %s (%s) unsubscribed. Reason: %s method: %s",
+        subscriber.id, subscriber.email, reason,
+        'one_click' if is_one_click else 'form'
     )
 
-    # Note: With Resend, unsubscribe is handled by List-Unsubscribe headers
-    # and our database is the source of truth. No external API call needed.
+    # RFC 8058 one-click — mail client expects 200 with no body
+    if is_one_click:
+        return '', 200
 
     flash(_('You have been unsubscribed from daily civic questions.'), 'success')
     return render_template('daily/unsubscribed.html', email=subscriber.email)
