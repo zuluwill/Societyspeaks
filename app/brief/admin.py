@@ -587,6 +587,7 @@ def test_send():
                 preferred_send_hour=18
             )
             subscriber.generate_magic_token()
+            subscriber.ensure_unsubscribe_token()
             subscriber.start_trial()
             db.session.add(subscriber)
             db.session.commit()
@@ -686,7 +687,8 @@ def add_subscriber():
             preferred_send_hour=preferred_hour
         )
         subscriber.generate_magic_token()
-        
+        subscriber.ensure_unsubscribe_token()
+
         # Set tier based on admin selection
         if tier == 'free':
             subscriber.grant_free_access()
@@ -744,7 +746,8 @@ def bulk_import_subscribers():
                 preferred_send_hour=preferred_hour
             )
             subscriber.generate_magic_token()
-            
+            subscriber.ensure_unsubscribe_token()
+
             # Set tier based on admin selection
             if tier == 'free':
                 subscriber.grant_free_access()

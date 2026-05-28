@@ -485,6 +485,9 @@ class DailyBriefSubscriber(db.Model):
     magic_token = db.Column(db.String(64), unique=True)
     magic_token_expires = db.Column(db.DateTime)
 
+    # Stable unsubscribe token — never rotates so old email links always work
+    unsubscribe_token = db.Column(db.String(64), unique=True, nullable=True)
+
     # Stripe integration
     stripe_customer_id = db.Column(db.String(255))
     stripe_subscription_id = db.Column(db.String(255))
@@ -516,6 +519,13 @@ class DailyBriefSubscriber(db.Model):
         self.magic_token = secrets.token_urlsafe(32)
         self.magic_token_expires = utcnow_naive() + timedelta(hours=expires_hours)
         return self.magic_token
+
+    def ensure_unsubscribe_token(self):
+        """Ensure a stable unsubscribe token exists. Never call generate here — only set once."""
+        if not self.unsubscribe_token:
+            import secrets
+            self.unsubscribe_token = secrets.token_urlsafe(32)
+        return self.unsubscribe_token
 
     @staticmethod
     def verify_magic_token(token):

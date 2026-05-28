@@ -166,6 +166,7 @@ def init_commands(app):
                     preferred_send_hour=18
                 )
                 subscriber.generate_magic_token()
+                subscriber.ensure_unsubscribe_token()
                 subscriber.start_trial()
                 db.session.add(subscriber)
                 db.session.commit()
@@ -411,6 +412,7 @@ def init_commands(app):
                 preferred_send_hour=hour
             )
             subscriber.generate_magic_token()
+            subscriber.ensure_unsubscribe_token()
             subscriber.start_trial()
 
             db.session.add(subscriber)

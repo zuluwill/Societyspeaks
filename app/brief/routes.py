@@ -544,7 +544,11 @@ def subscribe_inline():
 @brief_bp.route('/brief/unsubscribe/<token>')
 def unsubscribe(token):
     """Unsubscribe from daily brief emails"""
-    subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+    # Try stable unsubscribe_token first; fall back to magic_token for links
+    # sent before the unsubscribe_token column was added.
+    subscriber = DailyBriefSubscriber.query.filter_by(unsubscribe_token=token).first()
+    if not subscriber:
+        subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
         flash(_('Invalid unsubscribe link.'), 'error')
@@ -922,6 +926,7 @@ def admin_test_send():
             preferred_send_hour=8,
             magic_token=secrets.token_urlsafe(32),
         )
+        subscriber.ensure_unsubscribe_token()
         subscriber.grant_free_access()
         db.session.add(subscriber)
         db.session.commit()

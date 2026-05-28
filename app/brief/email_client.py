@@ -283,7 +283,7 @@ class ResendClient:
             # Build URLs
             base_url = get_base_url()
             magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
-            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
+            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
 
             # Render email HTML (sorted_items passed to avoid a second DB query)
@@ -427,7 +427,7 @@ class ResendClient:
 
         # Build URLs
         magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
-        unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
+        unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
         if sorted_items is None:
             sorted_items = self._get_sorted_brief_items(brief)
@@ -558,7 +558,7 @@ class ResendClient:
 
             magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
-            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
+            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
 
             from app.resend_client import _render_for_user as _render_email_for_user, _subject_for_user as _subject_email_for_user
             html_content = _render_email_for_user(

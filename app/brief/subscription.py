@@ -131,6 +131,7 @@ def process_subscription(
             preferred_weekly_day=preferred_weekly_day,
         )
         subscriber.generate_magic_token()
+        subscriber.ensure_unsubscribe_token()
         subscriber.grant_free_access()
         db.session.add(subscriber)
         db.session.commit()
