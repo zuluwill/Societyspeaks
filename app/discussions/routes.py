@@ -155,7 +155,7 @@ def news_feed():
     
     news_discussion_ids = db.session.query(TrendingTopic.discussion_id).filter(
         TrendingTopic.discussion_id.isnot(None)
-    ).subquery()
+    ).scalar_subquery()
     
     # Get active news sources for transparency
     news_sources = NewsSource.query.filter_by(is_active=True).order_by(NewsSource.name).all()

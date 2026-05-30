@@ -79,6 +79,7 @@ class ProgrammeSteward(db.Model):
         db.Index('ix_programme_steward_programme_id', 'programme_id'),
         db.Index('ix_programme_steward_user_id', 'user_id'),
         db.Index('ix_programme_steward_invite_token', 'invite_token', unique=True),
+        db.Index('ix_programme_steward_pending_email', 'pending_email'),
         db.UniqueConstraint('programme_id', 'user_id', name='uq_programme_steward_programme_user'),
     )
 
