@@ -1738,7 +1738,7 @@ def list_daily_subscribers():
         subscribed_user_subq = (
             db.session.query(DailyQuestionSubscriber.user_id)
             .filter(DailyQuestionSubscriber.user_id.isnot(None))
-            .subquery()
+            .scalar_subquery()
         )
         available_users = (
             User.query

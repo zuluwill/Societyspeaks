@@ -69,7 +69,7 @@ def get_discussion_diversity_stats(days: int = DIVERSITY_DEFAULT_DAYS, limit: in
         Discussion.created_at >= cutoff
     ).order_by(
         Discussion.created_at.desc()
-    ).limit(limit).subquery()
+    ).limit(limit).scalar_subquery()
 
     discussion_stats = db.session.query(
         NewsSource.political_leaning,

@@ -564,7 +564,7 @@ def init_scheduler(app):
             # These preserve source attribution for user-facing content
             articles_in_discussions = db.session.query(
                 DiscussionSourceArticle.article_id
-            ).distinct().subquery()
+            ).distinct().scalar_subquery()
             
             # Clean up low-relevance articles (with foreign key handling)
             # EXCLUDE articles that are linked to discussions - we keep those
@@ -602,7 +602,7 @@ def init_scheduler(app):
                 TrendingTopicArticle.article_id
             ).join(
                 BriefItem, BriefItem.trending_topic_id == TrendingTopicArticle.topic_id
-            ).distinct().subquery()
+            ).distinct().scalar_subquery()
             
             # Clean up old articles (with foreign key handling)
             # EXCLUDE articles that are linked to discussions OR briefs - we keep those
@@ -642,7 +642,7 @@ def init_scheduler(app):
                 # Get IDs of topics used in briefs (we want to KEEP these)
                 topics_in_briefs = db.session.query(
                     BriefItem.trending_topic_id
-                ).distinct().subquery()
+                ).distinct().scalar_subquery()
                 
                 # Find discarded topics to delete
                 discarded_topic_ids = db.session.query(TrendingTopic.id).filter(
