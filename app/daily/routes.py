@@ -886,9 +886,14 @@ def unsubscribe(token):
         and request.form.get('List-Unsubscribe') == 'One-Click'
     )
 
-    # If already unsubscribed, return appropriate response
+    # If already unsubscribed, return appropriate response. Any machine POST
+    # (one-click, or a bare POST with no reason field) gets a silent 200 so we
+    # never surface an error to a mail client; a human GET still sees the page.
     if not subscriber.is_active:
-        if is_one_click or request.method == 'POST' and not request.form.get('reason'):
+        is_machine_post = is_one_click or (
+            request.method == 'POST' and not request.form.get('reason')
+        )
+        if is_machine_post:
             return '', 200
         return render_template('daily/unsubscribed.html', email=subscriber.email)
 
