@@ -66,7 +66,7 @@
   {% endif %}
 
   {% if cohort %}
-  <section class="game-cohort mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5 reveal-step" style="--reveal-i: 3;">
+  <section class="game-cohort mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5 reveal-step" style="--reveal-i: 4;">
     <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-3">{{ _('How you compare') }}</p>
     {% if cohort.ready %}
     {% set scope_phrase = _('who played today') if cohort.scope == 'today' else _('who faced this crisis') %}
@@ -174,7 +174,7 @@
   {% endif %}
 
   {% if challenge_link %}
-  <section class="game-challenge mb-8 p-5 rounded-xl border border-game-border bg-game-elevated/50 reveal-step" style="--reveal-i: 4;">
+  <section class="game-challenge mb-8 p-5 rounded-xl border border-game-border bg-game-elevated/50 reveal-step" style="--reveal-i: 5;">
     <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-2">{{ _('Challenge a friend') }}</p>
     <p class="text-sm text-game-muted mb-4 leading-relaxed">
       {{ _('Send them into the same crisis. Your headline stays hidden until they finish their own run.') }}
@@ -204,7 +204,7 @@
       <span class="game-axis-label game-axis-label--bottom">{{ _('Fairness') }}</span>
       <span class="game-axis-label game-axis-label--left">{{ _('Trust') }}</span>
       <span class="game-axis-label game-axis-label--right">{{ _('Autonomy') }}</span>
-      <span class="game-axis-dot" style="left: {{ axis.trust_autonomy }}%; top: {{ axis.prosperity_fairness }}%;"></span>
+      <span class="game-axis-dot" style="--axis-x: {{ axis.trust_autonomy }}%; --axis-y: {{ axis.prosperity_fairness }}%;"></span>
     </div>
   </section>
 

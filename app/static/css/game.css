@@ -290,6 +290,8 @@ body.is-leaving {
 
 .game-axis-dot {
   position: absolute;
+  left: var(--axis-x, 50%);
+  top: var(--axis-y, 50%);
   width: 14px;
   height: 14px;
   margin-left: -7px;
