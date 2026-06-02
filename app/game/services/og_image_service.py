@@ -210,14 +210,16 @@ def render_outcome_png(
         draw.text((headline_x, meta_y), scenario_title, font=body_xs, fill=_MUTED)
         meta_y += 26
 
-    if trait_chips and meta_y + 12 + 32 <= footer_top:
+    # Badge takes priority over chips: it carries the social-proof beat that
+    # drives re-play.  When badge is present, skip chips so the badge always
+    # has a slot even after a 3-line headline + full metadata stack.
+    if world_badge:
+        if meta_y + 12 + 44 <= footer_top:
+            _paint_world_badge(
+                draw, world_badge, headline_x, meta_y + 12, headline_width, body_sm, accent
+            )
+    elif trait_chips and meta_y + 12 + 32 <= footer_top:
         _paint_trait_chips(draw, trait_chips, headline_x, meta_y + 12, body_xs, accent)
-        meta_y += 44
-
-    if world_badge and meta_y + 12 + 48 <= footer_top:
-        _paint_world_badge(
-            draw, world_badge, headline_x, meta_y + 12, headline_width, body_sm, accent
-        )
 
     _paint_footer(img, draw, body_xs, accent)
 
@@ -356,7 +358,7 @@ def _paint_world_badge(
     dot_d = 12
     pad_x = 18
     gap = 12
-    badge_h = 48
+    badge_h = 44
     badge_w = pad_x + dot_d + gap + text_w + pad_x
     draw.rounded_rectangle(
         (x, y, x + badge_w, y + badge_h),

@@ -120,6 +120,50 @@ def db(app, app_context):
     _db.drop_all()
 
 
+@pytest.fixture
+def client(app):
+    """Flask test client."""
+    return app.test_client()
+
+
+class _FakeRedis:
+    """In-process dict-backed Redis stub.  Starts empty each test so no state
+    leaks between runs via the shared Replit Redis instance."""
+
+    def __init__(self):
+        self.store: dict = {}
+
+    def get(self, k):
+        return self.store.get(k)
+
+    def setex(self, k, ttl, v):
+        self.store[k] = v
+
+    def set(self, k, v, ex=None):
+        self.store[k] = v
+
+    def delete(self, *keys):
+        for k in keys:
+            self.store.pop(k, None)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_redis(monkeypatch):
+    """Replace real Redis with a fresh fake for every test.
+
+    Without this, tests that call world_today() or participation_stats() write
+    into the shared Replit Redis and subsequent tests (in the same process OR
+    a later pytest session run on the same day) read stale cached tallies and
+    fail with unexpected sample_size / count values.
+
+    Tests that need to assert on Redis caching behaviour monkeypatch
+    get_client themselves — their setattr runs after this autouse fixture and
+    takes precedence, so they still exercise their own fake freely.
+    """
+    fake = _FakeRedis()
+    monkeypatch.setattr('app.lib.redis_client.get_client', lambda **kw: fake)
+
+
 class MockArticle:
     """Mock article for testing geographic extraction."""
     def __init__(self, geographic_scope=None, geographic_countries=None, source=None):

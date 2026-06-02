@@ -719,6 +719,15 @@ def create_app():
     app.jinja_env.filters['dq_hour_12h'] = format_dq_hour_12h
     app.jinja_env.globals['common_timezones'] = COMMON_TIMEZONES
 
+    def decimalformat(value):
+        """Format an integer with locale-appropriate thousand separators (e.g. 12,438)."""
+        try:
+            return f'{int(value):,}'
+        except (TypeError, ValueError):
+            return str(value) if value is not None else ''
+
+    app.jinja_env.filters['decimalformat'] = decimalformat
+
     import os as _os
     _css_path = _os.path.join(app.static_folder, 'css', 'output.css')
     _css_v = str(int(_os.path.getmtime(_css_path))) if _os.path.exists(_css_path) else '1'
