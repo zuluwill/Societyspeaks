@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app, abort, make_response
 from flask_login import login_required, current_user
 from app import db
+from app.lib.posthog_utils import safe_posthog_capture
 from app.models import IndividualProfile, CompanyProfile, Discussion, Programme, generate_unique_slug
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from replit.object_storage import Client
@@ -174,7 +175,8 @@ def create_individual_profile():
             try:
                 import posthog
                 if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
+                    safe_posthog_capture(
+                        posthog_client=posthog,
                         distinct_id=str(current_user.id),
                         event='profile_created',
                         properties={
@@ -260,7 +262,8 @@ def create_company_profile():
             try:
                 import posthog
                 if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
+                    safe_posthog_capture(
+                        posthog_client=posthog,
                         distinct_id=str(current_user.id),
                         event='profile_created',
                         properties={
@@ -344,7 +347,8 @@ def edit_individual_profile(username):
             try:
                 import posthog
                 if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
+                    safe_posthog_capture(
+                        posthog_client=posthog,
                         distinct_id=str(current_user.id),
                         event='profile_edited',
                         properties={
@@ -412,7 +416,8 @@ def edit_company_profile(company_name):
             try:
                 import posthog
                 if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
+                    safe_posthog_capture(
+                        posthog_client=posthog,
                         distinct_id=str(current_user.id),
                         event='profile_edited',
                         properties={

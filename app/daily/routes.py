@@ -10,6 +10,7 @@ from app.daily.constants import (
     VALID_REASON_TAGS, VALID_CONFIDENCE_LEVELS
 )
 from app import db, limiter
+from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant, Statement, StatementVote
 from app.trending.conversion_tracking import track_social_click
 from app.daily.utils import (
@@ -72,8 +73,12 @@ def _track_context_engagement(question, response, source='web'):
         if not posthog or not getattr(posthog, 'project_api_key', None):
             return
 
-        distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint()
-        posthog.capture(
+        distinct_id = resolve_request_distinct_id(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            anon_fallback=get_session_fingerprint(),
+        )
+        safe_posthog_capture(
+            posthog_client=posthog,
             distinct_id=distinct_id,
             event='daily_question_context_engaged',
             properties={
@@ -918,8 +923,11 @@ def unsubscribe(token):
     try:
         import posthog
         if posthog and getattr(posthog, 'project_api_key', None):
-            distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
-            posthog.capture(
+            distinct_id = resolve_request_distinct_id(
+                user_id=subscriber.user_id, anon_fallback=subscriber.email
+            )
+            safe_posthog_capture(
+                posthog_client=posthog,
                 distinct_id=distinct_id,
                 event='daily_question_unsubscribed',
                 properties={
@@ -1064,8 +1072,11 @@ def manage_preferences():
                 try:
                     import posthog
                     if posthog and getattr(posthog, 'project_api_key', None):
-                        distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
-                        posthog.capture(
+                        distinct_id = resolve_request_distinct_id(
+                            user_id=subscriber.user_id, anon_fallback=subscriber.email
+                        )
+                        safe_posthog_capture(
+                            posthog_client=posthog,
                             distinct_id=distinct_id,
                             event='frequency_preference_changed',
                             properties={
@@ -1145,7 +1156,7 @@ def weekly_batch():
         try:
             import posthog as _ph
             if _ph and getattr(_ph, 'project_api_key', None):
-                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'weekly_digest'})
         except Exception:
             pass
@@ -1327,7 +1338,7 @@ def weekly_batch_vote():
         try:
             import posthog as _ph
             if _ph and getattr(_ph, 'project_api_key', None):
-                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'daily_question_api'})
         except Exception:
             pass
@@ -1486,7 +1497,7 @@ def magic_link(token):
         try:
             import posthog as _ph
             if _ph and getattr(_ph, 'project_api_key', None):
-                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'daily_link'})
         except Exception:
             pass
@@ -1538,7 +1549,7 @@ def one_click_vote(token, vote_choice):
         try:
             import posthog as _ph
             if _ph and getattr(_ph, 'project_api_key', None):
-                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'one_click_vote'})
         except Exception:
             pass
@@ -1647,8 +1658,12 @@ def one_click_vote(token, vote_choice):
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = str(current_user.id) if current_user.is_authenticated else subscriber.email
-                posthog.capture(
+                distinct_id = resolve_request_distinct_id(
+                    user_id=current_user.id if current_user.is_authenticated else None,
+                    anon_fallback=subscriber.email,
+                )
+                safe_posthog_capture(
+                    posthog_client=posthog,
                     distinct_id=distinct_id,
                     event='daily_question_participated',
                     properties={
@@ -1817,8 +1832,12 @@ def vote():
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint()
-                posthog.capture(
+                distinct_id = resolve_request_distinct_id(
+                    user_id=current_user.id if current_user.is_authenticated else None,
+                    anon_fallback=get_session_fingerprint(),
+                )
+                safe_posthog_capture(
+                    posthog_client=posthog,
                     distinct_id=distinct_id,
                     event='daily_question_participated',
                     properties={

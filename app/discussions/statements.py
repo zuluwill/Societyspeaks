@@ -40,6 +40,8 @@ try:
 except ImportError:
     posthog = None
 
+from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
+
 statements_bp = Blueprint('statements', __name__)
 
 # Legacy cookie name (still written via unified voter cookie helper for backward compatibility).
@@ -503,8 +505,12 @@ def create_statement(discussion_id):
         # Track statement creation with PostHog
         if posthog and getattr(posthog, 'project_api_key', None):
             try:
-                distinct_id = str(identifier['user_id']) if identifier['user_id'] else identifier['session_fingerprint']
-                posthog.capture(
+                distinct_id = resolve_request_distinct_id(
+                    user_id=identifier['user_id'],
+                    anon_fallback=identifier['session_fingerprint'],
+                )
+                safe_posthog_capture(
+                    posthog_client=posthog,
                     distinct_id=distinct_id,
                     event='statement_created',
                     properties={
@@ -1234,11 +1240,13 @@ def vote_statement(statement_id):
             request_url = request.url if hasattr(request, 'url') else ''
             is_social = any(domain in referer for domain in ['twitter.com', 'x.com', 'bsky.social', 'bluesky.social']) or 'utm_source' in request_url
 
-            if current_user.is_authenticated:
-                distinct_id = str(current_user.id)
-            else:
-                # Match StatementVote.session_fingerprint (embed fingerprint when supplied).
-                distinct_id = session_fingerprint or get_statement_vote_fingerprint()
+            # Match StatementVote.session_fingerprint (embed fingerprint when
+            # supplied) as the durable fallback; prefer the JS cookie id so votes
+            # stitch to the same person as pageviews.
+            distinct_id = resolve_request_distinct_id(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                anon_fallback=session_fingerprint or get_statement_vote_fingerprint(),
+            )
 
             vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
             _disc = statement.discussion
@@ -1254,9 +1262,9 @@ def vote_statement(statement_id):
             if is_social:
                 properties['source'] = 'social'
                 properties['referer'] = referer
-                posthog.capture(distinct_id=distinct_id, event='discussion_participated_from_social', properties=properties)
+                safe_posthog_capture(posthog_client=posthog, distinct_id=distinct_id, event='discussion_participated_from_social', properties=properties)
 
-            posthog.capture(distinct_id=distinct_id, event='statement_voted', properties=properties)
+            safe_posthog_capture(posthog_client=posthog, distinct_id=distinct_id, event='statement_voted', properties=properties)
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
@@ -1311,8 +1319,16 @@ def vote_statement(statement_id):
                         if not cache.get(_step_cache_key):
                             _total_steps = len(_ordered)
                             _is_final = _step_num == _total_steps
-                            posthog.capture(
-                                distinct_id=_ph_id,
+                            # Stitch to the same person as the rest of the journey
+                            # funnel: prefer the JS cookie id, else the vote
+                            # fingerprint (_ph_id, which also keys the dedup above).
+                            _step_distinct_id = resolve_request_distinct_id(
+                                user_id=current_user.id if current_user.is_authenticated else None,
+                                anon_fallback=_ph_id,
+                            )
+                            safe_posthog_capture(
+                                posthog_client=posthog,
+                                distinct_id=_step_distinct_id,
                                 event='journey_step_completed',
                                 properties={
                                     'journey_id': _programme.id,

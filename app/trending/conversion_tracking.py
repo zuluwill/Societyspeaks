@@ -35,10 +35,20 @@ def track_social_conversion(
         if not posthog or not getattr(posthog, 'project_api_key', None):
             return
 
-        posthog.capture(
-            distinct_id=distinct_id or str(uuid.uuid4()),
+        from app.lib.posthog_utils import (
+            resolve_request_distinct_id,
+            safe_posthog_capture,
+        )
+
+        # Prefer an explicit id, then the browser's PostHog cookie id (so an
+        # anonymous social click stitches to that visitor's pageviews) and only
+        # fall back to a throwaway uuid when no identity is resolvable.
+        resolved = distinct_id or resolve_request_distinct_id() or str(uuid.uuid4())
+        safe_posthog_capture(
+            posthog_client=posthog,
+            distinct_id=resolved,
             event=event_name,
-            properties=properties
+            properties=properties,
         )
     except Exception as e:
         logger.warning(f"PostHog tracking error: {e}")

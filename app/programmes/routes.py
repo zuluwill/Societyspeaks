@@ -10,6 +10,7 @@ from io import BytesIO
 
 from app import cache, csrf, db, limiter
 from app.lib.auth_utils import normalize_email
+from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
 from app.lib.participation_metrics import visible_statement_vote_filters
 from app.lib.time import utcnow_naive
 from app.models import (
@@ -59,6 +60,31 @@ from flask_babel import format_time, force_locale, get_locale, gettext as _
 
 
 programmes_bp = Blueprint('programmes', __name__, template_folder='../templates/programmes')
+
+
+def _journey_anon_fallback():
+    """Stable anonymous identity shared across *all* journey events for a visitor.
+
+    Prefers the vote fingerprint (so journey funnel events stitch to the same
+    person as their votes), else a per-session UUID persisted in the Flask
+    session. Using one source for every journey event is what lets
+    started -> step_completed -> completed connect for anonymous players.
+    """
+    import uuid as _uuid
+
+    fp = session.get('statement_vote_fingerprint') or session.get('journey_anon_id')
+    if not fp:
+        fp = str(_uuid.uuid4())
+        session['journey_anon_id'] = fp
+        session.modified = True
+    return fp
+
+
+def _journey_distinct_id():
+    """Canonical PostHog distinct_id for a journey event in this request."""
+    if current_user.is_authenticated:
+        return str(current_user.id)
+    return resolve_request_distinct_id(anon_fallback=_journey_anon_fallback())
 
 
 def _programme_summary_cache_key(programme_id):
@@ -454,22 +480,12 @@ def view_programme(slug):
         # indefinitely and permanently blocked the event for returning users.
         if _posthog and getattr(_posthog, 'project_api_key', None):
             try:
-                import uuid as _uuid
-                if current_user.is_authenticated:
-                    _ph_id = str(current_user.id)
-                else:
-                    _ph_id = (
-                        session.get('statement_vote_fingerprint')
-                        or session.get('journey_anon_id')
-                    )
-                    if not _ph_id:
-                        _ph_id = str(_uuid.uuid4())
-                        session['journey_anon_id'] = _ph_id
-                        session.modified = True
+                _ph_id = _journey_distinct_id()
                 _start_cache_key = f'ph_journey_started:{programme.id}:{_ph_id[:32]}'
-                if not cache.get(_start_cache_key):
+                if _ph_id and not cache.get(_start_cache_key):
                     _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
-                    _posthog.capture(
+                    safe_posthog_capture(
+                        posthog_client=_posthog,
                         distinct_id=_ph_id,
                         event='journey_started',
                         properties={
@@ -551,23 +567,13 @@ def programme_journey_recap(slug):
     # indefinitely and permanently blocked the event for returning users.
     if _posthog and getattr(_posthog, 'project_api_key', None):
         try:
-            import uuid as _uuid
-            if current_user.is_authenticated:
-                _ph_id = str(current_user.id)
-            else:
-                _ph_id = (
-                    session.get('statement_vote_fingerprint')
-                    or session.get('journey_anon_id')
-                )
-                if not _ph_id:
-                    _ph_id = str(_uuid.uuid4())
-                    session['journey_anon_id'] = _ph_id
-                    session.modified = True
+            _ph_id = _journey_distinct_id()
             _complete_cache_key = f'ph_journey_completed:{programme.id}:{_ph_id[:32]}'
-            if not cache.get(_complete_cache_key):
+            if _ph_id and not cache.get(_complete_cache_key):
                 _ordered = ordered_discussions
                 _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
-                _posthog.capture(
+                safe_posthog_capture(
+                    posthog_client=_posthog,
                     distinct_id=_ph_id,
                     event='journey_completed',
                     properties={
@@ -725,8 +731,11 @@ def journey_reminder_subscribe(slug):
 
         if _posthog and getattr(_posthog, 'project_api_key', None):
             try:
-                _jid = str(user_id) if user_id else normalize_email(email)
-                _posthog.capture(
+                _jid = resolve_request_distinct_id(
+                    user_id=user_id, anon_fallback=normalize_email(email)
+                )
+                safe_posthog_capture(
+                    posthog_client=_posthog,
                     distinct_id=_jid,
                     event='journey_reminder_opt_in',
                     properties={
@@ -1336,13 +1345,12 @@ def journey_step_timing():
         step_num = next((i + 1 for i, d in enumerate(ordered) if d.id == discussion_id), None)
         if step_num is None:
             return jsonify({'ok': False}), 404
-        if current_user.is_authenticated:
-            ph_id = str(current_user.id)
-        else:
-            from app.discussions.statements import get_statement_vote_fingerprint
-            ph_id = get_statement_vote_fingerprint()
+        ph_id = _journey_distinct_id()
+        if not ph_id:
+            return jsonify({'ok': True})
         jtype = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
-        _posthog.capture(
+        safe_posthog_capture(
+            posthog_client=_posthog,
             distinct_id=ph_id,
             event='journey_step_timed',
             properties={
@@ -1382,13 +1390,10 @@ def journey_abandon():
         from app.programmes.journey import is_guided_journey_programme, ordered_journey_discussions
         if not is_guided_journey_programme(programme):
             return jsonify({'ok': False}), 400
-        if current_user.is_authenticated:
-            ph_id = str(current_user.id)
-            journey_session_id = None
-        else:
-            from app.discussions.statements import get_statement_vote_fingerprint
-            ph_id = get_statement_vote_fingerprint()
-            journey_session_id = ph_id
+        ph_id = _journey_distinct_id()
+        if not ph_id:
+            return jsonify({'ok': True})
+        journey_session_id = None if current_user.is_authenticated else ph_id
         ordered = ordered_journey_discussions(programme)
         jtype = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
         step_number = data.get('step_number')
@@ -1411,7 +1416,12 @@ def journey_abandon():
         time_on_step_ms = data.get('time_on_step_ms')
         if isinstance(time_on_step_ms, (int, float)) and time_on_step_ms > 0:
             props['time_on_step_seconds'] = round(time_on_step_ms / 1000)
-        _posthog.capture(distinct_id=ph_id, event='journey_abandoned', properties=props)
+        safe_posthog_capture(
+            posthog_client=_posthog,
+            distinct_id=ph_id,
+            event='journey_abandoned',
+            properties=props,
+        )
         return jsonify({'ok': True})
     except Exception as e:
         current_app.logger.warning(f'PostHog journey_abandoned error: {e}')

@@ -45,6 +45,8 @@ try:
 except ImportError:
     posthog = None
 
+from app.lib.posthog_utils import safe_posthog_capture
+
 
 discussions_bp = Blueprint('discussions', __name__)
 
@@ -368,7 +370,8 @@ def create_discussion():
         # Track discussion creation with PostHog
         if posthog and getattr(posthog, 'project_api_key', None):
             try:
-                posthog.capture(
+                safe_posthog_capture(
+                    posthog_client=posthog,
                     distinct_id=str(current_user.id),
                     event='discussion_created',
                     properties={
@@ -558,7 +561,8 @@ def edit_discussion(discussion_id):
     # PostHog tracking
     if posthog and getattr(posthog, 'project_api_key', None):
         try:
-            posthog.capture(
+            safe_posthog_capture(
+                posthog_client=posthog,
                 distinct_id=str(current_user.id),
                 event='discussion_edited',
                 properties={

@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from flask import current_app
 
 from app import db
-from app.game.analytics import track_game_event
+from app.game.analytics import resolve_distinct_id_for_run, track_game_event
 from app.game.constants import (
     DEFAULT_SOCIETY_NAME,
     GAME_RUN_STATUS_COMPLETED,
@@ -204,6 +204,7 @@ def get_or_start_daily_run(
         total_turns=total_turns,
         status=GAME_RUN_STATUS_IN_PROGRESS,
     )
+    run.posthog_distinct_id = resolve_distinct_id_for_run(run)
     db.session.add(run)
     db.session.commit()
     track_game_event(
@@ -258,6 +259,7 @@ def start_quick_run(
         total_turns=total_turns,
         status=GAME_RUN_STATUS_IN_PROGRESS,
     )
+    run.posthog_distinct_id = resolve_distinct_id_for_run(run)
     db.session.add(run)
     db.session.commit()
     track_game_event(

@@ -1079,3 +1079,87 @@ def test_challenge_link_redirects_to_play(app, client, db):
     assert '/play/daily/' in resp.headers['Location'] or '/play/run/' in resp.headers['Location']
     with client.session_transaction() as sess:
         assert sess.get('pending_game_challenge') == token
+
+
+# ---------- PostHog identity resolution (session stitching) ----------
+
+def test_logged_in_distinct_id_matches_js_sdk(app, db):
+    """Server-side game events must use plain str(user_id) so they stitch to the
+    JS SDK's identify('<id>') person — not the legacy 'user:<id>' prefix."""
+    from app.game.analytics import _distinct_id_for_run
+
+    with app.app_context():
+        db.create_all()
+        run = GameRun(
+            uuid=GameRun.generate_uuid(),
+            scenario_slug='debt-inherited',
+            mode='daily',
+            user_id=14,
+            session_fingerprint='f' * 64,
+            total_turns=5,
+        )
+        assert _distinct_id_for_run(run) == '14'
+
+
+def test_logged_in_overrides_stale_anonymous_stamp(app, db):
+    """If a run was stamped while anonymous and the player later logs in, the
+    logged-in identity wins so events don't strand on the old anon id."""
+    from app.game.analytics import _distinct_id_for_run
+
+    with app.app_context():
+        db.create_all()
+        run = GameRun(
+            uuid=GameRun.generate_uuid(),
+            scenario_slug='debt-inherited',
+            mode='daily',
+            user_id=21,
+            session_fingerprint='a' * 64,
+            posthog_distinct_id='019e8792-some-anon-uuid',
+            total_turns=5,
+        )
+        assert _distinct_id_for_run(run) == '21'
+
+
+def test_anonymous_distinct_id_prefers_stored_then_fingerprint(app, db):
+    """Anonymous events reuse the stamped (cookie-derived) id; absent that they
+    fall back to the durable fingerprint — never a prefixed 'anon:' id."""
+    from app.game.analytics import _distinct_id_for_run
+
+    with app.app_context():
+        db.create_all()
+        stamped = GameRun(
+            uuid=GameRun.generate_uuid(),
+            scenario_slug='debt-inherited',
+            mode='daily',
+            user_id=None,
+            session_fingerprint='b' * 64,
+            posthog_distinct_id='019e8792-js-cookie-uuid',
+            total_turns=5,
+        )
+        assert _distinct_id_for_run(stamped) == '019e8792-js-cookie-uuid'
+
+        unstamped = GameRun(
+            uuid=GameRun.generate_uuid(),
+            scenario_slug='debt-inherited',
+            mode='daily',
+            user_id=None,
+            session_fingerprint='c' * 64,
+            total_turns=5,
+        )
+        # Outside a request context posthog_js_distinct_id() returns None, so
+        # resolution falls back to the fingerprint (no 'anon:' prefix).
+        assert _distinct_id_for_run(unstamped) == 'c' * 64
+
+
+def test_started_run_is_stamped_with_distinct_id(app, db):
+    """A freshly started run carries a stable posthog_distinct_id so every event
+    in the run shares one identity."""
+    with app.app_context():
+        db.create_all()
+        run = start_quick_run(
+            scenario_slug='debt-inherited',
+            user_id=None,
+            session_fingerprint='e' * 64,
+        )
+        # No request/cookie in this context → stamped with the fingerprint.
+        assert run.posthog_distinct_id == 'e' * 64

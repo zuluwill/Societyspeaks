@@ -17,6 +17,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
+from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
 
 from sqlalchemy.orm import joinedload
 
@@ -577,8 +578,11 @@ def unsubscribe(token):
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
-                posthog.capture(
+                distinct_id = resolve_request_distinct_id(
+                    user_id=subscriber.user_id, anon_fallback=subscriber.email
+                )
+                safe_posthog_capture(
+                    posthog_client=posthog,
                     distinct_id=distinct_id,
                     event='daily_brief_unsubscribed',
                     properties={
@@ -642,8 +646,11 @@ def switch_to_weekly(token):
     try:
         import posthog
         if posthog and getattr(posthog, 'project_api_key', None):
-            distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
-            posthog.capture(
+            distinct_id = resolve_request_distinct_id(
+                user_id=subscriber.user_id, anon_fallback=subscriber.email
+            )
+            safe_posthog_capture(
+                posthog_client=posthog,
                 distinct_id=distinct_id,
                 event='daily_brief_switched_to_weekly',
                 properties={'email': subscriber.email}
@@ -682,7 +689,7 @@ def magic_link(token):
                     try:
                         import posthog as _ph
                         if _ph and getattr(_ph, 'project_api_key', None):
-                            _ph.capture(distinct_id=str(expired_sub.user.id), event='user_logged_in',
+                            safe_posthog_capture(posthog_client=_ph, distinct_id=str(expired_sub.user.id), event='user_logged_in',
                                         properties={'method': 'magic_link', 'source': 'brief_subscription'})
                     except Exception:
                         pass
@@ -703,7 +710,7 @@ def magic_link(token):
         try:
             import posthog as _ph
             if _ph and getattr(_ph, 'project_api_key', None):
-                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
                             properties={'method': 'magic_link', 'source': 'brief_subscription'})
         except Exception:
             pass

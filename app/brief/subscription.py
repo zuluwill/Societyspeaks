@@ -153,9 +153,16 @@ def process_subscription(
             try:
                 import posthog
                 if posthog and getattr(posthog, 'project_api_key', None):
+                    from app.lib.posthog_utils import (
+                        resolve_request_distinct_id,
+                        safe_posthog_capture,
+                    )
                     ref = request.referrer or ''
-                    posthog.capture(
-                        distinct_id=str(user.id) if user else email,
+                    safe_posthog_capture(
+                        posthog_client=posthog,
+                        distinct_id=resolve_request_distinct_id(
+                            user_id=user.id if user else None, anon_fallback=email
+                        ),
                         event='daily_brief_subscribed',
                         properties={
                             'subscription_tier': 'free',

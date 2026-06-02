@@ -37,6 +37,12 @@ class GameRun(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     session_fingerprint = db.Column(db.String(64), nullable=True)
+    # PostHog identity resolved once at run creation, so every event in a run
+    # shares one distinct_id and stitches to the JS SDK's person (the browser's
+    # PostHog cookie id for anon, str(user_id) for logged-in). NULL for legacy
+    # runs / events fired outside a request; analytics falls back to fingerprint.
+    # Width 255: PostHog distinct_ids may exceed the 64-char fingerprint length.
+    posthog_distinct_id = db.Column(db.String(255), nullable=True)
 
     society_name = db.Column(db.String(80), nullable=True)
     emblem_seed = db.Column(db.String(36), nullable=True)
