@@ -161,6 +161,26 @@ def _redact_path(path: str, view_args: Optional[dict]) -> str:
     return redacted
 
 
+def email_subscriber_distinct_id(email: Optional[str]) -> Optional[str]:
+    """Stable, pseudonymous ``distinct_id`` for an email-only (no account) person.
+
+    Email subscribers have no user id and (for cron-sent digests) no browser
+    cookie, so their email is the only stable identifier tying together
+    subscribe -> digest_sent -> one-click vote -> unsubscribe. We hash it so raw
+    PII never becomes a PostHog distinct_id (which surfaces in exports/URLs),
+    while staying identical across every one of that subscriber's events.
+
+    Must be used for *all* email-keyed events so they share one identity. Returns
+    ``None`` for a falsy email.
+    """
+    if not email:
+        return None
+    import hashlib
+
+    normalized = str(email).strip().lower()
+    return "subscriber:" + hashlib.sha256(normalized.encode()).hexdigest()[:32]
+
+
 def request_context_properties() -> dict:
     """Browser-context event properties derived from the current Flask request.
 

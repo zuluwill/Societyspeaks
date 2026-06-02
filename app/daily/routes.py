@@ -10,7 +10,7 @@ from app.daily.constants import (
     VALID_REASON_TAGS, VALID_CONFIDENCE_LEVELS
 )
 from app import db, limiter
-from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
+from app.lib.posthog_utils import email_subscriber_distinct_id, resolve_request_distinct_id, safe_posthog_capture
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant, Statement, StatementVote
 from app.trending.conversion_tracking import track_social_click
 from app.daily.utils import (
@@ -924,7 +924,8 @@ def unsubscribe(token):
         import posthog
         if posthog and getattr(posthog, 'project_api_key', None):
             distinct_id = resolve_request_distinct_id(
-                user_id=subscriber.user_id, anon_fallback=subscriber.email
+                user_id=subscriber.user_id,
+                anon_fallback=email_subscriber_distinct_id(subscriber.email),
             )
             safe_posthog_capture(
                 posthog_client=posthog,
@@ -1073,7 +1074,8 @@ def manage_preferences():
                     import posthog
                     if posthog and getattr(posthog, 'project_api_key', None):
                         distinct_id = resolve_request_distinct_id(
-                            user_id=subscriber.user_id, anon_fallback=subscriber.email
+                            user_id=subscriber.user_id,
+                            anon_fallback=email_subscriber_distinct_id(subscriber.email),
                         )
                         safe_posthog_capture(
                             posthog_client=posthog,
@@ -1660,7 +1662,7 @@ def one_click_vote(token, vote_choice):
             if posthog and getattr(posthog, 'project_api_key', None):
                 distinct_id = resolve_request_distinct_id(
                     user_id=current_user.id if current_user.is_authenticated else None,
-                    anon_fallback=subscriber.email,
+                    anon_fallback=email_subscriber_distinct_id(subscriber.email),
                 )
                 safe_posthog_capture(
                     posthog_client=posthog,

@@ -154,6 +154,7 @@ def process_subscription(
                 import posthog
                 if posthog and getattr(posthog, 'project_api_key', None):
                     from app.lib.posthog_utils import (
+                        email_subscriber_distinct_id,
                         resolve_request_distinct_id,
                         safe_posthog_capture,
                     )
@@ -161,7 +162,8 @@ def process_subscription(
                     safe_posthog_capture(
                         posthog_client=posthog,
                         distinct_id=resolve_request_distinct_id(
-                            user_id=user.id if user else None, anon_fallback=email
+                            user_id=user.id if user else None,
+                            anon_fallback=email_subscriber_distinct_id(email),
                         ),
                         event='daily_brief_subscribed',
                         properties={

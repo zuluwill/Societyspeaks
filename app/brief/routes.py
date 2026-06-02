@@ -17,7 +17,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
-from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
+from app.lib.posthog_utils import email_subscriber_distinct_id, resolve_request_distinct_id, safe_posthog_capture
 
 from sqlalchemy.orm import joinedload
 
@@ -579,7 +579,8 @@ def unsubscribe(token):
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
                 distinct_id = resolve_request_distinct_id(
-                    user_id=subscriber.user_id, anon_fallback=subscriber.email
+                    user_id=subscriber.user_id,
+                    anon_fallback=email_subscriber_distinct_id(subscriber.email),
                 )
                 safe_posthog_capture(
                     posthog_client=posthog,
@@ -647,8 +648,9 @@ def switch_to_weekly(token):
         import posthog
         if posthog and getattr(posthog, 'project_api_key', None):
             distinct_id = resolve_request_distinct_id(
-                user_id=subscriber.user_id, anon_fallback=subscriber.email
-            )
+                    user_id=subscriber.user_id,
+                    anon_fallback=email_subscriber_distinct_id(subscriber.email),
+                )
             safe_posthog_capture(
                 posthog_client=posthog,
                 distinct_id=distinct_id,

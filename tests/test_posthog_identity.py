@@ -11,6 +11,7 @@ import json
 from urllib.parse import quote
 
 from app.lib.posthog_utils import (
+    email_subscriber_distinct_id,
     posthog_js_distinct_id,
     request_context_properties,
     resolve_request_distinct_id,
@@ -94,6 +95,18 @@ def test_safe_capture_skips_when_distinct_id_missing(app):
         safe_posthog_capture(posthog_client=_Client(), distinct_id=None, event='x')
         safe_posthog_capture(posthog_client=_Client(), distinct_id='', event='x')
     assert captured == []
+
+
+def test_email_subscriber_id_is_pseudonymous_and_stable():
+    """Email-only subscribers get one stable, PII-free id so subscribe ->
+    digest_sent -> vote -> unsubscribe all stitch (and raw email never leaks)."""
+    a = email_subscriber_distinct_id('Person@Example.com')
+    b = email_subscriber_distinct_id('  person@example.com ')  # case/space-insensitive
+    assert a == b                       # consistent across events / casing
+    assert a.startswith('subscriber:')
+    assert 'person@example.com' not in a and 'Person@Example.com' not in a
+    assert email_subscriber_distinct_id('') is None
+    assert email_subscriber_distinct_id(None) is None
 
 
 def test_journey_events_share_one_anonymous_identity(app):

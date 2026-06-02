@@ -164,6 +164,7 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
             'referrer': request.referrer,
         }
         from app.lib.posthog_utils import (
+            email_subscriber_distinct_id,
             resolve_request_distinct_id,
             safe_posthog_capture,
         )
@@ -171,7 +172,8 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
         safe_posthog_capture(
             posthog_client=posthog,
             distinct_id=resolve_request_distinct_id(
-                user_id=user.id if user else None, anon_fallback=email
+                user_id=user.id if user else None,
+                anon_fallback=email_subscriber_distinct_id(email),
             ),
             event='daily_question_subscribed',
             properties=props,

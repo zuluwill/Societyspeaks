@@ -1847,12 +1847,14 @@ def init_scheduler(app):
                             logger.debug(f"Sent weekly digest to {subscriber.email}")
                             
                             # Track with PostHog
-                            import hashlib
-                            from app.lib.posthog_utils import safe_posthog_capture
+                            from app.lib.posthog_utils import (
+                                email_subscriber_distinct_id,
+                                safe_posthog_capture,
+                            )
                             import posthog as _ph
                             _ph_id = (
                                 str(subscriber.user_id) if subscriber.user_id
-                                else 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
+                                else email_subscriber_distinct_id(subscriber.email)
                             )
                             safe_posthog_capture(
                                 posthog_client=_ph,
@@ -1944,12 +1946,14 @@ def init_scheduler(app):
                             logger.debug(f"Sent monthly digest to {subscriber.email}")
                             
                             # Track with PostHog
-                            import hashlib
-                            from app.lib.posthog_utils import safe_posthog_capture
+                            from app.lib.posthog_utils import (
+                                email_subscriber_distinct_id,
+                                safe_posthog_capture,
+                            )
                             import posthog as _ph
                             _ph_id = (
                                 str(subscriber.user_id) if subscriber.user_id
-                                else 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
+                                else email_subscriber_distinct_id(subscriber.email)
                             )
                             safe_posthog_capture(
                                 posthog_client=_ph,
