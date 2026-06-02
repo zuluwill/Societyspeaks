@@ -68,7 +68,26 @@
   </section>
   {% endif %}
 
-  {# ── 3. SHARE — while the emotional peak is highest ─────────────────── #}
+  {# ── 3. DATA — compass + stats: see your result before you share it ──── #}
+  <section class="mb-6">
+    <p class="text-xs uppercase tracking-wider text-game-muted mb-3">{{ _('Where you landed') }}</p>
+    <div class="game-axis-plot" role="img" aria-label="{{ _('Your society on the trust–autonomy and prosperity–fairness axes') }}">
+      <div class="game-axis-grid"></div>
+      <div class="game-axis-cross"></div>
+      <span class="game-axis-label game-axis-label--top">{{ _('Prosperity') }}</span>
+      <span class="game-axis-label game-axis-label--bottom">{{ _('Fairness') }}</span>
+      <span class="game-axis-label game-axis-label--left">{{ _('Trust') }}</span>
+      <span class="game-axis-label game-axis-label--right">{{ _('Autonomy') }}</span>
+      <span class="game-axis-dot" style="--axis-x: {{ axis.trust_autonomy }}%; --axis-y: {{ axis.prosperity_fairness }}%;"></span>
+    </div>
+  </section>
+
+  <section class="mb-8">
+    <p class="text-xs uppercase tracking-wider text-game-muted mb-3">{{ _('Final state') }}</p>
+    {{ stat_bars(visible_stats) }}
+  </section>
+
+  {# ── 4. SHARE — they've seen their result, now share it ──────────────── #}
   <section class="game-share-card mb-6 p-6 rounded-2xl border border-game-accent/40 bg-game-accent/5 reveal-step" style="--reveal-i: 4;">
     <div class="flex items-center justify-between gap-3 mb-4">
       <p class="text-xs uppercase tracking-widest text-game-accent font-semibold">{{ _('Share your results') }}</p>
@@ -194,25 +213,7 @@
   </section>
   {% endif %}
 
-  {# ── 9. DATA SECTIONS — compass, stats, world distribution ──────────── #}
-  <section class="mb-8">
-    <p class="text-xs uppercase tracking-wider text-game-muted mb-3">{{ _('Where you landed') }}</p>
-    <div class="game-axis-plot" role="img" aria-label="{{ _('Your society on the trust–autonomy and prosperity–fairness axes') }}">
-      <div class="game-axis-grid"></div>
-      <div class="game-axis-cross"></div>
-      <span class="game-axis-label game-axis-label--top">{{ _('Prosperity') }}</span>
-      <span class="game-axis-label game-axis-label--bottom">{{ _('Fairness') }}</span>
-      <span class="game-axis-label game-axis-label--left">{{ _('Trust') }}</span>
-      <span class="game-axis-label game-axis-label--right">{{ _('Autonomy') }}</span>
-      <span class="game-axis-dot" style="--axis-x: {{ axis.trust_autonomy }}%; --axis-y: {{ axis.prosperity_fairness }}%;"></span>
-    </div>
-  </section>
-
-  <section class="mb-8">
-    <p class="text-xs uppercase tracking-wider text-game-muted mb-3">{{ _('Final state') }}</p>
-    {{ stat_bars(visible_stats) }}
-  </section>
-
+  {# ── 9. WORLD DISTRIBUTION ───────────────────────────────────────────── #}
   {% if world and world.ready %}
   <section class="game-world mb-8">
     <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-1">{{ _('How the world governed today') }}</p>
