@@ -2005,3 +2005,89 @@ def send_journey_reminder_email(
     except Exception as e:
         logger.error(f"Failed to send journey reminder email: {e}", exc_info=True)
         return False
+
+
+def send_game_reminder_email(
+    subscription,
+    *,
+    scenario_meta: dict,
+    streak: dict = None,
+    base_url: str = None,
+) -> bool:
+    """Send a daily "today's scenario is live / keep your streak" nudge.
+
+    Args:
+        subscription: GameReminderSubscription instance
+        scenario_meta: dict from daily_service.daily_meta (title/subtitle/etc.)
+        streak: dict from compute_daily_streak (uses 'current')
+        base_url: override base URL (defaults to client.base_url)
+    """
+    try:
+        client = get_resend_client()
+        _base = base_url or client.base_url
+
+        token = subscription.ensure_unsubscribe_token()
+        play_url = f"{_base}/play"
+        unsubscribe_url = f"{_base}/play/reminders/unsubscribe?token={token}"
+
+        streak = streak or {}
+        current_streak = int(streak.get('current') or 0)
+        has_streak = current_streak >= 2
+
+        _user = subscription.user if subscription.user_id else None
+        if _user and getattr(_user, 'username', None):
+            username = _user.username
+        else:
+            username = subscription.email.split('@')[0]
+
+        scenario_title = scenario_meta.get('title') or 'Society Speaks'
+
+        html = _render_for_user(
+            _user,
+            'emails/game_reminder.html',
+            username=username,
+            play_url=play_url,
+            unsubscribe_url=unsubscribe_url,
+            scenario_title=scenario_title,
+            scenario_subtitle=scenario_meta.get('subtitle') or '',
+            scenario_category=scenario_meta.get('category') or '',
+            scenario_teaser=scenario_meta.get('teaser') or '',
+            total_turns=scenario_meta.get('total_turns') or 5,
+            current_streak=current_streak,
+            has_streak=has_streak,
+        )
+
+        if has_streak:
+            subject = _subject_for_user(
+                _user,
+                "Today's scenario is live — keep your %(n)d-day streak",
+                n=current_streak,
+            )
+        else:
+            subject = _subject_for_user(
+                _user,
+                "Today's scenario is live: %(title)s",
+                title=scenario_title,
+            )
+
+        email_data = {
+            'from': client.from_email,
+            'to': [subscription.email],
+            'subject': subject,
+            'html': html,
+            'headers': {
+                'List-Unsubscribe': f'<{unsubscribe_url}>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+        }
+
+        success = client._send_with_retry(email_data, use_rate_limit=False)
+        if success:
+            logger.info(f"Game reminder sent to {subscription.email}")
+        else:
+            logger.error(f"Failed to send game reminder to {subscription.email}")
+        return success
+
+    except Exception as e:
+        logger.error(f"Failed to send game reminder email: {e}", exc_info=True)
+        return False

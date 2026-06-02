@@ -23,8 +23,8 @@ def test_launch_scenario_loads_and_validates(entry):
     assert data['turns'][4]['beat'] == 'legacy'
 
 
-def test_launch_rotation_has_fourteen_scenarios():
-    assert len(LAUNCH_SCENARIO_ROTATION) == 14
+def test_launch_rotation_scenarios_are_unique():
+    assert len(LAUNCH_SCENARIO_ROTATION) == 22
     slugs = [e['slug'] for e in LAUNCH_SCENARIO_ROTATION]
     assert len(slugs) == len(set(slugs))
 

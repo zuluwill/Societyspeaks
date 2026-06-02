@@ -7,59 +7,34 @@
 {% endblock %}
 
 {% block game_content %}
+{% set fresh = not in_progress and not completed_today_uuid %}
 <div class="game-hub">
-  {% if is_first_time %}
-  <section class="game-hub-explainer mb-8 p-6 rounded-2xl border border-game-accent/30 bg-game-accent/5">
-    <p class="text-xs uppercase tracking-widest text-game-accent mb-2">{{ _('New to Tradeoffs?') }}</p>
-    <h2 class="font-display text-xl text-game-text mb-3 leading-snug">
-      {{ _("You're in charge. Every decision costs something.") }}
-    </h2>
-    <p class="text-sm text-game-muted leading-relaxed mb-4">
-      {{ _("A crisis lands on your desk — and every path forward sacrifices something real. Cut now and lose public trust. Borrow now and burden the next generation. Build fast and fracture communities. Move slowly and watch the problems grow. Five turns to govern a nation. Your choices shape the society you leave behind.") }}
-    </p>
-    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
-      <div class="game-explainer-step">
-        <p class="text-2xl font-display text-game-accent">5</p>
-        <p class="text-xs text-game-muted leading-tight">{{ _('turns to govern') }}</p>
-      </div>
-      <div class="game-explainer-step">
-        <p class="text-2xl font-display text-game-accent">3</p>
-        <p class="text-xs text-game-muted leading-tight">{{ _('paths each turn') }}</p>
-      </div>
-      <div class="game-explainer-step">
-        <p class="text-2xl font-display text-game-accent">∞</p>
-        <p class="text-xs text-game-muted leading-tight">{{ _('possible outcomes') }}</p>
-      </div>
-    </div>
-    <p class="text-xs text-game-muted italic">
-      {{ _('Your society is yours: name it, watch its emblem take shape from your choices, and discover the kind of leader you become.') }}
-    </p>
-  </section>
-  {% endif %}
 
-  <header class="game-hub-hero mb-8">
-    <div class="flex items-center gap-3 mb-3">
-      <p class="text-xs uppercase tracking-widest text-game-accent">{{ _("Today's scenario") }}</p>
+  {# ---------- Above the fold: one hook, one action ---------- #}
+  <header class="game-hub-hero">
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="game-eyebrow">{{ _("Today's scenario") }}</span>
+      <span class="game-hero-date">{{ today.schedule_date.isoformat() }}</span>
       {% if streak and streak.current >= 1 %}
-      <span class="game-streak-chip" title="{{ _('Longest: %(n)d', n=streak.longest) }}">
+      <span class="game-streak-chip ml-auto" title="{{ _('Longest: %(n)d', n=streak.longest) }}">
         <span aria-hidden="true">🔥</span>
         {{ ngettext('%(num)d-day streak', '%(num)d-day streak', streak.current) }}
       </span>
       {% endif %}
     </div>
-    <p class="text-xs text-game-muted mb-3">
-      {{ _('UTC %(date)s · %(time)s publish', date=today.schedule_date.isoformat(), time=('%02d:00' % today.publish_hour_utc)) }}
+
+    {% if is_first_time and fresh %}
+    <h1 class="game-hero-title">{{ _("You're in charge. Every decision costs something.") }}</h1>
+    <p class="game-hero-deck">
+      {{ _('Five turns. Three choices each. Govern a nation — and live with what you trade away.') }}
     </p>
-    <h1 class="font-display text-3xl sm:text-4xl leading-tight text-game-text mb-2">
-      {{ today.title }}
-    </h1>
-    <p class="text-sm text-game-muted leading-relaxed max-w-prose">
-      {{ today.subtitle }}
-    </p>
-    {% if today.teaser and today.teaser != today.subtitle %}<p class="mt-2 text-xs text-game-muted italic">{{ today.teaser }}</p>{% endif %}
+    {% else %}
+    <h1 class="game-hero-title">{{ today.title }}</h1>
+    <p class="game-hero-deck">{{ today.subtitle }}</p>
+    {% endif %}
   </header>
 
-  <section class="game-hub-card mb-8 p-6 rounded-2xl border border-game-border bg-game-surface/80">
+  <section class="game-hub-card game-play-card">
     <div class="flex flex-wrap items-center gap-2 mb-4">
       <span class="game-chip">{{ today.category }}</span>
       <span class="game-chip game-chip--muted">{{ ngettext('%(num)d turn', '%(num)d turns', today.total_turns) }}</span>
@@ -72,6 +47,7 @@
     <a href="{{ url_for('game.daily') }}" class="game-btn-primary w-full text-center">
       {{ _('Continue') }}
     </a>
+
     {% elif completed_today_uuid %}
     <p class="text-sm text-game-muted mb-4">
       {{ _("You've already played today's scenario. Come back at %(time)s UTC for the next one.", time=('%02d:00' % tomorrow.publish_hour_utc)) }}
@@ -79,98 +55,218 @@
     <a href="{{ url_for('game.outcome', run_uuid=completed_today_uuid) }}" class="game-btn-primary w-full text-center">
       {{ _("View today's outcome") }}
     </a>
+
     {% else %}
-    <form method="get" action="{{ url_for('game.daily') }}" class="game-name-form mb-3">
-      <label for="society-name" class="block text-xs uppercase tracking-wider text-game-muted mb-1">
-        {{ _('Name your society (optional)') }}
-      </label>
-      <input
-        type="text"
-        id="society-name"
-        name="name"
-        maxlength="48"
-        placeholder="{{ _('e.g. Atlas, Riverlands, Your Republic') }}"
-        autocomplete="off"
-        class="game-input mb-3"
-      >
-      <button type="submit" class="game-btn-primary w-full">
+    {% if is_first_time %}
+    {# First-timers met the hook in the hero, so the card carries today's actual dilemma. #}
+    <h2 class="game-play-scenario font-display">{{ today.title }}</h2>
+    <p class="text-sm text-game-muted leading-relaxed mb-5">{{ today.subtitle }}</p>
+    {% endif %}
+
+    <form method="get" action="{{ url_for('game.daily') }}" class="game-play-form" id="play-form">
+      <input type="hidden" name="name_source" id="name-source" value="suggested">
+
+      {% if society_name_suggestions %}
+      <div class="game-society-field">
+        <label for="society-name" class="game-society-label">{{ _('Your society') }}</label>
+        <div class="game-society-row">
+          <input
+            type="text"
+            id="society-name"
+            name="name"
+            maxlength="48"
+            value="{{ society_name_suggestions[0] }}"
+            autocomplete="off"
+            spellcheck="false"
+            class="game-input"
+            aria-describedby="society-name-hint"
+          >
+          <button
+            type="button"
+            id="society-reroll"
+            class="game-society-reroll"
+            data-suggestions='{{ society_name_suggestions|tojson }}'
+            aria-label="{{ _('Suggest another name') }}"
+            title="{{ _('Suggest another name') }}"
+          >
+            <span aria-hidden="true">🎲</span>
+          </button>
+        </div>
+        <p id="society-name-hint" class="game-society-hint">
+          {{ _("We've named it for you — roll the dice for another, or type your own.") }}
+        </p>
+      </div>
+      {% endif %}
+
+      <button type="submit" class="game-btn-primary w-full game-play-cta">
         {{ _("Play today's scenario") }}
+        <span class="game-play-cta-meta">{{ _('Free · 2 min') }}</span>
       </button>
     </form>
     {% endif %}
   </section>
 
-  {% if quick_pool %}
-  <section class="game-hub-quick mb-8" id="quick-run-pool">
-    <p class="text-xs uppercase tracking-widest text-game-muted mb-3">{{ _('Quick Run') }} <span class="text-game-muted normal-case tracking-normal">· {{ _('replay anytime — no streak') }}</span></p>
-    <div class="space-y-2">
-      {% for entry in quick_pool[:6] %}
-      <a href="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"
-         data-quick-run-base="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"
-         class="game-quick-card block p-4 rounded-xl border border-game-border bg-game-surface/60 hover:border-game-accent transition">
-        <div class="flex items-baseline justify-between gap-3">
-          <p class="font-display text-base text-game-text truncate">{{ entry.title }}</p>
-          <span class="text-xs text-game-muted whitespace-nowrap">{{ entry.category }}</span>
+  {# ---------- Below the fold: detail, no longer blocking the first action ---------- #}
+  {% if fresh %}
+  <div class="game-hub-secondary">
+    <div class="game-hub-divider"><span>{{ _('More to explore') }}</span></div>
+
+    {% if is_first_time %}
+    <section class="game-hub-explainer mb-8 p-6 rounded-2xl border border-game-accent/30 bg-game-accent/5">
+      <p class="game-eyebrow mb-2">{{ _('New to Tradeoffs?') }}</p>
+      <h2 class="font-display text-xl text-game-text mb-4 leading-snug">
+        {{ _('How it works') }}
+      </h2>
+      <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+        <div class="game-explainer-step">
+          <p class="text-2xl font-display text-game-accent">5</p>
+          <p class="text-xs text-game-muted leading-tight">{{ _('turns to govern') }}</p>
         </div>
-        <p class="text-xs text-game-muted mt-1 truncate">{{ entry.teaser }}</p>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  <script nonce="{{ csp_nonce() }}">
-    // Carry the society name typed on the hub through to Quick Run links.
-    // Pure progressive enhancement — links work without JS, just without the name.
-    (function () {
-      var input = document.getElementById('society-name');
-      var pool = document.getElementById('quick-run-pool');
-      if (!pool) return;
-      function syncLinks() {
-        var raw = (input && input.value || '').trim();
-        var nameQS = raw ? '?name=' + encodeURIComponent(raw) : '';
-        pool.querySelectorAll('a[data-quick-run-base]').forEach(function (a) {
-          a.href = a.dataset.quickRunBase + nameQS;
-        });
-      }
-      if (input) {
-        input.addEventListener('input', syncLinks);
-        syncLinks();
-      }
-    })();
-  </script>
+        <div class="game-explainer-step">
+          <p class="text-2xl font-display text-game-accent">3</p>
+          <p class="text-xs text-game-muted leading-tight">{{ _('paths each turn') }}</p>
+        </div>
+        <div class="game-explainer-step">
+          <p class="text-2xl font-display text-game-accent">∞</p>
+          <p class="text-xs text-game-muted leading-tight">{{ _('possible outcomes') }}</p>
+        </div>
+      </div>
+      <p class="text-sm text-game-muted leading-relaxed mb-3">
+        {{ _("A crisis lands on your desk — and every path forward sacrifices something real. Cut now and lose public trust. Borrow now and burden the next generation. Build fast and fracture communities. Move slowly and watch the problems grow.") }}
+      </p>
+      <p class="text-xs text-game-muted italic">
+        {{ _('Your society is yours: name it, watch its emblem take shape from your choices, and discover the kind of leader you become.') }}
+      </p>
+    </section>
+    {% endif %}
+
+    {% if quick_pool %}
+    <section class="game-hub-quick mb-8" id="quick-run-pool">
+      <p class="game-eyebrow mb-1">{{ _('Quick Run') }}</p>
+      <p class="text-xs text-game-muted mb-3">{{ _('Replay any past scenario anytime — no streak.') }}</p>
+      <div class="space-y-2">
+        {% for entry in quick_pool[:6] %}
+        <a href="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"
+           data-quick-run-base="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"
+           class="game-quick-card block p-4 rounded-xl border border-game-border bg-game-surface/60 hover:border-game-accent transition">
+          <div class="flex items-baseline justify-between gap-3">
+            <p class="font-display text-base text-game-text truncate">{{ entry.title }}</p>
+            <span class="text-xs text-game-muted whitespace-nowrap">{{ entry.category }}</span>
+          </div>
+          <p class="text-xs text-game-muted mt-1 truncate">{{ entry.teaser }}</p>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="game-hub-tomorrow mb-8 p-5 rounded-xl border border-game-border/60 bg-game-elevated/40">
+      <p class="game-eyebrow mb-1">{{ _('Tomorrow') }}</p>
+      <p class="font-display text-lg text-game-text">{{ tomorrow.category }}</p>
+      <p class="text-xs text-game-muted mt-2">
+        {{ _('New scenario unlocks at %(time)s UTC', time=('%02d:00' % tomorrow.publish_hour_utc)) }}
+      </p>
+    </section>
+
+    {% if not is_authenticated %}
+    <section class="game-hub-signin mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
+      <p class="text-sm text-game-text mb-3">
+        {{ _('Save your societies across devices and keep your streak when this browser forgets.') }}
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <a href="{{ url_for('auth.register', next=url_for('game.index')) }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
+        <a href="{{ url_for('auth.magic_link_request', next=url_for('game.index')) }}" class="game-btn-secondary text-sm py-2">{{ _('Email me a sign-in link') }}</a>
+      </div>
+      <p class="text-xs text-game-muted mt-3">{{ _('Already have an account? We email a one-click sign-in link — no password needed.') }}</p>
+    </section>
+    {% endif %}
+
+    <section class="game-hub-foot text-center space-y-3">
+      <p class="text-xs text-game-muted leading-relaxed max-w-sm mx-auto">
+        {{ _('Every scenario reflects a real governing dilemma. There are no easy answers — only the values you choose to prioritise.') }}
+      </p>
+      <p class="text-xs space-x-3">
+        <a href="{{ url_for('game.archive') }}" class="text-game-muted underline hover:text-game-text transition">
+          {{ _('Your societies') }}
+        </a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('game.editorial_principles') }}" class="text-game-muted underline hover:text-game-text transition">
+          {{ _('How we write scenarios') }}
+        </a>
+      </p>
+    </section>
+  </div>
   {% endif %}
-
-  <section class="game-hub-tomorrow mb-8 p-5 rounded-xl border border-game-border/60 bg-game-elevated/40">
-    <p class="text-xs uppercase tracking-widest text-game-muted mb-1">{{ _('Tomorrow') }}</p>
-    <p class="font-display text-lg text-game-text">
-      {{ tomorrow.category }}
-    </p>
-    <p class="text-xs text-game-muted mt-2">
-      {{ _('New scenario unlocks at %(time)s UTC', time=('%02d:00' % tomorrow.publish_hour_utc)) }}
-    </p>
-  </section>
-
-  {% if not is_authenticated %}
-  <section class="game-hub-signin mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
-    <p class="text-sm text-game-text mb-3">
-      {{ _('Save your societies across devices and keep your streak when this browser forgets.') }}
-    </p>
-    <div class="flex flex-wrap gap-2">
-      <a href="{{ url_for('auth.register', next=url_for('game.index')) }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
-      <a href="{{ url_for('auth.magic_link_request', next=url_for('game.index')) }}" class="game-btn-secondary text-sm py-2">{{ _('Email me a sign-in link') }}</a>
-    </div>
-    <p class="text-xs text-game-muted mt-3">{{ _('Already have an account? We email a one-click sign-in link — no password needed.') }}</p>
-  </section>
-  {% endif %}
-
-  <section class="game-hub-foot text-center space-y-3">
-    <p class="text-xs text-game-muted leading-relaxed max-w-sm mx-auto">
-      {{ _('Every scenario reflects a real governing dilemma. There are no easy answers — only the values you choose to prioritise.') }}
-    </p>
-    <p class="text-xs">
-      <a href="{{ url_for('game.editorial_principles') }}" class="text-game-muted underline hover:text-game-text transition">
-        {{ _('How we write scenarios') }}
-      </a>
-    </p>
-  </section>
 </div>
+
+{% if fresh and society_name_suggestions %}
+<script nonce="{{ csp_nonce() }}">
+  // Hub interactivity — pure progressive enhancement. Without JS the form still
+  // submits the pre-filled suggestion and Quick Run links still work.
+  (function () {
+    var input = document.getElementById('society-name');
+    var sourceField = document.getElementById('name-source');
+    var rerollBtn = document.getElementById('society-reroll');
+    var pool = document.getElementById('quick-run-pool');
+
+    var suggestions = [];
+    if (rerollBtn) {
+      try { suggestions = JSON.parse(rerollBtn.getAttribute('data-suggestions') || '[]'); }
+      catch (e) { suggestions = []; }
+    }
+
+    function setSource(src) { if (sourceField) { sourceField.value = src; } }
+
+    // Carry the chosen name (and whether it's the player's own) into Quick Run links.
+    function syncQuickLinks() {
+      if (!pool) { return; }
+      var raw = (input && input.value || '').trim();
+      var src = (sourceField && sourceField.value) || 'suggested';
+      var qs = raw
+        ? '?name=' + encodeURIComponent(raw) + '&name_source=' + encodeURIComponent(src)
+        : '';
+      pool.querySelectorAll('a[data-quick-run-base]').forEach(function (a) {
+        a.href = a.dataset.quickRunBase + qs;
+      });
+    }
+
+    // Typing = the player authored it. (Programmatic value changes below don't fire 'input'.)
+    if (input) {
+      input.addEventListener('input', function () {
+        setSource('custom');
+        syncQuickLinks();
+      });
+      // Select-all on focus so replacing the suggestion is a single gesture.
+      input.addEventListener('focus', function () { input.select(); });
+    }
+
+    // Rolling another suggestion is still "suggested" — low-effort, not authored.
+    if (rerollBtn && suggestions.length > 1) {
+      rerollBtn.addEventListener('click', function () {
+        if (input) {
+          var current = input.value;
+          var next = current;
+          // Pick a random suggestion different from the one currently shown.
+          // With >=2 distinct suggestions this terminates immediately.
+          for (var tries = 0; tries < 10 && next === current; tries++) {
+            next = suggestions[Math.floor(Math.random() * suggestions.length)];
+          }
+          input.value = next;
+        }
+        setSource('suggested');
+        syncQuickLinks();
+        // Re-trigger the spin animation on every click by removing the class,
+        // forcing a reflow, and re-adding it.
+        rerollBtn.classList.remove('is-rolling');
+        void rerollBtn.offsetWidth;
+        rerollBtn.classList.add('is-rolling');
+      });
+    } else if (rerollBtn) {
+      rerollBtn.setAttribute('hidden', 'hidden');
+    }
+
+    syncQuickLinks();
+  })();
+</script>
+{% endif %}
 {% endblock %}

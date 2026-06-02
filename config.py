@@ -593,8 +593,20 @@ class Config:
     GAME_CAMPAIGN_SAVE_DAYS = _env_int('GAME_CAMPAIGN_SAVE_DAYS', 7)
     GAME_DAILY_RUN_EXPIRY_HOURS = _env_int('GAME_DAILY_RUN_EXPIRY_HOURS', 24)
     GAME_SCHEDULE_BUFFER_DAYS = _env_int('GAME_SCHEDULE_BUFFER_DAYS', 14)
-    GAME_COHORT_MIN_N = _env_int('GAME_COHORT_MIN_N', 200)
+    # Minimum cohort sample before we show comparison percentiles. Privacy-safe
+    # (aggregate-only) at this size; raise via env for stricter k-anonymity.
+    GAME_COHORT_MIN_N = _env_int('GAME_COHORT_MIN_N', 30)
     GAME_RATE_LIMIT_CHOOSE = os.getenv('GAME_RATE_LIMIT_CHOOSE', '30 per minute')
+
+    # Opt-in daily re-engagement email ("today's scenario is live / keep your
+    # streak"). Reuses the Resend + APScheduler pipeline; disable to silence all
+    # game reminder sends without removing the routes.
+    GAME_REMINDERS_ENABLED = os.getenv('GAME_REMINDERS_ENABLED', 'true').lower() == 'true'
+
+    # Seeded opening-state variation: same scenario, different starting posture,
+    # shared per UTC day so daily cohorts/challenges stay comparable. Keeps a
+    # fixed scenario library feeling fresh on repeat. Disable for identical replays.
+    GAME_SCENARIO_VARIATION_ENABLED = os.getenv('GAME_SCENARIO_VARIATION_ENABLED', 'true').lower() == 'true'
     
 class DevelopmentConfig(Config):
     FLASK_ENV = 'development'

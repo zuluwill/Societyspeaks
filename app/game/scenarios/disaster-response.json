@@ -1,0 +1,237 @@
+{
+  "slug": "disaster-response",
+  "title": "When the River Came",
+  "subtitle": "Who do you save when you can't save everyone?",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["disaster", "climate", "resilience"],
+  "initial_state": {
+    "prosperity": 52,
+    "trust": 50,
+    "fairness": 50,
+    "stability": 52,
+    "future": 46,
+    "debt_stress": 46,
+    "autonomy": 56,
+    "fragility": 12
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "A record flood swallows a major region overnight. Sirens are wailing and the water is still rising.",
+      "choices": [
+        {
+          "id": "evacuate_all",
+          "label": "Order a full mandatory evacuation",
+          "flavour": "Lives over everything.",
+          "tags": ["centralise", "welfare"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 6, "prosperity": -6, "autonomy": -6 }
+          },
+          "reaction": "Lives first. Homes and businesses left to the water."
+        },
+        {
+          "id": "protect_property",
+          "label": "Defend the city centre at all costs",
+          "flavour": "Save the engine of the economy.",
+          "memory_label": "defending the centre",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "fairness": -8, "stability": 2 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "trust": -6, "fairness": -4 },
+              "headline": "The poorer districts, left undefended, are devastated"
+            }
+          },
+          "reaction": "The downtown is saved. The outskirts drown."
+        },
+        {
+          "id": "volunteer_response",
+          "label": "Mobilise communities to self-organise",
+          "flavour": "Trust people to save each other.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 8, "autonomy": 6, "stability": -2, "fragility": 6 }
+          },
+          "reaction": "Neighbours rescue neighbours. Coordination is chaos."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "The waters recede. The cameras leave. Now comes the rebuild.",
+      "choices": [
+        {
+          "id": "rebuild_better",
+          "label": "Rebuild with flood defences and green infrastructure",
+          "flavour": "Survive the next one.",
+          "tags": ["future", "welfare"],
+          "effects": {
+            "immediate": { "future": 10, "trust": 6, "debt_stress": 10 }
+          },
+          "reaction": "Built to outlast the next storm. The bill is enormous."
+        },
+        {
+          "id": "rebuild_cheap",
+          "label": "Rebuild fast and cheap to reopen the economy",
+          "flavour": "Get the tills ringing.",
+          "memory_label": "the cut-rate rebuild",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fragility": 10 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "stability": -8, "trust": -6 },
+              "headline": "The next storm breaks straight through the cut-rate rebuild"
+            }
+          },
+          "reaction": "Doors reopen quickly. Corners were quietly cut."
+        },
+        {
+          "id": "managed_retreat",
+          "label": "Abandon the floodplain and relocate residents",
+          "flavour": "Don't rebuild in the river's path.",
+          "memory_label": "the managed retreat",
+          "tags": ["centralise", "future"],
+          "effects": {
+            "immediate": { "future": 8, "debt_stress": 6, "autonomy": -8, "trust": -4 }
+          },
+          "reaction": "A hard, sensible retreat. Communities mourn their homes."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Relief is slow, donors are wavering, and anger is boiling over in the camps.",
+      "choices": [
+        {
+          "id": "emergency_aid",
+          "label": "Borrow big for immediate relief",
+          "flavour": "Money now, worry later.",
+          "tags": ["borrow", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "debt_stress": 14 }
+          },
+          "reaction": "Cheques and supplies flow. The deficit swells."
+        },
+        {
+          "id": "austerity_aid",
+          "label": "Ration aid strictly to the worst-hit",
+          "flavour": "Stretch every dollar.",
+          "memory_label": "rationed aid",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -6, "stability": 2, "fairness": -8, "trust": -4 }
+          },
+          "reaction": "Funds stretched thin. Many feel abandoned."
+        },
+        {
+          "id": "private_recovery",
+          "label": "Lean on insurers and private rebuilding",
+          "flavour": "Let the market handle it.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "fairness": -6, "fragility": 6 }
+          },
+          "reaction": "The insured rebuild fast. The uninsured wait in line."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The shortcuts you took in the rush are now the disaster's second act.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "protect_property",
+          "text": "The districts you left undefended are now the symbol of who you chose to save."
+        },
+        {
+          "requires_choice": "rebuild_cheap",
+          "text": "The cheap rebuild has failed at the very first test of weather."
+        },
+        {
+          "requires_choice": "managed_retreat",
+          "text": "The communities you relocated have not forgiven the loss of home."
+        },
+        {
+          "requires_choice": "austerity_aid",
+          "text": "The rationed aid left wounds that politics is now reopening."
+        }
+      ],
+      "choices": [
+        {
+          "id": "resilience_fund",
+          "label": "Create a permanent climate-resilience fund",
+          "flavour": "Never be caught out again.",
+          "tags": ["future", "welfare"],
+          "effects": {
+            "immediate": { "future": 10, "trust": 8, "debt_stress": 10 }
+          },
+          "reaction": "A shield for the future. A weight on the present."
+        },
+        {
+          "id": "blame_and_move",
+          "label": "Cut losses and focus growth elsewhere",
+          "flavour": "Write it off, move on.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "fairness": -8, "trust": -4 }
+          },
+          "reaction": "The economy moves on. The region feels written off."
+        },
+        {
+          "id": "mutual_aid",
+          "label": "Empower local mutual-aid networks",
+          "flavour": "Hand the recovery to those living it.",
+          "tags": ["decentralise", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "autonomy": 6, "stability": -2 }
+          },
+          "reaction": "Communities lead their own recovery, unevenly."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The region rebuilds at last. What did the flood teach your country?",
+      "choices": [
+        {
+          "id": "adaptive_nation",
+          "label": "A nation rebuilt to live with a changing climate",
+          "flavour": "Prepared for the next one.",
+          "tags": ["future", "welfare"],
+          "effects": {
+            "immediate": { "future": 12, "trust": 8, "debt_stress": 6 }
+          },
+          "reaction": "Resilient and prepared. The cost shaped a generation."
+        },
+        {
+          "id": "growth_first_disaster",
+          "label": "Prioritise growth and hope the storms hold off",
+          "flavour": "Gamble on good weather.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 12, "future": -8, "fairness": -4 }
+          },
+          "reaction": "Prosperous today. Dangerously exposed tomorrow."
+        },
+        {
+          "id": "fortified_few",
+          "label": "Protect the centres, let the margins fend",
+          "flavour": "Save what's worth saving.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 10, "fairness": -10, "autonomy": -4 }
+          },
+          "reaction": "The core endures. The edges quietly erode."
+        }
+      ]
+    }
+  ]
+}

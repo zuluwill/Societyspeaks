@@ -357,8 +357,178 @@ body.is-leaving {
 
 /* ---------- Hub ---------- */
 
+/* Shared eyebrow/kicker label */
+.game-eyebrow {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--game-accent);
+}
+
+/* Above-the-fold hero: one hook, generous breathing room */
+.game-hub-hero {
+  padding: 0.5rem 0 1.5rem;
+}
+
+.game-hero-date {
+  font-size: 0.75rem;
+  color: var(--game-muted);
+  opacity: 0.8;
+}
+
+.game-hero-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.875rem, 7vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--game-text);
+  margin-bottom: 0.75rem;
+  text-wrap: balance;
+}
+
+.game-hero-deck {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--game-muted);
+  max-width: 32ch;
+}
+
+/* The single primary action card */
 .game-hub-card {
   box-shadow: 0 12px 40px -16px rgba(0, 0, 0, 0.55);
+}
+
+.game-play-card {
+  padding: 1.5rem;
+  border: 1px solid var(--game-border);
+  border-radius: 1.25rem;
+  background: rgba(21, 26, 34, 0.8);
+}
+
+.game-play-scenario {
+  font-size: 1.25rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--game-text);
+  margin-bottom: 0.5rem;
+}
+
+/* Society-name field: pre-filled suggestion + roll-another */
+.game-society-field {
+  margin-bottom: 1.25rem;
+}
+
+.game-society-label {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--game-muted);
+  margin-bottom: 0.4rem;
+}
+
+.game-society-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.game-society-row .game-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.game-society-reroll {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  border: 1px solid var(--game-border);
+  border-radius: 0.625rem;
+  background: var(--game-elevated);
+  color: var(--game-text);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.15s ease;
+}
+
+.game-society-reroll:hover {
+  border-color: var(--game-accent);
+  background: var(--game-surface);
+}
+
+@keyframes game-dice-roll {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.game-society-reroll.is-rolling {
+  animation: game-dice-roll 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-society-reroll.is-rolling { animation: none; }
+}
+
+.game-society-reroll:focus-visible {
+  outline: none;
+  border-color: var(--game-accent);
+  box-shadow: 0 0 0 2px rgba(212, 168, 83, 0.45);
+}
+
+.game-society-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--game-muted);
+  line-height: 1.45;
+}
+
+/* Primary CTA carries a quiet reassurance line */
+.game-play-cta {
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.game-play-cta-meta {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* Everything secondary lives below a clear divider, out of the 5-second path */
+.game-hub-secondary {
+  margin-top: 2.5rem;
+}
+
+.game-hub-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1.75rem;
+  color: var(--game-muted);
+}
+
+.game-hub-divider::before,
+.game-hub-divider::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--game-border);
+}
+
+.game-hub-divider span {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
 .game-hub-tomorrow {
@@ -414,6 +584,15 @@ body.is-leaving {
 }
 
 .game-share-status:empty {
+  display: none;
+}
+
+.game-reminder-status {
+  min-height: 1rem;
+  color: var(--game-accent);
+}
+
+.game-reminder-status:empty {
   display: none;
 }
 
@@ -708,6 +887,162 @@ body.is-leaving {
 .bg-game-surface\/50 { background: rgba(21, 26, 34, 0.5); }
 .bg-game-accent\/5 { background: rgba(212, 168, 83, 0.06); }
 
+/* ---------- Pressure indicator (in-run hidden-cost tell) ---------- */
+
+.game-pressure {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--game-border);
+  background: rgba(21, 26, 34, 0.6);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--game-muted);
+  transition: color 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+}
+
+.game-pressure-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--game-trust);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.game-pressure[data-level="1"] { color: #cbd5e1; border-color: rgba(212, 168, 83, 0.3); }
+.game-pressure[data-level="1"] .game-pressure-dot { background: var(--game-accent); }
+.game-pressure[data-level="2"] { color: #fbbf94; border-color: rgba(248, 113, 113, 0.35); }
+.game-pressure[data-level="2"] .game-pressure-dot { background: #fb923c; box-shadow: 0 0 8px rgba(251, 146, 60, 0.6); }
+.game-pressure[data-level="3"] { color: var(--game-warn); border-color: rgba(248, 113, 113, 0.55); background: rgba(248, 113, 113, 0.1); }
+.game-pressure[data-level="3"] .game-pressure-dot { background: var(--game-warn); box-shadow: 0 0 10px rgba(248, 113, 113, 0.8); animation: pressure-pulse 1.6s ease-in-out infinite; }
+
+@keyframes pressure-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ---------- Numbered choices + keyboard ---------- */
+
+.game-choice--numbered {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+
+.game-choice-num {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--game-border);
+  background: var(--game-elevated);
+  color: var(--game-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.game-choice--numbered:hover:not(:disabled) .game-choice-num,
+.game-choice--numbered:focus-visible .game-choice-num {
+  color: var(--game-accent);
+  border-color: var(--game-accent);
+}
+
+.game-choice-body { flex: 1 1 auto; min-width: 0; }
+
+.game-keyhint { opacity: 0.7; }
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices have no keyboard — hide the number badges and hint. */
+  .game-choice-num { display: none; }
+  .game-keyhint { display: none; }
+}
+
+/* ---------- Cohort comparison ---------- */
+
+.game-cohort {
+  box-shadow: 0 8px 32px -16px rgba(212, 168, 83, 0.25);
+}
+
+/* ---------- Challenge a friend ---------- */
+
+.game-challenge-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--game-muted);
+  word-break: break-all;
+  user-select: all;
+  -webkit-user-select: all;
+  text-align: center;
+}
+
+/* ---------- Outcome sequenced reveal ---------- */
+
+.reveal-step {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reveal-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--reveal-i, 0) * 130ms);
+}
+
+@keyframes reveal-rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Archive (your societies) ---------- */
+
+.game-archive-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+}
+
+@media (min-width: 420px) {
+  .game-archive-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.game-archive-card {
+  display: block;
+  padding: 1.125rem;
+  border: 1px solid var(--game-border);
+  border-left: 3px solid var(--emblem-accent, var(--game-accent));
+  border-radius: 1rem;
+  background: rgba(21, 26, 34, 0.7);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.game-archive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+}
+
+.game-archive-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(212, 168, 83, 0.5);
+}
+
+.game-archive-headline {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--game-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ---------- Motion reduction ---------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -718,8 +1053,17 @@ body.is-leaving {
   .game-consequence,
   .game-consequence-inner,
   .game-toast,
+  .game-pressure,
+  .game-pressure-dot,
+  .game-archive-card,
   body.is-leaving {
     transition: none;
+    animation: none;
+  }
+  .game-pressure[data-level="3"] .game-pressure-dot { animation: none; }
+  .reveal-step {
+    opacity: 1;
+    transform: none;
     animation: none;
   }
 }

@@ -1,0 +1,237 @@
+{
+  "slug": "trade-and-tariffs",
+  "title": "The Last Factory",
+  "subtitle": "Cheaper goods, emptier towns.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["economy", "trade", "industry"],
+  "initial_state": {
+    "prosperity": 54,
+    "trust": 50,
+    "fairness": 48,
+    "stability": 52,
+    "future": 48,
+    "debt_stress": 44,
+    "autonomy": 56,
+    "fragility": 8
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "A flood of cheap imports is about to close the last big factory in a town that has nothing else.",
+      "choices": [
+        {
+          "id": "tariffs",
+          "label": "Slap tariffs on the cheap imports",
+          "flavour": "Protect the jobs you can see.",
+          "memory_label": "the import tariffs",
+          "tags": ["restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 6, "prosperity": -6, "fairness": 4 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": -8, "debt_stress": 6 },
+              "headline": "Trading partners retaliate; your exporters start to bleed"
+            }
+          },
+          "reaction": "Factory towns cheer. Shoppers brace for higher prices."
+        },
+        {
+          "id": "free_trade",
+          "label": "Embrace open markets fully",
+          "flavour": "Cheaper for everyone — almost.",
+          "memory_label": "the open-market gamble",
+          "tags": ["open", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fairness": -8, "trust": -4 }
+          },
+          "reaction": "Consumers win. The factory town empties out."
+        },
+        {
+          "id": "retrain",
+          "label": "Subsidise retraining for displaced workers",
+          "flavour": "Bridge them to new work.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "future": 8, "fairness": 6, "trust": 4, "debt_stress": 8 }
+          },
+          "reaction": "A bridge to new jobs — if the new jobs ever appear."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "The economy steadies. You can think about the shape of the next decade.",
+      "choices": [
+        {
+          "id": "industrial_policy",
+          "label": "Pick and fund strategic industries",
+          "flavour": "Bet on tomorrow's exports.",
+          "tags": ["centralise", "future"],
+          "effects": {
+            "immediate": { "future": 8, "prosperity": 4, "debt_stress": 8 }
+          },
+          "reaction": "Bets placed on the industries of tomorrow."
+        },
+        {
+          "id": "deregulate",
+          "label": "Cut red tape to attract investment",
+          "flavour": "Roll out the red carpet.",
+          "memory_label": "the deregulation drive",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fairness": -6, "fragility": 8 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "stability": -6, "fairness": -4 },
+              "headline": "A deregulated industry cut corners and people got hurt"
+            }
+          },
+          "reaction": "Capital floods in. The safeguards thin out."
+        },
+        {
+          "id": "worker_rights",
+          "label": "Strengthen worker protections",
+          "flavour": "Tilt the deal back to labour.",
+          "tags": ["redistribute", "welfare"],
+          "effects": {
+            "immediate": { "fairness": 8, "trust": 6, "prosperity": -4 }
+          },
+          "reaction": "Workers gain ground. Some firms pack up and leave."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A full-blown trade war erupts. Your key exports are blocked at the border.",
+      "choices": [
+        {
+          "id": "escalate_trade",
+          "label": "Escalate with sweeping counter-tariffs",
+          "flavour": "Show them you won't fold.",
+          "memory_label": "the tariff escalation",
+          "tags": ["restrict"],
+          "effects": {
+            "immediate": { "trust": 4, "stability": 4, "prosperity": -10, "fragility": 8 }
+          },
+          "reaction": "You won't be pushed around. Prices climb everywhere."
+        },
+        {
+          "id": "seek_deal",
+          "label": "Swallow your pride and negotiate a deal",
+          "flavour": "Trade beats a standoff.",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "prosperity": 8, "trust": -4, "autonomy": -6, "stability": 4 }
+          },
+          "reaction": "Trade resumes. The concessions sting."
+        },
+        {
+          "id": "self_sufficiency",
+          "label": "Pivot hard toward self-sufficiency",
+          "flavour": "Make it all at home.",
+          "tags": ["restrict", "future"],
+          "effects": {
+            "immediate": { "future": 6, "autonomy": 8, "prosperity": -8, "debt_stress": 8 }
+          },
+          "reaction": "Resilient and costly. The shelves look different now."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The decisions you made for the economy now arrive with human faces.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "free_trade",
+          "text": "The open-market gamble hollowed out the towns now demanding answers."
+        },
+        {
+          "requires_choice": "deregulate",
+          "text": "The deregulation you championed has produced a disaster with a human cost."
+        },
+        {
+          "requires_choice": "tariffs",
+          "text": "The tariffs you imposed triggered the trade war now strangling your exports."
+        },
+        {
+          "requires_choice": "escalate_trade",
+          "text": "Your tariff escalation has frozen the ports solid."
+        }
+      ],
+      "choices": [
+        {
+          "id": "managed_trade",
+          "label": "Negotiate a managed, fairer trade pact",
+          "flavour": "A deal everyone can live with.",
+          "tags": ["open", "redistribute"],
+          "effects": {
+            "immediate": { "prosperity": 6, "fairness": 8, "trust": 6, "debt_stress": -2 }
+          },
+          "reaction": "A compromise nobody loves and everybody signs."
+        },
+        {
+          "id": "protect_everything",
+          "label": "Wall off the economy to save jobs",
+          "flavour": "Pull up the drawbridge.",
+          "tags": ["restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 4, "prosperity": -10, "future": -4 }
+          },
+          "reaction": "Jobs saved behind the wall. Growth left outside it."
+        },
+        {
+          "id": "innovate_out",
+          "label": "Bet the recovery on new industries",
+          "flavour": "Leap to what's next.",
+          "tags": ["growth", "future"],
+          "effects": {
+            "immediate": { "prosperity": 8, "future": 8, "fairness": -4, "debt_stress": 6 }
+          },
+          "reaction": "A leap toward tomorrow. Today's workers must keep up."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The dust settles on the trade wars. What kind of economy did you build?",
+      "choices": [
+        {
+          "id": "fair_globalist",
+          "label": "An open economy with a strong safety net",
+          "flavour": "Open to the world, kind at home.",
+          "tags": ["welfare", "open"],
+          "effects": {
+            "immediate": { "fairness": 10, "prosperity": 6, "debt_stress": 6 }
+          },
+          "reaction": "Open to the world, kinder at home. The balance is delicate."
+        },
+        {
+          "id": "fortress_economy",
+          "label": "A self-reliant fortress economy",
+          "flavour": "Smaller, but yours.",
+          "tags": ["restrict"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": 8, "prosperity": -6 }
+          },
+          "reaction": "Secure and self-made. Poorer, but yours."
+        },
+        {
+          "id": "growth_machine",
+          "label": "An unapologetic growth machine",
+          "flavour": "Win first. Share later.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 14, "fairness": -10, "trust": -2 }
+          },
+          "reaction": "The GDP soars. The gaps widen with it."
+        }
+      ]
+    }
+  ]
+}

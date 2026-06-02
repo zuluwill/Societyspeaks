@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from flask import current_app
@@ -30,6 +30,12 @@ from app.game.engine.scenario import (
     turn_context_for_player,
 )
 from app.game.engine.state import SocietyState
+from app.game.engine.variant import (
+    apply_initial_variation,
+    daily_variant_seed,
+    random_variant_seed,
+    variation_descriptor,
+)
 from app.game.services.daily_service import utc_game_date
 from app.lib.time import utcnow_naive
 from app.models.game import GameRun, GameRunOutcome
@@ -55,18 +61,63 @@ def _initial_state(scenario: Dict[str, Any]) -> SocietyState:
     return SocietyState.from_dict(scenario.get('initial_state'))
 
 
+def _variation_enabled() -> bool:
+    return bool(current_app.config.get('GAME_SCENARIO_VARIATION_ENABLED', True))
+
+
+def _seeded_initial_state(
+    scenario: Dict[str, Any], seed: Optional[int]
+) -> SocietyState:
+    """Opening state with seeded variation applied (baseline when seed is None)."""
+    varied = apply_initial_variation(scenario.get('initial_state') or {}, seed)
+    return SocietyState.from_dict(varied)
+
+
+def run_situation(run: GameRun) -> Optional[Dict[str, str]]:
+    """Legible one-liner describing this run's opening drift from baseline."""
+    if run.variant_seed is None:
+        return None
+    scenario = load_scenario(run.scenario_slug)
+    base = scenario.get('initial_state') or {}
+    varied = apply_initial_variation(base, run.variant_seed)
+    return variation_descriptor(base, varied)
+
+
+def _resolve_has_custom_name(
+    *, society_name: str, name_was_custom: Optional[bool]
+) -> bool:
+    """Whether the player authored the society name (for analytics).
+
+    The hub now pre-fills a suggested name, so a stored name differing from the
+    default no longer implies the player chose it. When the caller knows
+    (``name_was_custom`` is not None) we trust that signal; otherwise we fall
+    back to the legacy heuristic for callers that don't pass the hint.
+    """
+    if name_was_custom is not None:
+        return name_was_custom
+    return society_name != DEFAULT_SOCIETY_NAME
+
+
 def get_or_start_daily_run(
     *,
     scenario_slug: str,
     user_id: Optional[int],
     session_fingerprint: Optional[str],
     society_name: Optional[str] = None,
+    name_was_custom: Optional[bool] = None,
+    seed_date: Optional[date] = None,
 ) -> GameRun:
     """Return in-progress, completed, or fresh daily run for this scenario.
 
     Plan §3.1: a player completes today's daily once. Subsequent attempts
     return the existing completed run so the caller can redirect to the
     outcome, not a fresh replay.
+
+    ``seed_date`` is the scenario's *scheduled* date and drives opening-state
+    variation. It must be the schedule date (not wall-clock today) so that
+    everyone who plays a given day's daily — on the day, within the 48h streak
+    grace window, or via a daily challenge — inherits the identical opening,
+    preserving the shared-daily and cohort/challenge guarantees.
     """
     scenario = load_scenario(scenario_slug)
     total_turns = len(scenario['turns'])
@@ -131,6 +182,11 @@ def get_or_start_daily_run(
         return run
 
     name = (society_name or '').strip() or DEFAULT_SOCIETY_NAME
+    seed = (
+        daily_variant_seed(scenario_slug, seed_date or today_utc)
+        if _variation_enabled()
+        else None
+    )
     run = GameRun(
         uuid=GameRun.generate_uuid(),
         scenario_slug=scenario_slug,
@@ -139,7 +195,8 @@ def get_or_start_daily_run(
         session_fingerprint=session_fingerprint,
         society_name=name[:80],
         emblem_seed=GameRun.generate_uuid(),
-        state_json=_initial_state(scenario).to_dict(),
+        variant_seed=seed,
+        state_json=_seeded_initial_state(scenario, seed).to_dict(),
         choice_log_json=[],
         delayed_queue_json=[],
         headline_log_json=[],
@@ -152,7 +209,11 @@ def get_or_start_daily_run(
     track_game_event(
         run,
         'game_run_started',
-        properties={'has_custom_name': run.society_name != DEFAULT_SOCIETY_NAME},
+        properties={
+            'has_custom_name': _resolve_has_custom_name(
+                society_name=run.society_name, name_was_custom=name_was_custom
+            )
+        },
     )
     return run
 
@@ -163,6 +224,7 @@ def start_quick_run(
     user_id: Optional[int],
     session_fingerprint: Optional[str],
     society_name: Optional[str] = None,
+    name_was_custom: Optional[bool] = None,
 ) -> GameRun:
     """Fresh Quick Run — plan §3.2: replay anytime, no streak credit.
 
@@ -178,6 +240,7 @@ def start_quick_run(
         raise GameRunError('Identity required')
 
     name = (society_name or '').strip() or DEFAULT_SOCIETY_NAME
+    seed = random_variant_seed() if _variation_enabled() else None
     run = GameRun(
         uuid=GameRun.generate_uuid(),
         scenario_slug=scenario_slug,
@@ -186,7 +249,8 @@ def start_quick_run(
         session_fingerprint=session_fingerprint,
         society_name=name[:80],
         emblem_seed=GameRun.generate_uuid(),
-        state_json=_initial_state(scenario).to_dict(),
+        variant_seed=seed,
+        state_json=_seeded_initial_state(scenario, seed).to_dict(),
         choice_log_json=[],
         delayed_queue_json=[],
         headline_log_json=[],
@@ -201,7 +265,9 @@ def start_quick_run(
         'game_run_started',
         properties={
             'mode': 'quick',
-            'has_custom_name': run.society_name != DEFAULT_SOCIETY_NAME,
+            'has_custom_name': _resolve_has_custom_name(
+                society_name=run.society_name, name_was_custom=name_was_custom
+            ),
         },
     )
     return run
@@ -276,7 +342,9 @@ def build_turn_view(run: GameRun) -> Dict[str, Any]:
         'state': state_dict,
         'visible_stats': {k: state_dict[k] for k in STAT_VISIBLE},
         'mood_level': state.mood_level(),
+        'pressure_level': state.pressure_level(),
         'headlines': list(run.headline_log_json or [])[-3:],
+        'situation': run_situation(run) if run.turn_index == 0 else None,
     }
 
 
@@ -292,6 +360,8 @@ def next_turn_payload(run: GameRun) -> Optional[Dict[str, Any]]:
         'prompt': view['prompt'],
         'choices': view['choices'],
         'headlines': view['headlines'],
+        'mood_level': view['mood_level'],
+        'pressure_level': view['pressure_level'],
     }
 
 
@@ -404,6 +474,7 @@ def apply_run_choice(run: GameRun, choice_id: str) -> Dict[str, Any]:
         'state': state_dict,
         'visible_stats': {k: state_dict[k] for k in STAT_VISIBLE},
         'mood_level': state.mood_level(),
+        'pressure_level': state.pressure_level(),
         'turn_index': run.turn_index,
         'outcome_url': f'/play/outcome/{run.uuid}' if game_complete else None,
         'next_turn': next_turn_payload(run) if not game_complete else None,

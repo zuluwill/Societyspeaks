@@ -433,8 +433,30 @@ def test_hub_renders_society_name_input_when_no_active_run(app, client, db):
     client.set_cookie('ss_voter_client_id', 'n' * 64)
     resp = client.get('/play/')
     assert resp.status_code == 200
-    assert b'Name your society' in resp.data
+    assert b'Your society' in resp.data
     assert b'id="society-name"' in resp.data
+
+
+def test_hub_prefills_a_suggested_society_name(app, client, db):
+    """The name input ships with a non-empty, non-placeholder suggestion so the
+    only required action is "Play"."""
+    import re
+
+    with app.app_context():
+        db.create_all()
+    client.set_cookie('ss_voter_client_id', 'q' * 64)
+    resp = client.get('/play/')
+    assert resp.status_code == 200
+    body = resp.data.decode()
+    match = re.search(r'id="society-name"[^>]*\bvalue="([^"]+)"', body)
+    assert match, 'society-name input should carry a pre-filled value'
+    assert match.group(1).strip(), 'pre-filled society name must not be blank'
+    # The roll-another affordance ships its candidate pool inline for offline reuse.
+    assert b'id="society-reroll"' in resp.data
+    assert b'data-suggestions=' in resp.data
+    # name_source starts as "suggested" until the player types.
+    assert b'id="name-source"' in resp.data
+    assert b'value="suggested"' in resp.data
 
 
 def test_hub_renders_signin_cta_for_anonymous(app, client, db):
@@ -620,6 +642,133 @@ def test_hub_hides_explainer_after_quick_run_only(app, client, db):
     assert b'New to Tradeoffs?' not in resp.data
 
 
+# ---------- Society-name suggestions ----------
+
+def test_name_generator_produces_distinct_nonempty_names():
+    import random
+
+    from app.game.services.society_name_service import generate_society_names
+
+    names = generate_society_names(12, rng=random.Random(42))
+    assert len(names) == 12
+    assert len(set(names)) == 12, 'suggestions within a batch must be unique'
+    for name in names:
+        assert name.strip(), 'a suggestion must never be blank'
+        assert len(name) <= 48, 'must fit the input maxlength'
+
+
+def test_name_generator_is_deterministic_with_seed():
+    import random
+
+    from app.game.services.society_name_service import generate_society_names
+
+    first = generate_society_names(8, rng=random.Random(7))
+    second = generate_society_names(8, rng=random.Random(7))
+    assert first == second
+
+
+def test_name_generator_accepts_string_seed_for_stability():
+    """The hub seeds by visitor+date so a reload doesn't shuffle the pre-fill."""
+    from app.game.services.society_name_service import generate_society_names
+
+    a1 = generate_society_names(12, seed='visitor-x|2026-06-01')
+    a2 = generate_society_names(12, seed='visitor-x|2026-06-01')
+    assert a1 == a2, 'same seed must yield the same suggestions'
+
+    b = generate_society_names(12, seed='visitor-y|2026-06-01')
+    c = generate_society_names(12, seed='visitor-x|2026-06-02')
+    # Different visitor (same day) and same visitor (different day) should
+    # not lock to the same first suggestion — variety is the point.
+    assert a1[0] != b[0] or a1[0] != c[0]
+
+
+def test_hub_prefill_is_stable_across_reloads(app, client, db):
+    """Same visitor + same UTC day → the same pre-filled suggestion on reload."""
+    import re
+
+    with app.app_context():
+        db.create_all()
+    client.set_cookie('ss_voter_client_id', 'r' * 64)
+    pattern = re.compile(r'id="society-name"[^>]*\bvalue="([^"]+)"')
+
+    first = pattern.search(client.get('/play/').data.decode())
+    second = pattern.search(client.get('/play/').data.decode())
+    assert first and second
+    assert first.group(1) == second.group(1), (
+        'reloading the hub must not shuffle the pre-filled society name'
+    )
+
+
+def test_name_source_helper_maps_to_analytics_flag():
+    from app.game.routes import _name_was_custom
+
+    assert _name_was_custom('custom') is True
+    assert _name_was_custom('suggested') is False
+    assert _name_was_custom(None) is None
+    assert _name_was_custom('garbage') is None
+
+
+def _captured_started_events(monkeypatch):
+    """Patch analytics so we can inspect game_run_started properties."""
+    events = []
+
+    def _capture(run, event, properties=None):
+        events.append((event, properties or {}))
+
+    monkeypatch.setattr(
+        'app.game.services.run_service.track_game_event', _capture
+    )
+    return events
+
+
+def test_suggested_name_is_not_counted_as_custom(app, db, monkeypatch):
+    """A player who accepts/rolls our suggestion is not flagged has_custom_name,
+    even though the stored name differs from the default."""
+    events = _captured_started_events(monkeypatch)
+    with app.app_context():
+        db.create_all()
+        start_quick_run(
+            scenario_slug='debt-inherited',
+            user_id=None,
+            session_fingerprint=fingerprint_from_client_id('s' * 64),
+            society_name='The Halcyon Republic',
+            name_was_custom=False,
+        )
+    started = [p for (e, p) in events if e == 'game_run_started']
+    assert started and started[0]['has_custom_name'] is False
+
+
+def test_typed_name_is_counted_as_custom(app, db, monkeypatch):
+    events = _captured_started_events(monkeypatch)
+    with app.app_context():
+        db.create_all()
+        get_or_start_daily_run(
+            scenario_slug=scheduled_scenario_slug(),
+            user_id=None,
+            session_fingerprint=fingerprint_from_client_id('t' * 64),
+            society_name='My Own Republic',
+            name_was_custom=True,
+        )
+    started = [p for (e, p) in events if e == 'game_run_started']
+    assert started and started[0]['has_custom_name'] is True
+
+
+def test_missing_flag_falls_back_to_legacy_string_compare(app, db, monkeypatch):
+    """Callers that don't pass the hint keep the old behaviour: a name that
+    differs from the default counts as custom."""
+    events = _captured_started_events(monkeypatch)
+    with app.app_context():
+        db.create_all()
+        start_quick_run(
+            scenario_slug='debt-inherited',
+            user_id=None,
+            session_fingerprint=fingerprint_from_client_id('u' * 64),
+            society_name='Riverlands',
+        )
+    started = [p for (e, p) in events if e == 'game_run_started']
+    assert started and started[0]['has_custom_name'] is True
+
+
 def test_homepage_renders_tradeoffs_card(app, client, db):
     """The Three Ways section now includes the Tradeoffs card."""
     with app.app_context():
@@ -759,7 +908,7 @@ def test_outcome_page_renders_share_results_block(app, client, db):
     assert 'game-share-payload' in body
     assert 'What kind of leader would you be?' in body
     assert f'/play/outcome/{run_uuid}' in body
-    assert 'outcome.js?v=4' in body
+    assert 'outcome.js?v=6' in body
     assert '/play/challenge/' in body
 
 

@@ -1,0 +1,238 @@
+{
+  "slug": "crime-and-justice",
+  "title": "The City After Dark",
+  "subtitle": "Order and liberty rarely shake hands.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["justice", "policing", "civil-liberties"],
+  "initial_state": {
+    "prosperity": 50,
+    "trust": 48,
+    "fairness": 48,
+    "stability": 50,
+    "future": 48,
+    "debt_stress": 42,
+    "autonomy": 58,
+    "fragility": 8
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "Violent crime is surging and the public is afraid to go out at night. They want it fixed now.",
+      "choices": [
+        {
+          "id": "more_police",
+          "label": "Flood the streets with police",
+          "flavour": "Visible force, fast.",
+          "memory_label": "the policing surge",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": 4, "autonomy": -8, "debt_stress": 6 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "fairness": -6, "trust": -6 },
+              "headline": "Aggressive policing sparks a community backlash"
+            }
+          },
+          "reaction": "Patrols on every corner. Some feel safer, some feel watched."
+        },
+        {
+          "id": "root_causes",
+          "label": "Invest in jobs, youth, and housing",
+          "flavour": "Treat the disease, not the symptom.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "fairness": 6, "future": 8, "trust": 4, "debt_stress": 8 }
+          },
+          "reaction": "A long-term bet placed. Tonight's victims are unmoved."
+        },
+        {
+          "id": "tough_sentences",
+          "label": "Pass harsh mandatory sentences",
+          "flavour": "Make the price of crime brutal.",
+          "memory_label": "mandatory sentencing",
+          "tags": ["restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 4, "fairness": -8 }
+          },
+          "reaction": "Prisons fill. The crime stats dip — for now."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "Crime ticks down. Your approval ticks up. There's room to shape the system.",
+      "choices": [
+        {
+          "id": "community_policing",
+          "label": "Build community-led policing",
+          "flavour": "Police with people, not at them.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 10, "fairness": 6, "stability": 2 }
+          },
+          "reaction": "Trust rebuilds block by block."
+        },
+        {
+          "id": "surveillance_net",
+          "label": "Blanket the city in cameras and data",
+          "flavour": "If you can see it, you can stop it.",
+          "memory_label": "the surveillance network",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -12, "trust": -2 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "trust": -6, "autonomy": -4 },
+              "headline": "A data breach exposes everyone the cameras watched"
+            }
+          },
+          "reaction": "Eyes everywhere. Crime slips into the shadows."
+        },
+        {
+          "id": "privatise_prisons",
+          "label": "Privatise prisons to cut costs",
+          "flavour": "Let the market run the cells.",
+          "memory_label": "private prisons",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "prosperity": 6, "debt_stress": -8, "fairness": -8 }
+          },
+          "reaction": "The budget eases. Conditions quietly worsen."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A death in police custody is caught on camera. The city erupts in protest.",
+      "choices": [
+        {
+          "id": "reform_police",
+          "label": "Launch sweeping police reform",
+          "flavour": "Rebuild trust from the inside.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 8, "stability": -6 }
+          },
+          "reaction": "Reformers cheer. Police unions revolt."
+        },
+        {
+          "id": "crack_down",
+          "label": "Crack down hard on the protests",
+          "flavour": "Restore order at any cost.",
+          "memory_label": "the protest crackdown",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "stability": 6, "autonomy": -10, "trust": -8, "fragility": 10 }
+          },
+          "reaction": "Order restored by force. Resentment hardens into something lasting."
+        },
+        {
+          "id": "open_inquiry",
+          "label": "Open an independent inquiry",
+          "flavour": "Let the truth out, slowly.",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "trust": 6, "fairness": 4, "stability": -2 }
+          },
+          "reaction": "Cameras roll at the hearings. Justice moves at its own pace."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The choices you made to look tough are now the story.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "more_police",
+          "text": "The heavy policing you ordered is fuelling the very unrest on the streets."
+        },
+        {
+          "requires_choice": "surveillance_net",
+          "text": "The surveillance network has become a scandal all of its own."
+        },
+        {
+          "requires_choice": "crack_down",
+          "text": "The crackdown turned scattered protesters into a national movement."
+        },
+        {
+          "requires_choice": "privatise_prisons",
+          "text": "Conditions in the private prisons have become a public disgrace."
+        }
+      ],
+      "choices": [
+        {
+          "id": "justice_reform",
+          "label": "Rebuild the justice system from the ground up",
+          "flavour": "Fix it properly, finally.",
+          "tags": ["redistribute", "welfare"],
+          "effects": {
+            "immediate": { "fairness": 10, "trust": 8, "debt_stress": 8 }
+          },
+          "reaction": "A fairer system, slowly. The backlog runs years deep."
+        },
+        {
+          "id": "iron_fist",
+          "label": "Double down on order at any cost",
+          "flavour": "Crush it and move on.",
+          "tags": ["restrict", "centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -12, "fairness": -8 }
+          },
+          "reaction": "The streets go quiet. The cost is counted later."
+        },
+        {
+          "id": "decriminalise",
+          "label": "Decriminalise low-level offences",
+          "flavour": "Stop jailing the desperate.",
+          "tags": ["decentralise", "open"],
+          "effects": {
+            "immediate": { "fairness": 8, "autonomy": 8, "stability": -6, "fragility": 6 }
+          },
+          "reaction": "Courts breathe again. Critics warn of disorder."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The unrest settles. What kind of justice did your society choose?",
+      "choices": [
+        {
+          "id": "restorative",
+          "label": "Build a restorative-justice society",
+          "flavour": "Repair harm, not just punish it.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 12, "trust": 8, "debt_stress": 6 }
+          },
+          "reaction": "Fewer cells, more second chances. Not everyone forgives."
+        },
+        {
+          "id": "security_state",
+          "label": "Cement a hard security state",
+          "flavour": "Safety above all else.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -14, "trust": -2 }
+          },
+          "reaction": "Crime is low. So is freedom."
+        },
+        {
+          "id": "balanced_justice",
+          "label": "Balance enforcement with opportunity",
+          "flavour": "A bit of both, carefully.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "trust": 6, "fairness": 4 }
+          },
+          "reaction": "A workable peace — imperfect and forever contested."
+        }
+      ]
+    }
+  ]
+}

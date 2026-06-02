@@ -12,11 +12,19 @@
   'legacy': _('Legacy'),
 } %}
 
+{% set pressure_labels = {
+  0: _('Steady'),
+  1: _('Pressure building'),
+  2: _('Under strain'),
+  3: _('Crisis point'),
+} %}
+
 {% block game_content %}
 <div id="game-app"
      data-run-uuid="{{ run.uuid }}"
      data-csrf="{{ csrf_token() }}"
      data-beat-labels='{{ beat_labels|tojson }}'
+     data-pressure-labels='{{ pressure_labels|tojson }}'
      data-progress-template="{{ _('Turn {n} of {total}') }}">
 
   <header class="mb-6 flex items-center gap-3">
@@ -27,9 +35,13 @@
       </p>
       <h1 class="font-display text-lg text-game-text truncate">{{ society_name }}</h1>
     </div>
-    <svg class="w-8 h-8 flex-shrink-0 opacity-60" fill="none" stroke="#d4a853" viewBox="0 0 24 24" aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
-    </svg>
+    <span id="society-pressure"
+          class="game-pressure"
+          data-level="{{ view.pressure_level }}"
+          title="{{ _('Hidden strain on your society — debt and fragility you can feel but not see.') }}">
+      <span class="game-pressure-dot" aria-hidden="true"></span>
+      <span class="game-pressure-label" aria-live="polite">{{ pressure_labels.get(view.pressure_level, '') }}</span>
+    </span>
   </header>
 
   <div id="headline-ticker" class="game-ticker mb-5 min-h-[2.5rem] text-sm text-game-muted italic" aria-live="polite">
@@ -49,28 +61,42 @@
       {{ view.prompt }}
     </h2>
 
+    {% if view.situation %}
+    <p id="turn-situation" class="game-situation -mt-3 mb-6 text-sm text-game-accent/90 italic">
+      {{ view.situation.line }}
+    </p>
+    {% endif %}
+
     <div id="choices" class="space-y-3" role="group" aria-label="{{ _('Your options') }}">
       {% for choice in view.choices %}
       <button type="button"
-              class="game-choice w-full text-left"
-              data-choice-id="{{ choice.id }}">
-        <span class="game-choice-label">{{ choice.label }}</span>
-        {% if choice.flavour %}
-        <span class="game-choice-flavour">{{ choice.flavour }}</span>
-        {% endif %}
-        {% if choice.preview %}
-        <span class="game-choice-arrows mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="{{ _('Likely effects') }}">
-          {% for stat, dir in choice.preview.items() %}
-          <span class="text-xs text-game-muted">
-            {% if dir == 'up' %}<span class="text-game-trust">↑</span>{% elif dir == 'down' %}<span class="text-game-warn">↓</span>{% else %}→{% endif %}
-            <span data-stat-label="{{ stat }}">{{ stat | replace('_', ' ') | title }}</span>
+              class="game-choice game-choice--numbered w-full text-left"
+              data-choice-id="{{ choice.id }}"
+              data-choice-index="{{ loop.index }}"
+              aria-keyshortcuts="{{ loop.index }}">
+        <span class="game-choice-num" aria-hidden="true">{{ loop.index }}</span>
+        <span class="game-choice-body">
+          <span class="game-choice-label">{{ choice.label }}</span>
+          {% if choice.flavour %}
+          <span class="game-choice-flavour">{{ choice.flavour }}</span>
+          {% endif %}
+          {% if choice.preview %}
+          <span class="game-choice-arrows mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="{{ _('Likely effects') }}">
+            {% for stat, dir in choice.preview.items() %}
+            <span class="text-xs text-game-muted">
+              {% if dir == 'up' %}<span class="text-game-trust">↑</span>{% elif dir == 'down' %}<span class="text-game-warn">↓</span>{% else %}→{% endif %}
+              <span data-stat-label="{{ stat }}">{{ stat | replace('_', ' ') | title }}</span>
+            </span>
+            {% endfor %}
           </span>
-          {% endfor %}
+          {% endif %}
         </span>
-        {% endif %}
       </button>
       {% endfor %}
     </div>
+    <p class="game-keyhint mt-3 text-center text-xs text-game-muted" aria-hidden="true">
+      {{ _('Tip: press 1–3 to choose') }}
+    </p>
   </div>
 
   <div id="consequence-overlay"
@@ -96,5 +122,5 @@
 
 {% block game_scripts %}
 <script src="{{ url_for('static', filename='js/game/analytics.js') }}?v=1" defer></script>
-<script src="{{ url_for('static', filename='js/game/play.js') }}?v=5" defer></script>
+<script src="{{ url_for('static', filename='js/game/play.js') }}?v=6" defer></script>
 {% endblock %}

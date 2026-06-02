@@ -1,0 +1,18 @@
+{% extends "game/base.html" %}
+
+{% block game_title %}{{ _('Reminders stopped') }}{% endblock %}
+
+{% block game_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block game_content %}
+<section class="game-card text-center p-8 rounded-2xl border border-game-border bg-game-surface/60 mt-8">
+  <p class="text-5xl mb-4" aria-hidden="true">&#128276;</p>
+  <h1 class="text-xl font-semibold text-game-text mb-2">{{ _('Reminders stopped') }}</h1>
+  <p class="text-sm text-game-muted mb-6">
+    {% if email %}{{ _("We won't email %(email)s about new scenarios anymore.", email=email) }}{% else %}{{ _("We won't send you reminders anymore.") }}{% endif %}
+  </p>
+  <a href="{{ url_for('game.index') }}" class="game-btn-secondary">{{ _('Back to Tradeoffs') }}</a>
+</section>
+{% endblock %}

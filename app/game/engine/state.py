@@ -60,3 +60,14 @@ class SocietyState:
         if avg >= 30:
             return 1
         return 0
+
+    def pressure_level(self) -> int:
+        """0–3 band over the hidden strain stats (debt_stress + 1.5·fragility)."""
+        score = self.debt_stress + self.fragility * 1.5
+        if score >= 90:
+            return 3
+        if score >= 68:
+            return 2
+        if score >= 45:
+            return 1
+        return 0

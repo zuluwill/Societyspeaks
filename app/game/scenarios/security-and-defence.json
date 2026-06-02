@@ -1,0 +1,239 @@
+{
+  "slug": "security-and-defence",
+  "title": "The Border at Dawn",
+  "subtitle": "Guns, butter, and the price of safety.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["security", "defence", "sovereignty"],
+  "initial_state": {
+    "prosperity": 54,
+    "trust": 50,
+    "fairness": 50,
+    "stability": 50,
+    "future": 48,
+    "debt_stress": 45,
+    "autonomy": 58,
+    "fragility": 10
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "A hostile neighbour masses troops along your border. The capital wants reassurance. The world is watching.",
+      "choices": [
+        {
+          "id": "mobilise",
+          "label": "Mobilise the army and reinforce the border",
+          "flavour": "Strength now. Bills later.",
+          "memory_label": "the full mobilisation",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": 6, "prosperity": -8, "debt_stress": 8 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": -6, "debt_stress": 6 },
+              "headline": "War spending starts crowding out everything else"
+            }
+          },
+          "reaction": "Tanks roll to the frontier. Markets shudder."
+        },
+        {
+          "id": "diplomacy",
+          "label": "Open quiet back-channel negotiations",
+          "flavour": "Talk before you fight.",
+          "memory_label": "the diplomatic track",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "trust": 4, "stability": 4, "autonomy": -2, "fragility": 6 }
+          },
+          "reaction": "Envoys fly out at night. Hawks call it weakness."
+        },
+        {
+          "id": "call_allies",
+          "label": "Call in foreign allies for protection",
+          "flavour": "Borrow someone else's strength.",
+          "memory_label": "leaning on allies",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -12, "trust": 2 }
+          },
+          "reaction": "Allied jets patrol your skies. Sovereignty feels smaller."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "The border holds. The crisis cools enough to think past the next week.",
+      "choices": [
+        {
+          "id": "modernise_forces",
+          "label": "Modernise the military for the long haul",
+          "flavour": "Never be caught short again.",
+          "tags": ["future"],
+          "effects": {
+            "immediate": { "stability": 6, "future": 6, "debt_stress": 10 }
+          },
+          "reaction": "New hardware ordered. The bill is generational."
+        },
+        {
+          "id": "guns_to_butter",
+          "label": "Redirect the budget back to public services",
+          "flavour": "Spend on life, not war.",
+          "memory_label": "shifting guns to butter",
+          "tags": ["welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "stability": -4 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "stability": -8 },
+              "headline": "With defences thinned, provocations resume at the border"
+            }
+          },
+          "reaction": "Clinics reopen. Generals warn you'll regret it."
+        },
+        {
+          "id": "conscription",
+          "label": "Introduce national service",
+          "flavour": "Share the burden of defence.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -10, "trust": -2 }
+          },
+          "reaction": "The ranks swell. Families protest the draft."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A skirmish at the frontier leaves soldiers dead. The country demands a response.",
+      "choices": [
+        {
+          "id": "escalate",
+          "label": "Strike back hard to deter further attacks",
+          "flavour": "Make them think twice.",
+          "memory_label": "the retaliatory strike",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 6, "trust": 4, "prosperity": -8, "fragility": 10 }
+          },
+          "reaction": "The enemy pauses. The whole region holds its breath."
+        },
+        {
+          "id": "ceasefire",
+          "label": "Sue for an unpopular ceasefire",
+          "flavour": "Swallow pride to stop the bleeding.",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "prosperity": 6, "autonomy": -8, "trust": -8, "stability": 4 }
+          },
+          "reaction": "The guns fall silent. So does national pride."
+        },
+        {
+          "id": "total_war",
+          "label": "Order full mobilisation for total war",
+          "flavour": "All in. Whatever it takes.",
+          "memory_label": "total mobilisation",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 4, "prosperity": -12, "debt_stress": 14, "autonomy": -8 }
+          },
+          "reaction": "The nation girds itself. Normal life ends."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "Every earlier decision sends its invoice at once.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "escalate",
+          "text": "The strike you ordered pulled you into a war you can't easily exit."
+        },
+        {
+          "requires_choice": "call_allies",
+          "text": "Your protectors now expect a say in your every decision."
+        },
+        {
+          "requires_choice": "guns_to_butter",
+          "text": "The defences you thinned left exactly the opening the enemy took."
+        },
+        {
+          "requires_choice": "total_war",
+          "text": "Total mobilisation has bled the treasury white."
+        }
+      ],
+      "choices": [
+        {
+          "id": "negotiate_peace",
+          "label": "Negotiate a costly peace",
+          "flavour": "End it, even if it hurts.",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": 6, "autonomy": -6, "debt_stress": -4 }
+          },
+          "reaction": "Borders are redrawn. The maps look different now."
+        },
+        {
+          "id": "war_bonds",
+          "label": "Fund the fight with debt and patriotism",
+          "flavour": "Borrow against the future.",
+          "tags": ["borrow"],
+          "effects": {
+            "immediate": { "stability": 6, "debt_stress": 16, "trust": 4 }
+          },
+          "reaction": "Citizens buy war bonds. The future buys the bill."
+        },
+        {
+          "id": "dig_in",
+          "label": "Dig in for a long defensive war",
+          "flavour": "Hold the line, whatever the cost.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 4, "prosperity": -10, "fairness": -6, "autonomy": -6 }
+          },
+          "reaction": "The line holds. The economy does not."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The threat finally recedes. What did the long emergency make of your country?",
+      "choices": [
+        {
+          "id": "demobilise",
+          "label": "Demobilise and invest in peace",
+          "flavour": "Bring them home. Rebuild.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "trust": 10, "future": 8, "debt_stress": 6 }
+          },
+          "reaction": "Soldiers come home. The slow recovery begins."
+        },
+        {
+          "id": "garrison_state",
+          "label": "Keep the nation on permanent alert",
+          "flavour": "Never let your guard down.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -12, "trust": -2 }
+          },
+          "reaction": "Safe, watchful, and never quite at ease."
+        },
+        {
+          "id": "victory_growth",
+          "label": "Convert the war economy to growth",
+          "flavour": "Beat swords into market share.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 12, "fairness": -6, "trust": 2 }
+          },
+          "reaction": "Factories retool for profit. Veterans feel forgotten."
+        }
+      ]
+    }
+  ]
+}

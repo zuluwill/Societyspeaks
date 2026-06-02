@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import secrets
 import uuid as uuid_lib
+from datetime import datetime, timedelta, timezone
 
 from app import db
 from app.lib.time import utcnow_naive
@@ -29,6 +31,9 @@ class GameRun(db.Model):
 
     society_name = db.Column(db.String(80), nullable=True)
     emblem_seed = db.Column(db.String(36), nullable=True)
+    # Deterministic seed for opening-state variation (date-derived for dailies so
+    # all players share the same opening; random for quick runs). NULL = baseline.
+    variant_seed = db.Column(db.Integer, nullable=True)
 
     state_json = db.Column(db.JSON, nullable=False, default=dict)
     choice_log_json = db.Column(db.JSON, nullable=False, default=list)
@@ -116,3 +121,91 @@ class GameChallenge(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     creator_run = db.relationship('GameRun', foreign_keys=[creator_run_id])
+
+
+class GameReminderSubscription(db.Model):
+    """Opt-in daily nudge: 'today's scenario is live — keep your streak'.
+
+    Supports authenticated users (``user_id``) and anonymous players (email +
+    ``session_fingerprint``), mirroring the JourneyReminderSubscription pattern.
+    Sending is gated by the daily play check (we never nag a player who already
+    played today) and auto-pauses after ``MAX_CONSECUTIVE_MISSES`` unopened
+    nudges for deliverability hygiene.
+    """
+
+    __tablename__ = 'game_reminder_subscription'
+    __table_args__ = (
+        db.Index('idx_game_reminder_next_send', 'next_send_at'),
+        db.Index('idx_game_reminder_user', 'user_id'),
+        db.Index('idx_game_reminder_fingerprint', 'session_fingerprint'),
+        db.UniqueConstraint('email', name='uq_game_reminder_email'),
+    )
+
+    # Pause sending after this many consecutive nudges with no play, so dormant
+    # inboxes don't keep receiving mail (protects sender reputation).
+    MAX_CONSECUTIVE_MISSES = 5
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
+    email = db.Column(db.String(150), nullable=False)
+    session_fingerprint = db.Column(db.String(64), nullable=True)
+
+    timezone = db.Column(db.String(50), default='UTC', nullable=False)
+    preferred_hour = db.Column(db.Integer, default=8, nullable=False)
+
+    next_send_at = db.Column(db.DateTime, nullable=True)
+    last_sent_at = db.Column(db.DateTime, nullable=True)
+    reminder_count = db.Column(db.Integer, default=0, nullable=False)
+    consecutive_misses = db.Column(db.Integer, default=0, nullable=False)
+
+    unsubscribe_token = db.Column(db.String(255), nullable=True, unique=True)
+    unsubscribed_at = db.Column(db.DateTime, nullable=True)
+    unsubscribe_reason = db.Column(db.String(40), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+
+    user = db.relationship('User', backref=db.backref('game_reminder_subscriptions', lazy='dynamic'))
+
+    @property
+    def is_active(self) -> bool:
+        return self.unsubscribed_at is None
+
+    def ensure_unsubscribe_token(self) -> str:
+        """Stable token for indefinite unsubscribe links (CAN-SPAM / GDPR)."""
+        if not self.unsubscribe_token:
+            self.unsubscribe_token = secrets.token_urlsafe(32)
+        return self.unsubscribe_token
+
+    @staticmethod
+    def find_by_unsubscribe_token(token):
+        if not token:
+            return None
+        return GameReminderSubscription.query.filter_by(unsubscribe_token=token).first()
+
+    def set_next_send_at(self, from_dt=None) -> datetime:
+        """Schedule the next nudge at the player's local preferred hour.
+
+        Computes the next occurrence of ``preferred_hour`` in the subscriber's
+        timezone and stores it as naive UTC. If that slot is already past today,
+        rolls to tomorrow — so we send at most one nudge per local day.
+        """
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+        try:
+            tz = ZoneInfo(self.timezone or 'UTC')
+        except (ZoneInfoNotFoundError, ValueError, KeyError):
+            tz = ZoneInfo('UTC')
+
+        from_dt = from_dt or utcnow_naive()
+        now_utc = from_dt.replace(tzinfo=timezone.utc)
+        now_local = now_utc.astimezone(tz)
+
+        hour = self.preferred_hour if self.preferred_hour is not None else 8
+        hour = max(0, min(23, int(hour)))
+        target_local = now_local.replace(hour=hour, minute=0, second=0, microsecond=0)
+        if target_local <= now_local:
+            target_local = target_local + timedelta(days=1)
+
+        target_utc = target_local.astimezone(timezone.utc).replace(tzinfo=None)
+        self.next_send_at = target_utc
+        return target_utc

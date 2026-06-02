@@ -44,6 +44,7 @@ def build_share_text(
     trait_chips: Optional[List[str]] = None,
     streak_current: int = 0,
     contradiction_summary: Optional[str] = None,
+    cohort_line: Optional[str] = None,
     share_url: str,
     challenge_url: Optional[str] = None,
     played_at: Optional[datetime] = None,
@@ -78,6 +79,9 @@ def build_share_text(
             '🔥 '
             + ngettext('%(num)d-day streak', '%(num)d-day streak', streak_current)
         )
+
+    if cohort_line and cohort_line.strip():
+        lines.append('🌍 ' + cohort_line.strip())
 
     if contradiction_summary and contradiction_summary.strip():
         lines.append('')

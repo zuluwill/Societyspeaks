@@ -1,0 +1,237 @@
+{
+  "slug": "disinformation-age",
+  "title": "The Feed",
+  "subtitle": "Truth, lies, and who gets to decide.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["media", "democracy", "free-speech"],
+  "initial_state": {
+    "prosperity": 52,
+    "trust": 46,
+    "fairness": 50,
+    "stability": 50,
+    "future": 50,
+    "debt_stress": 40,
+    "autonomy": 60,
+    "fragility": 10
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "A viral hoax sparks riots, and an election is months away. The country looks to you to stop the lies.",
+      "choices": [
+        {
+          "id": "regulate_platforms",
+          "label": "Force platforms to remove falsehoods",
+          "flavour": "Pull the plug on the lies.",
+          "memory_label": "the content takedown law",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": 4, "autonomy": -10 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "autonomy": -4, "trust": -6 },
+              "headline": "Critics say lawful speech is being swept up and censored too"
+            }
+          },
+          "reaction": "The lies slow. So does some of the truth."
+        },
+        {
+          "id": "media_literacy",
+          "label": "Fund schools and public media literacy",
+          "flavour": "Inoculate the public.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "future": 10, "trust": 6, "debt_stress": 6 }
+          },
+          "reaction": "A slow inoculation. This week's hoax still spreads."
+        },
+        {
+          "id": "free_speech",
+          "label": "Refuse to police speech at all",
+          "flavour": "The cure is worse than the disease.",
+          "tags": ["open", "decentralise"],
+          "effects": {
+            "immediate": { "autonomy": 10, "trust": -6, "stability": -6, "fragility": 8 }
+          },
+          "reaction": "Liberty intact. So is the firehose of falsehood."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "The panic subsides. There's a window to build something durable.",
+      "choices": [
+        {
+          "id": "transparency_law",
+          "label": "Mandate transparency on political ads and bots",
+          "flavour": "Sunlight, not scissors.",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 4, "stability": 2 }
+          },
+          "reaction": "Sunlight on the feed. The operators adapt."
+        },
+        {
+          "id": "state_media",
+          "label": "Build a powerful state broadcaster",
+          "flavour": "One signal you can trust.",
+          "memory_label": "the state broadcaster",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": 4, "autonomy": -6, "debt_stress": 6 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "trust": -8 },
+              "headline": "The state channel is accused of pumping out propaganda"
+            }
+          },
+          "reaction": "A clear signal — that some call a leash."
+        },
+        {
+          "id": "fact_check_fund",
+          "label": "Fund independent fact-checkers",
+          "flavour": "Outsource the truth.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 6, "fairness": 4, "debt_stress": 4 }
+          },
+          "reaction": "Corrections circulate. So do claims of bias."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "Days before the vote, a convincing deepfake of you goes viral.",
+      "choices": [
+        {
+          "id": "emergency_powers",
+          "label": "Invoke emergency powers over the platforms",
+          "flavour": "Stop it by any means.",
+          "memory_label": "emergency speech powers",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "autonomy": -12, "trust": -4 }
+          },
+          "reaction": "The fake is scrubbed. The precedent is set."
+        },
+        {
+          "id": "counter_speak",
+          "label": "Flood the zone with verified truth",
+          "flavour": "Outrun the lie.",
+          "tags": ["open"],
+          "effects": {
+            "immediate": { "trust": 8, "stability": 2, "prosperity": -2 }
+          },
+          "reaction": "Truth races the lie. It's a photo finish."
+        },
+        {
+          "id": "delay_election",
+          "label": "Delay the election to restore calm",
+          "flavour": "Buy time. Risk everything.",
+          "memory_label": "delaying the vote",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": -10, "autonomy": -8, "fragility": 10 }
+          },
+          "reaction": "Order bought at a dangerous price."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The tools you reached for in the panic now define you.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "regulate_platforms",
+          "text": "The censorship powers you took are now being turned on your own critics."
+        },
+        {
+          "requires_choice": "state_media",
+          "text": "Your state broadcaster is dismissed across the country as a mouthpiece."
+        },
+        {
+          "requires_choice": "emergency_powers",
+          "text": "The emergency powers over speech have become permanent in all but name."
+        },
+        {
+          "requires_choice": "delay_election",
+          "text": "Delaying the vote handed your rivals a single, devastating word: tyrant."
+        }
+      ],
+      "choices": [
+        {
+          "id": "independent_regulator",
+          "label": "Hand oversight to an independent body",
+          "flavour": "Take your own hands off the dial.",
+          "tags": ["decentralise", "open"],
+          "effects": {
+            "immediate": { "trust": 10, "fairness": 6, "autonomy": 4 }
+          },
+          "reaction": "Power dispersed. Slower, but trusted."
+        },
+        {
+          "id": "nationalise_feed",
+          "label": "Bring the platforms under state control",
+          "flavour": "If you own it, you control it.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -12, "prosperity": -6 }
+          },
+          "reaction": "The feed is yours now. So is all the blame."
+        },
+        {
+          "id": "open_protocols",
+          "label": "Mandate open, interoperable platforms",
+          "flavour": "Break the monopoly on attention.",
+          "tags": ["decentralise", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 6, "autonomy": 8, "fragility": 6, "trust": 2 }
+          },
+          "reaction": "Competition blooms. So does fresh chaos."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The election passes. What did your information society become?",
+      "choices": [
+        {
+          "id": "civic_trust",
+          "label": "Rebuild a shared civic reality",
+          "flavour": "Argue, but from the same facts.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "trust": 12, "fairness": 6, "debt_stress": 6 }
+          },
+          "reaction": "A republic that argues fiercely but agrees on what's real."
+        },
+        {
+          "id": "controlled_speech",
+          "label": "Keep speech tightly controlled",
+          "flavour": "Calm is worth the silence.",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -14 }
+          },
+          "reaction": "Orderly, calm, and quietly afraid to speak."
+        },
+        {
+          "id": "wild_west",
+          "label": "Leave the information space fully free",
+          "flavour": "Let it all run.",
+          "tags": ["open", "decentralise"],
+          "effects": {
+            "immediate": { "autonomy": 14, "prosperity": 4, "stability": -6, "fragility": 6 }
+          },
+          "reaction": "Maximum freedom. Minimum agreement."
+        }
+      ]
+    }
+  ]
+}

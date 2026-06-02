@@ -26,7 +26,7 @@
 
 {% block game_content %}
 <div class="game-outcome" style="--emblem-accent: {{ emblem.accent }}; --emblem-soft: {{ emblem.accent_soft }};">
-  <div class="flex items-start gap-4 mb-6">
+  <div class="flex items-start gap-4 mb-6 reveal-step" style="--reveal-i: 0;">
     {{ society_emblem(emblem, size='lg') }}
     <div>
       <p class="text-xs uppercase tracking-wider text-game-accent mb-1">{{ scenario.title }}</p>
@@ -34,20 +34,61 @@
     </div>
   </div>
 
-  <h1 class="font-display text-2xl sm:text-3xl leading-tight text-game-text mb-3">
+  <h1 class="font-display text-2xl sm:text-3xl leading-tight text-game-text mb-3 reveal-step" style="--reveal-i: 1;">
     {{ headline }}
   </h1>
 
   {% if governance_label %}
-  <p class="text-sm font-medium text-game-muted mb-6">{{ governance_label }}</p>
+  <p class="text-sm font-medium text-game-muted mb-6 reveal-step" style="--reveal-i: 2;">{{ governance_label }}</p>
   {% endif %}
 
   {% if trait_chips %}
-  <div class="flex flex-wrap gap-2 mb-8">
+  <div class="flex flex-wrap gap-2 mb-8 reveal-step" style="--reveal-i: 2;">
     {% for chip in trait_chips %}
     <span class="game-chip">{{ chip }}</span>
     {% endfor %}
   </div>
+  {% endif %}
+
+  {% if past_self %}
+  <section class="game-pastself mb-8 p-5 rounded-xl border border-game-border bg-game-elevated/50 reveal-step" style="--reveal-i: 3;">
+    <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-2">{{ _('You vs your past self') }}</p>
+    <p class="text-sm text-game-muted mb-1">
+      {{ _('Last time you faced this (%(when)s), %(society)s ended:', when=past_self.completed_at.strftime('%b %d, %Y'), society=past_self.society_name) }}
+    </p>
+    <p class="font-display text-base text-game-text leading-snug mb-3">&ldquo;{{ past_self.headline }}&rdquo;</p>
+    {% if past_self.diverged %}
+    <p class="text-xs text-game-accent">{{ _('A different ending this time — you found another path.') }}</p>
+    {% else %}
+    <p class="text-xs text-game-muted">{{ _('Same ending as before. Can you steer it somewhere new?') }}</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if cohort %}
+  <section class="game-cohort mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5 reveal-step" style="--reveal-i: 3;">
+    <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-3">{{ _('How you compare') }}</p>
+    {% if cohort.ready %}
+    {% set scope_phrase = _('who played today') if cohort.scope == 'today' else _('who faced this crisis') %}
+    {% if cohort.axis %}
+    <p class="text-sm text-game-text leading-relaxed mb-2">
+      {{ _('You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s.', dir=cohort.axis.label, pct=cohort.axis.more_than_percent, scope=scope_phrase) }}
+    </p>
+    {% endif %}
+    {% if cohort.rarity %}
+    <p class="text-sm text-game-text leading-relaxed mb-2">
+      {{ _('%(pct)d%% of them ended like you.', pct=cohort.rarity.percent) }}
+    </p>
+    {% endif %}
+    <p class="text-xs text-game-muted mt-3">
+      {{ ngettext('Based on %(n)d leader so far.', 'Based on %(n)d leaders so far.', cohort.sample_size, n=cohort.sample_size) }}
+    </p>
+    {% else %}
+    <p class="text-sm text-game-text leading-relaxed">
+      {{ _("You're among the first to govern this crisis. Comparisons unlock as more leaders play — come back to see where you stood.") }}
+    </p>
+    {% endif %}
+  </section>
   {% endif %}
 
   {% if streak and streak.current >= 2 and not is_quick_run %}
@@ -72,6 +113,46 @@
   <p class="text-xs uppercase tracking-widest text-game-muted mb-6">{{ _('Quick Run · no streak credit') }}</p>
   {% endif %}
 
+  {% if show_reminder_optin %}
+  <section class="game-reminder-optin mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5" data-reminder-optin>
+    <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-2">
+      {% if streak and streak.current >= 2 %}{{ _("Don't break the streak") }}{% else %}{{ _('Come back tomorrow') }}{% endif %}
+    </p>
+    <p class="text-sm text-game-text leading-relaxed mb-4">
+      {{ _("One email when the next scenario is live — that's it. Unsubscribe in a click.") }}
+    </p>
+    <form method="post"
+          action="{{ url_for('game.reminders_subscribe') }}"
+          class="game-reminder-form"
+          data-reminder-form
+          data-csrf="{{ csrf_token() }}"
+          data-done-label="{{ _("You're set — watch your inbox.") }}"
+          data-error-label="{{ _('Enter a valid email and try again.') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="timezone" value="UTC" data-reminder-tz>
+      {% if reminder_email_prefill %}
+      <input type="hidden" name="email" value="{{ reminder_email_prefill }}">
+      <button type="submit" class="game-btn-primary w-full" data-reminder-submit>
+        {{ _('Email me when it\'s live') }}
+      </button>
+      {% else %}
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="email"
+               name="email"
+               required
+               autocomplete="email"
+               inputmode="email"
+               placeholder="{{ _('you@example.com') }}"
+               aria-label="{{ _('Email address for reminders') }}"
+               class="game-input flex-1">
+        <button type="submit" class="game-btn-primary" data-reminder-submit>{{ _('Remind me') }}</button>
+      </div>
+      {% endif %}
+      <p class="game-reminder-status text-xs mt-2" role="status" aria-live="polite" data-reminder-status></p>
+    </form>
+  </section>
+  {% endif %}
+
   {% if contradiction %}
   <section class="game-contradiction mb-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
     <p class="text-xs uppercase tracking-wider text-game-accent font-semibold mb-2">{{ contradiction.headline or _('Under pressure') }}</p>
@@ -89,6 +170,28 @@
     <p class="text-xs text-game-muted leading-relaxed">
       {{ _('You played the same crisis. The game never grades — it only shows what you each prioritised.') }}
     </p>
+  </section>
+  {% endif %}
+
+  {% if challenge_link %}
+  <section class="game-challenge mb-8 p-5 rounded-xl border border-game-border bg-game-elevated/50 reveal-step" style="--reveal-i: 4;">
+    <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-2">{{ _('Challenge a friend') }}</p>
+    <p class="text-sm text-game-muted mb-4 leading-relaxed">
+      {{ _('Send them into the same crisis. Your headline stays hidden until they finish their own run.') }}
+    </p>
+    <button type="button"
+            id="challenge-share"
+            class="game-btn-primary w-full"
+            data-challenge-url="{{ challenge_link }}"
+            data-run-uuid="{{ run.uuid }}"
+            data-share-title="{{ _('I governed a nation on Tradeoffs. Your turn.') }}"
+            data-default-label="{{ _('Challenge a friend') }}"
+            data-copied-label="{{ _('Link copied!') }}"
+            data-failed-label="{{ _('Could not copy — long-press the link below') }}">
+      {{ _('Challenge a friend') }}
+    </button>
+    <p class="game-challenge-url mt-3" id="challenge-url">{{ challenge_link }}</p>
+    <p id="challenge-status" class="game-share-status" role="status" aria-live="polite"></p>
   </section>
   {% endif %}
 
@@ -168,7 +271,9 @@
   </section>
   {% endif %}
 
-  <p class="mt-8 text-center text-xs text-game-muted">
+  <p class="mt-8 text-center text-xs text-game-muted space-x-3">
+    <a href="{{ url_for('game.archive') }}" class="underline hover:text-game-text">{{ _('Your societies') }}</a>
+    <span aria-hidden="true">·</span>
     <a href="{{ url_for('game.editorial_principles') }}" class="underline hover:text-game-text">{{ _('How we write scenarios') }}</a>
   </p>
 </div>
@@ -182,5 +287,5 @@
 
 {% block game_scripts %}
 <script src="{{ url_for('static', filename='js/game/analytics.js') }}?v=1" defer></script>
-<script src="{{ url_for('static', filename='js/game/outcome.js') }}?v=4" defer></script>
+<script src="{{ url_for('static', filename='js/game/outcome.js') }}?v=6" defer></script>
 {% endblock %}

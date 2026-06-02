@@ -1,0 +1,237 @@
+{
+  "slug": "federal-fracture",
+  "title": "The Region That Wants Out",
+  "subtitle": "Hold the union, or let it breathe.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["governance", "devolution", "sovereignty"],
+  "initial_state": {
+    "prosperity": 52,
+    "trust": 48,
+    "fairness": 50,
+    "stability": 50,
+    "future": 50,
+    "debt_stress": 44,
+    "autonomy": 58,
+    "fragility": 12
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "A wealthy region demands full independence. Half the country cheers; the other half is appalled.",
+      "choices": [
+        {
+          "id": "grant_referendum",
+          "label": "Grant a legal independence referendum",
+          "flavour": "Let the people decide.",
+          "tags": ["decentralise", "open"],
+          "effects": {
+            "immediate": { "trust": 8, "autonomy": 8, "stability": -6 }
+          },
+          "reaction": "Democracy honoured. The map suddenly feels provisional."
+        },
+        {
+          "id": "crack_down_sep",
+          "label": "Ban the vote and assert central control",
+          "flavour": "There will be no breakup.",
+          "memory_label": "banning the vote",
+          "tags": ["centralise", "restrict"],
+          "effects": {
+            "immediate": { "stability": 6, "autonomy": -12, "trust": -8, "fragility": 10 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "stability": -8, "trust": -6 },
+              "headline": "The suppression only hardens the independence movement"
+            }
+          },
+          "reaction": "Order imposed. Resentment deepens."
+        },
+        {
+          "id": "offer_devolution",
+          "label": "Offer sweeping devolved powers instead",
+          "flavour": "Stay, but on your own terms.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 6, "fairness": 4, "autonomy": 6, "stability": 2 }
+          },
+          "reaction": "A middle path. Hardliners on both sides grumble."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "The standoff cools into negotiation. There's space to redesign the deal.",
+      "choices": [
+        {
+          "id": "fiscal_transfer",
+          "label": "Redirect wealth to poorer regions",
+          "flavour": "Bind the country with solidarity.",
+          "memory_label": "the wealth transfers",
+          "tags": ["redistribute", "welfare"],
+          "effects": {
+            "immediate": { "fairness": 10, "trust": 4, "prosperity": -4 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "trust": -6 },
+              "headline": "The wealthy region bristles at subsidising the rest"
+            }
+          },
+          "reaction": "Solidarity funded. The donor regions seethe."
+        },
+        {
+          "id": "regional_autonomy",
+          "label": "Let regions keep more of their own taxes",
+          "flavour": "Local money, local control.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "autonomy": 8, "prosperity": 4, "fairness": -6 }
+          },
+          "reaction": "Local control grows. The gaps between regions widen."
+        },
+        {
+          "id": "national_unity",
+          "label": "Launch a national unity campaign",
+          "flavour": "Remind everyone what binds them.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "trust": 6, "debt_stress": 4 }
+          },
+          "reaction": "Flags and festivals. Skeptics call it spin."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A contested vote splits the country down the middle. Both sides claim the mandate.",
+      "choices": [
+        {
+          "id": "negotiate_split",
+          "label": "Negotiate an orderly separation",
+          "flavour": "Part as friends, if you can.",
+          "memory_label": "the negotiated split",
+          "tags": ["open", "decentralise"],
+          "effects": {
+            "immediate": { "autonomy": 8, "stability": 4, "prosperity": -8, "trust": 2 }
+          },
+          "reaction": "A velvet divorce begins. The borders harden."
+        },
+        {
+          "id": "federal_compromise",
+          "label": "Refound the nation as a loose federation",
+          "flavour": "Rewrite the contract entirely.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 8, "fairness": 6, "autonomy": 6, "stability": -2 }
+          },
+          "reaction": "A new constitution drafted. The details will be war."
+        },
+        {
+          "id": "hold_union",
+          "label": "Use every lever to hold the union together",
+          "flavour": "Whatever it takes to stay one country.",
+          "memory_label": "holding the union by force",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 8, "autonomy": -10, "trust": -4, "fragility": 8 }
+          },
+          "reaction": "The union endures, for now, under enormous strain."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The moves you made to manage the crisis have set the terms of the rupture.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "crack_down_sep",
+          "text": "The crackdown you ordered turned a fringe cause into a national rupture."
+        },
+        {
+          "requires_choice": "fiscal_transfer",
+          "text": "The transfers you mandated have the rich regions threatening to leave for good."
+        },
+        {
+          "requires_choice": "hold_union",
+          "text": "Holding the union by force has drained your legitimacy dry."
+        },
+        {
+          "requires_choice": "negotiate_split",
+          "text": "The separation you began is proving messier and costlier than you promised."
+        }
+      ],
+      "choices": [
+        {
+          "id": "new_federation",
+          "label": "Build a fair, durable federal settlement",
+          "flavour": "Share power by design.",
+          "tags": ["decentralise", "redistribute"],
+          "effects": {
+            "immediate": { "trust": 10, "fairness": 8, "autonomy": 4, "stability": 2 }
+          },
+          "reaction": "Power shared by design. It will be tested constantly."
+        },
+        {
+          "id": "centralise_hard",
+          "label": "Recentralise power to end the chaos",
+          "flavour": "One nation, firmly held.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 10, "autonomy": -12, "trust": -4 }
+          },
+          "reaction": "One country, firmly held. Quietly resentful."
+        },
+        {
+          "id": "let_them_go",
+          "label": "Let the region go and stabilise the rest",
+          "flavour": "A clean break.",
+          "tags": ["decentralise", "open"],
+          "effects": {
+            "immediate": { "stability": 6, "autonomy": 8, "prosperity": -8, "trust": 4 }
+          },
+          "reaction": "A smaller country, more at peace with itself."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The constitutional storm passes. What shape is your country left in?",
+      "choices": [
+        {
+          "id": "federal_nation",
+          "label": "A confident, decentralised federation",
+          "flavour": "Many peoples, one loose roof.",
+          "tags": ["decentralise"],
+          "effects": {
+            "immediate": { "trust": 10, "autonomy": 10, "fairness": 4 }
+          },
+          "reaction": "Many peoples under one loose roof. It mostly holds."
+        },
+        {
+          "id": "unitary_state",
+          "label": "A strong, unified central state",
+          "flavour": "Indivisible, by force of will.",
+          "tags": ["centralise"],
+          "effects": {
+            "immediate": { "stability": 12, "autonomy": -12, "trust": -2 }
+          },
+          "reaction": "Orderly and whole. Some still dream of leaving."
+        },
+        {
+          "id": "prosperous_split",
+          "label": "Smaller, richer, and finally at peace",
+          "flavour": "Less land, fewer fights.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 10, "trust": 6, "stability": 4 }
+          },
+          "reaction": "A clean break that paid off — for those who stayed."
+        }
+      ]
+    }
+  ]
+}

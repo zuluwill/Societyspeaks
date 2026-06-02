@@ -83,6 +83,46 @@ LAUNCH_SCENARIO_ROTATION: List[Dict[str, str]] = [
         'category': 'Monetary crisis',
         'teaser': 'The exchange rate falls. Confidence follows.',
     },
+    {
+        'slug': 'pandemic-outbreak',
+        'category': 'Health emergency',
+        'teaser': 'Lives, livelihoods, liberty — pick two.',
+    },
+    {
+        'slug': 'security-and-defence',
+        'category': 'Security & defence',
+        'teaser': 'Guns, butter, and the price of safety.',
+    },
+    {
+        'slug': 'crime-and-justice',
+        'category': 'Crime & justice',
+        'teaser': 'Order and liberty rarely shake hands.',
+    },
+    {
+        'slug': 'disinformation-age',
+        'category': 'Media & democracy',
+        'teaser': 'Truth, lies, and who gets to decide.',
+    },
+    {
+        'slug': 'trade-and-tariffs',
+        'category': 'Trade & industry',
+        'teaser': 'Cheaper goods, emptier towns.',
+    },
+    {
+        'slug': 'disaster-response',
+        'category': 'Disaster & climate',
+        'teaser': "Who do you save when you can't save everyone?",
+    },
+    {
+        'slug': 'pension-reckoning',
+        'category': 'Pensions & generations',
+        'teaser': 'An ageing nation and a shrinking pot.',
+    },
+    {
+        'slug': 'federal-fracture',
+        'category': 'Devolution & union',
+        'teaser': 'Hold the union, or let it breathe.',
+    },
 ]
 
 DEFAULT_BUFFER_DAYS = 14

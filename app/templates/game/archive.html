@@ -1,0 +1,111 @@
+{% extends "game/base.html" %}
+{% from "game/components/emblem.html" import society_emblem %}
+
+{% block game_title %}{{ _('Your societies') }}{% endblock %}
+
+{% block game_head %}
+<meta name="robots" content="noindex">
+<meta name="description" content="{{ _('Every society you have governed on Tradeoffs.') }}">
+{% endblock %}
+
+{% block game_content %}
+<div class="game-archive">
+  <header class="game-hub-hero">
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="game-eyebrow">{{ _('Your societies') }}</span>
+      {% if streak and streak.current >= 1 %}
+      <span class="game-streak-chip ml-auto" title="{{ _('Longest: %(n)d', n=streak.longest) }}">
+        <span aria-hidden="true">🔥</span>
+        {{ ngettext('%(num)d-day streak', '%(num)d-day streak', streak.current) }}
+      </span>
+      {% endif %}
+    </div>
+    <h1 class="game-hero-title">
+      {% if total %}
+      {{ ngettext('%(n)d society governed', '%(n)d societies governed', total, n=total) }}
+      {% else %}
+      {{ _('No societies yet') }}
+      {% endif %}
+    </h1>
+    <p class="game-hero-deck">
+      {% if total %}
+      {{ _('Every crisis you faced, and the leader you became.') }}
+      {% else %}
+      {{ _('Govern your first nation and it will appear here.') }}
+      {% endif %}
+    </p>
+  </header>
+
+  {% if societies %}
+  <div class="game-archive-grid">
+    {% for s in societies %}
+    <a href="{{ url_for('game.outcome', run_uuid=s.run_uuid) }}"
+       class="game-archive-card"
+       style="--emblem-accent: {{ s.emblem.accent }}; --emblem-soft: {{ s.emblem.accent_soft }};">
+      <div class="flex items-start gap-3 mb-3">
+        {{ society_emblem(s.emblem, size='md') }}
+        <div class="min-w-0">
+          <p class="font-display text-base text-game-text truncate">{{ s.society_name or _('Your society') }}</p>
+          <p class="text-xs text-game-muted truncate">
+            {{ s.scenario_title }}{% if s.is_quick_run %} · {{ _('Quick Run') }}{% endif %}
+          </p>
+        </div>
+      </div>
+      <p class="game-archive-headline">{{ s.headline }}</p>
+      {% if s.governance_label %}
+      <p class="text-xs text-game-accent mt-2">{{ s.governance_label }}</p>
+      {% endif %}
+      {% if s.trait_chips %}
+      <div class="flex flex-wrap gap-1.5 mt-3">
+        {% for chip in s.trait_chips %}
+        <span class="game-chip game-chip--muted text-xs">{{ chip }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if total_pages > 1 %}
+  <nav class="game-archive-pager mt-6 flex items-center justify-between gap-3" aria-label="{{ _('Pagination') }}">
+    {% if has_prev %}
+    <a href="{{ url_for('game.archive', page=page - 1) }}" class="game-btn-secondary text-sm py-2" rel="prev">{{ _('← Newer') }}</a>
+    {% else %}<span></span>{% endif %}
+    <span class="text-xs text-game-muted" aria-current="page">
+      {{ _('Page %(p)d of %(t)d', p=page, t=total_pages) }}
+    </span>
+    {% if has_next %}
+    <a href="{{ url_for('game.archive', page=page + 1) }}" class="game-btn-secondary text-sm py-2" rel="next">{{ _('Older →') }}</a>
+    {% else %}<span></span>{% endif %}
+  </nav>
+  {% endif %}
+
+  {% elif has_prev %}
+  <section class="game-archive-empty text-center p-8 rounded-2xl border border-game-border bg-game-surface/60">
+    <p class="text-sm text-game-muted mb-4">{{ _('Nothing more to show here.') }}</p>
+    <a href="{{ url_for('game.archive') }}" class="game-btn-secondary">{{ _('Back to your latest societies') }}</a>
+  </section>
+  {% else %}
+  <section class="game-archive-empty text-center p-8 rounded-2xl border border-game-border bg-game-surface/60">
+    <p class="text-5xl mb-4" aria-hidden="true">⚖️</p>
+    <a href="{{ url_for('game.index') }}" class="game-btn-primary">{{ _("Play today's scenario") }}</a>
+  </section>
+  {% endif %}
+
+  {% if not is_authenticated and societies %}
+  <section class="game-hub-signin mt-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
+    <p class="text-sm text-game-text mb-3">
+      {{ _('These societies only live on this browser. Save them to your account so they survive a cleared cache or a new device.') }}
+    </p>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('auth.register', next=url_for('game.archive')) }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
+      <a href="{{ url_for('auth.magic_link_request', next=url_for('game.archive')) }}" class="game-btn-secondary text-sm py-2">{{ _('Email me a sign-in link') }}</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <p class="mt-8 text-center text-xs">
+    <a href="{{ url_for('game.index') }}" class="text-game-muted underline hover:text-game-text transition">{{ _('Back to today') }}</a>
+  </p>
+</div>
+{% endblock %}

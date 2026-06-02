@@ -1755,6 +1755,29 @@ def init_scheduler(app):
             from app.programmes.journey_reminders import send_due_journey_reminders
             send_due_journey_reminders(db)
 
+    @scheduler.scheduled_job('cron', minute=10, id='send_game_reminders', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def send_game_reminders_job():
+        """
+        Send daily 'today's scenario is live / keep your streak' nudges.
+
+        Runs hourly at :10 so timezone-aware scheduling reaches each player at
+        their chosen local hour. next_send_at is indexed and the query only
+        returns due rows. Players who already played today are skipped (and
+        rescheduled), so we never nag an active player.
+
+        Only sends in production to prevent duplicate emails from dev.
+        """
+        if not app.config.get('GAME_REMINDERS_ENABLED', True):
+            return
+        if not _is_production_environment():
+            logger.info("Skipping game reminder emails — development environment")
+            return
+
+        with app.app_context():
+            from app import db
+            from app.game.services.reminder_service import send_due_game_reminders
+            send_due_game_reminders(db)
+
     # Weekly digest email sending
     _weekly_digest_in_progress = threading.Event()
     

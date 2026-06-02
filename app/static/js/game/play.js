@@ -18,6 +18,8 @@
   var beatLabelEl = document.getElementById('beat-label');
   var toast = document.getElementById('toast');
   var statBars = document.getElementById('stat-bars');
+  var pressureEl = document.getElementById('society-pressure');
+  var pressureLabelEl = pressureEl ? pressureEl.querySelector('.game-pressure-label') : null;
 
   var statLabels = (function () {
     try {
@@ -30,6 +32,14 @@
   var beatLabels = (function () {
     try {
       return JSON.parse(app.dataset.beatLabels || '{}');
+    } catch (e) {
+      return {};
+    }
+  })();
+
+  var pressureLabels = (function () {
+    try {
+      return JSON.parse(app.dataset.pressureLabels || '{}');
     } catch (e) {
       return {};
     }
@@ -84,6 +94,21 @@
       var track = row.querySelector('.game-stat-track');
       if (track) track.setAttribute('aria-valuenow', String(val));
     });
+  }
+
+  function updatePressure(level) {
+    if (!pressureEl || level === undefined || level === null) return;
+    var lvl = String(level);
+    if (pressureEl.dataset.level === lvl) return;
+    pressureEl.dataset.level = lvl;
+    if (pressureLabelEl && pressureLabels[lvl]) {
+      pressureLabelEl.textContent = pressureLabels[lvl];
+    }
+  }
+
+  function updateMood(level) {
+    if (level === undefined || level === null) return;
+    app.dataset.mood = String(level);
   }
 
   function appendTickerLine(text) {
@@ -187,22 +212,33 @@
       promptEl.textContent = next.prompt;
 
       choicesEl.innerHTML = '';
-      next.choices.forEach(function (choice) {
+      next.choices.forEach(function (choice, i) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'game-choice w-full text-left';
+        btn.className = 'game-choice game-choice--numbered w-full text-left';
         btn.dataset.choiceId = choice.id;
+        btn.dataset.choiceIndex = String(i + 1);
+        btn.setAttribute('aria-keyshortcuts', String(i + 1));
+
+        var numEl = document.createElement('span');
+        numEl.className = 'game-choice-num';
+        numEl.setAttribute('aria-hidden', 'true');
+        numEl.textContent = String(i + 1);
+        btn.appendChild(numEl);
+
+        var body = document.createElement('span');
+        body.className = 'game-choice-body';
 
         var labelEl = document.createElement('span');
         labelEl.className = 'game-choice-label';
         labelEl.textContent = choice.label;
-        btn.appendChild(labelEl);
+        body.appendChild(labelEl);
 
         if (choice.flavour) {
           var flavourEl = document.createElement('span');
           flavourEl.className = 'game-choice-flavour';
           flavourEl.textContent = choice.flavour;
-          btn.appendChild(flavourEl);
+          body.appendChild(flavourEl);
         }
 
         if (choice.preview && Object.keys(choice.preview).length) {
@@ -220,11 +256,15 @@
             item.appendChild(document.createTextNode(statLabels[stat] || stat));
             arrows.appendChild(item);
           });
-          btn.appendChild(arrows);
+          body.appendChild(arrows);
         }
 
+        btn.appendChild(body);
         choicesEl.appendChild(btn);
       });
+
+      updatePressure(next.pressure_level);
+      updateMood(next.mood_level);
 
       turnPanel.classList.remove('is-swapping');
     }, 220);
@@ -265,6 +305,8 @@
         }
         var data = result.data;
         animateStatBars(data.visible_stats);
+        updatePressure(data.pressure_level);
+        updateMood(data.mood_level);
 
         if (data.consequence && data.consequence.headline) {
           appendTickerLine(data.consequence.headline);
@@ -311,6 +353,21 @@
   choicesEl.addEventListener('click', function (e) {
     var btn = e.target.closest('.game-choice');
     if (!btn || btn.disabled) return;
+    var choiceId = btn.dataset.choiceId;
+    if (choiceId) choose(choiceId);
+  });
+
+  // Keyboard play: press 1/2/3 to pick the matching option. Ignored while the
+  // consequence dialog is open (it owns the keyboard) or when typing.
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (overlay && !overlay.classList.contains('hidden')) return;
+    var tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (e.key < '1' || e.key > '9') return;
+    var btn = choicesEl.querySelector('.game-choice[data-choice-index="' + e.key + '"]');
+    if (!btn || btn.disabled) return;
+    e.preventDefault();
     var choiceId = btn.dataset.choiceId;
     if (choiceId) choose(choiceId);
   });

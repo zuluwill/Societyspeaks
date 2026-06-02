@@ -1,0 +1,237 @@
+{
+  "slug": "pension-reckoning",
+  "title": "The Promise Comes Due",
+  "subtitle": "An ageing nation and a shrinking pot.",
+  "locale": "global",
+  "mode": "daily",
+  "topic_tags": ["economy", "welfare", "generations"],
+  "initial_state": {
+    "prosperity": 52,
+    "trust": 52,
+    "fairness": 52,
+    "stability": 54,
+    "future": 42,
+    "debt_stress": 50,
+    "autonomy": 56,
+    "fragility": 8
+  },
+  "turns": [
+    {
+      "id": "turn_1",
+      "beat": "hook",
+      "prompt": "The actuaries are blunt: the national pension fund runs dry within a decade. Something has to give.",
+      "choices": [
+        {
+          "id": "raise_age",
+          "label": "Raise the retirement age",
+          "flavour": "Work longer, pay less out.",
+          "memory_label": "raising the pension age",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -8, "future": 6, "trust": -8, "stability": -4 }
+          },
+          "reaction": "The books improve. Older workers feel betrayed."
+        },
+        {
+          "id": "raise_contributions",
+          "label": "Raise contributions on workers and firms",
+          "flavour": "Everyone pays a little more.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 6, "debt_stress": -6, "prosperity": -6, "trust": -2 }
+          },
+          "reaction": "The fund steadies. Paychecks shrink."
+        },
+        {
+          "id": "borrow_promise",
+          "label": "Borrow now to keep every promise",
+          "flavour": "Pay the pensions, push the problem.",
+          "memory_label": "borrowing to pay pensions",
+          "tags": ["borrow", "welfare"],
+          "effects": {
+            "immediate": { "trust": 8, "stability": 4, "debt_stress": 14 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "debt_stress": 8, "prosperity": -6 },
+              "headline": "Markets begin to question whether the promises are payable"
+            }
+          },
+          "reaction": "Pensioners relieved. Bond traders skeptical."
+        }
+      ]
+    },
+    {
+      "id": "turn_2",
+      "beat": "confidence",
+      "prompt": "The immediate panic eases. Now you can shape the long game.",
+      "choices": [
+        {
+          "id": "invest_fund",
+          "label": "Invest the fund for higher returns",
+          "flavour": "Make the money work harder.",
+          "memory_label": "the market bet",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "future": 6, "fragility": 10 },
+            "delayed": {
+              "turn_offset": 2,
+              "effects": { "prosperity": -10, "trust": -6 },
+              "headline": "A market downturn guts the pension pot overnight"
+            }
+          },
+          "reaction": "Returns look great. The risk stays hidden."
+        },
+        {
+          "id": "means_test",
+          "label": "Means-test benefits to target the needy",
+          "flavour": "Help where it's needed most.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 8, "debt_stress": -6, "trust": -4 }
+          },
+          "reaction": "Fairer in theory. The middle feels squeezed out."
+        },
+        {
+          "id": "boost_families",
+          "label": "Invest in families and childcare",
+          "flavour": "Grow tomorrow's taxpayers.",
+          "tags": ["welfare", "future"],
+          "effects": {
+            "immediate": { "future": 10, "fairness": 6, "debt_stress": 8 }
+          },
+          "reaction": "A long bet on a bigger next generation."
+        }
+      ]
+    },
+    {
+      "id": "turn_3",
+      "beat": "crack",
+      "prompt": "A wave of retirements hits, and younger workers march against shouldering the burden.",
+      "choices": [
+        {
+          "id": "intergenerational_deal",
+          "label": "Broker a deal between young and old",
+          "flavour": "Make everyone give a little.",
+          "tags": ["redistribute"],
+          "effects": {
+            "immediate": { "fairness": 8, "trust": 6, "stability": 2, "prosperity": -4 }
+          },
+          "reaction": "A fragile pact. Nobody's thrilled; everybody signs."
+        },
+        {
+          "id": "cut_benefits",
+          "label": "Cut benefits across the board",
+          "flavour": "Make the math work, cleanly.",
+          "memory_label": "the benefit cuts",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "debt_stress": -10, "stability": -6, "fairness": -8, "trust": -6 }
+          },
+          "reaction": "The math works. The streets don't."
+        },
+        {
+          "id": "immigration_fix",
+          "label": "Welcome young workers to widen the tax base",
+          "flavour": "Import the workforce you need.",
+          "tags": ["open", "growth"],
+          "effects": {
+            "immediate": { "prosperity": 8, "future": 6, "autonomy": 2, "trust": -4 }
+          },
+          "reaction": "The workforce grows. The politics get loud."
+        }
+      ]
+    },
+    {
+      "id": "turn_4",
+      "beat": "oh_no",
+      "prompt": "The clever fixes from before come back wearing the faces of real people.",
+      "memory_callbacks": [
+        {
+          "requires_choice": "invest_fund",
+          "text": "The market bet you made has blown a hole straight through the pension pot."
+        },
+        {
+          "requires_choice": "raise_age",
+          "text": "The higher retirement age has become a rallying cry against you."
+        },
+        {
+          "requires_choice": "cut_benefits",
+          "text": "The benefit cuts have pushed pensioners into visible, photographed poverty."
+        },
+        {
+          "requires_choice": "borrow_promise",
+          "text": "The borrowing that kept the promises is now a debt the young refuse to carry."
+        }
+      ],
+      "choices": [
+        {
+          "id": "grand_reform",
+          "label": "Pass a sustainable, fair pension settlement",
+          "flavour": "Fix it for good, painfully.",
+          "tags": ["redistribute", "future"],
+          "effects": {
+            "immediate": { "fairness": 10, "future": 8, "trust": 6, "debt_stress": -4 }
+          },
+          "reaction": "Built to last. The transition is brutal."
+        },
+        {
+          "id": "print_the_difference",
+          "label": "Cover the gap with cheap money",
+          "flavour": "Just make the cheques clear.",
+          "tags": ["borrow"],
+          "effects": {
+            "immediate": { "stability": 6, "prosperity": 4, "debt_stress": 12, "future": -6 }
+          },
+          "reaction": "The cheques clear. The currency wobbles."
+        },
+        {
+          "id": "privatise_pensions",
+          "label": "Shift to private retirement accounts",
+          "flavour": "Hand the risk to each citizen.",
+          "tags": ["growth", "decentralise"],
+          "effects": {
+            "immediate": { "prosperity": 8, "autonomy": 6, "fairness": -8, "fragility": 6 }
+          },
+          "reaction": "Freedom and risk, handed to everyone alike."
+        }
+      ]
+    },
+    {
+      "id": "turn_5",
+      "beat": "legacy",
+      "prompt": "The reckoning passes. How does your society grow old?",
+      "choices": [
+        {
+          "id": "solidarity_state",
+          "label": "A solidarity model: all pay in, all are covered",
+          "flavour": "Grow old together.",
+          "tags": ["welfare", "redistribute"],
+          "effects": {
+            "immediate": { "fairness": 12, "trust": 8, "debt_stress": 6 }
+          },
+          "reaction": "A nation that grows old together. It isn't cheap."
+        },
+        {
+          "id": "lean_state",
+          "label": "A lean state: low taxes, self-provision",
+          "flavour": "Light, cheap, and on your own.",
+          "tags": ["austerity"],
+          "effects": {
+            "immediate": { "prosperity": 10, "fairness": -10, "debt_stress": -6 }
+          },
+          "reaction": "Light and efficient. The unlucky fall furthest."
+        },
+        {
+          "id": "growth_gamble",
+          "label": "Outgrow the problem entirely",
+          "flavour": "If growth holds, all is well.",
+          "tags": ["growth"],
+          "effects": {
+            "immediate": { "prosperity": 12, "future": -6, "fragility": 8 }
+          },
+          "reaction": "If the growth holds, all is well. If."
+        }
+      ]
+    }
+  ]
+}
