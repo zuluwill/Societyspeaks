@@ -6,15 +6,19 @@ V1 implements topic match only (Daily Question first, then Discussion).
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import Any, Dict, Optional, Set
 
 from flask import url_for
+from sqlalchemy.orm import joinedload
 
 from app.game.engine.scenario import load_scenario
 from app.game.services.daily_service import utc_game_date
 from app.models.daily_question import DailyQuestion
 from app.models.discussions import Discussion
+
+logger = logging.getLogger(__name__)
 
 # Scenario topic_tags → Society Speaks Discussion.topic values.
 _TAG_TO_DISCUSSION_TOPICS: Dict[str, tuple[str, ...]] = {
@@ -74,8 +78,16 @@ _TAG_TO_DISCUSSION_TOPICS: Dict[str, tuple[str, ...]] = {
 
 
 def find_ss_bridge(scenario_slug: str) -> Optional[Dict[str, Any]]:
-    """Return at most one bridge target for a completed scenario, or None."""
-    scenario = load_scenario(scenario_slug)
+    """Return at most one bridge target for a completed scenario, or None.
+
+    Returns ``None`` gracefully if the scenario file is missing or malformed —
+    never let a bridge lookup crash the outcome page.
+    """
+    try:
+        scenario = load_scenario(scenario_slug)
+    except Exception:  # noqa: BLE001 — bad/missing scenario file must not 500 the page
+        logger.warning('bridge: could not load scenario %r', scenario_slug, exc_info=True)
+        return None
     tags = _scenario_tags(scenario)
     if not tags:
         return None
@@ -112,7 +124,10 @@ def _match_daily_question(tags: Set[str]) -> Optional[Dict[str, Any]]:
     today = utc_game_date()
     cutoff = today - timedelta(days=14)
     candidates = (
-        DailyQuestion.query.filter(
+        DailyQuestion.query.options(
+            joinedload(DailyQuestion.source_discussion)
+        )
+        .filter(
             DailyQuestion.status == 'published',
             DailyQuestion.question_date >= cutoff,
             DailyQuestion.question_date <= today,

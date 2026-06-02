@@ -36,7 +36,11 @@
 
   {% if profile and profile.has_enough %}
 
-  {# Value leanings — the heart of the profile #}
+  {# Value leanings — the heart of the profile.
+     profile.lean can be None when all completed runs lack axis data (e.g. a
+     scenario whose outcomes don't populate axis_trust_autonomy / axis_prosperity_fairness).
+     Guard here so we don't crash on profile.lean[key]. #}
+  {% if profile.lean %}
   <section class="mb-8">
     <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-4">{{ _('Where you lean') }}</p>
     <div class="space-y-5">
@@ -54,6 +58,7 @@
       {% endfor %}
     </div>
   </section>
+  {% endif %}
 
   {% if profile.signature_traits %}
   <section class="mb-8">
