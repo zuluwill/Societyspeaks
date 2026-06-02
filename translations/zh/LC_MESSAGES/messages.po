@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-05-22 09:04+0100\n"
+"POT-Creation-Date: 2026-06-01 20:11+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: zh <LL@li.org>\n"
@@ -126,7 +126,7 @@ msgstr "你已订阅每日公民问题！"
 #: app/resend_client.py:689 app/resend_client.py:961
 #, python-format
 msgid "Daily Question #%(num)s: %(topic)s"
-msgstr "每日问题 #%(num)s：%(topic)s"
+msgstr "每日问题 %(num)s：%(topic)s"
 
 #: app/resend_client.py:689 app/resend_client.py:961
 msgid "Civic"
@@ -201,10 +201,20 @@ msgstr "完成您的 Society Speaks 个人资料"
 msgid "Your Weekly Discussion Digest - Society Speaks"
 msgstr "您的每周讨论摘要 - Society Speaks"
 
-#: app/resend_client.py:1989
+#: app/resend_client.py:1990
 #, python-format
 msgid "Continue your journey: %(theme)s — Society Speaks"
 msgstr "继续您的旅程：%(theme)s — Society Speaks"
+
+#: app/resend_client.py:2062
+#, python-format
+msgid "Today's scenario is live — keep your %(n)d-day streak"
+msgstr ""
+
+#: app/resend_client.py:2068
+#, python-format
+msgid "Today's scenario is live: %(title)s"
+msgstr ""
 
 #: app/routes.py:275 app/routes.py:292
 msgid "No valid donation session found."
@@ -593,7 +603,7 @@ msgstr "Webhook 未配置"
 msgid "Invalid payload"
 msgstr "无效的载荷"
 
-#: app/billing/routes.py:465 app/brief/routes.py:1091
+#: app/billing/routes.py:465 app/brief/routes.py:1118
 msgid "Invalid signature"
 msgstr "无效的签名"
 
@@ -610,8 +620,8 @@ msgid "You have successfully subscribed!"
 msgstr "您已成功订阅！"
 
 #: app/brief/routes.py:419 app/brief/routes.py:502 app/brief/routes.py:503
-#: app/briefing/routes.py:826 app/briefing/routes.py:4162
-#: app/daily/routes.py:802
+#: app/briefing/routes.py:827 app/briefing/routes.py:4186
+#: app/daily/routes.py:802 app/game/routes.py:509
 msgid "Please enter a valid email address."
 msgstr "请输入有效的电子邮件地址。"
 
@@ -619,7 +629,7 @@ msgstr "请输入有效的电子邮件地址。"
 msgid "You're subscribed! Check your inbox."
 msgstr "您已订阅！请检查您的收件箱。"
 
-#: app/brief/routes.py:521 app/brief/routes.py:602
+#: app/brief/routes.py:521 app/brief/routes.py:628
 msgid "You're already subscribed!"
 msgstr "您已经订阅过了！"
 
@@ -627,8 +637,8 @@ msgstr "您已经订阅过了！"
 msgid "Welcome back! Check your inbox."
 msgstr "欢迎回来！请检查您的收件箱。"
 
-#: app/brief/routes.py:528 app/brief/subscription.py:119
-#: app/daily/utils.py:235
+#: app/brief/routes.py:528 app/brief/subscription.py:120
+#: app/daily/utils.py:236
 msgid "Welcome back! Your subscription has been reactivated."
 msgstr "欢迎回来！您的订阅已重新激活。"
 
@@ -636,108 +646,108 @@ msgstr "欢迎回来！您的订阅已重新激活。"
 msgid "You're subscribed! Check your inbox for the welcome email."
 msgstr "您已订阅！请查看您的收件箱中的欢迎邮件。"
 
-#: app/brief/routes.py:550 app/daily/routes.py:864
+#: app/brief/routes.py:562 app/daily/routes.py:880
 msgid "Invalid unsubscribe link."
 msgstr "无效的取消订阅链接。"
 
-#: app/brief/routes.py:581
+#: app/brief/routes.py:603
 msgid "You have been unsubscribed from the daily brief."
 msgstr "您已从每日简报中取消订阅。"
 
-#: app/brief/routes.py:597
+#: app/brief/routes.py:623
 msgid "Invalid link."
 msgstr "无效的链接。"
 
-#: app/brief/routes.py:606
+#: app/brief/routes.py:632
 msgid "Invalid request."
 msgstr "请求无效。"
 
-#: app/brief/routes.py:629
+#: app/brief/routes.py:655
 msgid ""
 "You've switched to the Weekly Brief! You'll receive a digest every Sunday."
 msgstr "您已切换到周刊摘要！您将在每个周日收到一份摘要。"
 
-#: app/brief/routes.py:663 app/brief/routes.py:685
+#: app/brief/routes.py:689 app/brief/routes.py:711
 #, python-format
 msgid "Welcome back! Signed in as %(email)s"
 msgstr "欢迎回来！已登录为 %(email)s"
 
-#: app/brief/routes.py:666 app/daily/routes.py:1441
+#: app/brief/routes.py:692 app/daily/routes.py:1476
 msgid "This link has expired or is invalid. Please subscribe again."
 msgstr "此链接已过期或无效。请重新订阅。"
 
-#: app/brief/routes.py:696
+#: app/brief/routes.py:722
 msgid "Invalid preferences link. Please use the link from your email."
 msgstr "偏好设置链接无效。请使用电子邮件中的链接。"
 
-#: app/brief/routes.py:705
+#: app/brief/routes.py:731
 msgid "Your link has expired. Please check your latest email for a new link."
 msgstr "您的链接已过期。请查看您最新的邮件以获取新链接。"
 
-#: app/brief/routes.py:749
+#: app/brief/routes.py:775
 #, python-format
 msgid ""
 "Welcome back! You have been resubscribed to the %(cadence_label)s Brief."
 msgstr "欢迎回来！您已重新订阅 %(cadence_label)s 简报。"
 
-#: app/brief/routes.py:752
+#: app/brief/routes.py:778
 msgid "Your preferences have been updated."
 msgstr "您的偏好设置已更新。"
 
-#: app/brief/routes.py:778 app/briefing/routes.py:2846
+#: app/brief/routes.py:804 app/briefing/routes.py:2869
 msgid "Audio generation is disabled"
 msgstr "音频生成已禁用"
 
-#: app/brief/routes.py:803
+#: app/brief/routes.py:829
 msgid "Invalid filename"
 msgstr "无效的文件名"
 
-#: app/brief/routes.py:812 app/brief/routes.py:818
+#: app/brief/routes.py:838 app/brief/routes.py:844
 msgid "Audio not found"
 msgstr "找不到音频"
 
-#: app/brief/routes.py:839
+#: app/brief/routes.py:865
 msgid "Failed to serve audio"
 msgstr "音频服务失败"
 
-#: app/brief/routes.py:862 app/brief/routes.py:885 app/news/routes.py:339
+#: app/brief/routes.py:888 app/brief/routes.py:911 app/news/routes.py:339
 msgid "Subscription required"
 msgstr "需要订阅"
 
-#: app/brief/routes.py:863 app/brief/routes.py:886
+#: app/brief/routes.py:889 app/brief/routes.py:912
 msgid "Subscribe to access the full Daily Brief API."
 msgstr "订阅以访问完整的日报 API。"
 
-#: app/brief/routes.py:870
+#: app/brief/routes.py:896
 msgid "No brief available"
 msgstr "无可用简报"
 
-#: app/brief/routes.py:893 app/daily/routes.py:423
+#: app/brief/routes.py:919 app/daily/routes.py:423
 msgid "Invalid date format"
 msgstr "日期格式无效"
 
-#: app/brief/routes.py:898
+#: app/brief/routes.py:924
 msgid "No brief found"
 msgstr "找不到简报"
 
-#: app/brief/routes.py:913
+#: app/brief/routes.py:939
 msgid "Email required"
 msgstr "需要电子邮件"
 
-#: app/brief/routes.py:1006
+#: app/brief/routes.py:1033
 #, python-format
 msgid "Test brief sent to %(email)s"
 msgstr "测试简报已发送至 %(email)s"
 
-#: app/brief/routes.py:1010
+#: app/brief/routes.py:1037
 msgid "Failed to send email"
 msgstr "发送电子邮件失败"
 
-#: app/brief/routes.py:1054
+#: app/brief/routes.py:1081
 msgid "Missing signature headers"
 msgstr "缺少签名标头"
 
-#: app/brief/routes.py:1059
+#: app/brief/routes.py:1086
 msgid "Empty signature header"
 msgstr "签名标头为空"
 
@@ -745,13 +755,13 @@ msgstr "签名标头为空"
 msgid "This email is already subscribed to the daily brief."
 msgstr "此电子邮件已订阅每日简报。"
 
-#: app/brief/subscription.py:103 app/brief/subscription.py:185
-#: app/daily/utils.py:228 app/partner/routes.py:762 app/partner/routes.py:1180
+#: app/brief/subscription.py:104 app/brief/subscription.py:187
+#: app/daily/utils.py:229 app/partner/routes.py:762 app/partner/routes.py:1180
 #: app/partner/routes.py:2082 app/sources/routes.py:156
 msgid "An error occurred. Please try again."
 msgstr "发生错误。请重试。"
 
-#: app/brief/subscription.py:176
+#: app/brief/subscription.py:178
 msgid "Successfully subscribed! Check your email for the first brief."
 msgstr "订阅成功！请查看您的邮件以获取第一份简报。"
 
@@ -880,174 +890,174 @@ msgstr "草稿已准备好：%(briefing)s — %(date)s"
 msgid "Review & Approve Draft"
 msgstr "审核与批准草稿"
 
-#: app/briefing/routes.py:453 app/briefing/routes.py:473
+#: app/briefing/routes.py:454 app/briefing/routes.py:474
 msgid "You do not have permission to access this briefing"
 msgstr "您没有权限访问此简报"
 
-#: app/briefing/routes.py:524 app/briefing/routes.py:2444
+#: app/briefing/routes.py:525 app/briefing/routes.py:2445
 msgid "You do not have access to this source"
 msgstr "您无权访问此来源"
 
-#: app/briefing/routes.py:767 app/briefing/routes.py:866
+#: app/briefing/routes.py:768 app/briefing/routes.py:867
 msgid "You already have an active subscription."
 msgstr "您已有一个活跃的订阅。"
 
-#: app/briefing/routes.py:796
+#: app/briefing/routes.py:797
 msgid "Trial signup is temporarily unavailable. Please try again shortly."
 msgstr "试用注册暂时不可用。请稍后重试。"
 
-#: app/briefing/routes.py:844
+#: app/briefing/routes.py:845
 msgid "Pick a brief template to start your trial."
 msgstr "选择一个简短的模板来开始您的试用。"
 
-#: app/briefing/routes.py:852
+#: app/briefing/routes.py:853
 msgid ""
 "We couldn't start a trial with that email. Try a different address — or "
 "contact us if this looks wrong."
 msgstr "我们无法用该邮箱开始试用。请尝试其他地址——或如果您认为这不对，请联系我们。"
 
-#: app/briefing/routes.py:888
+#: app/briefing/routes.py:889
 msgid "Something went wrong — please try again in a moment."
 msgstr "出了点问题——请稍后重试。"
 
-#: app/briefing/routes.py:917
+#: app/briefing/routes.py:918
 msgid "We had trouble sending the sign-in link. Try again in a moment."
 msgstr "我们在发送登录链接时遇到了问题。请稍后重试。"
 
-#: app/briefing/routes.py:937
+#: app/briefing/routes.py:938
 msgid "We couldn't send the sign-in email. Try again in a moment."
 msgstr "我们无法发送登录邮件。请稍后重试。"
 
-#: app/briefing/routes.py:977
+#: app/briefing/routes.py:978
 msgid "Tell us what to change — a sentence is enough."
 msgstr "告诉我们需要改变什么——一句话就够了。"
 
-#: app/briefing/routes.py:996
+#: app/briefing/routes.py:997
 msgid "Something went wrong. Try again in a moment."
 msgstr "出了点问题。请稍后重试。"
 
-#: app/briefing/routes.py:1006
+#: app/briefing/routes.py:1007
 msgid ""
 "Got it. Your next brief will reflect this — we don't regenerate the one you "
 "just saw."
 msgstr "明白了。你的下一份简报会反映这一点——我们不会重新生成你刚看过的。"
 
-#: app/briefing/routes.py:1108
+#: app/briefing/routes.py:1109
 msgid "You already have access — head to your briefings."
 msgstr "你已经可以访问了——前往你的简报。"
 
-#: app/briefing/routes.py:1111
+#: app/briefing/routes.py:1112
 msgid ""
 "We couldn't start your trial. Please try again or contact us if this seems "
 "wrong."
 msgstr "我们无法启动你的试用。请重试或联系我们（如果这似乎有问题）。"
 
-#: app/briefing/routes.py:1117
+#: app/briefing/routes.py:1118
 msgid "Welcome back — your brief is set up and ready."
 msgstr "欢迎回来——你的简报已设置好并准备就绪。"
 
-#: app/briefing/routes.py:1173
+#: app/briefing/routes.py:1174
 msgid ""
 "Your trial is live — your first brief is ready below. Tomorrow's full "
 "edition arrives at your chosen time."
 msgstr "你的试用已上线——你的第一份简报已准备好，见下文。明天的完整版将在你选择的时间送达。"
 
-#: app/briefing/routes.py:1178
+#: app/briefing/routes.py:1179
 msgid ""
 "Your trial is live. We're fetching your sources and building your first "
 "brief — refresh in a minute, or check your inbox tomorrow morning."
 msgstr "您的试用已激活。我们正在获取您的资源并生成首份摘要——请在一分钟后刷新，或明天早上查看您的邮箱。"
 
-#: app/briefing/routes.py:1183
+#: app/briefing/routes.py:1184
 msgid ""
 "Your trial is live. Your first full brief arrives tomorrow morning once all "
 "your sources have been fetched."
 msgstr "您的试用已激活。一旦所有资源获取完成，您的首份完整摘要将于明天早上送达。"
 
-#: app/briefing/routes.py:1342 app/briefing/routes.py:1384
+#: app/briefing/routes.py:1343 app/briefing/routes.py:1385
 msgid "This template is no longer available"
 msgstr "此模板不再可用"
 
-#: app/briefing/routes.py:1370 app/briefing/routes.py:1536
+#: app/briefing/routes.py:1371 app/briefing/routes.py:1537
 msgid ""
 "Your subscription is still activating. Please wait a few seconds and try "
 "again. You can also check \"Manage Billing\" to verify."
 msgstr "您的订阅仍在激活中。请稍等片刻后重试。您也可以查看\"管理账单\"来验证。"
 
-#: app/briefing/routes.py:1373 app/briefing/routes.py:1538
+#: app/briefing/routes.py:1374 app/briefing/routes.py:1539
 msgid ""
 "You need an active subscription to create briefings. Start your free trial "
 "today!"
 msgstr "您需要活跃的订阅才能创建简报。立即开始您的免费试用！"
 
-#: app/briefing/routes.py:1389
+#: app/briefing/routes.py:1390
 msgid ""
 "This template is only available for organizations. You need to be part of an"
 " organization to use it."
 msgstr "此模板仅适用于组织。您需要是某个组织的成员才能使用它。"
 
-#: app/briefing/routes.py:1409
+#: app/briefing/routes.py:1410
 msgid ""
 "You need to be part of an organization to create organization briefings"
 msgstr "您需要是某个组织的成员才能创建组织简报"
 
-#: app/briefing/routes.py:1500
+#: app/briefing/routes.py:1501
 #, python-format
 msgid ""
 "Briefing \"%(name)s\" created from template, but %(sources_failed)s sources "
 "could not be added. Add more sources below to start generating briefs."
 msgstr "简报 \"%(name)s\" 从模板创建，但 %(sources_failed)s 个来源无法添加。请在下方添加更多来源以开始生成简报。"
 
-#: app/briefing/routes.py:1502
+#: app/briefing/routes.py:1503
 #, python-format
 msgid ""
 "Briefing \"%(name)s\" created from template! Add sources below to start "
 "generating briefs."
 msgstr "简报 \"%(name)s\" 从模板创建成功！请在下方添加来源以开始生成简报。"
 
-#: app/briefing/routes.py:1508
+#: app/briefing/routes.py:1509
 msgid "An error occurred while creating your briefing. Please try again."
 msgstr "创建简报时出错。请重试。"
 
-#: app/briefing/routes.py:1608
+#: app/briefing/routes.py:1609
 msgid "You need to be part of an organization to create org briefings"
 msgstr "您需要是某个组织的成员才能创建组织简报"
 
-#: app/briefing/routes.py:1620 app/briefing/routes.py:1902
+#: app/briefing/routes.py:1621 app/briefing/routes.py:1903
 msgid "Email address is required when a sending domain is selected"
 msgstr "选择发送域时需要电子邮件地址"
 
-#: app/briefing/routes.py:1625 app/briefing/routes.py:1907
+#: app/briefing/routes.py:1626 app/briefing/routes.py:1908
 msgid "Selected domain not found"
 msgstr "所选域未找到"
 
-#: app/briefing/routes.py:1629 app/briefing/routes.py:1911
+#: app/briefing/routes.py:1630 app/briefing/routes.py:1912
 msgid "Selected domain is not verified. Please verify it first."
 msgstr "所选域未验证。请先验证。"
 
-#: app/briefing/routes.py:1641 app/briefing/routes.py:1923
+#: app/briefing/routes.py:1642 app/briefing/routes.py:1924
 #, python-format
 msgid "Email must be from verified domain: %(domain_name)s"
 msgstr "电子邮件必须来自已验证的域：%(domain_name)s"
 
-#: app/briefing/routes.py:1712
+#: app/briefing/routes.py:1713
 msgid ""
 "Your subscription expired during this operation. Please renew to continue."
 msgstr "您的订阅在此操作期间已过期。请续订以继续。"
 
-#: app/briefing/routes.py:1728
+#: app/briefing/routes.py:1729
 #, python-format
 msgid ""
 "Briefing \"%(name)s\" created successfully with %(count)d sources from "
 "template!"
 msgstr "摘要「%(name)s」创建成功，包含来自模板的 %(count)d 个资源！"
 
-#: app/briefing/routes.py:1730
+#: app/briefing/routes.py:1731
 #, python-format
 msgid "(%(count)d sources could not be added)"
 msgstr "（%(count)d 个资源无法添加）"
 
-#: app/briefing/routes.py:1734
+#: app/briefing/routes.py:1735
 #, python-format
 msgid ""
 "Briefing \"%(name)s\" created successfully, but %(sources_failed)s sources "
@@ -1055,471 +1065,472 @@ msgid ""
 " briefs."
 msgstr "简报 \"%(name)s\" 创建成功，但模板中的 %(sources_failed)s 个来源无法添加。请在下方添加更多来源以开始生成简报。"
 
-#: app/briefing/routes.py:1736
+#: app/briefing/routes.py:1737
 #, python-format
 msgid ""
 "Briefing \"%(name)s\" created successfully! Add sources below to start "
 "generating briefs."
 msgstr "简报 \"%(name)s\" 创建成功！请在下方添加来源以开始生成简报。"
 
-#: app/briefing/routes.py:1742
+#: app/briefing/routes.py:1743
 msgid "An error occurred while creating the briefing"
 msgstr "创建简报时出错"
 
-#: app/briefing/routes.py:1891
+#: app/briefing/routes.py:1892
 msgid "Status must be 'active' or 'paused'"
 msgstr "状态必须为 'active' 或 'paused'"
 
-#: app/briefing/routes.py:2021
+#: app/briefing/routes.py:2022
 msgid "Briefing updated successfully"
 msgstr "简报更新成功"
 
-#: app/briefing/routes.py:2027
+#: app/briefing/routes.py:2028
 msgid "An error occurred while updating the briefing"
 msgstr "更新简报时出错"
 
-#: app/briefing/routes.py:2072
+#: app/briefing/routes.py:2073
 #, python-format
 msgid "Briefing \"%(name)s\" deleted successfully"
 msgstr "简报 \"%(name)s\" 删除成功"
 
-#: app/briefing/routes.py:2076
+#: app/briefing/routes.py:2077
 msgid "An error occurred while deleting the briefing"
 msgstr "删除简报时出错"
 
-#: app/briefing/routes.py:2099 app/briefing/routes.py:3439
+#: app/briefing/routes.py:2100 app/briefing/routes.py:3462
 #: app/discussions/moderation.py:300
 msgid "Permission denied"
 msgstr "权限被拒绝"
 
-#: app/briefing/routes.py:2163
+#: app/briefing/routes.py:2164
 #, python-format
 msgid "Source \"%(name)s\" updated successfully"
 msgstr "来源 \"%(name)s\" 更新成功"
 
-#: app/briefing/routes.py:2169
+#: app/briefing/routes.py:2170
 msgid "An error occurred while updating the source"
 msgstr "更新来源时出错"
 
-#: app/briefing/routes.py:2194
+#: app/briefing/routes.py:2195
 #, python-format
 msgid "Source \"%(source_name)s\" has been deleted"
 msgstr "来源 \"%(source_name)s\" 已删除"
 
-#: app/briefing/routes.py:2198
+#: app/briefing/routes.py:2199
 msgid "An error occurred while deleting the source"
 msgstr "删除来源时出错"
 
-#: app/briefing/routes.py:2230
+#: app/briefing/routes.py:2231
 msgid "You need to be part of an organization to create org sources"
 msgstr "您需要是某个组织的成员才能创建组织来源"
 
-#: app/briefing/routes.py:2243
+#: app/briefing/routes.py:2244
 #, python-format
 msgid "A source with this RSS feed URL already exists: \"%(name)s\""
 msgstr "此 RSS 源 URL 的来源已存在：\"%(name)s\""
 
-#: app/briefing/routes.py:2249 app/briefing/routes.py:2274
+#: app/briefing/routes.py:2250 app/briefing/routes.py:2275
 msgid "Added to your briefing."
 msgstr "已添加到您的摘要。"
 
-#: app/briefing/routes.py:2266
+#: app/briefing/routes.py:2267
 #, python-format
 msgid ""
 "This feed is already in our curated library as \"%(name)s\" — we added that "
 "instead of creating a duplicate."
 msgstr "该信源已在我们的精选库中存在，名称为「%(name)s」——我们添加了该版本，而不是创建重复项。"
 
-#: app/briefing/routes.py:2298
+#: app/briefing/routes.py:2299
 #, python-format
 msgid "RSS source \"%(name)s\" added successfully"
 msgstr "RSS 源 \"%(name)s\" 添加成功"
 
-#: app/briefing/routes.py:2304 app/briefing/routes.py:2490
+#: app/briefing/routes.py:2305 app/briefing/routes.py:2491
 msgid "An error occurred while adding the source"
 msgstr "添加来源时出错"
 
-#: app/briefing/routes.py:2327
+#: app/briefing/routes.py:2328
 msgid "No file provided"
 msgstr "未提供文件"
 
-#: app/briefing/routes.py:2332
+#: app/briefing/routes.py:2333
 msgid "No file selected"
 msgstr "未选择文件"
 
-#: app/briefing/routes.py:2383
+#: app/briefing/routes.py:2384
 msgid ""
 "File uploaded and added to your briefing. Text extraction is in progress — "
 "stories will appear once processing finishes."
 msgstr "文件已上传并添加到您的简报中。正在进行文本提取——处理完成后故事将显示。"
 
-#: app/briefing/routes.py:2388
+#: app/briefing/routes.py:2389
 msgid "File uploaded successfully. Text extraction in progress..."
 msgstr "文件上传成功。正在进行文本提取..."
 
-#: app/briefing/routes.py:2402
+#: app/briefing/routes.py:2403
 msgid "An error occurred while uploading the file"
 msgstr "上传文件时出错"
 
-#: app/briefing/routes.py:2426
+#: app/briefing/routes.py:2427
 msgid "Source ID is required"
 msgstr "需要源 ID"
 
-#: app/briefing/routes.py:2439
+#: app/briefing/routes.py:2440
 msgid "Source not found"
 msgstr "来源未找到"
 
-#: app/briefing/routes.py:2449
+#: app/briefing/routes.py:2450
 msgid "Source is still being processed. Please wait."
 msgstr "来源仍在处理中。请稍候。"
 
-#: app/briefing/routes.py:2453
+#: app/briefing/routes.py:2454
 msgid "Source processing failed. Please check the source and try again."
 msgstr "来源处理失败。请检查来源并重试。"
 
-#: app/briefing/routes.py:2462
+#: app/briefing/routes.py:2463
 #, python-format
 msgid ""
 "You've reached your source limit (%(limit_msg)s) for the %(name)s plan. "
 "Please upgrade to add more sources."
 msgstr "您已达到 %(name)s 方案的来源限制（%(limit_msg)s）。请升级以添加更多来源。"
 
-#: app/briefing/routes.py:2464
+#: app/briefing/routes.py:2465
 msgid "You need an active subscription to add sources."
 msgstr "您需要有效的订阅才能添加来源。"
 
-#: app/briefing/routes.py:2474
+#: app/briefing/routes.py:2475
 msgid "Source already added to this briefing"
 msgstr "此源已添加到此简报中"
 
-#: app/briefing/routes.py:2485
+#: app/briefing/routes.py:2486
 #, python-format
 msgid "Source \"%(name)s\" added to briefing"
 msgstr "源「%(name)s」已添加到简报"
 
-#: app/briefing/routes.py:2520
+#: app/briefing/routes.py:2521
 msgid "Source removed from briefing"
 msgstr "源已从简报中删除"
 
-#: app/briefing/routes.py:2525 app/briefing/routes.py:2563
-#: app/briefing/routes.py:2772 app/briefing/routes.py:2970
+#: app/briefing/routes.py:2526 app/briefing/routes.py:2564
+#: app/briefing/routes.py:2777 app/briefing/routes.py:2993
 msgid "An error occurred"
 msgstr "发生错误"
 
-#: app/briefing/routes.py:2558
+#: app/briefing/routes.py:2559
 msgid "Source priority updated"
 msgstr "源优先级已更新"
 
-#: app/briefing/routes.py:2597 app/briefing/routes.py:3617
+#: app/briefing/routes.py:2598 app/briefing/routes.py:3640
 #: app/briefing/validators.py:15
 msgid "Email is required"
 msgstr "电子邮件是必需的"
 
-#: app/briefing/routes.py:2619
+#: app/briefing/routes.py:2621
 #, python-format
 msgid "Recipient %(email)s reactivated"
 msgstr "收件人 %(email)s 已重新激活"
 
-#: app/briefing/routes.py:2621
+#: app/briefing/routes.py:2623
 msgid "Recipient already exists"
 msgstr "收件人已存在"
 
-#: app/briefing/routes.py:2629
+#: app/briefing/routes.py:2631
 #, python-format
 msgid ""
 "You've reached your recipient limit (%(limit_msg)s) for the %(name)s plan. "
 "Please upgrade to add more recipients."
 msgstr "您已达到 %(name)s 方案的收件人限制（%(limit_msg)s）。请升级以添加更多收件人。"
 
-#: app/briefing/routes.py:2631
+#: app/briefing/routes.py:2633
 msgid "You need an active subscription to add recipients."
 msgstr "您需要有效的订阅才能添加收件人。"
 
-#: app/briefing/routes.py:2650
+#: app/briefing/routes.py:2653
 #, python-format
 msgid "Recipient %(email)s added successfully"
 msgstr "收件人 %(email)s 已成功添加"
 
-#: app/briefing/routes.py:2661
+#: app/briefing/routes.py:2664
 msgid "No valid email addresses found."
 msgstr "未找到有效的电子邮件地址。"
 
-#: app/briefing/routes.py:2720
+#: app/briefing/routes.py:2725
 #, python-format
 msgid ""
 "Imported %(added)s recipients. %(skipped)s skipped (already exists or "
 "invalid)."
 msgstr "已导入 %(added)s 个收件人。%(skipped)s 个已跳过（已存在或无效）。"
 
-#: app/briefing/routes.py:2730
+#: app/briefing/routes.py:2735
 #, python-format
 msgid "%(count)s recipient(s) removed"
 msgstr "已移除 %(count)s 个收件人"
 
-#: app/briefing/routes.py:2732
+#: app/briefing/routes.py:2737
 msgid "No recipients selected"
 msgstr "未选择收件人"
 
-#: app/briefing/routes.py:2745
+#: app/briefing/routes.py:2750
 #, python-format
 msgid "%(email)s has been paused."
 msgstr "%(email)s 已暂停。"
 
-#: app/briefing/routes.py:2751
+#: app/briefing/routes.py:2756
 #, python-format
 msgid "%(email)s has been activated."
 msgstr "%(email)s 已激活。"
 
-#: app/briefing/routes.py:2765
+#: app/briefing/routes.py:2770
 msgid "Recipient removed"
 msgstr "收件人已移除"
 
-#: app/briefing/routes.py:2802
+#: app/briefing/routes.py:2816
 msgid "Invalid unsubscribe link"
 msgstr "无效的退订链接"
 
-#: app/briefing/routes.py:2806
-msgid "You are already unsubscribed"
-msgstr "您已经取消订阅"
-
-#: app/briefing/routes.py:2818
+#: app/briefing/routes.py:2839
 msgid "You have been unsubscribed from this briefing"
 msgstr "您已取消订阅此简报"
 
-#: app/briefing/routes.py:2838
+#: app/briefing/routes.py:2841
+#, fuzzy
+msgid "You are already unsubscribed from this briefing"
+msgstr "您已取消订阅此简报"
+
+#: app/briefing/routes.py:2861
 msgid "Admin access required for audio generation"
 msgstr "音频生成需要管理员权限"
 
-#: app/briefing/routes.py:2904
+#: app/briefing/routes.py:2927
 msgid "You do not have permission to edit this run"
 msgstr "您没有权限编辑此运行"
 
-#: app/briefing/routes.py:2930
+#: app/briefing/routes.py:2953
 #, python-format
 msgid "Brief approved and sent to %(count)d recipients"
 msgstr "简报已批准并发送给 %(count)d 位收件人"
 
-#: app/briefing/routes.py:2932
+#: app/briefing/routes.py:2955
 msgid "Brief approved (ready to send)"
 msgstr "简报已批准（可以发送）"
 
-#: app/briefing/routes.py:2940
+#: app/briefing/routes.py:2963
 msgid "Skipped today's edition. Nothing will be sent."
 msgstr "已跳过今日版本。将不发送任何内容。"
 
-#: app/briefing/routes.py:2964
+#: app/briefing/routes.py:2987
 msgid "Draft updated"
 msgstr "草稿已更新"
 
-#: app/briefing/routes.py:3003
+#: app/briefing/routes.py:3026
 msgid "Brief must be approved before sending"
 msgstr "发送前必须批准简报"
 
-#: app/briefing/routes.py:3010
+#: app/briefing/routes.py:3033
 msgid "Your subscription expired. Please renew to send briefings."
 msgstr "您的订阅已过期。请续约以发送简报。"
 
-#: app/briefing/routes.py:3025
+#: app/briefing/routes.py:3048
 msgid "An error occurred while sending"
 msgstr "发送时出错"
 
-#: app/briefing/routes.py:3073
+#: app/briefing/routes.py:3096
 msgid "You need a company profile to manage sending domains"
 msgstr "您需要公司资料才能管理发送域名"
 
-#: app/briefing/routes.py:3090
+#: app/briefing/routes.py:3113
 msgid "You need a company profile to add sending domains"
 msgstr "您需要公司资料才能添加发送域名"
 
-#: app/briefing/routes.py:3099
+#: app/briefing/routes.py:3122
 msgid "Domain is required"
 msgstr "域名为必填项"
 
-#: app/briefing/routes.py:3106
+#: app/briefing/routes.py:3129
 msgid "Invalid domain format"
 msgstr "无效的域名格式"
 
-#: app/briefing/routes.py:3112
+#: app/briefing/routes.py:3135
 msgid "This domain is already registered"
 msgstr "此域名已被注册"
 
-#: app/briefing/routes.py:3131
+#: app/briefing/routes.py:3154
 #, python-format
 msgid "Domain \"%(domain)s\" added. Please configure DNS records."
 msgstr "域名 \"%(domain)s\" 已添加。请配置 DNS 记录。"
 
-#: app/briefing/routes.py:3140
+#: app/briefing/routes.py:3163
 msgid "An error occurred while adding the domain"
 msgstr "添加域名时出现错误"
 
-#: app/briefing/routes.py:3151 app/briefing/routes.py:3267
+#: app/briefing/routes.py:3174 app/briefing/routes.py:3290
 msgid "You need a company profile to manage domains"
 msgstr "您需要公司资料才能管理域名"
 
-#: app/briefing/routes.py:3168 app/briefing/routes.py:3210
+#: app/briefing/routes.py:3191 app/briefing/routes.py:3233
 msgid "Company profile required"
 msgstr "需要公司档案"
 
-#: app/briefing/routes.py:3177 app/briefing/routes.py:3221
+#: app/briefing/routes.py:3200 app/briefing/routes.py:3244
 msgid "Domain not yet registered with Resend"
 msgstr "域名尚未在 Resend 中注册"
 
-#: app/briefing/routes.py:3191 app/templates/briefing/domains/verify.html:201
+#: app/briefing/routes.py:3214 app/templates/briefing/domains/verify.html:201
 msgid "Domain verified successfully!"
 msgstr "域名验证成功！"
 
-#: app/briefing/routes.py:3195
+#: app/briefing/routes.py:3218
 msgid "Domain not yet verified. Please check DNS records."
 msgstr "域名尚未验证。请检查 DNS 记录。"
 
-#: app/briefing/routes.py:3199
+#: app/briefing/routes.py:3222
 msgid "An error occurred while checking verification"
 msgstr "检查验证时出错"
 
-#: app/briefing/routes.py:3283
+#: app/briefing/routes.py:3306
 #, python-format
 msgid ""
 "Cannot delete domain: %(active_briefings)s active briefing(s) are using it. "
 "Please remove the domain from those briefings first."
 msgstr "无法删除域名：%(active_briefings)s 个活跃简报正在使用它。请先从这些简报中移除该域名。"
 
-#: app/briefing/routes.py:3294
+#: app/briefing/routes.py:3317
 #, python-format
 msgid ""
 "Failed to delete domain from Resend: %(error_msg)s. Domain kept in database "
 "for manual cleanup."
 msgstr "从 Resend 删除域名失败：%(error_msg)s。域名已保留在数据库中以供手动清理。"
 
-#: app/briefing/routes.py:3301
+#: app/briefing/routes.py:3324
 #, python-format
 msgid "Domain \"%(domain_name)s\" deleted successfully"
 msgstr "域名 \"%(domain_name)s\" 已成功删除"
 
-#: app/briefing/routes.py:3306
+#: app/briefing/routes.py:3329
 msgid "An error occurred while deleting the domain"
 msgstr "删除域名时出错"
 
-#: app/briefing/routes.py:3323 app/briefing/routes.py:3347
+#: app/briefing/routes.py:3346 app/briefing/routes.py:3370
 msgid "This briefing is not publicly accessible"
 msgstr "此简报不公开可访问"
 
-#: app/briefing/routes.py:3445 app/briefing/routes.py:3446
+#: app/briefing/routes.py:3468 app/briefing/routes.py:3469
 msgid "Please add sources to your briefing before generating a test brief"
 msgstr "请先为简报添加来源，再生成测试简报"
 
-#: app/briefing/routes.py:3476
+#: app/briefing/routes.py:3499
 msgid "Brief generation started"
 msgstr "简报生成已开始"
 
-#: app/briefing/routes.py:3480
+#: app/briefing/routes.py:3503
 msgid "Brief generation started. This may take up to a minute."
 msgstr "简报生成已开始。最长可能需要一分钟。"
 
-#: app/briefing/routes.py:3485
+#: app/briefing/routes.py:3508
 msgid "System is busy. Brief generation may take longer than usual."
 msgstr "系统繁忙。简报生成可能需要更长时间。"
 
-#: app/briefing/routes.py:3505
+#: app/briefing/routes.py:3528
 msgid "No content available from your sources."
 msgstr "您的来源中没有可用内容。"
 
-#: app/briefing/routes.py:3506
+#: app/briefing/routes.py:3529
 msgid ""
 "No content available from your sources. Try adding more sources or wait for "
 "content to be ingested."
 msgstr "您的来源中没有可用内容。尝试添加更多来源或等待内容导入。"
 
-#: app/briefing/routes.py:3520
+#: app/briefing/routes.py:3543
 msgid "Test brief generated successfully!"
 msgstr "测试简报生成成功！"
 
-#: app/briefing/routes.py:3540 app/briefing/routes.py:3544
+#: app/briefing/routes.py:3563 app/briefing/routes.py:3567
 msgid "Job not found"
 msgstr "任务未找到"
 
-#: app/briefing/routes.py:3580
+#: app/briefing/routes.py:3603
 msgid "Brief generated successfully!"
 msgstr "简报生成成功！"
 
-#: app/briefing/routes.py:3585
+#: app/briefing/routes.py:3608
 #, python-format
 msgid "Generation failed: %(error)s"
 msgstr "生成失败：%(error)s"
 
-#: app/briefing/routes.py:3632
+#: app/briefing/routes.py:3655
 msgid "Test email already sent. Please wait a moment before sending again."
 msgstr "测试电子邮件已发送。请稍候后再尝试发送。"
 
-#: app/briefing/routes.py:3644
+#: app/briefing/routes.py:3667
 msgid "No brief runs available. Generate a test brief first."
 msgstr "没有可用的简报运行。请先生成测试简报。"
 
-#: app/briefing/routes.py:3649 app/briefing/routes.py:3654
+#: app/briefing/routes.py:3672 app/briefing/routes.py:3677
 msgid "The brief run has no content. Generate a new test brief."
 msgstr "简报运行中没有内容。请生成新的测试简报。"
 
-#: app/briefing/routes.py:3682
+#: app/briefing/routes.py:3706
 #, python-format
 msgid "Test email sent to %(test_email)s"
 msgstr "测试电子邮件已发送至 %(test_email)s"
 
-#: app/briefing/routes.py:3684
+#: app/briefing/routes.py:3708
 msgid "Failed to send test email. Check logs."
 msgstr "发送测试电子邮件失败。请查看日志。"
 
-#: app/briefing/routes.py:3783
+#: app/briefing/routes.py:3807
 msgid "An error occurred while duplicating the briefing"
 msgstr "复制简报时出错"
 
-#: app/briefing/routes.py:3979
+#: app/briefing/routes.py:4003
 msgid "You do not have permission to view this briefing"
 msgstr "您没有权限查看此简报"
 
-#: app/briefing/routes.py:4049 app/briefing/routes.py:4106
+#: app/briefing/routes.py:4073 app/briefing/routes.py:4130
 msgid ""
 "Organization settings are only available for Team and Enterprise plans."
 msgstr "组织设置仅适用于团队版和企业版计划。"
 
-#: app/briefing/routes.py:4066
+#: app/briefing/routes.py:4090
 msgid "No organization found. Please contact support."
 msgstr "未找到组织。请联系支持。"
 
-#: app/briefing/routes.py:4111
+#: app/briefing/routes.py:4135
 msgid "You don't have permission to edit this organization."
 msgstr "您没有权限编辑此组织。"
 
-#: app/briefing/routes.py:4122
+#: app/briefing/routes.py:4146
 msgid "Organization details updated successfully."
 msgstr "组织详情已成功更新。"
 
-#: app/briefing/routes.py:4133 app/briefing/routes.py:4199
-#: app/briefing/routes.py:4226
+#: app/briefing/routes.py:4157 app/briefing/routes.py:4223
+#: app/briefing/routes.py:4250
 msgid "Team management is only available for Team and Enterprise plans."
 msgstr "团队管理仅适用于团队版和企业版计划。"
 
-#: app/briefing/routes.py:4141 app/briefing/routes.py:4207
-#: app/briefing/routes.py:4234
+#: app/briefing/routes.py:4165 app/briefing/routes.py:4231
+#: app/briefing/routes.py:4258
 msgid "No organization found."
 msgstr "未找到组织。"
 
-#: app/briefing/routes.py:4155
+#: app/briefing/routes.py:4179
 msgid "You don't have permission to invite team members."
 msgstr "您没有权限邀请团队成员。"
 
-#: app/briefing/routes.py:4185
+#: app/briefing/routes.py:4209
 #, python-format
 msgid "Invitation sent to %(email)s."
 msgstr "邀请已发送至 %(email)s。"
 
-#: app/briefing/routes.py:4212
+#: app/briefing/routes.py:4236
 msgid "Team member removed successfully."
 msgstr "团队成员已成功移除。"
 
-#: app/briefing/routes.py:4241
+#: app/briefing/routes.py:4265
 msgid "Member role updated successfully."
 msgstr "成员角色已成功更新。"
 
-#: app/briefing/routes.py:4255
+#: app/briefing/routes.py:4279
 #, python-format
 msgid ""
 "Welcome to %(company_name)s! You now have access to the team's briefings."
@@ -1664,166 +1675,166 @@ msgstr "发送分钟必须在 0 到 59 之间"
 msgid "Invalid date format. Please use YYYY-MM-DD."
 msgstr "日期格式无效。请使用 YYYY-MM-DD 格式。"
 
-#: app/daily/routes.py:427 app/daily/routes.py:1323
+#: app/daily/routes.py:427 app/daily/routes.py:1358
 msgid "Question not found"
 msgstr "问题未找到"
 
-#: app/daily/routes.py:796 app/daily/utils.py:259
+#: app/daily/routes.py:796 app/daily/utils.py:261
 msgid "You have successfully subscribed to daily civic questions!"
 msgstr "您已成功订阅每日公民问题！"
 
-#: app/daily/routes.py:913
+#: app/daily/routes.py:948
 msgid "You have been unsubscribed from daily civic questions."
 msgstr "您已取消订阅每日公民问题。"
 
-#: app/daily/routes.py:959
+#: app/daily/routes.py:994
 msgid ""
 "Please use the link from your weekly digest email to manage preferences."
 msgstr "请使用周刊摘要电子邮件中的链接来管理偏好设置。"
 
-#: app/daily/routes.py:963
+#: app/daily/routes.py:998
 msgid "Your subscription is currently inactive."
 msgstr "您的订阅当前处于非活跃状态。"
 
-#: app/daily/routes.py:1055
+#: app/daily/routes.py:1090
 msgid "Your preferences have been updated successfully."
 msgstr "您的偏好设置已成功更新。"
 
-#: app/daily/routes.py:1059
+#: app/daily/routes.py:1094
 msgid "There was an error saving your preferences. Please try again."
 msgstr "保存您的偏好设置时出错。请重试。"
 
-#: app/daily/routes.py:1103
+#: app/daily/routes.py:1138
 msgid "Please use the link from your weekly digest email to access this page."
 msgstr "请使用您每周摘要电子邮件中的链接来访问此页面。"
 
-#: app/daily/routes.py:1151
+#: app/daily/routes.py:1186
 msgid "No questions available for this week yet."
 msgstr "本周暂无可用问题。"
 
-#: app/daily/routes.py:1282
+#: app/daily/routes.py:1317
 msgid "Not authenticated"
 msgstr "未认证"
 
-#: app/daily/routes.py:1286
+#: app/daily/routes.py:1321
 msgid "Subscriber not found or inactive"
 msgstr "订阅者未找到或已停用"
 
-#: app/daily/routes.py:1302
+#: app/daily/routes.py:1337
 msgid "Content-Type must be application/json"
 msgstr "Content-Type 必须是 application/json"
 
-#: app/daily/routes.py:1314
+#: app/daily/routes.py:1349
 msgid "Missing question_id or vote"
 msgstr "缺少 question_id 或 vote"
 
-#: app/daily/routes.py:1318
+#: app/daily/routes.py:1353
 msgid "Invalid vote"
 msgstr "投票无效"
 
-#: app/daily/routes.py:1327
+#: app/daily/routes.py:1362
 msgid "Already voted"
 msgstr "已投票"
 
-#: app/daily/routes.py:1432
+#: app/daily/routes.py:1467
 msgid "Failed to record vote"
 msgstr "记录投票失败"
 
-#: app/daily/routes.py:1478
+#: app/daily/routes.py:1513
 msgid "Invalid vote option."
 msgstr "投票选项无效。"
 
-#: app/daily/routes.py:1514
+#: app/daily/routes.py:1549
 msgid "This question is no longer available."
 msgstr "此问题不再可用。"
 
-#: app/daily/routes.py:1520
+#: app/daily/routes.py:1555
 msgid "This question isn't available yet. Please check back later."
 msgstr "此问题尚不可用。请稍后返回查看。"
 
-#: app/daily/routes.py:1525
+#: app/daily/routes.py:1560
 #, python-format
 msgid ""
 "This question expired on %(question_date)s. Please check today's question!"
 msgstr "此问题已于 %(question_date)s 过期。请查看今天的问题！"
 
-#: app/daily/routes.py:1530
+#: app/daily/routes.py:1565
 msgid "You have already voted on this question."
 msgstr "您已投票此问题。"
 
-#: app/daily/routes.py:1643
+#: app/daily/routes.py:1678
 msgid "Vote recorded! Thanks for participating."
 msgstr "投票已记录！感谢您的参与。"
 
-#: app/daily/routes.py:1657
+#: app/daily/routes.py:1692
 msgid "There was an error recording your vote. Please try again."
 msgstr "记录投票时出错。请重试。"
 
-#: app/daily/routes.py:1679 app/discussions/statements.py:1032
+#: app/daily/routes.py:1714 app/discussions/statements.py:1032
 msgid "Automated requests are not allowed."
 msgstr "不允许自动请求。"
 
-#: app/daily/routes.py:1685
+#: app/daily/routes.py:1720
 msgid "No question available today"
 msgstr "今天没有可用问题"
 
-#: app/daily/routes.py:1688
+#: app/daily/routes.py:1723
 msgid "You have already voted today"
 msgstr "您今天已投票"
 
-#: app/daily/routes.py:1692
+#: app/daily/routes.py:1727
 msgid "Please select a vote option."
 msgstr "请选择投票选项。"
 
-#: app/daily/routes.py:1711
+#: app/daily/routes.py:1746
 msgid "Invalid vote value"
 msgstr "投票值无效"
 
-#: app/daily/routes.py:1812
+#: app/daily/routes.py:1847
 msgid "Invalid request data"
 msgstr "请求数据无效"
 
-#: app/daily/routes.py:1818
+#: app/daily/routes.py:1853
 msgid "Duplicate vote detected"
 msgstr "检测到重复投票"
 
-#: app/daily/routes.py:1824
+#: app/daily/routes.py:1859
 msgid "Failed to submit vote"
 msgstr "投票提交失败"
 
-#: app/daily/routes.py:1836
+#: app/daily/routes.py:1871
 msgid "Invalid request format"
 msgstr "请求格式无效"
 
-#: app/daily/routes.py:1844
+#: app/daily/routes.py:1879
 msgid "Missing required fields"
 msgstr "缺少必填字段"
 
-#: app/daily/routes.py:1848
+#: app/daily/routes.py:1883
 msgid "Invalid reason"
 msgstr "原因无效"
 
-#: app/daily/routes.py:1853
+#: app/daily/routes.py:1888
 msgid "Response not found"
 msgstr "未找到响应"
 
-#: app/daily/routes.py:1857
+#: app/daily/routes.py:1892
 msgid "This response has already been reviewed"
 msgstr "此响应已被审核"
 
-#: app/daily/routes.py:1861
+#: app/daily/routes.py:1896
 msgid "You cannot report your own response"
 msgstr "您无法举报自己的响应"
 
-#: app/daily/routes.py:1878
+#: app/daily/routes.py:1913
 msgid "You have already reported this response"
 msgstr "您已举报过此响应"
 
-#: app/daily/routes.py:1905
+#: app/daily/routes.py:1940
 msgid "Report submitted successfully"
 msgstr "举报提交成功"
 
-#: app/daily/routes.py:1912
+#: app/daily/routes.py:1947
 msgid "Failed to submit report"
 msgstr "举报提交失败"
 
@@ -1831,7 +1842,7 @@ msgstr "举报提交失败"
 msgid "This email is already subscribed to daily questions."
 msgstr "此电子邮件已订阅每日问题。"
 
-#: app/daily/utils.py:268
+#: app/daily/utils.py:270
 msgid "There was an error processing your subscription. Please try again."
 msgstr "处理您的订阅时出错。请重试。"
 
@@ -2643,28 +2654,145 @@ msgstr "此证据未附加文件"
 msgid "Error downloading file"
 msgstr "文件下载错误"
 
-#: app/game/services/share_text_service.py:55
+#: app/game/routes.py:514
+msgid "You're set — we'll nudge you when the next scenario is live."
+msgstr ""
+
+#: app/game/routes.py:532
+#, fuzzy
+msgid "That unsubscribe link is no longer valid."
+msgstr "此讨论不再可用。"
+
+#: app/game/engine/variant.py:108
+msgid "You inherit this crisis already deep in debt."
+msgstr ""
+
+#: app/game/engine/variant.py:109
+msgid "The treasury starts in unusually good health."
+msgstr ""
+
+#: app/game/engine/variant.py:110
+msgid "You begin with rare public goodwill."
+msgstr ""
+
+#: app/game/engine/variant.py:111
+msgid "Public trust is thin before you even begin."
+msgstr ""
+
+#: app/game/engine/variant.py:112
+msgid "You inherit a calm, stable nation."
+msgstr ""
+
+#: app/game/engine/variant.py:113
+msgid "The country is volatile from day one."
+msgstr ""
+
+#: app/game/engine/variant.py:114
+msgid "You begin with a strong economy."
+msgstr ""
+
+#: app/game/engine/variant.py:115
+msgid "The economy is weak at the outset."
+msgstr ""
+
+#: app/game/engine/variant.py:116
+msgid "You inherit an unusually fair society."
+msgstr ""
+
+#: app/game/engine/variant.py:117
+msgid "Deep inequality greets you on arrival."
+msgstr ""
+
+#: app/game/engine/variant.py:118
+msgid "Citizens begin with broad freedoms."
+msgstr ""
+
+#: app/game/engine/variant.py:119
+msgid "Civil liberties are already constrained."
+msgstr ""
+
+#: app/game/engine/variant.py:120
+msgid "Past leaders invested well in the long term."
+msgstr ""
+
+#: app/game/engine/variant.py:121
+msgid "Little has been set aside for the long term."
+msgstr ""
+
+#: app/game/engine/variant.py:122
+msgid "The system is brittle before the first decision."
+msgstr ""
+
+#: app/game/engine/variant.py:123
+msgid "The system starts more resilient than usual."
+msgstr ""
+
+#: app/game/services/challenge_service.py:37
+#, fuzzy
+msgid "Someone"
+msgstr "时区"
+
+#: app/game/services/cohort_service.py:155 app/templates/game/outcome.html:204
+msgid "Autonomy"
+msgstr "自主权"
+
+#: app/game/services/cohort_service.py:156
+#: app/templates/daily/_reason_input.html:54
+#: app/templates/daily/confirm_vote.html:123
+#: app/templates/daily/weekly_batch.html:201
+#: app/templates/game/components/stat_bars.html:4
+#: app/templates/game/outcome.html:203
+msgid "Trust"
+msgstr "信任"
+
+#: app/game/services/cohort_service.py:157
+#: app/templates/daily/_reason_input.html:49
+#: app/templates/daily/confirm_vote.html:118
+#: app/templates/daily/weekly_batch.html:196
+#: app/templates/game/components/stat_bars.html:5
+#: app/templates/game/outcome.html:202
+msgid "Fairness"
+msgstr "公平性"
+
+#: app/game/services/cohort_service.py:158
+#: app/templates/game/components/stat_bars.html:3
+#: app/templates/game/outcome.html:201
+msgid "Prosperity"
+msgstr "繁荣"
+
+#: app/game/services/cohort_service.py:169
+#, python-format
+msgid "Only %(pct)d%% of leaders ended like you."
+msgstr ""
+
+#: app/game/services/cohort_service.py:173
+#, python-format
+msgid "More %(dir)s-led than %(pct)d%% of leaders."
+msgstr ""
+
+#: app/game/services/share_text_service.py:56
 #, python-format
 msgid "Tradeoffs · %(date)s"
 msgstr "权衡 · %(date)s"
 
-#: app/game/services/share_text_service.py:57
+#: app/game/services/share_text_service.py:58
 #, python-format
 msgid "⚖️ %(society)s"
 msgstr "⚖️ %(society)s"
 
-#: app/game/services/share_text_service.py:79 app/templates/game/hub.html:46
-#: app/templates/game/outcome.html:59
+#: app/game/services/share_text_service.py:80
+#: app/templates/game/archive.html:19 app/templates/game/hub.html:21
+#: app/templates/game/outcome.html:100
 #, python-format
 msgid "%(num)d-day streak"
 msgid_plural "%(num)d-day streak"
 msgstr[0] "%(num)d 天连续记录"
 
-#: app/game/services/share_text_service.py:87
+#: app/game/services/share_text_service.py:91
 msgid "What kind of leader would you be?"
 msgstr "你会成为什么样的领导者？"
 
-#: app/game/services/share_text_service.py:91
+#: app/game/services/share_text_service.py:95
 msgid "Challenge a friend to the same scenario:"
 msgstr "邀请朋友尝试同样的场景："
 
@@ -5760,8 +5888,8 @@ msgstr "进行大问题之旅"
 msgid "Read Today's Brief"
 msgstr "阅读今日简报"
 
-#: app/templates/game/hub.html:158 app/templates/game/outcome.html:164
-#: app/templates/index.html:158
+#: app/templates/game/archive.html:101 app/templates/game/hub.html:177
+#: app/templates/game/outcome.html:265 app/templates/index.html:158
 msgid "Sign up free"
 msgstr "免费注册"
 
@@ -6041,7 +6169,8 @@ msgstr "来自本平台真实讨论的例子。您的投票改变了社会所见
 msgid "Explore all discussions →"
 msgstr "探索所有讨论 →"
 
-#: app/templates/briefing/add_rss_source.html:26 app/templates/index.html:460
+#: app/templates/briefing/add_rss_source.html:26
+#: app/templates/game/hub.html:118 app/templates/index.html:460
 #: app/templates/index.html:714 app/templates/partner/hub.html:238
 msgid "How it works"
 msgstr "工作原理"
@@ -6254,7 +6383,7 @@ msgid ""
 msgstr ""
 "你掌控全局。危机降临到你的办公桌——每条前进的道路都要付出真实的代价。削减开支会失去公众信任。现在借贷会给下一代留下负担。快速建设会分裂社区。五轮治理。你会成为什么样的领导者？"
 
-#: app/templates/game/hub.html:42 app/templates/index.html:682
+#: app/templates/game/hub.html:16 app/templates/index.html:682
 msgid "Today's scenario"
 msgstr "今天的情景"
 
@@ -6274,8 +6403,10 @@ msgstr "保护"
 msgid "Restrict"
 msgstr "限制"
 
+#: app/templates/emails/game_reminder.html:51
+#: app/templates/game/archive.html:91
 #: app/templates/game/editorial_principles.html:139
-#: app/templates/game/hub.html:97 app/templates/index.html:710
+#: app/templates/game/hub.html:102 app/templates/index.html:710
 msgid "Play today's scenario"
 msgstr "今天参与场景"
 
@@ -6363,7 +6494,7 @@ msgstr "文化人类学家玛格丽特·米德的肖像"
 msgid "Cultural Anthropologist"
 msgstr "文化人类学家"
 
-#: app/templates/game/outcome.html:124 app/templates/index.html:867
+#: app/templates/game/outcome.html:225 app/templates/index.html:867
 msgid "Join the conversation"
 msgstr "加入对话"
 
@@ -6760,7 +6891,6 @@ msgid "Sign out"
 msgstr "退出登录"
 
 #: app/templates/discussions/_guided_journey_rail.html:62
-#: app/templates/game/hub.html:159 app/templates/game/outcome.html:165
 #: app/templates/layout.html:895 app/templates/layout.html:1172
 #: app/templates/partner/portal/login.html:34 app/templates/platform.html:1157
 #: app/templates/programmes/view.html:263
@@ -9139,7 +9269,7 @@ msgstr "继续您离开的地方"
 
 #: app/templates/auth/dashboard.html:211
 #: app/templates/discussions/_information_step.html:84
-#: app/templates/game/hub.html:73 app/templates/game/turn.html:85
+#: app/templates/game/hub.html:48 app/templates/game/turn.html:111
 msgid "Continue"
 msgstr "继续"
 
@@ -9511,6 +9641,8 @@ msgstr "忘记密码？"
 
 #: app/templates/auth/login.html:54
 #: app/templates/auth/magic_link_request.html:37
+#: app/templates/game/archive.html:102 app/templates/game/hub.html:178
+#: app/templates/game/outcome.html:266
 msgid "Email me a sign-in link"
 msgstr "给我发送登录链接"
 
@@ -11054,7 +11186,7 @@ msgid "Using your account email"
 msgstr "使用您的账户邮箱"
 
 #: app/templates/brief/subscribe.html:44 app/templates/briefing/start.html:90
-#: app/templates/daily/subscribe.html:42
+#: app/templates/daily/subscribe.html:42 app/templates/game/outcome.html:143
 #: app/templates/programmes/view.html:391
 msgid "you@example.com"
 msgstr "you@example.com"
@@ -11488,7 +11620,7 @@ msgstr "查看归档"
 msgid "How We Select Stories"
 msgstr "我们如何选择新闻"
 
-#: app/templates/brief/view.html:1015
+#: app/templates/brief/view.html:1015 app/templates/game/outcome.html:187
 msgid "Link copied!"
 msgstr "链接已复制！"
 
@@ -16149,6 +16281,7 @@ msgstr "个人照片"
 #: app/templates/components/profile_pagination.html:15
 #: app/templates/discussions/news_feed.html:360
 #: app/templates/discussions/search_discussions.html:136
+#: app/templates/game/archive.html:70
 msgid "Pagination"
 msgstr "分页"
 
@@ -16170,7 +16303,7 @@ msgstr "复制链接"
 #: app/templates/components/share_button.html:83
 #: app/templates/discussions/view_discussion.html:860
 #: app/templates/discussions/view_native.html:1189
-#: app/templates/game/outcome.html:145
+#: app/templates/game/outcome.html:246
 #: app/templates/partner/embed_generator.html:355
 #: app/templates/programmes/view.html:840
 msgid "Copied!"
@@ -16288,14 +16421,6 @@ msgstr "选择类别"
 msgid "Evidence"
 msgstr "证据"
 
-#: app/templates/daily/_reason_input.html:49
-#: app/templates/daily/confirm_vote.html:118
-#: app/templates/daily/weekly_batch.html:196
-#: app/templates/game/components/stat_bars.html:5
-#: app/templates/game/outcome.html:101
-msgid "Fairness"
-msgstr "公平性"
-
 #: app/templates/daily/_reason_input.html:50
 #: app/templates/daily/confirm_vote.html:119
 #: app/templates/daily/weekly_batch.html:197
@@ -16319,14 +16444,6 @@ msgstr "权利"
 #: app/templates/daily/weekly_batch.html:200
 msgid "Safety"
 msgstr "安全性"
-
-#: app/templates/daily/_reason_input.html:54
-#: app/templates/daily/confirm_vote.html:123
-#: app/templates/daily/weekly_batch.html:201
-#: app/templates/game/components/stat_bars.html:4
-#: app/templates/game/outcome.html:102
-msgid "Trust"
-msgstr "信任"
 
 #: app/templates/daily/_reason_input.html:55
 #: app/templates/daily/confirm_vote.html:124
@@ -20637,6 +20754,62 @@ msgstr "你收到此信息是因为你创建了此讨论并启用了通知。"
 msgid "Manage notification preferences"
 msgstr "管理通知偏好设置"
 
+#: app/templates/emails/game_reminder.html:3
+#, fuzzy
+msgid "Today's scenario is live — Society Speaks"
+msgstr "日常问题 - Society Speaks"
+
+#: app/templates/emails/game_reminder.html:5
+#, python-format
+msgid "Keep your %(n)d-day streak going — today's scenario is live."
+msgstr ""
+
+#: app/templates/emails/game_reminder.html:5
+#, fuzzy, python-format
+msgid "A new crisis is on your desk: %(title)s"
+msgstr "您的讨论「%(title)s」有新动态"
+
+#: app/templates/emails/game_reminder.html:12
+#, fuzzy
+msgid "Society Speaks · Daily"
+msgstr "✓ 仅Society Speaks"
+
+#: app/templates/emails/game_reminder.html:14
+#, python-format
+msgid "Keep your %(n)d-day streak alive, %(username)s"
+msgstr ""
+
+#: app/templates/emails/game_reminder.html:14
+#, python-format
+msgid "Today's scenario is live, %(username)s"
+msgstr ""
+
+#: app/templates/emails/game_reminder.html:17
+#, fuzzy
+msgid "You have five decisions to make. Every one of them costs something."
+msgstr "你是决策者。每个决定都需要付出代价。"
+
+#: app/templates/emails/game_reminder.html:27
+#, python-format
+msgid "%(n)d days in a row. Miss today and it resets."
+msgstr ""
+
+#: app/templates/emails/game_reminder.html:57
+#, python-format
+msgid "Takes about three minutes. %(n)d turns, one outcome."
+msgstr ""
+
+#: app/templates/emails/game_reminder.html:66
+msgid ""
+"You're getting this because you asked for a daily nudge from Society Speaks."
+msgstr ""
+
+#: app/templates/emails/game_reminder.html:68
+#: app/templates/emails/journey_reminder.html:114
+#: app/templates/programmes/view.html:459
+msgid "Stop reminders"
+msgstr "停止提醒"
+
 #: app/templates/emails/journey_reminder.html:3
 msgid "Continue your civic journey — Society Speaks"
 msgstr "继续你的公民之旅 — Society Speaks"
@@ -20713,11 +20886,6 @@ msgid ""
 "You're receiving this because you asked for reminders on the %(link)s "
 "journey."
 msgstr "你收到此信息是因为你在%(link)s之旅中请求了提醒。"
-
-#: app/templates/emails/journey_reminder.html:114
-#: app/templates/programmes/view.html:459
-msgid "Stop reminders"
-msgstr "停止提醒"
 
 #: app/templates/emails/journey_reminder_confirm.html:5
 #, python-format
@@ -21526,6 +21694,85 @@ msgid ""
 "later."
 msgstr "我们的团队已收到通知并正在调查问题。请稍后重试。"
 
+#: app/templates/game/archive.html:4 app/templates/game/archive.html:15
+#: app/templates/game/hub.html:190 app/templates/game/outcome.html:273
+#, fuzzy
+msgid "Your societies"
+msgstr "你的来源"
+
+#: app/templates/game/archive.html:8
+msgid "Every society you have governed on Tradeoffs."
+msgstr ""
+
+#: app/templates/game/archive.html:17 app/templates/game/hub.html:19
+#, python-format
+msgid "Longest: %(n)d"
+msgstr "最长：%(n)d"
+
+#: app/templates/game/archive.html:25
+#, python-format
+msgid "%(n)d society governed"
+msgid_plural "%(n)d societies governed"
+msgstr[0] ""
+
+#: app/templates/game/archive.html:27
+#, fuzzy
+msgid "No societies yet"
+msgstr "还没有收件人"
+
+#: app/templates/game/archive.html:32
+msgid "Every crisis you faced, and the leader you became."
+msgstr ""
+
+#: app/templates/game/archive.html:34
+#, fuzzy
+msgid "Govern your first nation and it will appear here."
+msgstr "你的简报将显示在这里"
+
+#: app/templates/game/archive.html:48 app/templates/game/hub.html:71
+#, fuzzy
+msgid "Your society"
+msgstr "你的来源"
+
+#: app/templates/game/archive.html:50 app/templates/game/hub.html:145
+#: app/templates/game/turn.html:34
+msgid "Quick Run"
+msgstr "快速运行"
+
+#: app/templates/game/archive.html:72
+#, fuzzy
+msgid "← Newer"
+msgstr "从未"
+
+#: app/templates/game/archive.html:75
+#, python-format
+msgid "Page %(p)d of %(t)d"
+msgstr ""
+
+#: app/templates/game/archive.html:78
+msgid "Older →"
+msgstr ""
+
+#: app/templates/game/archive.html:85
+msgid "Nothing more to show here."
+msgstr ""
+
+#: app/templates/game/archive.html:86
+#, fuzzy
+msgid "Back to your latest societies"
+msgstr "保存你的社群。"
+
+#: app/templates/game/archive.html:98
+msgid ""
+"These societies only live on this browser. Save them to your account so they"
+" survive a cleared cache or a new device."
+msgstr ""
+
+#: app/templates/game/archive.html:108
+#, fuzzy
+msgid "Back to today"
+msgstr "返回今日摘要"
+
 #: app/templates/game/editorial_principles.html:3
 #: app/templates/game/editorial_principles.html:15
 msgid "How Tradeoffs is written"
@@ -21831,112 +22078,123 @@ msgid ""
 msgstr ""
 "在压力下治理一个国家。五个回合，每个回合三个选择——每个决定都在一个价值观与另一个价值观之间进行权衡。Society Speaks上的社会策略游戏。"
 
-#: app/templates/game/hub.html:13
-msgid "New to Tradeoffs?"
-msgstr "初次接触权衡游戏？"
-
-#: app/templates/game/hub.html:15
+#: app/templates/game/hub.html:27
 msgid "You're in charge. Every decision costs something."
 msgstr "你是决策者。每个决定都需要付出代价。"
 
-#: app/templates/game/hub.html:18
+#: app/templates/game/hub.html:29
 msgid ""
-"A crisis lands on your desk — and every path forward sacrifices something "
-"real. Cut now and lose public trust. Borrow now and burden the next "
-"generation. Build fast and fracture communities. Move slowly and watch the "
-"problems grow. Five turns to govern a nation. Your choices shape the society"
-" you leave behind."
+"Five turns. Three choices each. Govern a nation — and live with what you "
+"trade away."
 msgstr ""
-"危机突然摆在你的面前——每条前进的道路都需要真实的代价。现在削减开支就会失去公众信任。现在借贷就会累及下一代。快速建设就会分裂社区。缓慢行动就会眼看问题恶化。五个回合管理一个国家。你的选择塑造你留下的社会。"
 
-#: app/templates/game/hub.html:23
-msgid "turns to govern"
-msgstr "回合来管理"
-
-#: app/templates/game/hub.html:27
-msgid "paths each turn"
-msgstr "每个回合的路径"
-
-#: app/templates/game/hub.html:31
-msgid "possible outcomes"
-msgstr "可能的结果"
-
-#: app/templates/game/hub.html:35
-msgid ""
-"Your society is yours: name it, watch its emblem take shape from your "
-"choices, and discover the kind of leader you become."
-msgstr "你的社会属于你：为它命名，看着你的选择塑造它的象征，发现你成为了什么样的领导者。"
-
-#: app/templates/game/hub.html:44
-#, python-format
-msgid "Longest: %(n)d"
-msgstr "最长：%(n)d"
-
-#: app/templates/game/hub.html:51
-#, python-format
-msgid "UTC %(date)s · %(time)s publish"
-msgstr "UTC %(date)s · %(time)s 发布"
-
-#: app/templates/game/hub.html:65
+#: app/templates/game/hub.html:40
 #, python-format
 msgid "%(num)d turn"
 msgid_plural "%(num)d turns"
 msgstr[0] "%(num)d 轮"
 
-#: app/templates/game/hub.html:70
+#: app/templates/game/hub.html:45
 #, python-format
 msgid "You're on turn %(current)d of %(total)d."
 msgstr "您正在第 %(current)d 轮，共 %(total)d 轮。"
 
-#: app/templates/game/hub.html:77
+#: app/templates/game/hub.html:53
 #, python-format
 msgid ""
 "You've already played today's scenario. Come back at %(time)s UTC for the "
 "next one."
 msgstr "您已完成今天的场景。请在 UTC %(time)s 回来参与下一个场景。"
 
-#: app/templates/game/hub.html:80
+#: app/templates/game/hub.html:56
 msgid "View today's outcome"
 msgstr "查看今天的结果"
 
-#: app/templates/game/hub.html:85
-msgid "Name your society (optional)"
-msgstr "为你的社区命名（可选）"
+#: app/templates/game/hub.html:89 app/templates/game/hub.html:90
+#, fuzzy
+msgid "Suggest another name"
+msgstr "请求另一个链接"
 
-#: app/templates/game/hub.html:92
-msgid "e.g. Atlas, Riverlands, Your Republic"
-msgstr "例如：Atlas、Riverlands、Your Republic"
+#: app/templates/game/hub.html:96
+msgid "We've named it for you — roll the dice for another, or type your own."
+msgstr ""
 
-#: app/templates/game/hub.html:105 app/templates/game/turn.html:26
-msgid "Quick Run"
-msgstr "快速运行"
+#: app/templates/game/hub.html:103
+msgid "Free · 2 min"
+msgstr ""
 
-#: app/templates/game/hub.html:105
-msgid "replay anytime — no streak"
+#: app/templates/game/hub.html:112
+#, fuzzy
+msgid "More to explore"
+msgstr "更多文章"
+
+#: app/templates/game/hub.html:116
+msgid "New to Tradeoffs?"
+msgstr "初次接触权衡游戏？"
+
+#: app/templates/game/hub.html:123
+msgid "turns to govern"
+msgstr "回合来管理"
+
+#: app/templates/game/hub.html:127
+msgid "paths each turn"
+msgstr "每个回合的路径"
+
+#: app/templates/game/hub.html:131
+msgid "possible outcomes"
+msgstr "可能的结果"
+
+#: app/templates/game/hub.html:135
+#, fuzzy
+msgid ""
+"A crisis lands on your desk — and every path forward sacrifices something "
+"real. Cut now and lose public trust. Borrow now and burden the next "
+"generation. Build fast and fracture communities. Move slowly and watch the "
+"problems grow."
+msgstr ""
+"危机突然摆在你的面前——每条前进的道路都需要真实的代价。现在削减开支就会失去公众信任。现在借贷就会累及下一代。快速建设就会分裂社区。缓慢行动就会眼看问题恶化。五个回合管理一个国家。你的选择塑造你留下的社会。"
+
+#: app/templates/game/hub.html:138
+msgid ""
+"Your society is yours: name it, watch its emblem take shape from your "
+"choices, and discover the kind of leader you become."
+msgstr "你的社会属于你：为它命名，看着你的选择塑造它的象征，发现你成为了什么样的领导者。"
+
+#: app/templates/game/hub.html:146
+#, fuzzy
+msgid "Replay any past scenario anytime — no streak."
 msgstr "随时重放——无连续记录"
 
-#: app/templates/game/hub.html:143
+#: app/templates/game/hub.html:164
 msgid "Tomorrow"
 msgstr "明天"
 
-#: app/templates/game/hub.html:148
+#: app/templates/game/hub.html:167
 #, python-format
 msgid "New scenario unlocks at %(time)s UTC"
 msgstr "新场景将在 %(time)s UTC 时解锁"
 
-#: app/templates/game/hub.html:155
+#: app/templates/game/hub.html:174
+#, fuzzy
 msgid ""
-"Sign in to save your societies across devices and keep your streak when this"
-" browser forgets."
+"Save your societies across devices and keep your streak when this browser "
+"forgets."
 msgstr "登录以在设备间保存你的社群，并在浏览器清除数据时保持你的连续记录。"
 
-#: app/templates/game/hub.html:166
+#: app/templates/game/hub.html:180 app/templates/game/outcome.html:268
+#, fuzzy
+msgid ""
+"Already have an account? We email a one-click sign-in link — no password "
+"needed."
+msgstr "我们会给您发送一个一键登录链接。无需记住密码。"
+
+#: app/templates/game/hub.html:186
 msgid ""
 "Every scenario reflects a real governing dilemma. There are no easy answers "
 "— only the values you choose to prioritise."
 msgstr "每个场景都反映真实的治理困境。没有简单答案——只有你选择优先考虑的价值观。"
 
-#: app/templates/game/hub.html:170 app/templates/game/outcome.html:171
+#: app/templates/game/hub.html:194 app/templates/game/outcome.html:275
 msgid "How we write scenarios"
 msgstr "我们如何编写场景"
 
@@ -21949,102 +22207,226 @@ msgstr "%(headline)s — Society Speaks 上的权衡"
 msgid "Tradeoffs on Society Speaks"
 msgstr "Society Speaks 上的权衡"
 
-#: app/templates/game/outcome.html:62
+#: app/templates/game/outcome.html:55
+msgid "You vs your past self"
+msgstr ""
+
+#: app/templates/game/outcome.html:57
+#, python-format
+msgid "Last time you faced this (%(when)s), %(society)s ended:"
+msgstr ""
+
+#: app/templates/game/outcome.html:61
+msgid "A different ending this time — you found another path."
+msgstr ""
+
+#: app/templates/game/outcome.html:63
+msgid "Same ending as before. Can you steer it somewhere new?"
+msgstr ""
+
+#: app/templates/game/outcome.html:70
+#, fuzzy
+msgid "How you compare"
+msgstr "我们如何对标"
+
+#: app/templates/game/outcome.html:72
+msgid "who played today"
+msgstr ""
+
+#: app/templates/game/outcome.html:72
+msgid "who faced this crisis"
+msgstr ""
+
+#: app/templates/game/outcome.html:75
+#, python-format
+msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
+msgstr ""
+
+#: app/templates/game/outcome.html:80
+#, python-format
+msgid "%(pct)d%% of them ended like you."
+msgstr ""
+
+#: app/templates/game/outcome.html:84
+#, python-format
+msgid "Based on %(n)d leader so far."
+msgid_plural "Based on %(n)d leaders so far."
+msgstr[0] ""
+
+#: app/templates/game/outcome.html:88
+msgid ""
+"You're among the first to govern this crisis. Comparisons unlock as more "
+"leaders play — come back to see where you stood."
+msgstr ""
+
+#: app/templates/game/outcome.html:103
 msgid "Your longest run yet."
 msgstr "你迄今为止最长的一次运行。"
 
-#: app/templates/game/outcome.html:64
+#: app/templates/game/outcome.html:105
 #, python-format
 msgid "Longest: %(n)d days"
 msgstr "最长：%(n)d 天"
 
-#: app/templates/game/outcome.html:72
+#: app/templates/game/outcome.html:113
 msgid "Quick Run · no streak credit"
 msgstr "快速运行 · 无连续奖励"
 
-#: app/templates/game/outcome.html:77
+#: app/templates/game/outcome.html:119
+#, fuzzy
+msgid "Don't break the streak"
+msgstr "通过 Stripe 安全捐款"
+
+#: app/templates/game/outcome.html:119
+#, fuzzy
+msgid "Come back tomorrow"
+msgstr "明天回来获取新问题。"
+
+#: app/templates/game/outcome.html:122
+msgid ""
+"One email when the next scenario is live — that's it. Unsubscribe in a "
+"click."
+msgstr ""
+
+#: app/templates/game/outcome.html:128
+#, fuzzy
+msgid "You're set — watch your inbox."
+msgstr "您已订阅！请检查您的收件箱。"
+
+#: app/templates/game/outcome.html:129
+#, fuzzy
+msgid "Enter a valid email and try again."
+msgstr "请输入有效的电子邮件地址。"
+
+#: app/templates/game/outcome.html:134
+#, fuzzy
+msgid "Email me when it's live"
+msgstr "给我发送登录链接"
+
+#: app/templates/game/outcome.html:144
+#, fuzzy
+msgid "Email address for reminders"
+msgstr "提醒邮件"
+
+#: app/templates/game/outcome.html:146
+#, fuzzy
+msgid "Remind me"
+msgstr "发送时间"
+
+#: app/templates/game/outcome.html:156
 msgid "Under pressure"
 msgstr "压力之下"
 
-#: app/templates/game/outcome.html:84
+#: app/templates/game/outcome.html:163
 msgid "Same scenario · different path"
 msgstr "相同情景·不同路径"
 
-#: app/templates/game/outcome.html:86
+#: app/templates/game/outcome.html:165
 #, python-format
 msgid "%(name)s ended with"
 msgstr "%(name)s 的结局是"
 
-#: app/templates/game/outcome.html:90
+#: app/templates/game/outcome.html:169
 msgid ""
 "You played the same crisis. The game never grades — it only shows what you "
 "each prioritised."
 msgstr "你们都经历了同一场危机。游戏不评分——只展示你们各自的优先选择。"
 
-#: app/templates/game/outcome.html:96
+#: app/templates/game/outcome.html:176 app/templates/game/outcome.html:186
+#: app/templates/game/outcome.html:189
+#, fuzzy
+msgid "Challenge a friend"
+msgstr "邀请朋友"
+
+#: app/templates/game/outcome.html:178
+msgid ""
+"Send them into the same crisis. Your headline stays hidden until they finish"
+" their own run."
+msgstr ""
+
+#: app/templates/game/outcome.html:185
+msgid "I governed a nation on Tradeoffs. Your turn."
+msgstr ""
+
+#: app/templates/game/outcome.html:188
+#, fuzzy
+msgid "Could not copy — long-press the link below"
+msgstr "无法复制——请选择上方的文本"
+
+#: app/templates/game/outcome.html:197
 msgid "Where you landed"
 msgstr "你的立场"
 
-#: app/templates/game/outcome.html:97
+#: app/templates/game/outcome.html:198
 msgid "Your society on the trust–autonomy and prosperity–fairness axes"
 msgstr "你的社会在信任–自主权和繁荣–公平轴上的位置"
 
-#: app/templates/game/components/stat_bars.html:3
-#: app/templates/game/outcome.html:100
-msgid "Prosperity"
-msgstr "繁荣"
-
-#: app/templates/game/outcome.html:103
-msgid "Autonomy"
-msgstr "自主权"
-
-#: app/templates/game/outcome.html:109
+#: app/templates/game/outcome.html:210
 msgid "Final state"
 msgstr "最终状态"
 
-#: app/templates/game/outcome.html:115
+#: app/templates/game/outcome.html:216
 msgid "Take this further"
 msgstr "深入探讨"
 
-#: app/templates/game/outcome.html:131
+#: app/templates/game/outcome.html:232
 msgid "Share your results"
 msgstr "分享你的结果"
 
-#: app/templates/game/outcome.html:135
+#: app/templates/game/outcome.html:236
 msgid ""
 "Copy a summary for WhatsApp, iMessage, or social — headline, stats, and your"
 " link."
 msgstr "复制总结到 WhatsApp、iMessage 或社交媒体——包含标题、数据和你的链接。"
 
-#: app/templates/game/outcome.html:137
+#: app/templates/game/outcome.html:238
 msgid "Results summary to share"
 msgstr "可分享的结果总结"
 
-#: app/templates/game/outcome.html:144 app/templates/game/outcome.html:147
+#: app/templates/game/outcome.html:245 app/templates/game/outcome.html:248
 msgid "Share results"
 msgstr "分享结果"
 
-#: app/templates/game/outcome.html:146
+#: app/templates/game/outcome.html:247
 msgid "Could not copy — select the text above"
 msgstr "无法复制——请选择上方的文本"
 
-#: app/templates/game/outcome.html:150
+#: app/templates/game/outcome.html:251
 msgid "Play again"
 msgstr "再玩一次"
 
-#: app/templates/game/outcome.html:154
+#: app/templates/game/outcome.html:255
 msgid "Friends can open your link to see the full outcome card."
 msgstr "朋友可以打开你的链接查看完整的结果卡。"
 
-#: app/templates/game/outcome.html:161
+#: app/templates/game/outcome.html:262
 msgid "Save your societies."
 msgstr "保存你的社群。"
 
-#: app/templates/game/outcome.html:162
-msgid ""
-"Without an account, your streak and archive only live on this browser. Sign "
-"in to keep them."
+#: app/templates/game/outcome.html:263
+#, fuzzy
+msgid "Without an account, your streak and archive only live on this browser."
 msgstr "没有账户的情况下，你的连胜记录和存档仅保留在此浏览器中。登录以保留它们。"
+
+#: app/templates/game/reminders_unsubscribed.html:3
+#: app/templates/game/reminders_unsubscribed.html:12
+#, fuzzy
+msgid "Reminders stopped"
+msgstr "提醒计划于："
+
+#: app/templates/game/reminders_unsubscribed.html:14
+#, python-format
+msgid "We won't email %(email)s about new scenarios anymore."
+msgstr ""
+
+#: app/templates/game/reminders_unsubscribed.html:14
+msgid "We won't send you reminders anymore."
+msgstr ""
+
+#: app/templates/game/reminders_unsubscribed.html:16
+#, fuzzy
+msgid "Back to Tradeoffs"
+msgstr "初次接触权衡游戏？"
 
 #: app/templates/game/turn.html:8
 msgid "Beginning"
@@ -22066,30 +22448,58 @@ msgstr "哎呀…"
 msgid "Legacy"
 msgstr "遗产"
 
-#: app/templates/game/turn.html:20
+#: app/templates/game/turn.html:16
+#, fuzzy
+msgid "Steady"
+msgstr "协调员"
+
+#: app/templates/game/turn.html:17
+msgid "Pressure building"
+msgstr ""
+
+#: app/templates/game/turn.html:18
+#, fuzzy
+msgid "Under strain"
+msgstr "鲜为人知"
+
+#: app/templates/game/turn.html:19
+msgid "Crisis point"
+msgstr ""
+
+#: app/templates/game/turn.html:28
 #, python-brace-format
 msgid "Turn {n} of {total}"
 msgstr "第 {n} 轮，共 {total} 轮"
 
-#: app/templates/game/turn.html:45
+#: app/templates/game/turn.html:41
+msgid ""
+"Hidden strain on your society — debt and fragility you can feel but not see."
+msgstr ""
+
+#: app/templates/game/turn.html:57
 #, python-format
 msgid "Turn %(n)d"
 msgstr "第 %(n)d 轮"
 
-#: app/templates/game/turn.html:46
+#: app/templates/game/turn.html:58
 #, python-format
 msgid "Turn %(n)d of %(total)d"
 msgstr "第 %(n)d 轮，共 %(total)d 轮"
 
-#: app/templates/game/turn.html:52
+#: app/templates/game/turn.html:70
 msgid "Your options"
 msgstr "您的选项"
 
-#: app/templates/game/turn.html:62
+#: app/templates/game/turn.html:84
 msgid "Likely effects"
 msgstr "可能的影响"
 
-#: app/templates/game/turn.html:92
+#: app/templates/game/turn.html:98
+#, fuzzy
+msgid "Tip: press 1–3 to choose"
+msgstr "不确定如何选择？"
+
+#: app/templates/game/turn.html:118
 msgid "Every choice costs something"
 msgstr "每个选择都是有代价的"
 
