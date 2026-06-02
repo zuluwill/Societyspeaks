@@ -1847,26 +1847,25 @@ def init_scheduler(app):
                             logger.debug(f"Sent weekly digest to {subscriber.email}")
                             
                             # Track with PostHog
-                            try:
-                                import posthog, hashlib
-                                if posthog and getattr(posthog, 'project_api_key', None):
-                                    if subscriber.user_id:
-                                        _ph_id = str(subscriber.user_id)
-                                    else:
-                                        _ph_id = 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
-                                    posthog.capture(
-                                        distinct_id=_ph_id,
-                                        event='weekly_digest_sent',
-                                        properties={
-                                            'question_count': len(questions),
-                                            'question_ids': [q.id for q in questions],
-                                            'send_day': subscriber.preferred_send_day,
-                                            'send_hour': subscriber.preferred_send_hour,
-                                            'timezone': subscriber.timezone or 'UTC'
-                                        }
-                                    )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                            import hashlib
+                            from app.lib.posthog_utils import safe_posthog_capture
+                            import posthog as _ph
+                            _ph_id = (
+                                str(subscriber.user_id) if subscriber.user_id
+                                else 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
+                            )
+                            safe_posthog_capture(
+                                posthog_client=_ph,
+                                distinct_id=_ph_id,
+                                event='weekly_digest_sent',
+                                properties={
+                                    'question_count': len(questions),
+                                    'question_ids': [q.id for q in questions],
+                                    'send_day': subscriber.preferred_send_day,
+                                    'send_hour': subscriber.preferred_send_hour,
+                                    'timezone': subscriber.timezone or 'UTC',
+                                },
+                            )
                         else:
                             logger.warning(f"Failed to send weekly digest to {subscriber.email}")
 
@@ -1945,24 +1944,23 @@ def init_scheduler(app):
                             logger.debug(f"Sent monthly digest to {subscriber.email}")
                             
                             # Track with PostHog
-                            try:
-                                import posthog, hashlib
-                                if posthog and getattr(posthog, 'project_api_key', None):
-                                    if subscriber.user_id:
-                                        _ph_id = str(subscriber.user_id)
-                                    else:
-                                        _ph_id = 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
-                                    posthog.capture(
-                                        distinct_id=_ph_id,
-                                        event='monthly_digest_sent',
-                                        properties={
-                                            'question_count': len(questions),
-                                            'question_ids': [q.id for q in questions],
-                                            'timezone': subscriber.timezone or 'UTC'
-                                        }
-                                    )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                            import hashlib
+                            from app.lib.posthog_utils import safe_posthog_capture
+                            import posthog as _ph
+                            _ph_id = (
+                                str(subscriber.user_id) if subscriber.user_id
+                                else 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
+                            )
+                            safe_posthog_capture(
+                                posthog_client=_ph,
+                                distinct_id=_ph_id,
+                                event='monthly_digest_sent',
+                                properties={
+                                    'question_count': len(questions),
+                                    'question_ids': [q.id for q in questions],
+                                    'timezone': subscriber.timezone or 'UTC',
+                                },
+                            )
                         else:
                             logger.warning(f"Failed to send monthly digest to {subscriber.email}")
 
@@ -2102,20 +2100,13 @@ def init_scheduler(app):
                         logger.info(f"Posted daily question #{question.question_number} to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            try:
-                                posthog.capture(
-                                    distinct_id='system',
-                                    event='daily_question_posted_to_x',
-                                    properties={
-                                        'question_id': question.id,
-                                        'question_number': question.question_number,
-                                        'tweet_id': tweet_id,
-                                        'response_count': question.response_count
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                        from app.lib.posthog_utils import safe_system_capture
+                        safe_system_capture('daily_question_posted_to_x', properties={
+                            'question_id': question.id,
+                            'question_number': question.question_number,
+                            'tweet_id': tweet_id,
+                            'response_count': question.response_count,
+                        })
                 except DuplicatePostError:
                     logger.info(f"Daily question #{question.question_number} already posted to X (duplicate)")
                 except Exception as e:
@@ -2137,20 +2128,13 @@ def init_scheduler(app):
                         logger.info(f"Posted daily question #{question.question_number} to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            try:
-                                posthog.capture(
-                                    distinct_id='system',
-                                    event='daily_question_posted_to_bluesky',
-                                    properties={
-                                        'question_id': question.id,
-                                        'question_number': question.question_number,
-                                        'bluesky_uri': bluesky_uri,
-                                        'response_count': question.response_count
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                        from app.lib.posthog_utils import safe_system_capture
+                        safe_system_capture('daily_question_posted_to_bluesky', properties={
+                            'question_id': question.id,
+                            'question_number': question.question_number,
+                            'bluesky_uri': bluesky_uri,
+                            'response_count': question.response_count,
+                        })
                 except Exception as e:
                     logger.error(f"Error posting daily question to Bluesky: {e}")
                     
@@ -2203,19 +2187,12 @@ def init_scheduler(app):
                         logger.info(f"Posted weekly insights to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            try:
-                                posthog.capture(
-                                    distinct_id='system',
-                                    event='weekly_insights_posted',
-                                    properties={
-                                        'platform': 'x',
-                                        'tweet_id': tweet_id,
-                                        'content_type': 'value_first'
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                        from app.lib.posthog_utils import safe_system_capture
+                        safe_system_capture('weekly_insights_posted', properties={
+                            'platform': 'x',
+                            'tweet_id': tweet_id,
+                            'content_type': 'value_first',
+                        })
                 except DuplicatePostError:
                     logger.info("Weekly insights already posted to X (duplicate)")
                 except Exception as e:
@@ -2234,19 +2211,12 @@ def init_scheduler(app):
                         logger.info(f"Posted weekly insights to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            try:
-                                posthog.capture(
-                                    distinct_id='system',
-                                    event='weekly_insights_posted',
-                                    properties={
-                                        'platform': 'bluesky',
-                                        'post_uri': bluesky_uri,
-                                        'content_type': 'value_first'
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                        from app.lib.posthog_utils import safe_system_capture
+                        safe_system_capture('weekly_insights_posted', properties={
+                            'platform': 'bluesky',
+                            'post_uri': bluesky_uri,
+                            'content_type': 'value_first',
+                        })
                 except Exception as e:
                     logger.error(f"Error posting weekly insights to Bluesky: {e}")
                     
@@ -2308,21 +2278,14 @@ def init_scheduler(app):
                         logger.info(f"Posted daily brief to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            try:
-                                posthog.capture(
-                                    distinct_id='system',
-                                    event='daily_brief_posted_to_x',
-                                    properties={
-                                        'brief_id': brief.id,
-                                        'brief_title': brief.title,
-                                        'brief_date': brief.date.isoformat(),
-                                        'tweet_id': tweet_id,
-                                        'item_count': brief.item_count
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                        from app.lib.posthog_utils import safe_system_capture
+                        safe_system_capture('daily_brief_posted_to_x', properties={
+                            'brief_id': brief.id,
+                            'brief_title': brief.title,
+                            'brief_date': brief.date.isoformat(),
+                            'tweet_id': tweet_id,
+                            'item_count': brief.item_count,
+                        })
                 except DuplicatePostError:
                     logger.info(f"Daily brief already posted to X (duplicate)")
                 except Exception as e:
@@ -2344,21 +2307,14 @@ def init_scheduler(app):
                         logger.info(f"Posted daily brief to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            try:
-                                posthog.capture(
-                                    distinct_id='system',
-                                    event='daily_brief_posted_to_bluesky',
-                                    properties={
-                                        'brief_id': brief.id,
-                                        'brief_title': brief.title,
-                                        'brief_date': brief.date.isoformat(),
-                                        'bluesky_uri': bluesky_uri,
-                                        'item_count': brief.item_count
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(f"PostHog tracking error: {e}")
+                        from app.lib.posthog_utils import safe_system_capture
+                        safe_system_capture('daily_brief_posted_to_bluesky', properties={
+                            'brief_id': brief.id,
+                            'brief_title': brief.title,
+                            'brief_date': brief.date.isoformat(),
+                            'bluesky_uri': bluesky_uri,
+                            'item_count': brief.item_count,
+                        })
                 except Exception as e:
                     logger.error(f"Error posting daily brief to Bluesky: {e}")
                     

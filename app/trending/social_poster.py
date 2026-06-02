@@ -652,23 +652,15 @@ def post_to_bluesky(
             logger.warning(f"Engagement tracking error: {e}")
 
         # Track with PostHog
-        try:
-            import posthog
-            if posthog and getattr(posthog, 'project_api_key', None):
-                posthog.capture(
-                    distinct_id='system',
-                    event='social_post_created',
-                    properties={
-                        'platform': 'bluesky',
-                        'post_uri': post.uri,
-                        'has_discussion': discussion is not None,
-                        'has_custom_text': custom_text is not None,
-                        'topic': topic,
-                        'hook_variant': hook_variant,
-                    }
-                )
-        except Exception as e:
-            logger.warning(f"PostHog tracking error: {e}")
+        from app.lib.posthog_utils import safe_system_capture
+        safe_system_capture('social_post_created', properties={
+            'platform': 'bluesky',
+            'post_uri': post.uri,
+            'has_discussion': discussion is not None,
+            'has_custom_text': custom_text is not None,
+            'topic': topic,
+            'hook_variant': hook_variant,
+        })
 
         return post.uri
         
@@ -892,23 +884,15 @@ def post_to_x(
 
         # Track with PostHog
         if response and response.data:
-            try:
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
-                        distinct_id='system',
-                        event='social_post_created',
-                        properties={
-                            'platform': 'x',
-                            'tweet_id': tweet_id,
-                            'has_discussion': discussion is not None,
-                            'has_custom_text': custom_text is not None,
-                            'topic': topic,
-                            'hook_variant': hook_variant,
-                        }
-                    )
-            except Exception as e:
-                logger.warning(f"PostHog tracking error: {e}")
+            from app.lib.posthog_utils import safe_system_capture
+            safe_system_capture('social_post_created', properties={
+                'platform': 'x',
+                'tweet_id': tweet_id,
+                'has_discussion': discussion is not None,
+                'has_custom_text': custom_text is not None,
+                'topic': topic,
+                'hook_variant': hook_variant,
+            })
 
         return tweet_id
     

@@ -120,7 +120,10 @@ def get_or_start_daily_run(
     preserving the shared-daily and cohort/challenge guarantees.
     """
     scenario = load_scenario(scenario_slug)
-    total_turns = len(scenario['turns'])
+    turns = scenario.get('turns') or []
+    if not turns:
+        raise GameRunError(f"Scenario '{scenario_slug}' has no turns configured")
+    total_turns = len(turns)
 
     if not user_id and not session_fingerprint:
         raise GameRunError('Identity required')
@@ -171,14 +174,22 @@ def get_or_start_daily_run(
     cutoff = now - timedelta(hours=expiry_hours)
 
     if run and run.last_active_at and run.last_active_at < cutoff:
-        run.status = 'abandoned'
-        db.session.commit()
+        try:
+            run.status = 'abandoned'
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.warning("Could not mark run %s as abandoned", run.uuid)
         run = None
 
     if run:
         if not run.last_active_at or (now - run.last_active_at) > timedelta(minutes=5):
-            run.last_active_at = now
-            db.session.commit()
+            try:
+                run.last_active_at = now
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                current_app.logger.warning("Could not update last_active_at for run %s", run.uuid)
         return run
 
     name = (society_name or '').strip() or DEFAULT_SOCIETY_NAME
@@ -206,7 +217,11 @@ def get_or_start_daily_run(
     )
     run.posthog_distinct_id = resolve_distinct_id_for_run(run)
     db.session.add(run)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise GameRunError('Could not create run — please try again')
     track_game_event(
         run,
         'game_run_started',
@@ -235,7 +250,10 @@ def start_quick_run(
     calculations.
     """
     scenario = load_scenario(scenario_slug)
-    total_turns = len(scenario['turns'])
+    turns = scenario.get('turns') or []
+    if not turns:
+        raise GameRunError(f"Scenario '{scenario_slug}' has no turns configured")
+    total_turns = len(turns)
 
     if not user_id and not session_fingerprint:
         raise GameRunError('Identity required')
@@ -261,7 +279,11 @@ def start_quick_run(
     )
     run.posthog_distinct_id = resolve_distinct_id_for_run(run)
     db.session.add(run)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise GameRunError('Could not create run — please try again')
     track_game_event(
         run,
         'game_run_started',
@@ -431,7 +453,11 @@ def apply_run_choice(run: GameRun, choice_id: str) -> Dict[str, Any]:
         run.status = GAME_RUN_STATUS_COMPLETED
         run.completed_at = utcnow_naive()
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     track_game_event(
         run,

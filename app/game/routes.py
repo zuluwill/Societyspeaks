@@ -466,7 +466,7 @@ def archive():
         abort(404)
 
     user_id, fingerprint = _player_identity()
-    page = max(1, request.args.get('page', default=1, type=int) or 1)
+    page = min(max(1, request.args.get('page', default=1, type=int) or 1), 500)
 
     total = count_completed_societies_for_visitor(
         user_id=user_id,
@@ -597,6 +597,7 @@ def reminders_subscribe():
 
 
 @game_bp.route('/reminders/unsubscribe', methods=['GET', 'POST'])
+@limiter.limit('20 per minute')
 @csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def reminders_unsubscribe():
     """One-click unsubscribe (RFC 8058) and human GET — token never expires."""

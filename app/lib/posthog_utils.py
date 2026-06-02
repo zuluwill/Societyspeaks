@@ -262,3 +262,25 @@ def safe_posthog_capture(
     except Exception:
         # Analytics must never break product flows.
         return
+
+
+def safe_system_capture(event: str, properties: Optional[dict] = None) -> None:
+    """Capture a PostHog event for automated background/scheduler jobs.
+
+    Uses ``distinct_id='system'`` because these events have no user identity
+    and no HTTP request context. Unlike ``safe_posthog_capture``, this function
+    intentionally omits request-context enrichment (``$current_url``, UTM tags)
+    since there is no request. Always a no-op when PostHog is not configured.
+    """
+    try:
+        import posthog as ph
+
+        if not (getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)):
+            return
+        ph.capture(
+            distinct_id="system",
+            event=event,
+            properties=dict(properties or {}),
+        )
+    except Exception:
+        pass

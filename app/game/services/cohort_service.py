@@ -138,7 +138,7 @@ def cohort_comparison(run: GameRun, *, min_n: Optional[int] = None) -> Optional[
         axis['label'] = axis_direction_label(axis['direction'])
 
     rarity = None
-    if outcome.outcome_category:
+    if outcome.outcome_category and sample_size > 0:
         same = sum(1 for r in rows if r[2] == outcome.outcome_category)
         rarity = {
             'category': outcome.outcome_category,
