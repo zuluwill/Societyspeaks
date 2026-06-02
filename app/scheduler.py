@@ -1848,10 +1848,14 @@ def init_scheduler(app):
                             
                             # Track with PostHog
                             try:
-                                import posthog
+                                import posthog, hashlib
                                 if posthog and getattr(posthog, 'project_api_key', None):
+                                    if subscriber.user_id:
+                                        _ph_id = str(subscriber.user_id)
+                                    else:
+                                        _ph_id = 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
                                     posthog.capture(
-                                        distinct_id=str(subscriber.user_id) if subscriber.user_id else subscriber.email,
+                                        distinct_id=_ph_id,
                                         event='weekly_digest_sent',
                                         properties={
                                             'question_count': len(questions),
@@ -1942,10 +1946,14 @@ def init_scheduler(app):
                             
                             # Track with PostHog
                             try:
-                                import posthog
+                                import posthog, hashlib
                                 if posthog and getattr(posthog, 'project_api_key', None):
+                                    if subscriber.user_id:
+                                        _ph_id = str(subscriber.user_id)
+                                    else:
+                                        _ph_id = 'anon-digest-' + hashlib.sha256(subscriber.email.encode()).hexdigest()[:16]
                                     posthog.capture(
-                                        distinct_id=str(subscriber.user_id) if subscriber.user_id else subscriber.email,
+                                        distinct_id=_ph_id,
                                         event='monthly_digest_sent',
                                         properties={
                                             'question_count': len(questions),
