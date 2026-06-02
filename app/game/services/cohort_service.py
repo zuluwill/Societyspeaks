@@ -24,11 +24,16 @@ _AXIS_HIGH = {'trust_autonomy': 'autonomy', 'prosperity_fairness': 'fairness'}
 _AXIS_LOW = {'trust_autonomy': 'trust', 'prosperity_fairness': 'prosperity'}
 
 
-def _min_n() -> int:
+def cohort_min_n() -> int:
+    """Privacy floor for any per-day aggregate (shared by daily_results_service)."""
     try:
         return int(current_app.config.get('GAME_COHORT_MIN_N', _DEFAULT_MIN_N))
     except Exception:  # noqa: BLE001 — config misconfig shouldn't break outcomes
         return _DEFAULT_MIN_N
+
+
+# Back-compat private alias (kept so existing call sites stay untouched).
+_min_n = cohort_min_n
 
 
 def _pct_strictly_less(values: List[float], pivot: float) -> int:

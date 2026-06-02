@@ -31,6 +31,7 @@ from app.game.services.archive_service import (
 )
 from app.game.services.bridge_service import find_ss_bridge
 from app.game.services.cohort_service import cohort_comparison, cohort_share_line
+from app.game.services.daily_results_service import world_today, world_today_share_line
 from app.game.services.daily_service import (
     daily_meta,
     ensure_schedule_buffer,
@@ -55,6 +56,7 @@ from app.game.services.challenge_service import (
     get_or_create_challenge,
 )
 from app.game.services.past_self_service import previous_outcome_for_scenario
+from app.game.services.profile_service import compute_player_profile
 from app.game.services.reminder_service import (
     has_active_reminder,
     subscribe_to_reminders,
@@ -62,6 +64,7 @@ from app.game.services.reminder_service import (
 )
 from app.game.services.share_text_service import build_share_text
 from app.game.services.society_name_service import generate_society_names
+from app.game.services.stats_service import participation_stats
 from app.game.services.run_service import (
     GameRunNotFound,
     build_outcome_view,
@@ -203,6 +206,12 @@ def index():
         seed = f"{fingerprint or 'anon'}|{today['schedule_date'].isoformat()}"
         society_name_suggestions = generate_society_names(12, seed=seed)
 
+    # First-timers: a no-spoiler taste of today's actual dilemma (turn 1 only)
+    # to convert the curious before they commit.
+    dilemma_preview = None
+    if is_first_time and not in_progress and not completed_today_uuid:
+        dilemma_preview = _dilemma_preview(today['scenario_slug'])
+
     response = make_response(
         render_template(
             'game/hub.html',
@@ -215,9 +224,27 @@ def index():
             is_authenticated=bool(user_id),
             is_first_time=is_first_time,
             society_name_suggestions=society_name_suggestions,
+            participation=participation_stats(),
+            dilemma_preview=dilemma_preview,
         )
     )
     return set_voter_client_cookies_if_needed(response)
+
+
+def _dilemma_preview(scenario_slug: str) -> dict | None:
+    """Turn-1 prompt + choice labels for the hub teaser (no effects shown)."""
+    try:
+        scenario = load_scenario(scenario_slug)
+    except Exception:  # noqa: BLE001 — never break the hub on a bad scenario
+        return None
+    turns = scenario.get('turns') or []
+    if not turns:
+        return None
+    first = turns[0]
+    labels = [c.get('label', '') for c in (first.get('choices') or [])[:3] if c.get('label')]
+    if not labels:
+        return None
+    return {'prompt': first.get('prompt', ''), 'choices': labels}
 
 
 @game_bp.route('/daily')
@@ -350,6 +377,10 @@ def outcome(run_uuid: str):
     contradiction = view.get('contradiction') or {}
 
     cohort = cohort_comparison(run)
+    world = world_today(run)
+    # One social comparison line: prefer the vivid choice-level "you went against
+    # the crowd" beat, fall back to outcome rarity. DRY — a single 🌍 line.
+    world_line = world_today_share_line(world) or cohort_share_line(cohort)
 
     challenge_row = get_or_create_challenge(run)
     challenge_link = challenge_url(challenge_row) if challenge_row else None
@@ -369,7 +400,7 @@ def outcome(run_uuid: str):
         trait_chips=view.get('trait_chips'),
         streak_current=int((view.get('streak') or {}).get('current') or 0),
         contradiction_summary=contradiction.get('summary'),
-        cohort_line=cohort_share_line(cohort),
+        cohort_line=world_line,
         share_url=share_url,
         challenge_url=challenge_link,
         played_at=run.completed_at or run.started_at,
@@ -414,6 +445,7 @@ def outcome(run_uuid: str):
             challenge_link=challenge_link,
             challenge_reveal=challenge_reveal,
             cohort=cohort,
+            world=world,
             is_authenticated=current_user.is_authenticated,
             signin_return=signin_return,
             show_reminder_optin=show_reminder_optin,
@@ -460,6 +492,30 @@ def archive():
             total_pages=total_pages,
             has_next=page < total_pages,
             has_prev=page > 1,
+        )
+    )
+    return set_voter_client_cookies_if_needed(response)
+
+
+@game_bp.route('/profile')
+@limiter.limit('60 per minute')
+def profile():
+    """Cumulative governing identity across all of this visitor's societies."""
+    if not current_app.config.get('GAME_ENABLED', True):
+        abort(404)
+
+    user_id, fingerprint = _player_identity()
+    profile_data = compute_player_profile(
+        user_id=user_id, session_fingerprint=fingerprint
+    )
+    streak = compute_daily_streak(user_id=user_id, session_fingerprint=fingerprint)
+
+    response = make_response(
+        render_template(
+            'game/profile.html',
+            profile=profile_data,
+            streak=streak,
+            is_authenticated=bool(user_id),
         )
     )
     return set_voter_client_cookies_if_needed(response)
@@ -600,12 +656,18 @@ def outcome_og_png(run_uuid: str):
     if not og_image_service.is_available():
         return redirect(url_for('game.outcome_og_svg', run_uuid=run_uuid))
 
-    cache_key = f'game:og:png:{run_uuid}'
+    # Social-proof badge ("Only X% made your call"). Keyed into the cache so an
+    # early, pre-threshold render doesn't freeze a badge-less card for 24h — once
+    # the cohort grows, the ready variant caches under a distinct key.
+    world_badge = world_today_share_line(world_today(run))
+    cache_key = f'game:og:png:{run_uuid}:{"w1" if world_badge else "w0"}'
     png_bytes = _og_cache_get(cache_key)
     if png_bytes is None:
         view = build_outcome_view(run)
         emblem = emblem_for_run(run)
-        png_bytes = og_image_service.render_outcome_png(run=run, view=view, emblem=emblem)
+        png_bytes = og_image_service.render_outcome_png(
+            run=run, view=view, emblem=emblem, world_badge=world_badge
+        )
         if png_bytes is None:
             return redirect(url_for('game.outcome_og_svg', run_uuid=run_uuid))
         _og_cache_set(cache_key, png_bytes)

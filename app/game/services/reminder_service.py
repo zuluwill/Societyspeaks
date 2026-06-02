@@ -16,7 +16,7 @@ from sqlalchemy import or_
 from app import db
 from app.game.constants import GAME_RUN_STATUS_COMPLETED
 from app.game.services.daily_service import daily_meta, utc_game_date
-from app.game.services.identity_service import compute_daily_streak
+from app.game.services.identity_service import compute_daily_streak, ownership_clauses
 from app.lib.time import utcnow_naive
 from app.models.game import GameReminderSubscription, GameRun
 
@@ -30,18 +30,9 @@ def _normalise_email(email: Optional[str]) -> Optional[str]:
     return email or None
 
 
-def _ownership_clauses(user_id: Optional[int], session_fingerprint: Optional[str]):
-    clauses = []
-    if user_id:
-        clauses.append(GameRun.user_id == user_id)
-    if session_fingerprint:
-        clauses.append(GameRun.session_fingerprint == session_fingerprint)
-    return clauses
-
-
 def _played_on(day, *, user_id: Optional[int], session_fingerprint: Optional[str]) -> bool:
     """True if this visitor has a completed daily run started on ``day`` (UTC)."""
-    ownership = _ownership_clauses(user_id, session_fingerprint)
+    ownership = ownership_clauses(user_id, session_fingerprint)
     if not ownership:
         return False
 
@@ -63,7 +54,7 @@ def _played_on(day, *, user_id: Optional[int], session_fingerprint: Optional[str
 
 def _played_since(since: datetime, *, user_id: Optional[int], session_fingerprint: Optional[str]) -> bool:
     """True if this visitor completed a daily run on or after ``since`` (UTC)."""
-    ownership = _ownership_clauses(user_id, session_fingerprint)
+    ownership = ownership_clauses(user_id, session_fingerprint)
     if not ownership:
         return False
     return (

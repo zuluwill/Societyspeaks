@@ -52,6 +52,24 @@ _TAG_TO_DISCUSSION_TOPICS: Dict[str, tuple[str, ...]] = {
     'finance': ('Economy',),
     'sovereignty': ('Geopolitics', 'Politics'),
     'austerity': ('Economy', 'Politics'),
+    # v2 scenarios (pandemic, security, crime, disinformation, trade, disaster,
+    # pensions, federalism) — without these their topic_tags never bridge.
+    'health': ('Healthcare', 'Society'),
+    'emergency': ('Healthcare', 'Society'),
+    'civil_liberties': ('Politics', 'Society'),
+    'defence': ('Geopolitics', 'Politics'),
+    'justice': ('Politics', 'Society'),
+    'policing': ('Politics', 'Society'),
+    'crime': ('Politics', 'Society'),
+    'media': ('Technology', 'Society', 'Politics'),
+    'free_speech': ('Politics', 'Society'),
+    'trade': ('Economy', 'Geopolitics'),
+    'industry': ('Economy',),
+    'disaster': ('Environment', 'Society'),
+    'resilience': ('Environment', 'Infrastructure'),
+    'welfare': ('Society', 'Healthcare'),
+    'generations': ('Society',),
+    'devolution': ('Politics',),
 }
 
 

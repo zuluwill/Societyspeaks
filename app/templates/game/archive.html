@@ -104,7 +104,9 @@
   </section>
   {% endif %}
 
-  <p class="mt-8 text-center text-xs">
+  <p class="mt-8 text-center text-xs space-x-3">
+    <a href="{{ url_for('game.profile') }}" class="text-game-muted underline hover:text-game-text transition">{{ _('Your governing self') }}</a>
+    <span aria-hidden="true">·</span>
     <a href="{{ url_for('game.index') }}" class="text-game-muted underline hover:text-game-text transition">{{ _('Back to today') }}</a>
   </p>
 </div>

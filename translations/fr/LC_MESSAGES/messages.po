@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-01 20:11+0100\n"
+"POT-Creation-Date: 2026-06-02 11:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -677,7 +677,7 @@ msgstr "Vous vous êtes abonné avec succès !"
 
 #: app/brief/routes.py:419 app/brief/routes.py:502 app/brief/routes.py:503
 #: app/briefing/routes.py:827 app/briefing/routes.py:4186
-#: app/daily/routes.py:802 app/game/routes.py:509
+#: app/daily/routes.py:802 app/game/routes.py:590
 msgid "Please enter a valid email address."
 msgstr "Veuillez entrer une adresse email valide."
 
@@ -2908,11 +2908,11 @@ msgstr "Aucun fichier joint à cette preuve"
 msgid "Error downloading file"
 msgstr "Erreur lors du téléchargement du fichier"
 
-#: app/game/routes.py:514
+#: app/game/routes.py:595
 msgid "You're set — we'll nudge you when the next scenario is live."
 msgstr ""
 
-#: app/game/routes.py:532
+#: app/game/routes.py:614
 #, fuzzy
 msgid "That unsubscribe link is no longer valid."
 msgstr "Cette discussion n'est plus disponible."
@@ -2986,42 +2986,79 @@ msgstr ""
 msgid "Someone"
 msgstr "Fuseau horaire"
 
-#: app/game/services/cohort_service.py:155 app/templates/game/outcome.html:204
+#: app/game/services/cohort_service.py:160 app/templates/game/outcome.html:206
 msgid "Autonomy"
 msgstr ""
 
-#: app/game/services/cohort_service.py:156
+#: app/game/services/cohort_service.py:161
 #: app/templates/daily/_reason_input.html:54
 #: app/templates/daily/confirm_vote.html:123
 #: app/templates/daily/weekly_batch.html:201
 #: app/templates/game/components/stat_bars.html:4
-#: app/templates/game/outcome.html:203
+#: app/templates/game/outcome.html:205
 msgid "Trust"
 msgstr "Confiance"
 
-#: app/game/services/cohort_service.py:157
+#: app/game/services/cohort_service.py:162
 #: app/templates/daily/_reason_input.html:49
 #: app/templates/daily/confirm_vote.html:118
 #: app/templates/daily/weekly_batch.html:196
 #: app/templates/game/components/stat_bars.html:5
-#: app/templates/game/outcome.html:202
+#: app/templates/game/outcome.html:204
 msgid "Fairness"
 msgstr "Équité"
 
-#: app/game/services/cohort_service.py:158
+#: app/game/services/cohort_service.py:163
 #: app/templates/game/components/stat_bars.html:3
-#: app/templates/game/outcome.html:201
+#: app/templates/game/outcome.html:203
 msgid "Prosperity"
 msgstr ""
 
-#: app/game/services/cohort_service.py:169
+#: app/game/services/cohort_service.py:174
 #, python-format
 msgid "Only %(pct)d%% of leaders ended like you."
 msgstr ""
 
-#: app/game/services/cohort_service.py:173
+#: app/game/services/cohort_service.py:178
 #, python-format
 msgid "More %(dir)s-led than %(pct)d%% of leaders."
+msgstr ""
+
+#: app/game/services/daily_results_service.py:145
+#, python-format
+msgid "Only %(pct)d%% made the call you did: %(label)s"
+msgstr ""
+
+#: app/game/services/profile_service.py:27
+msgid "Spectacular collapse"
+msgstr ""
+
+#: app/game/services/profile_service.py:28
+msgid "Accidental dystopia"
+msgstr ""
+
+#: app/game/services/profile_service.py:29
+#, fuzzy
+msgid "Ironic success"
+msgstr "Révoquer l'accès"
+
+#: app/game/services/profile_service.py:30
+#, fuzzy
+msgid "Ironic failure"
+msgstr "Configurer"
+
+#: app/game/services/profile_service.py:31
+#, fuzzy
+msgid "Collapse"
+msgstr "Fermer"
+
+#: app/game/services/profile_service.py:32
+#, fuzzy
+msgid "Unexpected utopia"
+msgstr "Erreur inattendue"
+
+#: app/game/services/profile_service.py:33
+msgid "Mixed legacy"
 msgstr ""
 
 #: app/game/services/share_text_service.py:56
@@ -3035,8 +3072,8 @@ msgid "⚖️ %(society)s"
 msgstr ""
 
 #: app/game/services/share_text_service.py:80
-#: app/templates/game/archive.html:19 app/templates/game/hub.html:21
-#: app/templates/game/outcome.html:100
+#: app/templates/game/archive.html:19 app/templates/game/hub.html:27
+#: app/templates/game/outcome.html:100 app/templates/game/profile.html:18
 #, python-format
 msgid "%(num)d-day streak"
 msgid_plural "%(num)d-day streak"
@@ -6725,8 +6762,9 @@ msgstr "Suivre le Big Questions Journey"
 msgid "Read Today's Brief"
 msgstr "Lire le Brief d'Aujourd'hui"
 
-#: app/templates/game/archive.html:101 app/templates/game/hub.html:177
-#: app/templates/game/outcome.html:265 app/templates/index.html:158
+#: app/templates/game/archive.html:101 app/templates/game/hub.html:173
+#: app/templates/game/outcome.html:294 app/templates/game/profile.html:107
+#: app/templates/index.html:158
 msgid "Sign up free"
 msgstr "S'inscrire gratuitement"
 
@@ -7035,7 +7073,7 @@ msgid "Explore all discussions →"
 msgstr "Explorez toutes les discussions →"
 
 #: app/templates/briefing/add_rss_source.html:26
-#: app/templates/game/hub.html:118 app/templates/index.html:460
+#: app/templates/game/hub.html:196 app/templates/index.html:460
 #: app/templates/index.html:714 app/templates/partner/hub.html:238
 msgid "How it works"
 msgstr "Comment ça marche"
@@ -7264,7 +7302,7 @@ msgid ""
 "govern. What kind of leader do you become?"
 msgstr ""
 
-#: app/templates/game/hub.html:16 app/templates/index.html:682
+#: app/templates/game/hub.html:22 app/templates/index.html:682
 msgid "Today's scenario"
 msgstr ""
 
@@ -7289,7 +7327,8 @@ msgstr "S'inscrire"
 #: app/templates/emails/game_reminder.html:51
 #: app/templates/game/archive.html:91
 #: app/templates/game/editorial_principles.html:139
-#: app/templates/game/hub.html:102 app/templates/index.html:710
+#: app/templates/game/hub.html:149 app/templates/game/profile.html:92
+#: app/templates/game/profile.html:97 app/templates/index.html:710
 msgid "Play today's scenario"
 msgstr ""
 
@@ -7385,7 +7424,7 @@ msgstr "Portrait de Margaret Mead, anthropologue culturelle"
 msgid "Cultural Anthropologist"
 msgstr "Anthropologue culturelle"
 
-#: app/templates/game/outcome.html:225 app/templates/index.html:867
+#: app/templates/game/outcome.html:254 app/templates/index.html:867
 msgid "Join the conversation"
 msgstr "Rejoignez la conversation"
 
@@ -10530,7 +10569,7 @@ msgstr "Continuez Où Vous Étiez"
 
 #: app/templates/auth/dashboard.html:211
 #: app/templates/discussions/_information_step.html:84
-#: app/templates/game/hub.html:48 app/templates/game/turn.html:111
+#: app/templates/game/hub.html:96 app/templates/game/turn.html:111
 msgid "Continue"
 msgstr "Continuer"
 
@@ -10921,8 +10960,8 @@ msgstr "Mot de passe oublié ?"
 
 #: app/templates/auth/login.html:54
 #: app/templates/auth/magic_link_request.html:37
-#: app/templates/game/archive.html:102 app/templates/game/hub.html:178
-#: app/templates/game/outcome.html:266
+#: app/templates/game/archive.html:102 app/templates/game/hub.html:174
+#: app/templates/game/outcome.html:295 app/templates/game/profile.html:108
 msgid "Email me a sign-in link"
 msgstr "Envoyez-moi un lien de connexion par e-mail"
 
@@ -12628,7 +12667,7 @@ msgid "Using your account email"
 msgstr "En utilisant l'e-mail de votre compte"
 
 #: app/templates/brief/subscribe.html:44 app/templates/briefing/start.html:90
-#: app/templates/daily/subscribe.html:42 app/templates/game/outcome.html:143
+#: app/templates/daily/subscribe.html:42 app/templates/game/outcome.html:145
 #: app/templates/programmes/view.html:391
 msgid "you@example.com"
 msgstr "vous@exemple.com"
@@ -13102,7 +13141,7 @@ msgstr "Voir l'archive"
 msgid "How We Select Stories"
 msgstr "Comment nous sélectionnons les histoires"
 
-#: app/templates/brief/view.html:1015 app/templates/game/outcome.html:187
+#: app/templates/brief/view.html:1015 app/templates/game/outcome.html:189
 msgid "Link copied!"
 msgstr "Lien copié !"
 
@@ -18055,7 +18094,7 @@ msgstr "Copier le lien"
 #: app/templates/components/share_button.html:83
 #: app/templates/discussions/view_discussion.html:860
 #: app/templates/discussions/view_native.html:1189
-#: app/templates/game/outcome.html:246
+#: app/templates/game/outcome.html:275
 #: app/templates/partner/embed_generator.html:355
 #: app/templates/programmes/view.html:840
 msgid "Copied!"
@@ -23932,7 +23971,8 @@ msgstr ""
 "plus tard."
 
 #: app/templates/game/archive.html:4 app/templates/game/archive.html:15
-#: app/templates/game/hub.html:190 app/templates/game/outcome.html:273
+#: app/templates/game/hub.html:244 app/templates/game/outcome.html:302
+#: app/templates/game/profile.html:114
 #, fuzzy
 msgid "Your societies"
 msgstr "Votre source"
@@ -23941,12 +23981,13 @@ msgstr "Votre source"
 msgid "Every society you have governed on Tradeoffs."
 msgstr ""
 
-#: app/templates/game/archive.html:17 app/templates/game/hub.html:19
+#: app/templates/game/archive.html:17 app/templates/game/hub.html:25
+#: app/templates/game/profile.html:16
 #, python-format
 msgid "Longest: %(n)d"
 msgstr ""
 
-#: app/templates/game/archive.html:25
+#: app/templates/game/archive.html:25 app/templates/game/profile.html:25
 #, python-format
 msgid "%(n)d society governed"
 msgid_plural "%(n)d societies governed"
@@ -23967,12 +24008,12 @@ msgstr ""
 msgid "Govern your first nation and it will appear here."
 msgstr "Vos synthèses s'afficheront ici"
 
-#: app/templates/game/archive.html:48 app/templates/game/hub.html:71
+#: app/templates/game/archive.html:48 app/templates/game/hub.html:118
 #, fuzzy
 msgid "Your society"
 msgstr "Votre source"
 
-#: app/templates/game/archive.html:50 app/templates/game/hub.html:145
+#: app/templates/game/archive.html:50 app/templates/game/hub.html:223
 #: app/templates/game/turn.html:34
 msgid "Quick Run"
 msgstr ""
@@ -24006,7 +24047,13 @@ msgid ""
 " survive a cleared cache or a new device."
 msgstr ""
 
-#: app/templates/game/archive.html:108
+#: app/templates/game/archive.html:108 app/templates/game/hub.html:248
+#: app/templates/game/profile.html:3 app/templates/game/profile.html:14
+#, fuzzy
+msgid "Your governing self"
+msgstr "Pour la gouvernance"
+
+#: app/templates/game/archive.html:110 app/templates/game/profile.html:116
 #, fuzzy
 msgid "Back to today"
 msgstr "Retour au digest d'aujourd'hui"
@@ -24298,81 +24345,131 @@ msgstr ""
 msgid "Every choice costs something."
 msgstr ""
 
-#: app/templates/game/hub.html:6
+#: app/templates/game/hub.html:9
 msgid ""
 "Govern a nation under pressure. Five turns, three choices each — every "
 "decision trades one value against another. The societal strategy game on "
 "Society Speaks."
 msgstr ""
 
-#: app/templates/game/hub.html:27
+#: app/templates/game/hub.html:33
 msgid "You're in charge. Every decision costs something."
 msgstr ""
 
-#: app/templates/game/hub.html:29
+#: app/templates/game/hub.html:35
 msgid ""
 "Five turns. Three choices each. Govern a nation — and live with what you "
 "trade away."
 msgstr ""
 
-#: app/templates/game/hub.html:40
+#: app/templates/game/hub.html:45
+#, fuzzy, python-format
+msgid "%(total)s societies governed"
+msgstr ""
+
+#: app/templates/game/hub.html:45
+#, fuzzy, python-format
+msgid "%(n)d today"
+msgid_plural "%(n)d today"
+msgstr[0] "%(n)d jours"
+msgstr[1] ""
+
+#: app/templates/game/hub.html:51
+#, fuzzy
+msgid "Today's first decision"
+msgstr "Question du jour"
+
+#: app/templates/game/hub.html:65
+#, fuzzy
+msgid "Recent scenario topics"
+msgstr "Articles Récentes"
+
+#: app/templates/game/hub.html:78
+msgid ""
+"Every scenario reflects a real governing dilemma. There are no easy answers "
+"— only the values you choose to prioritise."
+msgstr ""
+
+#: app/templates/game/hub.html:88
 #, python-format
 msgid "%(num)d turn"
 msgid_plural "%(num)d turns"
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/templates/game/hub.html:45
+#: app/templates/game/hub.html:93
 #, python-format
 msgid "You're on turn %(current)d of %(total)d."
 msgstr ""
 
-#: app/templates/game/hub.html:53
+#: app/templates/game/hub.html:101
 #, python-format
 msgid ""
 "You've already played today's scenario. Come back at %(time)s UTC for the "
 "next one."
 msgstr ""
 
-#: app/templates/game/hub.html:56
+#: app/templates/game/hub.html:104
 msgid "View today's outcome"
 msgstr ""
 
-#: app/templates/game/hub.html:89 app/templates/game/hub.html:90
+#: app/templates/game/hub.html:136 app/templates/game/hub.html:137
 #, fuzzy
 msgid "Suggest another name"
 msgstr "Demander un autre lien"
 
-#: app/templates/game/hub.html:96
+#: app/templates/game/hub.html:143
 msgid "We've named it for you — roll the dice for another, or type your own."
 msgstr ""
 
-#: app/templates/game/hub.html:103
+#: app/templates/game/hub.html:150
 msgid "Free · 2 min"
 msgstr ""
 
-#: app/templates/game/hub.html:112
+#: app/templates/game/hub.html:159
+msgid "Tomorrow"
+msgstr ""
+
+#: app/templates/game/hub.html:162
+#, fuzzy, python-format
+msgid "Unlocks %(time)s UTC"
+msgstr "Dernier contrôle : %(time)s UTC"
+
+#: app/templates/game/hub.html:170
+msgid ""
+"Save your societies across devices and keep your streak when this browser "
+"forgets."
+msgstr ""
+
+#: app/templates/game/hub.html:176 app/templates/game/outcome.html:297
+#, fuzzy
+msgid ""
+"Already have an account? We email a one-click sign-in link — no password "
+"needed."
+msgstr "Nous vous enverrons un lien unique. Aucun mot de passe requis."
+
+#: app/templates/game/hub.html:189
 #, fuzzy
 msgid "More to explore"
 msgstr "Vos sources"
 
-#: app/templates/game/hub.html:116
+#: app/templates/game/hub.html:194
 msgid "New to Tradeoffs?"
 msgstr ""
 
-#: app/templates/game/hub.html:123
+#: app/templates/game/hub.html:201
 msgid "turns to govern"
 msgstr ""
 
-#: app/templates/game/hub.html:127
+#: app/templates/game/hub.html:205
 msgid "paths each turn"
 msgstr ""
 
-#: app/templates/game/hub.html:131
+#: app/templates/game/hub.html:209
 msgid "possible outcomes"
 msgstr ""
 
-#: app/templates/game/hub.html:135
+#: app/templates/game/hub.html:213
 msgid ""
 "A crisis lands on your desk — and every path forward sacrifices something "
 "real. Cut now and lose public trust. Borrow now and burden the next "
@@ -24380,45 +24477,17 @@ msgid ""
 "problems grow."
 msgstr ""
 
-#: app/templates/game/hub.html:138
+#: app/templates/game/hub.html:216
 msgid ""
 "Your society is yours: name it, watch its emblem take shape from your "
 "choices, and discover the kind of leader you become."
 msgstr ""
 
-#: app/templates/game/hub.html:146
+#: app/templates/game/hub.html:224
 msgid "Replay any past scenario anytime — no streak."
 msgstr ""
 
-#: app/templates/game/hub.html:164
-msgid "Tomorrow"
-msgstr ""
-
-#: app/templates/game/hub.html:167
-#, python-format
-msgid "New scenario unlocks at %(time)s UTC"
-msgstr ""
-
-#: app/templates/game/hub.html:174
-msgid ""
-"Save your societies across devices and keep your streak when this browser "
-"forgets."
-msgstr ""
-
-#: app/templates/game/hub.html:180 app/templates/game/outcome.html:268
-#, fuzzy
-msgid ""
-"Already have an account? We email a one-click sign-in link — no password "
-"needed."
-msgstr "Nous vous enverrons un lien unique. Aucun mot de passe requis."
-
-#: app/templates/game/hub.html:186
-msgid ""
-"Every scenario reflects a real governing dilemma. There are no easy answers "
-"— only the values you choose to prioritise."
-msgstr ""
-
-#: app/templates/game/hub.html:194 app/templates/game/outcome.html:275
+#: app/templates/game/hub.html:252 app/templates/game/outcome.html:304
 msgid "How we write scenarios"
 msgstr ""
 
@@ -24513,125 +24582,210 @@ msgid ""
 "click."
 msgstr ""
 
-#: app/templates/game/outcome.html:128
+#: app/templates/game/outcome.html:129
 #, fuzzy
 msgid "You're set — watch your inbox."
 msgstr "Vous êtes abonné ! Consultez votre boîte de réception."
 
-#: app/templates/game/outcome.html:129
+#: app/templates/game/outcome.html:130
 #, fuzzy
 msgid "Enter a valid email and try again."
 msgstr "Veuillez entrer une adresse email valide."
 
-#: app/templates/game/outcome.html:134
+#: app/templates/game/outcome.html:136
 #, fuzzy
 msgid "Email me when it's live"
 msgstr "Envoyez-moi un lien de connexion par e-mail"
 
-#: app/templates/game/outcome.html:144
+#: app/templates/game/outcome.html:146
 #, fuzzy
 msgid "Email address for reminders"
 msgstr "Email pour les rappels"
 
-#: app/templates/game/outcome.html:146
+#: app/templates/game/outcome.html:148
 #, fuzzy
 msgid "Remind me"
 msgstr "Heure d'envoi"
 
-#: app/templates/game/outcome.html:156
+#: app/templates/game/outcome.html:158
 msgid "Under pressure"
 msgstr ""
 
-#: app/templates/game/outcome.html:163
+#: app/templates/game/outcome.html:165
 #, fuzzy
 msgid "Same scenario · different path"
 msgstr "Même histoire, perspective différente"
 
-#: app/templates/game/outcome.html:165
+#: app/templates/game/outcome.html:167
 #, fuzzy, python-format
 msgid "%(name)s ended with"
 msgstr "bannière %(name)s"
 
-#: app/templates/game/outcome.html:169
+#: app/templates/game/outcome.html:171
 msgid ""
 "You played the same crisis. The game never grades — it only shows what you "
 "each prioritised."
 msgstr ""
 
-#: app/templates/game/outcome.html:176 app/templates/game/outcome.html:186
-#: app/templates/game/outcome.html:189
+#: app/templates/game/outcome.html:178 app/templates/game/outcome.html:188
+#: app/templates/game/outcome.html:191
 #, fuzzy
 msgid "Challenge a friend"
 msgstr "Invitez un ami"
 
-#: app/templates/game/outcome.html:178
+#: app/templates/game/outcome.html:180
 msgid ""
 "Send them into the same crisis. Your headline stays hidden until they finish"
 " their own run."
 msgstr ""
 
-#: app/templates/game/outcome.html:185
+#: app/templates/game/outcome.html:187
 msgid "I governed a nation on Tradeoffs. Your turn."
 msgstr ""
 
-#: app/templates/game/outcome.html:188
+#: app/templates/game/outcome.html:190
 msgid "Could not copy — long-press the link below"
 msgstr ""
 
-#: app/templates/game/outcome.html:197
+#: app/templates/game/outcome.html:199
 msgid "Where you landed"
 msgstr ""
 
-#: app/templates/game/outcome.html:198
+#: app/templates/game/outcome.html:200
 msgid "Your society on the trust–autonomy and prosperity–fairness axes"
 msgstr ""
 
-#: app/templates/game/outcome.html:210
+#: app/templates/game/outcome.html:212
 msgid "Final state"
 msgstr ""
 
-#: app/templates/game/outcome.html:216
+#: app/templates/game/outcome.html:218
+msgid "How the world governed today"
+msgstr ""
+
+#: app/templates/game/outcome.html:220
+#, fuzzy, python-format
+msgid "Based on %(n)d leader who faced this scenario today."
+msgid_plural "Based on %(n)d leaders who faced this scenario today."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/game/outcome.html:225 app/templates/game/turn.html:57
+#, python-format
+msgid "Turn %(n)d"
+msgstr ""
+
+#: app/templates/game/outcome.html:231
+#, fuzzy
+msgid "you"
+msgstr "Toi"
+
+#: app/templates/game/outcome.html:245
 msgid "Take this further"
 msgstr ""
 
-#: app/templates/game/outcome.html:232
+#: app/templates/game/outcome.html:261
 #, fuzzy
 msgid "Share your results"
 msgstr "Partagez votre récapitulatif"
 
-#: app/templates/game/outcome.html:236
+#: app/templates/game/outcome.html:265
 msgid ""
 "Copy a summary for WhatsApp, iMessage, or social — headline, stats, and your"
 " link."
 msgstr ""
 
-#: app/templates/game/outcome.html:238
+#: app/templates/game/outcome.html:267
 msgid "Results summary to share"
 msgstr ""
 
-#: app/templates/game/outcome.html:245 app/templates/game/outcome.html:248
+#: app/templates/game/outcome.html:274 app/templates/game/outcome.html:277
 #, fuzzy
 msgid "Share results"
 msgstr "Résultats"
 
-#: app/templates/game/outcome.html:247
+#: app/templates/game/outcome.html:276
 msgid "Could not copy — select the text above"
 msgstr ""
 
-#: app/templates/game/outcome.html:251
+#: app/templates/game/outcome.html:280
 msgid "Play again"
 msgstr ""
 
-#: app/templates/game/outcome.html:255
+#: app/templates/game/outcome.html:284
 msgid "Friends can open your link to see the full outcome card."
 msgstr ""
 
-#: app/templates/game/outcome.html:262
+#: app/templates/game/outcome.html:291
 msgid "Save your societies."
 msgstr ""
 
-#: app/templates/game/outcome.html:263
+#: app/templates/game/outcome.html:292
 msgid "Without an account, your streak and archive only live on this browser."
+msgstr ""
+
+#: app/templates/game/profile.html:7
+msgid "The values you protect and trade away across every society you govern."
+msgstr ""
+
+#: app/templates/game/profile.html:28
+#, python-format
+msgid "Across %(n)d different crisis."
+msgid_plural "Across %(n)d different crises."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/game/profile.html:29
+msgid "Here is the leader the choices add up to."
+msgstr ""
+
+#: app/templates/game/profile.html:32
+#, fuzzy
+msgid "No profile yet"
+msgstr "Aucun programme pour l'instant"
+
+#: app/templates/game/profile.html:33
+#, fuzzy
+msgid "Govern your first nation and your tendencies will emerge here."
+msgstr "Vos synthèses s'afficheront ici"
+
+#: app/templates/game/profile.html:41
+#, fuzzy
+msgid "Where you lean"
+msgstr "Partagez votre récapitulatif"
+
+#: app/templates/game/profile.html:48
+#, python-format
+msgid "%(pct)d%% lean"
+msgstr ""
+
+#: app/templates/game/profile.html:60
+#, fuzzy
+msgid "Your signature"
+msgstr "Votre source"
+
+#: app/templates/game/profile.html:67
+#, fuzzy, python-format
+msgid "Most often: %(label)s"
+msgstr "Vous avez manqué la %(label)s ?"
+
+#: app/templates/game/profile.html:74
+#, fuzzy
+msgid "How your societies end"
+msgstr "Votre source"
+
+#: app/templates/game/profile.html:90
+#, python-format
+msgid "Govern %(n)d more society to reveal your governing tendencies."
+msgid_plural ""
+"Govern %(n)d more societies to reveal your governing tendencies."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/game/profile.html:104
+msgid ""
+"Your profile lives only on this browser. Save it to your account to keep it "
+"across devices."
 msgstr ""
 
 #: app/templates/game/reminders_unsubscribed.html:3
@@ -24700,11 +24854,6 @@ msgstr ""
 #: app/templates/game/turn.html:41
 msgid ""
 "Hidden strain on your society — debt and fragility you can feel but not see."
-msgstr ""
-
-#: app/templates/game/turn.html:57
-#, python-format
-msgid "Turn %(n)d"
 msgstr ""
 
 #: app/templates/game/turn.html:58

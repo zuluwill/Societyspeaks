@@ -17,6 +17,21 @@ from app.game.services.daily_service import utc_game_date
 from app.models.game import GameRun
 
 
+def ownership_clauses(user_id: Optional[int], session_fingerprint: Optional[str]):
+    """SQLAlchemy clauses matching runs owned by a visitor (account or browser).
+
+    Single source of truth for the account-OR-fingerprint ownership filter shared
+    by the archive, profile, and reminder services. Combine with ``or_(*clauses)``.
+    Returns ``[]`` when there's no identity, so callers can short-circuit.
+    """
+    clauses = []
+    if user_id:
+        clauses.append(GameRun.user_id == user_id)
+    if session_fingerprint:
+        clauses.append(GameRun.session_fingerprint == session_fingerprint)
+    return clauses
+
+
 def visitor_owns_run(
     run: GameRun,
     *,

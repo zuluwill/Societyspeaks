@@ -1180,4 +1180,102 @@ body.is-leaving {
     transform: none;
     animation: none;
   }
+  .game-world-bar-fill { transition: none; }
+}
+
+/* ── "How the world governed today" distribution bars ─────────────────── */
+
+.game-world-turn {
+  padding-top: 0.25rem;
+}
+
+.game-world-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--game-border);
+  background: rgba(21, 26, 34, 0.6);
+  overflow: hidden;
+}
+
+.game-world-bar.is-yours {
+  border-color: var(--game-accent);
+}
+
+.game-world-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--pct, 0%);
+  background: rgba(148, 163, 184, 0.16);
+  transition: width 0.5s ease;
+  z-index: 0;
+}
+
+.game-world-bar.is-yours .game-world-bar-fill {
+  background: rgba(212, 168, 83, 0.22);
+}
+
+.game-world-bar-label {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--game-text);
+}
+
+.game-world-you {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  background: var(--game-accent);
+  color: #0c0f14;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.game-world-bar-pct {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  color: var(--game-muted);
+}
+
+/* Hub: first-decision preview bullets */
+.game-preview-bullet {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--game-accent);
+}
+
+/* Profile value-lean meters */
+.game-lean-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+}
+
+.game-lean-fill {
+  display: block;
+  height: 100%;
+  width: var(--pct, 0%);
+  border-radius: 999px;
+  background: var(--game-accent);
+  transition: width 0.5s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-lean-fill { transition: none; }
 }

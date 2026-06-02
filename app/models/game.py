@@ -18,6 +18,15 @@ class GameRun(db.Model):
         db.Index('idx_game_run_fingerprint_status', 'session_fingerprint', 'status'),
         db.Index('idx_game_run_user_status', 'user_id', 'status'),
         db.Index('idx_game_run_uuid', 'uuid', unique=True),
+        # Partial index for participation counters (total + today). Selective and
+        # small because it only covers completed runs, and ordered by started_at
+        # so the day-range "today" count is a cheap index scan.
+        db.Index(
+            'idx_game_run_completed_started',
+            'started_at',
+            postgresql_where=db.text("status = 'completed'"),
+            sqlite_where=db.text("status = 'completed'"),
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)

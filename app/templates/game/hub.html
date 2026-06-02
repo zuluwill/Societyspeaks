@@ -39,6 +39,27 @@
       <p class="game-hero-deck">{{ today.subtitle }}</p>
       {% endif %}
 
+      {% if participation and participation.show %}
+      <p class="game-hero-stats text-xs text-game-muted mt-3">
+        <span aria-hidden="true">⚖️</span>
+        {{ _('%(total)s societies governed', total=participation.total|decimalformat) }}{% if participation.today %} · {{ ngettext('%(n)d today', '%(n)d today', participation.today, n=participation.today) }}{% endif %}
+      </p>
+      {% endif %}
+
+      {% if dilemma_preview %}
+      <div class="game-hero-preview mt-5 p-4 rounded-xl border border-game-border bg-game-surface/50">
+        <p class="text-xs uppercase tracking-widest text-game-muted mb-2">{{ _("Today's first decision") }}</p>
+        <p class="text-sm text-game-text leading-snug mb-3">{{ dilemma_preview.prompt }}</p>
+        <ul class="space-y-1.5">
+          {% for label in dilemma_preview.choices %}
+          <li class="flex items-center gap-2 text-sm text-game-muted">
+            <span class="game-preview-bullet" aria-hidden="true"></span>{{ label }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
       {# Scenario flavour chips — give desktop visitors a taste of the breadth #}
       {% if fresh and quick_pool %}
       <div class="game-hero-topics" aria-label="{{ _('Recent scenario topics') }}">
@@ -150,8 +171,9 @@
         </p>
         <div class="flex flex-wrap gap-2">
           <a href="{{ url_for('auth.register', next=url_for('game.index')) }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
-          <a href="{{ url_for('auth.magic_link_request', next=url_for('game.index')) }}" class="game-btn-secondary text-sm py-2">{{ _('Sign in') }}</a>
+          <a href="{{ url_for('auth.magic_link_request', next=url_for('game.index')) }}" class="game-btn-secondary text-sm py-2">{{ _('Email me a sign-in link') }}</a>
         </div>
+        <p class="text-xs text-game-muted mt-3">{{ _('Already have an account? We email a one-click sign-in link — no password needed.') }}</p>
       </section>
       {% endif %}
       {% endif %}
@@ -220,6 +242,10 @@
       <p class="text-xs space-x-3">
         <a href="{{ url_for('game.archive') }}" class="text-game-muted underline hover:text-game-text transition">
           {{ _('Your societies') }}
+        </a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('game.profile') }}" class="text-game-muted underline hover:text-game-text transition">
+          {{ _('Your governing self') }}
         </a>
         <span aria-hidden="true">·</span>
         <a href="{{ url_for('game.editorial_principles') }}" class="text-game-muted underline hover:text-game-text transition">

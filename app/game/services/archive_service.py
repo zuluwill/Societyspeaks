@@ -11,18 +11,10 @@ from app import db
 from app.game.constants import GAME_RUN_STATUS_COMPLETED
 from app.game.engine.emblem import emblem_for_run
 from app.game.engine.scenario import load_scenario
+from app.game.services.identity_service import ownership_clauses
 from app.models.game import GameRun
 
 _DEFAULT_LIMIT = 60
-
-
-def _ownership_clauses(user_id: Optional[int], session_fingerprint: Optional[str]):
-    clauses = []
-    if user_id:
-        clauses.append(GameRun.user_id == user_id)
-    if session_fingerprint:
-        clauses.append(GameRun.session_fingerprint == session_fingerprint)
-    return clauses
 
 
 def count_completed_societies_for_visitor(
@@ -34,7 +26,7 @@ def count_completed_societies_for_visitor(
 
     Index-only on ``idx_game_run_user_status`` / ``idx_game_run_fingerprint_status``.
     """
-    ownership = _ownership_clauses(user_id, session_fingerprint)
+    ownership = ownership_clauses(user_id, session_fingerprint)
     if not ownership:
         return 0
     return (
@@ -61,7 +53,7 @@ def completed_societies_for_visitor(
     Inner-joins the outcome (so only finished runs surface) and eager-loads it
     to avoid an N+1 over the page. ``offset``/``limit`` support pagination.
     """
-    ownership = _ownership_clauses(user_id, session_fingerprint)
+    ownership = ownership_clauses(user_id, session_fingerprint)
     if not ownership:
         return []
 

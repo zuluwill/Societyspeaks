@@ -32,6 +32,10 @@ except ImportError:  # pragma: no cover — exercised only in environments witho
 
 _CARD_SIZE = (1200, 630)
 _PADDING = 64
+# Footer geometry — shared by the footer painter and the headline overflow guard
+# so both stay in lockstep if the layout changes.
+_FOOTER_HEIGHT = 70
+_FOOTER_RULE_GAP = 18
 _DARK_BG = (12, 15, 20)
 _SURFACE = (21, 26, 34)
 _BORDER = (42, 52, 68)
@@ -139,8 +143,18 @@ def _wrap_lines(draw, text: str, font, max_width: int, max_lines: int) -> List[s
     return lines
 
 
-def render_outcome_png(*, run, view: Dict[str, Any], emblem: Dict[str, Any]) -> Optional[bytes]:
-    """Render the outcome share card. Returns PNG bytes or None if Pillow missing."""
+def render_outcome_png(
+    *,
+    run,
+    view: Dict[str, Any],
+    emblem: Dict[str, Any],
+    world_badge: Optional[str] = None,
+) -> Optional[bytes]:
+    """Render the outcome share card. Returns PNG bytes or None if Pillow missing.
+
+    ``world_badge`` is an optional short social-proof line (e.g. "Only 10% made
+    the call you did …"); painted below the identity block when it fits.
+    """
     if not PIL_AVAILABLE:
         return None
 
@@ -168,29 +182,42 @@ def render_outcome_png(*, run, view: Dict[str, Any], emblem: Dict[str, Any]) -> 
     _paint_brand_header(img, draw, wordmark, body_xs)
     _paint_axis_plot(draw, ta, pf, accent)
 
+    # Everything below the headline must clear this rule or it collides with the
+    # footer. Each lower element is guarded so a long headline simply sheds the
+    # least-important rows (chips, then scenario) rather than overprinting.
+    footer_top = _CARD_SIZE[1] - _FOOTER_HEIGHT - _FOOTER_RULE_GAP
+
     # Headline block — left column, sized to clear the axis plot on the right.
+    # Capped at 3 lines: outcome headlines are short, and 3 lines leaves room for
+    # the identity rows + social badge without crowding the footer.
     headline_x = _PADDING
     headline_y = 168
     headline_width = 700
-    lines = _wrap_lines(draw, headline, display_xl, headline_width, max_lines=4)
+    lines = _wrap_lines(draw, headline, display_xl, headline_width, max_lines=3)
     line_height = 70
     for i, line in enumerate(lines):
         draw.text((headline_x, headline_y + i * line_height), line, font=display_xl, fill=_TEXT)
     headline_bottom = headline_y + len(lines) * line_height
 
     meta_y = headline_bottom + 16
-    if governance:
+    if governance and meta_y + 32 <= footer_top:
         draw.text((headline_x, meta_y), governance, font=body_md, fill=accent)
         meta_y += 36
-    if society_name:
+    if society_name and meta_y + 24 <= footer_top:
         draw.text((headline_x, meta_y), society_name, font=body_sm, fill=_MUTED)
         meta_y += 28
-    if scenario_title:
+    if scenario_title and meta_y + 22 <= footer_top:
         draw.text((headline_x, meta_y), scenario_title, font=body_xs, fill=_MUTED)
         meta_y += 26
 
-    if trait_chips:
+    if trait_chips and meta_y + 12 + 32 <= footer_top:
         _paint_trait_chips(draw, trait_chips, headline_x, meta_y + 12, body_xs, accent)
+        meta_y += 44
+
+    if world_badge and meta_y + 12 + 48 <= footer_top:
+        _paint_world_badge(
+            draw, world_badge, headline_x, meta_y + 12, headline_width, body_sm, accent
+        )
 
     _paint_footer(img, draw, body_xs, accent)
 
@@ -319,11 +346,44 @@ def _paint_trait_chips(draw, chips: List[str], x: int, y: int, font, accent: Tup
         cursor += chip_w + spacing
 
 
+def _paint_world_badge(
+    draw, text: str, x: int, y: int, max_width: int, font, accent: Tuple[int, int, int]
+) -> None:
+    """Accent-tinted callout for the social-proof line ('Only X% made your call')."""
+    line = _wrap_lines(draw, text, font, max_width - 56, max_lines=1)
+    label = line[0] if line else text
+    text_w = int(draw.textlength(label, font=font))
+    dot_d = 12
+    pad_x = 18
+    gap = 12
+    badge_h = 48
+    badge_w = pad_x + dot_d + gap + text_w + pad_x
+    draw.rounded_rectangle(
+        (x, y, x + badge_w, y + badge_h),
+        radius=14,
+        fill=(accent[0], accent[1], accent[2], 28),
+        outline=(accent[0], accent[1], accent[2], 150),
+        width=1,
+    )
+    dot_cy = y + badge_h // 2
+    draw.ellipse(
+        (x + pad_x, dot_cy - dot_d // 2, x + pad_x + dot_d, dot_cy + dot_d // 2),
+        fill=accent,
+    )
+    text_h = font.getbbox(label)[3]
+    draw.text(
+        (x + pad_x + dot_d + gap, dot_cy - text_h // 2),
+        label,
+        font=font,
+        fill=_TEXT,
+    )
+
+
 def _paint_footer(img: 'Image.Image', draw, font, accent: Tuple[int, int, int]) -> None:
     """Footer: domain + tagline, with a 1px accent line above."""
-    footer_y = _CARD_SIZE[1] - 70
+    footer_y = _CARD_SIZE[1] - _FOOTER_HEIGHT
     draw.line(
-        ((_PADDING, footer_y - 18), (_CARD_SIZE[0] - _PADDING, footer_y - 18)),
+        ((_PADDING, footer_y - _FOOTER_RULE_GAP), (_CARD_SIZE[0] - _PADDING, footer_y - _FOOTER_RULE_GAP)),
         fill=_BORDER,
         width=1,
     )

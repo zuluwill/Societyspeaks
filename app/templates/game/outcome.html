@@ -213,6 +213,33 @@
     {{ stat_bars(visible_stats) }}
   </section>
 
+  {% if world and world.ready %}
+  <section class="game-world mb-8">
+    <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-1">{{ _('How the world governed today') }}</p>
+    <p class="text-xs text-game-muted mb-4">
+      {{ ngettext('Based on %(n)d leader who faced this scenario today.', 'Based on %(n)d leaders who faced this scenario today.', world.sample_size, n=world.sample_size) }}
+    </p>
+    <div class="space-y-4">
+      {% for turn in world.turns %}
+      <div class="game-world-turn">
+        <p class="text-xs text-game-muted mb-2">{{ _('Turn %(n)d', n=turn.turn_index + 1) }}</p>
+        <div class="space-y-1">
+          {% for c in turn.choices %}
+          <div class="game-world-bar{% if c.is_yours %} is-yours{% endif %}">
+            <span class="game-world-bar-fill" style="--pct: {{ c.percent }}%;" aria-hidden="true"></span>
+            <span class="game-world-bar-label">
+              {{ c.label }}{% if c.is_yours %} <span class="game-world-you">{{ _('you') }}</span>{% endif %}
+            </span>
+            <span class="game-world-bar-pct">{{ c.percent }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {% if ss_bridge %}
   <section class="game-bridge mb-8 p-5 rounded-xl border border-game-border/60 bg-game-elevated/40">
     <p class="text-xs uppercase tracking-widest text-game-muted mb-1">{{ _('Take this further') }}</p>

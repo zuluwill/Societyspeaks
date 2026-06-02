@@ -1,0 +1,119 @@
+{% extends "game/base.html" %}
+
+{% block game_title %}{{ _('Your governing self') }}{% endblock %}
+
+{% block game_head %}
+<meta name="robots" content="noindex">
+<meta name="description" content="{{ _('The values you protect and trade away across every society you govern.') }}">
+{% endblock %}
+
+{% block game_content %}
+<div class="game-profile">
+  <header class="game-hub-hero">
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="game-eyebrow">{{ _('Your governing self') }}</span>
+      {% if streak and streak.current >= 1 %}
+      <span class="game-streak-chip ml-auto" title="{{ _('Longest: %(n)d', n=streak.longest) }}">
+        <span aria-hidden="true">🔥</span>
+        {{ ngettext('%(num)d-day streak', '%(num)d-day streak', streak.current) }}
+      </span>
+      {% endif %}
+    </div>
+
+    {% if profile and profile.total %}
+    <h1 class="game-hero-title">
+      {{ ngettext('%(n)d society governed', '%(n)d societies governed', profile.total, n=profile.total) }}
+    </h1>
+    <p class="game-hero-deck">
+      {{ ngettext('Across %(n)d different crisis.', 'Across %(n)d different crises.', profile.distinct_scenarios, n=profile.distinct_scenarios) }}
+      {{ _('Here is the leader the choices add up to.') }}
+    </p>
+    {% else %}
+    <h1 class="game-hero-title">{{ _('No profile yet') }}</h1>
+    <p class="game-hero-deck">{{ _('Govern your first nation and your tendencies will emerge here.') }}</p>
+    {% endif %}
+  </header>
+
+  {% if profile and profile.has_enough %}
+
+  {# Value leanings — the heart of the profile #}
+  <section class="mb-8">
+    <p class="text-xs uppercase tracking-widest text-game-accent font-semibold mb-4">{{ _('Where you lean') }}</p>
+    <div class="space-y-5">
+      {% for key in ['trust_autonomy', 'prosperity_fairness'] %}
+      {% set axis = profile.lean[key] %}
+      <div class="game-lean">
+        <div class="flex items-baseline justify-between mb-1">
+          <span class="text-sm font-display text-game-text">{{ axis.label }}</span>
+          <span class="text-xs text-game-muted">{{ _('%(pct)d%% lean', pct=axis.strength) }}</span>
+        </div>
+        <div class="game-lean-track">
+          <span class="game-lean-fill" style="--pct: {{ axis.strength }}%;"></span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if profile.signature_traits %}
+  <section class="mb-8">
+    <p class="text-xs uppercase tracking-widest text-game-muted mb-3">{{ _('Your signature') }}</p>
+    <div class="flex flex-wrap gap-2">
+      {% for chip in profile.signature_traits %}
+      <span class="game-chip">{{ chip }}</span>
+      {% endfor %}
+    </div>
+    {% if profile.top_governance %}
+    <p class="text-sm text-game-accent mt-3">{{ _('Most often: %(label)s', label=profile.top_governance) }}</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if profile.outcome_breakdown %}
+  <section class="game-world mb-8">
+    <p class="text-xs uppercase tracking-widest text-game-muted mb-3">{{ _('How your societies end') }}</p>
+    <div class="space-y-1">
+      {% for o in profile.outcome_breakdown %}
+      <div class="game-world-bar">
+        <span class="game-world-bar-fill" style="--pct: {{ o.percent }}%;" aria-hidden="true"></span>
+        <span class="game-world-bar-label">{{ o.label }}</span>
+        <span class="game-world-bar-pct">{{ o.percent }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% elif profile and profile.total %}
+  <section class="text-center p-8 rounded-2xl border border-game-border bg-game-surface/60 mb-8">
+    <p class="text-sm text-game-muted mb-4">
+      {{ ngettext('Govern %(n)d more society to reveal your governing tendencies.', 'Govern %(n)d more societies to reveal your governing tendencies.', (3 - profile.total), n=(3 - profile.total)) }}
+    </p>
+    <a href="{{ url_for('game.index') }}" class="game-btn-primary">{{ _("Play today's scenario") }}</a>
+  </section>
+  {% else %}
+  <section class="text-center p-8 rounded-2xl border border-game-border bg-game-surface/60 mb-8">
+    <p class="text-5xl mb-4" aria-hidden="true">⚖️</p>
+    <a href="{{ url_for('game.index') }}" class="game-btn-primary">{{ _("Play today's scenario") }}</a>
+  </section>
+  {% endif %}
+
+  {% if not is_authenticated and profile and profile.total %}
+  <section class="game-hub-signin mt-8 p-5 rounded-xl border border-game-accent/30 bg-game-accent/5">
+    <p class="text-sm text-game-text mb-3">
+      {{ _('Your profile lives only on this browser. Save it to your account to keep it across devices.') }}
+    </p>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('auth.register', next=url_for('game.profile')) }}" class="game-btn-primary text-sm py-2">{{ _('Sign up free') }}</a>
+      <a href="{{ url_for('auth.magic_link_request', next=url_for('game.profile')) }}" class="game-btn-secondary text-sm py-2">{{ _('Email me a sign-in link') }}</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <p class="mt-8 text-center text-xs space-x-3">
+    <a href="{{ url_for('game.archive') }}" class="text-game-muted underline hover:text-game-text transition">{{ _('Your societies') }}</a>
+    <span aria-hidden="true">·</span>
+    <a href="{{ url_for('game.index') }}" class="text-game-muted underline hover:text-game-text transition">{{ _('Back to today') }}</a>
+  </p>
+</div>
+{% endblock %}
