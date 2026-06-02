@@ -209,12 +209,12 @@ msgstr "继续您的旅程：%(theme)s — Society Speaks"
 #: app/resend_client.py:2062
 #, python-format
 msgid "Today's scenario is live — keep your %(n)d-day streak"
-msgstr ""
+msgstr "Today's scenario is live — keep your %(n)d-day streak"
 
 #: app/resend_client.py:2068
 #, python-format
 msgid "Today's scenario is live: %(title)s"
-msgstr ""
+msgstr "Today's scenario is live: %(title)s"
 
 #: app/routes.py:275 app/routes.py:292
 msgid "No valid donation session found."
@@ -1293,9 +1293,8 @@ msgid "You have been unsubscribed from this briefing"
 msgstr "您已取消订阅此简报"
 
 #: app/briefing/routes.py:2841
-#, fuzzy
 msgid "You are already unsubscribed from this briefing"
-msgstr "您已取消订阅此简报"
+msgstr "You are already unsubscribed from this briefing"
 
 #: app/briefing/routes.py:2861
 msgid "Admin access required for audio generation"
@@ -2656,81 +2655,79 @@ msgstr "文件下载错误"
 
 #: app/game/routes.py:595
 msgid "You're set — we'll nudge you when the next scenario is live."
-msgstr ""
+msgstr "You're set — we'll nudge you when the next scenario is live."
 
 #: app/game/routes.py:614
-#, fuzzy
 msgid "That unsubscribe link is no longer valid."
-msgstr "此讨论不再可用。"
+msgstr "That unsubscribe link is no longer valid."
 
 #: app/game/engine/variant.py:108
 msgid "You inherit this crisis already deep in debt."
-msgstr ""
+msgstr "你继承的危机已经债台高筑。"
 
 #: app/game/engine/variant.py:109
 msgid "The treasury starts in unusually good health."
-msgstr ""
+msgstr "财政部门以异常良好的状态开始运作。"
 
 #: app/game/engine/variant.py:110
 msgid "You begin with rare public goodwill."
-msgstr ""
+msgstr "你获得了罕见的公众支持。"
 
 #: app/game/engine/variant.py:111
 msgid "Public trust is thin before you even begin."
-msgstr ""
+msgstr "在你开始之前，公众信任已经很脆弱。"
 
 #: app/game/engine/variant.py:112
 msgid "You inherit a calm, stable nation."
-msgstr ""
+msgstr "你继承了一个平静、稳定的国家。"
 
 #: app/game/engine/variant.py:113
 msgid "The country is volatile from day one."
-msgstr ""
+msgstr "这个国家从一开始就局势动荡。"
 
 #: app/game/engine/variant.py:114
 msgid "You begin with a strong economy."
-msgstr ""
+msgstr "你从一个强劲的经济开始。"
 
 #: app/game/engine/variant.py:115
 msgid "The economy is weak at the outset."
-msgstr ""
+msgstr "经济在一开始就很疲弱。"
 
 #: app/game/engine/variant.py:116
 msgid "You inherit an unusually fair society."
-msgstr ""
+msgstr "你继承了一个异常公平的社会。"
 
 #: app/game/engine/variant.py:117
 msgid "Deep inequality greets you on arrival."
-msgstr ""
+msgstr "你抵达时面临深刻的不平等。"
 
 #: app/game/engine/variant.py:118
 msgid "Citizens begin with broad freedoms."
-msgstr ""
+msgstr "公民享有广泛的自由。"
 
 #: app/game/engine/variant.py:119
 msgid "Civil liberties are already constrained."
-msgstr ""
+msgstr "公民自由已受到限制。"
 
 #: app/game/engine/variant.py:120
 msgid "Past leaders invested well in the long term."
-msgstr ""
+msgstr "过去的领导人进行了很好的长期投资。"
 
 #: app/game/engine/variant.py:121
 msgid "Little has been set aside for the long term."
-msgstr ""
+msgstr "为长期发展预留的资源很少。"
 
 #: app/game/engine/variant.py:122
 msgid "The system is brittle before the first decision."
-msgstr ""
+msgstr "系统在第一次决策前就很脆弱。"
 
 #: app/game/engine/variant.py:123
 msgid "The system starts more resilient than usual."
-msgstr ""
+msgstr "该系统的初始韧性高于平常。"
 
 #: app/game/services/challenge_service.py:37
-#, fuzzy
 msgid "Someone"
-msgstr "时区"
+msgstr "某人"
 
 #: app/game/services/cohort_service.py:160 app/templates/game/outcome.html:206
 msgid "Autonomy"
@@ -2763,50 +2760,45 @@ msgstr "繁荣"
 #: app/game/services/cohort_service.py:174
 #, python-format
 msgid "Only %(pct)d%% of leaders ended like you."
-msgstr ""
+msgstr "仅有 %(pct)d%% 的领导者的结局如你一样。"
 
 #: app/game/services/cohort_service.py:178
 #, python-format
 msgid "More %(dir)s-led than %(pct)d%% of leaders."
-msgstr ""
+msgstr "比 %(pct)d%% 的领导者更倾向于 %(dir)s 领导。"
 
 #: app/game/services/daily_results_service.py:145
 #, python-format
 msgid "Only %(pct)d%% made the call you did: %(label)s"
-msgstr ""
+msgstr "仅有 %(pct)d%% 的人做出了你的选择：%(label)s"
 
 #: app/game/services/profile_service.py:27
 msgid "Spectacular collapse"
-msgstr ""
+msgstr "壮观的崩溃"
 
 #: app/game/services/profile_service.py:28
 msgid "Accidental dystopia"
-msgstr ""
+msgstr "意外的反乌托邦"
 
 #: app/game/services/profile_service.py:29
-#, fuzzy
 msgid "Ironic success"
-msgstr "撤销访问"
+msgstr "讽刺的成功"
 
 #: app/game/services/profile_service.py:30
-#, fuzzy
 msgid "Ironic failure"
-msgstr "配置"
+msgstr "讽刺的失败"
 
 #: app/game/services/profile_service.py:31
-#, fuzzy
 msgid "Collapse"
-msgstr "关闭"
+msgstr "崩溃"
 
 #: app/game/services/profile_service.py:32
-#, fuzzy
 msgid "Unexpected utopia"
-msgstr "意外错误"
+msgstr "意想不到的乌托邦"
 
 #: app/game/services/profile_service.py:33
-#, fuzzy
 msgid "Mixed legacy"
-msgstr "遗产"
+msgstr "复杂的遗产"
 
 #: app/game/services/share_text_service.py:56
 #, python-format
@@ -20795,54 +20787,51 @@ msgid "Manage notification preferences"
 msgstr "管理通知偏好设置"
 
 #: app/templates/emails/game_reminder.html:3
-#, fuzzy
 msgid "Today's scenario is live — Society Speaks"
-msgstr "日常问题 - Society Speaks"
+msgstr "今日场景已上线 — Society Speaks"
 
 #: app/templates/emails/game_reminder.html:5
 #, python-format
 msgid "Keep your %(n)d-day streak going — today's scenario is live."
-msgstr ""
+msgstr "继续保持你的 %(n)d 天连胜 — 今日场景已上线。"
 
 #: app/templates/emails/game_reminder.html:5
-#, fuzzy, python-format
+#, python-format
 msgid "A new crisis is on your desk: %(title)s"
-msgstr "您的讨论「%(title)s」有新动态"
+msgstr "你的办公桌上有一个新危机：%(title)s"
 
 #: app/templates/emails/game_reminder.html:12
-#, fuzzy
 msgid "Society Speaks · Daily"
-msgstr "✓ 仅Society Speaks"
+msgstr "Society Speaks · Daily"
 
 #: app/templates/emails/game_reminder.html:14
 #, python-format
 msgid "Keep your %(n)d-day streak alive, %(username)s"
-msgstr ""
+msgstr "保持你的 %(n)d 天连续记录，%(username)s"
 
 #: app/templates/emails/game_reminder.html:14
 #, python-format
 msgid "Today's scenario is live, %(username)s"
-msgstr ""
+msgstr "今天的情景已上线，%(username)s"
 
 #: app/templates/emails/game_reminder.html:17
-#, fuzzy
 msgid "You have five decisions to make. Every one of them costs something."
-msgstr "你是决策者。每个决定都需要付出代价。"
+msgstr "你需要做五个决定。每个决定都有代价。"
 
 #: app/templates/emails/game_reminder.html:27
 #, python-format
 msgid "%(n)d days in a row. Miss today and it resets."
-msgstr ""
+msgstr "连续 %(n)d 天。错过今天就会重置。"
 
 #: app/templates/emails/game_reminder.html:57
 #, python-format
 msgid "Takes about three minutes. %(n)d turns, one outcome."
-msgstr ""
+msgstr "大约需要三分钟。%(n)d 轮回合，一个结果。"
 
 #: app/templates/emails/game_reminder.html:66
 msgid ""
 "You're getting this because you asked for a daily nudge from Society Speaks."
-msgstr ""
+msgstr "您收到此消息是因为您向 Society Speaks 申请了每日提醒。"
 
 #: app/templates/emails/game_reminder.html:68
 #: app/templates/emails/journey_reminder.html:114
@@ -21737,13 +21726,12 @@ msgstr "我们的团队已收到通知并正在调查问题。请稍后重试。
 #: app/templates/game/archive.html:4 app/templates/game/archive.html:15
 #: app/templates/game/hub.html:244 app/templates/game/outcome.html:302
 #: app/templates/game/profile.html:114
-#, fuzzy
 msgid "Your societies"
-msgstr "你的来源"
+msgstr "您的社群"
 
 #: app/templates/game/archive.html:8
 msgid "Every society you have governed on Tradeoffs."
-msgstr ""
+msgstr "您在 Tradeoffs 上管理过的每个社群。"
 
 #: app/templates/game/archive.html:17 app/templates/game/hub.html:25
 #: app/templates/game/profile.html:16
@@ -21755,26 +21743,23 @@ msgstr "最长：%(n)d"
 #, python-format
 msgid "%(n)d society governed"
 msgid_plural "%(n)d societies governed"
-msgstr[0] ""
+msgstr[0] "%(n)d 个社群已管理"
 
 #: app/templates/game/archive.html:27
-#, fuzzy
 msgid "No societies yet"
-msgstr "还没有收件人"
+msgstr "还没有社群"
 
 #: app/templates/game/archive.html:32
 msgid "Every crisis you faced, and the leader you became."
-msgstr ""
+msgstr "你经历的每场危机，以及你成为的那位领导者。"
 
 #: app/templates/game/archive.html:34
-#, fuzzy
 msgid "Govern your first nation and it will appear here."
-msgstr "你的简报将显示在这里"
+msgstr "管理你的第一个国家，它就会显示在这里。"
 
 #: app/templates/game/archive.html:48 app/templates/game/hub.html:118
-#, fuzzy
 msgid "Your society"
-msgstr "你的来源"
+msgstr "你的社群"
 
 #: app/templates/game/archive.html:50 app/templates/game/hub.html:223
 #: app/templates/game/turn.html:34
@@ -21782,44 +21767,40 @@ msgid "Quick Run"
 msgstr "快速运行"
 
 #: app/templates/game/archive.html:72
-#, fuzzy
 msgid "← Newer"
-msgstr "从未"
+msgstr "← 较新的"
 
 #: app/templates/game/archive.html:75
 #, python-format
 msgid "Page %(p)d of %(t)d"
-msgstr ""
+msgstr "第 %(p)d 页，共 %(t)d 页"
 
 #: app/templates/game/archive.html:78
 msgid "Older →"
-msgstr ""
+msgstr "更早内容 →"
 
 #: app/templates/game/archive.html:85
 msgid "Nothing more to show here."
-msgstr ""
+msgstr "没有更多内容了。"
 
 #: app/templates/game/archive.html:86
-#, fuzzy
 msgid "Back to your latest societies"
-msgstr "保存你的社群。"
+msgstr "返回您最近的社群"
 
 #: app/templates/game/archive.html:98
 msgid ""
 "These societies only live on this browser. Save them to your account so they"
 " survive a cleared cache or a new device."
-msgstr ""
+msgstr "这些社群仅存在于此浏览器中。保存到您的账户，以便在清除缓存或使用新设备时保留它们。"
 
 #: app/templates/game/archive.html:108 app/templates/game/hub.html:248
 #: app/templates/game/profile.html:3 app/templates/game/profile.html:14
-#, fuzzy
 msgid "Your governing self"
-msgstr "保持每日简报不中断"
+msgstr "你的执政自我"
 
 #: app/templates/game/archive.html:110 app/templates/game/profile.html:116
-#, fuzzy
 msgid "Back to today"
-msgstr "返回今日摘要"
+msgstr "回到今天"
 
 #: app/templates/game/editorial_principles.html:3
 #: app/templates/game/editorial_principles.html:15
@@ -22134,28 +22115,26 @@ msgstr "你是决策者。每个决定都需要付出代价。"
 msgid ""
 "Five turns. Three choices each. Govern a nation — and live with what you "
 "trade away."
-msgstr ""
+msgstr "五个回合。每个回合三个选择。治理一个国家——并接受你所放弃的代价。"
 
 #: app/templates/game/hub.html:45
-#, fuzzy, python-format
+#, python-format
 msgid "%(total)s societies governed"
-msgstr ""
+msgstr "%(total)s 个社会已被治理"
 
 #: app/templates/game/hub.html:45
-#, fuzzy, python-format
+#, python-format
 msgid "%(n)d today"
 msgid_plural "%(n)d today"
-msgstr[0] "%(n)d 天"
+msgstr[0] "%(n)d 个今天"
 
 #: app/templates/game/hub.html:51
-#, fuzzy
 msgid "Today's first decision"
-msgstr "今日问题"
+msgstr "今天的第一个决策"
 
 #: app/templates/game/hub.html:65
-#, fuzzy
 msgid "Recent scenario topics"
-msgstr "最近的文章"
+msgstr "最近的情景主题"
 
 #: app/templates/game/hub.html:78
 msgid ""
@@ -22186,45 +22165,41 @@ msgid "View today's outcome"
 msgstr "查看今天的结果"
 
 #: app/templates/game/hub.html:136 app/templates/game/hub.html:137
-#, fuzzy
 msgid "Suggest another name"
-msgstr "请求另一个链接"
+msgstr "建议另一个名称"
 
 #: app/templates/game/hub.html:143
 msgid "We've named it for you — roll the dice for another, or type your own."
-msgstr ""
+msgstr "我们已为您命名——掷骰子获得另一个建议，或输入您自己的。"
 
 #: app/templates/game/hub.html:150
 msgid "Free · 2 min"
-msgstr ""
+msgstr "免费 · 2 分钟"
 
 #: app/templates/game/hub.html:159
 msgid "Tomorrow"
 msgstr "明天"
 
 #: app/templates/game/hub.html:162
-#, fuzzy, python-format
+#, python-format
 msgid "Unlocks %(time)s UTC"
-msgstr "新场景将在 %(time)s UTC 时解锁"
+msgstr "解锁于 %(time)s UTC"
 
 #: app/templates/game/hub.html:170
-#, fuzzy
 msgid ""
 "Save your societies across devices and keep your streak when this browser "
 "forgets."
-msgstr "登录以在设备间保存你的社群，并在浏览器清除数据时保持你的连续记录。"
+msgstr "在设备之间保存您的社群，当浏览器忘记时保持连胜记录。"
 
 #: app/templates/game/hub.html:176 app/templates/game/outcome.html:297
-#, fuzzy
 msgid ""
 "Already have an account? We email a one-click sign-in link — no password "
 "needed."
-msgstr "我们会给您发送一个一键登录链接。无需记住密码。"
+msgstr "已有账户？我们会发送一个一键登录链接——无需密码。"
 
 #: app/templates/game/hub.html:189
-#, fuzzy
 msgid "More to explore"
-msgstr "更多文章"
+msgstr "更多内容可探索"
 
 #: app/templates/game/hub.html:194
 msgid "New to Tradeoffs?"
@@ -22243,14 +22218,13 @@ msgid "possible outcomes"
 msgstr "可能的结果"
 
 #: app/templates/game/hub.html:213
-#, fuzzy
 msgid ""
 "A crisis lands on your desk — and every path forward sacrifices something "
 "real. Cut now and lose public trust. Borrow now and burden the next "
 "generation. Build fast and fracture communities. Move slowly and watch the "
 "problems grow."
 msgstr ""
-"危机突然摆在你的面前——每条前进的道路都需要真实的代价。现在削减开支就会失去公众信任。现在借贷就会累及下一代。快速建设就会分裂社区。缓慢行动就会眼看问题恶化。五个回合管理一个国家。你的选择塑造你留下的社会。"
+"危机摆在您面前——每条前进的道路都要付出真实的代价。现在裁减就会失去公众信任。现在借贷就会拖累下一代。快速建设就会撕裂社群。缓慢行动就会看着问题恶化。"
 
 #: app/templates/game/hub.html:216
 msgid ""
@@ -22259,9 +22233,8 @@ msgid ""
 msgstr "你的社会属于你：为它命名，看着你的选择塑造它的象征，发现你成为了什么样的领导者。"
 
 #: app/templates/game/hub.html:224
-#, fuzzy
 msgid "Replay any past scenario anytime — no streak."
-msgstr "随时重放——无连续记录"
+msgstr "随时重放过去的任何情景 — 无连胜限制。"
 
 #: app/templates/game/hub.html:252 app/templates/game/outcome.html:304
 msgid "How we write scenarios"
@@ -22278,55 +22251,54 @@ msgstr "Society Speaks 上的权衡"
 
 #: app/templates/game/outcome.html:55
 msgid "You vs your past self"
-msgstr ""
+msgstr "你 vs 过去的自己"
 
 #: app/templates/game/outcome.html:57
 #, python-format
 msgid "Last time you faced this (%(when)s), %(society)s ended:"
-msgstr ""
+msgstr "上次你面对这个问题（%(when)s）时，%(society)s 的结局是："
 
 #: app/templates/game/outcome.html:61
 msgid "A different ending this time — you found another path."
-msgstr ""
+msgstr "这次有了不同的结局 — 你找到了另一条路。"
 
 #: app/templates/game/outcome.html:63
 msgid "Same ending as before. Can you steer it somewhere new?"
-msgstr ""
+msgstr "结局和之前一样。你能把它引向新的方向吗？"
 
 #: app/templates/game/outcome.html:70
-#, fuzzy
 msgid "How you compare"
-msgstr "我们如何对标"
+msgstr "你的比较"
 
 #: app/templates/game/outcome.html:72
 msgid "who played today"
-msgstr ""
+msgstr "今天谁出场了"
 
 #: app/templates/game/outcome.html:72
 msgid "who faced this crisis"
-msgstr ""
+msgstr "谁面对了这场危机"
 
 #: app/templates/game/outcome.html:75
 #, python-format
 msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
-msgstr ""
+msgstr "你在%(dir)s上的倾向程度超过了%(scope)s中%(pct)d%%的领导人。"
 
 #: app/templates/game/outcome.html:80
 #, python-format
 msgid "%(pct)d%% of them ended like you."
-msgstr ""
+msgstr "他们中有%(pct)d%%的人和你的立场一致。"
 
 #: app/templates/game/outcome.html:84
 #, python-format
 msgid "Based on %(n)d leader so far."
 msgid_plural "Based on %(n)d leaders so far."
-msgstr[0] ""
+msgstr[0] "基于 %(n)d 位领导者。"
 
 #: app/templates/game/outcome.html:88
 msgid ""
 "You're among the first to govern this crisis. Comparisons unlock as more "
 "leaders play — come back to see where you stood."
-msgstr ""
+msgstr "您是最早应对这场危机的领导者之一。随着更多领导者加入，比较功能将逐步解锁——回来看看您的排名吧。"
 
 #: app/templates/game/outcome.html:103
 msgid "Your longest run yet."
@@ -22342,45 +22314,38 @@ msgid "Quick Run · no streak credit"
 msgstr "快速运行 · 无连续奖励"
 
 #: app/templates/game/outcome.html:119
-#, fuzzy
 msgid "Don't break the streak"
-msgstr "通过 Stripe 安全捐款"
+msgstr "不要中断连续记录"
 
 #: app/templates/game/outcome.html:119
-#, fuzzy
 msgid "Come back tomorrow"
-msgstr "明天回来获取新问题。"
+msgstr "明天回来"
 
 #: app/templates/game/outcome.html:122
 msgid ""
 "One email when the next scenario is live — that's it. Unsubscribe in a "
 "click."
-msgstr ""
+msgstr "当下一个场景上线时，我们会发送一封邮件——仅此而已。点击即可退订。"
 
 #: app/templates/game/outcome.html:129
-#, fuzzy
 msgid "You're set — watch your inbox."
-msgstr "您已订阅！请检查您的收件箱。"
+msgstr "已完成 — 请查看您的收件箱。"
 
 #: app/templates/game/outcome.html:130
-#, fuzzy
 msgid "Enter a valid email and try again."
-msgstr "请输入有效的电子邮件地址。"
+msgstr "请输入有效的电子邮件地址后重试。"
 
 #: app/templates/game/outcome.html:136
-#, fuzzy
 msgid "Email me when it's live"
-msgstr "给我发送登录链接"
+msgstr "上线时请通过电子邮件提醒我"
 
 #: app/templates/game/outcome.html:146
-#, fuzzy
 msgid "Email address for reminders"
-msgstr "提醒邮件"
+msgstr "用于提醒的电子邮件地址"
 
 #: app/templates/game/outcome.html:148
-#, fuzzy
 msgid "Remind me"
-msgstr "发送时间"
+msgstr "提醒我"
 
 #: app/templates/game/outcome.html:158
 msgid "Under pressure"
@@ -22403,24 +22368,22 @@ msgstr "你们都经历了同一场危机。游戏不评分——只展示你们
 
 #: app/templates/game/outcome.html:178 app/templates/game/outcome.html:188
 #: app/templates/game/outcome.html:191
-#, fuzzy
 msgid "Challenge a friend"
-msgstr "邀请朋友"
+msgstr "挑战一位朋友"
 
 #: app/templates/game/outcome.html:180
 msgid ""
 "Send them into the same crisis. Your headline stays hidden until they finish"
 " their own run."
-msgstr ""
+msgstr "邀请他们面对同样的危机。在他们完成自己的任务之前，你的标题将保持隐藏。"
 
 #: app/templates/game/outcome.html:187
 msgid "I governed a nation on Tradeoffs. Your turn."
-msgstr ""
+msgstr "我在《权衡》中治理了一个国家。现在轮到你了。"
 
 #: app/templates/game/outcome.html:190
-#, fuzzy
 msgid "Could not copy — long-press the link below"
-msgstr "无法复制——请选择上方的文本"
+msgstr "无法复制 — 长按下方链接"
 
 #: app/templates/game/outcome.html:199
 msgid "Where you landed"
@@ -22436,13 +22399,13 @@ msgstr "最终状态"
 
 #: app/templates/game/outcome.html:218
 msgid "How the world governed today"
-msgstr ""
+msgstr "今天世界如何治理"
 
 #: app/templates/game/outcome.html:220
-#, fuzzy, python-format
+#, python-format
 msgid "Based on %(n)d leader who faced this scenario today."
 msgid_plural "Based on %(n)d leaders who faced this scenario today."
-msgstr[0] ""
+msgstr[0] "基于今天面对这个场景的 %(n)d 位领导人。"
 
 #: app/templates/game/outcome.html:225 app/templates/game/turn.html:57
 #, python-format
@@ -22450,7 +22413,6 @@ msgid "Turn %(n)d"
 msgstr "第 %(n)d 轮"
 
 #: app/templates/game/outcome.html:231
-#, fuzzy
 msgid "you"
 msgstr "你"
 
@@ -22493,91 +22455,83 @@ msgid "Save your societies."
 msgstr "保存你的社群。"
 
 #: app/templates/game/outcome.html:292
-#, fuzzy
 msgid "Without an account, your streak and archive only live on this browser."
-msgstr "没有账户的情况下，你的连胜记录和存档仅保留在此浏览器中。登录以保留它们。"
+msgstr "没有账户的话，你的连胜纪录和归档只会保存在这个浏览器中。"
 
 #: app/templates/game/profile.html:7
 msgid "The values you protect and trade away across every society you govern."
-msgstr ""
+msgstr "你在所治理的每个社会中保护和放弃的价值观。"
 
 #: app/templates/game/profile.html:28
 #, python-format
 msgid "Across %(n)d different crisis."
 msgid_plural "Across %(n)d different crises."
-msgstr[0] ""
+msgstr[0] "跨越 %(n)d 个不同的危机。"
 
 #: app/templates/game/profile.html:29
 msgid "Here is the leader the choices add up to."
-msgstr ""
+msgstr "以下是各选项汇总得出的领袖。"
 
 #: app/templates/game/profile.html:32
-#, fuzzy
 msgid "No profile yet"
-msgstr "暂无项目"
+msgstr "暂无个人资料"
 
 #: app/templates/game/profile.html:33
-#, fuzzy
 msgid "Govern your first nation and your tendencies will emerge here."
-msgstr "你的简报将显示在这里"
+msgstr "管理你的第一个国家，你的倾向将在此显示。"
 
 #: app/templates/game/profile.html:41
-#, fuzzy
 msgid "Where you lean"
-msgstr "你的立场"
+msgstr "你的倾向"
 
 #: app/templates/game/profile.html:48
 #, python-format
 msgid "%(pct)d%% lean"
-msgstr ""
+msgstr "%(pct)d%% 的倾向"
 
 #: app/templates/game/profile.html:60
-#, fuzzy
 msgid "Your signature"
-msgstr "你的来源"
+msgstr "你的签名"
 
 #: app/templates/game/profile.html:67
-#, fuzzy, python-format
+#, python-format
 msgid "Most often: %(label)s"
-msgstr "错过了%(label)s？"
+msgstr "最常见：%(label)s"
 
 #: app/templates/game/profile.html:74
-#, fuzzy
 msgid "How your societies end"
-msgstr "你的来源"
+msgstr "你的社群如何结束"
 
 #: app/templates/game/profile.html:90
 #, python-format
 msgid "Govern %(n)d more society to reveal your governing tendencies."
 msgid_plural ""
 "Govern %(n)d more societies to reveal your governing tendencies."
-msgstr[0] ""
+msgstr[0] "治理 %(n)d 个更多社群以展示你的治理倾向。"
 
 #: app/templates/game/profile.html:104
 msgid ""
 "Your profile lives only on this browser. Save it to your account to keep it "
 "across devices."
-msgstr ""
+msgstr "你的资料仅存储在此浏览器上。保存到你的账户以在各设备间同步。"
 
 #: app/templates/game/reminders_unsubscribed.html:3
 #: app/templates/game/reminders_unsubscribed.html:12
-#, fuzzy
 msgid "Reminders stopped"
-msgstr "提醒计划于："
+msgstr "提醒已停止"
 
 #: app/templates/game/reminders_unsubscribed.html:14
 #, python-format
 msgid "We won't email %(email)s about new scenarios anymore."
-msgstr ""
+msgstr "我们将不再向 %(email)s 发送新情景的邮件。"
 
 #: app/templates/game/reminders_unsubscribed.html:14
 msgid "We won't send you reminders anymore."
-msgstr ""
+msgstr "我们将不再向您发送提醒。"
 
 #: app/templates/game/reminders_unsubscribed.html:16
-#, fuzzy
 msgid "Back to Tradeoffs"
-msgstr "初次接触权衡游戏？"
+msgstr "返回权衡"
 
 #: app/templates/game/turn.html:8
 msgid "Beginning"
@@ -22600,22 +22554,20 @@ msgid "Legacy"
 msgstr "遗产"
 
 #: app/templates/game/turn.html:16
-#, fuzzy
 msgid "Steady"
-msgstr "协调员"
+msgstr "稳定"
 
 #: app/templates/game/turn.html:17
 msgid "Pressure building"
-msgstr ""
+msgstr "压力增加"
 
 #: app/templates/game/turn.html:18
-#, fuzzy
 msgid "Under strain"
-msgstr "鲜为人知"
+msgstr "承受压力"
 
 #: app/templates/game/turn.html:19
 msgid "Crisis point"
-msgstr ""
+msgstr "危机临界点"
 
 #: app/templates/game/turn.html:28
 #, python-brace-format
@@ -22625,7 +22577,7 @@ msgstr "第 {n} 轮，共 {total} 轮"
 #: app/templates/game/turn.html:41
 msgid ""
 "Hidden strain on your society — debt and fragility you can feel but not see."
-msgstr ""
+msgstr "社会中隐藏的压力——你能感受到但看不见的债务和脆弱性。"
 
 #: app/templates/game/turn.html:58
 #, python-format
@@ -22641,9 +22593,8 @@ msgid "Likely effects"
 msgstr "可能的影响"
 
 #: app/templates/game/turn.html:98
-#, fuzzy
 msgid "Tip: press 1–3 to choose"
-msgstr "不确定如何选择？"
+msgstr "提示：按 1-3 键选择"
 
 #: app/templates/game/turn.html:118
 msgid "Every choice costs something"
