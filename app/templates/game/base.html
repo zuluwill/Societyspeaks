@@ -14,7 +14,7 @@
 {% block content %}
 <div class="game-shell min-h-screen text-game-text">
   <header class="game-header px-4 py-5 sm:px-6">
-    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+    <div class="{% block game_header_width %}max-w-md{% endblock %} mx-auto flex items-center justify-between gap-3">
       <a href="{{ url_for('game.index') }}" class="game-brand text-sm font-semibold tracking-wide text-game-muted hover:text-game-text transition">
         Tradeoffs
       </a>

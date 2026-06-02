@@ -506,6 +506,109 @@ body.is-leaving {
   opacity: 0.7;
 }
 
+/* ── Desktop two-column hub layout ────────────────────────────────────── */
+
+.game-hub-top {
+  display: grid;
+  grid-template-columns: 1fr 22rem;
+  gap: 2rem 3rem;
+  align-items: start;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 700px) {
+  .game-hub-top {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.game-hub-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Scenario topic flavour chips in the hero */
+.game-hero-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.game-topic-chip {
+  display: inline-block;
+  padding: 0.2rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-radius: 999px;
+  border: 1px solid var(--game-border);
+  color: var(--game-muted);
+  background: rgba(30, 38, 51, 0.6);
+  white-space: nowrap;
+}
+
+/* Editorial credibility line — desktop only */
+.game-hero-credibility {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--game-muted);
+  opacity: 0.75;
+  max-width: 38ch;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 700px) {
+  .game-hero-credibility { display: none; }
+  .game-hero-topics { display: none; }
+}
+
+/* Compact tomorrow pill in the right col */
+.game-hub-tomorrow-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--game-border);
+  border-radius: 0.875rem;
+  background: rgba(30, 38, 51, 0.4);
+}
+
+.game-hub-tomorrow-pill .game-eyebrow {
+  flex-shrink: 0;
+}
+
+.game-hub-tomorrow-pill .font-display {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-hub-tomorrow-pill .text-xs:last-child {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Quick runs: 2-column grid on tablet+ */
+.game-hub-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+@media (min-width: 560px) {
+  .game-hub-quick-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Everything secondary lives below a clear divider, out of the 5-second path */
 .game-hub-secondary {
   margin-top: 2.5rem;
