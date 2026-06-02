@@ -13,6 +13,7 @@
   --game-trust: #2dd4bf;
   --game-fairness: #a78bfa;
   --game-stability: #60a5fa;
+  color-scheme: dark;
   background: var(--game-bg);
   color: var(--game-text);
   font-family: 'Inter', system-ui, sans-serif;
@@ -628,6 +629,14 @@ body.is-leaving {
   outline: none;
   border-color: var(--game-accent);
   box-shadow: 0 0 0 2px rgba(212, 168, 83, 0.25);
+}
+
+.game-input:-webkit-autofill,
+.game-input:-webkit-autofill:hover,
+.game-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #1e2633 inset;
+  -webkit-text-fill-color: #f0f4f8;
+  caret-color: #f0f4f8;
 }
 
 /* Quick Run cards */
