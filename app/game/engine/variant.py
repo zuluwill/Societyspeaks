@@ -35,14 +35,23 @@ _DESCRIPTOR_MIN_DELTA = 6
 
 
 def daily_variant_seed(scenario_slug: str, day: date) -> int:
-    """Stable per (scenario, UTC day) seed — identical for every player that day."""
+    """Stable per (scenario, UTC day) seed — identical for every player that day.
+
+    Masked to ``0x7FFFFFFF`` so the value fits in a PostgreSQL ``INTEGER``
+    column (signed 32-bit, max 2 147 483 647).  Fully deterministic: same
+    inputs always produce the same seed.
+    """
     key = f'{scenario_slug}:{day.isoformat()}'.encode('utf-8')
-    return zlib.adler32(key) & 0xFFFFFFFF
+    return zlib.adler32(key) & 0x7FFFFFFF
 
 
 def random_variant_seed() -> int:
-    """Fresh seed for unbounded replay (Quick Run)."""
-    return random.randint(0, 0xFFFFFFFF)
+    """Fresh seed for unbounded replay (Quick Run).
+
+    Kept within ``[0, 0x7FFFFFFF]`` (PostgreSQL ``INTEGER`` max) so the value
+    can be persisted without overflow.
+    """
+    return random.randint(0, 0x7FFFFFFF)
 
 
 def apply_initial_variation(
