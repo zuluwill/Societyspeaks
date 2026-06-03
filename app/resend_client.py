@@ -109,16 +109,26 @@ def _resend_http_post(
             response = requests.post(url, json=body, headers=headers, timeout=timeout)
             if response.status_code == 200:
                 return response, None
-            elif response.status_code == 429:
+            elif response.status_code in (429, 502, 503, 504):
                 if attempt < max_retries - 1:
                     wait = retry_delay * (2 ** attempt)
-                    logger.warning(
-                        f"{log_prefix} rate limited — waiting {wait:.1f}s "
-                        f"(attempt {attempt + 1}/{max_retries})"
-                    )
+                    if response.status_code == 429:
+                        logger.warning(
+                            f"{log_prefix} rate limited — waiting {wait:.1f}s "
+                            f"(attempt {attempt + 1}/{max_retries})"
+                        )
+                    else:
+                        logger.warning(
+                            f"{log_prefix} transient {response.status_code} — waiting {wait:.1f}s "
+                            f"(attempt {attempt + 1}/{max_retries})"
+                        )
                     time.sleep(wait)
                     continue
-                err = f"Rate limited after {max_retries} attempts"
+                err = (
+                    f"Rate limited after {max_retries} attempts"
+                    if response.status_code == 429
+                    else f"Transient {response.status_code} after {max_retries} attempts"
+                )
                 logger.error(f"{log_prefix}: {err}")
                 return None, err
             else:

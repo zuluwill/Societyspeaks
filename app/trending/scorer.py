@@ -312,15 +312,37 @@ def _sanitize_for_json(text: str) -> str:
     return "".join(ch for ch in text if ch == "\n" or ch == "\t" or (ord(ch) >= 0x20 and ord(ch) != 0x7F))
 
 
-def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
-    """Score articles using OpenAI Structured Outputs for guaranteed JSON schema."""
-    import openai
-    
-    client = openai.OpenAI(api_key=api_key)
-    
-    headlines = [f"{i+1}. {_sanitize_for_json(a.title or '')}" for i, a in enumerate(articles)]
-    
-    prompt = f"""Rate each headline on these scales:
+_OPENAI_RESPONSE_FORMAT = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "article_scores",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "scores": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "s": {"type": "number", "description": "Sensationalism score 0-1"},
+                            "r": {"type": "number", "description": "Relevance score 0-1"},
+                            "p": {"type": "number", "description": "Personal relevance score 0-1"},
+                            "geo": {"type": "string", "enum": ["global", "regional", "national", "local"]},
+                            "countries": {"type": "string", "description": "Country names or Global"}
+                        },
+                        "required": ["s", "r", "p", "geo", "countries"],
+                        "additionalProperties": False
+                    }
+                }
+            },
+            "required": ["scores"],
+            "additionalProperties": False
+        }
+    }
+}
+
+_OPENAI_SCORING_PROMPT_TEMPLATE = """Rate each headline on these scales:
 
 1. SENSATIONALISM (0-1):
 - 0 = neutral, factual, professional journalism
@@ -348,9 +370,41 @@ Examples of LOW (0.0-0.3): "Prime Minister meets foreign leader", "New cultural 
 5. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
 
 Headlines:
-{chr(10).join(headlines)}
+{headlines}
 
 Rate each headline in order."""
+
+
+def _apply_openai_scores(articles: List[NewsArticle], scores: list) -> None:
+    """Write scores from an OpenAI response onto article objects."""
+    for i, article in enumerate(articles):
+        if i < len(scores):
+            article.sensationalism_score = float(scores[i].get('s', 0.5))
+            article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
+            article.personal_relevance_score = float(scores[i].get('p', 0.5))
+            article.geographic_scope = scores[i].get('geo', 'unknown')
+            detected_countries = scores[i].get('countries', '').strip()
+            if detected_countries and _validate_geographic_countries(article, detected_countries):
+                article.geographic_countries = detected_countries
+            else:
+                article.geographic_countries = article.source.country if article.source and article.source.country else ''
+        else:
+            article.sensationalism_score = score_sensationalism(article.title)
+            article.personal_relevance_score = 0.5
+            article.geographic_scope = 'unknown'
+            article.geographic_countries = article.source.country if article.source and article.source.country else ''
+
+
+def _score_batch_with_openai(articles: List[NewsArticle], client, *, max_tokens: int = 4000, _depth: int = 0) -> None:
+    """
+    Score a batch of articles via OpenAI, bisecting and retrying if the response
+    is truncated. Falls back to heuristic scoring after two bisections (batches of 1).
+    """
+    if not articles:
+        return
+
+    headlines = [f"{i+1}. {_sanitize_for_json(a.title or '')}" for i, a in enumerate(articles)]
+    prompt = _OPENAI_SCORING_PROMPT_TEMPLATE.format(headlines=chr(10).join(headlines))
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -358,72 +412,50 @@ Rate each headline in order."""
             {"role": "system", "content": "You are a media quality analyst for a civic debate platform. Return ratings for each headline."},
             {"role": "user", "content": prompt}
         ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "article_scores",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "scores": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "s": {"type": "number", "description": "Sensationalism score 0-1"},
-                                    "r": {"type": "number", "description": "Relevance score 0-1"},
-                                    "p": {"type": "number", "description": "Personal relevance score 0-1"},
-                                    "geo": {"type": "string", "enum": ["global", "regional", "national", "local"]},
-                                    "countries": {"type": "string", "description": "Country names or Global"}
-                                },
-                                "required": ["s", "r", "p", "geo", "countries"],
-                                "additionalProperties": False
-                            }
-                        }
-                    },
-                    "required": ["scores"],
-                    "additionalProperties": False
-                }
-            }
-        },
-        max_tokens=8000,
-        temperature=0.3
+        response_format=_OPENAI_RESPONSE_FORMAT,
+        max_tokens=max_tokens,
+        temperature=0.3,
     )
-    
+
     choice = response.choices[0]
-    
+
     if choice.finish_reason == 'length':
-        logger.warning("OpenAI response truncated (max_tokens reached)")
-        raise ValueError("OpenAI response was truncated")
-    
+        if len(articles) == 1 or _depth >= 3:
+            logger.warning(
+                f"OpenAI response truncated on batch of {len(articles)} article(s) "
+                f"at depth {_depth} — falling back to heuristic scoring"
+            )
+            for article in articles:
+                article.sensationalism_score = score_sensationalism(article.title)
+                article.personal_relevance_score = 0.5
+                article.geographic_scope = 'unknown'
+                article.geographic_countries = article.source.country if article.source and article.source.country else ''
+            return
+
+        mid = len(articles) // 2
+        logger.warning(
+            f"OpenAI response truncated on batch of {len(articles)} — "
+            f"bisecting into {mid} + {len(articles) - mid} (depth {_depth + 1})"
+        )
+        _score_batch_with_openai(articles[:mid], client, max_tokens=max_tokens, _depth=_depth + 1)
+        _score_batch_with_openai(articles[mid:], client, max_tokens=max_tokens, _depth=_depth + 1)
+        return
+
     content = choice.message.content
     if not content:
         raise ValueError("Empty response from OpenAI")
-    
+
     result = json.loads(content)
     scores = result.get('scores', [])
+    _apply_openai_scores(articles, scores)
 
-    for i, article in enumerate(articles):
-        if i < len(scores):
-            article.sensationalism_score = float(scores[i].get('s', 0.5))
-            article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
-            article.personal_relevance_score = float(scores[i].get('p', 0.5))
-            article.geographic_scope = scores[i].get('geo', 'unknown')
 
-            # Validate AI-detected countries against article content
-            detected_countries = scores[i].get('countries', '').strip()
-            if detected_countries and _validate_geographic_countries(article, detected_countries):
-                article.geographic_countries = detected_countries
-            else:
-                # Fallback to source country if validation fails or no countries detected
-                article.geographic_countries = article.source.country if article.source and article.source.country else ''
-        else:
-            article.sensationalism_score = score_sensationalism(article.title)
-            article.personal_relevance_score = 0.5
-            article.geographic_scope = 'unknown'
-            article.geographic_countries = article.source.country if article.source and article.source.country else ''
-    
+def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
+    """Score articles using OpenAI Structured Outputs for guaranteed JSON schema."""
+    import openai
+
+    client = openai.OpenAI(api_key=api_key)
+    _score_batch_with_openai(articles, client)
     return articles
 
 
