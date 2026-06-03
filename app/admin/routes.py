@@ -1898,8 +1898,14 @@ def update_subscriber_frequency(subscriber_id):
 @admin_required
 def delete_subscriber(subscriber_id):
     """Delete a subscriber completely"""
+    from app.models.email import EmailEvent
     subscriber = db.get_or_404(DailyQuestionSubscriber, subscriber_id)
     email = subscriber.email
+    
+    # Unlink email_event rows before deleting to avoid FK violation
+    EmailEvent.query.filter_by(question_subscriber_id=subscriber_id).update(
+        {'question_subscriber_id': None}, synchronize_session=False
+    )
     
     db.session.delete(subscriber)
     db.session.commit()
@@ -1913,22 +1919,23 @@ def delete_subscriber(subscriber_id):
 @admin_required
 def bulk_remove_subscribers():
     """Bulk remove selected subscribers"""
+    from app.models.email import EmailEvent
     subscriber_ids = request.form.getlist('subscriber_ids')
     
     if not subscriber_ids:
         flash('No subscribers selected.', 'warning')
         return redirect(url_for('admin.list_daily_subscribers'))
     
-    removed = 0
-    for sub_id in subscriber_ids:
-        try:
-            subscriber = db.session.get(DailyQuestionSubscriber,int(sub_id))
-            if subscriber:
-                db.session.delete(subscriber)
-                removed += 1
-        except Exception as e:
-            current_app.logger.error(f"Error removing subscriber {sub_id}: {e}")
-            db.session.rollback()
+    int_ids = [int(sub_id) for sub_id in subscriber_ids]
+    
+    # Unlink email_event rows before deleting to avoid FK violation
+    EmailEvent.query.filter(
+        EmailEvent.question_subscriber_id.in_(int_ids)
+    ).update({'question_subscriber_id': None}, synchronize_session=False)
+    
+    removed = DailyQuestionSubscriber.query.filter(
+        DailyQuestionSubscriber.id.in_(int_ids)
+    ).delete(synchronize_session=False)
     
     db.session.commit()
     flash(f'Removed {removed} subscriber(s).', 'success')
