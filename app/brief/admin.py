@@ -793,9 +793,15 @@ def toggle_subscriber(subscriber_id):
 def delete_subscriber(subscriber_id):
     """Delete a subscriber"""
     from app.models import DailyBriefSubscriber
+    from app.models.email import EmailEvent
     
     subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     email = subscriber.email
+    
+    # Unlink email_event rows before deleting to avoid FK violation
+    EmailEvent.query.filter_by(brief_subscriber_id=subscriber_id).update(
+        {'brief_subscriber_id': None}, synchronize_session=False
+    )
     
     db.session.delete(subscriber)
     db.session.commit()
@@ -810,12 +816,18 @@ def delete_subscriber(subscriber_id):
 def bulk_remove_subscribers():
     """Bulk remove selected subscribers"""
     from app.models import DailyBriefSubscriber
+    from app.models.email import EmailEvent
     
     subscriber_ids = request.form.getlist('subscriber_ids', type=int)
     
     if not subscriber_ids:
         flash('No subscribers selected.', 'warning')
         return redirect(url_for('brief_admin.subscribers'))
+    
+    # Unlink email_event rows before deleting to avoid FK violation
+    EmailEvent.query.filter(
+        EmailEvent.brief_subscriber_id.in_(subscriber_ids)
+    ).update({'brief_subscriber_id': None}, synchronize_session=False)
     
     deleted = DailyBriefSubscriber.query.filter(
         DailyBriefSubscriber.id.in_(subscriber_ids)
