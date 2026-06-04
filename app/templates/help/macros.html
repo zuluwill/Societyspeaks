@@ -1,0 +1,49 @@
+{% from "components/ui_tokens.html" import btn_primary_sm, btn_secondary_sm %}
+
+{% macro help_nav_back() %}
+<a href="{{ url_for('help.help') }}" class="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline inline-flex items-center gap-1">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+  {{ _('Help Centre') }}
+</a>
+{% endmacro %}
+
+{% macro help_page_header(title, description) %}
+<div class="mb-10">
+  {{ help_nav_back() }}
+  <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mt-4 mb-3">{{ title }}</h1>
+  <p class="text-lg text-gray-600 max-w-3xl">{{ description }}</p>
+</div>
+{% endmacro %}
+
+{% macro help_section_card(title) %}
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8 mb-6">
+  <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ title }}</h2>
+  {{ caller() }}
+</div>
+{% endmacro %}
+
+{% macro help_demo_block() %}
+{% if help_demo %}
+<div class="rounded-2xl bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 p-6 sm:p-8 mb-8">
+  <span class="inline-flex rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-bold text-white mb-3">{{ _('Live demo') }}</span>
+  <h2 class="text-xl font-bold text-gray-900 mb-2">{{ _('See deliberation in practice') }}</h2>
+  <p class="text-gray-700 mb-4">{{ _('Vote on real statements, then open the consensus view to see opinion clusters, bridge ideas, and genuine divisions.') }}</p>
+  <div class="flex flex-wrap gap-3">
+    <a href="{{ help_demo.discussion_url }}" class="{{ btn_primary_sm() }}">{{ _('Try the demo discussion') }}</a>
+    <a href="{{ help_demo.consensus_url }}" class="{{ btn_secondary_sm() }}">{{ _('View consensus analysis') }}</a>
+  </div>
+  <p class="text-xs text-gray-500 mt-3">{{ _('Vote on several statements first to unlock the full analysis (demo discussions may show results immediately).') }}</p>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro help_footer_cta() %}
+<div class="mt-10 rounded-2xl bg-primary-50 border border-primary-100 p-6 sm:p-8 text-center">
+  <h2 class="text-lg font-bold text-gray-900 mb-2">{{ _('Still need help?') }}</h2>
+  <p class="text-gray-600 mb-4">{{ _('Browse the FAQ or email our team.') }}</p>
+  <div class="flex flex-col sm:flex-row justify-center gap-3">
+    <a href="{{ url_for('main.faq') }}" class="{{ btn_secondary_sm() }}">{{ _('FAQ') }}</a>
+    <a href="mailto:info@societyspeaks.io?subject=Help%20with%20Society%20Speaks" class="{{ btn_primary_sm() }}">{{ _('Email support') }}</a>
+  </div>
+</div>
+{% endmacro %}

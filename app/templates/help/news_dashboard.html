@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% from "help/macros.html" import help_page_header, help_footer_cta %}
+
+{% block title %}{{ _('News Transparency Dashboard — Help | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('Explore the News Transparency Dashboard: spectrum-organised coverage, sensationalism scores, and source transparency for today\'s news.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.news_dashboard', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('News Transparency Dashboard'),
+    _('See how today\'s stories are covered across the political spectrum — a free companion to the Daily Brief and our deliberation work.')
+  ) }}
+
+  <div class="space-y-6 text-gray-700">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <p class="mb-4">{{ _('The dashboard organises coverage from 140+ curated outlets — news, analysis, think tanks, and podcasts. For each topic you can compare left, centre, and right emphasis, view sensationalism scoring, and follow links to original reporting.') }}</p>
+      <p>{{ _('No sign-up required. It supports the same civic goal as our discussions: understand issues from multiple angles before forming judgment.') }}</p>
+      <a href="{{ url_for('news.dashboard') }}" class="inline-block mt-4 text-primary-600 font-medium hover:underline">{{ _('Open dashboard') }} →</a>
+    </div>
+    <p class="text-sm text-gray-600">
+      <a href="{{ url_for('help.news_feed') }}" class="text-primary-600 hover:underline">{{ _('How news feeds into discussions') }}</a>
+    </p>
+  </div>
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

@@ -1,21 +1,21 @@
 {# templates/help/creating_discussions.html #} {% extends "layout.html" %}
 
-{% block head %}
-<title>{{ _('Creating Discussions - Society Speaks Help | Start Meaningful Public Debates') }}</title>
-<meta name="description" content="{{ _('Learn how to create effective discussions on Society Speaks. Choose between our Native Debate System or Pol.is embed, add seed statements, and start meaningful conversations.') }}">
-<link rel="canonical" href="{{ url_for('help.creating_discussions', _external=True) }}">
+{% block title %}{{ _('Creating Discussions - Society Speaks Help | Start Meaningful Public Debates') }}{% endblock %}
+{% block meta_description %}{{ _('Create structured polls and deliberation spaces on Society Speaks: seed statements, visibility, moderation, and ML-powered consensus analysis. Native system recommended.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.creating_discussions', _external=True) }}{% endblock %}
 
+{% block extra_head %}
 <script type="application/ld+json">
 {{ {
   "@context": "https://schema.org",
   "@type": "HowTo",
   "name": _('Creating Discussions on Society Speaks'),
-  "description": _('Learn how to create effective discussions using our Native System or Pol.is'),
+  "description": _('Create a structured deliberation or poll on Society Speaks using the native statement system.'),
   "step": [
     {
       "@type": "HowToStep",
-      "name": _('Choose Your System'),
-      "text": _('Select between the Native Debate System for in-depth deliberation or Pol.is for large-scale polling.')
+      "name": _('Draft seed statements'),
+      "text": _('Write clear, single-claim statements spanning multiple perspectives on your topic.')
     },
     {
       "@type": "HowToStep",
@@ -41,9 +41,11 @@
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-4">{{ _('Creating Discussions') }}</h1>
-    <p class="text-gray-600">
-      {{ _('Learn how to create effective discussions using our Native System or Pol.is') }}
+    <a href="{{ url_for('help.help') }}" class="text-sm font-medium text-primary-600 hover:underline">{{ _('← Help Centre') }}</a>
+    <h1 class="text-3xl font-bold mt-3 mb-4">{{ _('Creating discussions') }}</h1>
+    <p class="text-gray-600 text-lg">
+      {{ _('Launch your own structured poll or deliberation in minutes — the building block for consultations and') }}
+      <a href="{{ url_for('help.civic_infrastructure') }}" class="text-primary-600 hover:underline">{{ _('programmes') }}</a>.
     </p>
   </div>
 
@@ -51,9 +53,9 @@
   <div class="space-y-8">
     <!-- Choose Your System -->
     <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
-      <h2 class="text-xl font-semibold mb-4">{{ _('Choose Your Discussion System') }}</h2>
+      <h2 class="text-xl font-semibold mb-4">{{ _('Native deliberation (recommended)') }}</h2>
       <p class="text-gray-700 mb-4">
-        {{ _('When creating a discussion, you can choose between two powerful systems:') }}
+        {{ _('Most new discussions use our native statement system — voting, optional threaded responses, evidence, and built-in consensus analysis. A legacy Pol.is embed path remains for specific integrations; see Advanced in the Help Centre.') }}
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">

@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% from "help/macros.html" import help_page_header, help_footer_cta %}
+
+{% block title %}{{ _('Daily Brief — Help | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('The free Society Speaks Daily Brief: 3–5 civic stories from 140+ sources, spectrum breakdown, and under-reported coverage.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.daily_brief', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Daily Brief'),
+    _('A free, ad-free editorial digest — not personalised algorithmic news. Stories are chosen for civic impact, not virality.')
+  ) }}
+
+  <div class="space-y-6 text-gray-700">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('What you get') }}</h2>
+      <ul class="list-disc pl-5 space-y-2">
+        <li>{{ _('3–5 stories per edition with "Why this matters" context') }}</li>
+        <li>{{ _('Left / centre / right breakdown per story (bias ratings from AllSides)') }}</li>
+        <li>{{ _('Under the Radar — important stories with low mainstream attention') }}</li>
+      </ul>
+      <a href="{{ url_for('brief.today') }}" class="inline-block mt-4 text-primary-600 font-medium hover:underline">{{ _("Read today's brief") }} →</a>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('Daily Brief vs Personal Briefs') }}</h2>
+      <p>{{ _('The Daily Brief is curated by Society Speaks from our 140+ source library. Personal Briefs are paid, custom digests built from sources you choose — and subscriptions fund the free civic platform.') }}</p>
+      <a href="{{ url_for('help.personal_briefs') }}" class="inline-block mt-3 text-primary-600 font-medium hover:underline">{{ _('Personal Briefs help') }} →</a>
+    </div>
+  </div>
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

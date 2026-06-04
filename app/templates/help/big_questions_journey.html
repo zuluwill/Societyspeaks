@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% from "help/macros.html" import help_page_header, help_footer_cta %}
+
+{% block title %}{{ _('Big Questions Journey — Help | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('Guide to the Big Questions Journey: 8 themes, country editions, voting, recaps, and how your views compare to opinion clusters.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.big_questions_journey', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Big Questions Journey'),
+    _('A guided civic experience across the issues defining our era — climate, AI, economy, health, security, democracy, society, and education.')
+  ) }}
+
+  <div class="space-y-6 text-gray-700">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('What it is') }}</h2>
+      <p class="mb-4">{{ _('Each edition contains 8 themes. Every theme starts with at least 7 expert-curated seed statements (56+ across the journey). Participants vote Agree, Disagree, or Unsure and can submit their own statements after engaging with the theme.') }}</p>
+      <p>{{ _('Country editions anchor questions in local policy context — UK, US, Germany, France, Netherlands, Ireland, Canada, Singapore, Japan, China, plus a global edition. We recommend an edition based on your profile or browser language when possible.') }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('After you vote') }}</h2>
+      <p>{{ _('Theme recaps show opinion clusters, consensus statements, bridge ideas, and genuine divisions. Sign in to save progress across devices. Complete all themes for your full picture.') }}</p>
+      <a href="{{ url_for('programmes.list_programmes') }}" class="inline-block mt-4 text-primary-600 font-medium hover:underline">{{ _('Choose your edition') }} →</a>
+    </div>
+  </div>
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

@@ -322,7 +322,7 @@
           <p class="text-sm font-medium text-gray-900">{{ _('Climate Action: Finding Common Ground') }}</p>
           <p class="text-xs text-gray-500 mt-1">{{ _('20 statements &middot; 400+ votes &middot; Multiple opinion groups')|safe }}</p>
         </div>
-        <a href="/discussions/25/climate-action-finding-common-ground" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors">
+        <a href="{{ help_demo.discussion_url if help_demo else url_for('discussions.news_feed') }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors">
           {{ _('View Live Discussion') }}
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -366,7 +366,7 @@
             </li>
           </ul>
         </div>
-        <a href="/discussions/25/consensus" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors">
+        <a href="{{ help_demo.consensus_url if help_demo else url_for('discussions.news_feed') }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors">
           {{ _('View Consensus Analysis') }}
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>

@@ -8,9 +8,9 @@
 {% block twitter_description %}{{ _('Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. From £4.99/month.') }}{% endblock %}
 {% block twitter_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
 
-{% block head %}
-<link rel="canonical" href="{{ url_for('briefing.landing', _external=True) }}">
+{% block canonical %}{{ url_for('briefing.landing', _external=True) }}{% endblock %}
 
+{% block extra_head %}
 {% set _briefing_site_url = url_for('main.index', _external=True) %}
 <!-- JSON-LD Structured Data for Product -->
 <script type="application/ld+json">

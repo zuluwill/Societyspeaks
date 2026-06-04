@@ -1,11 +1,17 @@
 {# templates/help/seed_comments.html #}
 {% extends "layout.html" %}
+{% from "help/macros.html" import help_nav_back %}
+
+{% block title %}{{ _('Seed statements — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _('How to write effective seed statements for Society Speaks discussions and consultations.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.seed_comments', _external=True) }}{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto p-6">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">{{ _('Understanding Seed Comments') }}</h1>
+        {{ help_nav_back() }}
+        <h1 class="text-3xl font-bold mt-3 mb-4">{{ _('Understanding Seed Comments') }}</h1>
         <p class="text-gray-600">{{ _('Learn how to create effective seed comments for your discussions') }}</p>
     </div>
 

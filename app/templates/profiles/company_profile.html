@@ -3,12 +3,12 @@
 {% from "components/social_links.html" import social_links %}
 {% from "components/profile_pagination.html" import pagination %}
 
-{% block head %}
-    <title>{{ _('%(name)s - Profile on SocietySpeaks', name=profile.company_name) }}</title>
-    <meta name="description" content="{{ _('Explore the profile of %(name)s, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.', name=profile.company_name) }}">
-    <meta name="keywords" content="{{ _('organisation profile, company profile, %(name)s, SocietySpeaks', name=profile.company_name) }}{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
-    <link rel="canonical" href="{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}">
+{% block title %}{{ _('%(name)s - Profile on SocietySpeaks', name=profile.company_name) }}{% endblock %}
+{% block meta_description %}{{ _('Explore the profile of %(name)s, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.', name=profile.company_name) }}{% endblock %}
+{% block meta_keywords %}{{ _('organisation profile, company profile, %(name)s, SocietySpeaks', name=profile.company_name) }}{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}{% endblock %}
+{% block canonical %}{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}{% endblock %}
 
+{% block extra_head %}
     <!-- Structured Data for SEO -->
     {% set _company_url = url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) %}
     {% set _company_logo = url_for('profiles.get_image', filename=profile.logo, _external=True) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png', _external=True) %}

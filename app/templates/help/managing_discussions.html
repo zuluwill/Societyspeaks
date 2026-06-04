@@ -1,11 +1,11 @@
 {# templates/help/managing_discussions.html #}
 {% extends "layout.html" %}
 
-{% block head %}
-<title>{{ _('Managing Discussions - Society Speaks Help | Monitor and Engage') }}</title>
-<meta name="description" content="{{ _('Learn how to monitor and maintain engaging discussions on Society Speaks. Track participation, promote engagement, and understand consensus visualizations.') }}">
-<link rel="canonical" href="{{ url_for('help.managing_discussions', _external=True) }}">
+{% block title %}{{ _('Managing Discussions — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _('Learn how to monitor and maintain engaging discussions on Society Speaks. Track participation, promote engagement, and understand consensus visualizations.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.managing_discussions', _external=True) }}{% endblock %}
 
+{% block extra_head %}
 <script type="application/ld+json">
 {{ {
   "@context": "https://schema.org",

@@ -1,11 +1,9 @@
 {% extends "layout.html" %}
 {% from "components/source_logo.html" import source_logo %}
 
-{% block head %}
-    <title>{{ _('Claim %(name)s - SocietySpeaks', name=source.name) }}</title>
-    <meta name="description" content="{{ _("Request to claim %(name)s as your organization's source profile on SocietySpeaks.", name=source.name) }}">
-    <meta name="robots" content="noindex, nofollow">
-{% endblock %}
+{% block title %}{{ _('Claim %(name)s - SocietySpeaks', name=source.name) }}{% endblock %}
+{% block meta_description %}{{ _("Request to claim %(name)s as your organization's source profile on SocietySpeaks.", name=source.name) }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:px-8">

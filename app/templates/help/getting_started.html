@@ -1,210 +1,63 @@
-{# templates/help/getting_started.html #} {% extends "layout.html" %}
+{# templates/help/getting_started.html #}
+{% extends "layout.html" %}
 {% from "components/ui_tokens.html" import btn_primary_sm, btn_secondary_sm %}
+{% from "help/macros.html" import help_page_header, help_demo_block, help_footer_cta %}
 
-{% block head %}
-<title>{{ _('Getting Started - Society Speaks Help | How to Participate in Discussions') }}</title>
-<meta name="description" content="{{ _('Learn how to use Society Speaks. Discover how to join discussions, vote on statements, add your perspective, and participate in meaningful public dialogue.') }}">
-<link rel="canonical" href="{{ url_for('help.getting_started', _external=True) }}">
-
-<script type="application/ld+json">
-{{ {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  "name": _('Getting Started with Society Speaks'),
-  "description": _('Learn how to participate in meaningful public discussions on Society Speaks'),
-  "step": [
-    {
-      "@type": "HowToStep",
-      "name": _('Join a Discussion'),
-      "text": _('Browse available discussions on the homepage, filter by country, city, or topic, and click on any discussion to participate.')
-    },
-    {
-      "@type": "HowToStep",
-      "name": _('Vote on Comments'),
-      "text": _('For each comment, you can Agree, Disagree, or Pass if unsure or the comment is not relevant to you.')
-    },
-    {
-      "@type": "HowToStep",
-      "name": _('Add Your Perspective'),
-      "text": _('Submit your own statements to add to the discussion and help build consensus.')
-    }
-  ]
-} | tojson }}
-</script>
-{% endblock %}
+{% block title %}{{ _('Getting Started — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _('Get started with Society Speaks: Daily Question, Big Questions Journey, discussions, Tradeoffs, and how to run your own consultations.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.getting_started', _external=True) }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto p-6">
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-4">{{ _('Getting Started with Society Speaks') }}</h1>
-    <p class="text-gray-600">
-      {{ _('Welcome to Society Speaks! Learn how to participate in meaningful discussions.') }}
-    </p>
-  </div>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Getting Started'),
+    _('Society Speaks is civic infrastructure for sense-making — participate in public programmes or run your own structured polls and consultations.')
+  ) }}
 
-  <!-- Main Content -->
-  <div class="space-y-8">
-    <!-- Overview -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">{{ _('What is Society Speaks?') }}</h2>
-      <p class="text-gray-700 mb-4">
-        {{ _('Society Speaks is a platform that enables meaningful public dialogue using two powerful systems:') }}
-      </p>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-blue-900 mb-2">
-            {{ _('✨ Native Debate System (NEW!)') }}
-          </h3>
-          <p class="text-sm text-gray-700">
-            {{ _('Our advanced system with real-time voting, threaded responses, evidence linking, and consensus visualization.') }}
-          </p>
-          <a
-            href="{{ url_for('help.native_system') }}"
-            class="text-primary-600 hover:underline text-sm mt-2 inline-block"
-          >
-            {{ _('Learn more →') }}
-          </a>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-gray-900 mb-2">{{ _('🌐 Pol.is Embed') }}</h3>
-          <p class="text-sm text-gray-700">
-            {{ _('Proven technology for large-scale opinion polling with powerful visualization.') }}
-          </p>
-          <a
-            href="{{ url_for('help.polis_algorithms') }}"
-            class="text-primary-600 hover:underline text-sm mt-2 inline-block"
-          >
-            {{ _('Learn more →') }}
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- How to Participate -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">{{ _('How to Participate') }}</h2>
-
-      <div class="space-y-4">
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">{{ _('1. Join a Discussion') }}</h3>
-          <ul class="list-disc pl-5 text-gray-700">
-            <li>{{ _('Browse available discussions on the homepage') }}</li>
-            <li>{{ _('Filter by country, city, or topic') }}</li>
-            <li>{{ _('Click on any discussion to participate') }}</li>
-          </ul>
-        </div>
-
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">{{ _('2. Vote on Comments') }}</h3>
-          <ul class="list-disc pl-5 text-gray-700">
-            <li>{{ _('For each comment, you can:') }}</li>
-            <li>{{ _('👍 Agree') }}</li>
-            <li>{{ _('👎 Disagree') }}</li>
-            <li>{{ _("⏭️ Pass (if unsure or the comment isn't relevant to you)") }}</li>
-          </ul>
-        </div>
-
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">{{ _('3. Submit Comments') }}</h3>
-          <ul class="list-disc pl-5 text-gray-700">
-            <li>{{ _('Share your own perspective (keep it under 140 characters)') }}</li>
-            <li>{{ _('Focus on one point per comment') }}</li>
-            <li>{{ _('Be respectful and constructive') }}</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- Creating an Account -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">{{ _('Creating an Account') }}</h2>
-      <p class="text-gray-700 mb-4">
-        {{ _('While you can browse discussions without an account, creating one allows you to:') }}
-      </p>
-      <ul class="list-disc pl-5 text-gray-700">
-        <li>{{ _('Create your own discussions') }}</li>
-        <li>{{ _('Track your participation') }}</li>
-        <li>{{ _('Build a profile') }}</li>
-        <li>{{ _("Receive updates on discussions you're interested in") }}</li>
+  <div class="space-y-6">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('No account required to explore') }}</h2>
+      <ul class="grid sm:grid-cols-2 gap-3 text-sm">
+        <li><a href="{{ url_for('brief.today') }}" class="text-primary-600 font-medium hover:underline">{{ _('Daily Brief') }}</a> — {{ _('free news digest') }}</li>
+        <li><a href="{{ url_for('daily.today') }}" class="text-primary-600 font-medium hover:underline">{{ _('Daily Question') }}</a> — {{ _('vote in under two minutes') }}</li>
+        <li><a href="{{ url_for('news.dashboard') }}" class="text-primary-600 font-medium hover:underline">{{ _('News Transparency Dashboard') }}</a></li>
+        <li><a href="{{ url_for('discussions.news_feed') }}" class="text-primary-600 font-medium hover:underline">{{ _('Browse discussions') }}</a></li>
+        {% if config.get('GAME_ENABLED', true) %}
+        <li><a href="{{ url_for('game.index') }}" class="text-primary-600 font-medium hover:underline">{{ _('Tradeoffs') }}</a> — {{ _('daily scenario game') }}</li>
+        {% endif %}
       </ul>
-      <div class="mt-4">
-        <a
-          href="{{ url_for('auth.register') }}"
-          class="{{ btn_primary_sm() }}"
-        >
-          {{ _('Create an Account') }}
-        </a>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Sign up free to save progress') }}</h2>
+      <p class="text-gray-700 mb-4">{{ _('An account lets you continue the Big Questions Journey across devices, create discussions and programmes, manage briefings, and track your voting history.') }}</p>
+      <a href="{{ url_for('auth.register') }}" class="{{ btn_primary_sm() }}">{{ _('Create free account') }}</a>
+    </div>
+
+    <div class="bg-gradient-to-r from-slate-900 to-blue-900 rounded-xl p-6 sm:p-8 text-white">
+      <h2 class="text-xl font-semibold mb-3">{{ _('Take the Big Questions Journey') }}</h2>
+      <p class="text-blue-100 text-sm mb-4">{{ _('Our flagship guided experience — 8 themes, country editions, consensus and bridge insights after you vote.') }}</p>
+      <a href="{{ url_for('programmes.list_programmes') }}" class="inline-flex items-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 hover:bg-blue-50">{{ _('Choose edition') }}</a>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('How voting works') }}</h2>
+      <p class="text-gray-700 mb-4">{{ _('On discussions and the Journey you vote on <strong>statements</strong> — clear, single claims — not threaded comments. Choose Agree, Disagree, or Unsure. Optionally add a short reason.')|safe }}</p>
+      <a href="{{ url_for('help.native_system') }}" class="text-primary-600 font-medium text-sm hover:underline">{{ _('Native deliberation system') }} →</a>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Run your own consultation') }}</h2>
+      <p class="text-gray-700 mb-4">{{ _('NGOs, governments, researchers, and publishers use Society Speaks to ship their own questions, polls, and multi-stage programmes — with exports and ML-powered consensus analysis.') }}</p>
+      <div class="flex flex-wrap gap-3">
+        <a href="{{ url_for('help.civic_infrastructure') }}" class="{{ btn_primary_sm() }}">{{ _('Civic infrastructure guide') }}</a>
+        <a href="{{ url_for('discussions.create_discussion') }}" class="{{ btn_secondary_sm() }}">{{ _('Start a discussion') }}</a>
       </div>
     </div>
 
-    <!-- See a Live Example -->
-    <div class="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg p-6 border border-emerald-200">
-      <h2 class="text-xl font-semibold mb-3">{{ _('See a Live Example') }}</h2>
-      <p class="text-gray-700 mb-4">
-        {{ _('The best way to understand Society Speaks is to try it. Explore our demo discussion on climate action, vote on statements, and then see how the consensus analysis reveals opinion groups and areas of agreement.') }}
-      </p>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a
-          href="/discussions/25/climate-action-finding-common-ground"
-          class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-emerald-100"
-        >
-          <h3 class="font-semibold text-emerald-700">{{ _('Explore the Discussion →') }}</h3>
-          <p class="text-sm text-gray-600">
-            {{ _('Vote on statements about climate action') }}
-          </p>
-        </a>
-        <a
-          href="/discussions/25/consensus"
-          class="block p-4 bg-white rounded-lg hover:shadow-md transition-shadow border border-emerald-100"
-        >
-          <h3 class="font-semibold text-purple-700">{{ _('View Consensus Analysis →') }}</h3>
-          <p class="text-sm text-gray-600">
-            {{ _('See opinion groups, bridges, and areas of agreement') }}
-          </p>
-        </a>
-      </div>
-      <p class="text-xs text-gray-500 mt-3">{{ _('Vote on 5 statements to unlock the full consensus analysis.') }}</p>
-    </div>
-
-    <!-- Next Steps -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4">{{ _('Next Steps') }}</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a
-          href="{{ url_for('help.creating_discussions') }}"
-          class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-          <h3 class="font-semibold">{{ _('Creating Discussions →') }}</h3>
-          <p class="text-sm text-gray-600">
-            {{ _('Learn how to start your own discussions') }}
-          </p>
-        </a>
-        <a
-          href="{{ url_for('help.seed_comments') }}"
-          class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-          <h3 class="font-semibold">{{ _('Understanding Seed Comments →') }}</h3>
-          <p class="text-sm text-gray-600">
-            {{ _('Tips for starting effective discussions') }}
-          </p>
-        </a>
-      </div>
-    </div>
+    {{ help_demo_block() }}
   </div>
 
-  <!-- Help Footer -->
-  <div class="mt-8 text-center">
-    <p class="text-gray-600">
-      {{ _('Still need help?') }}
-      <a
-        href="https://forms.gle/g3BQVhJgFLiGjmSP6"
-        target="_blank"
-        class="text-primary-600 hover:underline"
-      >
-        {{ _('Send us feedback') }}
-      </a>
-    </p>
-  </div>
+  {{ help_footer_cta() }}
 </div>
 {% endblock %}

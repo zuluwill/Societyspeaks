@@ -1,24 +1,12 @@
 {% extends "layout.html" %} {% from "components/discussion_card.html" import
-discussion_card %} {% block head %}
-<title>
-  {{ _('News Discussions - SocietySpeaks | Trending Topics for Structured Debate') }}
-</title>
-<meta
-  name="description"
-  content="{{ _('Join discussions on trending news topics. Curated from 140+ trusted journalism sources across the political spectrum for thoughtful, nuanced public debate.') }}"
-/>
-<link
-  rel="canonical"
-  href="{{ url_for('discussions.news_feed', _external=True) }}"
-/>
+discussion_card %}
+{% block title %}{{ _('News Discussions - SocietySpeaks | Trending Topics for Structured Debate') }}{% endblock %}
+{% block meta_description %}{{ _('Join discussions on trending news topics. Curated from 140+ trusted journalism sources across the political spectrum for thoughtful, nuanced public debate.') }}{% endblock %}
+{% block canonical %}{{ url_for('discussions.news_feed', _external=True) }}{% endblock %}
+{% block og_title %}{{ _('News Discussions - Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('Trending news transformed into structured debates. Join the conversation on current affairs.') }}{% endblock %}
 
-<meta property="og:title" content="{{ _('News Discussions - Society Speaks') }}" />
-<meta
-  property="og:description"
-  content="{{ _('Trending news transformed into structured debates. Join the conversation on current affairs.') }}"
-/>
-<meta property="og:type" content="website" />
-
+{% block extra_head %}
 {% set _news_feed_url = url_for('discussions.news_feed', _external=True) %}
 {% set _site_url = url_for('main.index', _external=True) %}
 <script type="application/ld+json">

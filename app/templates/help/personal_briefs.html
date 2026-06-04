@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md %}
+{% from "help/macros.html" import help_page_header, help_footer_cta %}
+
+{% block title %}{{ _('Personal Briefs — Help | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('Personal Briefs: custom AI daily digests from your sources. Plans, trials, and how subscriptions fund free civic features.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.personal_briefs', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Personal Briefs'),
+    _('Replace newsletter overload with one calm digest from sources you trust — RSS, Substacks, PDFs, and more. Delivered on your schedule.')
+  ) }}
+
+  <div class="space-y-6 text-gray-700">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('How it differs from the Daily Brief') }}</h2>
+      <p>{{ _('The Daily Brief is free and editorially curated by Society Speaks from our shared source library. Personal Briefs are yours — you pick sources, timing, and recipients (on higher plans).') }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('Funding the civic platform') }}</h2>
+      <p>{{ _('Personal Brief subscriptions directly support free features: Daily Brief, Daily Question, Big Questions Journey, discussions, and the News Transparency Dashboard. We are not ad-funded.') }}</p>
+    </div>
+    <a href="{{ url_for('briefing.landing') }}" class="{{ btn_primary_md() }}">{{ _('View plans & start trial') | escape_i18n }}</a>
+  </div>
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

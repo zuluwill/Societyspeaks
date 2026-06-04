@@ -1,11 +1,11 @@
 {# templates/help/news_feed.html #}
 {% extends "layout.html" %}
 
-{% block head %}
-<title>{{ _('How Our News Feed Works - Society Speaks | Curated News Discussions') }}</title>
-<meta name="description" content="{{ _('Learn how Society Speaks sources and selects trending news topics for structured public debate. We transform polarising issues into nuanced, meaningful discussions.') }}">
-<link rel="canonical" href="{{ url_for('help.news_feed', _external=True) }}">
+{% block title %}{{ _('How our news feed works — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _('Learn how Society Speaks sources and selects trending news topics for structured public debate. We transform polarising issues into nuanced, meaningful discussions.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.news_feed', _external=True) }}{% endblock %}
 
+{% block extra_head %}
 <script type="application/ld+json">
 {{ {
   "@context": "https://schema.org",

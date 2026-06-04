@@ -82,10 +82,12 @@ def hub():
     (Judgment Prompt, Audience Snapshot, Understanding Link), and provides
     links to the embed generator and API documentation.
     """
+    from app.help.demo import help_demo_links
     return render_template(
         'partner/hub.html',
         base_url=_get_base_url(),
-        demo_discussion_id=current_app.config.get('DEMO_DISCUSSION_ID')
+        demo_discussion_id=current_app.config.get('DEMO_DISCUSSION_ID'),
+        help_demo=help_demo_links(),
     )
 
 

@@ -678,3 +678,93 @@ def guided_journey_context_for_discussion(
         "has_source_articles": discussion_has_linked_source_articles(discussion),
         "next_theme_in_programme": next_theme_in_programme,
     }
+
+
+def resolve_guided_journey_programme_for_request() -> Optional[Programme]:
+    """
+    Best-effort guided journey programme for marketing pages (about, help).
+
+    Mirrors homepage personalisation: explicit ?journey=, profile country,
+    Accept-Language, then global edition.
+    """
+    from flask import request
+    from flask_login import current_user
+    from sqlalchemy.orm import joinedload
+
+    from app import cache, db
+    from app.models import Programme, User
+
+    journey_slugs = guided_journey_slug_set()
+    if not journey_slugs:
+        return None
+
+    cache_key = 'marketing_journey_programmes'
+    slug_fp = ','.join(sorted(journey_slugs))
+    rows: Optional[List[Programme]] = None
+    try:
+        cached = cache.get(cache_key)
+        if isinstance(cached, tuple) and len(cached) == 2 and cached[0] == slug_fp:
+            rows = cached[1]
+    except Exception:
+        pass
+    if rows is None:
+        rows = (
+            Programme.query.filter(
+                Programme.slug.in_(journey_slugs),
+                Programme.status == 'active',
+            )
+            .order_by(Programme.name.asc())
+            .all()
+        )
+        try:
+            cache.set(cache_key, (slug_fp, rows), timeout=300)
+        except Exception:
+            pass
+
+    if not rows:
+        return None
+
+    by_country = {(p.country or '').lower(): p for p in rows}
+    global_journey = next((p for p in rows if not p.country), None)
+    guided: Optional[Programme] = None
+
+    explicit_slug = (request.args.get('journey') or request.args.get('edition') or '').strip().lower()
+    if explicit_slug and explicit_slug in journey_slugs:
+        guided = next(
+            (p for p in rows if p.slug and p.slug.lower() == explicit_slug),
+            None,
+        )
+
+    if current_user.is_authenticated and not guided:
+        user = (
+            db.session.query(User)
+            .options(
+                joinedload(User.individual_profile),
+                joinedload(User.company_profile),
+            )
+            .filter_by(id=current_user.id)
+            .first()
+        )
+        profile_country = None
+        pt = getattr(user, 'profile_type', None)
+        if pt == 'company' and getattr(user, 'company_profile', None):
+            profile_country = user.company_profile.country
+        elif getattr(user, 'individual_profile', None):
+            profile_country = user.individual_profile.country
+        elif getattr(user, 'company_profile', None):
+            profile_country = user.company_profile.country
+        country_key = journey_programme_country_lookup_key(profile_country)
+        if country_key:
+            guided = by_country.get(country_key)
+
+    if not guided:
+        inferred = infer_journey_country_from_accept_language(
+            request.headers.get('Accept-Language', '')
+        )
+        if inferred:
+            guided = by_country.get(inferred)
+
+    if not guided:
+        guided = global_journey or rows[0]
+
+    return guided

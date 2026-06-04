@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md %}
+{% from "help/macros.html" import help_page_header, help_demo_block, help_footer_cta %}
+
+{% block title %}{{ _('Civic infrastructure — run programmes & consultations | Society Speaks Help') | escape_i18n }}{% endblock %}
+{% block meta_description %}{{ _('Use Society Speaks as civic infrastructure: run programmes, ship your own questions and polls, embed on your site, export data, and surface consensus, bridge ideas, and divisions.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.civic_infrastructure', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Civic infrastructure'),
+    _('Society Speaks is civic technology you can deploy — not only a destination site. Run consultations, publish your own structured polls, and export analysis-ready data using the same deliberation engine behind our public programmes.')
+  ) }}
+
+  <div class="space-y-6">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('What you can run') }}</h2>
+      <div class="grid md:grid-cols-2 gap-5 text-sm text-gray-700">
+        <div class="rounded-lg bg-blue-50 p-4">
+          <h3 class="font-semibold text-blue-900 mb-2">{{ _('Programmes') }}</h3>
+          <p>{{ _('Multi-discussion campaigns with themes, phases, cohorts, stewards, visibility controls, and bulk export — ideal for citizen assemblies, policy consultations, and longitudinal engagement.') }}</p>
+          <a href="{{ url_for('help.programmes') }}" class="text-primary-600 font-medium text-sm mt-2 inline-block hover:underline">{{ _('Programmes guide') }} →</a>
+        </div>
+        <div class="rounded-lg bg-blue-50 p-4">
+          <h3 class="font-semibold text-blue-900 mb-2">{{ _('Standalone discussions') }}</h3>
+          <p>{{ _('Launch a focused poll or deliberation in minutes: seed statements, set public/unlisted/invite-only visibility, moderate submissions, and unlock ML clustering when participation thresholds are met.') }}</p>
+          <a href="{{ url_for('help.creating_discussions') }}" class="text-primary-600 font-medium text-sm mt-2 inline-block hover:underline">{{ _('Creating discussions') }} →</a>
+        </div>
+        <div class="rounded-lg bg-emerald-50 p-4">
+          <h3 class="font-semibold text-emerald-900 mb-2">{{ _('Publisher embeds & Partner API') | escape_i18n }}</h3>
+          <p>{{ _('Embed voting on articles and pages you choose. You define topics and statements — we do not scrape your newsroom. Automate creation from your CMS when ready.') }}</p>
+          <a href="{{ url_for('partner.hub') }}" class="text-primary-600 font-medium text-sm mt-2 inline-block hover:underline">{{ _('For publishers') }} →</a>
+        </div>
+        <div class="rounded-lg bg-emerald-50 p-4">
+          <h3 class="font-semibold text-emerald-900 mb-2">{{ _('Organisation profiles') }}</h3>
+          <p>{{ _('Attach programmes and discussions to your organisation so multiple editors can steward the same initiative with a public-facing identity.') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Typical workflows') }}</h2>
+      <ol class="space-y-4 text-gray-700 list-decimal pl-5">
+        <li><strong>{{ _('Scoping') }}</strong> — {{ _('Define the decision or question, audience, and timeline. Draft 5–15 clear seed statements spanning perspectives.') }}</li>
+        <li><strong>{{ _('Launch') }}</strong> — {{ _('Create a programme or discussion, set visibility, invite stewards, share links or embed on your properties.') }}</li>
+        <li><strong>{{ _('Participation') }}</strong> — {{ _('Participants vote Agree / Disagree / Unsure and may add statements (moderated). Encourage voting before results where anchoring matters.') }}</li>
+        <li><strong>{{ _('Analysis') }}</strong> — {{ _('When enough votes exist, clustering reveals consensus, bridge ideas, and divisions. Export CSV for reporting.') }}</li>
+        <li><strong>{{ _('Action') }}</strong> — {{ _('Use bridge statements for coalition-building; use divisive statements to design deeper dialogue — not to declare winners.') }}</li>
+      </ol>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ _('Data & privacy') | escape_i18n }}</h2>
+      <ul class="list-disc pl-5 text-gray-700 space-y-2 text-sm">
+        <li>{{ _('Stewards receive aggregate vote distributions and anonymised exports — not public attribution of individual voters by name.') }}</li>
+        <li>{{ _('Visibility settings (public, unlisted, invite-only, private) control discovery and access.') }}</li>
+        <li>{{ _('Open-source codebase — audit how data is processed and stored.') }}</li>
+      </ul>
+      <p class="text-sm text-gray-600 mt-4">
+        <a href="{{ url_for('main.privacy_policy') }}" class="text-primary-600 hover:underline">{{ _('Privacy policy') }}</a>
+        ·
+        <a href="{{ url_for('help.managing_discussions') }}" class="text-primary-600 hover:underline">{{ _('Managing discussions & exports') | escape_i18n }}</a>
+      </p>
+    </div>
+
+    {{ help_demo_block() }}
+
+    <div class="rounded-2xl bg-primary-50 border border-primary-100 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">{{ _('Start building') }}</h2>
+        <p class="text-gray-600 text-sm mt-1">{{ _('Free to create discussions. Partner embeds and large programmes — talk to us if you need enterprise support.') }}</p>
+      </div>
+      <div class="flex flex-wrap gap-3 shrink-0">
+        <a href="{{ url_for('discussions.create_discussion') }}" class="{{ btn_primary_md() }}">{{ _('Create discussion') }}</a>
+        <a href="mailto:info@societyspeaks.io?subject=Civic%20infrastructure%20enquiry" class="{{ btn_secondary_md() }}">{{ _('Contact us') }}</a>
+      </div>
+    </div>
+  </div>
+
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

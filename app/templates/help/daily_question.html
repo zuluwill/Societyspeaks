@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% from "help/macros.html" import help_page_header, help_footer_cta %}
+
+{% block title %}{{ _('Daily Question — Help | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('How the Daily Question works: daily civic questions, blind-then-reveal voting, email digests, and longitudinal public opinion.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.daily_question', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Daily Question'),
+    _('One carefully chosen civic question each day — a two-minute habit that builds a longitudinal record of how society thinks.')
+  ) }}
+
+  <div class="space-y-6 text-gray-700">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('How to participate') }}</h2>
+      <ol class="list-decimal pl-5 space-y-2">
+        <li>{{ _('Open today\'s question and vote Agree, Disagree, or Unsure.') }}</li>
+        <li>{{ _('Optionally add a short reason for your vote.') }}</li>
+        <li>{{ _('See aggregate results after you have contributed — designed to reduce anchoring bias.') }}</li>
+      </ol>
+      <a href="{{ url_for('daily.today') }}" class="inline-block mt-4 text-primary-600 font-medium hover:underline">{{ _("Today's question") }} →</a>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('Email delivery') }}</h2>
+      <p class="mb-2">{{ _('Subscribe without an account. Default delivery is a weekly digest (5 questions); switch to daily or monthly via the link in any email.') }}</p>
+      <a href="{{ url_for('daily.subscribe') }}" class="text-primary-600 font-medium hover:underline">{{ _('Subscribe by email') }} →</a>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('For organisations') }}</h2>
+      <p>{{ _('Daily Questions are often linked to active discussions on the platform. Organisations running consultations can create discussions that feed the civic conversation — see') }}
+        <a href="{{ url_for('help.civic_infrastructure') }}" class="text-primary-600 hover:underline">{{ _('civic infrastructure') }}</a>.</p>
+    </div>
+  </div>
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ from app.programmes.journey import (
     guided_journey_slug_set,
     infer_journey_country_from_accept_language,
     journey_programme_country_lookup_key,
+    resolve_guided_journey_programme_for_request,
 )
 from app import cache, db, limiter
 from datetime import datetime, date
@@ -233,7 +234,11 @@ def index():
 
 @main_bp.route('/about')
 def about():
-    return render_template('about.html')
+    return render_template(
+        'about.html',
+        guided_journey_programme=resolve_guided_journey_programme_for_request(),
+        game_enabled=current_app.config.get('GAME_ENABLED', True),
+    )
 
 
 @main_bp.route('/platform')

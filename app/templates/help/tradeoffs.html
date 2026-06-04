@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% from "help/macros.html" import help_page_header, help_footer_cta %}
+
+{% block title %}{{ _('Tradeoffs — Help | Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('Tradeoffs on Society Speaks: daily governing scenarios, five turns, streaks, friend challenges, privacy, and links to real deliberation.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.tradeoffs', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  {{ help_page_header(
+    _('Tradeoffs'),
+    _('A daily scenario game on Society Speaks — govern under pressure, see what kind of leader you become, and discover what society you leave behind. Fictional crises, not a test of your real-world politics.')
+  ) }}
+
+  <div class="space-y-6 text-gray-700">
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('How play works') }}</h2>
+      <ul class="list-disc pl-5 space-y-2">
+        <li>{{ _('Each day (UTC) brings a new scenario — five turns, three choices per turn.') }}</li>
+        <li>{{ _('Every choice helps at least one societal stat you can see and hurts another; some consequences arrive later.') }}</li>
+        <li>{{ _('After five turns you receive an outcome card: identity headline, stats, traits, and shareable results.') }}</li>
+        <li>{{ _('Quick Run lets you replay other scenarios from the launch rotation without streak credit.') }}</li>
+        <li>{{ _('Challenge links let a friend play the same scenario and compare headlines afterward.') }}</li>
+      </ul>
+      <a href="{{ url_for('game.index') }}" class="inline-block mt-4 text-primary-600 font-medium hover:underline">{{ _('Play at /play') }} →</a>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('Bridge to deliberation') }}</h2>
+      <p>{{ _('When a scenario matches a live topic, Tradeoffs can link you to the related Daily Question or discussion — connecting play to real structured civic participation.') }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('Privacy & editorial standards') | escape_i18n }}</h2>
+      <p class="mb-3">{{ _('We store behavioural choices in fictional scenarios — not your stated political beliefs. Sign in with a magic link to save streaks and merge anonymous runs.') }}</p>
+      <p>
+        <a href="{{ url_for('game.editorial_principles') }}" class="text-primary-600 hover:underline">{{ _('Editorial principles') }}</a>
+        ·
+        <a href="{{ url_for('main.privacy_policy') }}" class="text-primary-600 hover:underline">{{ _('Privacy policy (Society Play section)') }}</a>
+      </p>
+    </div>
+  </div>
+  {{ help_footer_cta() }}
+</div>
+{% endblock %}

@@ -1,11 +1,11 @@
 {# templates/help/programmes.html #}
 {% extends "layout.html" %}
 
-{% block head %}
-<title>{{ _('Programmes - Society Speaks Help | Run Structured Deliberation Campaigns') }}</title>
-<meta name="description" content="{{ _('Learn how Programmes on Society Speaks let organisations and researchers run structured deliberation campaigns — grouping multiple discussions together with shared themes, phases, and participant access controls.') }}">
-<link rel="canonical" href="{{ url_for('help.programmes', _external=True) }}">
+{% block title %}{{ _('Programmes — Society Speaks Help | Structured deliberation campaigns') }}{% endblock %}
+{% block meta_description %}{{ _('Learn how Programmes on Society Speaks let organisations and researchers run structured deliberation campaigns — grouping multiple discussions together with shared themes, phases, and participant access controls.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.programmes', _external=True) }}{% endblock %}
 
+{% block extra_head %}
 <script type="application/ld+json">
 {{ {
   "@context": "https://schema.org",
@@ -49,6 +49,11 @@
     <a href="{{ url_for('help.help') }}" class="text-sm text-primary-600 hover:underline">{{ _('← Help Center') }}</a>
     <h1 class="text-3xl font-bold mt-3 mb-3">{{ _('Programmes') }}</h1>
     <p class="text-gray-600 text-lg">{{ _('Run structured deliberation campaigns — group multiple discussions under one project with shared themes, phases, and access controls.') }}</p>
+    <p class="text-sm text-gray-600 mt-3">
+      {{ _('Part of') }}
+      <a href="{{ url_for('help.civic_infrastructure') }}" class="text-primary-600 font-medium hover:underline">{{ _('civic infrastructure') }}</a>
+      — {{ _('use Programmes when one discussion is not enough.') }}
+    </p>
   </div>
 
   <div class="space-y-8">

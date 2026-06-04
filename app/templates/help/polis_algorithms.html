@@ -1,11 +1,17 @@
 {# templates/help/polis_algorithms.html #}
 {% extends "layout.html" %}
+{% from "help/macros.html" import help_nav_back %}
+
+{% block title %}{{ _('Understanding Pol.is algorithms — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _('How Pol.is-style clustering relates to Society Speaks native deliberation: opinion groups, consensus, and visualisation.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.polis_algorithms', _external=True) }}{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto p-6">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">{{ _('Understanding Pol.is Algorithms') }}</h1>
+        {{ help_nav_back() }}
+        <h1 class="text-3xl font-bold mt-3 mb-4">{{ _('Understanding Pol.is Algorithms') }}</h1>
         <p class="text-gray-600">{{ _('Learn how Pol.is analyses and visualises participant opinions') }}</p>
     </div>
 

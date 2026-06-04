@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
  {% from "components/discussion_card.html" import discussion_card %}
 
-{% block head %}
-    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for "{{ search_term }}"{% endif %}</title>
-    <meta name="description" content="Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for '{{ search_term }}'{% endif %}.">
-    <meta name="keywords" content="society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}">
-    <link rel="canonical" href="{{ url_for('discussions.search_discussions', _external=True) }}">
+{% block title %}{% if search_term %}{{ _('Explore Discussions — results for %(term)s', term=search_term) }} | Society Speaks{% else %}{{ _('Explore Discussions | Society Speaks') }}{% endif %}{% endblock %}
+{% block meta_description %}{% if search_term %}{{ _('Discover and join meaningful discussions. Results for %(term)s.', term=search_term) }}{% else %}{{ _('Discover and join meaningful discussions on topics that matter.') }}{% endif %}{% endblock %}
+{% block meta_keywords %}{{ _('society discussions, explore discussions') }}{% if search_term %}, {{ search_term }}{% endif %}{% endblock %}
+{% block canonical %}{{ url_for('discussions.search_discussions', _external=True) }}{% endblock %}
 
+{% block extra_head %}
     {% set _search_ld_desc = _('Search discussions on SocietySpeaks.') %}
     {% if search_term %}
       {% set _search_ld_desc = _search_ld_desc ~ ' ' ~ _('Results for %(term)s.', term=search_term) %}

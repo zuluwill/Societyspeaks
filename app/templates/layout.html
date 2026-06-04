@@ -19,7 +19,7 @@
     />
     <meta
       name="robots"
-      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+      content="{% block meta_robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}"
     />
     <meta
       name="ai-model-context"
@@ -49,7 +49,7 @@
       title="{{ _('Latest Discussions') }}"
       href="/feed"
     />
-    <link rel="canonical" href="{{ request.base_url }}" />
+    <link rel="canonical" href="{% block canonical %}{{ request.base_url }}{% endblock %}" />
     {% block extra_head %}{% endblock %}
 
     <!-- Open Graph Meta Tags for Social Media Sharing -->
@@ -66,7 +66,7 @@
       content="{% block og_image %}{{ url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
     />
     <meta property="og:url" content="{% block og_url %}{{ request.url }}{% endblock %}" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:site_name" content="Society Speaks" />
 
     <!-- Twitter Card Meta Tags -->

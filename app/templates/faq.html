@@ -2,7 +2,8 @@
 {% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md %}
 
 {% block title %}{{ _('Frequently Asked Questions — Society Speaks') }}{% endblock %}
-{% block meta_description %}{{ _('Everything you need to know about Society Speaks — the Big Questions Journey, Daily Brief, Daily Question, Personal Briefs, how our machine learning works, privacy, and pricing.') }}{% endblock %}
+{% block meta_description %}{{ _('Everything you need to know about Society Speaks — Big Questions Journey, Daily Brief, Daily Question, Tradeoffs, civic infrastructure for consultations, Personal Briefs, machine learning, privacy, and pricing.') }}{% endblock %}
+{% block canonical %}{{ url_for('main.faq', _external=True) }}{% endblock %}
 {% block og_title %}{{ _('Frequently Asked Questions — Society Speaks') }}{% endblock %}
 {% block og_description %}{{ _('How does Society Speaks work? What is a bridge idea? Is it free? Find answers to all your questions about our civic platform.') }}{% endblock %}
 
@@ -21,7 +22,7 @@
     {
       "@type": "Question",
       "name": _('Is Society Speaks free?'),
-      "acceptedAnswer": { "@type": "Answer", "text": _('Yes. All core features are free: discussions, the Big Questions Journey, the Daily Question, the Daily Brief, the News Transparency Dashboard, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform.') }
+      "acceptedAnswer": { "@type": "Answer", "text": _('Yes. All core features are free: discussions, programmes, the Big Questions Journey, the Daily Question, the Daily Brief, Tradeoffs, the News Transparency Dashboard, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform.') }
     },
     {
       "@type": "Question",
@@ -113,6 +114,18 @@
       "name": _('What is the News Transparency Dashboard?'),
       "acceptedAnswer": { "@type": "Answer", "text": _("The News Transparency Dashboard is a free tool that shows today's news from 140+ sources organised by political leaning — left, centre, and right. It includes AI-generated sensationalism scores, coverage balance percentages, and links to source bias ratings from AllSides. No sign-up required.") }
     }
+  ] + ([
+    {
+      "@type": "Question",
+      "name": _('What is Tradeoffs on Society Speaks?'),
+      "acceptedAnswer": { "@type": "Answer", "text": _('Tradeoffs is a daily scenario game at /play. You face a fictional crisis, make five rounds of governing choices with no perfect option, and receive an outcome showing what kind of leader you became and what society you built. It uses behavioural data about fictional choices, not your real-world political beliefs.') }
+    }
+  ] if config.get('GAME_ENABLED', true) else []) + [
+    {
+      "@type": "Question",
+      "name": _('Can organisations run their own consultations on Society Speaks?'),
+      "acceptedAnswer": { "@type": "Answer", "text": _('Yes. Society Speaks is civic infrastructure: create discussions with your own seed statements, run multi-discussion programmes with themes and phases, control visibility, appoint stewards, export CSV data, and embed voting on your website via the Partner API.') }
+    }
   ]
 } | tojson }}
 </script>
@@ -144,19 +157,19 @@
                     </svg>
                 </div>
                 <h2 id="section-{{ title | lower | replace(' ', '-') | replace('&', '') | replace('  ', '-') }}"
-                    class="text-xl font-bold text-gray-900">{{ title }}</h2>
+                    class="text-xl font-bold text-gray-900">{{ title | escape_i18n }}</h2>
             </div>
             <div class="space-y-3">
                 {% for q, a in questions %}
                 <details class="group bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <summary class="flex items-center justify-between gap-4 cursor-pointer px-6 py-4 text-gray-900 font-semibold text-sm sm:text-base select-none hover:bg-gray-50 transition-colors list-none [&::-webkit-details-marker]:hidden">
-                        {{ q }}
+                        {{ q | escape_i18n }}
                         <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </summary>
                     <div class="px-6 pb-5 pt-1 text-sm sm:text-base text-gray-600 leading-relaxed border-t border-gray-100">
-                        {{ a }}
+                        {{ a | escape_i18n }}
                     </div>
                 </details>
                 {% endfor %}
@@ -174,7 +187,7 @@
                 ),
                 (
                     _('Is Society Speaks free?'),
-                    _('Yes. All core features are free: the Big Questions Journey, Daily Question, Daily Brief, News Transparency Dashboard, discussions, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform.')
+                    _('Yes. All core features are free: the Big Questions Journey, Daily Question, Daily Brief, Tradeoffs, News Transparency Dashboard, discussions, programmes, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform.')
                 ),
                 (
                     _('Do I need an account?'),
@@ -182,7 +195,11 @@
                 ),
                 (
                     _('Who is Society Speaks for?'),
-                    _('Society Speaks is for anyone who wants to understand public opinion more honestly — individuals curious about where they stand, community groups and NGOs running consultations, governments and policymakers seeking civic insight, publishers and media outlets wanting to embed structured discussion, and researchers studying public opinion.')
+                    _('Everyone curious about public opinion — and civic technologists who need infrastructure to run their own programmes, polls, and consultations. That includes individuals, NGOs, governments, universities, publishers, and researchers.')
+                ),
+                (
+                    _('Can I run my own questions and polls?'),
+                    _('Yes. Create a discussion with your seed statements or build a full programme with multiple themed discussions, phases, and cohorts. You control visibility (public, unlisted, invite-only, or private), moderate submissions, and export results. See our civic infrastructure guide in the Help Centre.')
                 ),
                 (
                     _('Is Society Speaks open source?'),
@@ -280,6 +297,54 @@
             ]
         ) }}
 
+        {% if config.get('GAME_ENABLED', true) %}
+        {{ faq_section(
+            _('Tradeoffs'),
+            "M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3",
+            [
+                (
+                    _('What is Tradeoffs?'),
+                    _('Tradeoffs is a daily scenario game on Society Speaks (/play). Each scenario gives you five turns of crisis governing — every choice helps one part of society and hurts another. You receive an identity headline, stat card, and shareable outcome. Quick Run replays other scenarios; challenge links let friends play the same day and compare results.')
+                ),
+                (
+                    _('Is Tradeoffs about my real political views?'),
+                    _('No. Scenarios are fictional. We store behavioural choices in the game, not your stated ideology. The game holds up a mirror under pressure; it does not grade your real-world beliefs. See our editorial principles on /play/editorial-principles.')
+                ),
+                (
+                    _('Do I need an account to play Tradeoffs?'),
+                    _('No for a single daily play. Sign in (magic link) to save streaks, merge anonymous runs when you log in, and keep outcome history. Friend challenges work with or without an account.')
+                ),
+                (
+                    _('How does Tradeoffs connect to deliberation?'),
+                    _('When a scenario matches a live civic topic, Tradeoffs can link you to the related Daily Question or discussion so play leads into real structured participation.')
+                )
+            ]
+        ) }}
+        {% endif %}
+
+        {{ faq_section(
+            _('Civic infrastructure'),
+            "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+            [
+                (
+                    _('What is Society Speaks civic infrastructure?'),
+                    _('The same deliberation engine behind our public Journey and Daily Question — available for your organisation. Run programmes, ship structured polls, embed on your properties, and export analysis-ready data.')
+                ),
+                (
+                    _('What is the difference between a discussion and a programme?'),
+                    _('A discussion is a single deliberation space with its own statements and results. A programme groups many discussions under one initiative — with shared themes, sequential phases, cohorts, stewards, and bulk export for large consultations.')
+                ),
+                (
+                    _('Can publishers embed voting on their sites?'),
+                    _('Yes. The Partner hub provides iframe embeds and an API to attach discussions to article URLs, define your own statements, and receive structured opinion data. You choose every topic — we do not scrape your newsroom.')
+                ),
+                (
+                    _('When does consensus analysis become available?'),
+                    _('Typically after roughly 7–15 participants have voted on a meaningful share of statements (exact thresholds depend on discussion size). Stewards and creators can access CSV exports and consensus views when unlocked.')
+                )
+            ]
+        ) }}
+
         {{ faq_section(
             _('Discussions & Programmes'),
             "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
@@ -366,24 +431,28 @@
         ) }}
 
         {{ faq_section(
-            _('For Organisations'),
+            _('For organisations & partners'),
             "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
             [
                 (
                     _('Can organisations use Society Speaks?'),
-                    _('Yes. Society Speaks works with publishers, NGOs, governments, researchers, and media outlets globally. Organisations can embed discussions on their own websites via the Partner API, commission structured programmes for citizen consultation, and access data exports for analysis and reporting.')
+                    _('Yes — as participants and as operators. Use our public programmes or deploy your own consultations on the same infrastructure. NGOs, governments, universities, publishers, and researchers use Society Speaks globally.')
                 ),
                 (
                     _('What is the publisher embed?'),
-                    _('Publishers can embed live Society Speaks discussions directly on their articles and pages via a simple script tag. Readers vote on statements without leaving the publication, and the publisher gets structured public opinion data alongside their content. Visit the For Organisations page for details.')
+                    _('A lightweight iframe (and Partner API) that places structured voting on pages you choose. Readers vote Agree / Disagree / Unsure on statements you define; you receive consensus, bridge, and division analytics.')
                 ),
                 (
                     _('Can I run a citizen consultation or deliberation programme?'),
-                    _('Yes. Programmes are designed precisely for structured, multi-stage deliberation. You can create themed discussions, invite participants, control visibility, appoint stewards, and export results. Contact us if you need help setting up a large-scale programme.')
+                    _('Yes. Programmes support multi-stage deliberation: themes, phases, cohorts, stewards, visibility controls, and exports. Start from the Help Centre civic infrastructure guide or contact us for large deployments.')
                 ),
                 (
                     _('What data can organisations access?'),
-                    _('Discussion creators and programme stewards can access vote distributions, participant counts, consensus analysis results, and CSV exports of anonymised voting data. Raw personal data is never shared.')
+                    _('Vote distributions, participant counts, clustering results, and CSV exports of anonymised voting data. Individual voters are not publicly named. See our privacy policy for retention and rights.')
+                ),
+                (
+                    _('Where can I get implementation help?'),
+                    _('Visit the Help Centre civic infrastructure guide, Programmes documentation, Partner hub API reference, or email info@societyspeaks.io for enterprise-style support.')
                 )
             ]
         ) }}
