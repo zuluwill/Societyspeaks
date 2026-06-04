@@ -15,6 +15,8 @@ from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from typing import List, Tuple
 
+from sqlalchemy.orm import joinedload
+
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle
 from app.trending.news_fetcher import NewsFetcher, seed_default_sources
@@ -69,7 +71,9 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
         db.session.rollback()
     
     try:
-        unprocessed = NewsArticle.query.filter(
+        unprocessed = NewsArticle.query.options(
+            joinedload(NewsArticle.source)
+        ).filter(
             NewsArticle.fetched_at >= utcnow_naive() - timedelta(hours=6),
             NewsArticle.relevance_score.isnot(None),
             NewsArticle.relevance_score >= 0.4

@@ -13,6 +13,7 @@ from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Tuple
 
 from collections import Counter
+from sqlalchemy import func
 
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle, Discussion
@@ -293,8 +294,12 @@ def create_topic_from_cluster(
     when the idle connection is timed-out server-side.
 
     To avoid this we:
-    1. Extract all required data from ORM objects into plain Python values.
-    2. Release the connection back to the pool with db.session.close().
+    1. Extract all required data from ORM objects into plain Python values
+       (triggering any lazy loads while the connection is still healthy).
+    2. Call db.session.rollback() to release the connection back to the pool.
+       In SQLAlchemy 2.x, rollback() returns the connection immediately.
+       Objects remain in the session (not detached), just marked expired, so
+       later iterations of the cluster loop can still lazy-load them safely.
     3. Run all LLM API calls with no connection held.
     4. Re-enter the DB with a fresh connection (pool_pre_ping validates it).
     """
@@ -310,12 +315,15 @@ def create_topic_from_cluster(
     article_summaries = [a.summary or '' for a in articles]
     first_description = articles[0].summary or ''
 
-    # geographic info needs source.country (lazy relationship)
+    # geographic info may need source.country (lazy relationship)
     geo_data = []
     for a in articles:
         source_country = None
-        if a.source:
-            source_country = a.source.country
+        try:
+            if a.source:
+                source_country = a.source.country
+        except Exception:
+            pass  # detached or unloaded — geographic fallback is fine
         geo_data.append({
             'geographic_scope': a.geographic_scope,
             'geographic_countries': a.geographic_countries,
@@ -323,8 +331,11 @@ def create_topic_from_cluster(
         })
 
     # --- Step 2: release the connection before slow API calls ---------------
-    # pool_pre_ping=True ensures the next checkout gets a validated connection.
-    db.session.close()
+    # rollback() ends the implicit read transaction and returns the connection
+    # to the pool in SQLAlchemy 2.x.  Unlike close(), objects stay in the
+    # session (just expired), so subsequent cluster iterations can still
+    # lazy-load their own articles without DetachedInstanceError.
+    db.session.rollback()
 
     # --- Step 3: slow LLM API calls (no DB connection held) -----------------
     title = _generate_neutral_question_from_titles(article_titles)
@@ -357,7 +368,15 @@ def create_topic_from_cluster(
                     )
                     db.session.add(link)
 
-            existing.source_count = len(set(article_source_ids))
+            # Flush so the count query below sees the newly added rows.
+            db.session.flush()
+            # Recount ALL sources linked to the topic (not just this cluster).
+            existing.source_count = (
+                db.session.query(func.count(func.distinct(NewsArticle.source_id)))
+                .join(TrendingTopicArticle, NewsArticle.id == TrendingTopicArticle.article_id)
+                .filter(TrendingTopicArticle.topic_id == existing.id)
+                .scalar() or 0
+            )
             db.session.commit()
             return existing
 
