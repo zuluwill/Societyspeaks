@@ -93,17 +93,23 @@ def _resend_http_post(
     retry_delay: float = 2.0,
     timeout: int = 30,
     log_prefix: str = "Resend",
+    idempotency_key: Optional[str] = None,
 ) -> Tuple[Optional[requests.Response], Optional[str]]:
     """
     POST to the Resend API with exponential-backoff retry on transient errors.
 
     Returns (response, None) on HTTP 200, or (None, error_str) on failure.
     Logs all warnings and errors internally.
+
+    Pass idempotency_key for sends that must not be duplicated (e.g. brief emails).
+    Resend deduplicates requests with the same Idempotency-Key within a short window.
     """
     headers = {
         'Authorization': f'Bearer {api_key}',
         'Content-Type': 'application/json',
     }
+    if idempotency_key:
+        headers['Idempotency-Key'] = idempotency_key
     for attempt in range(max_retries):
         try:
             response = requests.post(url, json=body, headers=headers, timeout=timeout)
@@ -161,17 +167,26 @@ def resend_post_with_retry(
     max_retries: int = 3,
     retry_delay: float = 2.0,
     timeout: int = 30,
+    idempotency_key: Optional[str] = None,
 ) -> Tuple[bool, Optional[str]]:
     """
     POST a single email to the Resend API with exponential-backoff retry.
 
     Retries on transient OS/network errors (OSError/IOError/Timeout/ConnectionError)
     that can occur when TLS certificate files are read from the overlay filesystem.
+    Also retries on 429, 502, 503, 504 — all transient, server-side conditions.
+
+    Pass idempotency_key for sends that must not be duplicated on retry.
+    Resend deduplicates requests with the same Idempotency-Key within a short window,
+    so a retried 504 that was actually accepted will not produce a duplicate email.
 
     Returns:
         (success, message_id)  — message_id is None on failure or if Resend omits it.
     """
-    response, err = _resend_http_post(api_key, payload, url, max_retries, retry_delay, timeout)
+    response, err = _resend_http_post(
+        api_key, payload, url, max_retries, retry_delay, timeout,
+        idempotency_key=idempotency_key,
+    )
     if response is None:
         return False, err
     try:
@@ -332,6 +347,13 @@ class ResendEmailClient:
             cleaned_to.append(clean)
         email_data = {**email_data, 'to': cleaned_to}
 
+        # Use X-Entity-Ref-ID (already set on transactional emails) as the
+        # HTTP-level Idempotency-Key so that a retried 5xx cannot produce
+        # a duplicate delivery.
+        idempotency_key: Optional[str] = (
+            email_data.get('headers', {}).get('X-Entity-Ref-ID') or None
+        )
+
         if use_rate_limit:
             self.rate_limiter.acquire()
 
@@ -340,6 +362,7 @@ class ResendEmailClient:
             email_data,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
+            idempotency_key=idempotency_key,
         )
         if success:
             self.last_message_id = result

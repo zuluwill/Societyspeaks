@@ -496,15 +496,7 @@ def _validate_geographic_countries(article: NewsArticle, detected_countries: str
     return False
 
 
-def _score_with_anthropic(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
-    """Score articles using Anthropic for sensationalism and relevance."""
-    import anthropic
-    
-    client = anthropic.Anthropic(api_key=api_key)
-    
-    headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
-    
-    prompt = f"""Rate each headline on these scales:
+_ANTHROPIC_SCORING_PROMPT_TEMPLATE = """Rate each headline on these scales:
 
 1. SENSATIONALISM (0-1):
 - 0 = neutral, factual, professional journalism
@@ -532,40 +524,82 @@ Examples of LOW (0.0-0.3): "Prime Minister meets foreign leader", "New cultural 
 5. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
 
 Headlines:
-{chr(10).join(headlines)}
+{headlines}
 
 Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "p": 0.9, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "p": 0.1, "geo": "global", "countries": "Global"}}]"""
 
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1000,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    
-    content_block = message.content[0]
-    content = getattr(content_block, 'text', None) or str(content_block)
-    scores = extract_json(content)
-    
+
+def _apply_anthropic_scores(articles: List[NewsArticle], scores: list) -> None:
+    """Write scores from an Anthropic response onto article objects."""
     for i, article in enumerate(articles):
         if i < len(scores):
             article.sensationalism_score = float(scores[i].get('s', 0.5))
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
             article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
-
-            # Validate AI-detected countries against article content
             detected_countries = scores[i].get('countries', '').strip()
             if detected_countries and _validate_geographic_countries(article, detected_countries):
                 article.geographic_countries = detected_countries
             else:
-                # Fallback to source country if validation fails or no countries detected
                 article.geographic_countries = article.source.country if article.source and article.source.country else ''
         else:
             article.sensationalism_score = score_sensationalism(article.title)
             article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
             article.geographic_countries = article.source.country if article.source and article.source.country else ''
-    
+
+
+def _score_batch_with_anthropic(articles: List[NewsArticle], client, *, max_tokens: int = 2000, _depth: int = 0) -> None:
+    """
+    Score a batch of articles via Anthropic, bisecting and retrying if the response
+    is truncated. Falls back to heuristic scoring after two bisections (batches of 1).
+    """
+    if not articles:
+        return
+
+    headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
+    prompt = _ANTHROPIC_SCORING_PROMPT_TEMPLATE.format(headlines=chr(10).join(headlines))
+
+    message = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    if message.stop_reason == 'max_tokens':
+        if len(articles) == 1 or _depth >= 3:
+            logger.warning(
+                f"Anthropic response truncated on batch of {len(articles)} article(s) "
+                f"at depth {_depth} — falling back to heuristic scoring"
+            )
+            for article in articles:
+                article.sensationalism_score = score_sensationalism(article.title)
+                article.personal_relevance_score = 0.5
+                article.geographic_scope = 'unknown'
+                article.geographic_countries = article.source.country if article.source and article.source.country else ''
+            return
+
+        mid = len(articles) // 2
+        logger.warning(
+            f"Anthropic response truncated on batch of {len(articles)} — "
+            f"bisecting into {mid} + {len(articles) - mid} (depth {_depth + 1})"
+        )
+        _score_batch_with_anthropic(articles[:mid], client, max_tokens=max_tokens, _depth=_depth + 1)
+        _score_batch_with_anthropic(articles[mid:], client, max_tokens=max_tokens, _depth=_depth + 1)
+        return
+
+    content_block = message.content[0]
+    content = getattr(content_block, 'text', None) or str(content_block)
+    scores = extract_json(content)
+    _apply_anthropic_scores(articles, scores)
+
+
+def _score_with_anthropic(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
+    """Score articles using Anthropic for sensationalism and relevance."""
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=api_key)
+    _score_batch_with_anthropic(articles, client)
     return articles
 
 

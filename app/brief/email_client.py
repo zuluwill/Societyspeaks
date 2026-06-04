@@ -336,7 +336,10 @@ class ResendClient:
             # Send with rate limiting
             self.rate_limiter.acquire()
 
-            success = self._send_with_retry(email_data)
+            # Stable idempotency key ensures a retried 5xx cannot produce
+            # a duplicate email — Resend deduplicates on this key.
+            send_idempotency_key = f"brief:{brief.id}:{subscriber.id}"
+            success = self._send_with_retry(email_data, idempotency_key=send_idempotency_key)
 
             if success:
                 subscriber.last_sent_at = utcnow_naive()
@@ -379,12 +382,14 @@ class ResendClient:
             logger.error(f"Failed to send brief to {subscriber.email}: {e}")
             return False
 
-    def _send_with_retry(self, email_data: dict) -> bool:
+    def _send_with_retry(self, email_data: dict, idempotency_key: str = None) -> bool:
         """
         Send a daily brief email via Resend with retry.
 
         Args:
             email_data: Email payload for Resend API
+            idempotency_key: Optional stable key to prevent duplicate delivery on
+                             retried 5xx responses. Use "brief:{brief_id}:{subscriber_id}".
 
         Returns:
             bool: True on success, False on failure
@@ -400,6 +405,7 @@ class ResendClient:
             email_data,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
+            idempotency_key=idempotency_key,
         )
         self.last_send_error = result if not success else None
         return success
