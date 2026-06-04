@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-04 10:36+0100\n"
+"POT-Creation-Date: 2026-06-04 12:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: de <LL@li.org>\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Generated-By: Babel 2.18.0\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: app/__init__.py:971
 msgid "You don't have permission to access this resource."
@@ -130,29 +130,6 @@ msgstr ""
 msgid "Still here when you're ready"
 msgstr "Wir sind noch da, wenn Sie bereit sind"
 
-#: app/resend_client.py:618
-msgid "You're Subscribed to Daily Civic Questions!"
-msgstr "Sie haben Tägliche Bürgerfragen abonniert!"
-
-#: app/resend_client.py:722 app/resend_client.py:994
-#, python-format
-msgid "Daily Question #%(num)s: %(topic)s"
-msgstr "Tagesfrage Nr. %(num)s: %(topic)s"
-
-#: app/resend_client.py:722 app/resend_client.py:994
-msgid "Civic"
-msgstr "Bürgerfragen"
-
-#: app/resend_client.py:814
-#, python-format
-msgid "5 Questions This Week: %(first)s..."
-msgstr "5 Fragen diese Woche: %(first)s..."
-
-#: app/resend_client.py:909
-#, python-format
-msgid "10 Questions This Month: %(first)s..."
-msgstr "10 Fragen diesen Monat: %(first)s..."
-
 #: app/resend_client.py:1269
 msgid "New participant in your discussion"
 msgstr "Neuer Teilnehmer in Ihrer Diskussion"
@@ -199,34 +176,6 @@ msgstr "Aktivität in Ihrer Diskussion"
 #, python-format
 msgid "There's been activity in your discussion '%(title)s'"
 msgstr "Es gab Aktivität in Ihrer Diskussion '%(title)s'"
-
-#: app/resend_client.py:1365
-#, python-format
-msgid "You've been invited to join %(org)s on Society Speaks"
-msgstr "Sie wurden eingeladen, %(org)s auf Society Speaks beizutreten"
-
-#: app/resend_client.py:1733
-msgid "Complete Your Society Speaks Profile"
-msgstr "Vervollständigen Sie Ihr Society Speaks-Profil"
-
-#: app/resend_client.py:1800
-msgid "Your Weekly Discussion Digest - Society Speaks"
-msgstr "Ihr wöchentliches Diskussions-Digest - Society Speaks"
-
-#: app/resend_client.py:2023
-#, python-format
-msgid "Continue your journey: %(theme)s — Society Speaks"
-msgstr "Setzen Sie Ihre Reise fort: %(theme)s — Society Speaks"
-
-#: app/resend_client.py:2095
-#, python-format
-msgid "Today's scenario is live — keep your %(n)d-day streak"
-msgstr "Das heutige Szenario ist live — halten Sie Ihre %(n)d-Tage-Serie"
-
-#: app/resend_client.py:2101
-#, python-format
-msgid "Today's scenario is live: %(title)s"
-msgstr "Das heutige Szenario ist live: %(title)s"
 
 #: app/routes.py:280 app/routes.py:297
 msgid "No valid donation session found."
@@ -403,7 +352,7 @@ msgstr ""
 msgid "All fields are required."
 msgstr "Alle Felder sind erforderlich."
 
-#: app/auth/routes.py:638 app/settings/forms.py:9
+#: app/auth/routes.py:638
 msgid "Password must be at least 8 characters."
 msgstr "Das Passwort muss mindestens 8 Zeichen lang sein."
 
@@ -909,14 +858,6 @@ msgstr ""
 "Ihr %(cadence)s-Briefing umfasst %(count)d Geschichten von %(sources)d "
 "Quellen. Fokussiert auf Klarheit und Kontext."
 
-#: app/briefing/generator.py:1127
-msgid "Today's Stories"
-msgstr "Heutige Geschichten"
-
-#: app/briefing/generator.py:1148
-msgid "More Stories"
-msgstr "Weitere Geschichten"
-
 #: app/briefing/jobs.py:684
 msgid "Redis not available"
 msgstr "Redis nicht verfügbar"
@@ -1362,7 +1303,6 @@ msgid "Source priority updated"
 msgstr "Quellpriorität aktualisiert"
 
 #: app/briefing/routes.py:2598 app/briefing/routes.py:3640
-#: app/briefing/validators.py:15
 msgid "Email is required"
 msgstr "E-Mail-Adresse erforderlich"
 
@@ -1701,142 +1641,6 @@ msgstr ""
 "Willkommen bei %(company_name)s! Sie haben jetzt Zugriff auf die Briefings "
 "des Teams."
 
-#: app/briefing/template_config.py:25
-msgid "Releases & Products"
-msgstr "Veröffentlichungen & Produkte"
-
-#: app/briefing/template_config.py:26
-msgid "Regulation & Policy"
-msgstr "Regulierung & Politik"
-
-#: app/briefing/template_config.py:27
-msgid "Research & Analysis"
-msgstr "Forschung & Analyse"
-
-#: app/briefing/template_config.py:30 app/briefing/template_config.py:53
-msgid "What Changed"
-msgstr "Was sich geändert hat"
-
-#: app/briefing/template_config.py:31 app/briefing/template_config.py:54
-msgid "Who's Affected"
-msgstr "Wer ist betroffen"
-
-#: app/briefing/template_config.py:32 app/briefing/template_config.py:55
-msgid "What's Next"
-msgstr "Was kommt als nächstes"
-
-#: app/briefing/template_config.py:35
-msgid "Macro & Markets"
-msgstr "Makro & Märkte"
-
-#: app/briefing/template_config.py:36
-msgid "Business & Industry"
-msgstr "Wirtschaft & Industrie"
-
-#: app/briefing/template_config.py:37
-#: app/templates/briefing/_paid_brief_body.html:159
-msgid "Policy Context"
-msgstr "Politischer Kontext"
-
-#: app/briefing/template_config.py:40 app/templates/briefing/landing.html:717
-#: app/templates/briefing/landing.html:1039
-msgid "Climate & Energy"
-msgstr "Klima & Energie"
-
-#: app/briefing/template_config.py:41
-msgid "Policy & Regulation"
-msgstr "Politik & Regulierung"
-
-#: app/briefing/template_config.py:42
-msgid "Science & Impact"
-msgstr "Wissenschaft & Auswirkungen"
-
-#: app/briefing/template_config.py:45
-msgid "Headlines"
-msgstr "Schlagzeilen"
-
-#: app/briefing/template_config.py:46
-#: app/templates/discussions/view_native.html:172
-#: app/templates/help/civic_infrastructure.html:48
-msgid "Analysis"
-msgstr "Analyse"
-
-#: app/briefing/template_config.py:47
-msgid "Regional Context"
-msgstr "Regionaler Kontext"
-
-#: app/briefing/validators.py:19
-msgid "Invalid email format"
-msgstr "Ungültiges E-Mail-Format"
-
-#: app/briefing/validators.py:26
-msgid "Briefing name is required"
-msgstr "Briefing-Name ist erforderlich"
-
-#: app/briefing/validators.py:29
-msgid "Briefing name cannot be empty"
-msgstr "Briefing-Name darf nicht leer sein"
-
-#: app/briefing/validators.py:32
-msgid "Briefing name must be 200 characters or less"
-msgstr "Briefing-Name darf maximal 200 Zeichen lang sein"
-
-#: app/briefing/validators.py:39
-msgid "RSS URL is required"
-msgstr "RSS-URL ist erforderlich"
-
-#: app/briefing/validators.py:43
-msgid "Invalid URL format. Must start with http:// or https://"
-msgstr "Ungültiges URL-Format. Muss mit http:// oder https:// beginnen"
-
-#: app/briefing/validators.py:50
-msgid "File is required"
-msgstr "Datei ist erforderlich"
-
-#: app/briefing/validators.py:54
-msgid "File must be a PDF or Word document (.pdf, .docx, .doc)"
-msgstr "Datei muss ein PDF oder Word-Dokument sein (.pdf, .docx, .doc)"
-
-#: app/briefing/validators.py:63
-msgid "Timezone is required"
-msgstr "Zeitzone ist erforderlich"
-
-#: app/briefing/validators.py:69
-msgid "Invalid timezone"
-msgstr "Ungültige Zeitzone"
-
-#: app/briefing/validators.py:71
-msgid "Error validating timezone"
-msgstr "Fehler bei der Validierung der Zeitzone"
-
-#: app/briefing/validators.py:76
-msgid "Cadence must be 'daily' or 'weekly'"
-msgstr "Häufigkeit muss 'täglich' oder 'wöchentlich' sein"
-
-#: app/briefing/validators.py:83
-msgid "Visibility must be 'private', 'org_only', or 'public'"
-msgstr "Sichtbarkeit muss 'private', 'org_only' oder 'public' sein"
-
-#: app/briefing/validators.py:90
-msgid "Mode must be 'auto_send' or 'approval_required'"
-msgstr "Modus muss 'auto_send' oder 'approval_required' sein"
-
-#: app/briefing/validators.py:97
-msgid "Send hour must be an integer"
-msgstr "Sendezeit muss eine Ganzzahl sein"
-
-#: app/briefing/validators.py:100
-msgid "Send hour must be between 0 and 23"
-msgstr "Sendezeit muss zwischen 0 und 23 liegen"
-
-#: app/briefing/validators.py:107
-msgid "Send minute must be an integer"
-msgstr "Sendeminute muss eine Ganzzahl sein"
-
-#: app/briefing/validators.py:110
-msgid "Send minute must be between 0 and 59"
-msgstr "Sendeminute muss zwischen 0 und 59 liegen"
-
 #: app/daily/routes.py:382
 msgid "Invalid date format. Please use YYYY-MM-DD."
 msgstr "Ungültiges Datumsformat. Bitte verwenden Sie YYYY-MM-DD."
@@ -2109,136 +1913,6 @@ msgstr ""
 msgid "An error occurred while generating labels"
 msgstr "Ein Fehler ist beim Erstellen der Beschriftungen aufgetreten"
 
-#: app/discussions/forms.py:221 app/discussions/forms.py:291
-msgid "Discussion Title"
-msgstr "Diskussionstitel"
-
-#: app/discussions/forms.py:223 app/discussions/forms.py:293
-msgid "Title must be between 10 and 200 characters"
-msgstr "Titel muss zwischen 10 und 200 Zeichen lang sein"
-
-#: app/discussions/forms.py:225 app/discussions/forms.py:295
-#: app/programmes/forms.py:18 app/templates/briefing/create.html:54
-#: app/templates/briefing/edit.html:32
-#: app/templates/briefing/organization_settings.html:66
-#: app/templates/discussions/create_discussion.html:214
-#: app/templates/partner/api_docs.html:637
-#: app/templates/partner/api_docs.html:1048
-#: app/templates/partner/portal/discussions.html:66
-#: app/templates/trending/topic_detail.html:138
-msgid "Description"
-msgstr "Beschreibung"
-
-#: app/discussions/forms.py:227 app/discussions/forms.py:297
-msgid "Description must be between 30 and 1000 characters"
-msgstr "Beschreibung muss zwischen 30 und 1000 Zeichen lang sein"
-
-#: app/discussions/forms.py:229 app/discussions/forms.py:299
-#: app/templates/discussions/search_discussions.html:71
-#: app/templates/discussions/search_statements.html:24
-#: app/templates/partner/portal/discussions.html:72
-msgid "Topic"
-msgstr "Thema"
-
-#: app/discussions/forms.py:233
-msgid "Use Native Statement System"
-msgstr "Natives Aussagensystem verwenden"
-
-#: app/discussions/forms.py:235
-msgid ""
-"Enable the new pol.is-inspired debate system with voting and consensus "
-"clustering (recommended)"
-msgstr ""
-"Aktivieren Sie das neue pol.is-inspirierte Debattensystem mit Abstimmung und"
-" Konsensclusterung (empfohlen)"
-
-#: app/discussions/forms.py:238 app/discussions/forms.py:308
-#: app/templates/partner/embed_generator.html:267
-msgid "Embed Code"
-msgstr "Embed-Code"
-
-#: app/discussions/forms.py:240 app/discussions/forms.py:300
-msgid "Keywords"
-msgstr "Schlüsselwörter"
-
-#: app/discussions/forms.py:242 app/discussions/forms.py:301
-#: app/programmes/forms.py:20 app/templates/programmes/_form.html:28
-msgid "Geographic Scope"
-msgstr "Geografischer Geltungsbereich"
-
-#: app/discussions/forms.py:243 app/discussions/forms.py:302
-#: app/programmes/forms.py:21
-#: app/templates/components/discussion_card.html:101
-#: app/templates/daily/question.html:48 app/templates/daily/results.html:44
-#: app/templates/discussions/view_discussion.html:507
-#: app/templates/index.html:275 app/templates/index.html:306
-#: app/templates/programmes/list.html:78
-msgid "Global"
-msgstr "Global"
-
-#: app/discussions/forms.py:244 app/discussions/forms.py:248
-#: app/discussions/forms.py:303 app/discussions/forms.py:306
-#: app/profiles/forms.py:209 app/profiles/forms.py:228
-#: app/programmes/forms.py:21 app/programmes/forms.py:24
-#: app/templates/discussions/search_discussions.html:81
-#: app/templates/sources/index.html:114
-msgid "Country"
-msgstr "Land"
-
-#: app/discussions/forms.py:245 app/discussions/forms.py:249
-#: app/discussions/forms.py:304 app/discussions/forms.py:307
-#: app/profiles/forms.py:208 app/profiles/forms.py:227
-msgid "City"
-msgstr "Stadt"
-
-#: app/discussions/forms.py:250 app/discussions/forms.py:309
-#: app/templates/discussions/create_discussion.html:286
-#: app/templates/discussions/edit_discussion.html:113
-#: app/templates/discussions/search_discussions.html:99
-msgid "Programme"
-msgstr "Programm"
-
-#: app/discussions/forms.py:250 app/discussions/forms.py:309
-msgid "No programme"
-msgstr "Kein Programm"
-
-#: app/discussions/forms.py:251 app/discussions/forms.py:310
-msgid "Programme Theme"
-msgstr "Programmthema"
-
-#: app/discussions/forms.py:251 app/discussions/forms.py:310
-msgid "No theme"
-msgstr "Kein Thema"
-
-#: app/discussions/forms.py:252 app/discussions/forms.py:311
-msgid "Programme Phase"
-msgstr "Programmphase"
-
-#: app/discussions/forms.py:252 app/discussions/forms.py:311
-msgid "No phase"
-msgstr "Keine Phase"
-
-#: app/discussions/forms.py:253 app/discussions/forms.py:312
-msgid "Information Step Title"
-msgstr "Informationsschritt-Titel"
-
-#: app/discussions/forms.py:255
-msgid "Information Step Markdown"
-msgstr "Informationsschritt-Markdown"
-
-#: app/discussions/forms.py:257 app/discussions/forms.py:316
-#: app/discussions/forms.py:359
-msgid "Markdown only. Raw HTML is not supported."
-msgstr "Nur Markdown. Raw HTML wird nicht unterstützt."
-
-#: app/discussions/forms.py:260 app/discussions/forms.py:319
-msgid "Information Links (one per line: Label|https://url)"
-msgstr "Informationslinks (eine pro Zeile: Beschriftung|https://url)"
-
-#: app/discussions/forms.py:264 app/templates/partner/api_docs.html:113
-msgid "Create Discussion"
-msgstr "Discussion erstellen"
-
 #: app/discussions/forms.py:272
 msgid "Either provide a pol.is embed code or enable native statements"
 msgstr ""
@@ -2256,57 +1930,6 @@ msgstr "Stadt ist erforderlich für stadtspezifische Diskussionen"
 #: app/discussions/forms.py:284 app/discussions/forms.py:336
 msgid "Country is required for city-specific discussions"
 msgstr "Land ist erforderlich für stadtspezifische Diskussionen"
-
-#: app/discussions/forms.py:314
-msgid "Information Step (Markdown)"
-msgstr "Informationsschritt (Markdown)"
-
-#: app/discussions/forms.py:322
-msgid "Save changes"
-msgstr "Änderungen speichern"
-
-#: app/discussions/forms.py:344
-msgid "Update Type"
-msgstr "Aktualisierungstyp"
-
-#: app/discussions/forms.py:346
-msgid "General update"
-msgstr "Allgemeine Aktualisierung"
-
-#: app/discussions/forms.py:347
-#: app/templates/discussions/view_discussion.html:630
-msgid "Outcome"
-msgstr "Ergebnis"
-
-#: app/discussions/forms.py:348
-msgid "Next step"
-msgstr "Nächster Schritt"
-
-#: app/discussions/forms.py:353
-#: app/templates/discussions/create_discussion.html:202
-#: app/templates/partner/portal/discussions.html:193
-msgid "Title"
-msgstr "Titel"
-
-#: app/discussions/forms.py:354
-msgid "Title must be between 5 and 200 characters"
-msgstr "Titel muss zwischen 5 und 200 Zeichen lang sein"
-
-#: app/discussions/forms.py:357
-msgid "Body"
-msgstr "Text"
-
-#: app/discussions/forms.py:358
-msgid "Body must be between 20 and 10000 characters"
-msgstr "Text muss zwischen 20 und 10000 Zeichen lang sein"
-
-#: app/discussions/forms.py:362
-msgid "Related Links (one per line: Label|https://url)"
-msgstr "Zugehörige Links (eine pro Zeile: Beschriftung|https://url)"
-
-#: app/discussions/forms.py:365
-msgid "Save update"
-msgstr "Aktualisierung speichern"
 
 #: app/discussions/moderation.py:38
 msgid "You do not have permission to access the moderation queue."
@@ -2469,146 +2092,6 @@ msgstr "Teilnehmer verfolgt"
 #: app/discussions/routes.py:1837
 msgid "Failed to track participant"
 msgstr "Teilnehmer konnte nicht verfolgt werden"
-
-#: app/discussions/statement_forms.py:15 app/templates/auth/dashboard.html:341
-#: app/templates/auth/participation.html:39
-#: app/templates/discussions/create_response.html:22
-#: app/templates/discussions/embed_discussion.html:1087
-#: app/templates/discussions/view_statement.html:3
-#: app/templates/discussions/view_statement.html:44
-#: app/templates/partner/portal/discussion_detail.html:289
-msgid "Statement"
-msgstr "Aussage"
-
-#: app/discussions/statement_forms.py:16
-msgid "Statement is required"
-msgstr "Aussage ist erforderlich"
-
-#: app/discussions/statement_forms.py:17
-msgid "Statement must be 10-500 characters"
-msgstr "Aussage muss 10–500 Zeichen lang sein"
-
-#: app/discussions/statement_forms.py:19
-#: app/templates/briefing/add_rss_source.html:56
-#: app/templates/briefing/create.html:62
-#: app/templates/briefing/sources.html:40
-#: app/templates/briefing/sources.html:91 app/templates/sources/index.html:89
-msgid "Type"
-msgstr "Typ"
-
-#: app/discussions/statement_forms.py:20
-msgid "Claim"
-msgstr "Behauptung"
-
-#: app/discussions/statement_forms.py:21
-msgid "Question"
-msgstr "Frage"
-
-#: app/discussions/statement_forms.py:23
-msgid "Post Statement"
-msgstr "Aussage posten"
-
-#: app/discussions/statement_forms.py:28
-msgid "Vote"
-msgstr "Abstimmung"
-
-#: app/discussions/statement_forms.py:30
-msgid "Vote must be -1, 0, or 1"
-msgstr "Abstimmung muss -1, 0 oder 1 sein"
-
-#: app/discussions/statement_forms.py:32
-msgid "Confidence"
-msgstr "Vertrauen"
-
-#: app/discussions/statement_forms.py:34
-msgid "Confidence must be between 1 and 5"
-msgstr "Konfidenz muss zwischen 1 und 5 liegen"
-
-#: app/discussions/statement_forms.py:40 app/templates/auth/dashboard.html:342
-#: app/templates/auth/participation.html:40
-#: app/templates/discussions/view_response.html:1
-#: app/templates/discussions/view_response.html:19
-msgid "Response"
-msgstr "Antwort"
-
-#: app/discussions/statement_forms.py:41
-msgid "Response is required"
-msgstr "Antwort erforderlich"
-
-#: app/discussions/statement_forms.py:42
-msgid "Response must be 10-2000 characters"
-msgstr "Antwort muss 10–2000 Zeichen lang sein"
-
-#: app/discussions/statement_forms.py:44
-#: app/templates/discussions/consensus_results.html:646
-#: app/templates/discussions/view_response.html:166
-#: app/templates/discussions/view_statement.html:108
-msgid "Position"
-msgstr "Position"
-
-#: app/discussions/statement_forms.py:45
-msgid "Supporting"
-msgstr "Unterstützend"
-
-#: app/discussions/statement_forms.py:46
-msgid "Opposing"
-msgstr "Ablehnend"
-
-#: app/discussions/statement_forms.py:47
-msgid "Neutral/Clarifying"
-msgstr "Neutral/Klärend"
-
-#: app/discussions/statement_forms.py:49
-#: app/templates/discussions/create_response.html:129
-#: app/templates/discussions/view_statement.html:150
-msgid "Post Response"
-msgstr "Antwort veröffentlichen"
-
-#: app/discussions/statement_forms.py:54
-msgid "Source Title"
-msgstr "Quelle – Titel"
-
-#: app/discussions/statement_forms.py:58
-msgid "Source URL"
-msgstr "Quelle – URL"
-
-#: app/discussions/statement_forms.py:62
-msgid "Citation"
-msgstr "Zitat"
-
-#: app/discussions/statement_forms.py:66
-msgid "Add Evidence"
-msgstr "Beweis hinzufügen"
-
-#: app/discussions/statement_forms.py:71
-msgid "Reason"
-msgstr "Begründung"
-
-#: app/discussions/statement_forms.py:72 app/templates/daily/results.html:800
-msgid "Spam"
-msgstr "Spam"
-
-#: app/discussions/statement_forms.py:73
-msgid "Offensive/Abusive"
-msgstr "Beleidigend/Missbräuchlich"
-
-#: app/discussions/statement_forms.py:74
-msgid "Off Topic"
-msgstr "Off Topic"
-
-#: app/discussions/statement_forms.py:75
-msgid "Duplicate"
-msgstr "Duplikat"
-
-#: app/discussions/statement_forms.py:77
-msgid "Additional Context"
-msgstr "Zusätzlicher Kontext"
-
-#: app/discussions/statement_forms.py:81
-#: app/templates/discussions/flag_statement.html:1
-#: app/templates/discussions/flag_statement.html:6
-msgid "Flag Statement"
-msgstr "Aussage melden"
 
 #: app/discussions/statements.py:396
 msgid "This discussion does not support native statements"
@@ -3054,7 +2537,7 @@ msgstr "Was für ein Anführer würdest du sein?"
 msgid "Challenge a friend to the same scenario:"
 msgstr "Fordere einen Freund heraus, das gleiche Szenario zu spielen:"
 
-#: app/help/routes.py:13 app/templates/faq.html:181
+#: app/help/routes.py:13 app/templates/faq.html:191
 #: app/templates/help/getting_started.html:13
 msgid "Getting Started"
 msgstr "Erste Schritte"
@@ -3128,7 +2611,7 @@ msgstr ""
 "Erkunde, wie heutige Geschichten von links, Mitte und rechts berichtet "
 "werden"
 
-#: app/help/routes.py:53 app/templates/faq.html:326
+#: app/help/routes.py:53 app/templates/faq.html:336
 #: app/templates/help/civic_infrastructure.html:12
 #: app/templates/help/help.html:50
 msgid "Civic infrastructure"
@@ -3170,7 +2653,7 @@ msgid "Moderation, stewards, exports, and reading results"
 msgstr "Moderation, Stewards, Exporte und Leseergebnisse"
 
 #: app/help/routes.py:85 app/templates/about.html:326
-#: app/templates/briefing/landing.html:627
+#: app/templates/briefing/landing.html:627 app/templates/donate.html:57
 #: app/templates/help/personal_briefs.html:12 app/templates/layout.html:600
 #: app/templates/layout.html:980 app/templates/layout.html:1279
 msgid "Personal Briefs"
@@ -3200,7 +2683,7 @@ msgid "How trending topics become balanced deliberation prompts"
 msgstr "Wie Trendthemen zu ausgewogenen Deliberationseingaben werden"
 
 #: app/help/routes.py:113 app/templates/about.html:301
-#: app/templates/faq.html:302 app/templates/game/hub.html:3
+#: app/templates/faq.html:312 app/templates/game/hub.html:3
 #: app/templates/help/getting_started.html:26
 #: app/templates/help/tradeoffs.html:11 app/templates/index.html:674
 #: app/templates/layout.html:1271
@@ -3425,11 +2908,6 @@ msgstr ""
 #: app/partner/routes.py:769
 msgid "Your password has been reset. You are now signed in."
 msgstr "Ihr Passwort wurde zurückgesetzt. Sie sind jetzt angemeldet."
-
-#: app/partner/routes.py:787
-#: app/templates/emails/partner_password_reset.html:5
-msgid "Reset your Society Speaks Partner Portal password"
-msgstr "Setze dein Society Speaks Partner Portal-Passwort zurück"
 
 #: app/partner/routes.py:797
 msgid "Signed out."
@@ -3954,101 +3432,6 @@ msgstr ""
 msgid "Test delivery from Society Speaks partner portal."
 msgstr "Testversand vom Society Speaks-Partnerportal."
 
-#: app/profiles/forms.py:206
-msgid "Full Name"
-msgstr "Vollständiger Name"
-
-#: app/profiles/forms.py:207
-msgid "Bio"
-msgstr "Biografie"
-
-#: app/profiles/forms.py:210 app/templates/auth/login.html:30
-#: app/templates/auth/magic_link_request.html:30
-#: app/templates/auth/password_reset_request.html:15
-#: app/templates/auth/register.html:32
-#: app/templates/briefing/recipients.html:33
-#: app/templates/briefing/recipients.html:102
-#: app/templates/components/share_button.html:67
-#: app/templates/discussions/view_discussion.html:436
-#: app/templates/partner/portal/accept_invite.html:15
-#: app/templates/partner/portal/forgot_password.html:17
-#: app/templates/partner/portal/login.html:20
-#: app/templates/partner/rules.html:241
-msgid "Email"
-msgstr "E-Mail"
-
-#: app/profiles/forms.py:211 app/profiles/forms.py:230
-#: app/templates/briefing/organization_settings.html:72
-msgid "Website"
-msgstr "Website"
-
-#: app/profiles/forms.py:213 app/profiles/forms.py:232
-msgid "LinkedIn"
-msgstr "LinkedIn"
-
-#: app/profiles/forms.py:214 app/profiles/forms.py:233
-msgid "Twitter"
-msgstr "Twitter"
-
-#: app/profiles/forms.py:215 app/profiles/forms.py:234
-msgid "Facebook"
-msgstr "Facebook"
-
-#: app/profiles/forms.py:216 app/profiles/forms.py:235
-msgid "Instagram"
-msgstr "Instagram"
-
-#: app/profiles/forms.py:217 app/profiles/forms.py:236
-msgid "TikTok"
-msgstr "TikTok"
-
-#: app/profiles/forms.py:218 app/profiles/forms.py:237
-#: app/templates/layout.html:1364
-msgid "Bluesky"
-msgstr "Bluesky"
-
-#: app/profiles/forms.py:220
-#: app/templates/profiles/edit_individual_profile.html:31
-#: app/templates/profiles/edit_individual_profile.html:41
-msgid "Profile Picture"
-msgstr "Profilbild"
-
-#: app/profiles/forms.py:221 app/profiles/forms.py:240
-#: app/templates/profiles/edit_company_profile.html:55
-#: app/templates/profiles/edit_company_profile.html:65
-#: app/templates/profiles/edit_individual_profile.html:54
-#: app/templates/profiles/edit_individual_profile.html:64
-msgid "Banner Image"
-msgstr "Bannerbild"
-
-#: app/profiles/forms.py:222 app/templates/layout.html:831
-#: app/templates/layout.html:1109
-#: app/templates/profiles/create_individual_profile.html:58
-msgid "Create Profile"
-msgstr "Profil Erstellen"
-
-#: app/profiles/forms.py:225
-msgid "Company Name"
-msgstr "Unternehmensname"
-
-#: app/profiles/forms.py:226
-msgid "Company Description"
-msgstr "Unternehmensbeschreibung"
-
-#: app/profiles/forms.py:229
-msgid "Public contact email"
-msgstr "Öffentliche Kontakt-E-Mail"
-
-#: app/profiles/forms.py:239
-#: app/templates/profiles/edit_company_profile.html:31
-#: app/templates/profiles/edit_company_profile.html:42
-msgid "Company Logo"
-msgstr "Unternehmenslogo"
-
-#: app/profiles/forms.py:241
-msgid "Create Company Profile"
-msgstr "Unternehmensprofi erstellen"
-
 #: app/profiles/routes.py:140
 msgid ""
 "Profile picture couldn't be uploaded (must be JPG, PNG, GIF or WEBP under "
@@ -4133,81 +3516,6 @@ msgstr "Firmenprofil erfolgreich aktualisiert!"
 #: app/profiles/routes.py:484
 msgid "Profile not found."
 msgstr "Profil nicht gefunden."
-
-#: app/programmes/forms.py:17
-msgid "Programme Name"
-msgstr "Programmname"
-
-#: app/programmes/forms.py:25 app/templates/briefing/edit.html:223
-msgid "Logo URL"
-msgstr "Logo-URL"
-
-#: app/programmes/forms.py:28
-msgid "Themes (comma separated)"
-msgstr "Themen (durch Komma getrennt)"
-
-#: app/programmes/forms.py:30
-msgid "Example: Health, Prosperity, Security"
-msgstr "Beispiel: Gesundheit, Wohlstand, Sicherheit"
-
-#: app/programmes/forms.py:33
-msgid "Phases (comma separated)"
-msgstr "Phasen (durch Komma getrennt)"
-
-#: app/programmes/forms.py:35
-msgid "Example: Agenda-setting, Wave 1, Wave 2"
-msgstr "Beispiel: Agenda-Setting, Welle 1, Welle 2"
-
-#: app/programmes/forms.py:38
-msgid "Cohorts (one per line: slug|Label)"
-msgstr "Kohorten (eine pro Zeile: slug|Label)"
-
-#: app/programmes/forms.py:40
-msgid "Example line: pilot-informed|Pilot (informed)"
-msgstr "Beispielzeile: pilot-informed|Pilot (informed)"
-
-#: app/programmes/forms.py:44
-#: app/templates/briefing/organization_settings.html:118
-#: app/templates/briefing/use_template.html:55
-#: app/templates/programmes/_form.html:93
-msgid "Owner"
-msgstr "Inhaber"
-
-#: app/programmes/forms.py:45
-msgid "My account"
-msgstr "Mein Konto"
-
-#: app/programmes/forms.py:45 app/programmes/forms.py:48
-#: app/templates/briefing/use_template.html:63
-msgid "Organization"
-msgstr "Organisation"
-
-#: app/programmes/forms.py:50 app/templates/briefing/create.html:190
-#: app/templates/briefing/detail.html:100 app/templates/briefing/edit.html:96
-#: app/templates/briefing/use_template.html:125
-#: app/templates/programmes/_form.html:63
-msgid "Visibility"
-msgstr "Sichtbarkeit"
-
-#: app/programmes/forms.py:56
-msgid "Save Programme"
-msgstr "Programm speichern"
-
-#: app/programmes/forms.py:60
-msgid "Steward Email"
-msgstr "Steward-E-Mail"
-
-#: app/programmes/forms.py:61
-msgid "Invite Steward"
-msgstr "Steward einladen"
-
-#: app/programmes/forms.py:65
-msgid "Participant Email"
-msgstr "Teilnehmer-E-Mail"
-
-#: app/programmes/forms.py:66
-msgid "Grant access"
-msgstr "Zugriff gewähren"
 
 #: app/programmes/routes.py:415
 msgid "Programme created successfully."
@@ -4480,56 +3788,6 @@ msgstr "API-Schlüssel ist ungültig: %(message)s"
 msgid "Error validating API key"
 msgstr "Fehler bei der Validierung des API-Schlüssels"
 
-#: app/settings/forms.py:8
-msgid "Current Password"
-msgstr "Aktuelles Passwort"
-
-#: app/settings/forms.py:9 app/templates/auth/password_reset.html:14
-msgid "New Password"
-msgstr "Neues Passwort"
-
-#: app/settings/forms.py:10
-msgid "Confirm New Password"
-msgstr "Neues Passwort bestätigen"
-
-#: app/settings/forms.py:10
-msgid "Passwords must match."
-msgstr "Passwörter müssen übereinstimmen."
-
-#: app/settings/forms.py:11 app/templates/settings/settings.html:111
-msgid "Update Password"
-msgstr "Passwort aktualisieren"
-
-#: app/settings/forms.py:15 app/templates/settings/settings.html:137
-msgid "Enable email notifications"
-msgstr "E-Mail-Benachrichtigungen aktivieren"
-
-#: app/settings/forms.py:16 app/templates/settings/settings.html:152
-msgid "New participants"
-msgstr "Neue Teilnehmer"
-
-#: app/settings/forms.py:17 app/templates/settings/settings.html:166
-msgid "Discussion activity"
-msgstr "Diskussionsaktivität"
-
-#: app/settings/forms.py:18 app/templates/settings/settings.html:180
-msgid "Discussion updates"
-msgstr "Diskussionsupdates"
-
-#: app/settings/forms.py:19 app/templates/auth/dashboard.html:498
-#: app/templates/settings/settings.html:194
-msgid "Weekly digest"
-msgstr "Wöchentlicher Digest"
-
-#: app/settings/forms.py:20 app/templates/settings/settings.html:208
-msgid "Save Notification Preferences"
-msgstr "Benachrichtigungseinstellungen speichern"
-
-#: app/settings/forms.py:24 app/templates/settings/settings.html:285
-#: app/templates/settings/settings.html:297
-msgid "Delete Account"
-msgstr "Konto löschen"
-
 #: app/settings/routes.py:79
 msgid "Notification preferences updated successfully."
 msgstr "Benachrichtigungseinstellungen erfolgreich aktualisiert."
@@ -4744,7 +4002,6 @@ msgstr ""
 "spielerisch oder als Reise."
 
 #: app/templates/about.html:127
-#, python-format
 msgid "Tradeoffs · "
 msgstr "Abwägungen · "
 
@@ -4963,10 +4220,10 @@ msgstr "Verbindende Ideen"
 #: app/templates/about.html:270
 msgid ""
 "Statements that resonate across clusters that otherwise split — often the "
-"most actionable for policy and dialogue."
+"most useful for policy and dialogue."
 msgstr ""
-"Aussagen, die über Cluster hinweg ankommen, die sich sonst spalten — oft am "
-"praktischsten für Politik und Dialog."
+"Aussagen, die über Cluster hinweg resonieren, die sich sonst widersprechen —"
+" oft die wertvollsten Erkenntnisse für Politik und Dialog."
 
 #: app/templates/about.html:276 app/templates/platform.html:357
 msgid "Genuine divisions"
@@ -5132,22 +4389,23 @@ msgid "View Society Speaks source code on GitHub (opens in new tab)"
 msgstr "Society Speaks Quellcode auf GitHub anschauen (öffnet in neuem Tab)"
 
 #: app/templates/about.html:349 app/templates/brief/subscribe.html:300
+#: app/templates/donate.html:167
 msgid "View on GitHub"
 msgstr "Auf GitHub anschauen"
 
-#: app/templates/about.html:353
+#: app/templates/about.html:353 app/templates/donate.html:15
 msgid "Support the mission"
 msgstr "Unterstütze die Mission"
 
 #: app/templates/about.html:354
 msgid ""
-"No advertising, no selling your data. Donations and Personal Briefs "
-"subscriptions keep civic features free for everyone."
+"No advertising, no selling your data. Civic features stay free thanks to "
+"donations, Personal Brief subscriptions, and publisher partner plans."
 msgstr ""
-"Keine Werbung, keine Datenverkäufe. Spenden und Personal Briefs Abos halten "
-"Bürgerfunktionen für alle kostenlos."
+"Keine Werbung, keine Datenweitergabe. Bürgerbeteiligungsfeatures bleiben "
+"kostenlos dank Spenden, Personal-Brief-Abos und Publisher-Partnerpläne."
 
-#: app/templates/about.html:356
+#: app/templates/about.html:356 app/templates/donate.html:73
 msgid "Make a donation"
 msgstr "Spende machen"
 
@@ -5343,66 +4601,189 @@ msgstr "Abschnitt 1.3."
 msgid "Questions?"
 msgstr "Fragen?"
 
-#: app/templates/donate.html:2
+#: app/templates/donate.html:4
 msgid "Donate | Society Speaks"
 msgstr "Spende | Society Speaks"
 
-#: app/templates/donate.html:3
+#: app/templates/donate.html:5
 msgid ""
-"Support Society Speaks with a one-time donation. Your support funds open "
-"civic infrastructure and independent public-interest work."
+"Support Society Speaks with a one-time donation. Your gift helps keep "
+"deliberation free, ad-free, and open source for everyone."
 msgstr ""
-"Unterstütze Society Speaks mit einer einmaligen Spende. Deine Unterstützung "
-"finanziert offene Bürgerbeteiligungsinfrastruktur und unabhängige Arbeit im "
-"öffentlichen Interesse."
+"Unterstützen Sie Society Speaks mit einer einmaligen Spende. Ihre Gabe "
+"hilft, Deliberation kostenlos, werbefrei und Open Source für alle zu halten."
 
-#: app/templates/donate.html:8
-msgid "Support Society Speaks"
-msgstr "Society Speaks unterstützen"
+#: app/templates/donate.html:7 app/templates/donate.html:9
+#: app/templates/donate.html:16
+msgid "Donate to Society Speaks"
+msgstr "An Society Speaks spenden"
 
-#: app/templates/donate.html:10
+#: app/templates/donate.html:8 app/templates/donate.html:10
 msgid ""
-"Your donation helps keep Society Speaks independent, open source, and "
-"focused on civic value."
+"Keep civic deliberation free, ad-free, and open source. Make a secure one-"
+"time donation from £1."
 msgstr ""
-"Deine Spende hilft, Society Speaks unabhängig, Open Source und auf "
-"Bürgerwert konzentriert zu halten."
+"Halten Sie die Bürgerbeteiligung kostenlos, werbefrei und Open Source. "
+"Tätigen Sie eine sichere einmalige Spende ab £1."
 
-#: app/templates/donate.html:17
+#: app/templates/donate.html:18
+msgid ""
+"Society Speaks is civic infrastructure: free for most people to use, open "
+"source, and independent of advertising. Donations help us keep it that way."
+msgstr ""
+"Society Speaks ist Bürgertechnik-Infrastruktur: kostenlos für die meisten "
+"Nutzer, Open Source und unabhängig von Werbung. Spenden helfen uns, das zu "
+"erhalten."
+
+#: app/templates/donate.html:26
+msgid "Why donate?"
+msgstr "Warum spenden?"
+
+#: app/templates/donate.html:28
+msgid ""
+"Running deliberation at scale costs real money — servers, email delivery, "
+"machine-learning analysis, moderation tooling, and engineering time. We do "
+"not sell your data and we do not show adverts. Donations from supporters "
+"like you help close the gap between what civic features need and what "
+"subscriptions alone cover."
+msgstr ""
+"Deliberation im großen Maßstab kostet echtes Geld — Server, E-Mail-Versand, "
+"Machine-Learning-Analyse, Moderationswerkzeuge und Engineerzeit. Wir "
+"verkaufen Ihre Daten nicht und zeigen keine Anzeigen. Spenden von "
+"Unterstützern wie Ihnen helfen, die Lücke zwischen dem zu schließen, was "
+"Bürgerbeteiligungsfeatures brauchen, und dem, was Abos allein decken."
+
+#: app/templates/donate.html:33
+msgid ""
+"Keep core participation free — Journey, Daily Question, Daily Brief, "
+"discussions, programmes, and the News Transparency Dashboard"
+msgstr ""
+"Kostenlosen Zugang sichern — Journey, Daily Question, Daily Brief, "
+"Diskussionen, Programme und das News Transparency Dashboard"
+
+#: app/templates/donate.html:37
+msgid ""
+"Fund open-source development — our codebase is AGPL and auditable on GitHub"
+msgstr ""
+"Open-Source-Entwicklung finanzieren — unsere Codebasis ist AGPL und auf "
+"GitHub einsehbar"
+
+#: app/templates/donate.html:41
+msgid ""
+"Stay independent — no ad networks, no selling personal data to third parties"
+msgstr ""
+"Unabhängig bleiben — keine Ad-Netzwerke, keine Weitergabe persönlicher Daten"
+" an Dritte"
+
+#: app/templates/donate.html:47
+msgid "How we sustain the platform"
+msgstr "Wie wir die Plattform finanzieren"
+
+#: app/templates/donate.html:49
+msgid ""
+"We are transparent about revenue. Society Speaks is funded in three ways — "
+"you only pay if you use a paid product or are a publisher partner:"
+msgstr ""
+"Wir sind transparent über Einnahmen. Society Speaks wird auf drei Wegen "
+"finanziert — Sie zahlen nur, wenn Sie ein bezahltes Produkt nutzen oder "
+"Publisher-Partner sind:"
+
+#: app/templates/donate.html:53
+msgid "Donations"
+msgstr "Spenden"
+
+#: app/templates/donate.html:54
+msgid ""
+"Optional one-off gifts from anyone who wants civic tech to thrive without "
+"ads."
+msgstr ""
+"Freiwillige einmalige Gaben von jedem, der möchte, dass Bürgertechnik ohne "
+"Werbung existiert."
+
+#: app/templates/donate.html:58
+msgid ""
+"Paid custom digests from £4.99/month for people who want their own sources —"
+" subscriptions fund free civic features."
+msgstr ""
+"Bezahlte Custom Digests ab £4,99/Monat für alle, die ihre eigenen Quellen "
+"mögen — Abos finanzieren kostenlose Bürgerbeteiligungsfeatures."
+
+#: app/templates/donate.html:61
+msgid "Publisher partners"
+msgstr "Publisher-Partner"
+
+#: app/templates/donate.html:62
+msgid ""
+"Media and organisations subscribe for live embeds and the Partner API (from "
+"£49/month; free tier for testing)."
+msgstr ""
+"Medien und Organisationen abonnieren Live-Embeds und die Partner-API (ab "
+"£49/Monat; kostenlos zum Testen)."
+
+#: app/templates/donate.html:66
+msgid "See funding and publisher pricing in our FAQ"
+msgstr "Finanzierungs- und Publisher-Preise in unserer FAQ"
+
+#: app/templates/donate.html:68
+msgid "Publisher plans"
+msgstr "Publisher-Pläne"
+
+#: app/templates/donate.html:75
+msgid ""
+"Choose an amount below. Every contribution goes directly to running and "
+"improving Society Speaks."
+msgstr ""
+"Wählen Sie einen Betrag unten. Jeder Beitrag fließt direkt in den Betrieb "
+"und die Verbesserung von Society Speaks."
+
+#: app/templates/donate.html:82
 msgid "Choose an amount"
 msgstr "Wähle einen Betrag"
 
-#: app/templates/donate.html:36
+#: app/templates/donate.html:101
 msgid "Or enter a custom amount in GBP:"
 msgstr "Oder gib einen benutzerdefinierten Betrag in GBP ein:"
 
-#: app/templates/donate.html:42
+#: app/templates/donate.html:107
 msgid "e.g. 12.50"
 msgstr "z. B. 12,50"
 
-#: app/templates/donate.html:49
+#: app/templates/donate.html:114
 msgid "Name (optional)"
 msgstr "Name (optional)"
 
-#: app/templates/donate.html:59
+#: app/templates/donate.html:124
 msgid "Email (optional)"
 msgstr "E-Mail (optional)"
 
-#: app/templates/donate.html:71
+#: app/templates/donate.html:136
 msgid "Message (optional)"
 msgstr "Nachricht (optional)"
 
-#: app/templates/donate.html:83
+#: app/templates/donate.html:148
 msgid "Make this donation anonymous"
 msgstr "Diese Spende anonym machen"
 
-#: app/templates/donate.html:90
+#: app/templates/donate.html:155
 msgid "Donate securely with Stripe"
 msgstr "Sicher spenden mit Stripe"
 
-#: app/templates/donate.html:95
+#: app/templates/donate.html:160
 msgid "Donations are processed securely by Stripe. Minimum donation is £1."
 msgstr "Spenden werden sicher von Stripe verarbeitet. Mindestspende: £1."
+
+#: app/templates/donate.html:165
+msgid ""
+"Not ready to donate? You can still help by using the platform, sharing "
+"discussions, or subscribing to a Personal Brief."
+msgstr ""
+"Noch nicht bereit zu spenden? Sie können trotzdem helfen, indem Sie die "
+"Plattform nutzen, Diskussionen teilen oder einen Personal Brief abonnieren."
+
+#: app/templates/donate.html:168 app/templates/help/help.html:49
+#: app/templates/layout.html:1231
+msgid "About Society Speaks"
+msgstr "Über Society Speaks"
 
 #: app/templates/donate_success.html:2
 msgid "Thank You | Society Speaks"
@@ -5418,18 +4799,28 @@ msgstr "Vielen Dank für Ihre Unterstützung"
 
 #: app/templates/donate_success.html:10
 msgid ""
-"Your donation helps fund open civic infrastructure and independent public-"
-"interest work at Society Speaks."
+"Your donation helps keep Society Speaks independent, open source, and free "
+"of advertising — and it directly supports the civic features most people use"
+" at no cost."
 msgstr ""
-"Ihre Spende trägt zur Finanzierung offener Infrastruktur für "
-"Bürgerbeteiligung und unabhängiger gemeinnütziger Arbeit bei Society Speaks "
-"bei."
+"Ihre Spende hilft, Society Speaks unabhängig, Open Source und werbefrei zu "
+"halten — und sie unterstützt direkt die Bürgerbeteiligungsfeatures, die die "
+"meisten Menschen kostenlos nutzen."
 
-#: app/templates/donate_success.html:17
+#: app/templates/donate_success.html:13
+msgid ""
+"We fund the platform through donations, Personal Brief subscriptions, and "
+"publisher partner plans. Your gift strengthens the part that belongs to "
+"everyone."
+msgstr ""
+"Wir finanzieren die Plattform durch Spenden, Personal-Brief-Abos und "
+"Publisher-Partnerpläne. Ihre Gabe stärkt den Teil, der allen gehört."
+
+#: app/templates/donate_success.html:20
 msgid "Return to home"
 msgstr "Zur Startseite zurück"
 
-#: app/templates/donate_success.html:23
+#: app/templates/donate_success.html:26
 msgid "Make another donation"
 msgstr "Eine weitere Spende machen"
 
@@ -5461,7 +4852,7 @@ msgstr ""
 msgid "Society Speaks — Frequently Asked Questions"
 msgstr "Society Speaks — Häufig gestellte Fragen"
 
-#: app/templates/faq.html:19 app/templates/faq.html:185
+#: app/templates/faq.html:19 app/templates/faq.html:195
 #: app/templates/index.html:26
 msgid "What is Society Speaks?"
 msgstr "Was ist Society Speaks?"
@@ -5481,7 +4872,7 @@ msgstr ""
 "gegensätzliche Gruppen vereinen) und echte Unstimmigkeiten zu "
 "identifizieren. Sie ist Open Source, werbefrei und kostenlos nutzbar."
 
-#: app/templates/faq.html:24 app/templates/faq.html:189
+#: app/templates/faq.html:24 app/templates/faq.html:199
 msgid "Is Society Speaks free?"
 msgstr "Ist Society Speaks kostenlos?"
 
@@ -5489,16 +4880,15 @@ msgstr "Ist Society Speaks kostenlos?"
 msgid ""
 "Yes. All core features are free: discussions, programmes, the Big Questions "
 "Journey, the Daily Question, the Daily Brief, Tradeoffs, the News "
-"Transparency Dashboard, and voting. A paid Personal Briefs subscription "
-"(from £4.99/month) is available for those who want a custom daily digest "
-"from their own sources — and it funds the free civic platform."
+"Transparency Dashboard, and voting. We are funded by optional donations, "
+"Personal Brief subscriptions (from £4.99/month), and publisher partner plans"
+" — not advertising."
 msgstr ""
-"Ja. Alle Kernfunktionen sind kostenlos: Diskussionen, Programme, die Big "
-"Questions Journey, die Daily Question, das Daily Brief, Tradeoffs, das News "
-"Transparency Dashboard und Abstimmungen. Ein bezahltes Personal Briefs Abo "
-"(ab £4,99/Monat) ist für diejenigen verfügbar, die einen benutzerdefinierten"
-" täglichen Digest aus ihren eigenen Quellen möchten — und es finanziert die "
-"kostenlose Bürgerbeteiligungsplattform."
+"Ja. Alle wichtigsten Features sind kostenlos: Diskussionen, Programme, die "
+"Big Questions Journey, die Daily Question, der Daily Brief, Tradeoffs, das "
+"News Transparency Dashboard und Abstimmungen. Wir werden finanziert durch "
+"freiwillige Spenden, Personal-Brief-Abos (ab £4,99/Monat) und Publisher-"
+"Partnerpläne — nicht durch Werbung."
 
 #: app/templates/faq.html:29
 msgid "Do I need an account to use Society Speaks?"
@@ -5517,7 +4907,7 @@ msgstr ""
 "Fortschritt gespeichert wird), Diskussionen oder Programme zu erstellen oder"
 " die Daily Question per E-Mail zu abonnieren."
 
-#: app/templates/faq.html:34 app/templates/faq.html:216
+#: app/templates/faq.html:34 app/templates/faq.html:226
 #: app/templates/index.html:42
 msgid "What is the Big Questions Journey?"
 msgstr "Was ist die Big Questions Journey?"
@@ -5564,7 +4954,7 @@ msgstr ""
 " den spezifischen politischen Kontext und aktuelle Debatten des jeweiligen "
 "Landes wider."
 
-#: app/templates/faq.html:44 app/templates/faq.html:247
+#: app/templates/faq.html:44 app/templates/faq.html:257
 msgid "What is the Daily Question?"
 msgstr "Was ist die Daily Question?"
 
@@ -5585,7 +4975,7 @@ msgstr ""
 "per E-Mail zugestellt – standardmäßig wöchentlich – und Sie können die "
 "Häufigkeit in Ihren Einstellungen auf täglich oder monatlich ändern."
 
-#: app/templates/faq.html:49 app/templates/faq.html:274
+#: app/templates/faq.html:49 app/templates/faq.html:284
 msgid "What is the Daily Brief?"
 msgstr "Was ist das Daily Brief?"
 
@@ -5666,7 +5056,7 @@ msgstr ""
 "mehrere Moderatoren, Sichtbarkeitskontrolle (öffentlich, unlisted, nur auf "
 "Einladung oder privat) und Datenexport."
 
-#: app/templates/faq.html:69 app/templates/faq.html:388
+#: app/templates/faq.html:69 app/templates/faq.html:398
 msgid "What is a consensus statement?"
 msgstr "Was ist eine Konsens-Aussage?"
 
@@ -5682,7 +5072,7 @@ msgstr ""
 "Fragen nicht übereinstimmen. Konsens-Aussagen zeigen, wo Gesellschaft "
 "bereits übereinstimmt, auch wenn Menschen glauben, sie seien gespalten."
 
-#: app/templates/faq.html:74 app/templates/faq.html:392
+#: app/templates/faq.html:74 app/templates/faq.html:402
 msgid "What is a bridge idea?"
 msgstr "Was ist eine Brückenidee?"
 
@@ -5690,14 +5080,14 @@ msgstr "Was ist eine Brückenidee?"
 msgid ""
 "A bridge idea is a statement that resonates strongly across different "
 "opinion clusters — groups that otherwise disagree on most issues. Bridge "
-"ideas represent rare common ground and are often the most actionable "
-"insights for policy, journalism, or community dialogue."
+"ideas represent rare common ground and are often the most useful insights "
+"for policy, journalism, or community dialogue."
 msgstr ""
-"Eine Brückenidee ist eine Aussage, die stark über verschiedene "
-"Meinungsclusters hinweg resoniert – Gruppen, die sich bei den meisten Themen"
-" ansonsten nicht einigen. Brückenideen stellen seltenen gemeinsamen Grund "
-"dar und sind oft die handlungsfähigsten Erkenntnisse für Politik, "
-"Journalismus oder Bürgerdialog."
+"Eine Bridge Idea ist eine Aussage, die stark über verschiedene Meinungs-"
+"Cluster resoniert — Gruppen, die sich in den meisten Fragen sonst "
+"widersprechen. Bridge Ideas repräsentieren seltenen gemeinsamen Boden und "
+"sind oft die wertvollsten Erkenntnisse für Politik, Journalismus oder "
+"Gemeinschaftsdialog."
 
 #: app/templates/faq.html:79
 msgid "How does the machine learning work?"
@@ -5778,7 +5168,7 @@ msgstr ""
 "von der Community eingereichte Aussagen den Pool über die ursprünglichen "
 "Seed-Aussagen hinaus."
 
-#: app/templates/faq.html:99 app/templates/faq.html:411
+#: app/templates/faq.html:99 app/templates/faq.html:444
 msgid "What is a Personal Brief?"
 msgstr "Was ist ein Personal Brief?"
 
@@ -5817,11 +5207,48 @@ msgstr ""
 "Personal-Brief-Abonnement finanziert den kostenlosen Daily Brief und andere "
 "Civic-Funktionen."
 
-#: app/templates/faq.html:109 app/templates/faq.html:438
+#: app/templates/faq.html:109 app/templates/faq.html:421
+msgid "How is Society Speaks funded?"
+msgstr "Wie wird Society Speaks finanziert?"
+
+#: app/templates/faq.html:110
+msgid ""
+"Society Speaks is not ad-funded. Revenue comes from three sources: optional "
+"one-off donations, Personal Brief subscriptions (paid custom digests from "
+"£4.99/month), and publisher partner subscriptions for live embeds and the "
+"Partner API (from £49/month, with a free test tier). Donations and "
+"subscriptions help keep core civic features free for everyone."
+msgstr ""
+"Society Speaks wird nicht werbefinanziert. Einnahmen kommen aus drei "
+"Quellen: freiwillige einmalige Spenden, Personal-Brief-Abos (bezahlte Custom"
+" Digests ab £4,99/Monat) und Publisher-Partnerschaften für Live-Embeds und "
+"die Partner-API (ab £49/Monat, mit kostenlosem Testtarif). Spenden und Abos "
+"halten wichtigste Bürgerbeteiligungsfeatures für alle kostenlos."
+
+#: app/templates/faq.html:114 app/templates/faq.html:429
+msgid "What do publishers pay for embeds and the Partner API?"
+msgstr "Was zahlen Publisher für Embeds und die Partner-API?"
+
+#: app/templates/faq.html:115
+msgid ""
+"Publishers subscribe to run live embeds on their sites. Self-serve plans are"
+" £49/month (Starter, up to 100 live discussions per month) and £249/month "
+"(Professional, up to 500). A free tier includes test discussions and full "
+"API access before going live. Enterprise pricing is available for large "
+"newsrooms. Full details are on the For Publishers page."
+msgstr ""
+"Publisher abonnieren, um Live-Embeds auf ihren Websites zu schalten. Self-"
+"Service-Pläne sind £49/Monat (Starter, bis zu 100 Live-Diskussionen pro "
+"Monat) und £249/Monat (Professional, bis zu 500). Ein kostenlos Tarif "
+"enthält Test-Diskussionen und vollen API-Zugriff vor dem Go-Live. "
+"Enterprise-Preise sind für große Newsrooms verfügbar. Vollständige Details "
+"finden Sie auf der Seite Für Publisher."
+
+#: app/templates/faq.html:119 app/templates/faq.html:471
 msgid "Can organisations use Society Speaks?"
 msgstr "Können Organisationen Society Speaks nutzen?"
 
-#: app/templates/faq.html:110
+#: app/templates/faq.html:120
 msgid ""
 "Yes. Society Speaks works with publishers, NGOs, governments, researchers, "
 "and media outlets globally. Organisations can embed discussions directly on "
@@ -5836,11 +5263,11 @@ msgstr ""
 "beauftragen und strukturierte Datenexporte für Analyse und Berichterstattung"
 " erhalten. Kontaktieren Sie uns über die Seite For Organisations."
 
-#: app/templates/faq.html:114
+#: app/templates/faq.html:124
 msgid "What is the News Transparency Dashboard?"
 msgstr "Was ist das News Transparency Dashboard?"
 
-#: app/templates/faq.html:115
+#: app/templates/faq.html:125
 msgid ""
 "The News Transparency Dashboard is a free tool that shows today's news from "
 "140+ sources organised by political leaning — left, centre, and right. It "
@@ -5853,11 +5280,11 @@ msgstr ""
 "Berichterstattungs-Balance-Prozentsätze und Links zu "
 "Quellenverzerrungsratings von AllSides. Keine Anmeldung erforderlich."
 
-#: app/templates/faq.html:120
+#: app/templates/faq.html:130
 msgid "What is Tradeoffs on Society Speaks?"
 msgstr "Was ist Tradeoffs auf Society Speaks?"
 
-#: app/templates/faq.html:121
+#: app/templates/faq.html:131
 msgid ""
 "Tradeoffs is a daily scenario game at /play. You face a fictional crisis, "
 "make five rounds of governing choices with no perfect option, and receive an"
@@ -5871,13 +5298,13 @@ msgstr ""
 "welche Gesellschaft du aufbaust. Es nutzt Verhaltendaten über fiktive "
 "Entscheidungen, nicht deine realen politischen Überzeugungen."
 
-#: app/templates/faq.html:126
+#: app/templates/faq.html:136
 msgid "Can organisations run their own consultations on Society Speaks?"
 msgstr ""
 "Können Organisationen ihre eigenen Konsultationen auf Society Speaks "
 "durchführen?"
 
-#: app/templates/faq.html:127
+#: app/templates/faq.html:137
 msgid ""
 "Yes. Society Speaks is civic infrastructure: create discussions with your "
 "own seed statements, run multi-discussion programmes with themes and phases,"
@@ -5890,16 +5317,16 @@ msgstr ""
 "Sie Moderatoren, exportieren Sie CSV-Daten und betten Sie Abstimmungen über "
 "die Partner-API auf Ihrer Website ein."
 
-#: app/templates/faq.html:138
+#: app/templates/faq.html:148
 msgid "Help & support"
 msgstr "Hilfe & Support"
 
 #: app/templates/brief/landing.html:530 app/templates/brief/no_brief.html:253
-#: app/templates/faq.html:139 app/templates/help/polis_algorithms.html:268
+#: app/templates/faq.html:149 app/templates/help/polis_algorithms.html:268
 msgid "Frequently Asked Questions"
 msgstr "Häufig gestellte Fragen"
 
-#: app/templates/faq.html:141
+#: app/templates/faq.html:151
 msgid ""
 "Everything you need to know about Society Speaks — how it works, what it "
 "costs, and how to get the most from it."
@@ -5907,7 +5334,7 @@ msgstr ""
 "Alles, was Sie über Society Speaks wissen müssen – wie es funktioniert, was "
 "es kostet und wie Sie das Beste daraus machen."
 
-#: app/templates/faq.html:186
+#: app/templates/faq.html:196
 msgid ""
 "Society Speaks is a civic technology platform that uses machine learning to "
 "turn public participation into structured insight. We group participants by "
@@ -5922,26 +5349,25 @@ msgstr ""
 "sich teilt, und welche Ideen die Lücke überbrücken. Sie ist Open Source, "
 "werbefrei und kostenlos zu nutzen."
 
-#: app/templates/faq.html:190
+#: app/templates/faq.html:200
 msgid ""
 "Yes. All core features are free: the Big Questions Journey, Daily Question, "
 "Daily Brief, Tradeoffs, News Transparency Dashboard, discussions, "
-"programmes, and voting. A paid Personal Briefs subscription (from "
-"£4.99/month) is available for those who want a custom daily digest from "
-"their own sources — and it funds the free civic platform."
+"programmes, and voting. We are funded by optional donations, Personal Brief "
+"subscriptions (from £4.99/month), and publisher partner plans — not "
+"advertising."
 msgstr ""
-"Ja. Alle Kernfunktionen sind kostenlos: die Big Questions Journey, Daily "
-"Question, Daily Brief, Tradeoffs, News Transparency Dashboard, Diskussionen,"
-" Programme und Abstimmungen. Ein kostenpflichtiges Personal Briefs-"
-"Abonnement (ab £4,99/Monat) ist für diejenigen verfügbar, die einen "
-"personalisierten täglichen Überblick aus ihren eigenen Quellen wünschen — "
-"und es finanziert die kostenlose Bürgerbeteiligungsplattform."
+"Ja. Alle wichtigsten Features sind kostenlos: die Big Questions Journey, "
+"Daily Question, Daily Brief, Tradeoffs, News Transparency Dashboard, "
+"Diskussionen, Programme und Abstimmungen. Wir werden finanziert durch "
+"freiwillige Spenden, Personal-Brief-Abos (ab £4,99/Monat) und Publisher-"
+"Partnerpläne — nicht durch Werbung."
 
-#: app/templates/faq.html:193
+#: app/templates/faq.html:203
 msgid "Do I need an account?"
 msgstr "Brauche ich ein Konto?"
 
-#: app/templates/faq.html:194
+#: app/templates/faq.html:204
 msgid ""
 "No. You can browse discussions, read the Daily Brief, and explore the News "
 "Transparency Dashboard without an account. You need an account to save your "
@@ -5954,11 +5380,11 @@ msgstr ""
 "Diskussionen oder Programme zu erstellen oder die Daily Question per E-Mail "
 "zu abonnieren."
 
-#: app/templates/faq.html:197 app/templates/index.html:66
+#: app/templates/faq.html:207 app/templates/index.html:66
 msgid "Who is Society Speaks for?"
 msgstr "Für wen ist Society Speaks gedacht?"
 
-#: app/templates/faq.html:198
+#: app/templates/faq.html:208
 msgid ""
 "Everyone curious about public opinion — and civic technologists who need "
 "infrastructure to run their own programmes, polls, and consultations. That "
@@ -5970,11 +5396,11 @@ msgstr ""
 "Umfragen und Konsultationen benötigen. Das schließt Einzelpersonen, NGOs, "
 "Regierungen, Universitäten, Verlage und Forscher ein."
 
-#: app/templates/faq.html:201
+#: app/templates/faq.html:211
 msgid "Can I run my own questions and polls?"
 msgstr "Kann ich meine eigenen Fragen und Umfragen durchführen?"
 
-#: app/templates/faq.html:202
+#: app/templates/faq.html:212
 msgid ""
 "Yes. Create a discussion with your seed statements or build a full programme"
 " with multiple themed discussions, phases, and cohorts. You control "
@@ -5989,11 +5415,11 @@ msgstr ""
 "exportieren Ergebnisse. Weitere Informationen finden Sie in unserem "
 "Leitfaden zur Bürgerbeteiligungsinfrastruktur im Help Centre."
 
-#: app/templates/faq.html:205
+#: app/templates/faq.html:215
 msgid "Is Society Speaks open source?"
 msgstr "Ist Society Speaks Open Source?"
 
-#: app/templates/faq.html:206
+#: app/templates/faq.html:216
 msgid ""
 "Yes. The Society Speaks platform is open source. You can find the code on "
 "our GitHub repository. We believe civic infrastructure should be transparent"
@@ -6003,11 +5429,11 @@ msgstr ""
 "unserem GitHub-Repository. Wir sind der Überzeugung, dass Civic-"
 "Infrastruktur transparent und überprüfbar sein sollte."
 
-#: app/templates/faq.html:212
+#: app/templates/faq.html:222
 msgid "The Big Questions Journey"
 msgstr "Die Big Questions Journey"
 
-#: app/templates/faq.html:217
+#: app/templates/faq.html:227
 msgid ""
 "The Big Questions Journey is a guided civic experience covering the issues "
 "that define our era. It has 8 themes — climate and planet, AI and "
@@ -6024,11 +5450,11 @@ msgstr ""
 "von Experten kuratierten politischen Aussagen. Nach der Abstimmung sehen "
 "Sie, wie Sie sich im Vergleich zu anderen weltweit positionieren."
 
-#: app/templates/faq.html:220
+#: app/templates/faq.html:230
 msgid "How many statements are there?"
 msgstr "Wie viele Aussagen gibt es?"
 
-#: app/templates/faq.html:221
+#: app/templates/faq.html:231
 msgid ""
 "Each edition starts with at least 56 seed statements — a minimum of 7 per "
 "theme across 8 themes. Participants can also submit their own statements to "
@@ -6040,11 +5466,11 @@ msgstr ""
 "Thema einreichen, so dass die Gesamtzahl mit den Beiträgen der Community "
 "wächst. Die Anzahl variiert leicht zwischen den Länderausgaben."
 
-#: app/templates/faq.html:224
+#: app/templates/faq.html:234
 msgid "Are there editions for different countries?"
 msgstr "Gibt es Ausgaben für verschiedene Länder?"
 
-#: app/templates/faq.html:225
+#: app/templates/faq.html:235
 msgid ""
 "Yes. Country-specific editions are available for the United Kingdom, United "
 "States, Germany, France, Netherlands, Ireland, Canada, Singapore, Japan, and"
@@ -6061,11 +5487,11 @@ msgstr ""
 "verfügbar. Die Plattform personalisiert Ihre empfohlene Ausgabe basierend "
 "auf Ihrer Browser-Sprache oder Ihrem Profil."
 
-#: app/templates/faq.html:228
+#: app/templates/faq.html:238
 msgid "Can I add my own statement to a Journey discussion?"
 msgstr "Kann ich einer Journey-Diskussion meine eigene Aussage hinzufügen?"
 
-#: app/templates/faq.html:229
+#: app/templates/faq.html:239
 msgid ""
 "Yes. After voting on the existing statements in any theme, you can submit "
 "your own statement. Submitted statements are reviewed before appearing to "
@@ -6077,11 +5503,11 @@ msgstr ""
 "bevor sie anderen Teilnehmern angezeigt werden. So wächst der Pool der "
 "Aussagen über die ursprüngliche Seed-Menge hinaus."
 
-#: app/templates/faq.html:232
+#: app/templates/faq.html:242
 msgid "What happens after I complete the Journey?"
 msgstr "Was passiert, nachdem ich die Journey abgeschlossen habe?"
 
-#: app/templates/faq.html:233
+#: app/templates/faq.html:243
 msgid ""
 "Once you have voted across a theme's statements, you unlock the recap for "
 "that theme — showing how your views compare to different opinion clusters, "
@@ -6094,11 +5520,11 @@ msgstr ""
 "erreicht haben, und wo echte Teilungen liegen. Vervollständigen Sie alle 8 "
 "Themen, um Ihr Gesamtbild zu sehen."
 
-#: app/templates/faq.html:236
+#: app/templates/faq.html:246
 msgid "Can I save my progress and come back later?"
 msgstr "Kann ich meinen Fortschritt speichern und später zurückkommen?"
 
-#: app/templates/faq.html:237
+#: app/templates/faq.html:247
 msgid ""
 "Yes, if you are signed in. Your votes are saved to your account so you can "
 "return and continue where you left off. Anonymous voting uses a session "
@@ -6111,11 +5537,11 @@ msgstr ""
 "wenn Sie Ihre Browser-Daten löschen, kann Ihr anonymer Fortschritt verloren "
 "gehen."
 
-#: app/templates/faq.html:243 app/templates/index.html:512
+#: app/templates/faq.html:253 app/templates/index.html:512
 msgid "The Daily Question"
 msgstr "Die tägliche Frage"
 
-#: app/templates/faq.html:248
+#: app/templates/faq.html:258
 msgid ""
 "The Daily Question is one carefully chosen civic question published each "
 "day. You vote Agree, Disagree, or Unsure, optionally explain your reasoning "
@@ -6128,11 +5554,11 @@ msgstr ""
 "dann, wie andere antwortet haben. Im Laufe der Zeit entsteht so ein "
 "Längsschnitt darüber, wie sich die öffentliche Meinung entwickelt."
 
-#: app/templates/faq.html:251
+#: app/templates/faq.html:261
 msgid "How often is a new question published?"
 msgstr "Wie oft wird eine neue Frage veröffentlicht?"
 
-#: app/templates/faq.html:252
+#: app/templates/faq.html:262
 msgid ""
 "A new question is published every day. By default, the email digest delivers"
 " 5 questions per week. You can change your delivery frequency to daily or "
@@ -6142,11 +5568,11 @@ msgstr ""
 "standardmäßig 5 Fragen pro Woche. Du kannst die Lieferhäufigkeit in deinen "
 "E-Mail-Einstellungen auf täglich oder monatlich ändern."
 
-#: app/templates/faq.html:255
+#: app/templates/faq.html:265
 msgid "How do I get the Daily Question by email?"
 msgstr "Wie bekomme ich die Tagisfrage per E-Mail?"
 
-#: app/templates/faq.html:256
+#: app/templates/faq.html:266
 msgid ""
 "Visit the Daily Question subscribe page and enter your email address. No "
 "account is required to subscribe by email. You can manage your preferences —"
@@ -6158,11 +5584,11 @@ msgstr ""
 "kannst deine Einstellungen – einschließlich Häufigkeit, Versandtag und "
 "Uhrzeit – über einen Link in jeder E-Mail, die wir dir senden, verwalten."
 
-#: app/templates/faq.html:259
+#: app/templates/faq.html:269
 msgid "Can I change how often I get the email?"
 msgstr "Kann ich ändern, wie oft ich die E-Mail erhalte?"
 
-#: app/templates/faq.html:260
+#: app/templates/faq.html:270
 msgid ""
 "Yes. You can choose weekly (default, 5 questions per digest), daily (one "
 "question per day), or monthly. You can also choose which day and time weekly"
@@ -6174,11 +5600,11 @@ msgstr ""
 "welcher Wochentag und welche Uhrzeit wöchentliche Digests ankommen. "
 "Aktualisiere deine Einstellungen über den Link in jeder Tagisfrage-E-Mail."
 
-#: app/templates/faq.html:263
+#: app/templates/faq.html:273
 msgid "How are Daily Questions chosen?"
 msgstr "Wie werden die Tagisfragen ausgewählt?"
 
-#: app/templates/faq.html:264
+#: app/templates/faq.html:274
 msgid ""
 "Questions are chosen for civic relevance, timeliness, and their ability to "
 "surface genuine agreement or division. They are drawn from active "
@@ -6191,12 +5617,12 @@ msgstr ""
 
 #: app/templates/brief/landing.html:83 app/templates/brief/subscribe.html:130
 #: app/templates/brief/view.html:18 app/templates/emails/daily_brief.html:211
-#: app/templates/faq.html:270 app/templates/help/news_feed.html:237
+#: app/templates/faq.html:280 app/templates/help/news_feed.html:237
 #: app/templates/help/news_feed.html:240 app/templates/index.html:582
 msgid "The Daily Brief"
 msgstr "The Daily Brief"
 
-#: app/templates/faq.html:275
+#: app/templates/faq.html:285
 msgid ""
 "The Daily Brief is a free, ad-free daily news digest covering 3–5 stories "
 "vetted for civic impact. It draws from 140+ sources across the political "
@@ -6212,11 +5638,11 @@ msgstr ""
 "Artikel, die andere übersehen. Es ist keine Anmeldung erforderlich zum "
 "Lesen."
 
-#: app/templates/faq.html:278
+#: app/templates/faq.html:288
 msgid "How do you choose which stories to cover?"
 msgstr "Nach welchen Kriterien wählst du die Artikel aus?"
 
-#: app/templates/faq.html:279
+#: app/templates/faq.html:289
 msgid ""
 "Stories are selected for civic relevance — how they affect democratic life, "
 "policy, or public understanding — rather than for virality or outrage "
@@ -6229,11 +5655,11 @@ msgstr ""
 " KI-Bewertungssystem filtert nach Qualität und demokratischer Relevanz. "
 "Unser Redaktionsteam trifft die endgültige Auswahl."
 
-#: app/templates/faq.html:282
+#: app/templates/faq.html:292
 msgid "What does the left/centre/right breakdown mean?"
 msgstr "Was bedeutet die Links-/Mitte-/Rechts-Aufschlüsselung?"
 
-#: app/templates/faq.html:283
+#: app/templates/faq.html:293
 msgid ""
 "For each story, we show how sources across the political spectrum are "
 "covering it — what left-leaning, centre, and right-leaning outlets "
@@ -6248,11 +5674,11 @@ msgstr ""
 "du die gleiche Geschichte aus mehreren Blickwinkeln sehen, anstatt nur aus "
 "einer redaktionellen Perspektive."
 
-#: app/templates/faq.html:286
+#: app/templates/faq.html:296
 msgid "How many sources do you use?"
 msgstr "Wie viele Quellen nutzt ihr?"
 
-#: app/templates/faq.html:287
+#: app/templates/faq.html:297
 msgid ""
 "The Daily Brief draws from 140+ curated sources including news outlets, "
 "analysis publications, think tanks, and podcasts. You can explore all "
@@ -6263,11 +5689,11 @@ msgstr ""
 " alle Quellen, organisiert nach politischer Ausrichtung, im News "
 "Transparency Dashboard erkunden."
 
-#: app/templates/faq.html:290
+#: app/templates/faq.html:300
 msgid "Is the Daily Brief available by email?"
 msgstr "Ist The Daily Brief per E-Mail verfügbar?"
 
-#: app/templates/faq.html:291
+#: app/templates/faq.html:301
 msgid ""
 "Yes. Subscribe on the Daily Brief page. Email is optional — the Brief is "
 "always free to read on the website."
@@ -6275,11 +5701,11 @@ msgstr ""
 "Ja. Melde dich auf der Daily Brief-Seite an. E-Mail ist optional – The Brief"
 " ist immer kostenlos auf der Website zu lesen."
 
-#: app/templates/faq.html:294
+#: app/templates/faq.html:304
 msgid "What is the 'Under the Radar' section?"
 msgstr "Was ist der Bereich \"Under the Radar\"?"
 
-#: app/templates/faq.html:295
+#: app/templates/faq.html:305
 msgid ""
 "Under the Radar highlights important stories that have not received "
 "mainstream coverage. These are stories our editors and AI scoring system "
@@ -6292,11 +5718,11 @@ msgstr ""
 "aber geringe Medienaufmerksamkeit erhalten – die Art von Artikeln, die "
 "wichtig sind, aber selten Schlagzeilen machen."
 
-#: app/templates/faq.html:306
+#: app/templates/faq.html:316
 msgid "What is Tradeoffs?"
 msgstr "Was ist Tradeoffs?"
 
-#: app/templates/faq.html:307
+#: app/templates/faq.html:317
 msgid ""
 "Tradeoffs is a daily scenario game on Society Speaks (/play). Each scenario "
 "gives you five turns of crisis governing — every choice helps one part of "
@@ -6311,11 +5737,11 @@ msgstr ""
 "Quick Run wiederholt andere Szenarien; Challenge-Links lassen Freunde am "
 "selben Tag das gleiche Szenario spielen und Ergebnisse vergleichen."
 
-#: app/templates/faq.html:310
+#: app/templates/faq.html:320
 msgid "Is Tradeoffs about my real political views?"
 msgstr "Geht es bei Tradeoffs um meine echten politischen Ansichten?"
 
-#: app/templates/faq.html:311
+#: app/templates/faq.html:321
 msgid ""
 "No. Scenarios are fictional. We store behavioural choices in the game, not "
 "your stated ideology. The game holds up a mirror under pressure; it does not"
@@ -6328,11 +5754,11 @@ msgstr ""
 "Weitere Informationen finden Sie in unseren redaktionellen Grundsätzen auf "
 "/play/editorial-principles."
 
-#: app/templates/faq.html:314
+#: app/templates/faq.html:324
 msgid "Do I need an account to play Tradeoffs?"
 msgstr "Brauche ich ein Konto, um Tradeoffs zu spielen?"
 
-#: app/templates/faq.html:315
+#: app/templates/faq.html:325
 msgid ""
 "No for a single daily play. Sign in (magic link) to save streaks, merge "
 "anonymous runs when you log in, and keep outcome history. Friend challenges "
@@ -6343,11 +5769,11 @@ msgstr ""
 " Ihre Ergebnis-Historie zu behalten. Friend Challenges funktionieren mit "
 "oder ohne Konto."
 
-#: app/templates/faq.html:318
+#: app/templates/faq.html:328
 msgid "How does Tradeoffs connect to deliberation?"
 msgstr "Wie verbindet sich Tradeoffs mit strukturierter Bürgerbeteiligung?"
 
-#: app/templates/faq.html:319
+#: app/templates/faq.html:329
 msgid ""
 "When a scenario matches a live civic topic, Tradeoffs can link you to the "
 "related Daily Question or discussion so play leads into real structured "
@@ -6357,11 +5783,11 @@ msgstr ""
 "Tradeoffs Sie zur zugehörigen Daily Question oder Diskussion verlinken, "
 "sodass das Spiel in echte strukturierte Teilhabe übergeht."
 
-#: app/templates/faq.html:330
+#: app/templates/faq.html:340
 msgid "What is Society Speaks civic infrastructure?"
 msgstr "Was ist Society Speaks Infrastruktur für Bürgerbeteiligung?"
 
-#: app/templates/faq.html:331
+#: app/templates/faq.html:341
 msgid ""
 "The same deliberation engine behind our public Journey and Daily Question — "
 "available for your organisation. Run programmes, ship structured polls, "
@@ -6372,11 +5798,11 @@ msgstr ""
 "durch, starten Sie strukturierte Umfragen, betten Sie auf Ihren "
 "Eigenschaften ein und exportieren Sie analysereife Daten."
 
-#: app/templates/faq.html:334
+#: app/templates/faq.html:344
 msgid "What is the difference between a discussion and a programme?"
 msgstr "Was ist der Unterschied zwischen einer Diskussion und einem Programm?"
 
-#: app/templates/faq.html:335
+#: app/templates/faq.html:345
 msgid ""
 "A discussion is a single deliberation space with its own statements and "
 "results. A programme groups many discussions under one initiative — with "
@@ -6388,11 +5814,11 @@ msgstr ""
 "Initiative zusammen — mit gemeinsamen Themen, sequenziellen Phasen, "
 "Kohorten, Moderatoren und Massenexport für große Konsultationen."
 
-#: app/templates/faq.html:338
+#: app/templates/faq.html:348
 msgid "Can publishers embed voting on their sites?"
 msgstr "Können Verlage Abstimmungen auf ihren Websites einbetten?"
 
-#: app/templates/faq.html:339
+#: app/templates/faq.html:349
 msgid ""
 "Yes. The Partner hub provides iframe embeds and an API to attach discussions"
 " to article URLs, define your own statements, and receive structured opinion"
@@ -6403,11 +5829,11 @@ msgstr ""
 "strukturierte Meinungsdaten zu erhalten. Sie wählen jedes Thema — wir "
 "scrapen nicht Ihre Newsroom-Inhalte."
 
-#: app/templates/faq.html:342
+#: app/templates/faq.html:352
 msgid "When does consensus analysis become available?"
 msgstr "Wann wird die Konsens-Analyse verfügbar?"
 
-#: app/templates/faq.html:343
+#: app/templates/faq.html:353
 msgid ""
 "Typically after roughly 7–15 participants have voted on a meaningful share "
 "of statements (exact thresholds depend on discussion size). Stewards and "
@@ -6418,16 +5844,16 @@ msgstr ""
 "Diskussionsgröße ab). Moderatoren und Ersteller können CSV-Exporte und "
 "Konsens-Ansichten zugreifen, wenn diese freigeschaltet werden."
 
-#: app/templates/faq.html:349 app/templates/layout.html:587
+#: app/templates/faq.html:359 app/templates/layout.html:587
 #: app/templates/layout.html:974 app/templates/layout.html:1249
 msgid "Discussions & Programmes"
 msgstr "Diskussionen und Programme"
 
-#: app/templates/faq.html:353
+#: app/templates/faq.html:363
 msgid "What is a discussion?"
 msgstr "Was ist eine Diskussion?"
 
-#: app/templates/faq.html:354
+#: app/templates/faq.html:364
 msgid ""
 "A discussion is a structured deliberation space where participants vote on a"
 " set of statements about a specific topic. Anyone with an account can create"
@@ -6440,11 +5866,11 @@ msgstr ""
 "offenbaren Maschinenlernalgorithmen Konsens-Aussagen, Brückenideen und echte"
 " Uneinigkeiten."
 
-#: app/templates/faq.html:357
+#: app/templates/faq.html:367
 msgid "How do I create a discussion?"
 msgstr "Wie erstelle ich eine Diskussion?"
 
-#: app/templates/faq.html:358
+#: app/templates/faq.html:368
 msgid ""
 "Sign in, go to 'Start a Discussion', give it a title and description, add "
 "your seed statements (at least 3 to start), choose your visibility setting, "
@@ -6456,11 +5882,11 @@ msgstr ""
 "wähle deine Sichtbarkeitsstufe und veröffentliche. Du kannst andere über "
 "einen Link einladen oder die Diskussion für alle offen lassen."
 
-#: app/templates/faq.html:361
+#: app/templates/faq.html:371
 msgid "What are seed statements?"
 msgstr "Was sind Seed-Aussagen?"
 
-#: app/templates/faq.html:362
+#: app/templates/faq.html:372
 msgid ""
 "Seed statements are the initial set of propositions participants vote on. "
 "They define the conversation space. Good seed statements are clear, singular"
@@ -6473,11 +5899,11 @@ msgstr ""
 "Thema. Teilnehmer können auch eigene Aussagen hinzufügen, sobald die "
 "Diskussion läuft."
 
-#: app/templates/faq.html:365
+#: app/templates/faq.html:375
 msgid "What is a programme?"
 msgstr "Was ist ein Programm?"
 
-#: app/templates/faq.html:366
+#: app/templates/faq.html:376
 msgid ""
 "A programme is a collection of related discussions organised into themes and"
 " phases. Programmes are designed for structured consultation over time — "
@@ -6491,11 +5917,11 @@ msgstr ""
 "Gemeinschaftsbeteiligung oder mediengeleistete Deliberation. Sie "
 "unterstützen mehrere Betreuer, Fortschrittsverfolgung und Datenexport."
 
-#: app/templates/faq.html:369
+#: app/templates/faq.html:379
 msgid "What visibility options are available?"
 msgstr "Welche Sichtbarkeitsoptionen sind verfügbar?"
 
-#: app/templates/faq.html:370
+#: app/templates/faq.html:380
 msgid ""
 "Public: anyone can find and join. Unlisted: joinable via link only, not "
 "listed in search. Invite-only: participants must be approved or invited. "
@@ -6505,11 +5931,11 @@ msgstr ""
 "möglich, nicht in der Suche gelistet. Nur auf Einladung: Teilnehmer müssen "
 "genehmigt oder eingeladen werden. Privat: sichtbar nur für Programmbetreuer."
 
-#: app/templates/faq.html:373
+#: app/templates/faq.html:383
 msgid "How many votes are needed before the analysis runs?"
 msgstr "Wie viele Abstimmungen sind erforderlich, bevor die Analyse läuft?"
 
-#: app/templates/faq.html:374
+#: app/templates/faq.html:384
 msgid ""
 "The consensus analysis needs a minimum number of participants to produce "
 "statistically meaningful clusters — typically 7–15 participants who have "
@@ -6522,15 +5948,15 @@ msgstr ""
 " Der genaue Schwellenwert hängt von der Anzahl der Aussagen in der "
 "Diskussion ab."
 
-#: app/templates/faq.html:380
+#: app/templates/faq.html:390
 msgid "How the Machine Learning Works"
 msgstr "Wie das Maschinenlernmodell funktioniert"
 
-#: app/templates/faq.html:384
+#: app/templates/faq.html:394
 msgid "How does Society Speaks analyse votes?"
 msgstr "Wie analysiert Society Speaks Abstimmungen?"
 
-#: app/templates/faq.html:385
+#: app/templates/faq.html:395
 msgid ""
 "We use dimensionality reduction (Principal Component Analysis) and "
 "agglomerative clustering to group participants by their voting patterns — "
@@ -6544,7 +5970,7 @@ msgstr ""
 "Überzeugungen. Dies offenbart natürliche Meinungscluster: Gruppen von "
 "Menschen, die dazu neigen, über eine Diskussion hinweg ähnlich abzustimmen."
 
-#: app/templates/faq.html:389
+#: app/templates/faq.html:399
 msgid ""
 "A consensus statement receives broad agreement across all opinion clusters —"
 " including groups that disagree on other questions. It shows where society "
@@ -6555,23 +5981,23 @@ msgstr ""
 "Sie zeigt, wo sich die Gesellschaft bereits einigt, selbst wenn Menschen "
 "glauben, sie sind uneins."
 
-#: app/templates/faq.html:393
+#: app/templates/faq.html:403
 msgid ""
 "A bridge idea resonates strongly across different opinion clusters that "
 "otherwise disagree. Bridge ideas represent rare common ground and are often "
-"the most actionable insights for policymakers, journalists, and community "
+"the most useful insights for policymakers, journalists, and community "
 "leaders."
 msgstr ""
-"Eine Brückenidee resoniert stark über verschiedene Meinungscluster hinweg, "
-"die sich ansonsten uneinig sind. Brückenideen stellen seltenen gemeinsamen "
-"Boden dar und sind oft die aufschlussreichsten Erkenntnisse für Politische "
-"Entscheidungsträger, Journalisten und Gemeinschaftsführer."
+"Eine Bridge Idea resoniert stark über verschiedene Meinungs-Cluster hinweg, "
+"die sich sonst widersprechen. Bridge Ideas repräsentieren seltenen "
+"gemeinsamen Boden und sind oft die wertvollsten Erkenntnisse für "
+"Policymaker, Journalisten und Gemeinschaftsführer."
 
-#: app/templates/faq.html:396
+#: app/templates/faq.html:406
 msgid "What is a divisive statement?"
 msgstr "Was ist eine spalterische Aussage?"
 
-#: app/templates/faq.html:397
+#: app/templates/faq.html:407
 msgid ""
 "A divisive statement produces a strong, clear split between opinion "
 "clusters. Divisive statements are not failures — they show where genuine "
@@ -6582,11 +6008,11 @@ msgstr ""
 " wo echte demokratische Deliberation erforderlich ist, anstatt einfach "
 "Stimmen zu zählen."
 
-#: app/templates/faq.html:400
+#: app/templates/faq.html:410
 msgid "Is the methodology peer reviewed?"
 msgstr "Ist die Methodik von Fachleuten überprüft?"
 
-#: app/templates/faq.html:401
+#: app/templates/faq.html:411
 msgid ""
 "The methodology is inspired by Pol.is, developed by the Computational "
 "Democracy Project, which has been used in government deliberations in Taiwan"
@@ -6599,11 +6025,80 @@ msgstr ""
 "mit einer eigenen nativen Implementierung auf. Unser Code ist Open Source "
 "und nachprüfbar."
 
-#: app/templates/faq.html:407
+#: app/templates/faq.html:417
+msgid "How we are funded"
+msgstr "Wie wir finanziert werden"
+
+#: app/templates/faq.html:422
+msgid ""
+"We are not ad-funded and we do not sell personal data. Society Speaks is "
+"sustained in three ways: optional donations from supporters, Personal Brief "
+"subscriptions (paid custom digests), and publisher partner subscriptions for"
+" live embeds and the Partner API. Together these fund servers, analysis, and"
+" development while keeping core civic participation free."
+msgstr ""
+"Wir werden nicht werbefinanziert und verkaufen keine persönlichen Daten. "
+"Society Speaks wird auf drei Wegen erhalten: freiwillige Spenden von "
+"Unterstützern, Personal-Brief-Abos (bezahlte Custom Digests) und Publisher-"
+"Partnerschaften für Live-Embeds und die Partner-API. Zusammen finanzieren "
+"diese Server, Analyse und Entwicklung, während wichtigste Bürgerbeteiligung "
+"kostenlos bleibt."
+
+#: app/templates/faq.html:425
+msgid "Why donate if the platform is already free?"
+msgstr "Warum spenden, wenn die Plattform schon kostenlos ist?"
+
+#: app/templates/faq.html:426
+msgid ""
+"Most people never need to pay. Donations are voluntary gifts from people who"
+" want independent civic infrastructure to exist without advertising. They "
+"help cover running costs and open-source development that subscriptions and "
+"publisher revenue do not fully cover — and they signal public support for "
+"ad-free deliberation."
+msgstr ""
+"Die meisten Menschen müssen nie bezahlen. Spenden sind freiwillige Gaben von"
+" Leuten, die wollen, dass unabhängige Bürgertechnik-Infrastruktur ohne "
+"Werbung existiert. Sie helfen, Betriebskosten und Open-Source-Entwicklung zu"
+" decken, die Abos und Publisher-Einnahmen nicht vollständig abdecken — und "
+"sie zeigen öffentliche Unterstützung für werbefrei Deliberation."
+
+#: app/templates/faq.html:430
+msgid ""
+"Publishers and media partners subscribe to run live voting embeds on their "
+"websites. Self-serve plans are £49/month (Starter — up to 100 live "
+"discussions per month) and £249/month (Professional — up to 500). A free "
+"tier lets you prototype with test discussions before going live. Enterprise "
+"pricing (from around £2,000/month) is available for national publishers — "
+"see the For Publishers page for full plan details."
+msgstr ""
+"Publisher und Medienpartner abonnieren, um Live-Voting-Embeds auf ihren "
+"Websites zu schalten. Self-Service-Pläne sind £49/Monat (Starter — bis zu "
+"100 Live-Diskussionen pro Monat) und £249/Monat (Professional — bis zu 500)."
+" Ein kostenlos Tarif lässt Sie mit Test-Diskussionen prototyping, bevor Sie "
+"go live. Enterprise-Preise (ab etwa £2.000/Monat) sind für nationale "
+"Publisher verfügbar — siehe die Seite Für Publisher für vollständige Plan-"
+"Details."
+
+#: app/templates/faq.html:433
+msgid "Where can I donate?"
+msgstr "Wo kann ich spenden?"
+
+#: app/templates/faq.html:434
+msgid ""
+"You can make a secure one-off donation from the Donate page (linked in the "
+"site footer and About page). Amounts start from £1. Donations are processed "
+"by Stripe and are separate from Personal Brief or publisher subscriptions."
+msgstr ""
+"Sie können eine sichere einmalige Spende von der Donate-Seite tätigen "
+"(verlinkt in der Website-Fußzeile und About-Seite). Beträge beginnen bei £1."
+" Spenden werden durch Stripe verarbeitet und sind getrennt von Personal-"
+"Brief- oder Publisher-Abos."
+
+#: app/templates/faq.html:440
 msgid "Personal Briefs (Premium)"
 msgstr "Personal Briefs (Premium)"
 
-#: app/templates/faq.html:412
+#: app/templates/faq.html:445
 msgid ""
 "A Personal Brief is a paid product that lets you create a custom daily "
 "digest from your own chosen sources — RSS feeds, Substacks, PDFs, "
@@ -6618,11 +6113,11 @@ msgstr ""
 "deinem Zeitplan. Das unterscheidet sich vom kostenlosen Daily Brief, der "
 "redaktionell von Society Speaks zusammengestellt wird."
 
-#: app/templates/faq.html:415
+#: app/templates/faq.html:448
 msgid "How much does a Personal Brief cost?"
 msgstr "Wie viel kostet ein Personal Brief?"
 
-#: app/templates/faq.html:416
+#: app/templates/faq.html:449
 msgid ""
 "Plans start from £4.99/month for a Personal plan. Professional plans "
 "(£25/month) and Team plans (£300/month) are also available, with additional "
@@ -6636,28 +6131,29 @@ msgstr ""
 "Versand und Zusammenarbeit im Team. Alle Pläne beinhalten eine 30-tägige "
 "kostenlose Testphase und erfordern keine Kreditkarte zum Start."
 
-#: app/templates/faq.html:419
+#: app/templates/faq.html:452
 msgid "How does my subscription help the platform?"
 msgstr "Wie hilft mein Abonnement der Plattform?"
 
-#: app/templates/faq.html:420
+#: app/templates/faq.html:453
 msgid ""
 "Personal Brief subscriptions directly fund the free civic features of "
 "Society Speaks — the Daily Brief, Daily Question, Big Questions Journey, "
-"discussions, and the News Transparency Dashboard. We are not ad-funded, so "
-"subscriber support is what keeps everything else free."
+"discussions, and the News Transparency Dashboard. Along with donations and "
+"publisher partner plans, subscriber revenue helps keep core participation "
+"free without advertising."
 msgstr ""
-"Personal Brief-Abonnements finanzieren direkt die kostenlosen Civic-"
-"Funktionen von Society Speaks — Daily Brief, Daily Question, Big Questions "
-"Journey, Diskussionen und das News Transparency Dashboard. Wir sind nicht "
-"werbegestützt, daher trägt die Unterstützung durch Abonnenten dazu bei, dass"
-" alles andere kostenlos bleibt."
+"Personal-Brief-Abos finanzieren direkt die kostenlosen "
+"Bürgerbeteiligungsfeatures von Society Speaks — den Daily Brief, die Daily "
+"Question, die Big Questions Journey, Diskussionen und das News Transparency "
+"Dashboard. Zusammen mit Spenden und Publisher-Partnerplänen hilft Abonnent-"
+"Einnahmen, wichtigste Bürgerbeteiligung ohne Werbung kostenlos zu halten."
 
-#: app/templates/faq.html:423
+#: app/templates/faq.html:456
 msgid "What sources can I use in a Personal Brief?"
 msgstr "Welche Quellen kann ich in einem Personal Brief nutzen?"
 
-#: app/templates/faq.html:424
+#: app/templates/faq.html:457
 msgid ""
 "You can add any RSS feed, Substack, uploaded PDF, or web page. The AI "
 "synthesises content from all your chosen sources and delivers a coherent "
@@ -6668,11 +6164,11 @@ msgstr ""
 " und liefert einen kohärenten Auszug. Team-Pläne ermöglichen auch "
 "Überprüfung und Bearbeitung vor dem Versand des Briefs."
 
-#: app/templates/faq.html:427
+#: app/templates/faq.html:460
 msgid "Can I cancel at any time?"
 msgstr "Kann ich jederzeit kündigen?"
 
-#: app/templates/faq.html:428
+#: app/templates/faq.html:461
 msgid ""
 "Yes. Cancel anytime from your account settings. There are no lock-in "
 "periods. If you cancel during a trial, you will not be charged."
@@ -6681,11 +6177,11 @@ msgstr ""
 " Bindungsfristen. Wenn du während einer Testphase kündigst, wird dir nichts "
 "berechnet."
 
-#: app/templates/faq.html:434
+#: app/templates/faq.html:467
 msgid "For organisations & partners"
 msgstr "Für Organisationen & Partner"
 
-#: app/templates/faq.html:439
+#: app/templates/faq.html:472
 msgid ""
 "Yes — as participants and as operators. Use our public programmes or deploy "
 "your own consultations on the same infrastructure. NGOs, governments, "
@@ -6696,11 +6192,11 @@ msgstr ""
 "Infrastruktur bereit. NGOs, Regierungen, Universitäten, Verlage und Forscher"
 " nutzen Society Speaks weltweit."
 
-#: app/templates/faq.html:442
+#: app/templates/faq.html:475
 msgid "What is the publisher embed?"
 msgstr "Was ist das Publisher Embed?"
 
-#: app/templates/faq.html:443
+#: app/templates/faq.html:476
 msgid ""
 "A lightweight iframe (and Partner API) that places structured voting on "
 "pages you choose. Readers vote Agree / Disagree / Unsure on statements you "
@@ -6711,13 +6207,31 @@ msgstr ""
 " Unsicher zu Aussagen ab, die Sie definieren; Sie erhalten Konsens-, "
 "Brücken- und Divergenz-Analysen."
 
-#: app/templates/faq.html:446
+#: app/templates/faq.html:479
+msgid "How much do publisher embeds cost?"
+msgstr "Wie viel kosten Publisher-Embeds?"
+
+#: app/templates/faq.html:480
+msgid ""
+"Live embeds require a paid partner subscription. Starter is £49/month (up to"
+" 100 live discussions per month); Professional is £249/month (up to 500). "
+"You can start free with test discussions and the full API before going live."
+" Enterprise pricing is available for large newsrooms — see the For "
+"Publishers page."
+msgstr ""
+"Live-Embeds erfordern ein bezahltes Partner-Abonnement. Starter kostet "
+"£49/Monat (bis zu 100 Live-Diskussionen pro Monat); Professional kostet "
+"£249/Monat (bis zu 500). Sie können kostenlos mit Test-Diskussionen und der "
+"vollständigen API beginnen, bevor Sie live gehen. Enterprise-Preise sind für"
+" große Nachrichtenredaktionen verfügbar – siehe die Seite „For Publishers\"."
+
+#: app/templates/faq.html:483
 msgid "Can I run a citizen consultation or deliberation programme?"
 msgstr ""
 "Kann ich ein Bürgerbeteiligungsprogramm oder ein Deliberations-Programm "
 "durchführen?"
 
-#: app/templates/faq.html:447
+#: app/templates/faq.html:484
 msgid ""
 "Yes. Programmes support multi-stage deliberation: themes, phases, cohorts, "
 "stewards, visibility controls, and exports. Start from the Help Centre civic"
@@ -6728,11 +6242,11 @@ msgstr ""
 "Help Centre-Leitfaden zur Bürgerbeteiligungsinfrastruktur oder kontaktieren "
 "Sie uns für umfangreiche Implementierungen."
 
-#: app/templates/faq.html:450
+#: app/templates/faq.html:487
 msgid "What data can organisations access?"
 msgstr "Auf welche Daten können Organisationen zugreifen?"
 
-#: app/templates/faq.html:451
+#: app/templates/faq.html:488
 msgid ""
 "Vote distributions, participant counts, clustering results, and CSV exports "
 "of anonymised voting data. Individual voters are not publicly named. See our"
@@ -6743,11 +6257,11 @@ msgstr ""
 "öffentlich genannt. Weitere Informationen finden Sie in unserer "
 "Datenschutzrichtlinie für Aufbewahrung und Rechte."
 
-#: app/templates/faq.html:454
+#: app/templates/faq.html:491
 msgid "Where can I get implementation help?"
 msgstr "Wo kann ich Implementierungshilfe erhalten?"
 
-#: app/templates/faq.html:455
+#: app/templates/faq.html:492
 msgid ""
 "Visit the Help Centre civic infrastructure guide, Programmes documentation, "
 "Partner hub API reference, or email info@societyspeaks.io for enterprise-"
@@ -6757,15 +6271,15 @@ msgstr ""
 "die Programmes-Dokumentation, die Partner Hub API-Referenz oder senden Sie "
 "eine E-Mail an info@societyspeaks.io für Enterprise-Support."
 
-#: app/templates/faq.html:461
+#: app/templates/faq.html:498
 msgid "Privacy & Data"
 msgstr "Datenschutz & Daten"
 
-#: app/templates/faq.html:465
+#: app/templates/faq.html:502
 msgid "Is my voting anonymous?"
 msgstr "Sind meine Abstimmungen anonym?"
 
-#: app/templates/faq.html:466
+#: app/templates/faq.html:503
 msgid ""
 "Signed-in users have their votes linked to their account so they can track "
 "their own progress. Votes are not publicly attributed to individual users by"
@@ -6780,26 +6294,27 @@ msgstr ""
 " identifiziert. Die Website verwendet keine Werbung oder verkauft "
 "persönliche Daten."
 
-#: app/templates/faq.html:469
+#: app/templates/faq.html:506
 msgid "Do you use advertising?"
 msgstr "Nutzt ihr Werbung?"
 
-#: app/templates/faq.html:470
+#: app/templates/faq.html:507
 msgid ""
 "No. Society Speaks is not ad-funded. We do not show adverts, use "
-"retargeting, or sell your data to third parties. Revenue comes from Personal"
-" Brief subscriptions and organisation partnerships."
+"retargeting, or sell your data to third parties. Revenue comes from optional"
+" donations, Personal Brief subscriptions, and publisher partner "
+"subscriptions for embeds and the Partner API."
 msgstr ""
-"Nein. Society Speaks ist nicht werbegestützt. Wir zeigen keine Anzeigen, "
-"verwenden kein Retargeting und verkaufen deine Daten nicht an Dritte. Die "
-"Einnahmen stammen aus Personal Brief-Abonnements und Partnerschaften mit "
-"Organisationen."
+"Nein. Society Speaks ist nicht werbefinanziert. Wir zeigen keine Anzeigen, "
+"nutzen kein Retargeting und verkaufen Ihre Daten nicht an Dritte. Die "
+"Einnahmen stammen aus optionalen Spenden, Personal Brief-Abonnements und "
+"Publisher-Partner-Abonnements für Embeds und die Partner API."
 
-#: app/templates/faq.html:473
+#: app/templates/faq.html:510
 msgid "Is the platform open source?"
 msgstr "Ist die Plattform Open Source?"
 
-#: app/templates/faq.html:474
+#: app/templates/faq.html:511
 msgid ""
 "Yes. The Society Speaks codebase is open source and available on GitHub. We "
 "believe civic infrastructure should be transparent and auditable by anyone."
@@ -6808,11 +6323,11 @@ msgstr ""
 "Wir sind der Ansicht, dass Civic-Infrastruktur transparent und von jedem "
 "nachprüfbar sein sollte."
 
-#: app/templates/faq.html:477
+#: app/templates/faq.html:514
 msgid "How do I delete my account?"
 msgstr "Wie lösche ich mein Konto?"
 
-#: app/templates/faq.html:478
+#: app/templates/faq.html:515
 msgid ""
 "You can request account deletion from your account settings. This removes "
 "your personal data from our systems in accordance with GDPR and UK data "
@@ -6822,21 +6337,21 @@ msgstr ""
 " Dies entfernt deine persönlichen Daten aus unseren Systemen in "
 "Übereinstimmung mit der DSGVO und dem UK-Datenschutzgesetz."
 
-#: app/templates/faq.html:485
+#: app/templates/faq.html:522
 msgid "Still have a question?"
 msgstr "Hast du noch eine Frage?"
 
-#: app/templates/faq.html:486
+#: app/templates/faq.html:523
 msgid "We are happy to help. Send us a message and we will get back to you."
 msgstr ""
 "Wir helfen gerne weiter. Schreib uns eine Nachricht und wir melden uns "
 "zurück."
 
-#: app/templates/faq.html:493 app/templates/platform.html:1087
+#: app/templates/faq.html:530 app/templates/platform.html:1087
 msgid "Email us"
 msgstr "Schreib uns"
 
-#: app/templates/faq.html:497
+#: app/templates/faq.html:534
 msgid "Visit the Help Centre"
 msgstr "Besuche das Help Centre"
 
@@ -7211,6 +6726,14 @@ msgstr "Globale Ausgabe"
 #, python-format
 msgid "%(country)s — Start the journey"
 msgstr "%(country)s — Starten Sie die Reise"
+
+#: app/templates/components/discussion_card.html:101
+#: app/templates/daily/question.html:48 app/templates/daily/results.html:44
+#: app/templates/discussions/view_discussion.html:507
+#: app/templates/index.html:275 app/templates/index.html:306
+#: app/templates/programmes/list.html:78
+msgid "Global"
+msgstr "Global"
 
 #: app/templates/index.html:287
 msgid "Not the right edition? Choose yours below."
@@ -8011,6 +7534,11 @@ msgstr "Benutzermenü öffnen"
 msgid "Your Profile"
 msgstr "Ihr Profil"
 
+#: app/templates/layout.html:831 app/templates/layout.html:1109
+#: app/templates/profiles/create_individual_profile.html:58
+msgid "Create Profile"
+msgstr "Profil Erstellen"
+
 #: app/templates/admin/_admin_base.html:17
 #: app/templates/admin/_admin_base.html:93
 #: app/templates/auth/discussions.html:10
@@ -8131,10 +7659,6 @@ msgstr "Prüfen Sie Ihren Posteingang auf den Bestätigungslink."
 msgid "Resend verification email"
 msgstr "Bestätigungs-E-Mail erneut senden"
 
-#: app/templates/help/help.html:49 app/templates/layout.html:1231
-msgid "About Society Speaks"
-msgstr "Über Society Speaks"
-
 #: app/templates/layout.html:1234
 msgid ""
 "A sense-making system that turns disagreement into understanding. We reveal "
@@ -8168,6 +7692,10 @@ msgstr "Verbinden"
 #: app/templates/layout.html:1351
 msgid "X (formerly Twitter)"
 msgstr "X (ehemals Twitter)"
+
+#: app/templates/layout.html:1364
+msgid "Bluesky"
+msgstr "Bluesky"
 
 #: app/templates/layout.html:1377
 msgid "GitHub"
@@ -10950,6 +10478,23 @@ msgstr "Aktivität anzeigen"
 msgid "Voted"
 msgstr "Abgestimmt"
 
+#: app/templates/auth/dashboard.html:341
+#: app/templates/auth/participation.html:39
+#: app/templates/discussions/create_response.html:22
+#: app/templates/discussions/embed_discussion.html:1087
+#: app/templates/discussions/view_statement.html:3
+#: app/templates/discussions/view_statement.html:44
+#: app/templates/partner/portal/discussion_detail.html:289
+msgid "Statement"
+msgstr "Aussage"
+
+#: app/templates/auth/dashboard.html:342
+#: app/templates/auth/participation.html:40
+#: app/templates/discussions/view_response.html:1
+#: app/templates/discussions/view_response.html:19
+msgid "Response"
+msgstr "Antwort"
+
 #: app/templates/auth/dashboard.html:349
 msgid "Vote on statements or add an argument to build your activity history."
 msgstr ""
@@ -11052,6 +10597,11 @@ msgstr "Täglichen Brief abonnieren"
 #: app/templates/auth/dashboard.html:459
 msgid "A civic question in your inbox — vote in one click"
 msgstr "Eine Bürgerfrage in Ihrem Posteingang — mit einem Klick abstimmen"
+
+#: app/templates/auth/dashboard.html:498
+#: app/templates/settings/settings.html:194
+msgid "Weekly digest"
+msgstr "Wöchentlicher Digest"
 
 #: app/templates/auth/dashboard.html:500
 #: app/templates/daily/preferences.html:61
@@ -11251,6 +10801,21 @@ msgstr "Suche löschen"
 #: app/templates/auth/register.html:54 app/templates/auth/register.html:56
 msgid "Login"
 msgstr "Anmelden"
+
+#: app/templates/auth/login.html:30
+#: app/templates/auth/magic_link_request.html:30
+#: app/templates/auth/password_reset_request.html:15
+#: app/templates/auth/register.html:32
+#: app/templates/briefing/recipients.html:33
+#: app/templates/briefing/recipients.html:102
+#: app/templates/components/share_button.html:67
+#: app/templates/discussions/view_discussion.html:436
+#: app/templates/partner/portal/accept_invite.html:15
+#: app/templates/partner/portal/forgot_password.html:17
+#: app/templates/partner/portal/login.html:20
+#: app/templates/partner/rules.html:241
+msgid "Email"
+msgstr "E-Mail"
 
 #: app/templates/auth/login.html:33 app/templates/auth/register.html:35
 #: app/templates/partner/components/_password_field.html:8
@@ -11471,6 +11036,10 @@ msgstr "Wenn du Aussagen oder Argumente postest, werden sie hier angezeigt."
 #: app/templates/emails/password_reset.html:27
 msgid "Reset Password"
 msgstr "Passwort zurücksetzen"
+
+#: app/templates/auth/password_reset.html:14
+msgid "New Password"
+msgstr "Neues Passwort"
 
 #: app/templates/auth/password_reset.html:15
 msgid "At least 6 characters"
@@ -13540,6 +13109,10 @@ msgstr "Hauptherausforderung"
 msgid "Market Impact"
 msgstr "Marktauswirkung"
 
+#: app/templates/briefing/_paid_brief_body.html:159
+msgid "Policy Context"
+msgstr "Politischer Kontext"
+
 #: app/templates/briefing/_paid_brief_body.html:187
 msgid "Source:"
 msgstr "Quelle:"
@@ -13631,6 +13204,13 @@ msgstr "RSS-Feed-URL *"
 #: app/templates/briefing/add_rss_source.html:52
 msgid "Enter the full URL of the RSS feed"
 msgstr "Geben Sie die vollständige URL des RSS-Feeds ein"
+
+#: app/templates/briefing/add_rss_source.html:56
+#: app/templates/briefing/create.html:62
+#: app/templates/briefing/sources.html:40
+#: app/templates/briefing/sources.html:91 app/templates/sources/index.html:89
+msgid "Type"
+msgstr "Typ"
 
 #: app/templates/briefing/add_rss_source.html:59
 #: app/templates/briefing/create.html:65
@@ -14043,6 +13623,16 @@ msgstr "Name des Briefings *"
 msgid "e.g., Daily Tech Brief"
 msgstr "z. B. Daily Tech Brief"
 
+#: app/templates/briefing/create.html:54 app/templates/briefing/edit.html:32
+#: app/templates/briefing/organization_settings.html:66
+#: app/templates/discussions/create_discussion.html:214
+#: app/templates/partner/api_docs.html:637
+#: app/templates/partner/api_docs.html:1048
+#: app/templates/partner/portal/discussions.html:66
+#: app/templates/trending/topic_detail.html:138
+msgid "Description"
+msgstr "Beschreibung"
+
 #: app/templates/briefing/create.html:57
 msgid "Optional description of what this briefing covers"
 msgstr "Optionale Beschreibung der Inhalte dieses Briefings"
@@ -14158,6 +13748,13 @@ msgstr "10 Geschichten (umfassend)"
 #: app/templates/briefing/create.html:183
 msgid "15 stories (in-depth)"
 msgstr "15 Geschichten (detailliert)"
+
+#: app/templates/briefing/create.html:190
+#: app/templates/briefing/detail.html:100 app/templates/briefing/edit.html:96
+#: app/templates/briefing/use_template.html:125
+#: app/templates/programmes/_form.html:63
+msgid "Visibility"
+msgstr "Sichtbarkeit"
 
 #: app/templates/briefing/create.html:193
 msgid "Private (only you)"
@@ -14787,6 +14384,10 @@ msgstr "Visuelles Branding"
 #: app/templates/briefing/edit.html:218
 msgid "Customise the look and feel of your briefs."
 msgstr "Passen Sie das Aussehen und Verhalten Ihrer Briefe an."
+
+#: app/templates/briefing/edit.html:223
+msgid "Logo URL"
+msgstr "Logo-URL"
 
 #: app/templates/briefing/edit.html:228
 msgid "URL to your logo image (PNG, JPG, SVG)"
@@ -15556,6 +15157,11 @@ msgstr "Politikforscher, Analysten, bürgerbewusste Leser."
 #: app/templates/briefing/landing.html:713
 msgid "Reuters, Politico, Guardian, Foreign Affairs…"
 msgstr "Reuters, Politico, Guardian, Foreign Affairs…"
+
+#: app/templates/briefing/landing.html:717
+#: app/templates/briefing/landing.html:1039
+msgid "Climate & Energy"
+msgstr "Klima & Energie"
 
 #: app/templates/briefing/landing.html:718
 msgid ""
@@ -16875,6 +16481,10 @@ msgstr "Organisationsname"
 msgid "Brief description of your organization"
 msgstr "Kurze Beschreibung Ihrer Organisation"
 
+#: app/templates/briefing/organization_settings.html:72
+msgid "Website"
+msgstr "Website"
+
 #: app/templates/briefing/organization_settings.html:88
 msgid "Team Members"
 msgstr "Teammitglieder"
@@ -16892,6 +16502,12 @@ msgstr "%(current)s / %(max)s Plätze"
 #: app/templates/briefing/organization_settings.html:111
 msgid "Invitation pending"
 msgstr "Einladung ausstehend"
+
+#: app/templates/briefing/organization_settings.html:118
+#: app/templates/briefing/use_template.html:55
+#: app/templates/programmes/_form.html:93
+msgid "Owner"
+msgstr "Inhaber"
 
 #: app/templates/briefing/organization_settings.html:126
 #: app/templates/briefing/organization_settings.html:146
@@ -17781,6 +17397,10 @@ msgstr "Beschreibung (optional)"
 #: app/templates/briefing/use_template.html:50
 msgid "Add a description for your briefing"
 msgstr "Fügen Sie eine Beschreibung für Ihr Briefing hinzu"
+
+#: app/templates/briefing/use_template.html:63
+msgid "Organization"
+msgstr "Organisation"
 
 #: app/templates/briefing/use_template.html:90
 #, python-format
@@ -19491,6 +19111,10 @@ msgstr ""
 "Hilf uns, eine respektvolle Gemeinschaft zu bewahren. Warum meldest du diese"
 " Antwort?"
 
+#: app/templates/daily/results.html:800
+msgid "Spam"
+msgstr "Spam"
+
 #: app/templates/daily/results.html:801
 msgid "Unwanted commercial content or repetitive posts"
 msgstr "Unerwünschte kommerzielle Inhalte oder wiederholte Beiträge"
@@ -21037,6 +20661,12 @@ msgstr "{k} Meinungsgruppen über {n} Teilnehmer"
 msgid "You"
 msgstr "Du"
 
+#: app/templates/discussions/consensus_results.html:646
+#: app/templates/discussions/view_response.html:166
+#: app/templates/discussions/view_statement.html:108
+msgid "Position"
+msgstr "Position"
+
 #: app/templates/discussions/consensus_results.html:775
 msgid "Error loading visualization"
 msgstr "Fehler beim Laden der Visualisierung"
@@ -21156,6 +20786,11 @@ msgstr ""
 msgid "Add Discussion Details"
 msgstr "Diskussionsdetails hinzufügen"
 
+#: app/templates/discussions/create_discussion.html:202
+#: app/templates/partner/portal/discussions.html:193
+msgid "Title"
+msgstr "Titel"
+
 #: app/templates/discussions/create_discussion.html:206
 #: app/templates/discussions/edit_discussion.html:46
 msgid "Enter a descriptive title for your discussion"
@@ -21178,6 +20813,12 @@ msgstr "Wählen Sie die geografische Reichweite Ihrer Diskussion"
 #: app/templates/discussions/edit_discussion.html:102
 msgid "Select a city"
 msgstr "Wählen Sie eine Stadt"
+
+#: app/templates/discussions/create_discussion.html:286
+#: app/templates/discussions/edit_discussion.html:113
+#: app/templates/discussions/search_discussions.html:99
+msgid "Programme"
+msgstr "Programm"
 
 #: app/templates/discussions/create_discussion.html:286
 #: app/templates/discussions/edit_discussion.html:113
@@ -21418,6 +21059,11 @@ msgstr "Ihre Antwort hier eingeben... (50–2000 Zeichen)"
 #: app/templates/discussions/create_response.html:110
 msgid "Min 50 characters, Max 2000"
 msgstr "Mind. 50 Zeichen, Max. 2000"
+
+#: app/templates/discussions/create_response.html:129
+#: app/templates/discussions/view_statement.html:150
+msgid "Post Response"
+msgstr "Antwort veröffentlichen"
 
 #: app/templates/discussions/create_statement.html:1
 #: app/templates/discussions/create_statement.html:19
@@ -21786,6 +21432,11 @@ msgstr ""
 msgid "Visit Society Speaks"
 msgstr "Society Speaks besuchen"
 
+#: app/templates/discussions/flag_statement.html:1
+#: app/templates/discussions/flag_statement.html:6
+msgid "Flag Statement"
+msgstr "Aussage melden"
+
 #: app/templates/discussions/flag_statement.html:7
 msgid "Report problematic content for moderator review"
 msgstr "Problematische Inhalte zur Überprüfung durch Moderatoren melden"
@@ -22126,9 +21777,20 @@ msgstr "Nehmen Sie an Gesprächen teil, die Ihnen wichtig sind"
 msgid "Search discussions…"
 msgstr "Diskussionen suchen…"
 
+#: app/templates/discussions/search_discussions.html:71
+#: app/templates/discussions/search_statements.html:24
+#: app/templates/partner/portal/discussions.html:72
+msgid "Topic"
+msgstr "Thema"
+
 #: app/templates/discussions/search_discussions.html:73
 msgid "All Topics"
 msgstr "Alle Themen"
+
+#: app/templates/discussions/search_discussions.html:81
+#: app/templates/sources/index.html:114
+msgid "Country"
+msgstr "Land"
 
 #: app/templates/discussions/search_discussions.html:83
 #: app/templates/sources/index.html:120
@@ -22344,6 +22006,10 @@ msgstr "bevor sie zur Abstimmung erscheinen."
 msgid "Add update"
 msgstr "Update hinzufügen"
 
+#: app/templates/discussions/view_discussion.html:630
+msgid "Outcome"
+msgstr "Ergebnis"
+
 #: app/templates/discussions/view_discussion.html:631
 msgid "Next Step"
 msgstr "Nächster Schritt"
@@ -22448,6 +22114,11 @@ msgstr "Thema abgeschlossen!"
 #, python-format
 msgid "You voted on every statement in this theme (%(total)d)."
 msgstr "Sie haben zu jeder Aussage in diesem Thema abgestimmt (%(total)d)."
+
+#: app/templates/discussions/view_native.html:172
+#: app/templates/help/civic_infrastructure.html:48
+msgid "Analysis"
+msgstr "Analyse"
 
 #: app/templates/discussions/view_native.html:185
 #: app/templates/discussions/view_native.html:191
@@ -23734,6 +23405,10 @@ msgstr "Falls die Schaltfläche nicht funktioniert, kopiere diesen Link:"
 #: app/templates/emails/partner_password_reset.html:3
 msgid "Reset Your Partner Portal Password - Society Speaks"
 msgstr "Passwort zurücksetzen für Partner Portal — Society Speaks"
+
+#: app/templates/emails/partner_password_reset.html:5
+msgid "Reset your Society Speaks Partner Portal password"
+msgstr "Setze dein Society Speaks Partner Portal-Passwort zurück"
 
 #: app/templates/emails/partner_password_reset.html:7
 msgid "Partner Portal Password Reset"
@@ -25944,8 +25619,8 @@ msgid "✓ Evidence linking (citations, files)"
 msgstr "✓ Evidenzverknüpfung (Zitate, Dateien)"
 
 #: app/templates/help/creating_discussions.html:73
-msgid "✓ Consensus visualization"
-msgstr "✓ Konsensvisualisierung"
+msgid "✓ Consensus visualisation"
+msgstr "✓ Consensus-Visualisierung"
 
 #: app/templates/help/creating_discussions.html:74
 msgid "✓ Optional AI features"
@@ -25973,7 +25648,7 @@ msgid "✓ Simple agree/disagree/pass"
 msgstr "✓ Einfaches Zustimmen/Ablehnen/Überspringen"
 
 #: app/templates/help/creating_discussions.html:94
-msgid "✓ Instant visualization"
+msgid "✓ Instant visualisation"
 msgstr "✓ Sofortige Visualisierung"
 
 #: app/templates/help/creating_discussions.html:95
@@ -26112,7 +25787,7 @@ msgid "Key features of Pol.is:"
 msgstr "Hauptfunktionen von Pol.is:"
 
 #: app/templates/help/creating_discussions.html:199
-msgid "Real-time visualization of opinions"
+msgid "Real-time visualisation of opinions"
 msgstr "Echtzeit-Visualisierung von Meinungen"
 
 #: app/templates/help/creating_discussions.html:200
@@ -26532,22 +26207,20 @@ msgstr "Diskussionen verwalten — Society Speaks Hilfe"
 
 #: app/templates/help/managing_discussions.html:5
 msgid ""
-"Learn how to monitor and maintain engaging discussions on Society Speaks. "
-"Track participation, promote engagement, and understand consensus "
-"visualizations."
+"How to monitor and run discussions on Society Speaks. Track participation, "
+"moderate statements, and read the consensus visualisations."
 msgstr ""
-"Erfahre, wie du Diskussionen auf Society Speaks überwachst und pflegst. "
-"Verfolge die Teilnahme, förderst das Engagement und verstehst "
-"Konsensvisualisierungen."
+"Wie Sie Diskussionen auf Society Speaks überwachen und durchführen. "
+"Verfolgen Sie die Beteiligung, moderieren Sie Aussagen und lesen Sie die "
+"Consensus-Visualisierungen."
 
 #: app/templates/help/managing_discussions.html:13
 msgid "Managing Discussions on Society Speaks"
 msgstr "Diskussionen auf Society Speaks verwalten"
 
 #: app/templates/help/managing_discussions.html:14
-#: app/templates/help/managing_discussions.html:41
-msgid "Learn how to monitor and maintain engaging discussions"
-msgstr "Erfahre, wie du Diskussionen überwachst und pflegst"
+msgid "How to monitor and run your discussions"
+msgstr "So überwachen und führen Sie Ihre Diskussionen"
 
 #: app/templates/help/managing_discussions.html:18
 msgid "Monitor Participation"
@@ -26555,11 +26228,11 @@ msgstr "Teilnahme überwachen"
 
 #: app/templates/help/managing_discussions.html:19
 msgid ""
-"Track participant count, engagement levels, and review new comments "
-"regularly."
+"Track participant numbers, check new statements, and note which opinion "
+"groups are forming."
 msgstr ""
-"Verfolge die Anzahl der Teilnehmenden, Engagement-Level und überprüfe "
-"regelmäßig neue Kommentare."
+"Verfolgen Sie die Teilnehmerzahlen, überprüfen Sie neue Aussagen und "
+"beobachten Sie, welche Meinungsgruppen sich bilden."
 
 #: app/templates/help/managing_discussions.html:23
 msgid "Promote Engagement"
@@ -26567,11 +26240,11 @@ msgstr "Engagement fördern"
 
 #: app/templates/help/managing_discussions.html:24
 msgid ""
-"Share on relevant platforms, engage with participants, and add new seed "
-"comments."
+"Share on relevant platforms, respond to participants, and add new seed "
+"statements."
 msgstr ""
-"Teile auf relevanten Plattformen, interagiere mit Teilnehmenden und füge "
-"neue Seed-Kommentare hinzu."
+"Teilen Sie auf relevanten Plattformen, reagieren Sie auf Teilnehmer und "
+"fügen Sie neue Seed-Aussagen hinzu."
 
 #: app/templates/help/managing_discussions.html:28
 msgid "Understand Results"
@@ -26579,27 +26252,31 @@ msgstr "Ergebnisse verstehen"
 
 #: app/templates/help/managing_discussions.html:29
 msgid ""
-"Interpret opinion groups, consensus statements, and visualizations to derive"
-" insights."
+"Read opinion groups, consensus statements, and visualisations to understand "
+"your results."
 msgstr ""
-"Interpretiere Meinungsgruppen, Konsensaussagen und Visualisierungen, um "
-"Erkenntnisse zu gewinnen."
+"Lesen Sie Meinungsgruppen, Consensus-Aussagen und Visualisierungen, um Ihre "
+"Ergebnisse zu verstehen."
+
+#: app/templates/help/managing_discussions.html:41
+msgid "How to get the most from your discussions"
+msgstr "So holen Sie das Beste aus Ihren Diskussionen"
 
 #: app/templates/help/managing_discussions.html:48
 msgid "Monitoring Participation"
 msgstr "Teilnahme überwachen"
 
 #: app/templates/help/managing_discussions.html:51
-msgid "Keep track of your discussion's health and engagement:"
-msgstr "Behalte die Gesundheit und das Engagement deiner Diskussion im Blick:"
+msgid "Keep an eye on your discussion as it runs:"
+msgstr "Behalten Sie Ihre Diskussion während des Ablaufs im Auge:"
 
 #: app/templates/help/managing_discussions.html:53
-msgid "Monitor participant count and engagement levels"
-msgstr "Überwache die Teilnehmerzahl und Engagement-Level"
+msgid "Check participant numbers and vote counts"
+msgstr "Überprüfen Sie Teilnehmerzahlen und Abstimmungsergebnisse"
 
 #: app/templates/help/managing_discussions.html:54
-msgid "Review new comments regularly"
-msgstr "Überprüfe regelmäßig neue Kommentare"
+msgid "Review new statements regularly"
+msgstr "Überprüfen Sie regelmäßig neue Aussagen"
 
 #: app/templates/help/managing_discussions.html:55
 msgid "Observe opinion groups forming"
@@ -26614,20 +26291,20 @@ msgid "Promoting Engagement"
 msgstr "Engagement fördern"
 
 #: app/templates/help/managing_discussions.html:66
-msgid "Tips for Maintaining Active Discussions:"
-msgstr "Tipps zur Aufrechterhaltung aktiver Diskussionen:"
+msgid "Tips for keeping discussions active:"
+msgstr "Tipps zum Halten von aktiven Diskussionen:"
 
 #: app/templates/help/managing_discussions.html:68
 msgid "Share your discussion on relevant platforms"
 msgstr "Teile deine Diskussion auf relevanten Plattformen"
 
 #: app/templates/help/managing_discussions.html:69
-msgid "Engage with participants' comments"
-msgstr "Interagiere mit den Kommentaren der Teilnehmenden"
+msgid "Respond to participants' statements"
+msgstr "Reagieren Sie auf Aussagen der Teilnehmer"
 
 #: app/templates/help/managing_discussions.html:70
-msgid "Add new seed comments to explore emerging themes"
-msgstr "Füge neue Seed-Kommentare hinzu, um aufkommende Themen zu erkunden"
+msgid "Add new seed statements to explore emerging themes"
+msgstr "Fügen Sie neue Seed-Aussagen hinzu, um aufkommende Themen zu erkunden"
 
 #: app/templates/help/managing_discussions.html:71
 msgid "Keep the conversation focused and constructive"
@@ -26638,16 +26315,16 @@ msgid "Understanding Results"
 msgstr "Ergebnisse verstehen"
 
 #: app/templates/help/managing_discussions.html:81
-msgid "Interpreting Pol.is Visualizations:"
-msgstr "Pol.is-Visualisierungen interpretieren:"
+msgid "Reading the Pol.is visualisations:"
+msgstr "So lesen Sie die Pol.is-Visualisierungen:"
 
 #: app/templates/help/managing_discussions.html:85
 msgid "Groups are formed automatically based on voting patterns"
 msgstr "Gruppen werden automatisch basierend auf Abstimmungsmustern gebildet"
 
 #: app/templates/help/managing_discussions.html:86
-msgid "Each color represents a distinct opinion group"
-msgstr "Jede Farbe repräsentiert eine unterschiedliche Meinungsgruppe"
+msgid "Each colour represents a distinct opinion group"
+msgstr "Jede Farbe stellt eine unterschiedliche Meinungsgruppe dar"
 
 #: app/templates/help/managing_discussions.html:87
 msgid "Size of groups indicates number of participants"
@@ -26686,8 +26363,8 @@ msgid "Number of votes cast"
 msgstr "Anzahl der abgegebenen Stimmen"
 
 #: app/templates/help/managing_discussions.html:106
-msgid "Number of comments submitted"
-msgstr "Anzahl der eingereichten Kommentare"
+msgid "Number of statements submitted"
+msgstr "Anzahl der eingereichten Aussagen"
 
 #: app/templates/help/managing_discussions.html:107
 msgid "Participation rates over time"
@@ -26698,36 +26375,36 @@ msgid "Moderation Best Practices"
 msgstr "Best Practices für Moderation"
 
 #: app/templates/help/managing_discussions.html:119
-msgid "Key Moderation Tasks:"
-msgstr "Wichtigste Moderationsaufgaben:"
+msgid "Key moderation tasks:"
+msgstr "Wichtige Moderationsaufgaben:"
 
 #: app/templates/help/managing_discussions.html:121
-msgid "Regularly review and moderate new comments"
-msgstr "Überprüfen und moderieren Sie neue Kommentare regelmäßig"
+msgid "Regularly review and moderate new statements"
+msgstr "Überprüfen und moderieren Sie regelmäßig neue Aussagen"
 
 #: app/templates/help/managing_discussions.html:122
-msgid "Maintain a respectful and constructive environment"
-msgstr "Wahren Sie eine respektvolle und konstruktive Umgebung"
+msgid "Keep the space respectful and on-topic"
+msgstr "Halten Sie den Raum respektvoll und themenbezogen"
 
 #: app/templates/help/managing_discussions.html:123
-msgid "Remove inappropriate or off-topic comments"
-msgstr "Entfernen Sie unangemessene oder nicht zum Thema gehörige Kommentare"
+msgid "Remove inappropriate or off-topic statements"
+msgstr "Entfernen Sie unangemessene oder themenfremde Aussagen"
 
 #: app/templates/help/managing_discussions.html:124
-msgid "Encourage balanced participation across groups"
-msgstr "Fördern Sie ausgewogene Teilnahme über alle Gruppen hinweg"
+msgid "Encourage participation from different perspectives"
+msgstr "Fördern Sie die Beteiligung aus verschiedenen Perspektiven"
 
 #: app/templates/help/managing_discussions.html:129
-msgid "Setting Ground Rules:"
-msgstr "Grundregeln festlegen:"
+msgid "Setting ground rules:"
+msgstr "Festlegung von Grundregeln:"
 
 #: app/templates/help/managing_discussions.html:131
 msgid "Clear guidelines for participation"
 msgstr "Klare Richtlinien für die Teilnahme"
 
 #: app/templates/help/managing_discussions.html:132
-msgid "Expectations for comment quality"
-msgstr "Erwartungen an die Qualität von Kommentaren"
+msgid "Expectations for statement quality"
+msgstr "Erwartungen an die Aussagequalität"
 
 #: app/templates/help/managing_discussions.html:133
 msgid "Consequences for rule violations"
@@ -26750,24 +26427,21 @@ msgid "Complete Pol.is Documentation →"
 msgstr "Vollständige Pol.is-Dokumentation →"
 
 #: app/templates/help/managing_discussions.html:149
-msgid "Guide to Seed Comments →"
-msgstr "Leitfaden zu Seed Comments →"
+msgid "Guide to Seed Statements →"
+msgstr "Leitfaden zu Seed-Aussagen →"
 
 #: app/templates/help/native_system.html:5
-msgid ""
-"Native Debate System - Society Speaks | Advanced Consensus-Building Features"
-msgstr ""
-"Native Debate System - Society Speaks | Advanced Consensus-Building Features"
+msgid "Native Debate System — Society Speaks Help"
+msgstr "Natives Debattensystem — Society Speaks Hilfe"
 
 #: app/templates/help/native_system.html:6
 msgid ""
-"Learn about Society Speaks' advanced native debate system with real-time "
-"voting, threaded responses, evidence linking, and interactive consensus "
-"visualization."
+"How Society Speaks' native debate system works: real-time voting, threaded "
+"responses, evidence linking, and interactive consensus visualisation."
 msgstr ""
-"Erfahren Sie mehr über das fortschrittliche Native Debate System von Society"
-" Speaks mit Echtzeit-Abstimmungen, verschachtelten Antworten, Verknüpfung "
-"von Belegen und interaktiver Konsensvisualisierung."
+"So funktioniert das native Debattensystem von Society Speaks: Echtzeit-"
+"Abstimmung, verschachtelte Antworten, Evidence-Verlinkung und interaktive "
+"Consensus-Visualisierung."
 
 #: app/templates/help/native_system.html:14
 #: app/templates/help/native_system.html:38
@@ -26796,20 +26470,18 @@ msgstr "Was ist das Native Debate System?"
 
 #: app/templates/help/native_system.html:52
 msgid ""
-"Our Native Debate System is a next-generation deliberation platform built "
-"directly into Society Speaks. It combines the proven principles of pol.is "
-"with powerful new features like threaded arguments, evidence linking, and "
-"optional AI-powered insights."
+"Our Native Debate System is built directly into Society Speaks. It uses the "
+"same principles as Pol.is, with added support for threaded responses, "
+"evidence linking, and optional AI-powered analysis."
 msgstr ""
-"Unser Native Debate System ist eine Deliberationsplattform der nächsten "
-"Generation, die direkt in Society Speaks integriert ist. Es verbindet die "
-"bewährten Prinzipien von Pol.is mit leistungsstarken neuen Funktionen wie "
-"verschachtelten Argumenten, Belegverknüpfung und optionalen KI-gestützten "
-"Erkenntnissen."
+"Unser natives Debattensystem ist direkt in Society Speaks integriert. Es "
+"verwendet die gleichen Prinzipien wie Pol.is, mit zusätzlicher Unterstützung"
+" für verschachtelte Antworten, Evidence-Verlinkung und optionale KI-"
+"gestützte Analyse."
 
 #: app/templates/help/native_system.html:55
-msgid "✨ Key Advantages:"
-msgstr "✨ Wichtigste Vorteile:"
+msgid "Key advantages:"
+msgstr "Wichtigste Vorteile:"
 
 #: app/templates/help/native_system.html:57
 msgid "No separate account needed (fully integrated)"
@@ -26824,8 +26496,8 @@ msgid "Add detailed pro/con responses with evidence"
 msgstr "Detaillierte Pro-/Contra-Antworten mit Belegen hinzufügen"
 
 #: app/templates/help/native_system.html:60
-msgid "Interactive consensus visualizations"
-msgstr "Interaktive Konsensvisualisierungen"
+msgid "Interactive consensus visualisations"
+msgstr "Interaktive Consensus-Visualisierungen"
 
 #: app/templates/help/native_system.html:61
 msgid "Optional AI features (you control the costs)"
@@ -26945,8 +26617,8 @@ msgid "Identify \"bridge\" statements that unite groups"
 msgstr "Identifizieren Sie \"Brücken\"-Aussagen, die Gruppen vereinen"
 
 #: app/templates/help/native_system.html:147
-msgid "View interactive scatter plot visualization"
-msgstr "Sehen Sie eine interaktive Streudiagramm-Visualisierung"
+msgid "View interactive scatter plot visualisation"
+msgstr "Zeigen Sie die interaktive Scatter-Plot-Visualisierung an"
 
 #: app/templates/help/native_system.html:158
 msgid "See a live example of consensus analysis →"
@@ -27009,11 +26681,11 @@ msgstr "Konsensanalyse verstehen"
 
 #: app/templates/help/native_system.html:206
 msgid ""
-"After enough participation (7+ users, 20+ votes), the system analyzes voting"
+"After enough participation (7+ users, 20+ votes), the system analyses voting"
 " patterns to:"
 msgstr ""
-"Nach ausreichender Teilnahme (7+ Nutzer, 20+ Abstimmungen) analysiert das "
-"System Abstimmungsmuster zu:"
+"Nach ausreichender Beteiligung (7+ Nutzer, 20+ Abstimmungen) analysiert das "
+"System Abstimmungsmuster, um:"
 
 #: app/templates/help/native_system.html:211
 msgid "👥 Identify Opinion Groups"
@@ -27032,12 +26704,12 @@ msgstr ""
 
 #: app/templates/help/native_system.html:217
 msgid ""
-"Example: Group 1 might prioritize environmental concerns, while Group 2 "
-"prioritizes economic growth—even if both have mixed political backgrounds."
+"Example: Group 1 might prioritise environmental concerns, while Group 2 "
+"prioritises economic growth — even if both have mixed political backgrounds."
 msgstr ""
-"Beispiel: Gruppe 1 könnte Umweltanliegen priorisieren, während Gruppe 2 "
-"wirtschaftliches Wachstum priorisiert – selbst wenn beide unterschiedliche "
-"politische Hintergründe haben."
+"Beispiel: Gruppe 1 könnte Umweltbedenken bevorzugen, während Gruppe 2 "
+"wirtschaftliches Wachstum bevorzugt – selbst wenn beide gemischte politische"
+" Hintergründe haben."
 
 #: app/templates/help/native_system.html:223
 msgid "✅ Detect Consensus Statements"
@@ -27168,16 +26840,16 @@ msgstr ""
 "alle Inferenzgrößen eher explorativ als bestätigend."
 
 #: app/templates/help/native_system.html:272
-msgid "📊 Visualize with Interactive Charts"
-msgstr "📊 Mit interaktiven Diagrammen visualisieren"
+msgid "📊 See opinion groups on a chart"
+msgstr "📊 Sehen Sie Meinungsgruppen in einem Diagramm"
 
 #: app/templates/help/native_system.html:275
 msgid ""
 "See a <strong>2D scatter plot</strong> where each dot is a participant, "
-"colored by opinion group."
+"coloured by opinion group."
 msgstr ""
-"Sehen Sie ein <strong>2D-Streudiagramm</strong>, in dem jeder Punkt ein "
-"Teilnehmer ist, gefärbt nach Meinungsgruppe."
+"Sehen Sie ein <strong>2D-Scatter-Plot</strong>, bei dem jeder Punkt ein "
+"Teilnehmer ist, farblich gekennzeichnet nach Meinungsgruppe."
 
 #: app/templates/help/native_system.html:278
 msgid ""
@@ -28050,13 +27722,13 @@ msgstr "UMAP (Uniform Manifold Approximation and Projection)"
 
 #: app/templates/help/polis_algorithms.html:99
 msgid ""
-"UMAP helps visualize complex relationships between opinions while preserving"
+"UMAP helps visualise complex relationships between opinions while preserving"
 " important structures in the data. This creates the opinion group "
-"visualizations you see in Pol.is."
+"visualisations you see in Pol.is."
 msgstr ""
-"UMAP hilft dabei, komplexe Beziehungen zwischen Meinungen zu visualisieren, "
-"während wichtige Strukturen in den Daten erhalten bleiben. Dies erzeugt die "
-"Meinungsgruppenvisualisierungen, die du in Pol.is siehst."
+"UMAP hilft bei der Visualisierung komplexer Beziehungen zwischen Meinungen "
+"und bewahrt dabei wichtige Strukturen in den Daten. Dies erzeugt die "
+"Meinungsgruppen-Visualisierungen, die Sie in Pol.is sehen."
 
 #: app/templates/help/polis_algorithms.html:106
 msgid "2. Clustering Algorithms"
@@ -29834,6 +29506,10 @@ msgstr "PostMessage Events"
 msgid "oEmbed Provider"
 msgstr "oEmbed Provider"
 
+#: app/templates/partner/api_docs.html:113
+msgid "Create Discussion"
+msgstr "Discussion erstellen"
+
 #: app/templates/partner/api_docs.html:114
 msgid "Update Discussion"
 msgstr "Discussion aktualisieren"
@@ -31429,6 +31105,10 @@ msgstr ""
 #: app/templates/partner/embed_generator.html:259
 msgid "Embed preview"
 msgstr "Vorschau einbetten"
+
+#: app/templates/partner/embed_generator.html:267
+msgid "Embed Code"
+msgstr "Embed-Code"
 
 #: app/templates/partner/embed_generator.html:280
 #: app/templates/partner/embed_generator.html:475
@@ -34913,9 +34593,21 @@ msgstr "Profil"
 msgid "Edit Organisation Profile"
 msgstr "Organisationsprofil bearbeiten"
 
+#: app/templates/profiles/edit_company_profile.html:31
+#: app/templates/profiles/edit_company_profile.html:42
+msgid "Company Logo"
+msgstr "Unternehmenslogo"
+
 #: app/templates/profiles/edit_company_profile.html:48
 msgid "Click to upload a new company logo"
 msgstr "Klicken Sie hier, um ein neues Unternehmenslogo hochzuladen"
+
+#: app/templates/profiles/edit_company_profile.html:55
+#: app/templates/profiles/edit_company_profile.html:65
+#: app/templates/profiles/edit_individual_profile.html:54
+#: app/templates/profiles/edit_individual_profile.html:64
+msgid "Banner Image"
+msgstr "Bannerbild"
 
 #: app/templates/profiles/edit_company_profile.html:71
 #: app/templates/profiles/edit_individual_profile.html:70
@@ -34932,6 +34624,11 @@ msgstr ""
 "eigene Adresse verwenden, ein generisches Postfach (z. B. hello@…) oder das "
 "Feld leer lassen, um die Kontakt-E-Mail vollständig auszublenden. Dies ist "
 "unabhängig von Ihrer Login-E-Mail."
+
+#: app/templates/profiles/edit_individual_profile.html:31
+#: app/templates/profiles/edit_individual_profile.html:41
+msgid "Profile Picture"
+msgstr "Profilbild"
 
 #: app/templates/profiles/edit_individual_profile.html:47
 msgid "Click to upload a new profile picture"
@@ -35084,6 +34781,10 @@ msgstr "Beschreiben Sie den Zweck und die Ziele dieses Programms."
 #: app/templates/programmes/_form.html:24
 msgid "Location &amp; Access"
 msgstr "Ort &amp; Zugang"
+
+#: app/templates/programmes/_form.html:28
+msgid "Geographic Scope"
+msgstr "Geografischer Geltungsbereich"
 
 #: app/templates/programmes/_form.html:29
 msgid ""
@@ -36146,6 +35847,10 @@ msgstr "Sprache speichern"
 msgid "Change Password"
 msgstr "Passwort ändern"
 
+#: app/templates/settings/settings.html:111
+msgid "Update Password"
+msgstr "Passwort aktualisieren"
+
 #: app/templates/settings/settings.html:118
 msgid "Email Notifications"
 msgstr "E-Mail-Benachrichtigungen"
@@ -36154,20 +35859,36 @@ msgstr "E-Mail-Benachrichtigungen"
 msgid "Choose which email notifications you'd like to receive."
 msgstr "Wählen Sie, welche E-Mail-Benachrichtigungen Sie erhalten möchten."
 
+#: app/templates/settings/settings.html:137
+msgid "Enable email notifications"
+msgstr "E-Mail-Benachrichtigungen aktivieren"
+
 #: app/templates/settings/settings.html:138
 msgid "Master toggle for all email notifications"
 msgstr "Hauptschalter für alle E-Mail-Benachrichtigungen"
+
+#: app/templates/settings/settings.html:152
+msgid "New participants"
+msgstr "Neue Teilnehmer"
 
 #: app/templates/settings/settings.html:153
 msgid "Get notified when someone joins your discussion"
 msgstr ""
 "Erhalten Sie eine Benachrichtigung, wenn jemand Ihrer Diskussion beitritt"
 
+#: app/templates/settings/settings.html:166
+msgid "Discussion activity"
+msgstr "Diskussionsaktivität"
+
 #: app/templates/settings/settings.html:167
 msgid "New statements, replies, and votes in discussions you host or follow"
 msgstr ""
 "Neue Aussagen, Antworten und Abstimmungen in Diskussionen, die du moderierst"
 " oder verfolgst"
+
+#: app/templates/settings/settings.html:180
+msgid "Discussion updates"
+msgstr "Diskussionsupdates"
 
 #: app/templates/settings/settings.html:181
 msgid ""
@@ -36181,6 +35902,10 @@ msgid "Receive a weekly summary of discussions you're involved in"
 msgstr ""
 "Erhalte eine wöchentliche Zusammenfassung der Diskussionen, an denen du "
 "beteiligt bist"
+
+#: app/templates/settings/settings.html:208
+msgid "Save Notification Preferences"
+msgstr "Benachrichtigungseinstellungen speichern"
 
 #: app/templates/settings/settings.html:216
 msgid "Billing & Subscription"
@@ -36223,6 +35948,11 @@ msgid "Update payment method, download invoices, or cancel your subscription."
 msgstr ""
 "Zahlungsmethode aktualisieren, Rechnungen herunterladen oder dein Abonnement"
 " kündigen."
+
+#: app/templates/settings/settings.html:285
+#: app/templates/settings/settings.html:297
+msgid "Delete Account"
+msgstr "Konto löschen"
 
 #: app/templates/settings/settings.html:286
 msgid ""

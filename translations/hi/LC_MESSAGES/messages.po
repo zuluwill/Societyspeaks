@@ -7634,9 +7634,8 @@ msgid "Top"
 msgstr "शीर्ष"
 
 #: app/templates/layout.html:523 app/templates/layout.html:944
-#, fuzzy
 msgid "Play"
-msgstr "योजना"
+msgstr "खेलें"
 
 #: app/templates/briefing/_template_card.html:19
 #: app/templates/briefing/preview_template.html:28
@@ -9406,9 +9405,8 @@ msgstr ""
 "अनुसरण करें।"
 
 #: app/templates/privacy-policy.html:79
-#, fuzzy
 msgid "<strong>What we do not store:</strong>"
-msgstr "<strong>Partner Portal:</strong>"
+msgstr "<strong>हम क्या स्टोर नहीं करते:</strong>"
 
 #: app/templates/privacy-policy.html:81
 msgid ""
@@ -9448,9 +9446,8 @@ msgstr ""
 "सुविधाएँ प्रदान कर सकें)।"
 
 #: app/templates/privacy-policy.html:88
-#, fuzzy
 msgid "<strong>Retention:</strong>"
-msgstr "<strong>Partner Portal:</strong>"
+msgstr "<strong>डेटा रखरखाव:</strong>"
 
 #: app/templates/privacy-policy.html:90
 msgid ""
@@ -9492,9 +9489,8 @@ msgstr ""
 "अनिश्चित काल के लिए संग्रहीत की जाती है।"
 
 #: app/templates/privacy-policy.html:96
-#, fuzzy
 msgid "<strong>Your rights:</strong>"
-msgstr "<strong>Partner Portal:</strong>"
+msgstr "<strong>आपके अधिकार:</strong>"
 
 #: app/templates/privacy-policy.html:98
 msgid ""
@@ -9505,9 +9501,8 @@ msgstr ""
 "हर रन, परिणाम, और स्ट्रीक रिकॉर्ड 30 दिनों के भीतर हटा देते हैं।"
 
 #: app/templates/privacy-policy.html:99
-#, fuzzy
 msgid "<strong>Anonymous players:</strong> Email"
-msgstr "<strong>इंटरैक्टिव खेल का मैदान:</strong>"
+msgstr "<strong>गुमनाम खिलाड़ी:</strong> ईमेल"
 
 #: app/templates/privacy-policy.html:99
 msgid ""
@@ -13072,24 +13067,20 @@ msgstr ""
 "जेनरेट किया गया।"
 
 #: app/templates/briefing/_paid_brief_body.html:40
-#, fuzzy
 msgid "Coverage perspective"
-msgstr "विविध दृष्टिकोणों के लिए अच्छा"
+msgstr "कवरेज दृष्टिकोण"
 
 #: app/templates/briefing/_paid_brief_body.html:61
-#, fuzzy
 msgid "left"
-msgstr "बाएं"
+msgstr "वाम"
 
 #: app/templates/briefing/_paid_brief_body.html:64
-#, fuzzy
 msgid "centre"
 msgstr "केंद्र"
 
 #: app/templates/briefing/_paid_brief_body.html:67
-#, fuzzy
 msgid "right"
-msgstr "दाएं"
+msgstr "दक्षिण"
 
 #: app/templates/briefing/_paid_brief_body.html:79
 msgid "Blindspot:"

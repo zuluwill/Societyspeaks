@@ -4545,14 +4545,12 @@ msgstr ""
 "데이터 내보내기"
 
 #: app/templates/about.html:242 app/templates/help/getting_started.html:53
-#, fuzzy
 msgid "Civic infrastructure guide"
-msgstr "인프라 법안 진전"
+msgstr "시민 인프라 가이드"
 
 #: app/templates/about.html:245
-#, fuzzy
 msgid "For publishers & partners"
-msgstr "퍼블리셔용"
+msgstr "퍼블리셔 및 파트너"
 
 #: app/templates/about.html:248 app/templates/help/getting_started.html:54
 #: app/templates/platform.html:755 app/templates/platform.html:798
@@ -4561,9 +4559,8 @@ msgid "Start a discussion"
 msgstr "토론 시작하기"
 
 #: app/templates/about.html:255
-#, fuzzy
 msgid "What the system reveals"
-msgstr "시스템이 드러내는 것"
+msgstr "시스템이 보여주는 것"
 
 #: app/templates/about.html:256
 msgid "Three distinct types of insight — not a single vote count:"
@@ -4580,9 +4577,8 @@ msgid ""
 msgstr "의견 집단 전반의 광범위한 합의 — 다른 곳에서 의견이 나뉘는 집단도 포함."
 
 #: app/templates/about.html:269
-#, fuzzy
 msgid "Bridge ideas"
-msgstr "가교 아이디어"
+msgstr "아이디어 연결하기"
 
 #: app/templates/about.html:270
 msgid ""
@@ -4611,13 +4607,10 @@ msgid ""
 msgstr "모두를 위한 무료 civic 도구. 프리미엄 Briefs와 파트너십이 공유 자산을 지원합니다."
 
 #: app/templates/about.html:291
-#, fuzzy
 msgid ""
 "One question a day. Vote, reflect, then see how others responded. Builds a "
 "longitudinal picture of public opinion."
-msgstr ""
-"매일 신중하게 선택된 질문 하나. 투표하고, 당신의 의견을 공유한 후, 다른 사람들의 응답을 확인하세요. 시간이 지나면서 여론이 어떻게 "
-"변화하는지 보여줍니다."
+msgstr "하루에 한 가지 질문. 투표하고, 생각해보고, 다른 사람들의 답변을 확인하세요. 공론의 종단면 그림을 만듭니다."
 
 #: app/templates/about.html:292 app/templates/help/daily_question.html:23
 #: app/templates/index.html:520
@@ -4625,16 +4618,15 @@ msgid "Today's question"
 msgstr "오늘의 질문"
 
 #: app/templates/about.html:296
-#, fuzzy
 msgid ""
 "Free digest of 3–5 civic stories from 140+ sources with left/centre/right "
 "breakdown and why each story matters."
-msgstr "3~5개 기사 · 좌파/중도/우파 분석 · 왜 이것이 중요한가"
+msgstr ""
+"140개 이상의 출처에서 수집한 3~5개의 시민 뉴스를 무료로 제공합니다. 좌파/중도/우파 분석과 각 기사가 중요한 이유를 포함합니다."
 
 #: app/templates/about.html:297 app/templates/help/daily_brief.html:23
-#, fuzzy
 msgid "Read today's brief"
-msgstr "오늘의 Brief 읽기"
+msgstr "오늘의 브리프 읽기"
 
 #: app/templates/about.html:302
 msgid ""
@@ -4643,9 +4635,8 @@ msgid ""
 msgstr "압박 속에서의 다섯 번의 통치 — 모든 선택이 누군가를 돕고 누군가에게 해가 될 때 당신이 어떤 리더가 되는지 발견하세요."
 
 #: app/templates/about.html:303
-#, fuzzy
 msgid "Play today"
-msgstr "오늘"
+msgstr "오늘 하기"
 
 #: app/templates/about.html:308
 msgid "Depth & discovery"
@@ -4658,9 +4649,8 @@ msgid ""
 msgstr "8가지 주제, 국가별 판, 최소 56개의 시드 의견문 — 기후, AI, 민주주의, 보건 등을 투표하고 결과를 확인하세요."
 
 #: app/templates/about.html:313
-#, fuzzy
 msgid "Start the journey"
-msgstr "여정 공유"
+msgstr "여정 시작하기"
 
 #: app/templates/about.html:316 app/templates/admin/_admin_base.html:25
 #: app/templates/admin/_admin_base.html:101
@@ -4696,28 +4686,22 @@ msgid ""
 msgstr "전체 스펙트럼에 걸친 오늘의 뉴스 — 선정성 점수, 보도 균형, 출처 투명성."
 
 #: app/templates/about.html:323 app/templates/help/news_dashboard.html:19
-#, fuzzy
 msgid "Open dashboard"
 msgstr "대시보드 열기"
 
 #: app/templates/about.html:327
-#, fuzzy
 msgid ""
 "Paid custom digests from your RSS feeds, Substacks, and PDFs — subscriptions"
 " fund the free civic platform."
-msgstr ""
-"Personal Briefs를 통해 선택한 언론사, 뉴스레터, PDF로부터 맞춤형 일일 요약본을 만들 수 있습니다. 구독료는 오픈소스 "
-"civic platform을 지원합니다."
+msgstr "RSS 피드, Substack, PDF에서 가져온 맞춤형 유료 다이제스트 — 구독료는 무료 시민 플랫폼을 지원합니다."
 
 #: app/templates/about.html:328
-#, fuzzy
 msgid "Explore Personal Briefs"
-msgstr "개인 요약 잠금 해제"
+msgstr "Personal Briefs 살펴보기"
 
 #: app/templates/about.html:335
-#, fuzzy
 msgid "From news to deliberation"
-msgstr "뉴스에서 숙의로"
+msgstr "뉴스에서 숙의까지"
 
 #: app/templates/about.html:336
 msgid ""
@@ -4727,14 +4711,12 @@ msgstr ""
 "선별된 civic 뉴스와 스펙트럼 투명성이 Engage 단계를 지원 — 그 다음 시드 의견문과 토론이 이슈를 구조화된 참여로 이끕니다."
 
 #: app/templates/about.html:337
-#, fuzzy
 msgid "How we source news for debate"
-msgstr "뉴스 피드 작동 방식"
+msgstr "토론을 위한 뉴스 출처 방식"
 
 #: app/templates/about.html:343
-#, fuzzy
 msgid "Built in the open"
-msgstr "개방된 상태로 구축됨"
+msgstr "공개적으로 구축됨"
 
 #: app/templates/about.html:344
 msgid ""
@@ -4753,7 +4735,6 @@ msgid "View on GitHub"
 msgstr "GitHub에서 보기"
 
 #: app/templates/about.html:353
-#, fuzzy
 msgid "Support the mission"
 msgstr "우리의 사명 지원하기"
 
@@ -4769,9 +4750,8 @@ msgid "Make a donation"
 msgstr "기부하기"
 
 #: app/templates/about.html:365
-#, fuzzy
 msgid "Ready to participate or build?"
-msgstr "참여 방법"
+msgstr "참여하거나 구축할 준비가 되셨나요?"
 
 #: app/templates/about.html:366
 msgid ""
@@ -4787,9 +4767,8 @@ msgid "Today's Question"
 msgstr "오늘의 질문"
 
 #: app/templates/about.html:371
-#, fuzzy
 msgid "Play Tradeoffs"
-msgstr "← 브리핑으로 돌아가기"
+msgstr "Tradeoffs 하기"
 
 #: app/templates/about.html:373 app/templates/help/help.html:48
 #: app/templates/help/help.html:103 app/templates/help/macros.html:45
@@ -5024,14 +5003,13 @@ msgid "Frequently Asked Questions — Society Speaks"
 msgstr "자주 묻는 질문 — Society Speaks"
 
 #: app/templates/faq.html:5
-#, fuzzy
 msgid ""
 "Everything you need to know about Society Speaks — Big Questions Journey, "
 "Daily Brief, Daily Question, Tradeoffs, civic infrastructure for "
 "consultations, Personal Briefs, machine learning, privacy, and pricing."
 msgstr ""
-"Society Speaks에 대해 알아야 할 모든 것 — 빅 퀘스천 저니, 데일리 브리프, 데일리 퀘스션, 퍼스널 브리프, 머신러닝 작동"
-" 원리, 개인정보보호, 가격 정보."
+"Society Speaks에 대해 알아야 할 모든 것 — Big Questions Journey, Daily Brief, Daily "
+"Question, Tradeoffs, 협의를 위한 시민 인프라, Personal Briefs, 머신러닝, 개인정보보호, 가격 책정."
 
 #: app/templates/faq.html:8
 msgid ""
@@ -5067,7 +5045,6 @@ msgid "Is Society Speaks free?"
 msgstr "Society Speaks는 무료인가요?"
 
 #: app/templates/faq.html:25
-#, fuzzy
 msgid ""
 "Yes. All core features are free: discussions, programmes, the Big Questions "
 "Journey, the Daily Question, the Daily Brief, Tradeoffs, the News "
@@ -5075,9 +5052,10 @@ msgid ""
 "(from £4.99/month) is available for those who want a custom daily digest "
 "from their own sources — and it funds the free civic platform."
 msgstr ""
-"네. 모든 핵심 기능은 무료입니다: 토론, 빅 퀘스천 저니, 데일리 퀘스션, 데일리 브리프, 뉴스 투명성 대시보드, 투표. 자신의 "
-"소스에서 맞춤형 일일 요약을 원하는 사용자를 위한 유료 퍼스널 브리프 구독(월 £4.99부터)이 있으며, 이는 무료 시민 플랫폼 자금을 "
-"조성합니다."
+"예. 모든 핵심 기능은 무료입니다: 토론, 프로그램, Big Questions Journey, Daily Question, Daily "
+"Brief, Tradeoffs, News Transparency Dashboard, 투표. 자신의 출처에서 맞춤형 일일 다이제스트를 "
+"원하는 사람들을 위해 유료 Personal Briefs 구독(£4.99/월부터)을 이용할 수 있습니다 — 이는 무료 시민 플랫폼을 "
+"지원합니다."
 
 #: app/templates/faq.html:29
 msgid "Do I need an account to use Society Speaks?"
@@ -5373,9 +5351,8 @@ msgstr ""
 "필요하지 않습니다."
 
 #: app/templates/faq.html:120
-#, fuzzy
 msgid "What is Tradeoffs on Society Speaks?"
-msgstr "Society Speaks의 프로그램이란 무엇인가요?"
+msgstr "Society Speaks의 Tradeoffs란 무엇인가요?"
 
 #: app/templates/faq.html:121
 msgid ""

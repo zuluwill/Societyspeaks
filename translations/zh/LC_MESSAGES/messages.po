@@ -4377,14 +4377,12 @@ msgid ""
 msgstr "对明确的陈述进行投票——通常在看到众数之前，这样你的观点首先是你自己的。"
 
 #: app/templates/about.html:140
-#, fuzzy
 msgid "Discussions · programmes you run · publisher embeds"
-msgstr "讨论与项目"
+msgstr "讨论 · 你运营的项目 · 发布者嵌入"
 
 #: app/templates/about.html:150
-#, fuzzy
 msgid "Reveal"
-msgstr "撤销"
+msgstr "展示"
 
 #: app/templates/about.html:151
 msgid ""
@@ -4393,14 +4391,12 @@ msgid ""
 msgstr "机器学习根据投票模式而非标签对人进行分组——然后在结果中呈现结构。"
 
 #: app/templates/about.html:153
-#, fuzzy
 msgid "Consensus · bridges · divisions"
-msgstr "桥接与分化。"
+msgstr "共识 · 桥接 · 消除分歧"
 
 #: app/templates/about.html:164
-#, fuzzy
 msgid "Understand"
-msgstr "承受压力"
+msgstr "理解"
 
 #: app/templates/about.html:165
 msgid ""
@@ -4409,9 +4405,8 @@ msgid ""
 msgstr "个人看到意见的完整形态；机构看到他们可以引用和导出的证据。"
 
 #: app/templates/about.html:175
-#, fuzzy
 msgid "Decide & act"
-msgstr "科学与影响"
+msgstr "决策与行动"
 
 #: app/templates/about.html:176
 msgid ""
@@ -4429,33 +4424,28 @@ msgstr ""
 "我们坦诚限制：分析需要足够的参与者；权衡度衡量对虚构内容的回应，而非你的意识形态；机构导出是汇总数据。进度是累积的——一个问题、一个项目、一次咨询。"
 
 #: app/templates/about.html:191
-#, fuzzy
 msgid "The engine"
-msgstr "重新投票"
+msgstr "引擎"
 
 #: app/templates/about.html:193
 msgid "Three design choices behind the chain above — methodology inspired by"
 msgstr "上述链条背后的三个设计选择——灵感来自方法论"
 
 #: app/templates/about.html:194
-#, fuzzy
 msgid " / the Computational Democracy Project."
-msgstr "访问国家战略项目"
+msgstr " / 计算民主项目。"
 
 #: app/templates/about.html:199
-#, fuzzy
 msgid "Structured statements"
-msgstr "种子陈述"
+msgstr "结构化陈述"
 
 #: app/templates/about.html:200
-#, fuzzy
 msgid "Single claims, Agree / Disagree / Unsure — not threaded outrage."
-msgstr "简单投票（同意／不同意／不确定）"
+msgstr "单一观点，同意 / 不同意 / 不确定 — 而非链式愤怒。"
 
 #: app/templates/about.html:204
-#, fuzzy
 msgid "Think first"
-msgstr "智库"
+msgstr "先思考"
 
 #: app/templates/about.html:205
 msgid ""
@@ -4519,14 +4509,12 @@ msgid ""
 msgstr "<strong class=\"text-white\">共识分析</strong>——意见集群、桥接观点、当参与度足够时导出数据"
 
 #: app/templates/about.html:242 app/templates/help/getting_started.html:53
-#, fuzzy
 msgid "Civic infrastructure guide"
-msgstr "基础设施法案推进"
+msgstr "公民基础设施指南"
 
 #: app/templates/about.html:245
-#, fuzzy
 msgid "For publishers & partners"
-msgstr "面向出版方"
+msgstr "为发布者和合作伙伴"
 
 #: app/templates/about.html:248 app/templates/help/getting_started.html:54
 #: app/templates/platform.html:755 app/templates/platform.html:798
@@ -4535,9 +4523,8 @@ msgid "Start a discussion"
 msgstr "开始讨论"
 
 #: app/templates/about.html:255
-#, fuzzy
 msgid "What the system reveals"
-msgstr "系统揭示了什么"
+msgstr "系统揭示的内容"
 
 #: app/templates/about.html:256
 msgid "Three distinct types of insight — not a single vote count:"
@@ -4554,9 +4541,8 @@ msgid ""
 msgstr "跨意见集群的广泛共识——包括在其他方面意见相左的群体。"
 
 #: app/templates/about.html:269
-#, fuzzy
 msgid "Bridge ideas"
-msgstr "桥接观点"
+msgstr "桥接想法"
 
 #: app/templates/about.html:270
 msgid ""
@@ -4575,9 +4561,8 @@ msgid ""
 msgstr "需要更深入审议的清晰分歧线——诚实呈现，而非隐瞒。"
 
 #: app/templates/about.html:284
-#, fuzzy
 msgid "One platform, many ways to engage"
-msgstr "每天三种参与方式"
+msgstr "一个平台，多种参与方式"
 
 #: app/templates/about.html:285
 msgid ""
@@ -4586,11 +4571,10 @@ msgid ""
 msgstr "人人可用的免费公民工具。高级简报和伙伴关系为公共利益提供资金。"
 
 #: app/templates/about.html:291
-#, fuzzy
 msgid ""
 "One question a day. Vote, reflect, then see how others responded. Builds a "
 "longitudinal picture of public opinion."
-msgstr "每天精心挑选一个问题。投票、分享您的理由，然后看看其他人如何回应。随着时间推移，这会形成公众舆论如何演变的纵向视图。"
+msgstr "每天一个问题。投票、思考，然后看看其他人的回应。形成公众舆论的纵向图景。"
 
 #: app/templates/about.html:292 app/templates/help/daily_question.html:23
 #: app/templates/index.html:520
@@ -4598,14 +4582,12 @@ msgid "Today's question"
 msgstr "今日问题"
 
 #: app/templates/about.html:296
-#, fuzzy
 msgid ""
 "Free digest of 3–5 civic stories from 140+ sources with left/centre/right "
 "breakdown and why each story matters."
-msgstr "3-5篇故事·左/中心/右分类·为什么这很重要"
+msgstr "来自 140+ 媒体源的免费摘要，包含 3–5 篇公民故事，附带左翼/中间派/右翼观点分析及各故事重要性说明。"
 
 #: app/templates/about.html:297 app/templates/help/daily_brief.html:23
-#, fuzzy
 msgid "Read today's brief"
 msgstr "阅读今日简报"
 
