@@ -52,10 +52,26 @@ class EmailEvent(db.Model):
 
     # Optional references (for analytics drill-down)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    brief_subscriber_id = db.Column(db.Integer, db.ForeignKey('daily_brief_subscriber.id'), nullable=True)
-    question_subscriber_id = db.Column(db.Integer, db.ForeignKey('daily_question_subscriber.id'), nullable=True)
-    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=True)
-    daily_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
+    brief_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_brief_subscriber.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    question_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_question_subscriber.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    brief_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_brief.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    daily_question_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_question.id', ondelete='SET NULL'),
+        nullable=True,
+    )
 
     # Additional event data
     click_url = db.Column(db.String(500))  # For click events

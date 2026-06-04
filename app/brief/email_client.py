@@ -601,7 +601,11 @@ class ResendClient:
             }
 
             self.rate_limiter.acquire()
-            success = self._send_with_retry(email_data)
+            welcome_idempotency_key = f"brief-welcome:{subscriber.id}"
+            success = self._send_with_retry(
+                email_data,
+                idempotency_key=welcome_idempotency_key,
+            )
 
             if success:
                 # Record that welcome email was sent to prevent duplicates

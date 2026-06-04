@@ -557,7 +557,7 @@ def _score_batch_with_anthropic(articles: List[NewsArticle], client, *, max_toke
     if not articles:
         return
 
-    headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
+    headlines = [f"{i+1}. {_sanitize_for_json(a.title or '')}" for i, a in enumerate(articles)]
     prompt = _ANTHROPIC_SCORING_PROMPT_TEMPLATE.format(headlines=chr(10).join(headlines))
 
     message = client.messages.create(

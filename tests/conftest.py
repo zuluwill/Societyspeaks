@@ -148,7 +148,7 @@ class _FakeRedis:
 
 
 @pytest.fixture(autouse=True)
-def _isolate_redis(monkeypatch):
+def _isolate_redis(request, monkeypatch):
     """Replace real Redis with a fresh fake for every test.
 
     Without this, tests that call world_today() or participation_stats() write
@@ -156,10 +156,13 @@ def _isolate_redis(monkeypatch):
     a later pytest session run on the same day) read stale cached tallies and
     fail with unexpected sample_size / count values.
 
-    Tests that need to assert on Redis caching behaviour monkeypatch
-    get_client themselves — their setattr runs after this autouse fixture and
-    takes precedence, so they still exercise their own fake freely.
+    ``tests/test_redis_client.py`` exercises the real ``get_client`` contract
+    (unset REDIS_URL, pooling, fork reset) and opts out of this stub.
     """
+    node_path = str(getattr(request.node, 'fspath', '') or '')
+    if node_path.endswith('test_redis_client.py'):
+        return
+
     fake = _FakeRedis()
     monkeypatch.setattr('app.lib.redis_client.get_client', lambda **kw: fake)
 

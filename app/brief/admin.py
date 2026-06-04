@@ -793,17 +793,12 @@ def toggle_subscriber(subscriber_id):
 def delete_subscriber(subscriber_id):
     """Delete a subscriber"""
     from app.models import DailyBriefSubscriber
-    from app.models.email import EmailEvent
-    
+    from app.lib.email_subscriber_delete import delete_brief_subscriber
+
     subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     email = subscriber.email
-    
-    # Unlink email_event rows before deleting to avoid FK violation
-    EmailEvent.query.filter_by(brief_subscriber_id=subscriber_id).update(
-        {'brief_subscriber_id': None}, synchronize_session=False
-    )
-    
-    db.session.delete(subscriber)
+
+    delete_brief_subscriber(subscriber_id)
     db.session.commit()
     
     logger.info(f"Subscriber {email} deleted by {current_user.email}")
@@ -815,24 +810,23 @@ def delete_subscriber(subscriber_id):
 @admin_required
 def bulk_remove_subscribers():
     """Bulk remove selected subscribers"""
-    from app.models import DailyBriefSubscriber
-    from app.models.email import EmailEvent
-    
-    subscriber_ids = request.form.getlist('subscriber_ids', type=int)
-    
+    from app.lib.email_subscriber_delete import (
+        InvalidSubscriberIds,
+        delete_brief_subscribers_bulk,
+        parse_subscriber_ids,
+    )
+
+    try:
+        subscriber_ids = parse_subscriber_ids(request.form.getlist('subscriber_ids'))
+    except InvalidSubscriberIds:
+        flash('Invalid subscriber selection.', 'error')
+        return redirect(url_for('brief_admin.subscribers'))
+
     if not subscriber_ids:
         flash('No subscribers selected.', 'warning')
         return redirect(url_for('brief_admin.subscribers'))
-    
-    # Unlink email_event rows before deleting to avoid FK violation
-    EmailEvent.query.filter(
-        EmailEvent.brief_subscriber_id.in_(subscriber_ids)
-    ).update({'brief_subscriber_id': None}, synchronize_session=False)
-    
-    deleted = DailyBriefSubscriber.query.filter(
-        DailyBriefSubscriber.id.in_(subscriber_ids)
-    ).delete(synchronize_session=False)
-    
+
+    deleted = delete_brief_subscribers_bulk(subscriber_ids)
     db.session.commit()
     
     logger.info(f"{deleted} subscribers deleted by {current_user.email}")

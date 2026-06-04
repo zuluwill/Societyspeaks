@@ -1898,18 +1898,14 @@ def update_subscriber_frequency(subscriber_id):
 @admin_required
 def delete_subscriber(subscriber_id):
     """Delete a subscriber completely"""
-    from app.models.email import EmailEvent
+    from app.lib.email_subscriber_delete import delete_question_subscriber
+
     subscriber = db.get_or_404(DailyQuestionSubscriber, subscriber_id)
     email = subscriber.email
-    
-    # Unlink email_event rows before deleting to avoid FK violation
-    EmailEvent.query.filter_by(question_subscriber_id=subscriber_id).update(
-        {'question_subscriber_id': None}, synchronize_session=False
-    )
-    
-    db.session.delete(subscriber)
+
+    delete_question_subscriber(subscriber_id)
     db.session.commit()
-    
+
     flash(f'Subscriber {email} removed.', 'success')
     return redirect(url_for('admin.list_daily_subscribers'))
 
@@ -1919,24 +1915,23 @@ def delete_subscriber(subscriber_id):
 @admin_required
 def bulk_remove_subscribers():
     """Bulk remove selected subscribers"""
-    from app.models.email import EmailEvent
-    subscriber_ids = request.form.getlist('subscriber_ids')
-    
-    if not subscriber_ids:
+    from app.lib.email_subscriber_delete import (
+        InvalidSubscriberIds,
+        delete_question_subscribers_bulk,
+        parse_subscriber_ids,
+    )
+
+    try:
+        int_ids = parse_subscriber_ids(request.form.getlist('subscriber_ids'))
+    except InvalidSubscriberIds:
+        flash('Invalid subscriber selection.', 'error')
+        return redirect(url_for('admin.list_daily_subscribers'))
+
+    if not int_ids:
         flash('No subscribers selected.', 'warning')
         return redirect(url_for('admin.list_daily_subscribers'))
-    
-    int_ids = [int(sub_id) for sub_id in subscriber_ids]
-    
-    # Unlink email_event rows before deleting to avoid FK violation
-    EmailEvent.query.filter(
-        EmailEvent.question_subscriber_id.in_(int_ids)
-    ).update({'question_subscriber_id': None}, synchronize_session=False)
-    
-    removed = DailyQuestionSubscriber.query.filter(
-        DailyQuestionSubscriber.id.in_(int_ids)
-    ).delete(synchronize_session=False)
-    
+
+    removed = delete_question_subscribers_bulk(int_ids)
     db.session.commit()
     flash(f'Removed {removed} subscriber(s).', 'success')
     return redirect(url_for('admin.list_daily_subscribers'))
