@@ -116,21 +116,46 @@ def test_faq_jsonld_valid_and_matches_visibility(client, db):
     assert tradeoffs_in_ld == tradeoffs_visible, "FAQ Tradeoffs JSON-LD must match visible content"
 
 
-def test_donate_page_renders_funding_story(client, db):
-    resp = client.get('/donate')
-    assert resp.status_code == 200, resp.status_code
-    html = resp.get_data(as_text=True)
+def test_donate_page_renders_funding_story_and_seo(client, db):
+    html = _get(client, db, '/donate')
+    assert 'Donate to Society Speaks' in html
+    assert html.count('<h1') == 1
+    assert 'Why donate?' in html
     assert 'How we sustain the platform' in html
+    assert 'Personal Briefs' in html
+    assert 'Publisher partners' in html
+    assert 'Donate securely with Stripe' in html
     assert html.count('rel="canonical"') == 1
+    assert 'property="og:title"' in html
+    assert 'name="twitter:title"' in html
+    assert 'name="description"' in html
+    assert 'open source' in html.lower()
+    assert '/donate/checkout' in html
 
 
 def test_faq_funding_jsonld_matches_visible(client, db):
-    """New funding Q&A: JSON-LD entries must also be visible (Google policy)."""
+    """Funding Q&A in JSON-LD must also appear in visible FAQ content (Google policy)."""
     html = _get(client, db, '/faq')
     blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
     faq = next(json.loads(b) for b in blocks if json.loads(b).get('@type') == 'FAQPage')
     names = [q['name'] for q in faq['mainEntity']]
-    for n in ('How is Society Speaks funded?',
-              'What do publishers pay for embeds and the Partner API?'):
+    json_ld_funding = (
+        'How is Society Speaks funded?',
+        'What do publishers pay for embeds and the Partner API?',
+    )
+    for n in json_ld_funding:
         assert n in names, f"missing from JSON-LD: {n}"
         assert n in html, f"in JSON-LD but not visible: {n}"
+    # Visible funding section (not all duplicated in JSON-LD — that is allowed)
+    visible_funding = (
+        'How we are funded',
+        'Why donate if the platform is already free?',
+        'Where can I donate?',
+        'How much do publisher embeds cost?',
+    )
+    for n in visible_funding:
+        assert n in html, f"missing visible funding copy: {n}"
+    # Pricing claims in visible copy must match configured partner tiers
+    assert '£49/month' in html
+    assert '£249/month' in html
+    assert '£4.99/month' in html

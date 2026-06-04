@@ -11,6 +11,10 @@
 #   2. pybabel update --ignore-obsolete -d translations -i messages.pot
 #      (--ignore-obsolete avoids #~ obsolete blocks that duplicate live msgids;
 #       GNU gettext 0.26+ msgfmt -c rejects those duplicates.)
+#      If step 2 rewrites tens of thousands of lines with no new msgstrs, your
+#      local Babel/gettext version likely differs from the one that last committed
+#      .po files — pin Babel in requirements.txt and re-run once, or commit only
+#      after translate_po_with_haiku fills new entries (English msgids still work).
 #   3. ANTHROPIC_API_KEY=... python3 scripts/translate_po_with_haiku.py  # fill empty msgstrs
 #   4. ./scripts/compile_translations.sh  (this script)  # rebuild .mo files
 #   5. python3 scripts/i18n_check.py  # sanity check placeholders / bindings
