@@ -29,3 +29,23 @@ def apply_discussion_visibility(query, user, discussion_model=Discussion, progra
     if ranked_access is not None:
         query = query.outerjoin(ranked_access, ranked_access.c.programme_id == discussion_model.programme_id)
     return query.filter(predicate)
+
+
+def crawlable_discussions_query(discussion_model=Discussion, programme_model=Programme):
+    """Discussions reachable by anonymous visitors (matches public search/listings).
+
+    Excludes partner test data and discussions on non-public or inactive programmes.
+    """
+    return discussion_model.query.filter(
+        discussion_model.partner_env != 'test',
+    ).outerjoin(
+        programme_model, discussion_model.programme_id == programme_model.id,
+    ).filter(
+        or_(
+            discussion_model.programme_id.is_(None),
+            and_(
+                programme_model.status == 'active',
+                programme_model.visibility == 'public',
+            ),
+        ),
+    )

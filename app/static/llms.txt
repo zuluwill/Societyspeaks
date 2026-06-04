@@ -22,38 +22,27 @@ Social platforms reward outrage, certainty, and speed, making society appear mor
 
 ## Key Features
 
-- **Daily Question**: A Wordle-like daily participation ritual. One question per day, two minutes to respond, insight revealed after participation. Creates longitudinal view of how public opinion evolves.
+- **Daily Question**: A Wordle-like daily participation ritual. One question per day, two minutes to respond, insight revealed after participation.
 
-- **News-to-Deliberation Pipeline**: Transforms real journalism into balanced prompts by:
-  - Curating for civic relevance (not virality)
-  - Filtering sensational framing
-  - Generating balanced seed statements
+- **Daily Brief**: Free editorial digest from 140+ sources across the political spectrum.
 
-- **Consensus Analysis**: ML-powered analysis using PCA dimensionality reduction and agglomerative clustering to identify opinion groups and detect consensus/bridge/divisive statements.
+- **Tradeoffs (Society Play)**: Daily civic scenarios—govern under pressure and see how your choices shape society.
 
-## Technical Implementation
+- **Discussions & Programmes**: Structured deliberation spaces and multi-discussion campaigns (including the Big Questions Journey).
 
-- Groups users by voting patterns using cosine distance and agglomerative clustering
-- Consensus detection: 70%+ overall agreement, 60%+ in each cluster
-- Bridge detection: High mean agreement with low variance across clusters
-- Divisive detection: Controversy score >= 0.7 (near 50/50 split)
-- Background analysis with APScheduler
-- Anonymous participation supported via session fingerprinting
+- **News Transparency Dashboard**: Explore how stories are covered across left, centre, and right sources.
+
+- **Personal Briefs**: Custom AI digests from your sources (premium; funds the free civic platform).
+
+- **For Publishers**: Embed deliberation and consensus on your site via iframe and Partner API.
+
+- **Consensus Analysis**: ML-powered clustering to identify consensus, bridge, and divisive statements.
 
 ## What We Are NOT
 
 - Not a discussion forum (we don't do threaded comments)
 - Not a debate platform (we reduce adversarial dynamics)
 - Not a polling tool (we reveal structure, not just percentages)
-
-## Policy Relevance
-
-We produce evidence-based understanding of public opinion that can inform:
-- Policymakers seeking legitimate common ground
-- Journalists understanding public sentiment
-- Civic organizations designing workable solutions
-
-We don't claim to produce policy—we focus on the prerequisite: understanding where agreement exists, where bridges are possible, and where genuine divisions require deeper work.
 
 ## Tagline
 
@@ -67,7 +56,19 @@ Society Speaks is a sense-making system that turns disagreement into understandi
 
 - Website: https://societyspeaks.io
 - About: https://societyspeaks.io/about
+- Platform overview: https://societyspeaks.io/platform
 - Daily Question: https://societyspeaks.io/daily
+- Daily Brief: https://societyspeaks.io/brief/today
+- News dashboard: https://societyspeaks.io/news
+- Explore discussions: https://societyspeaks.io/discussions/search
+- Programmes: https://societyspeaks.io/programmes/
+- Source profiles: https://societyspeaks.io/sources/
+- Tradeoffs: https://societyspeaks.io/play
+- Personal Briefs: https://societyspeaks.io/briefings/landing
+- For publishers: https://societyspeaks.io/for-publishers/
+- Help centre: https://societyspeaks.io/help/
+- FAQ: https://societyspeaks.io/faq
+- Sitemap: https://societyspeaks.io/sitemap.xml
 - GitHub: https://github.com/zuluwill/Societyspeaks
 - Twitter/X: @societyspeaksio
 - Bluesky: societyspeaks.bsky.social

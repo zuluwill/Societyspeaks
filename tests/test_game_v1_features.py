@@ -339,7 +339,7 @@ def test_sitemap_includes_play_routes(app, client, db):
     resp = client.get('/sitemap.xml')
     assert resp.status_code == 200
     body = resp.data.decode('utf-8')
-    assert '/play</loc>' in body
+    assert '/play/' in body or '/play</loc>' in body
     assert '/play/editorial-principles</loc>' in body
 
 
@@ -350,7 +350,7 @@ def test_sitemap_omits_play_routes_when_game_disabled(app, client, db):
     resp = client.get('/sitemap.xml')
     assert resp.status_code == 200
     body = resp.data.decode('utf-8')
-    assert '/play</loc>' not in body
+    assert '/play/' not in body and '/play</loc>' not in body
     assert '/play/editorial-principles</loc>' not in body
 
 

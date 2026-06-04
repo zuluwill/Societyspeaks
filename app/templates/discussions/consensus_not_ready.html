@@ -1,5 +1,8 @@
 {% extends 'layout.html' %} {% block title %}{{ _('Consensus Analysis') }} - {{
-discussion.title }}{% endblock %} {% block content %}
+discussion.title }}{% endblock %}
+{# Pre-analysis placeholder: thin content for crawlers. Keep it out of the index but follow links to the discussion. #}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="mb-6">
     <h1 class="text-3xl font-bold mb-2">{{ _('Consensus Analysis') }}</h1>

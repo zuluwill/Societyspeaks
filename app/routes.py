@@ -11,7 +11,7 @@ from app.programmes.journey import (
 from app import cache, db, limiter
 from datetime import datetime, date
 from slugify import slugify
-from app.seo import generate_sitemap
+from app.seo import generate_sitemap, get_base_url as seo_get_base_url
 try:
     from replit.object_storage import Client
     from replit.object_storage.errors import ObjectNotFoundError
@@ -47,10 +47,8 @@ def init_routes(app):
 
 
 def get_base_url():
-    """Get the base URL depending on environment"""
-    if request.headers.get('X-Forwarded-Proto'):
-        return f"{request.scheme}://{request.headers['Host']}"
-    return 'https://societyspeaks.io'
+    """Canonical site origin (shared with sitemap generation)."""
+    return seo_get_base_url()
 
 
 
@@ -547,13 +545,20 @@ Allow: /
 # Default rules for all other crawlers
 User-agent: *
 Allow: /
-Allow: /news
-Allow: /news/
-Allow: /discussions
-Allow: /discussions/
-Allow: /help
-Allow: /help/
 Allow: /about
+Allow: /platform
+Allow: /donate
+Allow: /faq
+Allow: /daily
+Allow: /brief
+Allow: /news
+Allow: /discussions/
+Allow: /programmes/
+Allow: /sources/
+Allow: /briefings/
+Allow: /for-publishers/
+Allow: /play
+Allow: /help/
 Allow: /sitemap.xml
 
 # Block private/auth areas

@@ -1,5 +1,7 @@
 {% extends 'layout.html' %}
 {% block title %}{{ _('Unlock Consensus Analysis') }} - {{ discussion.title }}{% endblock %}
+{# Participation gate: thin, near-identical content for un-voted visitors (crawlers). Keep it out of the index but follow links to the discussion. #}
+{% block meta_robots %}noindex, follow{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
