@@ -609,9 +609,22 @@ from app.trending.constants import VALID_TOPICS, TARGET_AUDIENCE_DESCRIPTION
 def score_topic(topic: TrendingTopic) -> TrendingTopic:
     """
     Score a topic for civic relevance, quality, risk, and audience alignment.
+
+    Connection hygiene: the LLM scoring call is the longest external I/O in the
+    held-topic path. We snapshot the article titles (and topic title) while the
+    connection is healthy, then release it with ``db.session.rollback()`` before
+    the call so an idle connection isn't killed server-side by Neon/PgBouncer
+    (the same pattern as ``create_topic_from_cluster``). The score attributes set
+    afterwards are written back onto the (expired) in-session ``topic`` and
+    persisted by the caller's commit. Callers must not hold uncommitted changes
+    to ``topic`` across this call — both current callers (pipeline
+    ``process_held_topics`` and the admin ``rescore_topic`` route) load the topic
+    immediately before scoring, so the rollback discards nothing.
     """
+    from app import db
+
     api_key, provider = get_system_api_key()
-    
+
     if not api_key:
         topic.civic_score = 0.5
         topic.quality_score = 0.5
@@ -619,14 +632,18 @@ def score_topic(topic: TrendingTopic) -> TrendingTopic:
         topic.primary_topic = 'Society'
         topic.risk_flag = False
         return topic
-    
+
     article_titles = [ta.article.title for ta in topic.articles if ta.article][:5]
-    
+    topic_title = topic.title
+
+    # Release the DB connection before the slow LLM call (see docstring).
+    db.session.rollback()
+
     prompt = f"""Analyze this news topic cluster for a civic debate platform.
 
 {TARGET_AUDIENCE_DESCRIPTION}
 
-Topic: {topic.title}
+Topic: {topic_title}
 Source articles:
 {chr(10).join(f'- {t}' for t in article_titles)}
 

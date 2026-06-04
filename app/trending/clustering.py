@@ -2,7 +2,7 @@
 Topic Clustering Service
 
 Groups similar articles into topics using semantic embeddings.
-Handles question-level deduplication against existing discussions.
+Deduplicates new clusters against recent topics (find_duplicate_topic).
 """
 
 import os
@@ -16,7 +16,7 @@ from collections import Counter
 from sqlalchemy import func
 
 from app import db
-from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle, Discussion
+from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle
 from app.lib.sklearn_compat import (
     SKLEARN_AVAILABLE,
     cosine_similarity,
@@ -71,6 +71,19 @@ def extract_geographic_info_from_articles(articles: List[NewsArticle]) -> tuple:
         geographic_countries = None
     
     return geographic_scope, geographic_countries
+
+
+def recount_topic_source_count(topic_id: int) -> int:
+    """
+    Count distinct news sources linked to a topic (all article links, not one cluster).
+    """
+    return (
+        db.session.query(func.count(func.distinct(NewsArticle.source_id)))
+        .join(TrendingTopicArticle, NewsArticle.id == TrendingTopicArticle.article_id)
+        .filter(TrendingTopicArticle.topic_id == topic_id)
+        .scalar()
+        or 0
+    )
 
 
 def get_embeddings(texts: List[str], max_retries: int = 3) -> Optional[List[List[float]]]:
@@ -229,51 +242,20 @@ def find_duplicate_topic(topic_embedding: List[float], days: int = 30) -> Option
     
     new_embedding = np.array(topic_embedding)
     
+    new_norm = np.linalg.norm(new_embedding)
+    if new_norm == 0:
+        return None
+
     for topic in recent_topics:
         if topic.topic_embedding:
             existing_embedding = np.array(topic.topic_embedding)
-            similarity = np.dot(new_embedding, existing_embedding) / (
-                np.linalg.norm(new_embedding) * np.linalg.norm(existing_embedding)
-            )
-            
+            existing_norm = np.linalg.norm(existing_embedding)
+            if existing_norm == 0:
+                continue
+            similarity = np.dot(new_embedding, existing_embedding) / (new_norm * existing_norm)
+
             if similarity >= 0.78:  # Lowered from 0.85 to catch more related articles
                 return topic
-    
-    return None
-
-
-def find_similar_discussion(topic_embedding: List[float], days: int = 30) -> Optional[Discussion]:
-    """
-    Check if a similar discussion already exists.
-    Looks at discussion titles.
-    """
-    cutoff = utcnow_naive() - timedelta(days=days)
-    
-    recent_discussions = Discussion.query.filter(
-        Discussion.created_at >= cutoff,
-        Discussion.has_native_statements == True,
-        Discussion.partner_env != 'test'
-    ).all()
-    
-    if not recent_discussions:
-        return None
-    
-    titles = [d.title for d in recent_discussions]
-    embeddings = get_embeddings(titles)
-    
-    if not embeddings:
-        return None
-    
-    new_embedding = np.array(topic_embedding)
-    
-    for i, discussion in enumerate(recent_discussions):
-        existing_embedding = np.array(embeddings[i])
-        similarity = np.dot(new_embedding, existing_embedding) / (
-            np.linalg.norm(new_embedding) * np.linalg.norm(existing_embedding)
-        )
-        
-        if similarity >= 0.8:
-            return discussion
     
     return None
 
@@ -370,13 +352,7 @@ def create_topic_from_cluster(
 
             # Flush so the count query below sees the newly added rows.
             db.session.flush()
-            # Recount ALL sources linked to the topic (not just this cluster).
-            existing.source_count = (
-                db.session.query(func.count(func.distinct(NewsArticle.source_id)))
-                .join(TrendingTopicArticle, NewsArticle.id == TrendingTopicArticle.article_id)
-                .filter(TrendingTopicArticle.topic_id == existing.id)
-                .scalar() or 0
-            )
+            existing.source_count = recount_topic_source_count(existing.id)
             db.session.commit()
             return existing
 

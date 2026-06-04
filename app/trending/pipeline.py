@@ -21,7 +21,11 @@ from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle
 from app.trending.news_fetcher import NewsFetcher, seed_default_sources
 from app.trending.scorer import score_articles_with_llm, score_topic
-from app.trending.clustering import cluster_articles, create_topic_from_cluster
+from app.trending.clustering import (
+    cluster_articles,
+    create_topic_from_cluster,
+    recount_topic_source_count,
+)
 from app.trending.seed_generator import generate_seed_statements
 
 logger = logging.getLogger(__name__)
@@ -485,10 +489,8 @@ def _backfill_single_article(
                 similarity_score=best_similarity
             )
             db.session.add(link)
-            
-            best_match.source_count = len(set(
-                ta.article.source_id for ta in best_match.articles if ta.article
-            ))
+            db.session.flush()
+            best_match.source_count = recount_topic_source_count(best_match.id)
             db.session.commit()
             
             logger.info(f"Backfilled article {article.id} to topic {best_match.id} (similarity: {best_similarity:.2f})")
