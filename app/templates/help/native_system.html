@@ -2,8 +2,8 @@
 {% extends "layout.html" %}
 {% from "help/macros.html" import help_nav_back %}
 
-{% block title %}{{ _('Native Debate System - Society Speaks | Advanced Consensus-Building Features') }}{% endblock %}
-{% block meta_description %}{{ _("Learn about Society Speaks' advanced native debate system with real-time voting, threaded responses, evidence linking, and interactive consensus visualization.") }}{% endblock %}
+{% block title %}{{ _('Native Debate System — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _("How Society Speaks' native debate system works: real-time voting, threaded responses, evidence linking, and interactive consensus visualisation.") }}{% endblock %}
 {% block canonical %}{{ url_for('help.native_system', _external=True) }}{% endblock %}
 
 {% block extra_head %}
@@ -49,15 +49,15 @@
         {{ _('What is the Native Debate System?') }}
       </h2>
       <p class="text-gray-700 mb-4">
-        {{ _('Our Native Debate System is a next-generation deliberation platform built directly into Society Speaks. It combines the proven principles of pol.is with powerful new features like threaded arguments, evidence linking, and optional AI-powered insights.') }}
+        {{ _('Our Native Debate System is built directly into Society Speaks. It uses the same principles as Pol.is, with added support for threaded responses, evidence linking, and optional AI-powered analysis.') }}
       </p>
       <div class="bg-blue-50 p-4 rounded-lg">
-        <p class="text-blue-900 font-semibold">{{ _('✨ Key Advantages:') }}</p>
+        <p class="text-blue-900 font-semibold">{{ _('Key advantages:') }}</p>
         <ul class="list-disc pl-5 text-primary-800 mt-2">
           <li>{{ _('No separate account needed (fully integrated)') }}</li>
           <li>{{ _('Instant real-time voting with AJAX') }}</li>
           <li>{{ _('Add detailed pro/con responses with evidence') }}</li>
-          <li>{{ _('Interactive consensus visualizations') }}</li>
+          <li>{{ _('Interactive consensus visualisations') }}</li>
           <li>{{ _('Optional AI features (you control the costs)') }}</li>
         </ul>
       </div>
@@ -144,7 +144,7 @@
             <li>{{ _('See how different opinion groups formed') }}</li>
             <li>{{ _('Discover statements with broad agreement') }}</li>
             <li>{{ _('Identify "bridge" statements that unite groups') }}</li>
-            <li>{{ _('View interactive scatter plot visualization') }}</li>
+            <li>{{ _('View interactive scatter plot visualisation') }}</li>
           </ul>
           {% if help_demo %}
           <div class="mt-3 pt-3 border-t border-yellow-200">
@@ -203,7 +203,7 @@
 
       <div class="space-y-4">
         <p class="text-gray-700">
-          {{ _('After enough participation (7+ users, 20+ votes), the system analyzes voting patterns to:') }}
+          {{ _('After enough participation (7+ users, 20+ votes), the system analyses voting patterns to:') }}
         </p>
 
         <div class="bg-blue-50 p-4 rounded-lg">
@@ -214,7 +214,7 @@
             {{ _('Users are clustered based on <strong>voting similarity</strong>, not demographics. The system uses PCA (Principal Component Analysis) and Agglomerative Clustering to find natural groupings.')|safe }}
           </p>
           <p class="text-sm text-gray-600">
-            {{ _('Example: Group 1 might prioritize environmental concerns, while Group 2 prioritizes economic growth—even if both have mixed political backgrounds.') }}
+            {{ _('Example: Group 1 might prioritise environmental concerns, while Group 2 prioritises economic growth — even if both have mixed political backgrounds.') }}
           </p>
         </div>
 
@@ -269,10 +269,10 @@
 
         <div class="bg-purple-50 p-4 rounded-lg">
           <h3 class="font-semibold text-purple-900 mb-2">
-            {{ _('📊 Visualize with Interactive Charts') }}
+            {{ _('📊 See opinion groups on a chart') }}
           </h3>
           <p class="text-gray-700 mb-2">
-            {{ _('See a <strong>2D scatter plot</strong> where each dot is a participant, colored by opinion group.')|safe }}
+            {{ _('See a <strong>2D scatter plot</strong> where each dot is a participant, coloured by opinion group.')|safe }}
           </p>
           <p class="text-sm text-gray-600">
             {{ _('Hover over dots to see details. Closer dots = more similar voting patterns.') }}

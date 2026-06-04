@@ -2,7 +2,7 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('Managing Discussions — Society Speaks Help') }}{% endblock %}
-{% block meta_description %}{{ _('Learn how to monitor and maintain engaging discussions on Society Speaks. Track participation, promote engagement, and understand consensus visualizations.') }}{% endblock %}
+{% block meta_description %}{{ _('How to monitor and run discussions on Society Speaks. Track participation, moderate statements, and read the consensus visualisations.') }}{% endblock %}
 {% block canonical %}{{ url_for('help.managing_discussions', _external=True) }}{% endblock %}
 
 {% block extra_head %}
@@ -11,22 +11,22 @@
   "@context": "https://schema.org",
   "@type": "HowTo",
   "name": _('Managing Discussions on Society Speaks'),
-  "description": _('Learn how to monitor and maintain engaging discussions'),
+  "description": _('How to monitor and run your discussions'),
   "step": [
     {
       "@type": "HowToStep",
       "name": _('Monitor Participation'),
-      "text": _('Track participant count, engagement levels, and review new comments regularly.')
+      "text": _('Track participant numbers, check new statements, and note which opinion groups are forming.')
     },
     {
       "@type": "HowToStep",
       "name": _('Promote Engagement'),
-      "text": _('Share on relevant platforms, engage with participants, and add new seed comments.')
+      "text": _('Share on relevant platforms, respond to participants, and add new seed statements.')
     },
     {
       "@type": "HowToStep",
       "name": _('Understand Results'),
-      "text": _('Interpret opinion groups, consensus statements, and visualizations to derive insights.')
+      "text": _('Read opinion groups, consensus statements, and visualisations to understand your results.')
     }
   ]
 } | tojson }}
@@ -38,7 +38,7 @@
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold mb-4">{{ _('Managing Discussions') }}</h1>
-        <p class="text-gray-600">{{ _('Learn how to monitor and maintain engaging discussions') }}</p>
+        <p class="text-gray-600">{{ _('How to get the most from your discussions') }}</p>
     </div>
 
     <!-- Main Content -->
@@ -48,10 +48,10 @@
             <h2 class="text-xl font-semibold mb-4">{{ _('Monitoring Participation') }}</h2>
 
             <div class="space-y-4">
-                <p class="text-gray-700">{{ _("Keep track of your discussion's health and engagement:") }}</p>
+                <p class="text-gray-700">{{ _("Keep an eye on your discussion as it runs:") }}</p>
                 <ul class="list-disc pl-5 text-gray-700">
-                    <li>{{ _('Monitor participant count and engagement levels') }}</li>
-                    <li>{{ _('Review new comments regularly') }}</li>
+                    <li>{{ _('Check participant numbers and vote counts') }}</li>
+                    <li>{{ _('Review new statements regularly') }}</li>
                     <li>{{ _('Observe opinion groups forming') }}</li>
                     <li>{{ _('Look for areas of consensus and division') }}</li>
                 </ul>
@@ -63,11 +63,11 @@
             <h2 class="text-xl font-semibold mb-4">{{ _('Promoting Engagement') }}</h2>
 
             <div class="space-y-4">
-                <h3 class="font-semibold">{{ _('Tips for Maintaining Active Discussions:') }}</h3>
+                <h3 class="font-semibold">{{ _('Tips for keeping discussions active:') }}</h3>
                 <ul class="list-disc pl-5 text-gray-700">
                     <li>{{ _('Share your discussion on relevant platforms') }}</li>
-                    <li>{{ _("Engage with participants' comments") }}</li>
-                    <li>{{ _('Add new seed comments to explore emerging themes') }}</li>
+                    <li>{{ _("Respond to participants' statements") }}</li>
+                    <li>{{ _('Add new seed statements to explore emerging themes') }}</li>
                     <li>{{ _('Keep the conversation focused and constructive') }}</li>
                 </ul>
             </div>
@@ -78,12 +78,12 @@
             <h2 class="text-xl font-semibold mb-4">{{ _('Understanding Results') }}</h2>
 
             <div class="space-y-4">
-                <h3 class="font-semibold">{{ _('Interpreting Pol.is Visualizations:') }}</h3>
+                <h3 class="font-semibold">{{ _('Reading the Pol.is visualisations:') }}</h3>
                 <div class="bg-blue-50 p-4 rounded-lg">
                     <h4 class="font-semibold mb-2">{{ _('Opinion Groups') }}</h4>
                     <ul class="list-disc pl-5 text-gray-700">
                         <li>{{ _('Groups are formed automatically based on voting patterns') }}</li>
-                        <li>{{ _('Each color represents a distinct opinion group') }}</li>
+                        <li>{{ _('Each colour represents a distinct opinion group') }}</li>
                         <li>{{ _('Size of groups indicates number of participants') }}</li>
                         <li>{{ _('Distance between groups shows opinion difference') }}</li>
                     </ul>
@@ -103,7 +103,7 @@
                     <ul class="list-disc pl-5 text-gray-700">
                         <li>{{ _('Total number of participants') }}</li>
                         <li>{{ _('Number of votes cast') }}</li>
-                        <li>{{ _('Number of comments submitted') }}</li>
+                        <li>{{ _('Number of statements submitted') }}</li>
                         <li>{{ _('Participation rates over time') }}</li>
                     </ul>
                 </div>
@@ -116,20 +116,20 @@
 
             <div class="space-y-4">
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">{{ _('Key Moderation Tasks:') }}</h3>
+                    <h3 class="font-semibold mb-2">{{ _('Key moderation tasks:') }}</h3>
                     <ul class="list-disc pl-5 text-gray-700">
-                        <li>{{ _('Regularly review and moderate new comments') }}</li>
-                        <li>{{ _('Maintain a respectful and constructive environment') }}</li>
-                        <li>{{ _('Remove inappropriate or off-topic comments') }}</li>
-                        <li>{{ _('Encourage balanced participation across groups') }}</li>
+                        <li>{{ _('Regularly review and moderate new statements') }}</li>
+                        <li>{{ _('Keep the space respectful and on-topic') }}</li>
+                        <li>{{ _('Remove inappropriate or off-topic statements') }}</li>
+                        <li>{{ _('Encourage participation from different perspectives') }}</li>
                     </ul>
                 </div>
 
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">{{ _('Setting Ground Rules:') }}</h3>
+                    <h3 class="font-semibold mb-2">{{ _('Setting ground rules:') }}</h3>
                     <ul class="list-disc pl-5 text-gray-700">
                         <li>{{ _('Clear guidelines for participation') }}</li>
-                        <li>{{ _('Expectations for comment quality') }}</li>
+                        <li>{{ _('Expectations for statement quality') }}</li>
                         <li>{{ _('Consequences for rule violations') }}</li>
                         <li>{{ _('Process for appealing moderation decisions') }}</li>
                     </ul>
@@ -146,7 +146,7 @@
                 </a>
 
                 <a href="{{ url_for('help.seed_comments') }}" class="block text-primary-600 hover:underline">
-                    {{ _('Guide to Seed Comments →') }}
+                    {{ _('Guide to Seed Statements →') }}
                 </a>
             </div>
         </div>
