@@ -114,3 +114,23 @@ def test_faq_jsonld_valid_and_matches_visibility(client, db):
     tradeoffs_in_ld = any('Tradeoffs' in n for n in names)
     tradeoffs_visible = 'What is Tradeoffs on Society Speaks?' in html
     assert tradeoffs_in_ld == tradeoffs_visible, "FAQ Tradeoffs JSON-LD must match visible content"
+
+
+def test_donate_page_renders_funding_story(client, db):
+    resp = client.get('/donate')
+    assert resp.status_code == 200, resp.status_code
+    html = resp.get_data(as_text=True)
+    assert 'How we sustain the platform' in html
+    assert html.count('rel="canonical"') == 1
+
+
+def test_faq_funding_jsonld_matches_visible(client, db):
+    """New funding Q&A: JSON-LD entries must also be visible (Google policy)."""
+    html = _get(client, db, '/faq')
+    blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+    faq = next(json.loads(b) for b in blocks if json.loads(b).get('@type') == 'FAQPage')
+    names = [q['name'] for q in faq['mainEntity']]
+    for n in ('How is Society Speaks funded?',
+              'What do publishers pay for embeds and the Partner API?'):
+        assert n in names, f"missing from JSON-LD: {n}"
+        assert n in html, f"in JSON-LD but not visible: {n}"

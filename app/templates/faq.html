@@ -22,7 +22,7 @@
     {
       "@type": "Question",
       "name": _('Is Society Speaks free?'),
-      "acceptedAnswer": { "@type": "Answer", "text": _('Yes. All core features are free: discussions, programmes, the Big Questions Journey, the Daily Question, the Daily Brief, Tradeoffs, the News Transparency Dashboard, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform.') }
+      "acceptedAnswer": { "@type": "Answer", "text": _('Yes. All core features are free: discussions, programmes, the Big Questions Journey, the Daily Question, the Daily Brief, Tradeoffs, the News Transparency Dashboard, and voting. We are funded by optional donations, Personal Brief subscriptions (from £4.99/month), and publisher partner plans — not advertising.') }
     },
     {
       "@type": "Question",
@@ -103,6 +103,16 @@
       "@type": "Question",
       "name": _('How is the Personal Brief different from the Daily Brief?'),
       "acceptedAnswer": { "@type": "Answer", "text": _("The Daily Brief is a free, editorially curated digest of 3–5 civic stories from Society Speaks' 140+ source library. A Personal Brief is a paid, fully customisable digest built from your own chosen sources, with AI synthesis and your own schedule. A Personal Brief subscription funds the free Daily Brief and other civic features.") }
+    },
+    {
+      "@type": "Question",
+      "name": _('How is Society Speaks funded?'),
+      "acceptedAnswer": { "@type": "Answer", "text": _('Society Speaks is not ad-funded. Revenue comes from three sources: optional one-off donations, Personal Brief subscriptions (paid custom digests from £4.99/month), and publisher partner subscriptions for live embeds and the Partner API (from £49/month, with a free test tier). Donations and subscriptions help keep core civic features free for everyone.') }
+    },
+    {
+      "@type": "Question",
+      "name": _('What do publishers pay for embeds and the Partner API?'),
+      "acceptedAnswer": { "@type": "Answer", "text": _('Publishers subscribe to run live embeds on their sites. Self-serve plans are £49/month (Starter, up to 100 live discussions per month) and £249/month (Professional, up to 500). A free tier includes test discussions and full API access before going live. Enterprise pricing is available for large newsrooms. Full details are on the For Publishers page.') }
     },
     {
       "@type": "Question",
@@ -187,7 +197,7 @@
                 ),
                 (
                     _('Is Society Speaks free?'),
-                    _('Yes. All core features are free: the Big Questions Journey, Daily Question, Daily Brief, Tradeoffs, News Transparency Dashboard, discussions, programmes, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform.')
+                    _('Yes. All core features are free: the Big Questions Journey, Daily Question, Daily Brief, Tradeoffs, News Transparency Dashboard, discussions, programmes, and voting. We are funded by optional donations, Personal Brief subscriptions (from £4.99/month), and publisher partner plans — not advertising.')
                 ),
                 (
                     _('Do I need an account?'),
@@ -404,6 +414,29 @@
         ) }}
 
         {{ faq_section(
+            _('How we are funded'),
+            "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+            [
+                (
+                    _('How is Society Speaks funded?'),
+                    _('We are not ad-funded and we do not sell personal data. Society Speaks is sustained in three ways: optional donations from supporters, Personal Brief subscriptions (paid custom digests), and publisher partner subscriptions for live embeds and the Partner API. Together these fund servers, analysis, and development while keeping core civic participation free.')
+                ),
+                (
+                    _('Why donate if the platform is already free?'),
+                    _('Most people never need to pay. Donations are voluntary gifts from people who want independent civic infrastructure to exist without advertising. They help cover running costs and open-source development that subscriptions and publisher revenue do not fully cover — and they signal public support for ad-free deliberation.')
+                ),
+                (
+                    _('What do publishers pay for embeds and the Partner API?'),
+                    _('Publishers and media partners subscribe to run live voting embeds on their websites. Self-serve plans are £49/month (Starter — up to 100 live discussions per month) and £249/month (Professional — up to 500). A free tier lets you prototype with test discussions before going live. Enterprise pricing (from around £2,000/month) is available for national publishers — see the For Publishers page for full plan details.')
+                ),
+                (
+                    _('Where can I donate?'),
+                    _('You can make a secure one-off donation from the Donate page (linked in the site footer and About page). Amounts start from £1. Donations are processed by Stripe and are separate from Personal Brief or publisher subscriptions.')
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
             _('Personal Briefs (Premium)'),
             "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
             [
@@ -417,7 +450,7 @@
                 ),
                 (
                     _('How does my subscription help the platform?'),
-                    _('Personal Brief subscriptions directly fund the free civic features of Society Speaks — the Daily Brief, Daily Question, Big Questions Journey, discussions, and the News Transparency Dashboard. We are not ad-funded, so subscriber support is what keeps everything else free.')
+                    _('Personal Brief subscriptions directly fund the free civic features of Society Speaks — the Daily Brief, Daily Question, Big Questions Journey, discussions, and the News Transparency Dashboard. Along with donations and publisher partner plans, subscriber revenue helps keep core participation free without advertising.')
                 ),
                 (
                     _('What sources can I use in a Personal Brief?'),
@@ -441,6 +474,10 @@
                 (
                     _('What is the publisher embed?'),
                     _('A lightweight iframe (and Partner API) that places structured voting on pages you choose. Readers vote Agree / Disagree / Unsure on statements you define; you receive consensus, bridge, and division analytics.')
+                ),
+                (
+                    _('How much do publisher embeds cost?'),
+                    _('Live embeds require a paid partner subscription. Starter is £49/month (up to 100 live discussions per month); Professional is £249/month (up to 500). You can start free with test discussions and the full API before going live. Enterprise pricing is available for large newsrooms — see the For Publishers page.')
                 ),
                 (
                     _('Can I run a citizen consultation or deliberation programme?'),
@@ -467,7 +504,7 @@
                 ),
                 (
                     _('Do you use advertising?'),
-                    _('No. Society Speaks is not ad-funded. We do not show adverts, use retargeting, or sell your data to third parties. Revenue comes from Personal Brief subscriptions and organisation partnerships.')
+                    _('No. Society Speaks is not ad-funded. We do not show adverts, use retargeting, or sell your data to third parties. Revenue comes from optional donations, Personal Brief subscriptions, and publisher partner subscriptions for embeds and the Partner API.')
                 ),
                 (
                     _('Is the platform open source?'),
