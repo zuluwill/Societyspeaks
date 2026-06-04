@@ -761,7 +761,11 @@ class BriefEmailScheduler:
                     current_subscriber.magic_token_expires and current_subscriber.magic_token_expires < utcnow_naive()
                 ):
                     current_subscriber.generate_magic_token(expires_hours=168)
-                    db.session.flush()
+
+                # Ensure every subscriber has a stable unsubscribe token before
+                # their email goes out. Idempotent — only writes if token is None.
+                current_subscriber.ensure_unsubscribe_token()
+                db.session.flush()
 
                 success = self.client.send_brief(current_subscriber, brief)
                 if success:
