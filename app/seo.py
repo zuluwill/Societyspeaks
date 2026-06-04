@@ -56,7 +56,12 @@ def get_base_url() -> str:
 
 def _external(endpoint: str, **values) -> str:
     """Build an absolute URL using configured BASE_URL, not the request Host header."""
-    path = url_for(endpoint, _external=False, **values)
+    from flask import has_request_context
+    if has_request_context():
+        path = url_for(endpoint, _external=False, **values)
+    else:
+        with current_app.test_request_context('/'):
+            path = url_for(endpoint, _external=False, **values)
     if not path.startswith('/'):
         path = f'/{path}'
     return f'{get_base_url().rstrip("/")}{path}'
