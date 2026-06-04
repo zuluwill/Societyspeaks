@@ -284,50 +284,86 @@ def create_topic_from_cluster(
     """
     Create a TrendingTopic from a cluster of articles.
     Applies hold window for cooldown.
+
+    IMPORTANT - connection hygiene
+    --------------------------------
+    This function makes slow external LLM API calls (title generation,
+    embeddings).  Holding a DB connection open during those calls risks an
+    "SSL connection has been closed unexpectedly" error from Neon/PgBouncer
+    when the idle connection is timed-out server-side.
+
+    To avoid this we:
+    1. Extract all required data from ORM objects into plain Python values.
+    2. Release the connection back to the pool with db.session.close().
+    3. Run all LLM API calls with no connection held.
+    4. Re-enter the DB with a fresh connection (pool_pre_ping validates it).
     """
     if not articles:
         return None
-    
-    title = generate_neutral_question(articles)
+
+    # --- Step 1: snapshot all ORM data into plain Python --------------------
+    # Access every attribute (including lazy-loaded relationships) NOW, while
+    # we still have a valid connection, before we release it.
+    article_ids = [a.id for a in articles]
+    article_source_ids = [a.source_id for a in articles]
+    article_titles = [a.title for a in articles]
+    article_summaries = [a.summary or '' for a in articles]
+    first_description = articles[0].summary or ''
+
+    # geographic info needs source.country (lazy relationship)
+    geo_data = []
+    for a in articles:
+        source_country = None
+        if a.source:
+            source_country = a.source.country
+        geo_data.append({
+            'geographic_scope': a.geographic_scope,
+            'geographic_countries': a.geographic_countries,
+            'source_country': source_country,
+        })
+
+    # --- Step 2: release the connection before slow API calls ---------------
+    # pool_pre_ping=True ensures the next checkout gets a validated connection.
+    db.session.close()
+
+    # --- Step 3: slow LLM API calls (no DB connection held) -----------------
+    title = _generate_neutral_question_from_titles(article_titles)
     if not title:
-        title = f"Discussion: {articles[0].title[:100]}"
-    
-    texts = [f"{a.title}. {a.summary or ''}" for a in articles]
+        title = f"Discussion: {article_titles[0][:100]}"
+
+    texts = [f"{t}. {s}" for t, s in zip(article_titles, article_summaries)]
     combined_text = " ".join(texts)[:2000]
-    
+
     embeddings = get_embeddings([combined_text])
     topic_embedding = embeddings[0] if embeddings else None
-    
+
+    # --- Step 4: DB operations with a fresh, pre-pinged connection ----------
+    geographic_scope, geographic_countries = _extract_geographic_info_from_data(geo_data)
+    unique_sources = len(set(article_source_ids))
+
     if topic_embedding:
         existing = find_duplicate_topic(topic_embedding)
         if existing:
             logger.info(f"Topic duplicate found: {existing.title}")
-            for article in articles:
+            for article_id in article_ids:
                 existing_link = TrendingTopicArticle.query.filter_by(
                     topic_id=existing.id,
-                    article_id=article.id
+                    article_id=article_id
                 ).first()
                 if not existing_link:
                     link = TrendingTopicArticle(
                         topic_id=existing.id,
-                        article_id=article.id
+                        article_id=article_id
                     )
                     db.session.add(link)
-            
-            existing.source_count = len(set(
-                ta.article.source_id for ta in existing.articles if ta.article
-            ))
+
+            existing.source_count = len(set(article_source_ids))
             db.session.commit()
             return existing
-    
-    unique_sources = len(set(a.source_id for a in articles))
-    
-    # Extract geographic info from source articles
-    geographic_scope, geographic_countries = extract_geographic_info_from_articles(articles)
-    
+
     topic = TrendingTopic(
         title=title,
-        description=articles[0].summary or '',
+        description=first_description,
         topic_embedding=topic_embedding,
         source_count=unique_sources,
         geographic_scope=geographic_scope,
@@ -335,20 +371,109 @@ def create_topic_from_cluster(
         status='pending',
         hold_until=utcnow_naive() + timedelta(minutes=hold_minutes)
     )
-    
+
     db.session.add(topic)
     db.session.flush()
-    
-    for article in articles:
+
+    for article_id in article_ids:
         link = TrendingTopicArticle(
             topic_id=topic.id,
-            article_id=article.id
+            article_id=article_id
         )
         db.session.add(link)
-    
+
     db.session.commit()
-    
+
     return topic
+
+
+def _generate_neutral_question_from_titles(titles: List[str]) -> Optional[str]:
+    """
+    Generate a neutral framing question from a list of article titles.
+    Works on plain strings so it can be called after the DB session is closed.
+    """
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        return None
+
+    headlines = titles[:5]
+
+    prompt = f"""Based on these news headlines about the same topic, generate a neutral,
+open-ended question suitable for public deliberation. The question should:
+- Be neutral, not leading
+- Invite multiple perspectives
+- Focus on policy/civic implications where possible
+- Use simple, direct language a 12-year-old could understand
+- Avoid bureaucratic jargon and complex terminology
+- Maximum 2 clauses (keep it concise)
+- Be under 150 characters
+
+Headlines:
+{chr(10).join(f'- {h}' for h in headlines)}
+
+Return ONLY the question, nothing else."""
+
+    try:
+        import openai
+        client = openai.OpenAI(api_key=api_key)
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a civic discourse facilitator."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=100,
+            temperature=0.7
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        logger.error(f"Question generation failed: {e}")
+        return None
+
+
+def _extract_geographic_info_from_data(geo_data: List[dict]) -> tuple:
+    """
+    Extract geographic scope and countries from pre-loaded article geo data.
+    Accepts plain dicts so it works after the DB session has been closed.
+    """
+    scopes = []
+    countries_list = []
+
+    for item in geo_data:
+        scope = item.get('geographic_scope')
+        if scope and scope != 'unknown':
+            scopes.append(scope)
+        countries = item.get('geographic_countries')
+        if countries:
+            countries_list.append(countries)
+        elif item.get('source_country'):
+            countries_list.append(item['source_country'])
+
+    if scopes:
+        scope_counts = Counter(scopes)
+        most_common_scope = scope_counts.most_common(1)[0][0]
+        geographic_scope = 'country' if most_common_scope in ('national', 'local', 'regional') else 'global'
+    else:
+        geographic_scope = 'global'
+
+    if countries_list:
+        all_countries = []
+        for c in countries_list:
+            all_countries.extend([x.strip() for x in c.split(',')])
+
+        if 'Global' in all_countries:
+            geographic_countries = None
+        else:
+            country_counts = Counter(all_countries)
+            top_countries = [c for c, _ in country_counts.most_common(3)]
+            geographic_countries = ', '.join(top_countries) if top_countries else None
+    else:
+        geographic_countries = None
+
+    return geographic_scope, geographic_countries
 
 
 def generate_neutral_question(articles: List[NewsArticle]) -> Optional[str]:
