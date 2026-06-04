@@ -10,14 +10,14 @@
 {% macro help_page_header(title, description) %}
 <div class="mb-10">
   {{ help_nav_back() }}
-  <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mt-4 mb-3">{{ title }}</h1>
-  <p class="text-lg text-gray-600 max-w-3xl">{{ description }}</p>
+  <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mt-4 mb-3">{{ title | escape_i18n }}</h1>
+  <p class="text-lg text-gray-600 max-w-3xl">{{ description | escape_i18n }}</p>
 </div>
 {% endmacro %}
 
 {% macro help_section_card(title) %}
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8 mb-6">
-  <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ title }}</h2>
+  <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ title | escape_i18n }}</h2>
   {{ caller() }}
 </div>
 {% endmacro %}

@@ -2834,7 +2834,7 @@ msgstr "开始使用"
 
 #: app/help/routes.py:14
 msgid "How to participate, save progress, and explore the platform"
-msgstr ""
+msgstr "如何参与、保存进度并探索平台"
 
 #: app/help/routes.py:21 app/templates/about.html:311
 #: app/templates/about.html:368
@@ -2846,7 +2846,7 @@ msgstr "大问题之旅"
 
 #: app/help/routes.py:22
 msgid "Guided civic experience across 8 themes and country editions"
-msgstr ""
+msgstr "跨越 8 个主题和国家版本的引导式公民体验"
 
 #: app/help/routes.py:29 app/templates/about.html:290
 #: app/templates/auth/dashboard.html:458
@@ -2861,7 +2861,7 @@ msgstr "每日问题"
 #: app/help/routes.py:30
 msgid ""
 "One civic question a day — vote, reflect, then see how others responded"
-msgstr ""
+msgstr "每天一个公民问题——投票、反思，然后看看其他人如何回应"
 
 #: app/help/routes.py:37 app/templates/about.html:295
 #: app/templates/admin/_admin_base.html:49
@@ -2878,9 +2878,8 @@ msgid "Daily Brief"
 msgstr "每日简报"
 
 #: app/help/routes.py:38
-#, fuzzy
 msgid "Free editorial digest from 140+ sources across the spectrum"
-msgstr "我们从140+个跨光谱的可信来源中进行精选"
+msgstr "来自 140+ 跨越政治谱系的源的免费编辑文摘"
 
 #: app/help/routes.py:45 app/templates/about.html:321
 #: app/templates/brief/subscribe.html:209
@@ -2894,18 +2893,17 @@ msgstr "新闻透明度仪表板"
 
 #: app/help/routes.py:46
 msgid "Explore how today's stories are covered left, centre, and right"
-msgstr ""
+msgstr "探索今天的新闻如何被左、中、右方面报道"
 
 #: app/help/routes.py:53 app/templates/faq.html:326
 #: app/templates/help/civic_infrastructure.html:12
 #: app/templates/help/help.html:50
-#, fuzzy
 msgid "Civic infrastructure"
-msgstr "公民评分"
+msgstr "公民基础设施"
 
 #: app/help/routes.py:54
 msgid "Run programmes, ship your own questions, polls, and consultations"
-msgstr ""
+msgstr "运行项目、发布你自己的问题、民意调查和咨询"
 
 #: app/help/routes.py:61 app/templates/auth/dashboard.html:39
 #: app/templates/help/civic_infrastructure.html:21
@@ -2917,16 +2915,15 @@ msgstr "项目"
 
 #: app/help/routes.py:62
 msgid "Multi-discussion campaigns with themes, phases, and exports"
-msgstr ""
+msgstr "具有主题、阶段和导出功能的多讨论活动"
 
 #: app/help/routes.py:69
 msgid "Creating Discussions"
 msgstr "创建讨论"
 
 #: app/help/routes.py:70
-#, fuzzy
 msgid "Launch structured polls and deliberation spaces in minutes"
-msgstr "结构化审议系统"
+msgstr "在几分钟内启动结构化民意调查和审议空间"
 
 #: app/help/routes.py:77 app/templates/help/managing_discussions.html:40
 msgid "Managing Discussions"
@@ -2934,7 +2931,7 @@ msgstr "管理讨论"
 
 #: app/help/routes.py:78
 msgid "Moderation, stewards, exports, and reading results"
-msgstr ""
+msgstr "内容审核、管理员、数据导出和结果阅读"
 
 #: app/help/routes.py:85 app/templates/about.html:326
 #: app/templates/briefing/landing.html:627
@@ -2945,26 +2942,24 @@ msgstr "个人简报"
 
 #: app/help/routes.py:86
 msgid "Custom AI digests from your sources — funds the free civic platform"
-msgstr ""
+msgstr "来自你的源的自定义 AI 文摘——为免费公民平台提供资金"
 
 #: app/help/routes.py:93 app/templates/help/getting_started.html:46
 #: app/templates/help/help.html:79
-#, fuzzy
 msgid "Native deliberation system"
-msgstr "原生辩论系统"
+msgstr "原生审议系统"
 
 #: app/help/routes.py:94
 msgid "Statements, voting, clustering, consensus, and bridge ideas"
-msgstr ""
+msgstr "观点、投票、聚类、共识和桥接想法"
 
 #: app/help/routes.py:101
-#, fuzzy
 msgid "News sourcing for discussions"
-msgstr "新闻讨论"
+msgstr "讨论的新闻采购"
 
 #: app/help/routes.py:102
 msgid "How trending topics become balanced deliberation prompts"
-msgstr ""
+msgstr "趋势话题如何成为平衡的审议提示"
 
 #: app/help/routes.py:113 app/templates/about.html:301
 #: app/templates/faq.html:302 app/templates/game/hub.html:3
@@ -2976,7 +2971,7 @@ msgstr "权衡取舍"
 
 #: app/help/routes.py:114
 msgid "Daily scenarios — govern under pressure, see who you become"
-msgstr ""
+msgstr "日常场景——在压力下治理，看看你会成为什么样的人"
 
 #: app/help/routes.py:127 app/templates/about.html:138
 #: app/templates/layout.html:536 app/templates/layout.html:952
@@ -2984,18 +2979,16 @@ msgid "Participate"
 msgstr "参与"
 
 #: app/help/routes.py:128 app/templates/about.html:287
-#, fuzzy
 msgid "Daily civic habit"
-msgstr "每日公民议题"
+msgstr "日常公民习惯"
 
 #: app/help/routes.py:129
-#, fuzzy
 msgid "Build & run consultations"
-msgstr "住房与规划咨询"
+msgstr "构建和运行咨询"
 
 #: app/help/routes.py:130
 msgid "Technical depth"
-msgstr ""
+msgstr "技术深度"
 
 #: app/lib/partner_portal_session.py:257 app/partner/routes.py:702
 msgid "This account has been deactivated. Please contact support."
@@ -4246,9 +4239,8 @@ msgid ""
 msgstr "您的认领申请已提交。管理员将尽快审核。"
 
 #: app/templates/about.html:4
-#, fuzzy
 msgid "About Society Speaks — Civic Technology for Sense-Making"
-msgstr "关于 Society Speaks - 社会意义探索系统"
+msgstr "关于 Society Speaks——公民技术助力意义制造"
 
 #: app/templates/about.html:5
 msgid ""
@@ -4256,23 +4248,23 @@ msgid ""
 "change, ML deliberation, Big Questions Journey, daily civic tools, "
 "Tradeoffs, and infrastructure for your own consultations."
 msgstr ""
+"Society Speaks 如何将参与转化为理解：我们的变革理论、ML 审议、大问题旅程、日常公民工具、权衡取舍以及你自己咨询的基础设施。"
 
 #: app/templates/about.html:7 app/templates/about.html:9
-#, fuzzy
 msgid "About Society Speaks — Making Disagreement Useful Again"
-msgstr "关于 Society Speaks - 让分歧再次有用"
+msgstr "关于 Society Speaks——让分歧再度有益"
 
 #: app/templates/about.html:8 app/templates/about.html:10
 msgid ""
 "Vote on the questions that matter. Run structured consultations on our "
 "infrastructure. Free, ad-free, open source civic technology."
-msgstr ""
+msgstr "对重要的问题投票。在我们的基础设施上运行结构化咨询。免费、无广告、开源的公民技术。"
 
 #: app/templates/about.html:19
 msgid ""
 "Civic technology platform for structured public deliberation and sense-"
 "making."
-msgstr ""
+msgstr "用于结构化公众审议和意义制造的公民技术平台。"
 
 #: app/templates/about.html:36
 #: app/templates/discussions/search_statements.html:7
@@ -4287,9 +4279,8 @@ msgid "About"
 msgstr "关于"
 
 #: app/templates/about.html:50
-#, fuzzy
 msgid "Open source civic infrastructure"
-msgstr "支持开源公民技术"
+msgstr "开源公民基础设施"
 
 #: app/templates/about.html:52 app/templates/index.html:133
 msgid "Making Disagreement Useful Again"
@@ -4299,7 +4290,7 @@ msgstr "让分歧再次有用"
 msgid ""
 "Open-source civic infrastructure for structured public judgment — and the "
 "daily habits that feed it."
-msgstr ""
+msgstr "用于结构化公众判断的开源公民基础设施——以及促进它的日常习惯。"
 
 #: app/templates/about.html:59 app/templates/help/getting_started.html:38
 #: app/templates/index.html:147
@@ -4307,9 +4298,8 @@ msgid "Take the Big Questions Journey"
 msgstr "进行大问题之旅"
 
 #: app/templates/about.html:62 app/templates/help/getting_started.html:50
-#, fuzzy
 msgid "Run your own consultation"
-msgstr "标准咨询"
+msgstr "运行你自己的咨询"
 
 #: app/templates/about.html:75 app/templates/index.html:205
 msgid "Open source"
@@ -4320,23 +4310,20 @@ msgid "No ads · No tracking"
 msgstr "无广告 · 无跟踪"
 
 #: app/templates/about.html:83
-#, fuzzy
 msgid "ML-powered deliberation"
-msgstr "公众审议"
+msgstr "ML 驱动的审议"
 
 #: app/templates/about.html:87
-#, fuzzy
 msgid "140+ curated news sources"
-msgstr "精选新闻来源"
+msgstr "140+ 精选新闻源"
 
 #: app/templates/about.html:97
-#, fuzzy
 msgid "The problem"
-msgstr "民调的问题"
+msgstr "问题所在"
 
 #: app/templates/about.html:99
 msgid "Society has information. It lacks understanding."
-msgstr ""
+msgstr "社会拥有信息。但缺乏理解。"
 
 #: app/templates/about.html:102
 msgid ""
@@ -4345,52 +4332,49 @@ msgid ""
 "a clearer picture of where communities align, where they split, and which "
 "ideas can bridge the gap."
 msgstr ""
+"大多数在线公共辩论奖励速度、愤怒和部落确定性——所以人们往往认为他们的分歧比实际更大。更好的决策需要更清晰地了解社区在何处一致、在何处分歧，以及哪些想法可以弥合差距。"
 
 #: app/templates/about.html:108
 msgid "Our theory of change"
-msgstr ""
+msgstr "我们的变革理论"
 
 #: app/templates/about.html:110
-#, fuzzy
 msgid "How participation becomes better judgment"
-msgstr "参与率随时间的变化"
+msgstr "参与如何成为更好的判断"
 
 #: app/templates/about.html:113
 msgid ""
 "We are building toward a more accurate, transparent view of public opinion "
 "on the issues people engage with here — not another comment section, but a "
 "shared reasoning layer. Each product is a step in the same chain."
-msgstr ""
+msgstr "我们正在建立一个更准确、透明的公众舆论观点——不是另一个评论区，而是一个共享的推理层。每个产品都是同一链条中的一步。"
 
 #: app/templates/about.html:117
 msgid "Theory of change steps"
-msgstr ""
+msgstr "变革理论步骤"
 
 #: app/templates/about.html:124
-#, fuzzy
 msgid "Engage"
-msgstr "语言"
+msgstr "参与"
 
 #: app/templates/about.html:125
 msgid ""
 "Meet people where curiosity already is — brief, question, play, or journey."
-msgstr ""
+msgstr "在好奇心已经存在的地方满足人们——简洁、提问、游戏或旅程。"
 
 #: app/templates/about.html:127
-#, fuzzy
 msgid "Tradeoffs · "
-msgstr "权衡取舍"
+msgstr "权衡取舍·"
 
 #: app/templates/about.html:127
-#, fuzzy
 msgid "Daily Question · Daily Brief · Big Questions Journey"
-msgstr "什么是《大问题之旅》？"
+msgstr "日常问题·日常简报·大问题旅程"
 
 #: app/templates/about.html:139
 msgid ""
 "Vote on clear statements — often before seeing crowds, so your view is yours"
 " first."
-msgstr ""
+msgstr "对明确的陈述进行投票——通常在看到众数之前，这样你的观点首先是你自己的。"
 
 #: app/templates/about.html:140
 #, fuzzy
@@ -4406,7 +4390,7 @@ msgstr "撤销"
 msgid ""
 "Machine learning groups people by voting patterns, not labels — then "
 "surfaces structure in the results."
-msgstr ""
+msgstr "机器学习根据投票模式而非标签对人进行分组——然后在结果中呈现结构。"
 
 #: app/templates/about.html:153
 #, fuzzy
@@ -4422,7 +4406,7 @@ msgstr "承受压力"
 msgid ""
 "Individuals see the full shape of opinion; institutions see evidence they "
 "can cite and export."
-msgstr ""
+msgstr "个人看到意见的完整形态；机构看到他们可以引用和导出的证据。"
 
 #: app/templates/about.html:175
 #, fuzzy
@@ -4433,7 +4417,7 @@ msgstr "科学与影响"
 msgid ""
 "Better-informed citizens, journalism, research, and policy — plus "
 "consultations you host on our infrastructure."
-msgstr ""
+msgstr "信息更灵通的公民、新闻、研究和政策——加上你在我们基础设施上举办的咨询。"
 
 #: app/templates/about.html:185
 msgid ""
@@ -4442,6 +4426,7 @@ msgid ""
 " Progress is cumulative — one question, one programme, one consultation at a"
 " time."
 msgstr ""
+"我们坦诚限制：分析需要足够的参与者；权衡度衡量对虚构内容的回应，而非你的意识形态；机构导出是汇总数据。进度是累积的——一个问题、一个项目、一次咨询。"
 
 #: app/templates/about.html:191
 #, fuzzy
@@ -4450,7 +4435,7 @@ msgstr "重新投票"
 
 #: app/templates/about.html:193
 msgid "Three design choices behind the chain above — methodology inspired by"
-msgstr ""
+msgstr "上述链条背后的三个设计选择——灵感来自方法论"
 
 #: app/templates/about.html:194
 #, fuzzy
@@ -4475,25 +4460,25 @@ msgstr "智库"
 #: app/templates/about.html:205
 msgid ""
 "Many surfaces hide aggregates until you have voted, reducing anchoring."
-msgstr ""
+msgstr "许多界面在你投票前隐藏汇总数据，减少锚定偏差。"
 
 #: app/templates/about.html:209
 msgid "Pattern-based groups"
-msgstr ""
+msgstr "基于模式的分组"
 
 #: app/templates/about.html:210
 msgid ""
 "Clusters form from votes, not demographics — then feed the reveal step "
 "below."
-msgstr ""
+msgstr "集群从投票中形成，而非人口统计——然后进入下面的显示步骤。"
 
 #: app/templates/about.html:217
 msgid "For civic tech builders"
-msgstr ""
+msgstr "为公民科技建设者"
 
 #: app/templates/about.html:218
 msgid "Run your own programmes on our infrastructure"
-msgstr ""
+msgstr "在我们的基础设施上运行你自己的项目"
 
 #: app/templates/about.html:220
 msgid ""
@@ -4502,31 +4487,36 @@ msgid ""
 "panels, publisher embeds, and internal strategy processes using the same "
 "deliberation engine we use on societyspeaks.io."
 msgstr ""
+"Society Speaks 不仅仅是一个公共广场——它是你可以部署的公民基础设施。使用我们在 societyspeaks.io "
+"上使用的同一审议引擎，启动结构化咨询、公民大会、研究小组、发行商嵌入和内部战略流程。"
 
 #: app/templates/about.html:225
 msgid ""
 "<strong class=\"text-white\">Programmes</strong> — group discussions by "
 "theme and phase, manage stewards, control visibility, export CSV data"
 msgstr ""
+"<strong class=\"text-white\">项目</strong>——按主题和阶段对讨论进行分组、管理协调员、控制可见性、导出 CSV "
+"数据"
 
 #: app/templates/about.html:229
 msgid ""
 "<strong class=\"text-white\">Discussions & polls</strong> — ship your own "
 "statements, seed questions, invite cohorts, run public or private "
 "consultations"
-msgstr ""
+msgstr "<strong class=\"text-white\">讨论与民调</strong>——发布你自己的陈述、设定问题、邀请队列、运行公开或私密咨询"
 
 #: app/templates/about.html:233
 msgid ""
 "<strong class=\"text-white\">Publisher embeds & API</strong> — embed voting "
 "on your site; automate topics from your CMS"
 msgstr ""
+"<strong class=\"text-white\">发行商嵌入与 API</strong>——在你的网站上嵌入投票；从你的 CMS 自动化主题"
 
 #: app/templates/about.html:237
 msgid ""
 "<strong class=\"text-white\">Consensus analysis</strong> — opinion clusters,"
 " bridge ideas, and exports when you have enough participation"
-msgstr ""
+msgstr "<strong class=\"text-white\">共识分析</strong>——意见集群、桥接观点、当参与度足够时导出数据"
 
 #: app/templates/about.html:242 app/templates/help/getting_started.html:53
 #, fuzzy
@@ -4551,7 +4541,7 @@ msgstr "系统揭示了什么"
 
 #: app/templates/about.html:256
 msgid "Three distinct types of insight — not a single vote count:"
-msgstr ""
+msgstr "三种不同的见解类型——而非单一投票计数："
 
 #: app/templates/about.html:262 app/templates/platform.html:339
 msgid "Consensus statements"
@@ -4561,7 +4551,7 @@ msgstr "共识陈述"
 msgid ""
 "Broad agreement across opinion clusters — including groups that disagree "
 "elsewhere."
-msgstr ""
+msgstr "跨意见集群的广泛共识——包括在其他方面意见相左的群体。"
 
 #: app/templates/about.html:269
 #, fuzzy
@@ -4572,7 +4562,7 @@ msgstr "桥接观点"
 msgid ""
 "Statements that resonate across clusters that otherwise split — often the "
 "most actionable for policy and dialogue."
-msgstr ""
+msgstr "在通常分裂的集群中引起共鸣的陈述——通常对政策和对话最有可行性。"
 
 #: app/templates/about.html:276 app/templates/platform.html:357
 msgid "Genuine divisions"
@@ -4582,7 +4572,7 @@ msgstr "真正的分歧"
 msgid ""
 "Clear fault lines where deeper deliberation is needed — surfaced honestly, "
 "not hidden."
-msgstr ""
+msgstr "需要更深入审议的清晰分歧线——诚实呈现，而非隐瞒。"
 
 #: app/templates/about.html:284
 #, fuzzy
@@ -4593,7 +4583,7 @@ msgstr "每天三种参与方式"
 msgid ""
 "Free civic tools for everyone. Premium Briefs and partnerships fund the "
 "commons."
-msgstr ""
+msgstr "人人可用的免费公民工具。高级简报和伙伴关系为公共利益提供资金。"
 
 #: app/templates/about.html:291
 #, fuzzy
@@ -4623,27 +4613,25 @@ msgstr "阅读今日简报"
 msgid ""
 "Five turns of governing under pressure — discover what kind of leader you "
 "become when every choice helps someone and hurts someone else."
-msgstr ""
+msgstr "压力下的五轮治理——发现当每个选择都帮助某人又伤害另一个人时，你会成为什么样的领导者。"
 
 #: app/templates/about.html:303
-#, fuzzy
 msgid "Play today"
-msgstr "今天谁出场了"
+msgstr "立即开始游戏"
 
 #: app/templates/about.html:308
 msgid "Depth & discovery"
-msgstr ""
+msgstr "深度探索"
 
 #: app/templates/about.html:312
 msgid ""
 "8 themes, country editions, at least 56 seed statements — vote across "
 "climate, AI, democracy, health, and more, then see your recap."
-msgstr ""
+msgstr "8个主题、多国版本、至少56条初始陈述——跨越气候、人工智能、民主、健康等多个领域进行投票，然后查看你的总结。"
 
 #: app/templates/about.html:313
-#, fuzzy
 msgid "Start the journey"
-msgstr "分享旅程"
+msgstr "开始旅程"
 
 #: app/templates/about.html:316 app/templates/admin/_admin_base.html:25
 #: app/templates/admin/_admin_base.html:101
@@ -4665,7 +4653,7 @@ msgstr "讨论"
 msgid ""
 "Topic-based deliberation on news and community issues — create your own or "
 "join open conversations."
-msgstr ""
+msgstr "基于主题的新闻和社区议题讨论——创建你自己的讨论或加入开放对话。"
 
 #: app/templates/about.html:318 app/templates/auth/saved_discussions.html:91
 #: app/templates/platform.html:747
@@ -4676,43 +4664,37 @@ msgstr "探索讨论"
 msgid ""
 "Today's news across the spectrum — sensationalism scores, coverage balance, "
 "and source transparency."
-msgstr ""
+msgstr "今日新闻全景——感性化评分、报道平衡度和信息源透明度。"
 
 #: app/templates/about.html:323 app/templates/help/news_dashboard.html:19
-#, fuzzy
 msgid "Open dashboard"
-msgstr "打开您的仪表板"
+msgstr "打开仪表板"
 
 #: app/templates/about.html:327
-#, fuzzy
 msgid ""
 "Paid custom digests from your RSS feeds, Substacks, and PDFs — subscriptions"
 " fund the free civic platform."
-msgstr "个人简报让您从您选择的出版物、Substacks 和 PDF 创建自定义日报摘要。您的订阅为我们的开源公民平台提供资金。"
+msgstr "来自你的RSS源、Substack和PDF的付费定制摘要——订阅为免费公民平台提供资金。"
 
 #: app/templates/about.html:328
-#, fuzzy
 msgid "Explore Personal Briefs"
-msgstr "示例个人简报"
+msgstr "探索个人简报"
 
 #: app/templates/about.html:335
-#, fuzzy
 msgid "From news to deliberation"
-msgstr "从新闻到审议"
+msgstr "从新闻到讨论"
 
 #: app/templates/about.html:336
 msgid ""
 "Curated civic news and spectrum transparency feed the Engage step — then "
 "seed statements and discussions carry issues into structured participation."
-msgstr ""
+msgstr "精选公民新闻和光谱透明度反馈支撑参与步骤——然后初始陈述和讨论将议题引入结构化参与。"
 
 #: app/templates/about.html:337
-#, fuzzy
 msgid "How we source news for debate"
-msgstr "我们的新闻源如何运作"
+msgstr "我们如何为辩论寻找新闻"
 
 #: app/templates/about.html:343
-#, fuzzy
 msgid "Built in the open"
 msgstr "开放构建"
 
@@ -4720,7 +4702,7 @@ msgstr "开放构建"
 msgid ""
 "Society Speaks is open source (AGPL). Audit the code, contribute "
 "improvements, or self-host components for your own civic stack."
-msgstr ""
+msgstr "Society Speaks是开源的(AGPL)。审计代码、贡献改进或自托管组件以构建你自己的公民堆栈。"
 
 #: app/templates/about.html:346
 msgid "View Society Speaks source code on GitHub (opens in new tab)"
@@ -4731,30 +4713,28 @@ msgid "View on GitHub"
 msgstr "在 GitHub 上查看"
 
 #: app/templates/about.html:353
-#, fuzzy
 msgid "Support the mission"
-msgstr "支持我们的使命"
+msgstr "支持使命"
 
 #: app/templates/about.html:354
 msgid ""
 "No advertising, no selling your data. Donations and Personal Briefs "
 "subscriptions keep civic features free for everyone."
-msgstr ""
+msgstr "无广告、不出售你的数据。捐赠和个人简报订阅让所有人都能免费使用公民功能。"
 
 #: app/templates/about.html:356
 msgid "Make a donation"
 msgstr "进行捐款"
 
 #: app/templates/about.html:365
-#, fuzzy
 msgid "Ready to participate or build?"
-msgstr "如何参与"
+msgstr "准备好参与或构建？"
 
 #: app/templates/about.html:366
 msgid ""
 "Take the Journey, answer today's question, or launch your own consultation "
 "on our infrastructure."
-msgstr ""
+msgstr "开始旅程、回答今日问题，或在我们的基础设施上启动你自己的咨询。"
 
 #: app/templates/about.html:369 app/templates/daily/no_question.html:30
 #: app/templates/daily/results.html:700 app/templates/layout.html:575
@@ -4764,9 +4744,8 @@ msgid "Today's Question"
 msgstr "今日问题"
 
 #: app/templates/about.html:371
-#, fuzzy
 msgid "Play Tradeoffs"
-msgstr "权衡取舍"
+msgstr "玩权衡游戏"
 
 #: app/templates/about.html:373 app/templates/help/help.html:48
 #: app/templates/help/help.html:103 app/templates/help/macros.html:45
@@ -4996,13 +4975,11 @@ msgid "Frequently Asked Questions — Society Speaks"
 msgstr "常见问题 — Society Speaks"
 
 #: app/templates/faq.html:5
-#, fuzzy
 msgid ""
 "Everything you need to know about Society Speaks — Big Questions Journey, "
 "Daily Brief, Daily Question, Tradeoffs, civic infrastructure for "
 "consultations, Personal Briefs, machine learning, privacy, and pricing."
-msgstr ""
-"关于 Society Speaks 的一切你需要了解的信息 — 大问题之旅、每日简报、每日问题、个人简报、我们的机器学习如何运作、隐私和定价。"
+msgstr "了解Society Speaks的一切——大问题旅程、每日简报、每日问题、权衡、公民咨询基础设施、个人简报、机器学习、隐私和定价。"
 
 #: app/templates/faq.html:8
 msgid ""
@@ -5035,7 +5012,6 @@ msgid "Is Society Speaks free?"
 msgstr "Society Speaks 免费吗？"
 
 #: app/templates/faq.html:25
-#, fuzzy
 msgid ""
 "Yes. All core features are free: discussions, programmes, the Big Questions "
 "Journey, the Daily Question, the Daily Brief, Tradeoffs, the News "
@@ -5043,8 +5019,7 @@ msgid ""
 "(from £4.99/month) is available for those who want a custom daily digest "
 "from their own sources — and it funds the free civic platform."
 msgstr ""
-"是的。所有核心功能都是免费的：讨论、大问题旅程、每日问题、每日摘要、新闻透明度仪表板和投票。付费的 Personal Briefs 订阅（从 "
-"£4.99/月起）可供那些想要从自己来源获取定制每日摘要的用户使用——这为免费的公民平台提供资金支持。"
+"是的。所有核心功能都是免费的：讨论、项目、大问题旅程、每日问题、每日简报、权衡、新闻透明度仪表板和投票。付费个人简报订阅(起价£4.99/月)面向想要从自己的信息源获得定制每日摘要的用户——它为免费公民平台提供资金。"
 
 #: app/templates/faq.html:29
 msgid "Do I need an account to use Society Speaks?"
@@ -5316,9 +5291,8 @@ msgstr ""
 "AllSides 的源偏见评级链接。无需注册。"
 
 #: app/templates/faq.html:120
-#, fuzzy
 msgid "What is Tradeoffs on Society Speaks?"
-msgstr "Society Speaks 上的权衡"
+msgstr "Society Speaks上的权衡是什么？"
 
 #: app/templates/faq.html:121
 msgid ""
@@ -5328,11 +5302,11 @@ msgid ""
 "It uses behavioural data about fictional choices, not your real-world "
 "political beliefs."
 msgstr ""
+"权衡是/play上的每日情景游戏。你面临虚构危机，在五轮管理选择中做出决定，每个选项都不完美，然后获得一个成果，显示你成为了什么样的领导者以及你建立了什么样的社会。它使用关于虚构选择的行为数据，而不是你真实的政治信念。"
 
 #: app/templates/faq.html:126
-#, fuzzy
 msgid "Can organisations run their own consultations on Society Speaks?"
-msgstr "组织可以使用 Society Speaks 吗？"
+msgstr "组织能否在Society Speaks上运行自己的咨询？"
 
 #: app/templates/faq.html:127
 msgid ""
@@ -5341,6 +5315,8 @@ msgid ""
 " control visibility, appoint stewards, export CSV data, and embed voting on "
 "your website via the Partner API."
 msgstr ""
+"能。Society "
+"Speaks是公民基础设施：使用你自己的初始陈述创建讨论、运行具有主题和阶段的多讨论项目、控制可见性、任命管理员、导出CSV数据，并通过合作伙伴API在你的网站上嵌入投票。"
 
 #: app/templates/faq.html:138
 msgid "Help & support"
@@ -5369,7 +5345,6 @@ msgstr ""
 "是一个公民技术平台，使用机器学习将公众参与转化为结构化见解。我们按投票方式（而非身份）对参与者进行分组，以揭示社会真正同意的地方、分裂的地方以及哪些想法能够弥合分歧。它是开源的、无广告的，且免费使用。"
 
 #: app/templates/faq.html:190
-#, fuzzy
 msgid ""
 "Yes. All core features are free: the Big Questions Journey, Daily Question, "
 "Daily Brief, Tradeoffs, News Transparency Dashboard, discussions, "
@@ -5377,8 +5352,7 @@ msgid ""
 "£4.99/month) is available for those who want a custom daily digest from "
 "their own sources — and it funds the free civic platform."
 msgstr ""
-"可以。所有核心功能都是免费的：《大问题之旅》、《每日问题》、《每日摘要》、新闻透明度仪表板、讨论和投票。对于那些想要从自己的来源获取自定义日报摘要的用户，可以获得付费个人摘要订阅（从"
-" £4.99/月起），这为免费公民平台提供资金。"
+"是的。所有核心功能都是免费的：大问题旅程、每日问题、每日简报、权衡、新闻透明度仪表板、讨论、项目和投票。付费个人简报订阅(起价£4.99/月)面向想要从自己的信息源获得定制每日摘要的用户——它为免费公民平台提供资金。"
 
 #: app/templates/faq.html:193
 msgid "Do I need an account?"
@@ -5404,10 +5378,11 @@ msgid ""
 "includes individuals, NGOs, governments, universities, publishers, and "
 "researchers."
 msgstr ""
+"任何对公众舆论好奇的人——以及需要基础设施来运行自己的项目、民意调查和咨询的公民技术专家。这包括个人、非政府组织、政府、大学、出版商和研究人员。"
 
 #: app/templates/faq.html:201
 msgid "Can I run my own questions and polls?"
-msgstr ""
+msgstr "我能运行自己的问题和民意调查吗？"
 
 #: app/templates/faq.html:202
 msgid ""
@@ -5417,6 +5392,7 @@ msgid ""
 "submissions, and export results. See our civic infrastructure guide in the "
 "Help Centre."
 msgstr ""
+"能。使用你的初始陈述创建讨论或构建包含多个主题讨论、阶段和队列的完整项目。你可以控制可见性(公开、未列出、仅限邀请或私密)、审核提交内容并导出结果。查看帮助中心的公民基础设施指南。"
 
 #: app/templates/faq.html:205
 msgid "Is Society Speaks open source?"
@@ -5658,9 +5634,8 @@ msgstr ""
 "'雷达之外'突出了未获得主流报道的重要故事。这些是我们的编辑和AI评分系统确定为具有高公民相关性但媒体关注度低的故事 — 重要但很少成为头条的故事。"
 
 #: app/templates/faq.html:306
-#, fuzzy
 msgid "What is Tradeoffs?"
-msgstr "什么是《权衡》"
+msgstr "权衡是什么？"
 
 #: app/templates/faq.html:307
 msgid ""
@@ -5670,10 +5645,12 @@ msgid ""
 "shareable outcome. Quick Run replays other scenarios; challenge links let "
 "friends play the same day and compare results."
 msgstr ""
+"权衡是Society "
+"Speaks上的每日情景游戏(/play)。每个情景给你五轮危机管理——每个选择帮助社会的一部分，伤害另一部分。你会获得身份标题、统计卡和可分享的成果。快速运行会重放其他情景；挑战链接让朋友在同一天玩同一情景并比较结果。"
 
 #: app/templates/faq.html:310
 msgid "Is Tradeoffs about my real political views?"
-msgstr ""
+msgstr "权衡与我真实的政治观点有关吗？"
 
 #: app/templates/faq.html:311
 msgid ""
@@ -5682,46 +5659,45 @@ msgid ""
 " grade your real-world beliefs. See our editorial principles on "
 "/play/editorial-principles."
 msgstr ""
+"没有。情景是虚构的。我们在游戏中存储行为选择，而不是你声称的意识形态。这个游戏在压力下照出了镜像；它不会评判你真实的信念。查看/play/editorial-"
+"principles上的编辑原则。"
 
 #: app/templates/faq.html:314
-#, fuzzy
 msgid "Do I need an account to play Tradeoffs?"
-msgstr "我需要账户才能使用 Society Speaks 吗？"
+msgstr "玩权衡需要账户吗？"
 
 #: app/templates/faq.html:315
 msgid ""
 "No for a single daily play. Sign in (magic link) to save streaks, merge "
 "anonymous runs when you log in, and keep outcome history. Friend challenges "
 "work with or without an account."
-msgstr ""
+msgstr "单次每日游戏不需要。登录(魔法链接)以保存连胜纪录、在登录时合并匿名运行，并保留成果历史。朋友挑战无论是否有账户都能工作。"
 
 #: app/templates/faq.html:318
 msgid "How does Tradeoffs connect to deliberation?"
-msgstr ""
+msgstr "权衡如何与讨论相连？"
 
 #: app/templates/faq.html:319
 msgid ""
 "When a scenario matches a live civic topic, Tradeoffs can link you to the "
 "related Daily Question or discussion so play leads into real structured "
 "participation."
-msgstr ""
+msgstr "当情景与活跃的公民议题匹配时，权衡可以链接你到相关的每日问题或讨论，使游戏引入真实结构化参与。"
 
 #: app/templates/faq.html:330
-#, fuzzy
 msgid "What is Society Speaks civic infrastructure?"
-msgstr "什么是 Society Speaks？"
+msgstr "Society Speaks公民基础设施是什么？"
 
 #: app/templates/faq.html:331
 msgid ""
 "The same deliberation engine behind our public Journey and Daily Question — "
 "available for your organisation. Run programmes, ship structured polls, "
 "embed on your properties, and export analysis-ready data."
-msgstr ""
+msgstr "支撑我们公开旅程和每日问题的同一讨论引擎——可供你的组织使用。运行项目、推送结构化民意调查、在你的平台上嵌入，并导出分析就绪的数据。"
 
 #: app/templates/faq.html:334
-#, fuzzy
 msgid "What is the difference between a discussion and a programme?"
-msgstr "个人计划和专业计划有什么区别？"
+msgstr "讨论和项目之间的区别是什么？"
 
 #: app/templates/faq.html:335
 msgid ""
@@ -5730,10 +5706,11 @@ msgid ""
 "shared themes, sequential phases, cohorts, stewards, and bulk export for "
 "large consultations."
 msgstr ""
+"讨论是一个独立的审议空间，拥有自己的陈述和结果。项目将许多讨论组织在一项倡议下——共享主题、阶段序列、参与群体、引导者和用于大规模咨询的批量导出。"
 
 #: app/templates/faq.html:338
 msgid "Can publishers embed voting on their sites?"
-msgstr ""
+msgstr "发行商能否在其网站上嵌入投票？"
 
 #: app/templates/faq.html:339
 msgid ""
@@ -5741,11 +5718,11 @@ msgid ""
 " to article URLs, define your own statements, and receive structured opinion"
 " data. You choose every topic — we do not scrape your newsroom."
 msgstr ""
+"可以。合作伙伴中心提供iframe嵌入和API，让您将讨论链接到文章URL、定义自己的陈述，并获取结构化的舆论数据。您选择每个主题——我们不会抓取您的新闻编辑室。"
 
 #: app/templates/faq.html:342
-#, fuzzy
 msgid "When does consensus analysis become available?"
-msgstr "参与人数足够后，共识分析将可用"
+msgstr "共识分析何时可用？"
 
 #: app/templates/faq.html:343
 msgid ""
@@ -5753,6 +5730,7 @@ msgid ""
 "of statements (exact thresholds depend on discussion size). Stewards and "
 "creators can access CSV exports and consensus views when unlocked."
 msgstr ""
+"通常在大约7–15名参与者对陈述的有意义部分进行投票后即可获得（确切的阈值取决于讨论规模）。引导者和创建者可以在解锁时访问CSV导出和共识视图。"
 
 #: app/templates/faq.html:349 app/templates/layout.html:587
 #: app/templates/layout.html:974 app/templates/layout.html:1249
@@ -5962,9 +5940,8 @@ msgid ""
 msgstr "可以。随时从账户设置中取消。没有锁定期。如果在试用期间取消，您不会被收费。"
 
 #: app/templates/faq.html:434
-#, fuzzy
 msgid "For organisations & partners"
-msgstr "供组织使用"
+msgstr "面向组织和合作伙伴"
 
 #: app/templates/faq.html:439
 msgid ""
@@ -5972,6 +5949,8 @@ msgid ""
 "your own consultations on the same infrastructure. NGOs, governments, "
 "universities, publishers, and researchers use Society Speaks globally."
 msgstr ""
+"可以——既作为参与者，也作为运营者。使用我们的公开项目或在同一基础设施上部署您自己的咨询。非政府组织、政府、大学、发行商和研究人员在全球范围内使用Society"
+" Speaks。"
 
 #: app/templates/faq.html:442
 msgid "What is the publisher embed?"
@@ -5983,6 +5962,7 @@ msgid ""
 "pages you choose. Readers vote Agree / Disagree / Unsure on statements you "
 "define; you receive consensus, bridge, and division analytics."
 msgstr ""
+"一个轻量级iframe（和合作伙伴API），在您选择的页面上放置结构化投票。读者对您定义的陈述投票「同意/不同意/不确定」；您获得共识、桥接和分化分析。"
 
 #: app/templates/faq.html:446
 msgid "Can I run a citizen consultation or deliberation programme?"
@@ -5993,7 +5973,7 @@ msgid ""
 "Yes. Programmes support multi-stage deliberation: themes, phases, cohorts, "
 "stewards, visibility controls, and exports. Start from the Help Centre civic"
 " infrastructure guide or contact us for large deployments."
-msgstr ""
+msgstr "可以。项目支持多阶段审议：主题、阶段、参与群体、引导者、可见性控制和导出。从帮助中心公民基础设施指南开始，或联系我们进行大规模部署。"
 
 #: app/templates/faq.html:450
 msgid "What data can organisations access?"
@@ -6004,19 +5984,18 @@ msgid ""
 "Vote distributions, participant counts, clustering results, and CSV exports "
 "of anonymised voting data. Individual voters are not publicly named. See our"
 " privacy policy for retention and rights."
-msgstr ""
+msgstr "投票分布、参与者数量、聚类结果和匿名投票数据的CSV导出。个人投票者不会被公开命名。详见我们的隐私政策了解保留期和权利。"
 
 #: app/templates/faq.html:454
-#, fuzzy
 msgid "Where can I get implementation help?"
-msgstr "实施检查清单"
+msgstr "我在哪里可以获得实施帮助？"
 
 #: app/templates/faq.html:455
 msgid ""
 "Visit the Help Centre civic infrastructure guide, Programmes documentation, "
 "Partner hub API reference, or email info@societyspeaks.io for enterprise-"
 "style support."
-msgstr ""
+msgstr "访问帮助中心公民基础设施指南、项目文档、合作伙伴中心API参考，或发送邮件至info@societyspeaks.io获得企业级支持。"
 
 #: app/templates/faq.html:461
 msgid "Privacy & Data"
@@ -19873,26 +19852,24 @@ msgstr "查看所有话题"
 #: app/templates/discussions/search_discussions.html:4
 #, python-format
 msgid "Explore Discussions — results for %(term)s"
-msgstr ""
+msgstr "浏览讨论——%(term)s的结果"
 
 #: app/templates/discussions/search_discussions.html:4
-#, fuzzy
 msgid "Explore Discussions | Society Speaks"
-msgstr "新闻讨论 - Society Speaks"
+msgstr "浏览讨论 | Society Speaks"
 
 #: app/templates/discussions/search_discussions.html:5
 #, python-format
 msgid "Discover and join meaningful discussions. Results for %(term)s."
-msgstr ""
+msgstr "发现并加入有意义的讨论。%(term)s的结果。"
 
 #: app/templates/discussions/search_discussions.html:5
 msgid "Discover and join meaningful discussions on topics that matter."
-msgstr ""
+msgstr "发现并加入关于重要议题的有意义讨论。"
 
 #: app/templates/discussions/search_discussions.html:6
-#, fuzzy
 msgid "society discussions, explore discussions"
-msgstr "探索讨论"
+msgstr "society讨论，浏览讨论"
 
 #: app/templates/discussions/search_discussions.html:10
 msgid "Search discussions on SocietySpeaks."
@@ -22913,26 +22890,24 @@ msgid "Stability"
 msgstr "稳定性"
 
 #: app/templates/help/big_questions_journey.html:4
-#, fuzzy
 msgid "Big Questions Journey — Help | Society Speaks"
-msgstr "大问题公民之旅 — Society Speaks"
+msgstr "大问题之旅——帮助 | Society Speaks"
 
 #: app/templates/help/big_questions_journey.html:5
 msgid ""
 "Guide to the Big Questions Journey: 8 themes, country editions, voting, "
 "recaps, and how your views compare to opinion clusters."
-msgstr ""
+msgstr "大问题之旅指南：8个主题、国家版本、投票、回顾以及您的观点与舆论聚类的对比。"
 
 #: app/templates/help/big_questions_journey.html:12
 msgid ""
 "A guided civic experience across the issues defining our era — climate, AI, "
 "economy, health, security, democracy, society, and education."
-msgstr ""
+msgstr "一次跨越时代重大问题的引导式公民体验——气候、人工智能、经济、卫生、安全、民主、社会和教育。"
 
 #: app/templates/help/big_questions_journey.html:17
-#, fuzzy
 msgid "What it is"
-msgstr "含义"
+msgstr "它是什么"
 
 #: app/templates/help/big_questions_journey.html:18
 msgid ""
@@ -22941,6 +22916,7 @@ msgid ""
 "Disagree, or Unsure and can submit their own statements after engaging with "
 "the theme."
 msgstr ""
+"每个版本包含8个主题。每个主题以至少7个专家策划的种子陈述开始（整个旅程中有56+条）。参与者投票「同意」、「不同意」或「不确定」，并可在与主题互动后提交自己的陈述。"
 
 #: app/templates/help/big_questions_journey.html:19
 msgid ""
@@ -22949,35 +22925,34 @@ msgid ""
 "global edition. We recommend an edition based on your profile or browser "
 "language when possible."
 msgstr ""
+"国家版本将问题锚定在本地政策背景中——英国、美国、德国、法国、荷兰、爱尔兰、加拿大、新加坡、日本、中国，加上全球版本。我们根据您的资料或浏览器语言推荐相应版本。"
 
 #: app/templates/help/big_questions_journey.html:22
-#, fuzzy
 msgid "After you vote"
-msgstr "确认你的投票"
+msgstr "投票后"
 
 #: app/templates/help/big_questions_journey.html:23
 msgid ""
 "Theme recaps show opinion clusters, consensus statements, bridge ideas, and "
 "genuine divisions. Sign in to save progress across devices. Complete all "
 "themes for your full picture."
-msgstr ""
+msgstr "主题回顾展示舆论聚类、共识陈述、桥接想法和真实分歧。登录以跨设备保存进度。完成所有主题可获得您的完整图景。"
 
 #: app/templates/help/big_questions_journey.html:24
-#, fuzzy
 msgid "Choose your edition"
-msgstr "或选择一个版本"
+msgstr "选择您的版本"
 
 #: app/templates/help/civic_infrastructure.html:5
 msgid ""
 "Civic infrastructure — run programmes & consultations | Society Speaks Help"
-msgstr ""
+msgstr "公民基础设施——运行项目和咨询 | Society Speaks帮助"
 
 #: app/templates/help/civic_infrastructure.html:6
 msgid ""
 "Use Society Speaks as civic infrastructure: run programmes, ship your own "
 "questions and polls, embed on your site, export data, and surface consensus,"
 " bridge ideas, and divisions."
-msgstr ""
+msgstr "使用Society Speaks作为公民基础设施：运行项目、发布自己的问卷和投票、在您的网站上嵌入、导出数据，并展示共识、桥接想法和分化。"
 
 #: app/templates/help/civic_infrastructure.html:13
 msgid ""
@@ -22986,165 +22961,148 @@ msgid ""
 "analysis-ready data using the same deliberation engine behind our public "
 "programmes."
 msgstr ""
+"Society "
+"Speaks是您可以部署的公民技术——不仅是一个目的地网站。运行咨询、发布自己的结构化投票，并使用支持我们公开项目的同一审议引擎导出可进行分析的数据。"
 
 #: app/templates/help/civic_infrastructure.html:18
-#, fuzzy
 msgid "What you can run"
-msgstr "您可以自定义的内容"
+msgstr "您可以运行的内容"
 
 #: app/templates/help/civic_infrastructure.html:22
 msgid ""
 "Multi-discussion campaigns with themes, phases, cohorts, stewards, "
 "visibility controls, and bulk export — ideal for citizen assemblies, policy "
 "consultations, and longitudinal engagement."
-msgstr ""
+msgstr "具有主题、阶段、参与群体、引导者、可见性控制和批量导出的多讨论活动——非常适合公民大会、政策咨询和纵向参与。"
 
 #: app/templates/help/civic_infrastructure.html:23
-#, fuzzy
 msgid "Programmes guide"
-msgstr "项目"
+msgstr "项目指南"
 
 #: app/templates/help/civic_infrastructure.html:26
-#, fuzzy
 msgid "Standalone discussions"
-msgstr "已保存的讨论"
+msgstr "独立讨论"
 
 #: app/templates/help/civic_infrastructure.html:27
 msgid ""
 "Launch a focused poll or deliberation in minutes: seed statements, set "
 "public/unlisted/invite-only visibility, moderate submissions, and unlock ML "
 "clustering when participation thresholds are met."
-msgstr ""
+msgstr "在几分钟内启动聚焦投票或审议：种子陈述、设置公开/未列出/仅邀请可见性、审核提交、在达到参与阈值时解锁ML聚类。"
 
 #: app/templates/help/civic_infrastructure.html:28
 #: app/templates/help/creating_discussions.html:45
-#, fuzzy
 msgid "Creating discussions"
 msgstr "创建讨论"
 
 #: app/templates/help/civic_infrastructure.html:31
-#, fuzzy
 msgid "Publisher embeds & Partner API"
-msgstr "发布者嵌入"
+msgstr "发行商嵌入和合作伙伴API"
 
 #: app/templates/help/civic_infrastructure.html:32
-#, fuzzy
 msgid ""
 "Embed voting on articles and pages you choose. You define topics and "
 "statements — we do not scrape your newsroom. Automate creation from your CMS"
 " when ready."
-msgstr ""
-"在您选择的文章或其他页面上嵌入 Society "
-"Speaks：您可以自己定义每个投票主题和开场陈述，或通过您的内容管理系统——我们不会抓取您的新闻编辑室。"
+msgstr "在您选择的文章和页面上嵌入投票。您定义主题和陈述——我们不会抓取您的新闻编辑室。准备好时可从您的CMS自动创建。"
 
 #: app/templates/help/civic_infrastructure.html:36
-#, fuzzy
 msgid "Organisation profiles"
-msgstr "组织档案"
+msgstr "组织资料"
 
 #: app/templates/help/civic_infrastructure.html:37
 msgid ""
 "Attach programmes and discussions to your organisation so multiple editors "
 "can steward the same initiative with a public-facing identity."
-msgstr ""
+msgstr "将项目和讨论附加到您的组织，以便多个编辑者能够以公开身份引导同一倡议。"
 
 #: app/templates/help/civic_infrastructure.html:43
-#, fuzzy
 msgid "Typical workflows"
-msgstr "审批工作流"
+msgstr "典型工作流程"
 
 #: app/templates/help/civic_infrastructure.html:45
-#, fuzzy
 msgid "Scoping"
-msgstr "显示"
+msgstr "界定范围"
 
 #: app/templates/help/civic_infrastructure.html:45
 msgid ""
 "Define the decision or question, audience, and timeline. Draft 5–15 clear "
 "seed statements spanning perspectives."
-msgstr ""
+msgstr "明确决策或问题、受众和时间表。起草5–15条清晰的种子陈述，涵盖多个视角。"
 
 #: app/templates/help/civic_infrastructure.html:46
-#, fuzzy
 msgid "Launch"
-msgstr "套餐"
+msgstr "启动"
 
 #: app/templates/help/civic_infrastructure.html:46
 msgid ""
 "Create a programme or discussion, set visibility, invite stewards, share "
 "links or embed on your properties."
-msgstr ""
+msgstr "创建一个项目或讨论，设置可见性，邀请主持人，分享链接或嵌入到您的平台。"
 
 #: app/templates/help/civic_infrastructure.html:47
-#, fuzzy
 msgid "Participation"
-msgstr "正在参与"
+msgstr "参与"
 
 #: app/templates/help/civic_infrastructure.html:47
 msgid ""
 "Participants vote Agree / Disagree / Unsure and may add statements "
 "(moderated). Encourage voting before results where anchoring matters."
-msgstr ""
+msgstr "参与者对「同意/不同意/不确定」进行投票，并可添加陈述（审核）。在显示结果前鼓励投票，因为先入为主的影响很重要。"
 
 #: app/templates/help/civic_infrastructure.html:48
 msgid ""
 "When enough votes exist, clustering reveals consensus, bridge ideas, and "
 "divisions. Export CSV for reporting."
-msgstr ""
+msgstr "当有足够的投票时，聚类会揭示共识、桥接想法和分歧。导出CSV用于报告。"
 
 #: app/templates/help/civic_infrastructure.html:49
-#, fuzzy
 msgid "Action"
-msgstr "操作"
+msgstr "行动"
 
 #: app/templates/help/civic_infrastructure.html:49
 msgid ""
 "Use bridge statements for coalition-building; use divisive statements to "
 "design deeper dialogue — not to declare winners."
-msgstr ""
+msgstr "使用桥接陈述进行联盟建设；使用分歧陈述设计更深入的对话——而非宣布赢家。"
 
 #: app/templates/help/civic_infrastructure.html:54
-#, fuzzy
 msgid "Data & privacy"
-msgstr "我的数据隐私吗？"
+msgstr "数据和隐私"
 
 #: app/templates/help/civic_infrastructure.html:56
 msgid ""
 "Stewards receive aggregate vote distributions and anonymised exports — not "
 "public attribution of individual voters by name."
-msgstr ""
+msgstr "主持人收到汇总的投票分布和匿名导出——不按姓名公开个别投票者的属性。"
 
 #: app/templates/help/civic_infrastructure.html:57
-#, fuzzy
 msgid ""
 "Visibility settings (public, unlisted, invite-only, private) control "
 "discovery and access."
-msgstr "<strong>设置可见性。</strong>根据你的受众和隐私需求选择公开、不列出、仅邀请或私密。"
+msgstr "可见性设置（公开、未列出、仅邀请、私密）控制发现和访问。"
 
 #: app/templates/help/civic_infrastructure.html:58
 msgid "Open-source codebase — audit how data is processed and stored."
-msgstr ""
+msgstr "开源代码库——审计数据如何处理和存储。"
 
 #: app/templates/help/civic_infrastructure.html:61
-#, fuzzy
 msgid "Privacy policy"
 msgstr "隐私政策"
 
 #: app/templates/help/civic_infrastructure.html:63
-#, fuzzy
 msgid "Managing discussions & exports"
-msgstr "管理讨论"
+msgstr "管理讨论和导出"
 
 #: app/templates/help/civic_infrastructure.html:71
-#, fuzzy
 msgid "Start building"
-msgstr "开始投票"
+msgstr "开始构建"
 
 #: app/templates/help/civic_infrastructure.html:72
 msgid ""
 "Free to create discussions. Partner embeds and large programmes — talk to us"
 " if you need enterprise support."
-msgstr ""
+msgstr "免费创建讨论。合作伙伴嵌入和大型项目——如需企业支持，请与我们联系。"
 
 #: app/templates/help/civic_infrastructure.html:75
 #: app/templates/partner/api_docs.html:1262
@@ -23162,7 +23120,7 @@ msgid ""
 "Create structured polls and deliberation spaces on Society Speaks: seed "
 "statements, visibility, moderation, and ML-powered consensus analysis. "
 "Native system recommended."
-msgstr ""
+msgstr "在Society Speaks上创建结构化民调和审议空间：种子陈述、可见性、审核和机器学习驱动的共识分析。推荐使用本地系统。"
 
 #: app/templates/help/creating_discussions.html:12
 msgid "Creating Discussions on Society Speaks"
@@ -23172,18 +23130,17 @@ msgstr "在 Society Speaks 上创建讨论"
 msgid ""
 "Create a structured deliberation or poll on Society Speaks using the native "
 "statement system."
-msgstr ""
+msgstr "使用Society Speaks上的本地陈述系统创建结构化审议或民调。"
 
 #: app/templates/help/creating_discussions.html:17
-#, fuzzy
 msgid "Draft seed statements"
-msgstr "添加种子陈述"
+msgstr "起草种子陈述"
 
 #: app/templates/help/creating_discussions.html:18
 msgid ""
 "Write clear, single-claim statements spanning multiple perspectives on your "
 "topic."
-msgstr ""
+msgstr "撰写清晰、单一主张的陈述，涵盖您主题的多个视角。"
 
 #: app/templates/help/creating_discussions.html:22
 msgid "Add Seed Statements"
@@ -23213,7 +23170,6 @@ msgid "Share your discussion link and actively engage with participants."
 msgstr "分享您的讨论链接并主动与参与者互动。"
 
 #: app/templates/help/creating_discussions.html:44
-#, fuzzy
 msgid "← Help Centre"
 msgstr "← 帮助中心"
 
@@ -23221,17 +23177,15 @@ msgstr "← 帮助中心"
 msgid ""
 "Launch your own structured poll or deliberation in minutes — the building "
 "block for consultations and"
-msgstr ""
+msgstr "在几分钟内启动您自己的结构化民调或审议——咨询和项目的构建块"
 
 #: app/templates/help/creating_discussions.html:48
-#, fuzzy
 msgid "programmes"
 msgstr "项目"
 
 #: app/templates/help/creating_discussions.html:56
-#, fuzzy
 msgid "Native deliberation (recommended)"
-msgstr "✨ 原生系统（推荐）"
+msgstr "本地审议（推荐）"
 
 #: app/templates/help/creating_discussions.html:58
 msgid ""
@@ -23240,6 +23194,7 @@ msgid ""
 "Pol.is embed path remains for specific integrations; see Advanced in the "
 "Help Centre."
 msgstr ""
+"大多数新讨论使用我们的本地陈述系统——投票、可选的线程回复、证据和内置共识分析。旧的Pol.is嵌入路径仍可用于特定集成；请参阅帮助中心的高级部分。"
 
 #: app/templates/help/creating_discussions.html:64
 msgid "✨ Native System (Recommended)"
@@ -23460,169 +23415,152 @@ msgid "Send us feedback"
 msgstr "向我们发送反馈"
 
 #: app/templates/help/daily_brief.html:4
-#, fuzzy
 msgid "Daily Brief — Help | Society Speaks"
-msgstr "订阅每日简报 - Society Speaks"
+msgstr "每日简讯——帮助 | Society Speaks"
 
 #: app/templates/help/daily_brief.html:5
 msgid ""
 "The free Society Speaks Daily Brief: 3–5 civic stories from 140+ sources, "
 "spectrum breakdown, and under-reported coverage."
-msgstr ""
+msgstr "免费的Society Speaks每日简讯：来自140多个来源的3–5个公民故事、光谱分解和鲜少报道的内容。"
 
 #: app/templates/help/daily_brief.html:12
 msgid ""
 "A free, ad-free editorial digest — not personalised algorithmic news. "
 "Stories are chosen for civic impact, not virality."
-msgstr ""
+msgstr "免费、无广告的编辑摘要——非个性化的算法新闻。故事因公民影响而非病毒式传播而选择。"
 
 #: app/templates/help/daily_brief.html:19
 msgid "3–5 stories per edition with \"Why this matters\" context"
-msgstr ""
+msgstr "每期3–5个故事，附带「为什么这很重要」的背景"
 
 #: app/templates/help/daily_brief.html:20
 msgid "Left / centre / right breakdown per story (bias ratings from AllSides)"
-msgstr ""
+msgstr "左翼/中间/右翼分解（来自AllSides的偏见评级）"
 
 #: app/templates/help/daily_brief.html:21
 msgid "Under the Radar — important stories with low mainstream attention"
-msgstr ""
+msgstr "雷达下——主流媒体关注度低的重要故事"
 
 #: app/templates/help/daily_brief.html:26
-#, fuzzy
 msgid "Daily Brief vs Personal Briefs"
-msgstr "什么是个人摘要？"
+msgstr "每日简讯 vs 个人简讯"
 
 #: app/templates/help/daily_brief.html:27
-#, fuzzy
 msgid ""
 "The Daily Brief is curated by Society Speaks from our 140+ source library. "
 "Personal Briefs are paid, custom digests built from sources you choose — and"
 " subscriptions fund the free civic platform."
 msgstr ""
-"日报摘要是一份免费的、编辑精心策划的摘要，包含来自 Society Speaks 140+ 源库的 3-5 "
-"篇公民故事。个人摘要是一份付费的、完全可自定义的摘要，由您选择的来源构建，具有 AI "
-"合成和您自己的时间表。个人摘要订阅为免费日报摘要和其他公民功能提供资金。"
+"每日简讯由Society "
+"Speaks从我们的140多个来源库中精选。个人简讯是付费、自定义摘要，由您选择的来源构建——订阅为免费的civic平台提供资金。"
 
 #: app/templates/help/daily_brief.html:28
-#, fuzzy
 msgid "Personal Briefs help"
-msgstr "个人简报"
+msgstr "个人简讯帮助"
 
 #: app/templates/help/daily_question.html:4
-#, fuzzy
 msgid "Daily Question — Help | Society Speaks"
-msgstr "日常问题 - Society Speaks"
+msgstr "每日问题——帮助 | Society Speaks"
 
 #: app/templates/help/daily_question.html:5
 msgid ""
 "How the Daily Question works: daily civic questions, blind-then-reveal "
 "voting, email digests, and longitudinal public opinion."
-msgstr ""
+msgstr "每日问题的工作原理：每日公民问题、盲投后揭示投票、电子邮件摘要和纵向公众舆论。"
 
 #: app/templates/help/daily_question.html:12
 msgid ""
 "One carefully chosen civic question each day — a two-minute habit that "
 "builds a longitudinal record of how society thinks."
-msgstr ""
+msgstr "每天精心选择一个公民问题——两分钟的习惯，建立社会思想的纵向记录。"
 
 #: app/templates/help/daily_question.html:17
-#, fuzzy
 msgid "How to participate"
 msgstr "如何参与"
 
 #: app/templates/help/daily_question.html:19
-#, fuzzy
 msgid "Open today's question and vote Agree, Disagree, or Unsure."
-msgstr "您对今日议题的投票：同意、不同意或不确定"
+msgstr "打开今日问题并投票「同意」、「不同意」或「不确定」。"
 
 #: app/templates/help/daily_question.html:20
-#, fuzzy
 msgid "Optionally add a short reason for your vote."
-msgstr "为你的理由提供可选的简短解释"
+msgstr "可选：为您的投票添加简短的理由。"
 
 #: app/templates/help/daily_question.html:21
 msgid ""
 "See aggregate results after you have contributed — designed to reduce "
 "anchoring bias."
-msgstr ""
+msgstr "贡献后查看汇总结果 — 旨在减少锚定偏差。"
 
 #: app/templates/help/daily_question.html:26
-#, fuzzy
 msgid "Email delivery"
-msgstr "定时投送"
+msgstr "电子邮件投递"
 
 #: app/templates/help/daily_question.html:27
 msgid ""
 "Subscribe without an account. Default delivery is a weekly digest (5 "
 "questions); switch to daily or monthly via the link in any email."
-msgstr ""
+msgstr "无需账户即可订阅。默认每周发送一次摘要（5 个问题）；可通过任何电子邮件中的链接切换为每日或每月。"
 
 #: app/templates/help/daily_question.html:28
-#, fuzzy
 msgid "Subscribe by email"
-msgstr "重新订阅每日简报"
+msgstr "通过电子邮件订阅"
 
 #: app/templates/help/daily_question.html:32
 msgid ""
 "Daily Questions are often linked to active discussions on the platform. "
 "Organisations running consultations can create discussions that feed the "
 "civic conversation — see"
-msgstr ""
+msgstr "每日问题通常与平台上的活跃讨论相关。运行咨询的组织可以创建推动公民对话的讨论 — 详见"
 
 #: app/templates/help/daily_question.html:33
 #: app/templates/help/programmes.html:54
-#, fuzzy
 msgid "civic infrastructure"
-msgstr "公民评分"
+msgstr "公民基础设施"
 
 #: app/templates/help/getting_started.html:6
-#, fuzzy
 msgid "Getting Started — Society Speaks Help"
-msgstr "Society Speaks 快速开始"
+msgstr "入门指南 — Society Speaks 帮助"
 
 #: app/templates/help/getting_started.html:7
 msgid ""
 "Get started with Society Speaks: Daily Question, Big Questions Journey, "
 "discussions, Tradeoffs, and how to run your own consultations."
-msgstr ""
+msgstr "开始使用 Society Speaks：每日问题、大问题之旅、讨论、权衡分析，以及如何运行您自己的咨询。"
 
 #: app/templates/help/getting_started.html:14
 msgid ""
 "Society Speaks is civic infrastructure for sense-making — participate in "
 "public programmes or run your own structured polls and consultations."
-msgstr ""
+msgstr "Society Speaks 是用于理解民意的公民基础设施 — 参与公众项目或运行您自己的结构化民调和咨询。"
 
 #: app/templates/help/getting_started.html:19
-#, fuzzy
 msgid "No account required to explore"
-msgstr "需要账户"
+msgstr "无需账户即可探索"
 
 #: app/templates/help/getting_started.html:21
-#, fuzzy
 msgid "free news digest"
-msgstr "每周摘要"
+msgstr "免费新闻摘要"
 
 #: app/templates/help/getting_started.html:22
 msgid "vote in under two minutes"
-msgstr ""
+msgstr "两分钟内完成投票"
 
 #: app/templates/help/getting_started.html:26
-#, fuzzy
 msgid "daily scenario game"
-msgstr "今天的情景"
+msgstr "每日场景游戏"
 
 #: app/templates/help/getting_started.html:32
-#, fuzzy
 msgid "Sign up free to save progress"
-msgstr "以保存进度。"
+msgstr "免费注册以保存进度"
 
 #: app/templates/help/getting_started.html:33
 msgid ""
 "An account lets you continue the Big Questions Journey across devices, "
 "create discussions and programmes, manage briefings, and track your voting "
 "history."
-msgstr ""
+msgstr "账户让您可以跨设备继续大问题之旅、创建讨论和项目、管理简报，以及跟踪您的投票历史。"
 
 #: app/templates/help/getting_started.html:34
 #: app/templates/partner/hub.html:632
@@ -23634,17 +23572,15 @@ msgstr "创建免费账户"
 msgid ""
 "Our flagship guided experience — 8 themes, country editions, consensus and "
 "bridge insights after you vote."
-msgstr ""
+msgstr "我们的旗舰引导体验 — 8 个主题、国家版本、投票后的共识和桥接见解。"
 
 #: app/templates/help/getting_started.html:40
-#, fuzzy
 msgid "Choose edition"
-msgstr "或选择一个版本"
+msgstr "选择版本"
 
 #: app/templates/help/getting_started.html:44
-#, fuzzy
 msgid "How voting works"
-msgstr "运作方式"
+msgstr "投票如何运作"
 
 #: app/templates/help/getting_started.html:45
 msgid ""
@@ -23652,6 +23588,8 @@ msgid ""
 "clear, single claims — not threaded comments. Choose Agree, Disagree, or "
 "Unsure. Optionally add a short reason."
 msgstr ""
+"在讨论和之旅中，您对 <strong>声明</strong> — 清晰的单一观点 — "
+"进行投票，而不是对话式评论。选择同意、不同意或不确定。可选择添加简短的理由。"
 
 #: app/templates/help/getting_started.html:51
 msgid ""
@@ -23659,47 +23597,43 @@ msgid ""
 "their own questions, polls, and multi-stage programmes — with exports and "
 "ML-powered consensus analysis."
 msgstr ""
+"非政府组织、政府、研究人员和出版商使用 Society Speaks 来发布他们自己的问题、民调和多阶段项目 — 包括数据导出和人工智能驱动的共识分析。"
 
 #: app/templates/help/help.html:6
-#, fuzzy
 msgid "Help Centre — Society Speaks"
-msgstr "平台 — Society Speaks"
+msgstr "帮助中心 — Society Speaks"
 
 #: app/templates/help/help.html:7
 msgid ""
 "Help for Society Speaks: participate in the Big Questions Journey, Daily "
 "Question, Daily Brief, Tradeoffs, run programmes and consultations, Personal"
 " Briefs, and the native deliberation system."
-msgstr ""
+msgstr "Society Speaks 帮助：参与大问题之旅、每日问题、每日简报、权衡分析、运行项目和咨询、个人简报以及原生审议系统。"
 
 #: app/templates/help/help.html:15
 msgid "Society Speaks Help Centre"
 msgstr "Society Speaks 帮助中心"
 
 #: app/templates/help/help.html:16
-#, fuzzy
 msgid ""
 "Help resources for participating in and building on Society Speaks civic "
 "infrastructure"
-msgstr "使用 Society Speaks（公民审议平台）的帮助资源"
+msgstr "参与和建立在 Society Speaks 公民基础设施上的帮助资源"
 
 #: app/templates/help/help.html:20
 msgid "How do I get started with Society Speaks?"
 msgstr "我如何开始使用 Society Speaks？"
 
 #: app/templates/help/help.html:23
-#, fuzzy
 msgid ""
 "Browse the Daily Brief, Daily Question, and News Transparency Dashboard "
 "without an account. Sign up free to save Journey progress, create "
 "discussions, or run programmes. See Getting Started in the Help Centre."
-msgstr ""
-"不需要。您可以在没有账户的情况下浏览讨论、阅读《每日摘要》和探索新闻透明度仪表板。您需要一个账户来保存您的投票进度、创建讨论或计划或通过电子邮件订阅《每日问题》。"
+msgstr "无需账户即可浏览每日简报、每日问题和新闻透明度仪表板。免费注册以保存之旅进度、创建讨论或运行项目。详见帮助中心中的入门指南。"
 
 #: app/templates/help/help.html:28
-#, fuzzy
 msgid "Can I run my own consultation on Society Speaks?"
-msgstr "组织可以使用 Society Speaks 吗？"
+msgstr "我可以在 Society Speaks 上运行自己的咨询吗？"
 
 #: app/templates/help/help.html:31
 msgid ""
@@ -23707,39 +23641,35 @@ msgid ""
 "visibility controls, stewards, and data export. Publishers can embed voting "
 "via the Partner API. See Civic infrastructure in the Help Centre."
 msgstr ""
+"可以。使用您自己的种子声明、可见性控制、协调人和数据导出创建讨论或完整项目。出版商可以通过合作伙伴 API 嵌入投票。详见帮助中心中的公民基础设施。"
 
 #: app/templates/help/help.html:42 app/templates/help/macros.html:6
-#, fuzzy
 msgid "Help Centre"
 msgstr "帮助中心"
 
 #: app/templates/help/help.html:43
-#, fuzzy
 msgid "How can we help?"
-msgstr "需要帮助？"
+msgstr "我们可以如何帮助您？"
 
 #: app/templates/help/help.html:45
 msgid ""
 "Guides for participating in civic deliberation and for organisations running"
 " consultations on our infrastructure."
-msgstr ""
+msgstr "参与公民审议以及运行咨询的组织使用我们基础设施的指南。"
 
 #: app/templates/help/help.html:70
-#, fuzzy
 msgid "Read guide"
-msgstr "设置指南"
+msgstr "阅读指南"
 
 #: app/templates/help/help.html:80
-#, fuzzy
 msgid ""
 "Structured statements, ML clustering, consensus and bridge detection, "
 "optional threaded responses and evidence — all built into Society Speaks."
-msgstr "我们的原生审议系统具有实时投票、使用机器学习的共识分析、可选的线程回复和交互式可视化——全部直接内置于 Society Speaks 中。"
+msgstr "结构化声明、机器学习聚类、共识和桥接检测、可选对话式回复和证据 — 全部内置在 Society Speaks 中。"
 
 #: app/templates/help/help.html:82
-#, fuzzy
 msgid "System overview"
-msgstr "系统源"
+msgstr "系统概览"
 
 #: app/templates/help/help.html:83
 #: app/templates/partner/portal/discussions.html:43
@@ -23747,27 +23677,24 @@ msgid "Create a discussion"
 msgstr "创建讨论"
 
 #: app/templates/help/help.html:88
-#, fuzzy
 msgid "Advanced & reference"
-msgstr "保存偏好设置"
+msgstr "高级和参考"
 
 #: app/templates/help/help.html:90
 msgid "Methodology (Pol.is heritage)"
-msgstr ""
+msgstr "方法论（Pol.is 遗产）"
 
 #: app/templates/help/help.html:92
-#, fuzzy
 msgid "Seed statements tips"
-msgstr "种子陈述"
+msgstr "种子声明提示"
 
 #: app/templates/help/help.html:94
-#, fuzzy
 msgid "Computational Democracy Project"
-msgstr "使用中：国家战略项目"
+msgstr "计算民主项目"
 
 #: app/templates/help/help.html:100
 msgid "Email us or explore the FAQ."
-msgstr ""
+msgstr "给我们发邮件或浏览常见问题。"
 
 #: app/templates/help/help.html:102 app/templates/help/macros.html:46
 #: app/templates/partner/hub.html:664
@@ -23775,23 +23702,20 @@ msgid "Email support"
 msgstr "电子邮件支持"
 
 #: app/templates/help/macros.html:29
-#, fuzzy
 msgid "See deliberation in practice"
-msgstr "版主最佳实践"
+msgstr "查看实际审议"
 
 #: app/templates/help/macros.html:30
 msgid ""
 "Vote on real statements, then open the consensus view to see opinion "
 "clusters, bridge ideas, and genuine divisions."
-msgstr ""
+msgstr "对真实声明投票，然后打开共识视图以查看观点集群、桥接想法和真实分歧。"
 
 #: app/templates/help/macros.html:32
-#, fuzzy
 msgid "Try the demo discussion"
-msgstr "演示讨论"
+msgstr "试试演示讨论"
 
 #: app/templates/help/macros.html:33
-#, fuzzy
 msgid "View consensus analysis"
 msgstr "查看共识分析"
 
@@ -23799,16 +23723,15 @@ msgstr "查看共识分析"
 msgid ""
 "Vote on several statements first to unlock the full analysis (demo "
 "discussions may show results immediately)."
-msgstr ""
+msgstr "请先对多个陈述进行投票以解锁完整分析（演示讨论可能会立即显示结果）。"
 
 #: app/templates/help/macros.html:43
 msgid "Browse the FAQ or email our team."
-msgstr ""
+msgstr "浏览常见问题或给我们团队发邮件。"
 
 #: app/templates/help/managing_discussions.html:4
-#, fuzzy
 msgid "Managing Discussions — Society Speaks Help"
-msgstr "在 Society Speaks 上管理讨论"
+msgstr "管理讨论 — Society Speaks 帮助"
 
 #: app/templates/help/managing_discussions.html:5
 msgid ""
@@ -24654,21 +24577,20 @@ msgid "Join ongoing conversations and vote"
 msgstr "加入进行中的对话并投票"
 
 #: app/templates/help/news_dashboard.html:4
-#, fuzzy
 msgid "News Transparency Dashboard — Help | Society Speaks"
-msgstr "新闻透明度仪表板 - Society Speaks"
+msgstr "新闻透明度仪表板 — 帮助 | Society Speaks"
 
 #: app/templates/help/news_dashboard.html:5
 msgid ""
 "Explore the News Transparency Dashboard: spectrum-organised coverage, "
 "sensationalism scores, and source transparency for today's news."
-msgstr ""
+msgstr "探索新闻透明度仪表板：按政治光谱组织的报道、煽情性评分和来源透明度的最新新闻。"
 
 #: app/templates/help/news_dashboard.html:12
 msgid ""
 "See how today's stories are covered across the political spectrum — a free "
 "companion to the Daily Brief and our deliberation work."
-msgstr ""
+msgstr "了解当今新闻如何在政治光谱中报道 — 这是《每日简报》和我们审议工作的免费配套工具。"
 
 #: app/templates/help/news_dashboard.html:17
 msgid ""
@@ -24677,22 +24599,22 @@ msgid ""
 " right emphasis, view sensationalism scoring, and follow links to original "
 "reporting."
 msgstr ""
+"该仪表板汇集来自 140+ 精选媒体的报道 — "
+"新闻、分析、智库和播客。对于每个话题，你可以比较左翼、中间和右翼的侧重点，查看煽情性评分，并跟踪原始报道的链接。"
 
 #: app/templates/help/news_dashboard.html:18
 msgid ""
 "No sign-up required. It supports the same civic goal as our discussions: "
 "understand issues from multiple angles before forming judgment."
-msgstr ""
+msgstr "无需注册。它支持与我们讨论相同的公民目标：从多个角度理解问题，然后形成判断。"
 
 #: app/templates/help/news_dashboard.html:22
-#, fuzzy
 msgid "How news feeds into discussions"
-msgstr "新闻讨论"
+msgstr "新闻如何融入讨论"
 
 #: app/templates/help/news_feed.html:4
-#, fuzzy
 msgid "How our news feed works — Society Speaks Help"
-msgstr "我们的新闻源如何运作 - Society Speaks | 精选新闻讨论"
+msgstr "我们的新闻源工作原理 — Society Speaks 帮助"
 
 #: app/templates/help/news_feed.html:5
 msgid ""
@@ -25008,27 +24930,24 @@ msgid "Send Feedback"
 msgstr "发送反馈"
 
 #: app/templates/help/personal_briefs.html:5
-#, fuzzy
 msgid "Personal Briefs — Help | Society Speaks"
-msgstr "捐款 | Society Speaks"
+msgstr "个人简报 — 帮助 | Society Speaks"
 
 #: app/templates/help/personal_briefs.html:6
-#, fuzzy
 msgid ""
 "Personal Briefs: custom AI daily digests from your sources. Plans, trials, "
 "and how subscriptions fund free civic features."
-msgstr "个人简报让您从您选择的出版物、Substacks 和 PDF 创建自定义日报摘要。您的订阅为我们的开源公民平台提供资金。"
+msgstr "个人简报：来自你信任的源的自定义 AI 每日摘要。计划、试用以及订阅如何支持免费公民功能。"
 
 #: app/templates/help/personal_briefs.html:13
 msgid ""
 "Replace newsletter overload with one calm digest from sources you trust — "
 "RSS, Substacks, PDFs, and more. Delivered on your schedule."
-msgstr ""
+msgstr "用一份来自你信任源的平静摘要替换新闻简报的泛滥 — RSS、Substack、PDF 等。按你的日程投递。"
 
 #: app/templates/help/personal_briefs.html:18
-#, fuzzy
 msgid "How it differs from the Daily Brief"
-msgstr "个人摘要与日报摘要有何不同？"
+msgstr "与《每日简报》的区别"
 
 #: app/templates/help/personal_briefs.html:19
 msgid ""
@@ -25036,36 +24955,32 @@ msgid ""
 "shared source library. Personal Briefs are yours — you pick sources, timing,"
 " and recipients (on higher plans)."
 msgstr ""
+"《每日简报》是免费的，由 Society Speaks 从我们的共享源库进行编辑策划。个人简报是你的 — 你选择源、时间和收件人（在更高级计划上）。"
 
 #: app/templates/help/personal_briefs.html:22
 msgid "Funding the civic platform"
-msgstr ""
+msgstr "为公民平台提供资金"
 
 #: app/templates/help/personal_briefs.html:23
-#, fuzzy
 msgid ""
 "Personal Brief subscriptions directly support free features: Daily Brief, "
 "Daily Question, Big Questions Journey, discussions, and the News "
 "Transparency Dashboard. We are not ad-funded."
-msgstr ""
-"个人简报订阅直接资助Society "
-"Speaks的免费公民功能——每日简报、每日问题、大问题之旅、讨论和新闻透明度仪表板。我们不依赖广告资金，因此订阅者的支持是保持其他功能免费的关键。"
+msgstr "个人简报订阅直接支持免费功能：《每日简报》、《每日问题》、《大问题之旅》、讨论和新闻透明度仪表板。我们不依赖广告。"
 
 #: app/templates/help/personal_briefs.html:25
-#, fuzzy
 msgid "View plans & start trial"
-msgstr "查看方案并开始免费试用"
+msgstr "查看计划并开始试用"
 
 #: app/templates/help/polis_algorithms.html:5
-#, fuzzy
 msgid "Understanding Pol.is algorithms — Society Speaks Help"
-msgstr "理解 Pol.is 算法"
+msgstr "理解 Pol.is 算法 — Society Speaks 帮助"
 
 #: app/templates/help/polis_algorithms.html:6
 msgid ""
 "How Pol.is-style clustering relates to Society Speaks native deliberation: "
 "opinion groups, consensus, and visualisation."
-msgstr ""
+msgstr "Pol.is 风格的聚类与 Society Speaks 原生审议的关系：意见群体、共识和可视化。"
 
 #: app/templates/help/polis_algorithms.html:14
 msgid "Understanding Pol.is Algorithms"
@@ -25399,9 +25314,8 @@ msgid "Technical Overview of Pol.is →"
 msgstr "Pol.is 技术概述 →"
 
 #: app/templates/help/programmes.html:4
-#, fuzzy
 msgid "Programmes — Society Speaks Help | Structured deliberation campaigns"
-msgstr "项目 - Society Speaks 帮助 | 运行结构化审议活动"
+msgstr "计划 — Society Speaks 帮助 | 结构化审议活动"
 
 #: app/templates/help/programmes.html:5
 msgid ""
@@ -25461,13 +25375,12 @@ msgid ""
 msgstr "运行结构化审议活动——在一个项目下分组多个讨论，共享主题、阶段和访问控制。"
 
 #: app/templates/help/programmes.html:53
-#, fuzzy
 msgid "Part of"
-msgstr "合作伙伴参考"
+msgstr "属于"
 
 #: app/templates/help/programmes.html:55
 msgid "use Programmes when one discussion is not enough."
-msgstr ""
+msgstr "当一个讨论不够时，使用计划。"
 
 #: app/templates/help/programmes.html:63
 msgid "What is a Programme?"
@@ -25940,16 +25853,14 @@ msgid "Understand how voting, statements and consensus analysis work"
 msgstr "了解投票、声明和共识分析如何运作"
 
 #: app/templates/help/seed_comments.html:5
-#, fuzzy
 msgid "Seed statements — Society Speaks Help"
-msgstr "项目 - Society Speaks 帮助"
+msgstr "种子陈述 — Society Speaks 帮助"
 
 #: app/templates/help/seed_comments.html:6
-#, fuzzy
 msgid ""
 "How to write effective seed statements for Society Speaks discussions and "
 "consultations."
-msgstr "了解如何为讨论创建有效的种子评论"
+msgstr "如何为 Society Speaks 讨论和咨询编写有效的种子陈述。"
 
 #: app/templates/help/seed_comments.html:14
 msgid "Understanding Seed Comments"
@@ -26060,15 +25971,14 @@ msgid "Adding Comments as Yourself →"
 msgstr "作为你自己添加评论 →"
 
 #: app/templates/help/tradeoffs.html:4
-#, fuzzy
 msgid "Tradeoffs — Help | Society Speaks"
-msgstr "Society Speaks 上的权衡"
+msgstr "权衡 — 帮助 | Society Speaks"
 
 #: app/templates/help/tradeoffs.html:5
 msgid ""
 "Tradeoffs on Society Speaks: daily governing scenarios, five turns, streaks,"
 " friend challenges, privacy, and links to real deliberation."
-msgstr ""
+msgstr "Society Speaks 上的权衡：日常治理情景、五个回合、连续记录、朋友挑战、隐私和真实审议的链接。"
 
 #: app/templates/help/tradeoffs.html:12
 msgid ""
@@ -26076,79 +25986,75 @@ msgid ""
 "kind of leader you become, and discover what society you leave behind. "
 "Fictional crises, not a test of your real-world politics."
 msgstr ""
+"Society Speaks 上的日常情景游戏 — "
+"在压力下治理，看看你会成为什么样的领导者，并发现你留下的社会是什么样的。虚构的危机，不是你真实世界政治的测试。"
 
 #: app/templates/help/tradeoffs.html:17
-#, fuzzy
 msgid "How play works"
-msgstr "运作方式"
+msgstr "游戏如何进行"
 
 #: app/templates/help/tradeoffs.html:19
 msgid ""
 "Each day (UTC) brings a new scenario — five turns, three choices per turn."
-msgstr ""
+msgstr "每天（UTC）都会出现一个新情景 — 五个回合，每个回合三个选择。"
 
 #: app/templates/help/tradeoffs.html:20
 msgid ""
 "Every choice helps at least one societal stat you can see and hurts another;"
 " some consequences arrive later."
-msgstr ""
+msgstr "每个选择都至少帮助一个你能看到的社会统计数据，但会伤害另一个；有些后果会稍后出现。"
 
 #: app/templates/help/tradeoffs.html:21
 msgid ""
 "After five turns you receive an outcome card: identity headline, stats, "
 "traits, and shareable results."
-msgstr ""
+msgstr "五个回合后，你会收到一张成果卡：身份标题、统计数据、特征和可分享的结果。"
 
 #: app/templates/help/tradeoffs.html:22
 msgid ""
 "Quick Run lets you replay other scenarios from the launch rotation without "
 "streak credit."
-msgstr ""
+msgstr "快速运行让你可以在没有连续记录积分的情况下重放启动轮换中的其他情景。"
 
 #: app/templates/help/tradeoffs.html:23
 msgid ""
 "Challenge links let a friend play the same scenario and compare headlines "
 "afterward."
-msgstr ""
+msgstr "挑战链接让朋友玩同一个情景，然后在之后比较标题。"
 
 #: app/templates/help/tradeoffs.html:25
-#, fuzzy
 msgid "Play at /play"
-msgstr "再玩一次"
+msgstr "在 /play 上玩"
 
 #: app/templates/help/tradeoffs.html:28
-#, fuzzy
 msgid "Bridge to deliberation"
-msgstr "从新闻到审议"
+msgstr "通往审议的桥梁"
 
 #: app/templates/help/tradeoffs.html:29
 msgid ""
 "When a scenario matches a live topic, Tradeoffs can link you to the related "
 "Daily Question or discussion — connecting play to real structured civic "
 "participation."
-msgstr ""
+msgstr "当情景与实时话题匹配时，权衡可以将你链接到相关的《每日问题》或讨论 — 将游戏与真实结构化公民参与连接起来。"
 
 #: app/templates/help/tradeoffs.html:32
-#, fuzzy
 msgid "Privacy & editorial standards"
-msgstr "面向编辑领导"
+msgstr "隐私与编辑标准"
 
 #: app/templates/help/tradeoffs.html:33
 msgid ""
 "We store behavioural choices in fictional scenarios — not your stated "
 "political beliefs. Sign in with a magic link to save streaks and merge "
 "anonymous runs."
-msgstr ""
+msgstr "我们储存的是虚拟场景中的行为选择——而非您公开表述的政治信念。使用魔法链接登录可以保存连胜纪录并合并匿名运行记录。"
 
 #: app/templates/help/tradeoffs.html:35
-#, fuzzy
 msgid "Editorial principles"
-msgstr "十项原则"
+msgstr "编辑原则"
 
 #: app/templates/help/tradeoffs.html:37
-#, fuzzy
 msgid "Privacy policy (Society Play section)"
-msgstr "隐私政策 - Society Speaks"
+msgstr "隐私政策（Society Play 部分）"
 
 #: app/templates/news/dashboard.html:3
 msgid "News Transparency Dashboard - Society Speaks"

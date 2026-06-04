@@ -210,12 +210,12 @@ msgstr "تابع رحلتك: %(theme)s — Society Speaks"
 #: app/resend_client.py:2095
 #, python-format
 msgid "Today's scenario is live — keep your %(n)d-day streak"
-msgstr ""
+msgstr "السيناريو اليوم مباشر — حافظ على سلسلتك البالغة %(n)d أيام"
 
 #: app/resend_client.py:2101
 #, python-format
 msgid "Today's scenario is live: %(title)s"
-msgstr ""
+msgstr "السيناريو اليوم مباشر: %(title)s"
 
 #: app/routes.py:280 app/routes.py:297
 msgid "No valid donation session found."
@@ -836,9 +836,8 @@ msgid "Domain already removed"
 msgstr "تم حذف المجال بالفعل"
 
 #: app/briefing/generator.py:744
-#, fuzzy
 msgid "Your brief is being prepared. Check back shortly."
-msgstr "يتم تحضير ملخصك الأول…"
+msgstr "جاري تحضير موجزك. تحقق منه قريباً."
 
 #: app/briefing/generator.py:748
 #, python-format
@@ -846,6 +845,8 @@ msgid ""
 "Today's brief: %(count)d stories from %(sources)d of your sources, clustered"
 " for clarity — not a raw feed dump."
 msgstr ""
+"موجزك اليوم: %(count)d مقالة من %(sources)d من مصادرك، مجمّعة للوضوح — وليس "
+"مجرد تدفق خام."
 
 #: app/briefing/generator.py:756
 #, python-format
@@ -853,16 +854,16 @@ msgid ""
 "Your %(cadence)s brief covers %(count)d stories from %(sources)d sources. "
 "Focused on clarity and context."
 msgstr ""
+"يغطي موجزك %(cadence)s %(count)d مقالة من %(sources)d مصادر. يركز على الوضوح"
+" والسياق."
 
 #: app/briefing/generator.py:1127
-#, fuzzy
 msgid "Today's Stories"
-msgstr "ملخص اليوم"
+msgstr "مقالات اليوم"
 
 #: app/briefing/generator.py:1148
-#, fuzzy
 msgid "More Stories"
-msgstr "مصادرك"
+msgstr "المزيد من المقالات"
 
 #: app/briefing/jobs.py:684
 msgid "Redis not available"
@@ -1348,9 +1349,8 @@ msgid "You have been unsubscribed from this briefing"
 msgstr "تم إلغاء اشتراكك من هذه النشرة"
 
 #: app/briefing/routes.py:2841
-#, fuzzy
 msgid "You are already unsubscribed from this briefing"
-msgstr "تم إلغاء اشتراكك من هذه النشرة"
+msgstr "أنت بالفعل غير مشترك في هذا الموجز"
 
 #: app/briefing/routes.py:2861
 msgid "Admin access required for audio generation"
@@ -1599,46 +1599,40 @@ msgstr "مرحباً بك في %(company_name)s! لديك الآن حق الوص
 
 #: app/briefing/template_config.py:25
 msgid "Releases & Products"
-msgstr ""
+msgstr "الإصدارات والمنتجات"
 
 #: app/briefing/template_config.py:26
-#, fuzzy
 msgid "Regulation & Policy"
-msgstr "السياسة والسياسة العامة"
+msgstr "التنظيم والسياسة"
 
 #: app/briefing/template_config.py:27
-#, fuzzy
 msgid "Research & Analysis"
-msgstr "الباحثون والمحللون"
+msgstr "البحث والتحليل"
 
 #: app/briefing/template_config.py:30 app/briefing/template_config.py:53
-#, fuzzy
 msgid "What Changed"
-msgstr "ما الذي تغيّر؟"
+msgstr "ما الذي تغير"
 
 #: app/briefing/template_config.py:31 app/briefing/template_config.py:54
 msgid "Who's Affected"
-msgstr ""
+msgstr "من المتأثر"
 
 #: app/briefing/template_config.py:32 app/briefing/template_config.py:55
-#, fuzzy
 msgid "What's Next"
-msgstr "ما يحدث بعد ذلك"
+msgstr "الخطوات التالية"
 
 #: app/briefing/template_config.py:35
-#, fuzzy
 msgid "Macro & Markets"
-msgstr "الاقتصاد والأسواق"
+msgstr "الاقتصاد الكلي والأسواق"
 
 #: app/briefing/template_config.py:36
 msgid "Business & Industry"
-msgstr ""
+msgstr "الأعمال والصناعة"
 
 #: app/briefing/template_config.py:37
 #: app/templates/briefing/_paid_brief_body.html:159
-#, fuzzy
 msgid "Policy Context"
-msgstr "تغيير السياسة"
+msgstr "السياق السياسي"
 
 #: app/briefing/template_config.py:40 app/templates/briefing/landing.html:717
 #: app/templates/briefing/landing.html:1039
@@ -1646,19 +1640,16 @@ msgid "Climate & Energy"
 msgstr "المناخ والطاقة"
 
 #: app/briefing/template_config.py:41
-#, fuzzy
 msgid "Policy & Regulation"
-msgstr "التشاور العام"
+msgstr "السياسة والتنظيم"
 
 #: app/briefing/template_config.py:42
-#, fuzzy
 msgid "Science & Impact"
-msgstr "العلوم والأفكار الكبرى"
+msgstr "العلم والتأثير"
 
 #: app/briefing/template_config.py:45
-#, fuzzy
 msgid "Headlines"
-msgstr "الرؤوس"
+msgstr "العناوين الرئيسية"
 
 #: app/briefing/template_config.py:46
 #: app/templates/discussions/view_native.html:172
@@ -1667,92 +1658,80 @@ msgid "Analysis"
 msgstr "التحليل"
 
 #: app/briefing/template_config.py:47
-#, fuzzy
 msgid "Regional Context"
-msgstr "المزيد من السياق"
+msgstr "السياق الإقليمي"
 
 #: app/briefing/validators.py:19
-#, fuzzy
 msgid "Invalid email format"
-msgstr "تنسيق نطاق غير صحيح"
+msgstr "صيغة البريد الإلكتروني غير صحيحة"
 
 #: app/briefing/validators.py:26
-#, fuzzy
 msgid "Briefing name is required"
-msgstr "اسم الملخص *"
+msgstr "اسم الموجز مطلوب"
 
 #: app/briefing/validators.py:29
-#, fuzzy
 msgid "Briefing name cannot be empty"
-msgstr "اسم الملخص *"
+msgstr "اسم الموجز لا يمكن أن يكون فارغاً"
 
 #: app/briefing/validators.py:32
-#, fuzzy
 msgid "Briefing name must be 200 characters or less"
-msgstr "يجب أن يكون التصريح 500 حرف أو أقل."
+msgstr "اسم الموجز يجب ألا يزيد عن 200 حرف"
 
 #: app/briefing/validators.py:39
-#, fuzzy
 msgid "RSS URL is required"
-msgstr "معرّف المصدر مطلوب"
+msgstr "رابط RSS مطلوب"
 
 #: app/briefing/validators.py:43
 msgid "Invalid URL format. Must start with http:// or https://"
-msgstr ""
+msgstr "صيغة الرابط غير صحيحة. يجب أن يبدأ بـ http:// أو https://"
 
 #: app/briefing/validators.py:50
-#, fuzzy
 msgid "File is required"
-msgstr "العنوان مطلوب."
+msgstr "الملف مطلوب"
 
 #: app/briefing/validators.py:54
 msgid "File must be a PDF or Word document (.pdf, .docx, .doc)"
-msgstr ""
+msgstr "يجب أن يكون الملف بصيغة PDF أو Word (.pdf, .docx, .doc)"
 
 #: app/briefing/validators.py:63
-#, fuzzy
 msgid "Timezone is required"
-msgstr "العنوان مطلوب."
+msgstr "المنطقة الزمنية مطلوبة"
 
 #: app/briefing/validators.py:69
-#, fuzzy
 msgid "Invalid timezone"
-msgstr "إجراء غير صحيح"
+msgstr "المنطقة الزمنية غير صحيحة"
 
 #: app/briefing/validators.py:71
-#, fuzzy
 msgid "Error validating timezone"
-msgstr "خطأ في التحقق من مفتاح API"
+msgstr "خطأ في التحقق من المنطقة الزمنية"
 
 #: app/briefing/validators.py:76
-#, fuzzy
 msgid "Cadence must be 'daily' or 'weekly'"
-msgstr "يجب أن تكون الحالة 'نشط' أو 'مُوقف مؤقتاً'"
+msgstr "التكرار يجب أن يكون 'daily' أو 'weekly'"
 
 #: app/briefing/validators.py:83
 msgid "Visibility must be 'private', 'org_only', or 'public'"
-msgstr ""
+msgstr "الرؤية يجب أن تكون 'private' أو 'org_only' أو 'public'"
 
 #: app/briefing/validators.py:90
-#, fuzzy
 msgid "Mode must be 'auto_send' or 'approval_required'"
-msgstr "يجب أن تكون الحالة 'نشط' أو 'مُوقف مؤقتاً'"
+msgstr "الوضع يجب أن يكون 'auto_send' أو 'approval_required'"
 
 #: app/briefing/validators.py:97
 msgid "Send hour must be an integer"
-msgstr ""
+msgstr "ساعة الإرسال يجب أن تكون رقماً صحيحاً"
 
 #: app/briefing/validators.py:100
 msgid "Send hour must be between 0 and 23"
-msgstr ""
+msgstr "ساعة الإرسال يجب أن تكون بين 0 و 23"
 
 #: app/briefing/validators.py:107
 msgid "Send minute must be an integer"
-msgstr ""
+msgstr "دقيقة الإرسال يجب أن تكون رقماً صحيحاً"
 
 #: app/briefing/validators.py:110
 msgid "Send minute must be between 0 and 59"
-msgstr ""
+msgstr "دقيقة الإرسال يجب أن تكون بين 0 و 59"
 
 #: app/daily/routes.py:382
 msgid "Invalid date format. Please use YYYY-MM-DD."
@@ -2007,14 +1986,12 @@ msgid "An error occurred while generating labels"
 msgstr "حدث خطأ أثناء إنشاء التسميات"
 
 #: app/discussions/forms.py:221 app/discussions/forms.py:291
-#, fuzzy
 msgid "Discussion Title"
 msgstr "عنوان النقاش"
 
 #: app/discussions/forms.py:223 app/discussions/forms.py:293
-#, fuzzy
 msgid "Title must be between 10 and 200 characters"
-msgstr "يجب أن يتكون التصريح من 10 أحرف على الأقل."
+msgstr "يجب أن يكون العنوان بين 10 و 200 حرف"
 
 #: app/discussions/forms.py:225 app/discussions/forms.py:295
 #: app/programmes/forms.py:18 app/templates/briefing/create.html:54
@@ -2030,7 +2007,7 @@ msgstr "الوصف"
 
 #: app/discussions/forms.py:227 app/discussions/forms.py:297
 msgid "Description must be between 30 and 1000 characters"
-msgstr ""
+msgstr "يجب أن تكون الوصف بين 30 و 1000 حرف"
 
 #: app/discussions/forms.py:229 app/discussions/forms.py:299
 #: app/templates/discussions/search_discussions.html:71
@@ -2040,15 +2017,15 @@ msgid "Topic"
 msgstr "الموضوع"
 
 #: app/discussions/forms.py:233
-#, fuzzy
 msgid "Use Native Statement System"
-msgstr "حدد \"استخدم نظام البيانات الأصلي\""
+msgstr "استخدام نظام البيانات الأصلي"
 
 #: app/discussions/forms.py:235
 msgid ""
 "Enable the new pol.is-inspired debate system with voting and consensus "
 "clustering (recommended)"
 msgstr ""
+"تفعيل نظام النقاش المستوحى من Pol.is مع التصويت والتجميع الإجماعي (موصى به)"
 
 #: app/discussions/forms.py:238 app/discussions/forms.py:308
 #: app/templates/partner/embed_generator.html:267
@@ -2056,9 +2033,8 @@ msgid "Embed Code"
 msgstr "رمز التضمين"
 
 #: app/discussions/forms.py:240 app/discussions/forms.py:300
-#, fuzzy
 msgid "Keywords"
-msgstr "تضمين الكلمات المفتاحية"
+msgstr "الكلمات الرئيسية"
 
 #: app/discussions/forms.py:242 app/discussions/forms.py:301
 #: app/programmes/forms.py:20 app/templates/programmes/_form.html:28
@@ -2087,9 +2063,8 @@ msgstr "البلد"
 #: app/discussions/forms.py:245 app/discussions/forms.py:249
 #: app/discussions/forms.py:304 app/discussions/forms.py:307
 #: app/profiles/forms.py:208 app/profiles/forms.py:227
-#, fuzzy
 msgid "City"
-msgstr "المجتمع"
+msgstr "المدينة"
 
 #: app/discussions/forms.py:250 app/discussions/forms.py:309
 #: app/templates/discussions/create_discussion.html:286
@@ -2099,49 +2074,41 @@ msgid "Programme"
 msgstr "البرنامج"
 
 #: app/discussions/forms.py:250 app/discussions/forms.py:309
-#, fuzzy
 msgid "No programme"
-msgstr "برنامج جديد"
+msgstr "لا توجد برنامج"
 
 #: app/discussions/forms.py:251 app/discussions/forms.py:310
-#, fuzzy
 msgid "Programme Theme"
-msgstr "برنامج · مثال"
+msgstr "موضوع البرنامج"
 
 #: app/discussions/forms.py:251 app/discussions/forms.py:310
-#, fuzzy
 msgid "No theme"
-msgstr "المواضيع"
+msgstr "لا يوجد موضوع"
 
 #: app/discussions/forms.py:252 app/discussions/forms.py:311
-#, fuzzy
 msgid "Programme Phase"
-msgstr "البرامج"
+msgstr "مرحلة البرنامج"
 
 #: app/discussions/forms.py:252 app/discussions/forms.py:311
-#, fuzzy
 msgid "No phase"
-msgstr "المراحل"
+msgstr "لا توجد مرحلة"
 
 #: app/discussions/forms.py:253 app/discussions/forms.py:312
-#, fuzzy
 msgid "Information Step Title"
-msgstr "1. المعلومات التي نجمعها"
+msgstr "عنوان خطوة المعلومات"
 
 #: app/discussions/forms.py:255
-#, fuzzy
 msgid "Information Step Markdown"
-msgstr "معلومات قبل المشاركة"
+msgstr "خطوة Markdown للمعلومات"
 
 #: app/discussions/forms.py:257 app/discussions/forms.py:316
 #: app/discussions/forms.py:359
-#, fuzzy
 msgid "Markdown only. Raw HTML is not supported."
-msgstr "يتم دعم Markdown. لا يُسمح بـ HTML الخام."
+msgstr "Markdown فقط. لا يتم دعم HTML الخام."
 
 #: app/discussions/forms.py:260 app/discussions/forms.py:319
 msgid "Information Links (one per line: Label|https://url)"
-msgstr ""
+msgstr "روابط المعلومات (واحد لكل سطر: تسمية|https://url)"
 
 #: app/discussions/forms.py:264 app/templates/partner/api_docs.html:113
 msgid "Create Discussion"
@@ -2164,24 +2131,20 @@ msgid "Country is required for city-specific discussions"
 msgstr "الدولة مطلوبة للنقاشات الخاصة بمدن معينة"
 
 #: app/discussions/forms.py:314
-#, fuzzy
 msgid "Information Step (Markdown)"
-msgstr "معلومات قبل المشاركة"
+msgstr "خطوة المعلومات (Markdown)"
 
 #: app/discussions/forms.py:322
-#, fuzzy
 msgid "Save changes"
 msgstr "حفظ التغييرات"
 
 #: app/discussions/forms.py:344
-#, fuzzy
 msgid "Update Type"
-msgstr "تحديث الموضوع"
+msgstr "نوع التحديث"
 
 #: app/discussions/forms.py:346
-#, fuzzy
 msgid "General update"
-msgstr "تم إنشاؤه"
+msgstr "تحديث عام"
 
 #: app/discussions/forms.py:347
 #: app/templates/discussions/view_discussion.html:630
@@ -2189,7 +2152,6 @@ msgid "Outcome"
 msgstr "النتيجة"
 
 #: app/discussions/forms.py:348
-#, fuzzy
 msgid "Next step"
 msgstr "الخطوة التالية"
 
@@ -2200,27 +2162,24 @@ msgid "Title"
 msgstr "العنوان"
 
 #: app/discussions/forms.py:354
-#, fuzzy
 msgid "Title must be between 5 and 200 characters"
-msgstr "اكتب حتى 2000 حرف"
+msgstr "يجب أن يكون العنوان بين 5 و 200 حرف"
 
 #: app/discussions/forms.py:357
-#, fuzzy
 msgid "Body"
-msgstr "اليوم"
+msgstr "النص"
 
 #: app/discussions/forms.py:358
 msgid "Body must be between 20 and 10000 characters"
-msgstr ""
+msgstr "يجب أن يكون النص بين 20 و 10000 حرف"
 
 #: app/discussions/forms.py:362
 msgid "Related Links (one per line: Label|https://url)"
-msgstr ""
+msgstr "الروابط ذات الصلة (واحد لكل سطر: تسمية|https://url)"
 
 #: app/discussions/forms.py:365
-#, fuzzy
 msgid "Save update"
-msgstr "حفظ المسودة"
+msgstr "حفظ التحديث"
 
 #: app/discussions/moderation.py:38
 msgid "You do not have permission to access the moderation queue."
@@ -2385,14 +2344,12 @@ msgid "Statement"
 msgstr "تصريح"
 
 #: app/discussions/statement_forms.py:16
-#, fuzzy
 msgid "Statement is required"
-msgstr "محتوى العبارة مطلوب."
+msgstr "البيان مطلوب"
 
 #: app/discussions/statement_forms.py:17
-#, fuzzy
 msgid "Statement must be 10-500 characters"
-msgstr "يجب أن يكون التصريح 500 حرف أو أقل."
+msgstr "يجب أن تكون البيان بين 10 و 500 حرف"
 
 #: app/discussions/statement_forms.py:19
 #: app/templates/briefing/add_rss_source.html:56
@@ -2403,38 +2360,32 @@ msgid "Type"
 msgstr "النوع"
 
 #: app/discussions/statement_forms.py:20
-#, fuzzy
 msgid "Claim"
-msgstr "المطالبة باسم"
+msgstr "مطالبة"
 
 #: app/discussions/statement_forms.py:21
-#, fuzzy
 msgid "Question"
-msgstr "الأسئلة"
+msgstr "سؤال"
 
 #: app/discussions/statement_forms.py:23
-#, fuzzy
 msgid "Post Statement"
-msgstr "إرسال التصريح"
+msgstr "نشر البيان"
 
 #: app/discussions/statement_forms.py:28
-#, fuzzy
 msgid "Vote"
-msgstr "الأصوات"
+msgstr "صوت"
 
 #: app/discussions/statement_forms.py:30
-#, fuzzy
 msgid "Vote must be -1, 0, or 1"
-msgstr "قيمة التصويت غير صحيحة. يجب أن تكون -1 أو 0 أو 1"
+msgstr "يجب أن يكون الصوت -1 أو 0 أو 1"
 
 #: app/discussions/statement_forms.py:32
-#, fuzzy
 msgid "Confidence"
-msgstr "اختر مستوى الثقة"
+msgstr "الثقة"
 
 #: app/discussions/statement_forms.py:34
 msgid "Confidence must be between 1 and 5"
-msgstr ""
+msgstr "يجب أن تكون الثقة بين 1 و 5"
 
 #: app/discussions/statement_forms.py:40 app/templates/auth/dashboard.html:342
 #: app/templates/auth/participation.html:40
@@ -2444,14 +2395,12 @@ msgid "Response"
 msgstr "رد"
 
 #: app/discussions/statement_forms.py:41
-#, fuzzy
 msgid "Response is required"
-msgstr "تم تسجيل الرد"
+msgstr "الرد مطلوب"
 
 #: app/discussions/statement_forms.py:42
-#, fuzzy
 msgid "Response must be 10-2000 characters"
-msgstr "اكتب حتى 2000 حرف"
+msgstr "يجب أن يكون الرد بين 10 و 2000 حرف"
 
 #: app/discussions/statement_forms.py:44
 #: app/templates/discussions/consensus_results.html:646
@@ -2461,18 +2410,16 @@ msgid "Position"
 msgstr "الموقف"
 
 #: app/discussions/statement_forms.py:45
-#, fuzzy
 msgid "Supporting"
-msgstr "الدعم"
+msgstr "يدعم"
 
 #: app/discussions/statement_forms.py:46
-#, fuzzy
 msgid "Opposing"
-msgstr "معارض (رافض)"
+msgstr "يعارض"
 
 #: app/discussions/statement_forms.py:47
 msgid "Neutral/Clarifying"
-msgstr ""
+msgstr "محايد/توضيح"
 
 #: app/discussions/statement_forms.py:49
 #: app/templates/discussions/create_response.html:129
@@ -2481,29 +2428,24 @@ msgid "Post Response"
 msgstr "نشر الرد"
 
 #: app/discussions/statement_forms.py:54
-#, fuzzy
 msgid "Source Title"
-msgstr "مقالات المصادر"
+msgstr "عنوان المصدر"
 
 #: app/discussions/statement_forms.py:58
-#, fuzzy
 msgid "Source URL"
-msgstr "المصدر"
+msgstr "رابط المصدر"
 
 #: app/discussions/statement_forms.py:62
-#, fuzzy
 msgid "Citation"
-msgstr "📖 الاقتباسات"
+msgstr "الاستشهاد"
 
 #: app/discussions/statement_forms.py:66
-#, fuzzy
 msgid "Add Evidence"
-msgstr "إضافة الأدلة"
+msgstr "إضافة دليل"
 
 #: app/discussions/statement_forms.py:71
-#, fuzzy
 msgid "Reason"
-msgstr "رد"
+msgstr "السبب"
 
 #: app/discussions/statement_forms.py:72 app/templates/daily/results.html:800
 msgid "Spam"
@@ -2511,22 +2453,19 @@ msgstr "بريد عشوائي"
 
 #: app/discussions/statement_forms.py:73
 msgid "Offensive/Abusive"
-msgstr ""
+msgstr "مسيء/إساءة"
 
 #: app/discussions/statement_forms.py:74
-#, fuzzy
 msgid "Off Topic"
-msgstr "الموضوع"
+msgstr "خارج الموضوع"
 
 #: app/discussions/statement_forms.py:75
-#, fuzzy
 msgid "Duplicate"
-msgstr "تحديث"
+msgstr "مكرر"
 
 #: app/discussions/statement_forms.py:77
-#, fuzzy
 msgid "Additional Context"
-msgstr "التعليقات التقليدية"
+msgstr "سياق إضافي"
 
 #: app/discussions/statement_forms.py:81
 #: app/templates/discussions/flag_statement.html:1
@@ -2794,85 +2733,83 @@ msgstr "خطأ في تحميل الملف"
 
 #: app/game/routes.py:595
 msgid "You're set — we'll nudge you when the next scenario is live."
-msgstr ""
+msgstr "تمام التمام — سنخبرك عندما تكون السيناريو التالي متاحة."
 
 #: app/game/routes.py:615
-#, fuzzy
 msgid "That unsubscribe link is no longer valid."
-msgstr "هذا النقاش لم يعد متاحًا."
+msgstr "رابط الإلغاء هذا لم يعد صحيحاً."
 
 #: app/game/engine/variant.py:117
 msgid "You inherit this crisis already deep in debt."
-msgstr ""
+msgstr "أنت ترث أزمة مثقلة بالديون."
 
 #: app/game/engine/variant.py:118
 msgid "The treasury starts in unusually good health."
-msgstr ""
+msgstr "الخزانة تبدأ بصحة غير معتادة."
 
 #: app/game/engine/variant.py:119
 msgid "You begin with rare public goodwill."
-msgstr ""
+msgstr "تبدأ برغبة عامة نادرة."
 
 #: app/game/engine/variant.py:120
 msgid "Public trust is thin before you even begin."
-msgstr ""
+msgstr "الثقة العامة ضعيفة قبل أن تبدأ حتى."
 
 #: app/game/engine/variant.py:121
 msgid "You inherit a calm, stable nation."
-msgstr ""
+msgstr "أنت ترث أمة هادئة مستقرة."
 
 #: app/game/engine/variant.py:122
 msgid "The country is volatile from day one."
-msgstr ""
+msgstr "البلد غير مستقر منذ اليوم الأول."
 
 #: app/game/engine/variant.py:123
 msgid "You begin with a strong economy."
-msgstr ""
+msgstr "تبدأ باقتصاد قوي."
 
 #: app/game/engine/variant.py:124
 msgid "The economy is weak at the outset."
-msgstr ""
+msgstr "الاقتصاد ضعيف في البداية."
 
 #: app/game/engine/variant.py:125
 msgid "You inherit an unusually fair society."
-msgstr ""
+msgstr "أنت ترث مجتمعاً عادلاً بشكل غير معتاد."
 
 #: app/game/engine/variant.py:126
 msgid "Deep inequality greets you on arrival."
-msgstr ""
+msgstr "عدم المساواة العميق يستقبلك عند وصولك."
 
 #: app/game/engine/variant.py:127
 msgid "Citizens begin with broad freedoms."
-msgstr ""
+msgstr "المواطنون يبدأون بحريات واسعة."
 
 #: app/game/engine/variant.py:128
 msgid "Civil liberties are already constrained."
-msgstr ""
+msgstr "الحريات المدنية مقيدة بالفعل."
 
 #: app/game/engine/variant.py:129
 msgid "Past leaders invested well in the long term."
-msgstr ""
+msgstr "الزعماء السابقون استثمروا بشكل جيد في المدى الطويل."
 
 #: app/game/engine/variant.py:130
 msgid "Little has been set aside for the long term."
-msgstr ""
+msgstr "القليل جداً تم تخصيصه للمدى الطويل."
 
 #: app/game/engine/variant.py:131
 msgid "The system is brittle before the first decision."
-msgstr ""
+msgstr "النظام هش قبل القرار الأول."
 
 #: app/game/engine/variant.py:132
 msgid "The system starts more resilient than usual."
-msgstr ""
+msgstr "النظام يبدأ أكثر مرونة من المعتاد."
 
 #: app/game/services/challenge_service.py:37
-#, fuzzy
 msgid "Someone"
-msgstr "المنطقة الزمنية"
+msgstr "شخص ما"
 
 #: app/game/services/cohort_service.py:160 app/templates/game/outcome.html:80
 msgid "Autonomy"
-msgstr ""
+msgstr "الاستقلالية"
 
 #: app/game/services/cohort_service.py:161
 #: app/templates/daily/_reason_input.html:54
@@ -2896,64 +2833,60 @@ msgstr "الإنصاف"
 #: app/templates/game/components/stat_bars.html:3
 #: app/templates/game/outcome.html:77
 msgid "Prosperity"
-msgstr ""
+msgstr "الرخاء"
 
 #: app/game/services/cohort_service.py:174
 #, python-format
 msgid "Only %(pct)d%% of leaders ended like you."
-msgstr ""
+msgstr "فقط %(pct)d%% من الزعماء انتهى بهم الحال مثلك."
 
 #: app/game/services/cohort_service.py:178
 #, python-format
 msgid "More %(dir)s-led than %(pct)d%% of leaders."
-msgstr ""
+msgstr "أكثر قيادة من %(dir)s من %(pct)d%% من الزعماء."
 
 #: app/game/services/daily_results_service.py:200
 #, python-format
 msgid "Only %(pct)d%% made the call you did: %(label)s"
-msgstr ""
+msgstr "فقط %(pct)d%% اتخذوا القرار الذي اتخذته: %(label)s"
 
 #: app/game/services/profile_service.py:27
 msgid "Spectacular collapse"
-msgstr ""
+msgstr "انهيار مذهل"
 
 #: app/game/services/profile_service.py:28
 msgid "Accidental dystopia"
-msgstr ""
+msgstr "استبداد عرضي"
 
 #: app/game/services/profile_service.py:29
-#, fuzzy
 msgid "Ironic success"
-msgstr "سحب الوصول"
+msgstr "نجاح讽刺"
 
 #: app/game/services/profile_service.py:30
-#, fuzzy
 msgid "Ironic failure"
-msgstr "تكوين"
+msgstr "فشل讽刺"
 
 #: app/game/services/profile_service.py:31
-#, fuzzy
 msgid "Collapse"
-msgstr "إغلاق"
+msgstr "انهيار"
 
 #: app/game/services/profile_service.py:32
-#, fuzzy
 msgid "Unexpected utopia"
-msgstr "خطأ غير متوقع"
+msgstr "يوتوبيا غير متوقعة"
 
 #: app/game/services/profile_service.py:33
 msgid "Mixed legacy"
-msgstr ""
+msgstr "إرث مختلط"
 
 #: app/game/services/share_text_service.py:56
-#, fuzzy, python-format
+#, python-format
 msgid "Tradeoffs · %(date)s"
-msgstr "نشرة من %(date)s"
+msgstr "المقايضات · %(date)s"
 
 #: app/game/services/share_text_service.py:58
 #, python-format
 msgid "⚖️ %(society)s"
-msgstr ""
+msgstr "⚖️ %(society)s"
 
 #: app/game/services/share_text_service.py:80
 #: app/templates/game/archive.html:19 app/templates/game/hub.html:27
@@ -2961,20 +2894,20 @@ msgstr ""
 #, python-format
 msgid "%(num)d-day streak"
 msgid_plural "%(num)d-day streak"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "سلسلة %(num)d أيام"
+msgstr[1] "سلسلة %(num)d أيام"
+msgstr[2] "سلسلة %(num)d أيام"
+msgstr[3] "سلسلة %(num)d أيام"
+msgstr[4] "سلسلة %(num)d أيام"
+msgstr[5] "سلسلة %(num)d أيام"
 
 #: app/game/services/share_text_service.py:91
 msgid "What kind of leader would you be?"
-msgstr ""
+msgstr "ما نوع القائد الذي ستكون عليه؟"
 
 #: app/game/services/share_text_service.py:95
 msgid "Challenge a friend to the same scenario:"
-msgstr ""
+msgstr "تحدَّ صديقاً على نفس السيناريو:"
 
 #: app/help/routes.py:13 app/templates/faq.html:181
 #: app/templates/help/getting_started.html:13
@@ -2983,7 +2916,7 @@ msgstr "البدء"
 
 #: app/help/routes.py:14
 msgid "How to participate, save progress, and explore the platform"
-msgstr ""
+msgstr "كيفية المشاركة وحفظ التقدم واستكشاف المنصة"
 
 #: app/help/routes.py:21 app/templates/about.html:311
 #: app/templates/about.html:368
@@ -2995,7 +2928,7 @@ msgstr "رحلة الأسئلة الكبرى"
 
 #: app/help/routes.py:22
 msgid "Guided civic experience across 8 themes and country editions"
-msgstr ""
+msgstr "تجربة مدنية موجهة عبر 8 مواضيع وإصدارات بلدان"
 
 #: app/help/routes.py:29 app/templates/about.html:290
 #: app/templates/auth/dashboard.html:458
@@ -3010,7 +2943,7 @@ msgstr "السؤال اليومي"
 #: app/help/routes.py:30
 msgid ""
 "One civic question a day — vote, reflect, then see how others responded"
-msgstr ""
+msgstr "سؤال مدني واحد يومياً — صوّت وفكر ثم اطلع على آراء الآخرين"
 
 #: app/help/routes.py:37 app/templates/about.html:295
 #: app/templates/admin/_admin_base.html:49
@@ -3027,9 +2960,8 @@ msgid "Daily Brief"
 msgstr "موجز يومي"
 
 #: app/help/routes.py:38
-#, fuzzy
 msgid "Free editorial digest from 140+ sources across the spectrum"
-msgstr "نستمد من 140+ مصدراً موثوقاً عبر الطيف"
+msgstr "ملخص افتتاحي مجاني من 140+ مصدر عبر الطيف"
 
 #: app/help/routes.py:45 app/templates/about.html:321
 #: app/templates/brief/subscribe.html:209
@@ -3043,18 +2975,17 @@ msgstr "لوحة تحليل الأخبار الشفافة"
 
 #: app/help/routes.py:46
 msgid "Explore how today's stories are covered left, centre, and right"
-msgstr ""
+msgstr "اكتشف كيفية تغطية قصص اليوم من اليسار والوسط واليمين"
 
 #: app/help/routes.py:53 app/templates/faq.html:326
 #: app/templates/help/civic_infrastructure.html:12
 #: app/templates/help/help.html:50
-#, fuzzy
 msgid "Civic infrastructure"
-msgstr "درجة المشاركة المدنية"
+msgstr "البنية التحتية المدنية"
 
 #: app/help/routes.py:54
 msgid "Run programmes, ship your own questions, polls, and consultations"
-msgstr ""
+msgstr "قم بتشغيل البرامج وأطلق أسئلتك واستطلاعاتك واستشاراتك الخاصة"
 
 #: app/help/routes.py:61 app/templates/auth/dashboard.html:39
 #: app/templates/help/civic_infrastructure.html:21
@@ -3066,16 +2997,15 @@ msgstr "البرامج"
 
 #: app/help/routes.py:62
 msgid "Multi-discussion campaigns with themes, phases, and exports"
-msgstr ""
+msgstr "حملات متعددة النقاشات مع مواضيع ومراحل وتصديرات"
 
 #: app/help/routes.py:69
 msgid "Creating Discussions"
 msgstr "إنشاء النقاشات"
 
 #: app/help/routes.py:70
-#, fuzzy
 msgid "Launch structured polls and deliberation spaces in minutes"
-msgstr "نظام التداول المنظم"
+msgstr "أطلق استطلاعات منظمة ومساحات حوار في دقائق"
 
 #: app/help/routes.py:77 app/templates/help/managing_discussions.html:40
 msgid "Managing Discussions"
@@ -3083,7 +3013,7 @@ msgstr "إدارة النقاشات"
 
 #: app/help/routes.py:78
 msgid "Moderation, stewards, exports, and reading results"
-msgstr ""
+msgstr "الإشراف والمشرفون والتصديرات وقراءة النتائج"
 
 #: app/help/routes.py:85 app/templates/about.html:326
 #: app/templates/briefing/landing.html:627
@@ -3094,26 +3024,24 @@ msgstr "موجزات شخصية"
 
 #: app/help/routes.py:86
 msgid "Custom AI digests from your sources — funds the free civic platform"
-msgstr ""
+msgstr "ملخصات ذكية مخصصة من مصادرك — تمول منصة المدنية المجانية"
 
 #: app/help/routes.py:93 app/templates/help/getting_started.html:46
 #: app/templates/help/help.html:79
-#, fuzzy
 msgid "Native deliberation system"
-msgstr "نظام النقاش الأصلي"
+msgstr "نظام حوار أصلي"
 
 #: app/help/routes.py:94
 msgid "Statements, voting, clustering, consensus, and bridge ideas"
-msgstr ""
+msgstr "بيانات التصويت والتجميع والإجماع وأفكار الجسور"
 
 #: app/help/routes.py:101
-#, fuzzy
 msgid "News sourcing for discussions"
-msgstr "نقاشات الأخبار"
+msgstr "استدراج الأخبار للنقاشات"
 
 #: app/help/routes.py:102
 msgid "How trending topics become balanced deliberation prompts"
-msgstr ""
+msgstr "كيف تصبح المواضيع الرائجة حوافز نقاش متوازنة"
 
 #: app/help/routes.py:113 app/templates/about.html:301
 #: app/templates/faq.html:302 app/templates/game/hub.html:3
@@ -3121,11 +3049,11 @@ msgstr ""
 #: app/templates/help/tradeoffs.html:11 app/templates/index.html:674
 #: app/templates/layout.html:1271
 msgid "Tradeoffs"
-msgstr ""
+msgstr "المقارنات"
 
 #: app/help/routes.py:114
 msgid "Daily scenarios — govern under pressure, see who you become"
-msgstr ""
+msgstr "سيناريوهات يومية — حكم تحت الضغط واكتشف من تصبح عليه"
 
 #: app/help/routes.py:127 app/templates/about.html:138
 #: app/templates/layout.html:536 app/templates/layout.html:952
@@ -3133,18 +3061,16 @@ msgid "Participate"
 msgstr "شارك"
 
 #: app/help/routes.py:128 app/templates/about.html:287
-#, fuzzy
 msgid "Daily civic habit"
-msgstr "الأسئلة المدنية اليومية"
+msgstr "عادة مدنية يومية"
 
 #: app/help/routes.py:129
-#, fuzzy
 msgid "Build & run consultations"
-msgstr "استشارة الإسكان والتخطيط"
+msgstr "بناء وتشغيل الاستشارات"
 
 #: app/help/routes.py:130
 msgid "Technical depth"
-msgstr ""
+msgstr "العمق التقني"
 
 #: app/lib/partner_portal_session.py:257 app/partner/routes.py:702
 msgid "This account has been deactivated. Please contact support."
@@ -3156,49 +3082,49 @@ msgstr "أهلاً بعودتك."
 
 #: app/lib/editorial/coverage.py:174
 msgid "Coverage perspective not available — sources unrated."
-msgstr ""
+msgstr "منظور التغطية غير متاح — المصادر غير مصنفة."
 
 #: app/lib/editorial/coverage.py:178
 msgid "Today's stories came from one left-leaning source."
-msgstr ""
+msgstr "قصص اليوم جاءت من مصدر واحد يميل لليسار."
 
 #: app/lib/editorial/coverage.py:180
 msgid "Today's stories came from one right-leaning source."
-msgstr ""
+msgstr "قصص اليوم جاءت من مصدر واحد يميل لليمين."
 
 #: app/lib/editorial/coverage.py:181
 msgid "Today's stories came from one centrist source."
-msgstr ""
+msgstr "قصص اليوم جاءت من مصدر واحد وسطي."
 
 #: app/lib/editorial/coverage.py:185
 #, python-format
 msgid "Coverage skewed left (%(n)d of %(total)d rated outlets)."
-msgstr ""
+msgstr "التغطية منحازة لليسار (%(n)d من %(total)d منافذ مصنفة)."
 
 #: app/lib/editorial/coverage.py:188
 #, python-format
 msgid "Coverage skewed right (%(n)d of %(total)d rated outlets)."
-msgstr ""
+msgstr "التغطية منحازة لليمين (%(n)d من %(total)d منافذ مصنفة)."
 
 #: app/lib/editorial/coverage.py:191
 #, python-format
 msgid "Coverage clustered in the centre (%(n)d of %(total)d rated outlets)."
-msgstr ""
+msgstr "التغطية متمركزة في الوسط (%(n)d من %(total)d منافذ مصنفة)."
 
 #: app/lib/editorial/coverage.py:196
-#, fuzzy, python-format
+#, python-format
 msgid "%(n)dL"
-msgstr "%(n)d أيام"
+msgstr "%(n)dL"
 
 #: app/lib/editorial/coverage.py:198
-#, fuzzy, python-format
+#, python-format
 msgid "%(n)dC"
-msgstr "%(n)d أيام"
+msgstr "%(n)dC"
 
 #: app/lib/editorial/coverage.py:200
 #, python-format
 msgid "%(n)dR"
-msgstr ""
+msgstr "%(n)dR"
 
 #: app/lib/editorial/coverage.py:204
 #, python-format
@@ -3206,15 +3132,17 @@ msgid ""
 "Today's brief drew on %(total)d rated outlets (%(breakdown)s), plus "
 "%(unrated)d unrated."
 msgstr ""
+"استمد الملخص اليومي من %(total)d منافذ مصنفة (%(breakdown)s)، بالإضافة إلى "
+"%(unrated)d غير مصنفة."
 
 #: app/lib/editorial/coverage.py:208
 #, python-format
 msgid "Today's brief drew on %(total)d rated outlets (%(breakdown)s)."
-msgstr ""
+msgstr "استمد الملخص اليومي من %(total)d منافذ مصنفة (%(breakdown)s)."
 
 #: app/lib/editorial/quality.py:77
 msgid "No items selected — nothing to send."
-msgstr ""
+msgstr "لم يتم تحديد أي عناصر — لا يوجد شيء للإرسال."
 
 #: app/lib/editorial/quality.py:93
 #, python-format
@@ -3222,12 +3150,16 @@ msgid ""
 "Only %(count)d item(s) available — brief held for review rather than sending"
 " a near-empty edition."
 msgstr ""
+"فقط %(count)d عنصر(عناصر) متاح — تم إرجاء الملخص للمراجعة بدلاً من إرسال "
+"نسخة شبه فارغة."
 
 #: app/lib/editorial/quality.py:105
 msgid ""
 "All selected items came from a single source — brief held for review so we "
 "don't ship a single-feed digest."
 msgstr ""
+"جميع العناصر المحددة جاءت من مصدر واحد — تم إرجاء الملخص للمراجعة حتى لا "
+"نرسل ملخص تغذية واحدة."
 
 #: app/lib/editorial/quality.py:116
 #, python-format
@@ -3235,6 +3167,8 @@ msgid ""
 "%(pct)d%% of items came from one source — brief held for review to avoid a "
 "single-outlet edition."
 msgstr ""
+"%(pct)d%% من العناصر جاءت من مصدر واحد — تم إرجاء الملخص للمراجعة لتجنب نسخة"
+" من منفذ واحد."
 
 #: app/news/routes.py:328
 msgid "Invalid request"
@@ -3807,13 +3741,12 @@ msgid "Test delivery from Society Speaks partner portal."
 msgstr "رسالة اختبار من بوابة شركاء Society Speaks."
 
 #: app/profiles/forms.py:206
-#, fuzzy
 msgid "Full Name"
 msgstr "الاسم الكامل"
 
 #: app/profiles/forms.py:207
 msgid "Bio"
-msgstr ""
+msgstr "السيرة الذاتية"
 
 #: app/profiles/forms.py:210 app/templates/auth/login.html:30
 #: app/templates/auth/magic_link_request.html:30
@@ -3836,27 +3769,24 @@ msgid "Website"
 msgstr "موقع الويب"
 
 #: app/profiles/forms.py:213 app/profiles/forms.py:232
-#, fuzzy
 msgid "LinkedIn"
-msgstr "الروابط"
+msgstr "LinkedIn"
 
 #: app/profiles/forms.py:214 app/profiles/forms.py:233
-#, fuzzy
 msgid "Twitter"
-msgstr "X (Twitter)"
+msgstr "Twitter"
 
 #: app/profiles/forms.py:215 app/profiles/forms.py:234
 msgid "Facebook"
-msgstr ""
+msgstr "Facebook"
 
 #: app/profiles/forms.py:216 app/profiles/forms.py:235
-#, fuzzy
 msgid "Instagram"
-msgstr "Mistral"
+msgstr "Instagram"
 
 #: app/profiles/forms.py:217 app/profiles/forms.py:236
 msgid "TikTok"
-msgstr ""
+msgstr "TikTok"
 
 #: app/profiles/forms.py:218 app/profiles/forms.py:237
 #: app/templates/layout.html:1364
@@ -3884,19 +3814,16 @@ msgid "Create Profile"
 msgstr "إنشاء ملف شخصي"
 
 #: app/profiles/forms.py:225
-#, fuzzy
 msgid "Company Name"
-msgstr "اسم النطاق"
+msgstr "اسم الشركة"
 
 #: app/profiles/forms.py:226
-#, fuzzy
 msgid "Company Description"
-msgstr "الوصف"
+msgstr "وصف الشركة"
 
 #: app/profiles/forms.py:229
-#, fuzzy
 msgid "Public contact email"
-msgstr "بريد التواصل الإلكتروني"
+msgstr "البريد الإلكتروني العام للتواصل"
 
 #: app/profiles/forms.py:239
 #: app/templates/profiles/edit_company_profile.html:31
@@ -3905,9 +3832,8 @@ msgid "Company Logo"
 msgstr "شعار الشركة"
 
 #: app/profiles/forms.py:241
-#, fuzzy
 msgid "Create Company Profile"
-msgstr "تحرير ملف الشركة"
+msgstr "إنشاء ملف تعريف الشركة"
 
 #: app/profiles/routes.py:140
 msgid ""
@@ -3994,40 +3920,36 @@ msgid "Profile not found."
 msgstr "لم يتم العثور على الملف الشخصي."
 
 #: app/programmes/forms.py:17
-#, fuzzy
 msgid "Programme Name"
-msgstr "برنامج · مثال"
+msgstr "اسم البرنامج"
 
 #: app/programmes/forms.py:25 app/templates/briefing/edit.html:223
 msgid "Logo URL"
 msgstr "رابط الشعار"
 
 #: app/programmes/forms.py:28
-#, fuzzy
 msgid "Themes (comma separated)"
-msgstr "موضوعات مكتملة"
+msgstr "المواضيع (مفصولة بفواصل)"
 
 #: app/programmes/forms.py:30
-#, fuzzy
 msgid "Example: Health, Prosperity, Security"
-msgstr "الصحة، الازدهار، الأمن، البيئة"
+msgstr "مثال: الصحة، الازدهار، الأمان"
 
 #: app/programmes/forms.py:33
 msgid "Phases (comma separated)"
-msgstr ""
+msgstr "المراحل (مفصولة بفواصل)"
 
 #: app/programmes/forms.py:35
-#, fuzzy
 msgid "Example: Agenda-setting, Wave 1, Wave 2"
-msgstr "تحديد الأجندة، الموجة 1، الموجة 2"
+msgstr "مثال: تحديد الأجندة، الموجة الأولى، الموجة الثانية"
 
 #: app/programmes/forms.py:38
 msgid "Cohorts (one per line: slug|Label)"
-msgstr ""
+msgstr "مجموعات (واحدة في كل سطر: معرّف|التسمية)"
 
 #: app/programmes/forms.py:40
 msgid "Example line: pilot-informed|Pilot (informed)"
-msgstr ""
+msgstr "مثال السطر: pilot-informed|Pilot (informed)"
 
 #: app/programmes/forms.py:44
 #: app/templates/briefing/organization_settings.html:118
@@ -4037,9 +3959,8 @@ msgid "Owner"
 msgstr "المالك"
 
 #: app/programmes/forms.py:45
-#, fuzzy
 msgid "My account"
-msgstr "الحساب"
+msgstr "حسابي"
 
 #: app/programmes/forms.py:45 app/programmes/forms.py:48
 #: app/templates/briefing/use_template.html:63
@@ -4054,29 +3975,24 @@ msgid "Visibility"
 msgstr "الرؤية"
 
 #: app/programmes/forms.py:56
-#, fuzzy
 msgid "Save Programme"
-msgstr "عرض البرنامج"
+msgstr "حفظ البرنامج"
 
 #: app/programmes/forms.py:60
-#, fuzzy
 msgid "Steward Email"
-msgstr "بريد المرسل"
+msgstr "بريد المشرف الإلكتروني"
 
 #: app/programmes/forms.py:61
-#, fuzzy
 msgid "Invite Steward"
-msgstr "دعوة الميسرين"
+msgstr "دعوة المشرف"
 
 #: app/programmes/forms.py:65
-#, fuzzy
 msgid "Participant Email"
-msgstr "شارك"
+msgstr "بريد المشارك الإلكتروني"
 
 #: app/programmes/forms.py:66
-#, fuzzy
 msgid "Grant access"
-msgstr "وصول المشاركين"
+msgstr "منح الوصول"
 
 #: app/programmes/routes.py:415
 msgid "Programme created successfully."
@@ -4334,23 +4250,20 @@ msgid "Error validating API key"
 msgstr "خطأ في التحقق من مفتاح API"
 
 #: app/settings/forms.py:8
-#, fuzzy
 msgid "Current Password"
-msgstr "إعادة تعيين كلمة المرور"
+msgstr "كلمة المرور الحالية"
 
 #: app/settings/forms.py:9 app/templates/auth/password_reset.html:14
 msgid "New Password"
 msgstr "كلمة المرور الجديدة"
 
 #: app/settings/forms.py:10
-#, fuzzy
 msgid "Confirm New Password"
-msgstr "كلمة المرور الجديدة"
+msgstr "تأكيد كلمة المرور الجديدة"
 
 #: app/settings/forms.py:10
-#, fuzzy
 msgid "Passwords must match."
-msgstr "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل."
+msgstr "يجب أن تتطابق كلمات المرور."
 
 #: app/settings/forms.py:11 app/templates/settings/settings.html:111
 msgid "Update Password"
@@ -4446,9 +4359,8 @@ msgid ""
 msgstr "تم تقديم طلب المطالبة الخاص بك. سيقوم المسؤول بمراجعته قريبًا."
 
 #: app/templates/about.html:4
-#, fuzzy
 msgid "About Society Speaks — Civic Technology for Sense-Making"
-msgstr "حول Society Speaks - نظام إحساس لصنع القرار في المجتمع"
+msgstr "حول Society Speaks — تكنولوجيا مدنية لفهم الأمور"
 
 #: app/templates/about.html:5
 msgid ""
@@ -4456,23 +4368,27 @@ msgid ""
 "change, ML deliberation, Big Questions Journey, daily civic tools, "
 "Tradeoffs, and infrastructure for your own consultations."
 msgstr ""
+"كيف يحول Society Speaks المشاركة إلى فهم: استراتيجيتنا للتغيير، والمناقشة "
+"بالتعلم الآلي، ورحلة الأسئلة الكبرى، والأدوات المدنية اليومية، والمقايضات، "
+"والبنية التحتية لاستشاراتك الخاصة."
 
 #: app/templates/about.html:7 app/templates/about.html:9
-#, fuzzy
 msgid "About Society Speaks — Making Disagreement Useful Again"
-msgstr "حول Society Speaks - جعل الاختلاف مفيداً مجدداً"
+msgstr "حول Society Speaks — جعل الاختلاف مفيداً مرة أخرى"
 
 #: app/templates/about.html:8 app/templates/about.html:10
 msgid ""
 "Vote on the questions that matter. Run structured consultations on our "
 "infrastructure. Free, ad-free, open source civic technology."
 msgstr ""
+"صوّت على الأسئلة التي تهمك. أدِر استشارات منظمة على بنيتنا التحتية. "
+"تكنولوجيا مدنية مجانية وخالية من الإعلانات ومفتوحة المصدر."
 
 #: app/templates/about.html:19
 msgid ""
 "Civic technology platform for structured public deliberation and sense-"
 "making."
-msgstr ""
+msgstr "منصة تكنولوجيا مدنية للمناقشة العامة المنظمة والفهم."
 
 #: app/templates/about.html:36
 #: app/templates/discussions/search_statements.html:7
@@ -4487,9 +4403,8 @@ msgid "About"
 msgstr "حول"
 
 #: app/templates/about.html:50
-#, fuzzy
 msgid "Open source civic infrastructure"
-msgstr "ادعم تكنولوجيا المدنية مفتوحة المصدر"
+msgstr "بنية تحتية مدنية مفتوحة المصدر"
 
 #: app/templates/about.html:52 app/templates/index.html:133
 msgid "Making Disagreement Useful Again"
@@ -4500,6 +4415,8 @@ msgid ""
 "Open-source civic infrastructure for structured public judgment — and the "
 "daily habits that feed it."
 msgstr ""
+"بنية تحتية مدنية مفتوحة المصدر للحكم العام المنظم — والعادات اليومية التي "
+"تغذيها."
 
 #: app/templates/about.html:59 app/templates/help/getting_started.html:38
 #: app/templates/index.html:147
@@ -4507,9 +4424,8 @@ msgid "Take the Big Questions Journey"
 msgstr "خذ رحلة الأسئلة الكبرى"
 
 #: app/templates/about.html:62 app/templates/help/getting_started.html:50
-#, fuzzy
 msgid "Run your own consultation"
-msgstr "المشاورة القياسية"
+msgstr "أدِر استشارتك الخاصة"
 
 #: app/templates/about.html:75 app/templates/index.html:205
 msgid "Open source"
@@ -4520,23 +4436,20 @@ msgid "No ads · No tracking"
 msgstr "بدون إعلانات · بدون تتبع"
 
 #: app/templates/about.html:83
-#, fuzzy
 msgid "ML-powered deliberation"
-msgstr "التشاور العام"
+msgstr "التداول المدعوم بالذكاء الاصطناعي"
 
 #: app/templates/about.html:87
-#, fuzzy
 msgid "140+ curated news sources"
-msgstr "مصدر أخبار منتقى"
+msgstr "أكثر من 140 مصدر أخبار مختار"
 
 #: app/templates/about.html:97
-#, fuzzy
 msgid "The problem"
-msgstr "المشكلة مع الاستطلاعات"
+msgstr "المشكلة"
 
 #: app/templates/about.html:99
 msgid "Society has information. It lacks understanding."
-msgstr ""
+msgstr "المجتمع لديه معلومات. لكنه يفتقر إلى الفهم."
 
 #: app/templates/about.html:102
 msgid ""
@@ -4545,15 +4458,18 @@ msgid ""
 "a clearer picture of where communities align, where they split, and which "
 "ideas can bridge the gap."
 msgstr ""
+"معظم النقاش العام على الإنترنت يكافئ السرعة والغضب واليقين القبلي — لذا "
+"غالباً ما يعتقد الناس أنهم يختلفون أكثر مما هو واقعي. القرارات الأفضل تحتاج "
+"إلى صورة أوضح عن أماكن توافق المجتمعات، وحيث تنقسم، وأي الأفكار يمكن أن "
+"تجسّر الهوة."
 
 #: app/templates/about.html:108
 msgid "Our theory of change"
-msgstr ""
+msgstr "نظريتنا في التغيير"
 
 #: app/templates/about.html:110
-#, fuzzy
 msgid "How participation becomes better judgment"
-msgstr "معدلات المشاركة بمرور الوقت"
+msgstr "كيف يتحول المشاركة إلى حكم أفضل"
 
 #: app/templates/about.html:113
 msgid ""
@@ -4561,79 +4477,83 @@ msgid ""
 "on the issues people engage with here — not another comment section, but a "
 "shared reasoning layer. Each product is a step in the same chain."
 msgstr ""
+"نحن نبني نحو رؤية أكثر دقة وشفافية للرأي العام حول القضايا التي يتفاعل الناس"
+" معها هنا — ليس قسم تعليقات آخر، بل طبقة استدلال مشتركة. كل منتج هو خطوة في "
+"نفس السلسلة."
 
 #: app/templates/about.html:117
 msgid "Theory of change steps"
-msgstr ""
+msgstr "خطوات نظرية التغيير"
 
 #: app/templates/about.html:124
-#, fuzzy
 msgid "Engage"
-msgstr "اللغة"
+msgstr "التفاعل"
 
 #: app/templates/about.html:125
 msgid ""
 "Meet people where curiosity already is — brief, question, play, or journey."
-msgstr ""
+msgstr "التقابل مع الناس حيث تكون فضولهم — سؤال موجز أو لعبة أو رحلة."
 
 #: app/templates/about.html:127
 #, python-format
 msgid "Tradeoffs · "
-msgstr ""
+msgstr "المقايضات · "
 
 #: app/templates/about.html:127
-#, fuzzy
 msgid "Daily Question · Daily Brief · Big Questions Journey"
-msgstr "ما هي رحلة الأسئلة الكبرى؟"
+msgstr "السؤال اليومي · الملخص اليومي · رحلة الأسئلة الكبرى"
 
 #: app/templates/about.html:139
 msgid ""
 "Vote on clear statements — often before seeing crowds, so your view is yours"
 " first."
 msgstr ""
+"صوّت على تصريحات واضحة — غالباً قبل رؤية الآراء الجماعية، حتى تكون وجهة نظرك"
+" ملكك أولاً."
 
 #: app/templates/about.html:140
-#, fuzzy
 msgid "Discussions · programmes you run · publisher embeds"
-msgstr "النقاشات والبرامج"
+msgstr "النقاشات · البرامج التي تديرها · تضمينات الناشرين"
 
 #: app/templates/about.html:150
-#, fuzzy
 msgid "Reveal"
-msgstr "إلغاء"
+msgstr "الكشف"
 
 #: app/templates/about.html:151
 msgid ""
 "Machine learning groups people by voting patterns, not labels — then "
 "surfaces structure in the results."
 msgstr ""
+"يجمع التعلم الآلي الناس حسب أنماط التصويت، وليس التصنيفات — ثم يكشف البنية "
+"في النتائج."
 
 #: app/templates/about.html:153
-#, fuzzy
 msgid "Consensus · bridges · divisions"
-msgstr "الجسور والانقسامات."
+msgstr "الإجماع · الجسور · الانقسامات"
 
 #: app/templates/about.html:164
-#, fuzzy
 msgid "Understand"
-msgstr "تحت الرادار"
+msgstr "الفهم"
 
 #: app/templates/about.html:165
 msgid ""
 "Individuals see the full shape of opinion; institutions see evidence they "
 "can cite and export."
 msgstr ""
+"يرى الأفراد الصورة الكاملة للرأي؛ ترى المؤسسات أدلة يمكنها الاستشهاد بها "
+"وتصديرها."
 
 #: app/templates/about.html:175
-#, fuzzy
 msgid "Decide & act"
-msgstr "العلوم والأفكار الكبرى"
+msgstr "القرار والعمل"
 
 #: app/templates/about.html:176
 msgid ""
 "Better-informed citizens, journalism, research, and policy — plus "
 "consultations you host on our infrastructure."
 msgstr ""
+"مواطنون أفضل اطلاعاً، صحافة، أبحاث وسياسة — بالإضافة إلى الاستشارات التي "
+"تستضيفها على بنيتنا التحتية."
 
 #: app/templates/about.html:185
 msgid ""
@@ -4642,58 +4562,58 @@ msgid ""
 " Progress is cumulative — one question, one programme, one consultation at a"
 " time."
 msgstr ""
+"نحن صادقون بشأن الحدود: التحليل يحتاج مشاركين كافيين؛ المقايضات تقيس "
+"الاستجابات لافتراضات، وليس أيديولوجيتك؛ صادرات المؤسسات إجمالية. التقدم "
+"تراكمي — سؤال واحد، برنامج واحد، استشارة واحدة في المرة."
 
 #: app/templates/about.html:191
-#, fuzzy
 msgid "The engine"
-msgstr "صوّت مجددًا"
+msgstr "المحرك"
 
 #: app/templates/about.html:193
 msgid "Three design choices behind the chain above — methodology inspired by"
-msgstr ""
+msgstr "ثلاثة خيارات تصميم وراء السلسلة أعلاه — منهجية مستوحاة من"
 
 #: app/templates/about.html:194
-#, fuzzy
 msgid " / the Computational Democracy Project."
-msgstr "زيارة مشروع الاستراتيجية الوطنية"
+msgstr " / مشروع الديمقراطية الحسابية."
 
 #: app/templates/about.html:199
-#, fuzzy
 msgid "Structured statements"
-msgstr "البيانات الأولية"
+msgstr "تصريحات منظمة"
 
 #: app/templates/about.html:200
-#, fuzzy
 msgid "Single claims, Agree / Disagree / Unsure — not threaded outrage."
-msgstr "التصويت البسيط (موافق / غير موافق / غير متأكد)"
+msgstr "مطالبات منفردة، موافق / لا أوافق / غير متأكد — ليس غضب متسلسل."
 
 #: app/templates/about.html:204
-#, fuzzy
 msgid "Think first"
-msgstr "مراكز الفكر"
+msgstr "فكّر أولاً"
 
 #: app/templates/about.html:205
 msgid ""
 "Many surfaces hide aggregates until you have voted, reducing anchoring."
-msgstr ""
+msgstr "سطوح كثيرة تخفي الإجماليات حتى تصوت، مما يقلل التثبيط."
 
 #: app/templates/about.html:209
 msgid "Pattern-based groups"
-msgstr ""
+msgstr "مجموعات قائمة على الأنماط"
 
 #: app/templates/about.html:210
 msgid ""
 "Clusters form from votes, not demographics — then feed the reveal step "
 "below."
 msgstr ""
+"التجمعات تتشكل من الأصوات، وليس من البيانات الديموغرافية — ثم تغذي خطوة "
+"الكشف أدناه."
 
 #: app/templates/about.html:217
 msgid "For civic tech builders"
-msgstr ""
+msgstr "لمنشئي التكنولوجيا المدنية"
 
 #: app/templates/about.html:218
 msgid "Run your own programmes on our infrastructure"
-msgstr ""
+msgstr "قم بتشغيل برامجك الخاصة على بنيتنا التحتية"
 
 #: app/templates/about.html:220
 msgid ""
@@ -4702,12 +4622,18 @@ msgid ""
 "panels, publisher embeds, and internal strategy processes using the same "
 "deliberation engine we use on societyspeaks.io."
 msgstr ""
+"Society Speaks ليست ساحة عامة فقط — بل هي بنية تحتية مدنية يمكنك نشرها. أطلق"
+" استشارات منظمة، جمعيات مواطنين، لجان بحثية، تضمينات ناشرين، وعمليات "
+"استراتيجية داخلية باستخدام نفس محرك التداول الذي نستخدمه على "
+"societyspeaks.io."
 
 #: app/templates/about.html:225
 msgid ""
 "<strong class=\"text-white\">Programmes</strong> — group discussions by "
 "theme and phase, manage stewards, control visibility, export CSV data"
 msgstr ""
+"<strong class=\"text-white\">البرامج</strong> — جمع النقاشات حسب الموضوع "
+"والمرحلة، إدارة الحراس، التحكم في الرؤية، تصدير بيانات CSV"
 
 #: app/templates/about.html:229
 msgid ""
@@ -4715,28 +4641,32 @@ msgid ""
 "statements, seed questions, invite cohorts, run public or private "
 "consultations"
 msgstr ""
+"<strong class=\"text-white\">النقاشات والاستطلاعات</strong> — اطلق تصريحاتك "
+"الخاصة، أسئلة أولية، ادعُ مجموعات، قم بتشغيل استشارات عامة أو خاصة"
 
 #: app/templates/about.html:233
 msgid ""
 "<strong class=\"text-white\">Publisher embeds & API</strong> — embed voting "
 "on your site; automate topics from your CMS"
 msgstr ""
+"<strong class=\"text-white\">تضمينات الناشرين والواجهة البرمجية</strong> — "
+"ضمّن التصويت على موقعك؛ أتمتة المواضيع من نظام إدارة محتوى موقعك"
 
 #: app/templates/about.html:237
 msgid ""
 "<strong class=\"text-white\">Consensus analysis</strong> — opinion clusters,"
 " bridge ideas, and exports when you have enough participation"
 msgstr ""
+"<strong class=\"text-white\">تحليل الإجماع</strong> — تجمعات الرأي، أفكار "
+"جسورة، وصادرات عندما يكون لديك مشاركة كافية"
 
 #: app/templates/about.html:242 app/templates/help/getting_started.html:53
-#, fuzzy
 msgid "Civic infrastructure guide"
-msgstr "مشروع البنية التحتية يتقدم"
+msgstr "دليل البنية التحتية المدنية"
 
 #: app/templates/about.html:245
-#, fuzzy
 msgid "For publishers & partners"
-msgstr "للناشرين"
+msgstr "للناشرين والشركاء"
 
 #: app/templates/about.html:248 app/templates/help/getting_started.html:54
 #: app/templates/platform.html:755 app/templates/platform.html:798
@@ -4745,13 +4675,12 @@ msgid "Start a discussion"
 msgstr "ابدأ نقاشاً"
 
 #: app/templates/about.html:255
-#, fuzzy
 msgid "What the system reveals"
 msgstr "ما يكشفه النظام"
 
 #: app/templates/about.html:256
 msgid "Three distinct types of insight — not a single vote count:"
-msgstr ""
+msgstr "ثلاثة أنواع مميزة من الرؤى — وليس عدد أصوات واحد:"
 
 #: app/templates/about.html:262 app/templates/platform.html:339
 msgid "Consensus statements"
@@ -4762,17 +4691,20 @@ msgid ""
 "Broad agreement across opinion clusters — including groups that disagree "
 "elsewhere."
 msgstr ""
+"اتفاق واسع عبر مجموعات الآراء — بما في ذلك المجموعات التي تختلف في مواضع "
+"أخرى."
 
 #: app/templates/about.html:269
-#, fuzzy
 msgid "Bridge ideas"
-msgstr "فكرة جسر"
+msgstr "أفكار جسور"
 
 #: app/templates/about.html:270
 msgid ""
 "Statements that resonate across clusters that otherwise split — often the "
 "most actionable for policy and dialogue."
 msgstr ""
+"بيانات تتردد صداها عبر مجموعات تنقسم في غير ذلك — غالباً ما تكون الأكثر "
+"قابلية للتطبيق في السياسة والحوار."
 
 #: app/templates/about.html:276 app/templates/platform.html:357
 msgid "Genuine divisions"
@@ -4783,25 +4715,27 @@ msgid ""
 "Clear fault lines where deeper deliberation is needed — surfaced honestly, "
 "not hidden."
 msgstr ""
+"خطوط صراع واضحة حيث يكون النقاش الأعمق مطلوباً — يتم الكشف عنها بصراحة، وليس"
+" إخفاؤها."
 
 #: app/templates/about.html:284
 msgid "One platform, many ways to engage"
-msgstr ""
+msgstr "منصة واحدة، طرق عديدة للمشاركة"
 
 #: app/templates/about.html:285
 msgid ""
 "Free civic tools for everyone. Premium Briefs and partnerships fund the "
 "commons."
 msgstr ""
+"أدوات مدنية مجانية للجميع. الملخصات المتميزة والشراكات تمول الصالح العام."
 
 #: app/templates/about.html:291
-#, fuzzy
 msgid ""
 "One question a day. Vote, reflect, then see how others responded. Builds a "
 "longitudinal picture of public opinion."
 msgstr ""
-"سؤال واحد مختار بعناية كل يوم. صوّت، شارك تبريرك، ثم شاهد كيف استجاب "
-"الآخرون. بمرور الوقت، يخلق هذا رؤية طولية لكيفية تطور الرأي العام."
+"سؤال واحد يومياً. صوّت، تأمل، ثم انظر كيف استجاب الآخرون. يبني صورة طولية "
+"للرأي العام."
 
 #: app/templates/about.html:292 app/templates/help/daily_question.html:23
 #: app/templates/index.html:520
@@ -4809,14 +4743,14 @@ msgid "Today's question"
 msgstr "سؤال اليوم"
 
 #: app/templates/about.html:296
-#, fuzzy
 msgid ""
 "Free digest of 3–5 civic stories from 140+ sources with left/centre/right "
 "breakdown and why each story matters."
-msgstr "3–5 قصص · تفصيل يسار/وسط/يمين · لماذا يهم"
+msgstr ""
+"ملخص مجاني لـ 3–5 قصص مدنية من 140+ مصدر مع تقسيم يسار/وسط/يمين ولماذا تهم "
+"كل قصة."
 
 #: app/templates/about.html:297 app/templates/help/daily_brief.html:23
-#, fuzzy
 msgid "Read today's brief"
 msgstr "اقرأ ملخص اليوم"
 
@@ -4825,26 +4759,28 @@ msgid ""
 "Five turns of governing under pressure — discover what kind of leader you "
 "become when every choice helps someone and hurts someone else."
 msgstr ""
+"خمس جولات من الحكم تحت الضغط — اكتشف نوع القائد الذي تصبحه عندما يساعد كل "
+"خيار شخصاً ويؤذي شخصاً آخر."
 
 #: app/templates/about.html:303
-#, fuzzy
 msgid "Play today"
-msgstr "اليوم"
+msgstr "العب اليوم"
 
 #: app/templates/about.html:308
 msgid "Depth & discovery"
-msgstr ""
+msgstr "العمق والاكتشاف"
 
 #: app/templates/about.html:312
 msgid ""
 "8 themes, country editions, at least 56 seed statements — vote across "
 "climate, AI, democracy, health, and more, then see your recap."
 msgstr ""
+"8 مواضيع، إصدارات بلدان، على الأقل 56 بيان بذري — صوّت عبر المناخ والذكاء "
+"الاصطناعي والديمقراطية والصحة وأكثر، ثم انظر ملخصك."
 
 #: app/templates/about.html:313
-#, fuzzy
 msgid "Start the journey"
-msgstr "شارك الرحلة"
+msgstr "ابدأ الرحلة"
 
 #: app/templates/about.html:316 app/templates/admin/_admin_base.html:25
 #: app/templates/admin/_admin_base.html:101
@@ -4867,6 +4803,8 @@ msgid ""
 "Topic-based deliberation on news and community issues — create your own or "
 "join open conversations."
 msgstr ""
+"نقاش قائم على الموضوع حول أخبار والقضايا المجتمعية — أنشئ نقاشك الخاص أو "
+"انضم إلى محادثات مفتوحة."
 
 #: app/templates/about.html:318 app/templates/auth/saved_discussions.html:91
 #: app/templates/platform.html:747
@@ -4877,29 +4815,25 @@ msgstr "استكشف النقاشات"
 msgid ""
 "Today's news across the spectrum — sensationalism scores, coverage balance, "
 "and source transparency."
-msgstr ""
+msgstr "أخبار اليوم عبر الطيف — درجات الإثارة، توازن التغطية، وشفافية المصدر."
 
 #: app/templates/about.html:323 app/templates/help/news_dashboard.html:19
-#, fuzzy
 msgid "Open dashboard"
-msgstr "افتح لوحة المعلومات الخاصة بك"
+msgstr "فتح لوحة المعلومات"
 
 #: app/templates/about.html:327
-#, fuzzy
 msgid ""
 "Paid custom digests from your RSS feeds, Substacks, and PDFs — subscriptions"
 " fund the free civic platform."
 msgstr ""
-"Personal Briefs يتيح لك إنشاء ملخصات يومية مخصصة من المنشورات و Substacks و "
-"ملفات PDF التي تختارها. اشتراكك يمول منصتنا المدنية مفتوحة المصدر."
+"ملخصات مخصصة مدفوعة من موجزات RSS وSubstacks وملفات PDF الخاصة بك — "
+"الاشتراكات تمول منصة المدنية المجانية."
 
 #: app/templates/about.html:328
-#, fuzzy
 msgid "Explore Personal Briefs"
-msgstr "موجز عينة شخصي"
+msgstr "استكشف ملخصات شخصية"
 
 #: app/templates/about.html:335
-#, fuzzy
 msgid "From news to deliberation"
 msgstr "من الأخبار إلى النقاش"
 
@@ -4908,14 +4842,14 @@ msgid ""
 "Curated civic news and spectrum transparency feed the Engage step — then "
 "seed statements and discussions carry issues into structured participation."
 msgstr ""
+"تغذي أخبار مدنية منتقاة وشفافية الطيف خطوة المشاركة — ثم البيانات البذرية "
+"والنقاشات تنقل المشاكل إلى المشاركة المنظمة."
 
 #: app/templates/about.html:337
-#, fuzzy
 msgid "How we source news for debate"
-msgstr "كيف يعمل خلاصتنا الإخبارية"
+msgstr "كيفية جمع الأخبار للنقاش"
 
 #: app/templates/about.html:343
-#, fuzzy
 msgid "Built in the open"
 msgstr "مبني بشكل مفتوح"
 
@@ -4924,6 +4858,8 @@ msgid ""
 "Society Speaks is open source (AGPL). Audit the code, contribute "
 "improvements, or self-host components for your own civic stack."
 msgstr ""
+"Society Speaks مفتوح المصدر (AGPL). قم بتدقيق الكود، أو ساهم بتحسينات، أو "
+"استضف المكونات بنفسك لمجموعتك المدنية الخاصة."
 
 #: app/templates/about.html:346
 msgid "View Society Speaks source code on GitHub (opens in new tab)"
@@ -4934,30 +4870,31 @@ msgid "View on GitHub"
 msgstr "عرض على GitHub"
 
 #: app/templates/about.html:353
-#, fuzzy
 msgid "Support the mission"
-msgstr "دعم الرسالة"
+msgstr "دعم المهمة"
 
 #: app/templates/about.html:354
 msgid ""
 "No advertising, no selling your data. Donations and Personal Briefs "
 "subscriptions keep civic features free for everyone."
 msgstr ""
+"بدون إعلانات، بدون بيع بياناتك. التبرعات واشتراكات الملخصات الشخصية تحافظ "
+"على الميزات المدنية مجانية للجميع."
 
 #: app/templates/about.html:356
 msgid "Make a donation"
 msgstr "تبرع الآن"
 
 #: app/templates/about.html:365
-#, fuzzy
 msgid "Ready to participate or build?"
-msgstr "كيفية المشاركة"
+msgstr "هل أنت مستعد للمشاركة أو البناء؟"
 
 #: app/templates/about.html:366
 msgid ""
 "Take the Journey, answer today's question, or launch your own consultation "
 "on our infrastructure."
 msgstr ""
+"خذ الرحلة، أجب على سؤال اليوم، أو أطلق استشارتك الخاصة على بنيتنا الأساسية."
 
 #: app/templates/about.html:369 app/templates/daily/no_question.html:30
 #: app/templates/daily/results.html:700 app/templates/layout.html:575
@@ -4967,9 +4904,8 @@ msgid "Today's Question"
 msgstr "سؤال اليوم"
 
 #: app/templates/about.html:371
-#, fuzzy
 msgid "Play Tradeoffs"
-msgstr "← العودة إلى النشرات الإخبارية"
+msgstr "العب Tradeoffs"
 
 #: app/templates/about.html:373 app/templates/help/help.html:48
 #: app/templates/help/help.html:103 app/templates/help/macros.html:45
@@ -5227,15 +5163,14 @@ msgid "Frequently Asked Questions — Society Speaks"
 msgstr "الأسئلة الشائعة — Society Speaks"
 
 #: app/templates/faq.html:5
-#, fuzzy
 msgid ""
 "Everything you need to know about Society Speaks — Big Questions Journey, "
 "Daily Brief, Daily Question, Tradeoffs, civic infrastructure for "
 "consultations, Personal Briefs, machine learning, privacy, and pricing."
 msgstr ""
-"كل ما تحتاج معرفته عن Society Speaks — رحلة الأسئلة الكبرى، الملخص اليومي، "
-"السؤال اليومي، الملخصات الشخصية، وكيف يعمل التعلم الآلي لدينا والخصوصية "
-"والتسعير."
+"كل ما تحتاج إلى معرفته عن Society Speaks — رحلة الأسئلة الكبرى، الملخص "
+"اليومي، السؤال اليومي، Tradeoffs، البنية الأساسية المدنية للاستشارات، "
+"الملخصات الشخصية، التعلم الآلي، والخصوصية والتسعير."
 
 #: app/templates/faq.html:8
 msgid ""
@@ -5273,7 +5208,6 @@ msgid "Is Society Speaks free?"
 msgstr "هل Society Speaks مجاني؟"
 
 #: app/templates/faq.html:25
-#, fuzzy
 msgid ""
 "Yes. All core features are free: discussions, programmes, the Big Questions "
 "Journey, the Daily Question, the Daily Brief, Tradeoffs, the News "
@@ -5281,10 +5215,10 @@ msgid ""
 "(from £4.99/month) is available for those who want a custom daily digest "
 "from their own sources — and it funds the free civic platform."
 msgstr ""
-"نعم. جميع الميزات الأساسية مجانية: النقاشات ورحلة الأسئلة الكبرى والسؤال "
-"اليومي والملخص اليومي لوحة معلومات شفافية الأخبار والتصويت. اشتراك شخصي "
-"مدفوع (من £4.99/الشهر) متاح لمن يريد ملخصاً يومياً مخصصاً من مصادره الخاصة —"
-" وهو يمول المنصة المدنية المجانية."
+"نعم. جميع الميزات الأساسية مجانية: النقاشات، والبرامج، ورحلة الأسئلة الكبرى،"
+" والسؤال اليومي، والملخص اليومي، و Tradeoffs، ولوحة معلومات شفافية الأخبار، "
+"والتصويت. يتوفر اشتراك مدفوع للملخصات الشخصية (من £4.99/شهر) لمن يريد ملخصاً"
+" يومياً مخصصاً من مصادره الخاصة — وهو يمول منصة المدنية المجانية."
 
 #: app/templates/faq.html:29
 msgid "Do I need an account to use Society Speaks?"
@@ -5611,9 +5545,8 @@ msgstr ""
 " من AllSides. لا تتطلب تسجيل."
 
 #: app/templates/faq.html:120
-#, fuzzy
 msgid "What is Tradeoffs on Society Speaks?"
-msgstr "ما هو البرنامج على Society Speaks؟"
+msgstr "ما هو Tradeoffs على Society Speaks؟"
 
 #: app/templates/faq.html:121
 msgid ""
@@ -5623,11 +5556,14 @@ msgid ""
 "It uses behavioural data about fictional choices, not your real-world "
 "political beliefs."
 msgstr ""
+"Tradeoffs هي لعبة سيناريو يومية على /play. تواجه أزمة خيالية، تتخذ خمس جولات"
+" من خيارات الحكم بدون خيار مثالي، وتتلقى نتيجة توضح نوع القائد الذي أصبحت "
+"وأي مجتمع بنيت. تستخدم بيانات سلوكية حول الخيارات الخيالية، وليس معتقداتك "
+"السياسية في العالم الحقيقي."
 
 #: app/templates/faq.html:126
-#, fuzzy
 msgid "Can organisations run their own consultations on Society Speaks?"
-msgstr "هل يمكن للمنظمات استخدام Society Speaks؟"
+msgstr "هل يمكن للمنظمات تشغيل استشاراتها الخاصة على Society Speaks؟"
 
 #: app/templates/faq.html:127
 msgid ""
@@ -5636,6 +5572,9 @@ msgid ""
 " control visibility, appoint stewards, export CSV data, and embed voting on "
 "your website via the Partner API."
 msgstr ""
+"نعم. Society Speaks هي بنية أساسية مدنية: أنشئ نقاشات مع بياناتك البذرية "
+"الخاصة، شغّل برامج متعددة النقاشات بمواضيع وأطوار، تحكم الرؤية، عيّن الحراس،"
+" صدّر بيانات CSV، وضمّن التصويت على موقعك عبر Partner API."
 
 #: app/templates/faq.html:138
 msgid "Help & support"
@@ -5668,7 +5607,6 @@ msgstr ""
 "مفتوحة المصدر وخالية من الإعلانات ومجانية للاستخدام."
 
 #: app/templates/faq.html:190
-#, fuzzy
 msgid ""
 "Yes. All core features are free: the Big Questions Journey, Daily Question, "
 "Daily Brief, Tradeoffs, News Transparency Dashboard, discussions, "
@@ -5676,10 +5614,10 @@ msgid ""
 "£4.99/month) is available for those who want a custom daily digest from "
 "their own sources — and it funds the free civic platform."
 msgstr ""
-"نعم. جميع الميزات الأساسية مجانية: رحلة الأسئلة الكبرى والسؤال اليومي "
-"والنشرة اليومية ولوحة معلومات شفافية الأخبار والمناقشات والتصويت. اشتراك "
-"النشرات الشخصية المدفوع (من £4.99 شهرياً) متاح لمن يرغب في ملخص يومي مخصص من"
-" مصادره الخاصة — وهذا يمول المنصة المدنية المجانية."
+"نعم. جميع الميزات الأساسية مجانية: رحلة الأسئلة الكبرى، والسؤال اليومي، "
+"والملخص اليومي، و Tradeoffs، ولوحة معلومات شفافية الأخبار، والنقاشات، "
+"والبرامج، والتصويت. يتوفر اشتراك مدفوع للملخصات الشخصية (من £4.99/شهر) لمن "
+"يريد ملخصاً يومياً مخصصاً من مصادره الخاصة — وهو يمول منصة المدنية المجانية."
 
 #: app/templates/faq.html:193
 msgid "Do I need an account?"
@@ -5707,10 +5645,13 @@ msgid ""
 "includes individuals, NGOs, governments, universities, publishers, and "
 "researchers."
 msgstr ""
+"كل من يفضل معرفة الرأي العام — وتقنيي المدنية الذين يحتاجون إلى بنية أساسية "
+"لتشغيل برامجهم واستطلاعاتهم واستشاراتهم الخاصة. وهذا يشمل الأفراد والمنظمات "
+"غير الحكومية والحكومات والجامعات والناشرين والباحثين."
 
 #: app/templates/faq.html:201
 msgid "Can I run my own questions and polls?"
-msgstr ""
+msgstr "هل يمكنني طرح أسئلتي الخاصة وإجراء استطلاعاتي؟"
 
 #: app/templates/faq.html:202
 msgid ""
@@ -5720,6 +5661,10 @@ msgid ""
 "submissions, and export results. See our civic infrastructure guide in the "
 "Help Centre."
 msgstr ""
+"نعم. أنشئ نقاشًا بعباراتك الأولية أو ابنِ برنامجًا كاملاً بنقاشات متعددة "
+"ومواضيع وأطوار وفئات. أنت تتحكم بالرؤية (عام أو غير مدرج أو بدعوة فحسب أو "
+"خاص)، وتعتدل على التقديمات، وتُصدِّر النتائج. انظر إلى دليل البنية التحتية "
+"المدنية في مركز المساعدة."
 
 #: app/templates/faq.html:205
 msgid "Is Society Speaks open source?"
@@ -6002,9 +5947,8 @@ msgstr ""
 "العناوين."
 
 #: app/templates/faq.html:306
-#, fuzzy
 msgid "What is Tradeoffs?"
-msgstr "← العودة إلى النشرات الإخبارية"
+msgstr "ما هي Tradeoffs؟"
 
 #: app/templates/faq.html:307
 msgid ""
@@ -6014,10 +5958,15 @@ msgid ""
 "shareable outcome. Quick Run replays other scenarios; challenge links let "
 "friends play the same day and compare results."
 msgstr ""
+"Tradeoffs لعبة سيناريو يومية على Society Speaks (/play). كل سيناريو يعطيك "
+"خمس جولات من إدارة الأزمات — كل اختيار يساعد جزءًا من المجتمع ويؤذي جزءًا "
+"آخر. تتلقى عنوان هوية وبطاقة إحصائيات ونتيجة قابلة للمشاركة. Quick Run تُعيد"
+" تشغيل سيناريوهات أخرى؛ روابط التحدي تتيح للأصدقاء لعب نفس السيناريو في نفس "
+"اليوم ومقارنة النتائج."
 
 #: app/templates/faq.html:310
 msgid "Is Tradeoffs about my real political views?"
-msgstr ""
+msgstr "هل Tradeoffs تتعلق بآرائي السياسية الحقيقية؟"
 
 #: app/templates/faq.html:311
 msgid ""
@@ -6026,11 +5975,13 @@ msgid ""
 " grade your real-world beliefs. See our editorial principles on "
 "/play/editorial-principles."
 msgstr ""
+"لا. السيناريوهات خيالية. نحن نخزّن الخيارات السلوكية في اللعبة، وليس "
+"أيديولوجيتك المُعلنة. تعكس اللعبة صورة تحت الضغط؛ لا تقيّم معتقداتك "
+"الحقيقية. انظر إلى مبادئنا التحريرية على /play/editorial-principles."
 
 #: app/templates/faq.html:314
-#, fuzzy
 msgid "Do I need an account to play Tradeoffs?"
-msgstr "هل أحتاج إلى حساب لاستخدام Society Speaks؟"
+msgstr "هل أحتاج إلى حساب للعب Tradeoffs؟"
 
 #: app/templates/faq.html:315
 msgid ""
@@ -6038,10 +5989,13 @@ msgid ""
 "anonymous runs when you log in, and keep outcome history. Friend challenges "
 "work with or without an account."
 msgstr ""
+"لا، لجولة واحدة يومية. سجّل الدخول (رابط سحري) لحفظ سلاسلك، ودمج الجولات "
+"المجهولة عند تسجيلك، والاحتفاظ بسجل النتائج. تحديات الأصدقاء تعمل مع أو بدون"
+" حساب."
 
 #: app/templates/faq.html:318
 msgid "How does Tradeoffs connect to deliberation?"
-msgstr ""
+msgstr "كيف تتصل Tradeoffs بالنقاش المنظم؟"
 
 #: app/templates/faq.html:319
 msgid ""
@@ -6049,11 +6003,12 @@ msgid ""
 "related Daily Question or discussion so play leads into real structured "
 "participation."
 msgstr ""
+"عندما يتطابق سيناريو مع موضوع مدني حي، يمكن لـ Tradeoffs أن توصلك إلى السؤال"
+" اليومي أو النقاش ذي الصلة حتى تؤدي اللعبة إلى مشاركة منظمة حقيقية."
 
 #: app/templates/faq.html:330
-#, fuzzy
 msgid "What is Society Speaks civic infrastructure?"
-msgstr "ما هو Society Speaks؟"
+msgstr "ما هي البنية التحتية المدنية في Society Speaks؟"
 
 #: app/templates/faq.html:331
 msgid ""
@@ -6061,11 +6016,12 @@ msgid ""
 "available for your organisation. Run programmes, ship structured polls, "
 "embed on your properties, and export analysis-ready data."
 msgstr ""
+"نفس محرك النقاش وراء Journey العام والسؤال اليومي — متاح لمؤسستك. قم بتشغيل "
+"برامج، وأطلق استطلاعات منظمة، واحفر على خصائصك، وصدّر بيانات جاهزة للتحليل."
 
 #: app/templates/faq.html:334
-#, fuzzy
 msgid "What is the difference between a discussion and a programme?"
-msgstr "ما الفرق بين الخطة الشخصية والاحترافية؟"
+msgstr "ما الفرق بين النقاش والبرنامج؟"
 
 #: app/templates/faq.html:335
 msgid ""
@@ -6074,10 +6030,13 @@ msgid ""
 "shared themes, sequential phases, cohorts, stewards, and bulk export for "
 "large consultations."
 msgstr ""
+"النقاش هو مساحة نقاش واحدة بعباراتها الخاصة ونتائجها. البرنامج يجمّع نقاشات "
+"كثيرة تحت مبادرة واحدة — مع مواضيع مشتركة وأطوار متتالية وفئات ووكلاء وتصدير"
+" بكميات كبيرة للاستشارات الضخمة."
 
 #: app/templates/faq.html:338
 msgid "Can publishers embed voting on their sites?"
-msgstr ""
+msgstr "هل يمكن للناشرين تضمين التصويت على مواقعهم؟"
 
 #: app/templates/faq.html:339
 msgid ""
@@ -6085,11 +6044,13 @@ msgid ""
 " to article URLs, define your own statements, and receive structured opinion"
 " data. You choose every topic — we do not scrape your newsroom."
 msgstr ""
+"نعم. توفر مركز Partner iframes قابلة للتضمين وواجهة API لربط النقاشات برابط "
+"URL المقالة، وتحديد عباراتك الخاصة، واستقبال بيانات الرأي المنظمة. أنت تختار"
+" كل موضوع — نحن لا نكشط غرفة أخبارك."
 
 #: app/templates/faq.html:342
-#, fuzzy
 msgid "When does consensus analysis become available?"
-msgstr "بعد مشاركة كافية، يصبح تحليل التوافق متاحاً"
+msgstr "متى يصبح تحليل الإجماع متاحًا؟"
 
 #: app/templates/faq.html:343
 msgid ""
@@ -6097,6 +6058,9 @@ msgid ""
 "of statements (exact thresholds depend on discussion size). Stewards and "
 "creators can access CSV exports and consensus views when unlocked."
 msgstr ""
+"عادة بعد حوالي 7-15 مشارك صوتوا على حصة ذات معنى من البيانات (الحدود الدقيقة"
+" تعتمد على حجم النقاش). يمكن للوكلاء والمنشئين الوصول إلى تصديرات CSV وآراء "
+"الإجماع عند فتحها."
 
 #: app/templates/faq.html:349 app/templates/layout.html:587
 #: app/templates/layout.html:974 app/templates/layout.html:1249
@@ -6345,9 +6309,8 @@ msgstr ""
 "النسخة التجريبية، فلن يتم تحصيل رسوم منك."
 
 #: app/templates/faq.html:434
-#, fuzzy
 msgid "For organisations & partners"
-msgstr "للمنظمات"
+msgstr "للمنظمات والشركاء"
 
 #: app/templates/faq.html:439
 msgid ""
@@ -6355,6 +6318,9 @@ msgid ""
 "your own consultations on the same infrastructure. NGOs, governments, "
 "universities, publishers, and researchers use Society Speaks globally."
 msgstr ""
+"نعم — كمشاركين وكمشغلين. استخدم برامجنا العامة أو انشر استشاراتك الخاصة على "
+"نفس البنية التحتية. تستخدم المنظمات غير الحكومية والحكومات والجامعات "
+"والناشرون والباحثون Society Speaks عالميًا."
 
 #: app/templates/faq.html:442
 msgid "What is the publisher embed?"
@@ -6366,6 +6332,9 @@ msgid ""
 "pages you choose. Readers vote Agree / Disagree / Unsure on statements you "
 "define; you receive consensus, bridge, and division analytics."
 msgstr ""
+"iframe خفيف (وواجهة Partner API) يضع التصويت المنظم على الصفحات التي "
+"تختارها. يصوت القراء موافق / معارض / غير متأكد على العبارات التي تحددها؛ "
+"تتلقى تحليلات الإجماع والجسر والانقسام."
 
 #: app/templates/faq.html:446
 msgid "Can I run a citizen consultation or deliberation programme?"
@@ -6377,6 +6346,9 @@ msgid ""
 "stewards, visibility controls, and exports. Start from the Help Centre civic"
 " infrastructure guide or contact us for large deployments."
 msgstr ""
+"نعم. تدعم البرامج النقاش متعدد المراحل: مواضيع وأطوار وفئات ووكلاء وضوابط "
+"الرؤية والتصديرات. ابدأ من دليل البنية التحتية المدنية في مركز المساعدة أو "
+"اتصل بنا للنشرات الكبيرة."
 
 #: app/templates/faq.html:450
 msgid "What data can organisations access?"
@@ -6388,11 +6360,13 @@ msgid ""
 "of anonymised voting data. Individual voters are not publicly named. See our"
 " privacy policy for retention and rights."
 msgstr ""
+"توزيعات التصويت وعدد المشاركين ونتائج التجميع وتصديرات CSV لبيانات التصويت "
+"المجهولة الهوية. لا يتم تسمية الناخبين الأفراد علنًا. اطّلع على سياسة "
+"الخصوصية الخاصة بنا للاحتفاظ والحقوق."
 
 #: app/templates/faq.html:454
-#, fuzzy
 msgid "Where can I get implementation help?"
-msgstr "قائمة التحقق من التنفيذ"
+msgstr "أين يمكنني الحصول على مساعدة التنفيذ؟"
 
 #: app/templates/faq.html:455
 msgid ""
@@ -6400,6 +6374,9 @@ msgid ""
 "Partner hub API reference, or email info@societyspeaks.io for enterprise-"
 "style support."
 msgstr ""
+"تفضّل بزيارة دليل البنية التحتية المدنية في مركز المساعدة، توثيق البرامج، "
+"مرجع واجهة Partner hub API، أو أرسل بريدًا إلى info@societyspeaks.io للحصول "
+"على دعم على مستوى المؤسسات."
 
 #: app/templates/faq.html:461
 msgid "Privacy & Data"
@@ -7028,13 +7005,15 @@ msgstr ""
 
 #: app/templates/index.html:496
 msgid "Three daily ways to engage"
-msgstr ""
+msgstr "ثلاث طرق يومية للمشاركة"
 
 #: app/templates/index.html:497
 msgid ""
 "Vote on the day’s question. Read the day’s news. Pressure-test your own "
 "ideas in a five-minute game."
 msgstr ""
+"صوّت على سؤال اليوم. اقرأ أخبار اليوم. اختبر أفكارك الخاصة في لعبة مدتها خمس"
+" دقائق."
 
 #: app/templates/index.html:511
 msgid "2 minutes a day"
@@ -7197,9 +7176,8 @@ msgid "140+ sources across the spectrum →"
 msgstr "140+ مصادر عبر الطيف →"
 
 #: app/templates/index.html:673
-#, fuzzy
 msgid "5 minutes a day"
-msgstr "دقيقتان في اليوم"
+msgstr "5 دقائق في اليوم"
 
 #: app/templates/index.html:678
 msgid ""
@@ -7208,28 +7186,29 @@ msgid ""
 "the next generation. Build fast and fracture communities. Five turns to "
 "govern. What kind of leader do you become?"
 msgstr ""
+"أنت المسؤول. أزمة تصل إلى مكتبك — وكل مسار للأمام يكلّف شيئًا حقيقيًا. اقطع "
+"الإنفاق وفقد الثقة العامة. اقترض الآن وأثقل كاهل الجيل القادم. ابنِ بسرعة "
+"وقسّم المجتمعات. خمس جولات للحكم. ما نوع القائد الذي تصبحه؟"
 
 #: app/templates/game/hub.html:22 app/templates/index.html:682
 msgid "Today's scenario"
-msgstr ""
+msgstr "سيناريو اليوم"
 
 #: app/templates/index.html:688
 msgid "A new crisis. Five choices. No good answers."
-msgstr ""
+msgstr "أزمة جديدة. خمسة خيارات. لا إجابات جيدة."
 
 #: app/templates/index.html:692
 msgid "Build"
-msgstr ""
+msgstr "بناء"
 
 #: app/templates/index.html:696
-#, fuzzy
 msgid "Protect"
-msgstr "حماية التكلفة"
+msgstr "حماية"
 
 #: app/templates/index.html:700
-#, fuzzy
 msgid "Restrict"
-msgstr "التسجيل"
+msgstr "تقييد"
 
 #: app/templates/emails/game_reminder.html:51
 #: app/templates/game/archive.html:91
@@ -7237,11 +7216,11 @@ msgstr "التسجيل"
 #: app/templates/game/hub.html:149 app/templates/game/profile.html:97
 #: app/templates/game/profile.html:102 app/templates/index.html:710
 msgid "Play today's scenario"
-msgstr ""
+msgstr "العب سيناريو اليوم"
 
 #: app/templates/index.html:717
 msgid "Daily scenarios · Builds your streak · Links to real discussions"
-msgstr ""
+msgstr "سيناريوهات يومية · بناء سلسلتك · روابط إلى نقاشات حقيقية"
 
 #: app/templates/brief/landing.html:177 app/templates/index.html:726
 msgid "We draw from 140+ trusted sources across the spectrum"
@@ -7486,9 +7465,8 @@ msgid "Top"
 msgstr "أعلى الصفحة"
 
 #: app/templates/layout.html:523 app/templates/layout.html:944
-#, fuzzy
 msgid "Play"
-msgstr "الخطة"
+msgstr "العب"
 
 #: app/templates/briefing/_template_card.html:19
 #: app/templates/briefing/preview_template.html:28
@@ -9162,7 +9140,7 @@ msgstr ""
 
 #: app/templates/privacy-policy.html:68
 msgid "1.4 Society Play (Tradeoffs) Game Data"
-msgstr ""
+msgstr "1.4 بيانات لعبة Society Play (Tradeoffs)"
 
 #: app/templates/privacy-policy.html:70
 msgid ""
@@ -9170,6 +9148,9 @@ msgid ""
 " of the society you build. This is behavioural data about how you respond to"
 " fictional pressure — not your political views, not your real-world beliefs."
 msgstr ""
+"عندما تلعب Tradeoffs على /play، تخزّن اللعبة اختياراتك وحالة المجتمع الذي "
+"تبنيه. هذه بيانات سلوكية حول كيفية استجابتك للضغط الخيالي — وليس آراؤك "
+"السياسية، وليس معتقداتك الحقيقية."
 
 #: app/templates/privacy-policy.html:72
 msgid ""
@@ -9178,6 +9159,9 @@ msgid ""
 "scenario. We use this to compute your outcome, your streak, and to detect "
 "patterns the game can reflect back to you on the outcome screen."
 msgstr ""
+"<strong>سجل الخيارات</strong> — تسلسل الخيارات التي اتخذتها عبر سيناريو، بما"
+" في ذلك طابع زمني لكل جولة ومعرّف للسيناريو. نستخدم هذا لحساب نتيجتك وسلسلتك"
+" والكشف عن الأنماط التي يمكن للعبة أن تعكسها عليك على شاشة النتيجة."
 
 #: app/templates/privacy-policy.html:73
 msgid ""
@@ -9185,6 +9169,9 @@ msgid ""
 "fairness, stability, plus four hidden stats) updated by your choices. This "
 "is derived from your choice log and is reset at the start of each new run."
 msgstr ""
+"<strong>حالة المجتمع</strong> — الإحصائيات الحالية (الازدهار والثقة والعدالة"
+" والاستقرار، بالإضافة إلى أربع إحصائيات مخفية) التي يتم تحديثها بناءً على "
+"اختياراتك. وهي مشتقة من سجل اختياراتك وتُعاد تعيينها في بداية كل تشغيل جديد."
 
 #: app/templates/privacy-policy.html:74
 msgid ""
@@ -9192,6 +9179,9 @@ msgid ""
 "label your society. Stored against your run only; never shared in analytics "
 "or with third parties."
 msgstr ""
+"<strong>اسم المجتمع الاختياري</strong> — نص قصير يمكنك اختياره لتسمية "
+"مجتمعك. يُحفظ فقط مع تشغيلتك؛ لا يُشارك أبداً في التحليلات أو مع أطراف "
+"ثالثة."
 
 #: app/templates/privacy-policy.html:75
 msgid ""
@@ -9200,35 +9190,45 @@ msgid ""
 " you across plays in the same browser so your streak persists, without "
 "requiring an account."
 msgstr ""
+"<strong>بصمة الجلسة</strong> — نفس القيمة المُجزأة المستخدمة للتصويت المجهول"
+" في مكان آخر على Society Speaks (انظر 1.3). وهي تسمح لنا بالتعرف عليك عبر "
+"التشغيلات في نفس المتصفح بحيث يستمر تسلسلك، دون الحاجة إلى حساب."
 
 #: app/templates/privacy-policy.html:76
 msgid ""
 "<strong>User ID</strong> — if you have signed in, your runs are attached to "
 "your account so they survive cookie clears and follow you across devices."
 msgstr ""
+"<strong>معرّف المستخدم</strong> — إذا قمت بتسجيل الدخول، تُربط تشغيلاتك "
+"بحسابك بحيث تستمر بعد حذف ملفات تعريف الارتباط وتتابعك عبر الأجهزة."
 
 #: app/templates/privacy-policy.html:79
-#, fuzzy
 msgid "<strong>What we do not store:</strong>"
-msgstr "<strong>بوابة الشركاء:</strong>"
+msgstr "<strong>ما لا نحفظه:</strong>"
 
 #: app/templates/privacy-policy.html:81
 msgid ""
 "We do not store your real political opinions. Your in-game choices reflect a"
 " five-minute thought experiment, not your views."
 msgstr ""
+"لا نحفظ آراءك السياسية الحقيقية. اختياراتك في اللعبة تعكس تجربة فكرية لمدة "
+"خمس دقائق، وليس وجهات نظرك."
 
 #: app/templates/privacy-policy.html:82
 msgid ""
 "We do not link your game data to your activity on partner news sites or to "
 "advertising profiles. Tradeoffs has no advertising."
 msgstr ""
+"لا نربط بيانات اللعبة الخاصة بك بنشاطك على مواقع الأخبار الشريكة أو بملفات "
+"الإعلانات. Tradeoffs ليس به إعلانات."
 
 #: app/templates/privacy-policy.html:83
 msgid ""
 "We do not send the optional society name you type into our analytics "
 "pipeline (PostHog). Only a boolean flag (named or default) is recorded."
 msgstr ""
+"لا نرسل اسم المجتمع الاختياري الذي تكتبه إلى خط أنابيب التحليلات الخاص بنا "
+"(PostHog). فقط يتم تسجيل علم منطقي (مسمى أو افتراضي)."
 
 #: app/templates/privacy-policy.html:86
 msgid ""
@@ -9237,17 +9237,21 @@ msgid ""
 "from aggregate patterns) and contract performance for logged-in accounts (so"
 " we can deliver the features tied to your account)."
 msgstr ""
+"<strong>الأساس القانوني:</strong> المصلحة المشروعة للعب المجهول (بحيث تعمل "
+"اللعبة، ويستمر التسلسل، ويمكننا تحسين توازن السيناريو من الأنماط المجمعة) "
+"وأداء العقد للحسابات المُسجلة (بحيث يمكننا توفير الميزات المرتبطة بحسابك)."
 
 #: app/templates/privacy-policy.html:88
-#, fuzzy
 msgid "<strong>Retention:</strong>"
-msgstr "<strong>بوابة الشركاء:</strong>"
+msgstr "<strong>الاحتفاظ:</strong>"
 
 #: app/templates/privacy-policy.html:90
 msgid ""
 "In-progress runs that go inactive are marked abandoned after 24 hours. Their"
 " data is kept for 30 days for debugging, then deleted."
 msgstr ""
+"تُوضع التشغيلات الجارية التي تصبح غير نشطة على أنها مهجورة بعد 24 ساعة. "
+"يُحتفظ ببيانتها لمدة 30 يوماً للتصحيح، ثم حذفها."
 
 #: app/templates/privacy-policy.html:91
 msgid ""
@@ -9256,12 +9260,17 @@ msgid ""
 "anonymise (drop the fingerprint and user link) and keep only aggregated, "
 "non-identifying outcome data."
 msgstr ""
+"تُحتفظ التشغيلات المكتملة لمدة 24 شهراً بحيث يستمر التسلسل وشاشة النتيجة وأي"
+" رابط مشاركة نشرته في العمل. بعد 24 شهراً نجعلها مجهولة (نحذف البصمة وارتباط"
+" المستخدم) ونحتفظ فقط بالبيانات المُجمعة وغير المحددة للهوية."
 
 #: app/templates/privacy-policy.html:92
 msgid ""
 "Account-linked runs are kept for the lifetime of your account. They are "
 "deleted when you delete your account."
 msgstr ""
+"يتم الاحتفاظ بالتشغيلات المرتبطة بالحساب مدى الحياة. يتم حذفها عند حذف "
+"حسابك."
 
 #: app/templates/privacy-policy.html:93
 msgid ""
@@ -9269,22 +9278,25 @@ msgid ""
 "today\") are derived from completed runs and stored indefinitely in non-"
 "identifying form."
 msgstr ""
+"تُشتق إحصائيات المجموعات المُجمعة (على سبيل المثال ‹اختار 27 بالمائة من "
+"اللاعبين الاقتراض اليوم›) من التشغيلات المكتملة وتُحفظ إلى الأبد في شكل غير "
+"محدد للهوية."
 
 #: app/templates/privacy-policy.html:96
-#, fuzzy
 msgid "<strong>Your rights:</strong>"
-msgstr "<strong>بوابة الشركاء:</strong>"
+msgstr "<strong>حقوقك:</strong>"
 
 #: app/templates/privacy-policy.html:98
 msgid ""
 "<strong>Logged-in players:</strong> Delete your account and we cascade-"
 "delete every run, outcome, and streak record attached to it within 30 days."
 msgstr ""
+"<strong>اللاعبون المُسجلون:</strong> احذف حسابك وسنحذف بشكل متسلسل كل تشغيل "
+"ونتيجة وسجل تسلسل مرتبط به في غضون 30 يوماً."
 
 #: app/templates/privacy-policy.html:99
-#, fuzzy
 msgid "<strong>Anonymous players:</strong> Email"
-msgstr "<strong>ملعب تفاعلي:</strong>"
+msgstr "<strong>اللاعبون المجهولون:</strong> البريد الإلكتروني"
 
 #: app/templates/privacy-policy.html:99
 msgid ""
@@ -9292,6 +9304,9 @@ msgid ""
 "value (visible in your browser developer tools as the ss_voter_client_id "
 "cookie). We will purge the associated runs within 30 days."
 msgstr ""
+"مع معرّف التشغيل من أي رابط مشاركة، أو قيمة ملف تعريف ارتباط بصمة المتصفح "
+"الخاص بك (يُرى في أدوات مطور المتصفح الخاص بك مثل ملف تعريف الارتباط "
+"ss_voter_client_id). سننظف التشغيلات المرتبطة في غضون 30 يوماً."
 
 #: app/templates/privacy-policy.html:100
 msgid ""
@@ -9299,6 +9314,8 @@ msgid ""
 "of every run and outcome attached to your account or fingerprint, in JSON "
 "format, within 30 days."
 msgstr ""
+"<strong>التصدير:</strong> البريد الإلكتروني للعنوان أعلاه وسنعيد لك نسخة من "
+"كل تشغيل ونتيجة مرتبطة بحسابك أو بصمتك بصيغة JSON في غضون 30 يوماً."
 
 #: app/templates/privacy-policy.html:103
 msgid ""
@@ -9307,6 +9324,10 @@ msgid ""
 "view your outcome page. Treat the share URL the same way you would treat a "
 "private link — it is unguessable but not encrypted."
 msgstr ""
+"<strong>مشاركة نتيجتك:</strong> عند النقر على ‹مشاركة› على شاشة النتيجة، "
+"يحتوي الرابط على معرّف التشغيل الخاص بك. يمكن لأي شخص لديه هذا الرابط عرض "
+"صفحة النتيجة الخاصة بك. تعامل مع عنوان URL للمشاركة بنفس الطريقة التي "
+"ستتعامل بها مع رابط خاص — إنه غير قابل للتخمين لكنه غير مشفر."
 
 #: app/templates/privacy-policy.html:105
 msgid ""
@@ -9315,6 +9336,9 @@ msgid ""
 "is a normal page visit; it does not transfer your game data to the "
 "discussion side of the platform."
 msgstr ""
+"<strong>الجسر إلى النقاشات:</strong> قد تربط شاشة النتيجة إلى سؤال يومي ذي "
+"صلة أو نقاش على Society Speaks. اتباع هذا الرابط زيارة صفحة عادية؛ فهو لا "
+"ينقل بيانات اللعبة الخاصة بك إلى جانب النقاش من المنصة."
 
 #: app/templates/privacy-policy.html:107
 msgid "2. How We Use Your Information"
@@ -12790,14 +12814,12 @@ msgid "What This Means"
 msgstr "ماذا يعني هذا"
 
 #: app/templates/briefing/_paid_brief_body.html:157
-#, fuzzy
 msgid "Key Challenge"
-msgstr "حفظ التغييرات"
+msgstr "التحدي الرئيسي"
 
 #: app/templates/briefing/_paid_brief_body.html:158
-#, fuzzy
 msgid "Market Impact"
-msgstr "إشارة السوق"
+msgstr "تأثير السوق"
 
 #: app/templates/briefing/_paid_brief_body.html:187
 msgid "Source:"
@@ -21071,26 +21093,24 @@ msgstr "عرض جميع المواضيع"
 #: app/templates/discussions/search_discussions.html:4
 #, python-format
 msgid "Explore Discussions — results for %(term)s"
-msgstr ""
+msgstr "استكشف النقاشات — نتائج %(term)s"
 
 #: app/templates/discussions/search_discussions.html:4
-#, fuzzy
 msgid "Explore Discussions | Society Speaks"
-msgstr "نقاشات الأخبار - Society Speaks"
+msgstr "استكشف النقاشات | Society Speaks"
 
 #: app/templates/discussions/search_discussions.html:5
 #, python-format
 msgid "Discover and join meaningful discussions. Results for %(term)s."
-msgstr ""
+msgstr "اكتشف والتحق بنقاشات ذات معنى. النتائج عن %(term)s."
 
 #: app/templates/discussions/search_discussions.html:5
 msgid "Discover and join meaningful discussions on topics that matter."
-msgstr ""
+msgstr "اكتشف والتحق بنقاشات ذات معنى حول الموضوعات التي تهمك."
 
 #: app/templates/discussions/search_discussions.html:6
-#, fuzzy
 msgid "society discussions, explore discussions"
-msgstr "استكشف النقاشات"
+msgstr "نقاشات المجتمع، استكشف النقاشات"
 
 #: app/templates/discussions/search_discussions.html:10
 msgid "Search discussions on SocietySpeaks."
@@ -22369,53 +22389,51 @@ msgid "Manage notification preferences"
 msgstr "إدارة تفضيلات الإشعارات"
 
 #: app/templates/emails/game_reminder.html:3
-#, fuzzy
 msgid "Today's scenario is live — Society Speaks"
-msgstr "السؤال اليومي - Society Speaks"
+msgstr "سيناريو اليوم مباشر — Society Speaks"
 
 #: app/templates/emails/game_reminder.html:5
 #, python-format
 msgid "Keep your %(n)d-day streak going — today's scenario is live."
-msgstr ""
+msgstr "حافظ على تسلسلك البالغ %(n)d يوم — سيناريو اليوم مباشر."
 
 #: app/templates/emails/game_reminder.html:5
-#, fuzzy, python-format
+#, python-format
 msgid "A new crisis is on your desk: %(title)s"
-msgstr "هناك نشاط جديد في نقاشك '%(title)s'"
+msgstr "أزمة جديدة على مكتبك: %(title)s"
 
 #: app/templates/emails/game_reminder.html:12
-#, fuzzy
 msgid "Society Speaks · Daily"
-msgstr "✓ Society Speaks فقط"
+msgstr "Society Speaks · يومي"
 
 #: app/templates/emails/game_reminder.html:14
 #, python-format
 msgid "Keep your %(n)d-day streak alive, %(username)s"
-msgstr ""
+msgstr "حافظ على تسلسلك البالغ %(n)d يوم على قيد الحياة، %(username)s"
 
 #: app/templates/emails/game_reminder.html:14
 #, python-format
 msgid "Today's scenario is live, %(username)s"
-msgstr ""
+msgstr "سيناريو اليوم مباشر، %(username)s"
 
 #: app/templates/emails/game_reminder.html:17
 msgid "You have five decisions to make. Every one of them costs something."
-msgstr ""
+msgstr "لديك خمسة قرارات يجب اتخاذها. كل واحد منها يكلف شيئاً ما."
 
 #: app/templates/emails/game_reminder.html:27
 #, python-format
 msgid "%(n)d days in a row. Miss today and it resets."
-msgstr ""
+msgstr "%(n)d يوم متتالي. إذا فاتك اليوم سيُعاد تعيينه."
 
 #: app/templates/emails/game_reminder.html:57
 #, python-format
 msgid "Takes about three minutes. %(n)d turns, one outcome."
-msgstr ""
+msgstr "يستغرق حوالي ثلاث دقائق. %(n)d أدوار، نتيجة واحدة."
 
 #: app/templates/emails/game_reminder.html:66
 msgid ""
 "You're getting this because you asked for a daily nudge from Society Speaks."
-msgstr ""
+msgstr "تلقيت هذا لأنك طلبت تذكيراً يومياً من Society Speaks."
 
 #: app/templates/emails/game_reminder.html:68
 #: app/templates/emails/journey_reminder.html:114
@@ -23363,119 +23381,117 @@ msgstr "تم إخطار فريقنا والتحقيق في المشكلة جار
 #: app/templates/game/archive.html:4 app/templates/game/archive.html:15
 #: app/templates/game/hub.html:244 app/templates/game/outcome.html:316
 #: app/templates/game/profile.html:119
-#, fuzzy
 msgid "Your societies"
-msgstr "مصدرك"
+msgstr "مجتمعاتك"
 
 #: app/templates/game/archive.html:8
 msgid "Every society you have governed on Tradeoffs."
-msgstr ""
+msgstr "كل مجتمع حكمته على Tradeoffs."
 
 #: app/templates/game/archive.html:17 app/templates/game/hub.html:25
 #: app/templates/game/profile.html:16
 #, python-format
 msgid "Longest: %(n)d"
-msgstr ""
+msgstr "الأطول: %(n)d"
 
 #: app/templates/game/archive.html:25 app/templates/game/profile.html:25
 #, python-format
 msgid "%(n)d society governed"
 msgid_plural "%(n)d societies governed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "%(n)d مجتمع محكوم"
+msgstr[1] "%(n)d مجتمع محكوم"
+msgstr[2] "%(n)d مجتمع محكوم"
+msgstr[3] "%(n)d مجتمع محكوم"
+msgstr[4] "%(n)d مجتمع محكوم"
+msgstr[5] "%(n)d مجتمع محكوم"
 
 #: app/templates/game/archive.html:27
-#, fuzzy
 msgid "No societies yet"
-msgstr "لا توجد مستقبلات حتى الآن"
+msgstr "لا توجد مجتمعات حتى الآن"
 
 #: app/templates/game/archive.html:32
 msgid "Every crisis you faced, and the leader you became."
-msgstr ""
+msgstr "كل أزمة واجهتها، والقائد الذي أصبحت عليه."
 
 #: app/templates/game/archive.html:34
-#, fuzzy
 msgid "Govern your first nation and it will appear here."
-msgstr "ستظهر ملخصاتك هنا"
+msgstr "احكم أول دولة لك وستظهر هنا."
 
 #: app/templates/game/archive.html:48 app/templates/game/hub.html:118
-#, fuzzy
 msgid "Your society"
-msgstr "مصدرك"
+msgstr "مجتمعك"
 
 #: app/templates/game/archive.html:50 app/templates/game/hub.html:223
 #: app/templates/game/turn.html:34
 msgid "Quick Run"
-msgstr ""
+msgstr "تشغيل سريع"
 
 #: app/templates/game/archive.html:72
-#, fuzzy
 msgid "← Newer"
-msgstr "أبداً"
+msgstr "← أحدث"
 
 #: app/templates/game/archive.html:75
 #, python-format
 msgid "Page %(p)d of %(t)d"
-msgstr ""
+msgstr "الصفحة %(p)d من %(t)d"
 
 #: app/templates/game/archive.html:78
 msgid "Older →"
-msgstr ""
+msgstr "أقدم →"
 
 #: app/templates/game/archive.html:85
 msgid "Nothing more to show here."
-msgstr ""
+msgstr "لا شيء آخر لعرضه هنا."
 
 #: app/templates/game/archive.html:86
-#, fuzzy
 msgid "Back to your latest societies"
-msgstr "مصدرك"
+msgstr "العودة إلى أحدث مجتمعاتك"
 
 #: app/templates/game/archive.html:98
 msgid ""
 "These societies only live on this browser. Save them to your account so they"
 " survive a cleared cache or a new device."
 msgstr ""
+"هذه المجتمعات موجودة فقط على هذا المتصفح. احفظها في حسابك حتى تبقى بعد حذف "
+"ذاكرة التخزين المؤقت أو على جهاز جديد."
 
 #: app/templates/game/archive.html:108 app/templates/game/hub.html:248
 #: app/templates/game/profile.html:3 app/templates/game/profile.html:14
-#, fuzzy
 msgid "Your governing self"
-msgstr "احتفظ بملخصك الصباحي"
+msgstr "ذاتك الحاكمة"
 
 #: app/templates/game/archive.html:110 app/templates/game/profile.html:121
-#, fuzzy
 msgid "Back to today"
-msgstr "العودة إلى نشرة اليوم"
+msgstr "العودة إلى اليوم"
 
 #: app/templates/game/editorial_principles.html:3
 #: app/templates/game/editorial_principles.html:15
 msgid "How Tradeoffs is written"
-msgstr ""
+msgstr "كيف تتم كتابة المقايضات"
 
 #: app/templates/game/editorial_principles.html:8
 msgid ""
 "How Tradeoffs is written — the editorial principles behind a five-minute "
 "civic game that simulates pressure, not ideology."
 msgstr ""
+"كيف تتم كتابة المقايضات — المبادئ التحريرية وراء لعبة مدنية مدتها خمس دقائق "
+"تحاكي الضغط وليس الأيديولوجية."
 
 #: app/templates/game/editorial_principles.html:17
 msgid "The game holds up a mirror; it never grades the reflection."
-msgstr ""
+msgstr "اللعبة ترفع المرآة؛ لا تصدر حكماً على الانعكاس أبداً."
 
 #: app/templates/game/editorial_principles.html:20
 msgid ""
 "Every scenario is designed to make you feel a real trade-off, not to teach "
 "you what to think. Here is the editorial discipline that keeps it honest."
 msgstr ""
+"كل سيناريو مصمم لتشعر بمقايضة حقيقية، وليس لتعليمك ما تفكر فيه. إليك "
+"الانضباط التحريري الذي يحافظ على النزاهة."
 
 #: app/templates/game/editorial_principles.html:27
 msgid "What Tradeoffs is"
-msgstr ""
+msgstr "ما هي المقايضات"
 
 #: app/templates/game/editorial_principles.html:29
 msgid ""
@@ -23483,6 +23499,9 @@ msgid ""
 "good answers. Borrow now and pay later, or cut now and lose trust. Build "
 "fast and fracture the country, or move slowly while the queues grow."
 msgstr ""
+"المقايضات هي لعبة مدتها خمس جولات عن الحكم. تواجه أزمة واحدة بدون إجابات "
+"جيدة. اقترض الآن وادفع لاحقاً، أو اقطع الآن وفقد الثقة. ابنِ بسرعة وفتّت "
+"الدولة، أو تحرك ببطء بينما تطول الطوابير."
 
 #: app/templates/game/editorial_principles.html:32
 msgid ""
@@ -23491,42 +23510,54 @@ msgid ""
 "the way real policy does. After five turns, you see what kind of leader you "
 "became under pressure — and what kind of society you left behind."
 msgstr ""
+"تقدم كل جولة ثلاثة خيارات. كل اختيار يساعد جزءاً واحداً على الأقل من المجتمع"
+" ويضر آخر. قد تأتي بعض العواقب على الفور. البعض الآخر يأتي لاحقاً، كما هو "
+"الحال مع السياسة الحقيقية. بعد خمس جولات، ترى نوع القائد الذي أصبحت عليه تحت"
+" الضغط — ونوع المجتمع الذي تركته خلفك."
 
 #: app/templates/game/editorial_principles.html:37
 msgid "What Tradeoffs is not"
-msgstr ""
+msgstr "ما ليست عليه المقايضات"
 
 #: app/templates/game/editorial_principles.html:39
 msgid ""
 "It is not a policy simulator. Real economies have hundreds of levers; we "
 "abstract to the dozen that show up in the news."
 msgstr ""
+"إنها ليست محاكاة سياسية. الاقتصادات الحقيقية لها مئات الرافعات؛ نحن نختصر "
+"إلى العشرة التي تظهر في الأخبار."
 
 #: app/templates/game/editorial_principles.html:40
 msgid ""
 "It is not a quiz with right answers. The headlines you collect describe what"
 " happened — they do not grade the choice."
 msgstr ""
+"إنها ليست اختباراً بإجابات صحيحة. العناوين التي تجمعها تصف ما حدث — فهي لا "
+"تصدر حكماً على الاختيار."
 
 #: app/templates/game/editorial_principles.html:41
 msgid ""
 "It is not a partisan litmus test. Every choice is written so a thoughtful "
 "person could defend it from inside a real political tradition."
 msgstr ""
+"إنها ليست اختبار ولاء حزبي. كل اختيار مكتوب بحيث يمكن لشخص مفكر أن يدافع عنه"
+" من داخل تقليد سياسي حقيقي."
 
 #: app/templates/game/editorial_principles.html:42
 msgid ""
 "It is not an opinion piece. We use real research, but every scenario is "
 "fiction, set in no country you can name."
 msgstr ""
+"إنها ليست مقالة رأي. نستخدم البحث الحقيقي، لكن كل سيناريو خيال، يدور في دولة"
+" لا تستطيع تسميتها."
 
 #: app/templates/game/editorial_principles.html:49
 msgid "Ten principles"
-msgstr ""
+msgstr "عشرة مبادئ"
 
 #: app/templates/game/editorial_principles.html:53
 msgid "We simulate pressure, not ideology."
-msgstr ""
+msgstr "نحاكي الضغط، وليس الأيديولوجية."
 
 #: app/templates/game/editorial_principles.html:54
 msgid ""
@@ -23535,10 +23566,14 @@ msgid ""
 "a leftist or a libertarian. The same scenario is written so any of those "
 "starting points can navigate it without feeling cornered."
 msgstr ""
+"اللعبة تتعلق بشعور المقايضات — الارتياح والندم، الاستعجالية والعواقب غير "
+"المقصودة. لا تتعلق بما إذا كان يجب أن تكون وسطياً أو يسارياً أو ليبرالياً. "
+"نفس السيناريو مكتوب بحيث يمكن لأي من هذه نقاط الانطلاق أن تتنقل فيه دون "
+"الشعور بالحصار."
 
 #: app/templates/game/editorial_principles.html:57
 msgid "Multiple paths remain viable."
-msgstr ""
+msgstr "تبقى مسارات متعددة قابلة للحياة."
 
 #: app/templates/game/editorial_principles.html:58
 msgid ""
@@ -23546,10 +23581,13 @@ msgid ""
 "cost, no plausible downside — that turn is broken and we rewrite it. The "
 "interesting tension lives in choices that are all defensible from somewhere."
 msgstr ""
+"إذا كان اختيار واحد في جولة أفضل بشكل صارم من الآخرين — لا تكلفة حقيقية، لا "
+"سلبية معقولة — فتلك الجولة مكسورة وسنعيد كتابتها. التوتر المثير يعيش في "
+"الاختيارات التي يمكن الدفاع عن جميعها من مكان ما."
 
 #: app/templates/game/editorial_principles.html:61
 msgid "Consequences describe, never judge."
-msgstr ""
+msgstr "العواقب تصف، لا تحكم."
 
 #: app/templates/game/editorial_principles.html:62
 msgid ""
@@ -23557,10 +23595,12 @@ msgid ""
 "\"The cruel pension cut sparked outrage.\" The verbs are observational. The "
 "verdict belongs to the player."
 msgstr ""
+"نقول ‹المتقاعدون يحتجون. عوائد السندات تنخفض — قليلاً.› لا نقول ‹قطع "
+"المعاشات التقاعدية القاسي أثار غضباً.› الأفعال ملاحظاتية. الحكم يعود للاعب."
 
 #: app/templates/game/editorial_principles.html:65
 msgid "Systems, not tribes."
-msgstr ""
+msgstr "الأنظمة، وليس القبائل."
 
 #: app/templates/game/editorial_principles.html:66
 msgid ""
@@ -23569,10 +23609,14 @@ msgid ""
 "are descriptive: unions, investors, retirees, regulators. If a reaction "
 "would only make sense inside one political tradition, we cut it."
 msgstr ""
+"لا يتم وضع علامات على أي خيار بتسمية حزبية أو شخصية أو دولة. الضغوط عالمية —"
+" الديون والإسكان والطاقة والهجرة — والفاعلون وصفيون: النقابات والمستثمرون "
+"والمتقاعدون والمنظمون. إذا كان رد الفعل لن يكون منطقياً إلا داخل تقليد سياسي"
+" واحد، فإننا نحذفه."
 
 #: app/templates/game/editorial_principles.html:69
 msgid "Framing is audited for balance."
-msgstr ""
+msgstr "يتم التدقيق في الصياغة للتوازن."
 
 #: app/templates/game/editorial_principles.html:70
 msgid ""
@@ -23581,10 +23625,14 @@ msgid ""
 "single choice feel written to be wrong? When the answer is yes to that last "
 "one, the scenario fails the validator and goes back for rewrite."
 msgstr ""
+"كل سيناريو يمر عبر قائمة تفقد: هل تُسمّى الخيارات بحيادية؟ هل تذكر ردود "
+"الفعل أصحاب المصلحة الحقيقيين دون السخرية منهم؟ هل يشعر أي خيار واحد أنه "
+"مكتوب ليكون خاطئاً؟ عندما تكون الإجابة نعم على الأخير، السيناريو يفشل التحقق"
+" ويعود للإعادة."
 
 #: app/templates/game/editorial_principles.html:73
 msgid "Causality is simplified, not claimed as truth."
-msgstr ""
+msgstr "السببية مبسطة، وليست مطالب بالحقيقة."
 
 #: app/templates/game/editorial_principles.html:74
 msgid ""
@@ -23592,10 +23640,12 @@ msgid ""
 "In the real world it depends on a hundred variables. We make the mechanic "
 "legible so the lesson lands: every lever has weight."
 msgstr ""
+"خيار يخفض الإنفاق العام سيخفض ضغط الديون في اللعبة. في العالم الحقيقي، يعتمد"
+" على مائة متغير. نحن نجعل الآلية واضحة حتى تصل الدرس: لكل رافعة وزن."
 
 #: app/templates/game/editorial_principles.html:77
 msgid "Global first."
-msgstr ""
+msgstr "عالمي أولاً."
 
 #: app/templates/game/editorial_principles.html:78
 msgid ""
@@ -23603,10 +23653,13 @@ msgid ""
 "Berlin, and Iowa. If a scenario needs a footnote about a country-specific "
 "institution to make sense, we rewrite the scenario."
 msgstr ""
+"تتم كتابة السيناريوهات بحيث تُقرأ بوضوح في ساو باولو ولاغوس ومومباي وبرلين "
+"وآيوا. إذا كان السيناريو يحتاج إلى حاشية عن مؤسسة خاصة بدولة معينة ليكون "
+"منطقياً، فإننا نعيد كتابة السيناريو."
 
 #: app/templates/game/editorial_principles.html:81
 msgid "Players discover contradictions; we never accuse."
-msgstr ""
+msgstr "يكتشف اللاعبون التناقضات؛ نحن لا نتهم."
 
 #: app/templates/game/editorial_principles.html:82
 msgid ""
@@ -23615,10 +23668,13 @@ msgid ""
 "\"Under pressure\" is the word for it. Politicians do this. Ordinary people "
 "do this. The mirror is the point."
 msgstr ""
+"إذا بدأت بحماية الإنصاف وانتهيت بخفض المزايا مرتين، ستلاحظ اللعبة ذلك برفق —"
+" وليس كفشل أخلاقي، بل كملاحظة. «تحت الضغط» هي الكلمة المناسبة. السياسيون "
+"يفعلون هذا. الناس العاديون يفعلون هذا. المرآة هي النقطة."
 
 #: app/templates/game/editorial_principles.html:85
 msgid "We show tradeoffs, not purity."
-msgstr ""
+msgstr "نعرض المقايضات، وليس النقاء."
 
 #: app/templates/game/editorial_principles.html:86
 msgid ""
@@ -23626,10 +23682,12 @@ msgid ""
 "runs are the most interesting — the ones where you can articulate what you "
 "protected and what you sacrificed."
 msgstr ""
+"لا توجد طريقة من خلال أي سيناريو تحسن كل إحصائية. أفضل الجولات هي الأكثر "
+"إثارة للاهتمام — تلك التي يمكنك فيها التعبير عما حميته وما ضحيت به."
 
 #: app/templates/game/editorial_principles.html:89
 msgid "When in doubt, cut the lecture."
-msgstr ""
+msgstr "عند الشك، احذف المحاضرة."
 
 #: app/templates/game/editorial_principles.html:90
 msgid ""
@@ -23637,10 +23695,13 @@ msgid ""
 "than evoking, it goes. If a consequence headline reads like a press release,"
 " it goes. The game is a feeling, not a class."
 msgstr ""
+"الخمس أدوار قصيرة بقصد. إذا كانت سطور النثر تعلم بدلاً من الإثارة، فإنها "
+"تذهب. إذا كان عنوان العاقبة يبدو وكأنه بيان صحفي، فإنه يذهب. اللعبة هي "
+"إحساس، وليست فئة."
 
 #: app/templates/game/editorial_principles.html:98
 msgid "What the validator catches"
-msgstr ""
+msgstr "ما يمسكه المدقق"
 
 #: app/templates/game/editorial_principles.html:99
 msgid ""
@@ -23648,30 +23709,41 @@ msgid ""
 "rotation. The gate enforces — automatically, in the codebase, with tests — "
 "the rules that the prose alone cannot guarantee:"
 msgstr ""
+"كل سيناريو يمر عبر بوابة نشر قبل أن يظهر في التناوب. تفرض البوابة — "
+"تلقائياً، في قاعدة الأكواد، مع الاختبارات — القواعد التي لا يمكن للنثر وحده "
+"ضمانها:"
 
 #: app/templates/game/editorial_principles.html:101
 msgid ""
 "Five turns, in the order hook → confidence → crack → oh no → legacy. The "
 "emotional shape is fixed; the content varies."
 msgstr ""
+"خمس أدوار، بالترتيب: الخطاف → الثقة → الشقوق → يا إلهي → الإرث. الشكل "
+"العاطفي ثابت؛ المحتوى يختلف."
 
 #: app/templates/game/editorial_principles.html:102
 msgid ""
 "Three choices per turn, every choice must help at least one stat that the "
 "player can see."
 msgstr ""
+"ثلاثة خيارات لكل دور، يجب أن يساعد كل خيار إحصائية واحدة على الأقل يمكن "
+"للاعب رؤيتها."
 
 #: app/templates/game/editorial_principles.html:103
 msgid ""
 "At least one delayed consequence per scenario, because the \"oh no\" beat "
 "only lands when an early choice comes due later."
 msgstr ""
+"عاقبة مؤجلة واحدة على الأقل لكل سيناريو، لأن إيقاع «يا إلهي» لا يصل إلا "
+"عندما يستحق خيار مبكر لاحقاً."
 
 #: app/templates/game/editorial_principles.html:104
 msgid ""
 "Three memory callbacks on turn four — the run is only yours if turn four "
 "references your earlier moves by name."
 msgstr ""
+"ثلاث ذكريات تذكر في الدور الرابع — الجولة تكون ملكك فقط إذا كان الدور الرابع"
+" يشير إلى تحركاتك السابقة بالاسم."
 
 #: app/templates/game/editorial_principles.html:105
 msgid ""
@@ -23679,22 +23751,28 @@ msgid ""
 "centralise and decentralise) — that would confuse the engine that tracks "
 "your value shifts across the run."
 msgstr ""
+"لا يمكن لأي خيار أن يجلس على جانبي محور متعارض (الرعاية والتقشف، التركيز "
+"واللامركزية) — سيربك محرك يتتبع تحولات قيمتك عبر الجولة."
 
 #: app/templates/game/editorial_principles.html:106
 msgid ""
 "No turn where every choice shows only down-arrows to the player. If a turn "
 "reads as picked-on, the scenario fails."
 msgstr ""
+"لا دور حيث يظهر كل خيار فقط أسهم لأسفل للاعب. إذا بدا الدور كما لو أنه "
+"مختار، فإن السيناريو يفشل."
 
 #: app/templates/game/editorial_principles.html:109
 msgid ""
 "These rules are not aspirations. They are the conditions under which a "
 "scenario can be published. The corpus you play has all passed them."
 msgstr ""
+"هذه القواعد ليست طموحات. إنها الشروط التي يمكن بموجبها نشر السيناريو. "
+"المجموعة التي تلعبها قد مرت عليها جميعاً."
 
 #: app/templates/game/editorial_principles.html:114
 msgid "Who writes the scenarios"
-msgstr ""
+msgstr "من يكتب السيناريوهات"
 
 #: app/templates/game/editorial_principles.html:116
 msgid ""
@@ -23704,6 +23782,10 @@ msgid ""
 "first pass — the policy lever search, the dramatic shape, the phrasing — and"
 " is never trusted to make the choice about whether a scenario is fair."
 msgstr ""
+"يتم كتابة Tradeoffs من قبل فريق صغير يستخدم AI كشريك في المسودة. المؤسس يتخذ"
+" كل قرار توازن، يضع كل علامة، يدقق كل عنوان العاقبة، ويوافق على كل نشر. "
+"يساعد AI في المسودة الأولى — البحث عن رافعة السياسة، الشكل الدرامي، الصياغة "
+"— ولا يُؤتمن أبداً لاتخاذ القرار حول ما إذا كان السيناريو عادلاً."
 
 #: app/templates/game/editorial_principles.html:119
 msgid ""
@@ -23712,10 +23794,13 @@ msgid ""
 "surveillance, corruption — we look for outside reads from people whose lives"
 " the topic actually touches."
 msgstr ""
+"كل سيناريو يتلقى تدقيق حساسية ذاتي ضد المبادئ أعلاه قبل الإرسال. حيث يكون "
+"الموضوع حساساً — الهجرة والشعبوية والمراقبة والفساد — نبحث عن قراءات خارجية "
+"من أشخاص يلمسهم الموضوع فعلاً."
 
 #: app/templates/game/editorial_principles.html:124
 msgid "When we get it wrong"
-msgstr ""
+msgstr "عندما نخطئ"
 
 #: app/templates/game/editorial_principles.html:126
 msgid ""
@@ -23723,6 +23808,8 @@ msgid ""
 " topics, and a writer with a perspective will leak through, no matter how "
 "hard we audit."
 msgstr ""
+"سنفعل. خمسة أدوار وثلاثة خيارات هي ميزانية ضيقة للتعامل مع مواضيع معقدة، "
+"والكاتب الذي لديه وجهة نظر سيتسرب، بغض النظر عن مدى صعوبة التدقيق."
 
 #: app/templates/game/editorial_principles.html:129
 msgid ""
@@ -23730,14 +23817,17 @@ msgid ""
 " choice reads to you as a straw man written by the other side — tell us. The"
 " fix is usually a rewrite, not an argument. Reach us at"
 msgstr ""
+"إذا أنهيت سيناريو وشعرت أنك محاصر في أيديولوجية واحدة — إذا بدا أي خيار واحد"
+" لك كرجل قش مكتوب من الجانب الآخر — أخبرنا. الإصلاح عادة ما يكون إعادة "
+"كتابة، وليس جدالاً. تواصل معنا على"
 
 #: app/templates/game/editorial_principles.html:130
 msgid " with the scenario name and the choice that landed wrong."
-msgstr ""
+msgstr "مع اسم السيناريو والخيار الذي بدا خاطئاً."
 
 #: app/templates/game/editorial_principles.html:137
 msgid "Every choice costs something."
-msgstr ""
+msgstr "كل خيار يكلف شيئاً."
 
 #: app/templates/game/hub.html:9
 msgid ""
@@ -23745,48 +23835,50 @@ msgid ""
 "decision trades one value against another. The societal strategy game on "
 "Society Speaks."
 msgstr ""
+"حكم أمة تحت الضغط. خمس أدوار، ثلاثة خيارات لكل واحد — كل قرار يقايض قيمة "
+"واحدة ضد أخرى. لعبة استراتيجية المجتمع على Society Speaks."
 
 #: app/templates/game/hub.html:33
 msgid "You're in charge. Every decision costs something."
-msgstr ""
+msgstr "أنت المسؤول. كل قرار يكلف شيئاً."
 
 #: app/templates/game/hub.html:35
 msgid ""
 "Five turns. Three choices each. Govern a nation — and live with what you "
 "trade away."
-msgstr ""
+msgstr "خمس أدوار. ثلاثة خيارات لكل واحد. حكم أمة — وعش مع ما تضحي به."
 
 #: app/templates/game/hub.html:45
 #, python-format
 msgid "%(total)s societies governed"
-msgstr ""
+msgstr "%(total)s مجتمعات تحكمها"
 
 #: app/templates/game/hub.html:45
-#, fuzzy, python-format
+#, python-format
 msgid "%(n)d today"
 msgid_plural "%(n)d today"
-msgstr[0] "%(n)d أيام"
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "%(n)d اليوم"
+msgstr[1] "%(n)d اليوم"
+msgstr[2] "%(n)d اليوم"
+msgstr[3] "%(n)d اليوم"
+msgstr[4] "%(n)d اليوم"
+msgstr[5] "%(n)d اليوم"
 
 #: app/templates/game/hub.html:51
-#, fuzzy
 msgid "Today's first decision"
-msgstr "سؤال اليوم"
+msgstr "قرار اليوم الأول"
 
 #: app/templates/game/hub.html:65
-#, fuzzy
 msgid "Recent scenario topics"
-msgstr "المقالات الحديثة"
+msgstr "موضوعات السيناريوهات الأخيرة"
 
 #: app/templates/game/hub.html:78
 msgid ""
 "Every scenario reflects a real governing dilemma. There are no easy answers "
 "— only the values you choose to prioritise."
 msgstr ""
+"كل سيناريو يعكس معضلة حقيقية في الحكم. لا توجد إجابات سهلة — فقط القيم التي "
+"تختار تحديد أولوياتك لها."
 
 #: app/templates/game/hub.html:88
 #, python-format
@@ -23794,15 +23886,15 @@ msgid "%(num)d turn"
 msgid_plural "%(num)d turns"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[2] "%(num)d أدوار"
+msgstr[3] "%(num)d دور"
+msgstr[4] "%(num)d دور"
+msgstr[5] "%(num)d دور"
 
 #: app/templates/game/hub.html:93
 #, python-format
 msgid "You're on turn %(current)d of %(total)d."
-msgstr ""
+msgstr "أنت في الدور %(current)d من %(total)d."
 
 #: app/templates/game/hub.html:101
 #, python-format
@@ -23810,68 +23902,68 @@ msgid ""
 "You've already played today's scenario. Come back at %(time)s UTC for the "
 "next one."
 msgstr ""
+"لقد لعبت السيناريو الخاص باليوم بالفعل. عُد في %(time)s بتوقيت UTC للدور "
+"التالي."
 
 #: app/templates/game/hub.html:104
 msgid "View today's outcome"
-msgstr ""
+msgstr "عرض نتيجة اليوم"
 
 #: app/templates/game/hub.html:136 app/templates/game/hub.html:137
-#, fuzzy
 msgid "Suggest another name"
-msgstr "طلب رابط آخر"
+msgstr "اقترح اسماً آخر"
 
 #: app/templates/game/hub.html:143
 msgid "We've named it for you — roll the dice for another, or type your own."
 msgstr ""
+"لقد اخترنا اسماً لك — اعكس الزهر لتحصل على واحد آخر، أو اكتب اسمك الخاص."
 
 #: app/templates/game/hub.html:150
 msgid "Free · 2 min"
-msgstr ""
+msgstr "مجاني · دقيقتان"
 
 #: app/templates/game/hub.html:159
 msgid "Tomorrow"
-msgstr ""
+msgstr "غداً"
 
 #: app/templates/game/hub.html:162
-#, fuzzy, python-format
+#, python-format
 msgid "Unlocks %(time)s UTC"
-msgstr "آخر فحص: %(time)s بتوقيت UTC"
+msgstr "يفتح في %(time)s بتوقيت UTC"
 
 #: app/templates/game/hub.html:170
 msgid ""
 "Save your societies across devices and keep your streak when this browser "
 "forgets."
-msgstr ""
+msgstr "احفظ مجتمعاتك عبر الأجهزة واحتفظ بسلسلتك عندما تنسى هذه المتصفحة."
 
 #: app/templates/game/hub.html:176 app/templates/game/outcome.html:311
-#, fuzzy
 msgid ""
 "Already have an account? We email a one-click sign-in link — no password "
 "needed."
 msgstr ""
-"سنرسل لك رابط دخول بنقرة واحدة عبر البريد الإلكتروني. لا حاجة لتذكر كلمة "
+"هل لديك حساب بالفعل؟ نرسل لك رابط تسجيل دخول بنقرة واحدة — لا حاجة لكلمة "
 "مرور."
 
 #: app/templates/game/hub.html:189
-#, fuzzy
 msgid "More to explore"
-msgstr "مصادرك"
+msgstr "المزيد للاستكشاف"
 
 #: app/templates/game/hub.html:194
 msgid "New to Tradeoffs?"
-msgstr ""
+msgstr "جديد في Tradeoffs؟"
 
 #: app/templates/game/hub.html:201
 msgid "turns to govern"
-msgstr ""
+msgstr "أدوار للحكم"
 
 #: app/templates/game/hub.html:205
 msgid "paths each turn"
-msgstr ""
+msgstr "مسارات كل دور"
 
 #: app/templates/game/hub.html:209
 msgid "possible outcomes"
-msgstr ""
+msgstr "النتائج المحتملة"
 
 #: app/templates/game/hub.html:213
 msgid ""
@@ -23880,449 +23972,444 @@ msgid ""
 "generation. Build fast and fracture communities. Move slowly and watch the "
 "problems grow."
 msgstr ""
+"أزمة تهبط على طاولتك — وكل مسار للأمام يضحي بشيء حقيقي. قطع الآن وفقد ثقة "
+"الجمهور. اقترض الآن وأثقل الجيل القادم. ابنِ بسرعة وفزّع المجتمعات. تحرك "
+"ببطء وراقب المشاكل تنمو."
 
 #: app/templates/game/hub.html:216
 msgid ""
 "Your society is yours: name it, watch its emblem take shape from your "
 "choices, and discover the kind of leader you become."
 msgstr ""
+"مجتمعك هو ملكك: سمّه، راقب شعاره يتشكل من اختياراتك، واكتشف نوع القائد الذي "
+"تصبح."
 
 #: app/templates/game/hub.html:224
 msgid "Replay any past scenario anytime — no streak."
-msgstr ""
+msgstr "أعد تشغيل أي سيناريو سابق في أي وقت — بدون سلسلة."
 
 #: app/templates/game/hub.html:252 app/templates/game/outcome.html:318
 msgid "How we write scenarios"
-msgstr ""
+msgstr "كيف نكتب السيناريوهات"
 
 #: app/templates/game/outcome.html:8
 #, python-format
 msgid "%(headline)s — Tradeoffs on Society Speaks"
-msgstr ""
+msgstr "%(headline)s — Tradeoffs على Society Speaks"
 
 #: app/templates/game/outcome.html:11 app/templates/game/outcome.html:22
 msgid "Tradeoffs on Society Speaks"
-msgstr ""
+msgstr "Tradeoffs على Society Speaks"
 
 #: app/templates/game/outcome.html:58
 msgid "You vs your past self"
-msgstr ""
+msgstr "أنت مقابل نسختك السابقة"
 
 #: app/templates/game/outcome.html:60
 #, python-format
 msgid "Last time you faced this (%(when)s), %(society)s ended:"
 msgstr ""
+"في المرة الأخيرة التي واجهت فيها هذا (%(when)s)، انتهت %(society)s بـ:"
 
 #: app/templates/game/outcome.html:64
 msgid "A different ending this time — you found another path."
-msgstr ""
+msgstr "نهاية مختلفة هذه المرة — وجدت مساراً آخر."
 
 #: app/templates/game/outcome.html:66
 msgid "Same ending as before. Can you steer it somewhere new?"
-msgstr ""
+msgstr "نفس النهاية كما في السابق. هل يمكنك توجيهها إلى مكان جديد؟"
 
 #: app/templates/game/outcome.html:73
 msgid "Where you landed"
-msgstr ""
+msgstr "حيث هبطت"
 
 #: app/templates/game/outcome.html:74
 msgid "Your society on the trust–autonomy and prosperity–fairness axes"
-msgstr ""
+msgstr "مجتمعك على محاور الثقة والاستقلالية والازدهار والعدالة"
 
 #: app/templates/game/outcome.html:86
 msgid "Final state"
-msgstr ""
+msgstr "الحالة النهائية"
 
 #: app/templates/game/outcome.html:93
-#, fuzzy
 msgid "Share your results"
-msgstr "شارك ملخصك"
+msgstr "شارك نتائجك"
 
 #: app/templates/game/outcome.html:97
 msgid ""
 "Copy a summary for WhatsApp, iMessage, or social — headline, stats, and your"
 " link."
 msgstr ""
+"انسخ ملخصاً لـ WhatsApp أو iMessage أو الوسائط الاجتماعية — العنوان "
+"والإحصائيات ورابطك."
 
 #: app/templates/game/outcome.html:99
 msgid "Results summary to share"
-msgstr ""
+msgstr "ملخص النتائج للمشاركة"
 
 #: app/templates/game/outcome.html:106 app/templates/game/outcome.html:109
-#, fuzzy
 msgid "Share results"
-msgstr "النتائج"
+msgstr "مشاركة النتائج"
 
 #: app/templates/game/outcome.html:108
 msgid "Could not copy — select the text above"
-msgstr ""
+msgstr "لم يتمكن من النسخ — حدد النص أعلاه"
 
 #: app/templates/game/outcome.html:112
 msgid "Play again"
-msgstr ""
+msgstr "العب مرة أخرى"
 
 #: app/templates/game/outcome.html:116
 msgid "Friends can open your link to see the full outcome card."
-msgstr ""
+msgstr "يمكن للأصدقاء فتح رابطك لرؤية بطاقة النتيجة الكاملة."
 
 #: app/templates/game/outcome.html:124 app/templates/game/outcome.html:134
 #: app/templates/game/outcome.html:137
-#, fuzzy
 msgid "Challenge a friend"
-msgstr "ادعُ صديقًا"
+msgstr "تحدّ صديقاً"
 
 #: app/templates/game/outcome.html:126
 msgid ""
 "Send them into the same crisis. Your headline stays hidden until they finish"
 " their own run."
-msgstr ""
+msgstr "أرسلهم إلى نفس الأزمة. عنوانك يبقى مخفياً حتى ينهي لعبته الخاصة."
 
 #: app/templates/game/outcome.html:133
 msgid "I governed a nation on Tradeoffs. Your turn."
-msgstr ""
+msgstr "حكمت أمة في Tradeoffs. دورك الآن."
 
 #: app/templates/game/outcome.html:136
 msgid "Could not copy — long-press the link below"
-msgstr ""
+msgstr "لم يتمكن من النسخ — اضغط مطولاً على الرابط أدناه"
 
 #: app/templates/game/outcome.html:147
-#, fuzzy
 msgid "How you compare"
-msgstr "كيف نقارن"
+msgstr "كيف تقارن"
 
 #: app/templates/game/outcome.html:149
 msgid "who played today"
-msgstr ""
+msgstr "من لعب اليوم"
 
 #: app/templates/game/outcome.html:149
 msgid "who faced this crisis"
-msgstr ""
+msgstr "من واجه هذه الأزمة"
 
 #: app/templates/game/outcome.html:152
 #, python-format
 msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
-msgstr ""
+msgstr "ميلت أكثر نحو %(dir)s من %(pct)d%% من القادة %(scope)s."
 
 #: app/templates/game/outcome.html:157
 #, python-format
 msgid "%(pct)d%% of them ended like you."
-msgstr ""
+msgstr "%(pct)d%% منهم انتهت حالهم مثلك."
 
 #: app/templates/game/outcome.html:161
 #, python-format
 msgid "Based on %(n)d leader so far."
 msgid_plural "Based on %(n)d leaders so far."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "بناءً على %(n)d قائد حتى الآن."
+msgstr[1] "بناءً على %(n)d قادة حتى الآن."
+msgstr[2] "بناءً على %(n)d قادة حتى الآن."
+msgstr[3] "بناءً على %(n)d قادة حتى الآن."
+msgstr[4] "بناءً على %(n)d قادة حتى الآن."
+msgstr[5] "بناءً على %(n)d قادة حتى الآن."
 
 #: app/templates/game/outcome.html:165
 msgid ""
 "You're among the first to govern this crisis. Comparisons unlock as more "
 "leaders play — come back to see where you stood."
 msgstr ""
+"أنت من بين الأوائل الذين يحكمون هذه الأزمة. تتح المقارنات مع لعب المزيد من "
+"القادة — عد للاطلاع على مكانك."
 
 #: app/templates/game/outcome.html:181
 msgid "Your longest run yet."
-msgstr ""
+msgstr "أطول سلسلة لك حتى الآن."
 
 #: app/templates/game/outcome.html:183
 #, python-format
 msgid "Longest: %(n)d days"
-msgstr ""
+msgstr "الأطول: %(n)d يوم"
 
 #: app/templates/game/outcome.html:191
 msgid "Quick Run · no streak credit"
-msgstr ""
+msgstr "جولة سريعة · بدون رصيد السلسلة"
 
 #: app/templates/game/outcome.html:197
 msgid "Under pressure"
-msgstr ""
+msgstr "تحت الضغط"
 
 #: app/templates/game/outcome.html:205
-#, fuzzy
 msgid "Same scenario · different path"
-msgstr "نفس الخبر، منظور مختلف"
+msgstr "نفس السيناريو · مسار مختلف"
 
 #: app/templates/game/outcome.html:207
-#, fuzzy, python-format
+#, python-format
 msgid "%(name)s ended with"
-msgstr "بانر %(name)s"
+msgstr "%(name)s انتهى بـ"
 
 #: app/templates/game/outcome.html:211
 msgid ""
 "You played the same crisis. The game never grades — it only shows what you "
 "each prioritised."
 msgstr ""
+"لعبتما نفس الأزمة. اللعبة لا تعطي درجات — فقط تظهر ما أولى كل منكما "
+"الأولوية."
 
 #: app/templates/game/outcome.html:219
 msgid "How the world governed today"
-msgstr ""
+msgstr "كيف حكم العالم اليوم"
 
 #: app/templates/game/outcome.html:221
-#, fuzzy, python-format
+#, python-format
 msgid "Based on %(n)d leader who faced this scenario today."
 msgid_plural "Based on %(n)d leaders who faced this scenario today."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "بناءً على %(n)d قائد واجه هذا السيناريو اليوم."
+msgstr[1] "بناءً على %(n)d قادة واجهوا هذا السيناريو اليوم."
+msgstr[2] "بناءً على %(n)d قادة واجهوا هذا السيناريو اليوم."
+msgstr[3] "بناءً على %(n)d قادة واجهوا هذا السيناريو اليوم."
+msgstr[4] "بناءً على %(n)d قادة واجهوا هذا السيناريو اليوم."
+msgstr[5] "بناءً على %(n)d قادة واجهوا هذا السيناريو اليوم."
 
 #: app/templates/game/outcome.html:226 app/templates/game/turn.html:57
 #, python-format
 msgid "Turn %(n)d"
-msgstr ""
+msgstr "الدور %(n)d"
 
 #: app/templates/game/outcome.html:232
-#, fuzzy
 msgid "you"
 msgstr "أنت"
 
 #: app/templates/game/outcome.html:248
-#, fuzzy
 msgid "Don't break the streak"
-msgstr "تبرع بأمان عبر Stripe"
+msgstr "لا تكسر السلسلة"
 
 #: app/templates/game/outcome.html:248
-#, fuzzy
 msgid "Come back tomorrow"
-msgstr "عد غداً للحصول على سؤال جديد."
+msgstr "عد غداً"
 
 #: app/templates/game/outcome.html:251
 msgid ""
 "One email when the next scenario is live — that's it. Unsubscribe in a "
 "click."
 msgstr ""
+"بريد إلكتروني واحد عندما يكون السيناريو التالي مباشراً — هذا كل شيء. يمكنك "
+"إلغاء الاشتراك بنقرة واحدة."
 
 #: app/templates/game/outcome.html:258
-#, fuzzy
 msgid "You're set — watch your inbox."
-msgstr "أنت مشترك! تحقق من صندوق الوارد."
+msgstr "أنت جاهز — راقب بريدك الوارد."
 
 #: app/templates/game/outcome.html:259
-#, fuzzy
 msgid "Enter a valid email and try again."
-msgstr "يرجى إدخال عنوان بريد إلكتروني صحيح."
+msgstr "أدخل بريداً إلكترونياً صحيحاً وحاول مرة أخرى."
 
 #: app/templates/game/outcome.html:265
-#, fuzzy
 msgid "Email me when it's live"
-msgstr "أرسل لي رابط تسجيل الدخول"
+msgstr "أرسل لي بريداً عندما يكون متاحاً"
 
 #: app/templates/game/outcome.html:275
-#, fuzzy
 msgid "Email address for reminders"
-msgstr "البريد الإلكتروني للتذكيرات"
+msgstr "عنوان البريد الإلكتروني للتذكيرات"
 
 #: app/templates/game/outcome.html:277
-#, fuzzy
 msgid "Remind me"
-msgstr "وقت الإرسال"
+msgstr "ذكّرني"
 
 #: app/templates/game/outcome.html:288
 msgid "Take this further"
-msgstr ""
+msgstr "اذهب أبعد من ذلك"
 
 #: app/templates/game/outcome.html:305
 msgid "Save your societies."
-msgstr ""
+msgstr "احفظ مجتمعاتك."
 
 #: app/templates/game/outcome.html:306
 msgid "Without an account, your streak and archive only live on this browser."
-msgstr ""
+msgstr "بدون حساب، سجلك وأرشيفك موجودان فقط على هذا المتصفح."
 
 #: app/templates/game/profile.html:7
 msgid "The values you protect and trade away across every society you govern."
-msgstr ""
+msgstr "القيم التي تحميها وتتنازل عنها عبر كل مجتمع تحكمه."
 
 #: app/templates/game/profile.html:28
 #, python-format
 msgid "Across %(n)d different crisis."
 msgid_plural "Across %(n)d different crises."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "عبر %(n)d أزمة مختلفة."
+msgstr[1] "عبر %(n)d أزمة مختلفة."
+msgstr[2] "عبر %(n)d أزمة مختلفة."
+msgstr[3] "عبر %(n)d أزمة مختلفة."
+msgstr[4] "عبر %(n)d أزمة مختلفة."
+msgstr[5] "عبر %(n)d أزمة مختلفة."
 
 #: app/templates/game/profile.html:29
 msgid "Here is the leader the choices add up to."
-msgstr ""
+msgstr "إليك الزعيم الذي تضيف إليه اختياراتك."
 
 #: app/templates/game/profile.html:32
-#, fuzzy
 msgid "No profile yet"
-msgstr "لا توجد برامج بعد"
+msgstr "لا توجد ملف شخصي حتى الآن"
 
 #: app/templates/game/profile.html:33
-#, fuzzy
 msgid "Govern your first nation and your tendencies will emerge here."
-msgstr "ستظهر ملخصاتك هنا"
+msgstr "حكّم دولتك الأولى وستظهر اتجاهاتك هنا."
 
 #: app/templates/game/profile.html:45
-#, fuzzy
 msgid "Where you lean"
-msgstr "شارك ملخصك"
+msgstr "حيث تميل"
 
 #: app/templates/game/profile.html:52
 #, python-format
 msgid "%(pct)d%% lean"
-msgstr ""
+msgstr "%(pct)d%% ميل"
 
 #: app/templates/game/profile.html:65
-#, fuzzy
 msgid "Your signature"
-msgstr "مصدرك"
+msgstr "توقيعك"
 
 #: app/templates/game/profile.html:72
-#, fuzzy, python-format
+#, python-format
 msgid "Most often: %(label)s"
-msgstr "هل فاتك %(label)s؟"
+msgstr "غالباً: %(label)s"
 
 #: app/templates/game/profile.html:79
-#, fuzzy
 msgid "How your societies end"
-msgstr "مصدرك"
+msgstr "كيف تنتهي مجتمعاتك"
 
 #: app/templates/game/profile.html:95
 #, python-format
 msgid "Govern %(n)d more society to reveal your governing tendencies."
 msgid_plural ""
 "Govern %(n)d more societies to reveal your governing tendencies."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
-msgstr[4] ""
-msgstr[5] ""
+msgstr[0] "حكّم %(n)d مجتمع آخر لكشف اتجاهات حكمك."
+msgstr[1] "حكّم %(n)d مجتمع آخر لكشف اتجاهات حكمك."
+msgstr[2] "حكّم %(n)d مجتمع آخر لكشف اتجاهات حكمك."
+msgstr[3] "حكّم %(n)d مجتمع آخر لكشف اتجاهات حكمك."
+msgstr[4] "حكّم %(n)d مجتمع آخر لكشف اتجاهات حكمك."
+msgstr[5] "حكّم %(n)d مجتمع آخر لكشف اتجاهات حكمك."
 
 #: app/templates/game/profile.html:109
 msgid ""
 "Your profile lives only on this browser. Save it to your account to keep it "
 "across devices."
 msgstr ""
+"ملفك الشخصي موجود فقط على هذا المتصفح. احفظه في حسابك للحفاظ عليه عبر "
+"الأجهزة."
 
 #: app/templates/game/reminders_unsubscribed.html:3
 #: app/templates/game/reminders_unsubscribed.html:12
-#, fuzzy
 msgid "Reminders stopped"
-msgstr "تمت جدولة التذكيرات:"
+msgstr "توقفت التذكيرات"
 
 #: app/templates/game/reminders_unsubscribed.html:14
 #, python-format
 msgid "We won't email %(email)s about new scenarios anymore."
-msgstr ""
+msgstr "لن نرسل بريداً إلى %(email)s بشأن السيناريوهات الجديدة بعد الآن."
 
 #: app/templates/game/reminders_unsubscribed.html:14
 msgid "We won't send you reminders anymore."
-msgstr ""
+msgstr "لن نرسل لك تذكيرات بعد الآن."
 
 #: app/templates/game/reminders_unsubscribed.html:16
-#, fuzzy
 msgid "Back to Tradeoffs"
-msgstr "← العودة إلى النشرات الإخبارية"
+msgstr "العودة إلى المقارنات"
 
 #: app/templates/game/turn.html:8
 msgid "Beginning"
-msgstr ""
+msgstr "البداية"
 
 #: app/templates/game/turn.html:9
 msgid "Settling in"
-msgstr ""
+msgstr "الاستقرار"
 
 #: app/templates/game/turn.html:10
 msgid "First cracks"
-msgstr ""
+msgstr "الشقوق الأولى"
 
 #: app/templates/game/turn.html:11
 msgid "Oh no…"
-msgstr ""
+msgstr "يا إلهي…"
 
 #: app/templates/game/turn.html:12
 msgid "Legacy"
-msgstr ""
+msgstr "الإرث"
 
 #: app/templates/game/turn.html:16
-#, fuzzy
 msgid "Steady"
-msgstr "الميسر"
+msgstr "مستقر"
 
 #: app/templates/game/turn.html:17
 msgid "Pressure building"
-msgstr ""
+msgstr "الضغط يتراكم"
 
 #: app/templates/game/turn.html:18
-#, fuzzy
 msgid "Under strain"
-msgstr "تحت الرادار"
+msgstr "تحت الضغط"
 
 #: app/templates/game/turn.html:19
 msgid "Crisis point"
-msgstr ""
+msgstr "نقطة الأزمة"
 
 #: app/templates/game/turn.html:28
 #, python-brace-format
 msgid "Turn {n} of {total}"
-msgstr ""
+msgstr "الدور {n} من {total}"
 
 #: app/templates/game/turn.html:41
 msgid ""
 "Hidden strain on your society — debt and fragility you can feel but not see."
-msgstr ""
+msgstr "ضغط مخفي على مجتمعك — ديون وهشاشة تشعر بها لكن لا تراها."
 
 #: app/templates/game/turn.html:58
 #, python-format
 msgid "Turn %(n)d of %(total)d"
-msgstr ""
+msgstr "الدور %(n)d من %(total)d"
 
 #: app/templates/game/turn.html:70
 msgid "Your options"
-msgstr ""
+msgstr "خياراتك"
 
 #: app/templates/game/turn.html:84
 msgid "Likely effects"
-msgstr ""
+msgstr "التأثيرات المحتملة"
 
 #: app/templates/game/turn.html:98
-#, fuzzy
 msgid "Tip: press 1–3 to choose"
-msgstr "غير متأكد من الخيار الذي تختار؟"
+msgstr "نصيحة: اضغط 1–3 للاختيار"
 
 #: app/templates/game/turn.html:118
 msgid "Every choice costs something"
-msgstr ""
+msgstr "كل اختيار يكلف شيئًا ما"
 
 #: app/templates/game/components/stat_bars.html:6
 msgid "Stability"
-msgstr ""
+msgstr "الاستقرار"
 
 #: app/templates/help/big_questions_journey.html:4
-#, fuzzy
 msgid "Big Questions Journey — Help | Society Speaks"
-msgstr "رحلة Big Questions المدنية — Society Speaks"
+msgstr "رحلة الأسئلة الكبرى — مساعدة | Society Speaks"
 
 #: app/templates/help/big_questions_journey.html:5
 msgid ""
 "Guide to the Big Questions Journey: 8 themes, country editions, voting, "
 "recaps, and how your views compare to opinion clusters."
 msgstr ""
+"دليل رحلة الأسئلة الكبرى: 8 مواضيع، إصدارات وطنية، التصويت، الملخصات، وكيفية"
+" مقارنة آرائك بالتجمعات الرأي."
 
 #: app/templates/help/big_questions_journey.html:12
 msgid ""
 "A guided civic experience across the issues defining our era — climate, AI, "
 "economy, health, security, democracy, society, and education."
 msgstr ""
+"تجربة مدنية موجهة عبر القضايا التي تحدد عصرنا — المناخ والذكاء الاصطناعي "
+"والاقتصاد والصحة والأمن والديمقراطية والمجتمع والتعليم."
 
 #: app/templates/help/big_questions_journey.html:17
-#, fuzzy
 msgid "What it is"
-msgstr "ما معنى ذلك"
+msgstr "ما هو"
 
 #: app/templates/help/big_questions_journey.html:18
 msgid ""
@@ -24331,6 +24418,9 @@ msgid ""
 "Disagree, or Unsure and can submit their own statements after engaging with "
 "the theme."
 msgstr ""
+"يحتوي كل إصدار على 8 مواضيع. يبدأ كل موضوع بما لا يقل عن 7 بيانات أساسية "
+"منسقة من الخبراء (56+ عبر الرحلة). يصوت المشاركون بـ موافق أو معارض أو غير "
+"متأكد ويمكنهم تقديم بياناتهم الخاصة بعد التفاعل مع الموضوع."
 
 #: app/templates/help/big_questions_journey.html:19
 msgid ""
@@ -24339,11 +24429,14 @@ msgid ""
 "global edition. We recommend an edition based on your profile or browser "
 "language when possible."
 msgstr ""
+"تؤسس الإصدارات الوطنية الأسئلة في السياق السياسي المحلي — المملكة المتحدة "
+"والولايات المتحدة وألمانيا وفرنسا وهولندا وأيرلندا وكندا وسنغافورة واليابان "
+"والصين، بالإضافة إلى إصدار عالمي. ننصح بإصدار بناءً على ملفك الشخصي أو لغة "
+"متصفحك عند الإمكان."
 
 #: app/templates/help/big_questions_journey.html:22
-#, fuzzy
 msgid "After you vote"
-msgstr "تأكيد تصويتك"
+msgstr "بعد التصويت"
 
 #: app/templates/help/big_questions_journey.html:23
 msgid ""
@@ -24351,16 +24444,19 @@ msgid ""
 "genuine divisions. Sign in to save progress across devices. Complete all "
 "themes for your full picture."
 msgstr ""
+"تعرض ملخصات الموضوع التجمعات الرأي والبيانات الإجماعية وأفكار جسور البناء "
+"والانقسامات الحقيقية. قم بتسجيل الدخول لحفظ التقدم عبر الأجهزة. أكمل جميع "
+"المواضيع للحصول على صورتك الكاملة."
 
 #: app/templates/help/big_questions_journey.html:24
-#, fuzzy
 msgid "Choose your edition"
-msgstr "أو اختر إصدارًا"
+msgstr "اختر إصدارك"
 
 #: app/templates/help/civic_infrastructure.html:5
 msgid ""
 "Civic infrastructure — run programmes & consultations | Society Speaks Help"
 msgstr ""
+"البنية التحتية المدنية — تشغيل البرامج والاستشارات | Society Speaks مساعدة"
 
 #: app/templates/help/civic_infrastructure.html:6
 msgid ""
@@ -24368,6 +24464,9 @@ msgid ""
 "questions and polls, embed on your site, export data, and surface consensus,"
 " bridge ideas, and divisions."
 msgstr ""
+"استخدم Society Speaks كبنية تحتية مدنية: قم بتشغيل البرامج وأرسل أسئلتك "
+"والاستطلاعات الخاصة بك وضمنها على موقعك وصدّر البيانات واستخرج الإجماع "
+"وأفكار الجسور والانقسامات."
 
 #: app/templates/help/civic_infrastructure.html:13
 msgid ""
@@ -24376,11 +24475,13 @@ msgid ""
 "analysis-ready data using the same deliberation engine behind our public "
 "programmes."
 msgstr ""
+"Society Speaks هو تكنولوجيا مدنية يمكنك نشرها — وليست وجهة فقط. قم بتشغيل "
+"الاستشارات ونشر الاستطلاعات المنظمة الخاصة بك وصدّر البيانات الجاهزة للتحليل"
+" باستخدام نفس محرك الحوار خلف برامجنا العامة."
 
 #: app/templates/help/civic_infrastructure.html:18
-#, fuzzy
 msgid "What you can run"
-msgstr "ما الذي يمكنك تخصيصه"
+msgstr "ما يمكنك تشغيله"
 
 #: app/templates/help/civic_infrastructure.html:22
 msgid ""
@@ -24388,16 +24489,17 @@ msgid ""
 "visibility controls, and bulk export — ideal for citizen assemblies, policy "
 "consultations, and longitudinal engagement."
 msgstr ""
+"حملات متعددة المناقشات مع مواضيع وأطوار وأفواج ومسؤولين وضوابط الرؤية "
+"والتصدير الجماعي — مثالي لمجالس المواطنين واستشارات السياسات والمشاركة "
+"الطولية."
 
 #: app/templates/help/civic_infrastructure.html:23
-#, fuzzy
 msgid "Programmes guide"
-msgstr "البرامج"
+msgstr "دليل البرامج"
 
 #: app/templates/help/civic_infrastructure.html:26
-#, fuzzy
 msgid "Standalone discussions"
-msgstr "النقاشات المحفوظة"
+msgstr "مناقشات مستقلة"
 
 #: app/templates/help/civic_infrastructure.html:27
 msgid ""
@@ -24405,17 +24507,18 @@ msgid ""
 "public/unlisted/invite-only visibility, moderate submissions, and unlock ML "
 "clustering when participation thresholds are met."
 msgstr ""
+"أطلق استطلاعًا أو حوارًا مركزًا في دقائق: بيانات أساسية، عيّن رؤية عامة/غير "
+"مدرجة/دعوة فقط، تعديل التقديمات، وفتح التجميع الآلي عند الوصول إلى عتبات "
+"المشاركة."
 
 #: app/templates/help/civic_infrastructure.html:28
 #: app/templates/help/creating_discussions.html:45
-#, fuzzy
 msgid "Creating discussions"
-msgstr "إنشاء النقاشات"
+msgstr "إنشاء مناقشات"
 
 #: app/templates/help/civic_infrastructure.html:31
-#, fuzzy
 msgid "Publisher embeds & Partner API"
-msgstr "تضمينات الناشرين"
+msgstr "عمليات الدمج والواجهة البرمجية للشركاء"
 
 #: app/templates/help/civic_infrastructure.html:32
 msgid ""
@@ -24423,47 +24526,51 @@ msgid ""
 "statements — we do not scrape your newsroom. Automate creation from your CMS"
 " when ready."
 msgstr ""
+"ضمّن التصويت على المقالات والصفحات التي تختارها. أنت تحدد المواضيع والبيانات"
+" — نحن لا نكشط غرفة الأخبار الخاصة بك. أتمتة الإنشاء من نظام إدارة المحتوى "
+"الخاص بك عند الاستعداد."
 
 #: app/templates/help/civic_infrastructure.html:36
-#, fuzzy
 msgid "Organisation profiles"
-msgstr "ملف تعريفي للمنظمة"
+msgstr "ملفات تعريف المنظمة"
 
 #: app/templates/help/civic_infrastructure.html:37
 msgid ""
 "Attach programmes and discussions to your organisation so multiple editors "
 "can steward the same initiative with a public-facing identity."
 msgstr ""
+"أرفق البرامج والمناقشات بمنظمتك حتى يتمكن محررون متعددون من الإشراف على نفس "
+"المبادرة برهان عام."
 
 #: app/templates/help/civic_infrastructure.html:43
-#, fuzzy
 msgid "Typical workflows"
-msgstr "سير عمل الموافقة"
+msgstr "سير العمل النموذجي"
 
 #: app/templates/help/civic_infrastructure.html:45
-#, fuzzy
 msgid "Scoping"
-msgstr "عرض"
+msgstr "التحديد"
 
 #: app/templates/help/civic_infrastructure.html:45
 msgid ""
 "Define the decision or question, audience, and timeline. Draft 5–15 clear "
 "seed statements spanning perspectives."
 msgstr ""
+"حدد القرار أو السؤال والجمهور والجدول الزمني. صيغ 5–15 بيان أساسي واضح يشمل "
+"وجهات النظر."
 
 #: app/templates/help/civic_infrastructure.html:46
-#, fuzzy
 msgid "Launch"
-msgstr "الخطة"
+msgstr "الإطلاق"
 
 #: app/templates/help/civic_infrastructure.html:46
 msgid ""
 "Create a programme or discussion, set visibility, invite stewards, share "
 "links or embed on your properties."
 msgstr ""
+"أنشئ برنامجًا أو مناقشة، عيّن الرؤية، ادعُ المسؤولين، شارك الروابط أو ضمّنها"
+" على ممتلكاتك."
 
 #: app/templates/help/civic_infrastructure.html:47
-#, fuzzy
 msgid "Participation"
 msgstr "المشاركة"
 
@@ -24472,68 +24579,72 @@ msgid ""
 "Participants vote Agree / Disagree / Unsure and may add statements "
 "(moderated). Encourage voting before results where anchoring matters."
 msgstr ""
+"يصوت المشاركون بـ موافق / معارض / غير متأكد وقد يضيفون بيانات (معدلة). شجع "
+"التصويت قبل النتائج عند أهمية التثبيت."
 
 #: app/templates/help/civic_infrastructure.html:48
 msgid ""
 "When enough votes exist, clustering reveals consensus, bridge ideas, and "
 "divisions. Export CSV for reporting."
 msgstr ""
+"عندما توجد أصوات كافية، يكشف التجميع عن الإجماع وأفكار الجسور والانقسامات. "
+"صدّر CSV للإبلاغ."
 
 #: app/templates/help/civic_infrastructure.html:49
-#, fuzzy
 msgid "Action"
-msgstr "الإجراءات"
+msgstr "إجراء"
 
 #: app/templates/help/civic_infrastructure.html:49
 msgid ""
 "Use bridge statements for coalition-building; use divisive statements to "
 "design deeper dialogue — not to declare winners."
 msgstr ""
+"استخدم تصريحات الجسور لبناء التحالفات؛ استخدم التصريحات المثيرة للانقسام "
+"لتصميم حوار أعمق — وليس للإعلان عن الفائزين."
 
 #: app/templates/help/civic_infrastructure.html:54
-#, fuzzy
 msgid "Data & privacy"
-msgstr "هل بياناتي خاصة؟"
+msgstr "البيانات والخصوصية"
 
 #: app/templates/help/civic_infrastructure.html:56
 msgid ""
 "Stewards receive aggregate vote distributions and anonymised exports — not "
 "public attribution of individual voters by name."
 msgstr ""
+"يتلقى الموكلون توزيعات الأصوات الإجمالية والصادرات المجهولة الهوية — وليس "
+"نسب عام للناخبين الأفراد بأسمائهم."
 
 #: app/templates/help/civic_infrastructure.html:57
-#, fuzzy
 msgid ""
 "Visibility settings (public, unlisted, invite-only, private) control "
 "discovery and access."
 msgstr ""
-"<strong>حدد الرؤية.</strong> اختر عام أو غير مدرج أو خاص بالدعوة فقط أو خاص "
-"حسب جمهورك واحتياجات الخصوصية."
+"إعدادات الرؤية (عام، غير مدرج في القوائم، بدعوة فقط، خاص) تتحكم في الاكتشاف "
+"والوصول."
 
 #: app/templates/help/civic_infrastructure.html:58
 msgid "Open-source codebase — audit how data is processed and stored."
-msgstr ""
+msgstr "قاعدة أكواد مفتوحة المصدر — تدقيق كيفية معالجة البيانات وتخزينها."
 
 #: app/templates/help/civic_infrastructure.html:61
-#, fuzzy
 msgid "Privacy policy"
 msgstr "سياسة الخصوصية"
 
 #: app/templates/help/civic_infrastructure.html:63
-#, fuzzy
 msgid "Managing discussions & exports"
-msgstr "إدارة النقاشات"
+msgstr "إدارة النقاشات والصادرات"
 
 #: app/templates/help/civic_infrastructure.html:71
-#, fuzzy
 msgid "Start building"
-msgstr "بدء التصويت"
+msgstr "ابدأ البناء"
 
 #: app/templates/help/civic_infrastructure.html:72
 msgid ""
 "Free to create discussions. Partner embeds and large programmes — talk to us"
 " if you need enterprise support."
 msgstr ""
+"إنشاء نقاشات مجاني. الشركاء والبرامج الكبرى — تحدث معنا إذا كنت بحاجة إلى "
+"دعم المؤسسات."
 
 #: app/templates/help/civic_infrastructure.html:75
 #: app/templates/partner/api_docs.html:1262
@@ -24552,6 +24663,9 @@ msgid ""
 "statements, visibility, moderation, and ML-powered consensus analysis. "
 "Native system recommended."
 msgstr ""
+"أنشئ استطلاعات منظمة ومساحات حوار على Society Speaks: تصريحات البذور والرؤية"
+" والإشراف والتحليل الإجماعي المدعوم بالذكاء الاصطناعي. النظام الأصلي موصى "
+"به."
 
 #: app/templates/help/creating_discussions.html:12
 msgid "Creating Discussions on Society Speaks"
@@ -24562,17 +24676,18 @@ msgid ""
 "Create a structured deliberation or poll on Society Speaks using the native "
 "statement system."
 msgstr ""
+"أنشئ نقاشًا منظمًا أو استطلاعًا على Society Speaks باستخدام نظام التصريح "
+"الأصلي."
 
 #: app/templates/help/creating_discussions.html:17
-#, fuzzy
 msgid "Draft seed statements"
-msgstr "أضف عبارات البداية"
+msgstr "صياغة تصريحات البذور"
 
 #: app/templates/help/creating_discussions.html:18
 msgid ""
 "Write clear, single-claim statements spanning multiple perspectives on your "
 "topic."
-msgstr ""
+msgstr "اكتب تصريحات واضحة ذات ادعاء واحد تغطي وجهات نظر متعددة حول موضوعك."
 
 #: app/templates/help/creating_discussions.html:22
 msgid "Add Seed Statements"
@@ -24602,7 +24717,6 @@ msgid "Share your discussion link and actively engage with participants."
 msgstr "شارك رابط النقاش الخاص بك والعب دوراً نشطاً مع المشاركين."
 
 #: app/templates/help/creating_discussions.html:44
-#, fuzzy
 msgid "← Help Centre"
 msgstr "← مركز المساعدة"
 
@@ -24611,16 +24725,15 @@ msgid ""
 "Launch your own structured poll or deliberation in minutes — the building "
 "block for consultations and"
 msgstr ""
+"أطلق استطلاعك المنظم الخاص بك في دقائق — كتلة البناء الأساسية للاستشارات و"
 
 #: app/templates/help/creating_discussions.html:48
-#, fuzzy
 msgid "programmes"
 msgstr "البرامج"
 
 #: app/templates/help/creating_discussions.html:56
-#, fuzzy
 msgid "Native deliberation (recommended)"
-msgstr "✨ النظام الأصلي (موصى به)"
+msgstr "النقاش الأصلي (موصى به)"
 
 #: app/templates/help/creating_discussions.html:58
 msgid ""
@@ -24629,6 +24742,9 @@ msgid ""
 "Pol.is embed path remains for specific integrations; see Advanced in the "
 "Help Centre."
 msgstr ""
+"تستخدم معظم النقاشات الجديدة نظام التصريح الأصلي لدينا — التصويت والردود "
+"المترابطة الاختيارية والأدلة وتحليل الإجماع المدمج. يبقى مسار تضمين Pol.is "
+"القديم لعمليات التكامل المحددة؛ انظر المتقدمة في مركز المساعدة."
 
 #: app/templates/help/creating_discussions.html:64
 msgid "✨ Native System (Recommended)"
@@ -24849,110 +24965,108 @@ msgid "Send us feedback"
 msgstr "أرسل لنا ملاحظاتك"
 
 #: app/templates/help/daily_brief.html:4
-#, fuzzy
 msgid "Daily Brief — Help | Society Speaks"
-msgstr "اشترك في النشرة اليومية - Society Speaks"
+msgstr "Daily Brief — Help | Society Speaks"
 
 #: app/templates/help/daily_brief.html:5
 msgid ""
 "The free Society Speaks Daily Brief: 3–5 civic stories from 140+ sources, "
 "spectrum breakdown, and under-reported coverage."
 msgstr ""
+"ملخص Society Speaks Daily Brief المجاني: 3–5 قصص مدنية من 140+ مصدر، تفصيل "
+"الطيف، والتغطية غير المبلغ عنها."
 
 #: app/templates/help/daily_brief.html:12
 msgid ""
 "A free, ad-free editorial digest — not personalised algorithmic news. "
 "Stories are chosen for civic impact, not virality."
 msgstr ""
+"ملخص افتتاحي مجاني وخالي من الإعلانات — وليس أخبارًا خوارزمية مخصصة. يتم "
+"اختيار القصص للتأثير المدني وليس للفيروسية."
 
 #: app/templates/help/daily_brief.html:19
 msgid "3–5 stories per edition with \"Why this matters\" context"
-msgstr ""
+msgstr "3–5 قصص لكل إصدار مع سياق 《لماذا يهمك》"
 
 #: app/templates/help/daily_brief.html:20
 msgid "Left / centre / right breakdown per story (bias ratings from AllSides)"
-msgstr ""
+msgstr "تفصيل يسار/مركز/يمين لكل قصة (تقييمات التحيز من AllSides)"
 
 #: app/templates/help/daily_brief.html:21
 msgid "Under the Radar — important stories with low mainstream attention"
-msgstr ""
+msgstr "تحت الرادار — قصص مهمة بانتباه منخفض في التيار السائد"
 
 #: app/templates/help/daily_brief.html:26
-#, fuzzy
 msgid "Daily Brief vs Personal Briefs"
-msgstr "ما هي النشرة الشخصية؟"
+msgstr "Daily Brief مقابل Personal Briefs"
 
 #: app/templates/help/daily_brief.html:27
-#, fuzzy
 msgid ""
 "The Daily Brief is curated by Society Speaks from our 140+ source library. "
 "Personal Briefs are paid, custom digests built from sources you choose — and"
 " subscriptions fund the free civic platform."
 msgstr ""
-"النشرة اليومية ملخص مجاني محرر بعناية يضم 3-5 قصص مدنية من مكتبة Society "
-"Speaks التي تضم 140+ مصدر. النشرة الشخصية ملخص مدفوع قابل للتخصيص بالكامل "
-"مبني من مصادرك المختارة، مع توليف بواسطة الذكاء الاصطناعي وجدولك الزمني "
-"الخاص. يمول اشتراك النشرة الشخصية النشرة اليومية المجانية والميزات المدنية "
-"الأخرى."
+"يتم استقطاب Daily Brief بواسطة Society Speaks من مكتبة مصادرنا 140+. "
+"Personal Briefs مدفوعة وملخصات مخصصة مبنية من المصادر التي تختارها — "
+"والاشتراكات تمول منصة مدنية مجانية."
 
 #: app/templates/help/daily_brief.html:28
-#, fuzzy
 msgid "Personal Briefs help"
-msgstr "موجزات شخصية"
+msgstr "مساعدة Personal Briefs"
 
 #: app/templates/help/daily_question.html:4
-#, fuzzy
 msgid "Daily Question — Help | Society Speaks"
-msgstr "السؤال اليومي - Society Speaks"
+msgstr "Daily Question — Help | Society Speaks"
 
 #: app/templates/help/daily_question.html:5
 msgid ""
 "How the Daily Question works: daily civic questions, blind-then-reveal "
 "voting, email digests, and longitudinal public opinion."
 msgstr ""
+"كيفية عمل السؤال اليومي: أسئلة مدنية يومية، تصويت أعمى ثم إظهار، ملخصات "
+"البريد الإلكتروني وآراء عامة طولية."
 
 #: app/templates/help/daily_question.html:12
 msgid ""
 "One carefully chosen civic question each day — a two-minute habit that "
 "builds a longitudinal record of how society thinks."
 msgstr ""
+"سؤال مدني واحد تم اختياره بعناية كل يوم — عادة مدتها دقيقتان تبني سجلًا "
+"طوليًا لكيفية تفكير المجتمع."
 
 #: app/templates/help/daily_question.html:17
-#, fuzzy
 msgid "How to participate"
 msgstr "كيفية المشاركة"
 
 #: app/templates/help/daily_question.html:19
-#, fuzzy
 msgid "Open today's question and vote Agree, Disagree, or Unsure."
-msgstr "تصويتك على سؤال اليوم: أوافق أو أعترض أو غير متأكد"
+msgstr "افتح سؤال اليوم صوِّت بموافقة أو عدم موافقة أو غير متأكد."
 
 #: app/templates/help/daily_question.html:20
-#, fuzzy
 msgid "Optionally add a short reason for your vote."
-msgstr "شروحات قصيرة اختيارية لأسبابك"
+msgstr "اختياريًا أضف سببًا قصيرًا لتصويتك."
 
 #: app/templates/help/daily_question.html:21
 msgid ""
 "See aggregate results after you have contributed — designed to reduce "
 "anchoring bias."
-msgstr ""
+msgstr "شاهد النتائج الإجمالية بعد أن تساهم — مصمم لتقليل انحياز الارتساء."
 
 #: app/templates/help/daily_question.html:26
-#, fuzzy
 msgid "Email delivery"
-msgstr "التسليم المجدول"
+msgstr "توصيل البريد الإلكتروني"
 
 #: app/templates/help/daily_question.html:27
 msgid ""
 "Subscribe without an account. Default delivery is a weekly digest (5 "
 "questions); switch to daily or monthly via the link in any email."
 msgstr ""
+"اشترك بدون حساب. التسليم الافتراضي هو ملخص أسبوعي (5 أسئلة)؛ التبديل إلى "
+"يومي أو شهري عبر الرابط في أي بريد إلكتروني."
 
 #: app/templates/help/daily_question.html:28
-#, fuzzy
 msgid "Subscribe by email"
-msgstr "إعادة الاشتراك في اليومي"
+msgstr "الاشتراك عبر البريد الإلكتروني"
 
 #: app/templates/help/daily_question.html:32
 msgid ""
@@ -24960,53 +25074,53 @@ msgid ""
 "Organisations running consultations can create discussions that feed the "
 "civic conversation — see"
 msgstr ""
+"غالبًا ما يتم ربط الأسئلة اليومية بنقاشات نشطة على المنصة. يمكن للمنظمات "
+"التي تدير الاستشارات إنشاء نقاشات تغذي المحادثة المدنية —"
 
 #: app/templates/help/daily_question.html:33
 #: app/templates/help/programmes.html:54
-#, fuzzy
 msgid "civic infrastructure"
-msgstr "درجة المشاركة المدنية"
+msgstr "البنية التحتية المدنية"
 
 #: app/templates/help/getting_started.html:6
-#, fuzzy
 msgid "Getting Started — Society Speaks Help"
-msgstr "البدء مع Society Speaks"
+msgstr "البدء — مساعدة Society Speaks"
 
 #: app/templates/help/getting_started.html:7
 msgid ""
 "Get started with Society Speaks: Daily Question, Big Questions Journey, "
 "discussions, Tradeoffs, and how to run your own consultations."
 msgstr ""
+"ابدأ مع Society Speaks: السؤال اليومي، رحلة الأسئلة الكبرى، النقاشات، "
+"المقارنات، وكيفية إجراء استشاراتك الخاصة."
 
 #: app/templates/help/getting_started.html:14
 msgid ""
 "Society Speaks is civic infrastructure for sense-making — participate in "
 "public programmes or run your own structured polls and consultations."
 msgstr ""
+"Society Speaks هي بنية تحتية مدنية لفهم الواقع — شارك في البرامج العامة أو "
+"أجرِ استطلاعات واستشارات منظمة خاصة بك."
 
 #: app/templates/help/getting_started.html:19
-#, fuzzy
 msgid "No account required to explore"
-msgstr "حساب مطلوب"
+msgstr "لا يلزم حساب للاستكشاف"
 
 #: app/templates/help/getting_started.html:21
-#, fuzzy
 msgid "free news digest"
-msgstr "الملخص الأسبوعي"
+msgstr "ملخص أخبار مجاني"
 
 #: app/templates/help/getting_started.html:22
 msgid "vote in under two minutes"
-msgstr ""
+msgstr "التصويت في أقل من دقيقتين"
 
 #: app/templates/help/getting_started.html:26
-#, fuzzy
 msgid "daily scenario game"
-msgstr "موجز يومي"
+msgstr "لعبة سيناريو يومية"
 
 #: app/templates/help/getting_started.html:32
-#, fuzzy
 msgid "Sign up free to save progress"
-msgstr "لحفظ التقدم."
+msgstr "سجل مجاناً لحفظ تقدمك"
 
 #: app/templates/help/getting_started.html:33
 msgid ""
@@ -25014,6 +25128,8 @@ msgid ""
 "create discussions and programmes, manage briefings, and track your voting "
 "history."
 msgstr ""
+"يتيح لك الحساب متابعة رحلة الأسئلة الكبرى عبر الأجهزة، وإنشاء نقاشات وبرامج،"
+" وإدارة الملخصات، وتتبع سجل التصويت الخاص بك."
 
 #: app/templates/help/getting_started.html:34
 #: app/templates/partner/hub.html:632
@@ -25026,16 +25142,16 @@ msgid ""
 "Our flagship guided experience — 8 themes, country editions, consensus and "
 "bridge insights after you vote."
 msgstr ""
+"تجربتنا الموجهة الرئيسية — 8 مواضيع، إصدارات حسب البلد، رؤى الإجماع والجسور "
+"بعد تصويتك."
 
 #: app/templates/help/getting_started.html:40
-#, fuzzy
 msgid "Choose edition"
-msgstr "أو اختر إصدارًا"
+msgstr "اختر الإصدار"
 
 #: app/templates/help/getting_started.html:44
-#, fuzzy
 msgid "How voting works"
-msgstr "كيف يعمل"
+msgstr "كيف يعمل التصويت"
 
 #: app/templates/help/getting_started.html:45
 msgid ""
@@ -25043,6 +25159,9 @@ msgid ""
 "clear, single claims — not threaded comments. Choose Agree, Disagree, or "
 "Unsure. Optionally add a short reason."
 msgstr ""
+"في النقاشات والرحلة تصوت على <strong>عبارات</strong> — مطالبات واضحة وفردية "
+"— وليس تعليقات مترابطة. اختر موافق أو معارض أو غير متأكد. يمكنك اختياراً "
+"إضافة سبب قصير."
 
 #: app/templates/help/getting_started.html:51
 msgid ""
@@ -25050,11 +25169,13 @@ msgid ""
 "their own questions, polls, and multi-stage programmes — with exports and "
 "ML-powered consensus analysis."
 msgstr ""
+"تستخدم المنظمات غير الحكومية والحكومات والباحثون والناشرون Society Speaks "
+"لطرح أسئلتهم واستطلاعاتهم وبرامجهم متعددة المراحل — مع التصديرات وتحليل "
+"الإجماع المدعوم بالذكاء الاصطناعي."
 
 #: app/templates/help/help.html:6
-#, fuzzy
 msgid "Help Centre — Society Speaks"
-msgstr "المنصة — Society Speaks"
+msgstr "مركز المساعدة — Society Speaks"
 
 #: app/templates/help/help.html:7
 msgid ""
@@ -25062,37 +25183,37 @@ msgid ""
 "Question, Daily Brief, Tradeoffs, run programmes and consultations, Personal"
 " Briefs, and the native deliberation system."
 msgstr ""
+"مساعدة Society Speaks: شارك في رحلة الأسئلة الكبرى، السؤال اليومي، الملخص "
+"اليومي، المقارنات، تشغيل البرامج والاستشارات، الملخصات الشخصية، ونظام النقاش"
+" الأصلي."
 
 #: app/templates/help/help.html:15
 msgid "Society Speaks Help Centre"
 msgstr "مركز مساعدة Society Speaks"
 
 #: app/templates/help/help.html:16
-#, fuzzy
 msgid ""
 "Help resources for participating in and building on Society Speaks civic "
 "infrastructure"
-msgstr "موارد المساعدة لاستخدام Society Speaks — منصة التداول المدني"
+msgstr "موارد المساعدة للمشاركة والبناء على بنية Society Speaks المدنية"
 
 #: app/templates/help/help.html:20
 msgid "How do I get started with Society Speaks?"
 msgstr "كيف أبدأ مع Society Speaks؟"
 
 #: app/templates/help/help.html:23
-#, fuzzy
 msgid ""
 "Browse the Daily Brief, Daily Question, and News Transparency Dashboard "
 "without an account. Sign up free to save Journey progress, create "
 "discussions, or run programmes. See Getting Started in the Help Centre."
 msgstr ""
-"لا. يمكنك استعراض المناقشات وقراءة النشرة اليومية واستكشاف لوحة معلومات "
-"شفافية الأخبار بدون حساب. تحتاج إلى حساب لحفظ تقدم التصويت الخاص بك أو إنشاء"
-" مناقشات أو برامج أو الاشتراك في السؤال اليومي عبر البريد الإلكتروني."
+"تصفح الملخص اليومي والسؤال اليومي ولوحة معلومات شفافية الأخبار بدون حساب. "
+"سجل مجاناً لحفظ تقدم الرحلة، أو إنشاء نقاشات، أو تشغيل برامج. انظر البدء في "
+"مركز المساعدة."
 
 #: app/templates/help/help.html:28
-#, fuzzy
 msgid "Can I run my own consultation on Society Speaks?"
-msgstr "هل يمكن للمنظمات استخدام Society Speaks؟"
+msgstr "هل يمكنني إجراء استشارة خاصة بي على Society Speaks؟"
 
 #: app/templates/help/help.html:31
 msgid ""
@@ -25100,42 +25221,41 @@ msgid ""
 "visibility controls, stewards, and data export. Publishers can embed voting "
 "via the Partner API. See Civic infrastructure in the Help Centre."
 msgstr ""
+"نعم. أنشئ نقاشات أو برامج كاملة مع عبارات بذرة خاصة بك، وعناصر التحكم في "
+"الرؤية، والمشرفين، وتصدير البيانات. يمكن للناشرين دمج التصويت عبر واجهة "
+"Partner API. انظر البنية الأساسية المدنية في مركز المساعدة."
 
 #: app/templates/help/help.html:42 app/templates/help/macros.html:6
-#, fuzzy
 msgid "Help Centre"
 msgstr "مركز المساعدة"
 
 #: app/templates/help/help.html:43
-#, fuzzy
 msgid "How can we help?"
-msgstr "هل تحتاج مساعدة؟"
+msgstr "كيف يمكننا مساعدتك؟"
 
 #: app/templates/help/help.html:45
 msgid ""
 "Guides for participating in civic deliberation and for organisations running"
 " consultations on our infrastructure."
 msgstr ""
+"أدلة للمشاركة في النقاش المدني والمنظمات التي تجري استشارات على بنيتنا "
+"الأساسية."
 
 #: app/templates/help/help.html:70
-#, fuzzy
 msgid "Read guide"
-msgstr "دليل الإعداد"
+msgstr "اقرأ الدليل"
 
 #: app/templates/help/help.html:80
-#, fuzzy
 msgid ""
 "Structured statements, ML clustering, consensus and bridge detection, "
 "optional threaded responses and evidence — all built into Society Speaks."
 msgstr ""
-"يتميز نظام التداول الأصلي لدينا بالتصويت في الوقت الفعلي وتحليل الإجماع "
-"باستخدام التعلم الآلي والردود ذات الخيوط الاختيارية والتصورات التفاعلية — كل"
-" ذلك مدمج مباشرة في Society Speaks."
+"عبارات منظمة، تجميع التعلم الآلي، كشف الإجماع والجسور، ردود مترابطة اختيارية"
+" وأدلة — كل ذلك مدمج في Society Speaks."
 
 #: app/templates/help/help.html:82
-#, fuzzy
 msgid "System overview"
-msgstr "مصدر النظام"
+msgstr "نظرة عامة على النظام"
 
 #: app/templates/help/help.html:83
 #: app/templates/partner/portal/discussions.html:43
@@ -25143,27 +25263,24 @@ msgid "Create a discussion"
 msgstr "إنشاء نقاش"
 
 #: app/templates/help/help.html:88
-#, fuzzy
 msgid "Advanced & reference"
-msgstr "حفظ التفضيلات"
+msgstr "متقدم والمرجع"
 
 #: app/templates/help/help.html:90
 msgid "Methodology (Pol.is heritage)"
-msgstr ""
+msgstr "المنهجية (إرث Pol.is)"
 
 #: app/templates/help/help.html:92
-#, fuzzy
 msgid "Seed statements tips"
-msgstr "البيانات الأولية"
+msgstr "نصائح العبارات الأولية"
 
 #: app/templates/help/help.html:94
-#, fuzzy
 msgid "Computational Democracy Project"
-msgstr "قيد الاستخدام: مشروع الاستراتيجية الوطنية"
+msgstr "مشروع الديمقراطية الحسابية"
 
 #: app/templates/help/help.html:100
 msgid "Email us or explore the FAQ."
-msgstr ""
+msgstr "راسلنا أو استكشف الأسئلة الشائعة."
 
 #: app/templates/help/help.html:102 app/templates/help/macros.html:46
 #: app/templates/partner/hub.html:664
@@ -25171,40 +25288,40 @@ msgid "Email support"
 msgstr "دعم البريد الإلكتروني"
 
 #: app/templates/help/macros.html:29
-#, fuzzy
 msgid "See deliberation in practice"
-msgstr "أفضل ممارسات الإشراف"
+msgstr "انظر النقاش في الممارسة العملية"
 
 #: app/templates/help/macros.html:30
 msgid ""
 "Vote on real statements, then open the consensus view to see opinion "
 "clusters, bridge ideas, and genuine divisions."
 msgstr ""
+"صوّت على عبارات حقيقية، ثم افتح عرض الإجماع لرؤية مجموعات الآراء، والأفكار "
+"الجسرية، والانقسامات الحقيقية."
 
 #: app/templates/help/macros.html:32
-#, fuzzy
 msgid "Try the demo discussion"
-msgstr "مناقشة توضيحية"
+msgstr "جرّب نقاش العرض التوضيحي"
 
 #: app/templates/help/macros.html:33
-#, fuzzy
 msgid "View consensus analysis"
-msgstr "عرض تحليل التوافق"
+msgstr "عرض تحليل الإجماع"
 
 #: app/templates/help/macros.html:35
 msgid ""
 "Vote on several statements first to unlock the full analysis (demo "
 "discussions may show results immediately)."
 msgstr ""
+"صوّت على عدة عبارات أولاً لفتح التحليل الكامل (قد تعرض نقاشات العروض "
+"التوضيحية النتائج فوراً)."
 
 #: app/templates/help/macros.html:43
 msgid "Browse the FAQ or email our team."
-msgstr ""
+msgstr "تصفح الأسئلة الشائعة أو راسل فريقنا بالبريد الإلكتروني."
 
 #: app/templates/help/managing_discussions.html:4
-#, fuzzy
 msgid "Managing Discussions — Society Speaks Help"
-msgstr "إدارة النقاشات على Society Speaks"
+msgstr "إدارة النقاشات — مساعدة Society Speaks"
 
 #: app/templates/help/managing_discussions.html:5
 msgid ""
@@ -26121,21 +26238,24 @@ msgid "Join ongoing conversations and vote"
 msgstr "انضم إلى محادثات جارية وصوّت"
 
 #: app/templates/help/news_dashboard.html:4
-#, fuzzy
 msgid "News Transparency Dashboard — Help | Society Speaks"
-msgstr "لوحة معلومات شفافية الأخبار - Society Speaks"
+msgstr "لوحة معلومات شفافية الأخبار — المساعدة | Society Speaks"
 
 #: app/templates/help/news_dashboard.html:5
 msgid ""
 "Explore the News Transparency Dashboard: spectrum-organised coverage, "
 "sensationalism scores, and source transparency for today's news."
 msgstr ""
+"استكشف لوحة معلومات شفافية الأخبار: التغطية المنظمة بالطيف، ودرجات الإثارة، "
+"وشفافية المصدر لأخبار اليوم."
 
 #: app/templates/help/news_dashboard.html:12
 msgid ""
 "See how today's stories are covered across the political spectrum — a free "
 "companion to the Daily Brief and our deliberation work."
 msgstr ""
+"شاهد كيف تغطي القصص الإخبارية لهذا اليوم عبر الطيف السياسي — مرافق مجاني "
+"للملخص اليومي وعملنا في المناظرات."
 
 #: app/templates/help/news_dashboard.html:17
 msgid ""
@@ -26144,22 +26264,25 @@ msgid ""
 " right emphasis, view sensationalism scoring, and follow links to original "
 "reporting."
 msgstr ""
+"لوحة المعلومات تنظم التغطية من أكثر من 140 منفذ منسق — أخبار وتحليل ودراسات "
+"استراتيجية وبودكاست. لكل موضوع يمكنك مقارنة التركيز على اليسار والوسط "
+"واليمين، عرض درجات المبالغة الإعلامية، والوصول لروابط الأخبار الأصلية."
 
 #: app/templates/help/news_dashboard.html:18
 msgid ""
 "No sign-up required. It supports the same civic goal as our discussions: "
 "understand issues from multiple angles before forming judgment."
 msgstr ""
+"لا يتطلب التسجيل. يدعم نفس الهدف المدني مثل نقاشاتنا: فهم القضايا من زوايا "
+"متعددة قبل تكوين الحكم."
 
 #: app/templates/help/news_dashboard.html:22
-#, fuzzy
 msgid "How news feeds into discussions"
-msgstr "نقاشات الأخبار"
+msgstr "كيف تتغذى الأخبار النقاشات"
 
 #: app/templates/help/news_feed.html:4
-#, fuzzy
 msgid "How our news feed works — Society Speaks Help"
-msgstr "كيف يعمل خلاصتنا الإخبارية - Society Speaks | نقاشات الأخبار المختارة"
+msgstr "كيف يعمل مصدر الأخبار لدينا — مساعدة Society Speaks"
 
 #: app/templates/help/news_feed.html:5
 msgid ""
@@ -26505,29 +26628,28 @@ msgid "Send Feedback"
 msgstr "أرسل ملاحظاتك"
 
 #: app/templates/help/personal_briefs.html:5
-#, fuzzy
 msgid "Personal Briefs — Help | Society Speaks"
-msgstr "تبرع | Society Speaks"
+msgstr "الملخصات الشخصية — مساعدة | Society Speaks"
 
 #: app/templates/help/personal_briefs.html:6
-#, fuzzy
 msgid ""
 "Personal Briefs: custom AI daily digests from your sources. Plans, trials, "
 "and how subscriptions fund free civic features."
 msgstr ""
-"Personal Briefs يتيح لك إنشاء ملخصات يومية مخصصة من المنشورات و Substacks و "
-"ملفات PDF التي تختارها. اشتراكك يمول منصتنا المدنية مفتوحة المصدر."
+"الملخصات الشخصية: ملخصات يومية مخصصة بقوة الذكاء الاصطناعي من مصادرك. الخطط "
+"والتجارب وكيفية تمويل الاشتراكات للميزات المدنية المجانية."
 
 #: app/templates/help/personal_briefs.html:13
 msgid ""
 "Replace newsletter overload with one calm digest from sources you trust — "
 "RSS, Substacks, PDFs, and more. Delivered on your schedule."
 msgstr ""
+"استبدل الإرهاق من النشرات الإخبارية برسالة واحدة هادئة من مصادر تثق بها — "
+"RSS وSubstacks وملفات PDF والمزيد. يتم التسليم وفق جدولك."
 
 #: app/templates/help/personal_briefs.html:18
-#, fuzzy
 msgid "How it differs from the Daily Brief"
-msgstr "ما الفرق بين النشرة الشخصية والنشرة اليومية؟"
+msgstr "كيف يختلف عن الملخص اليومي"
 
 #: app/templates/help/personal_briefs.html:19
 msgid ""
@@ -26535,38 +26657,39 @@ msgid ""
 "shared source library. Personal Briefs are yours — you pick sources, timing,"
 " and recipients (on higher plans)."
 msgstr ""
+"الملخص اليومي مجاني ومنسق تحريرياً بواسطة Society Speaks من مكتبة المصادر "
+"المشتركة لدينا. الملخصات الشخصية خاصة بك — أنت تختار المصادر والتوقيت "
+"والمستقبلين (في الخطط الأعلى)."
 
 #: app/templates/help/personal_briefs.html:22
 msgid "Funding the civic platform"
-msgstr ""
+msgstr "تمويل منصة المدنية"
 
 #: app/templates/help/personal_briefs.html:23
-#, fuzzy
 msgid ""
 "Personal Brief subscriptions directly support free features: Daily Brief, "
 "Daily Question, Big Questions Journey, discussions, and the News "
 "Transparency Dashboard. We are not ad-funded."
 msgstr ""
-"اشتراكات الملخص الشخصي تمول مباشرة الميزات المدنية المجانية في Society "
-"Speaks — الملخص اليومي والسؤال اليومي ورحلة الأسئلة الكبرى والمناقشات ولوحة "
-"مراقبة شفافية الأخبار. نحن غير ممولين من الإعلانات، لذا فإن دعم المشتركين هو"
-" ما يبقي كل شيء آخر مجانيًا."
+"اشتراكات الملخص الشخصي تدعم مباشرة الميزات المجانية: الملخص اليومي والسؤال "
+"اليومي ورحلة الأسئلة الكبرى والنقاشات ولوحة معلومات شفافية الأخبار. نحن لا "
+"نعتمد على الإعلانات."
 
 #: app/templates/help/personal_briefs.html:25
-#, fuzzy
 msgid "View plans & start trial"
-msgstr "اعرض الخطط وابدأ النسخة التجريبية المجانية"
+msgstr "اعرض الخطط وابدأ التجربة"
 
 #: app/templates/help/polis_algorithms.html:5
-#, fuzzy
 msgid "Understanding Pol.is algorithms — Society Speaks Help"
-msgstr "فهم خوارزميات Pol.is"
+msgstr "فهم خوارزميات Pol.is — مساعدة Society Speaks"
 
 #: app/templates/help/polis_algorithms.html:6
 msgid ""
 "How Pol.is-style clustering relates to Society Speaks native deliberation: "
 "opinion groups, consensus, and visualisation."
 msgstr ""
+"كيفية ارتباط التجميع على غرار Pol.is بمناظرتنا الأصلية على Society Speaks: "
+"مجموعات الآراء والإجماع والتصور البصري."
 
 #: app/templates/help/polis_algorithms.html:14
 msgid "Understanding Pol.is Algorithms"
@@ -26922,9 +27045,8 @@ msgid "Technical Overview of Pol.is →"
 msgstr "نظرة عامة تقنية على Pol.is →"
 
 #: app/templates/help/programmes.html:4
-#, fuzzy
 msgid "Programmes — Society Speaks Help | Structured deliberation campaigns"
-msgstr "البرامج - مساعدة Society Speaks | تشغيل حملات النقاش المهيكل"
+msgstr "البرامج — مساعدة Society Speaks | حملات المناظرة المنظمة"
 
 #: app/templates/help/programmes.html:5
 msgid ""
@@ -26997,13 +27119,12 @@ msgstr ""
 "ومراحل والتحكم في الوصول."
 
 #: app/templates/help/programmes.html:53
-#, fuzzy
 msgid "Part of"
-msgstr "مرجع الشريك"
+msgstr "جزء من"
 
 #: app/templates/help/programmes.html:55
 msgid "use Programmes when one discussion is not enough."
-msgstr ""
+msgstr "استخدم البرامج عندما تكون مناظرة واحدة غير كافية."
 
 #: app/templates/help/programmes.html:63
 msgid "What is a Programme?"
@@ -27561,16 +27682,14 @@ msgid "Understand how voting, statements and consensus analysis work"
 msgstr "افهم كيفية عمل التصويت والبيانات وتحليل الإجماع"
 
 #: app/templates/help/seed_comments.html:5
-#, fuzzy
 msgid "Seed statements — Society Speaks Help"
-msgstr "البرامج - مساعدة Society Speaks"
+msgstr "البيانات الأولية — مساعدة Society Speaks"
 
 #: app/templates/help/seed_comments.html:6
-#, fuzzy
 msgid ""
 "How to write effective seed statements for Society Speaks discussions and "
 "consultations."
-msgstr "تعرف على كيفية إنشاء تعليقات بذور فعالة لنقاشاتك"
+msgstr "كيفية كتابة بيانات أولية فعالة لنقاشات واستشارات Society Speaks."
 
 #: app/templates/help/seed_comments.html:14
 msgid "Understanding Seed Comments"
@@ -27692,15 +27811,16 @@ msgid "Adding Comments as Yourself →"
 msgstr "إضافة تعليقات باسمك →"
 
 #: app/templates/help/tradeoffs.html:4
-#, fuzzy
 msgid "Tradeoffs — Help | Society Speaks"
-msgstr "تبرع | Society Speaks"
+msgstr "المقابلات — مساعدة | Society Speaks"
 
 #: app/templates/help/tradeoffs.html:5
 msgid ""
 "Tradeoffs on Society Speaks: daily governing scenarios, five turns, streaks,"
 " friend challenges, privacy, and links to real deliberation."
 msgstr ""
+"المقابلات على Society Speaks: سيناريوهات حكم يومية، خمس أدوار، متوالية، "
+"تحديات الأصدقاء، الخصوصية، والروابط للمناظرات الحقيقية."
 
 #: app/templates/help/tradeoffs.html:12
 msgid ""
@@ -27708,49 +27828,58 @@ msgid ""
 "kind of leader you become, and discover what society you leave behind. "
 "Fictional crises, not a test of your real-world politics."
 msgstr ""
+"لعبة سيناريو يومي على Society Speaks — حكم تحت الضغط واكتشف أي نوع من القادة"
+" تصبح، واكتشف المجتمع الذي تتركه خلفك. أزمات خيالية، وليست اختباراً لسياستك "
+"الحقيقية."
 
 #: app/templates/help/tradeoffs.html:17
-#, fuzzy
 msgid "How play works"
-msgstr "كيف يعمل"
+msgstr "كيف تعمل اللعبة"
 
 #: app/templates/help/tradeoffs.html:19
 msgid ""
 "Each day (UTC) brings a new scenario — five turns, three choices per turn."
 msgstr ""
+"كل يوم (بتوقيت UTC) يجلب سيناريو جديد — خمس أدوار، ثلاث خيارات لكل دور."
 
 #: app/templates/help/tradeoffs.html:20
 msgid ""
 "Every choice helps at least one societal stat you can see and hurts another;"
 " some consequences arrive later."
 msgstr ""
+"كل خيار يساعد احدى إحصائيات المجتمع على الأقل يمكنك رؤيتها ويضر أخرى؛ بعض "
+"النتائج تصل لاحقاً."
 
 #: app/templates/help/tradeoffs.html:21
 msgid ""
 "After five turns you receive an outcome card: identity headline, stats, "
 "traits, and shareable results."
 msgstr ""
+"بعد خمس أدوار تتلقى بطاقة نتائج: عنوان الهوية والإحصائيات والصفات والنتائج "
+"القابلة للمشاركة."
 
 #: app/templates/help/tradeoffs.html:22
 msgid ""
 "Quick Run lets you replay other scenarios from the launch rotation without "
 "streak credit."
 msgstr ""
+"Quick Run يسمح لك بإعادة تشغيل السيناريوهات الأخرى من دوران الإطلاق دون رصيد"
+" المتوالية."
 
 #: app/templates/help/tradeoffs.html:23
 msgid ""
 "Challenge links let a friend play the same scenario and compare headlines "
 "afterward."
 msgstr ""
+"روابط التحدي تسمح لصديق باللعب نفس السيناريو ومقارنة العناوين بعد ذلك."
 
 #: app/templates/help/tradeoffs.html:25
 msgid "Play at /play"
-msgstr ""
+msgstr "العب في /play"
 
 #: app/templates/help/tradeoffs.html:28
-#, fuzzy
 msgid "Bridge to deliberation"
-msgstr "من الأخبار إلى النقاش"
+msgstr "الجسر للمناظرة"
 
 #: app/templates/help/tradeoffs.html:29
 msgid ""
@@ -27758,11 +27887,12 @@ msgid ""
 "Daily Question or discussion — connecting play to real structured civic "
 "participation."
 msgstr ""
+"عندما يطابق السيناريو موضوع مباشر، يمكن لـ Tradeoffs ربطك بالسؤال اليومي أو "
+"المناظرة المتعلقة — ربط اللعب بالمشاركة المدنية المنظمة الحقيقية."
 
 #: app/templates/help/tradeoffs.html:32
-#, fuzzy
 msgid "Privacy & editorial standards"
-msgstr "لقادة التحرير"
+msgstr "الخصوصية والمعايير التحريرية"
 
 #: app/templates/help/tradeoffs.html:33
 msgid ""
@@ -27770,16 +27900,17 @@ msgid ""
 "political beliefs. Sign in with a magic link to save streaks and merge "
 "anonymous runs."
 msgstr ""
+"نحن نخزن الاختيارات السلوكية في السيناريوهات الخيالية — وليس معتقداتك "
+"السياسية المعلنة. سجل الدخول باستخدام رابط سحري لحفظ المتواليات ودمج الأشواط"
+" المجهولة."
 
 #: app/templates/help/tradeoffs.html:35
-#, fuzzy
 msgid "Editorial principles"
-msgstr "لقادة التحرير"
+msgstr "المبادئ التحريرية"
 
 #: app/templates/help/tradeoffs.html:37
-#, fuzzy
 msgid "Privacy policy (Society Play section)"
-msgstr "سياسة الخصوصية - Society Speaks"
+msgstr "سياسة الخصوصية (قسم Society Play)"
 
 #: app/templates/news/dashboard.html:3
 msgid "News Transparency Dashboard - Society Speaks"
@@ -28411,6 +28542,8 @@ msgid ""
 "Use test keys while you rehearse on staging; switch to live keys once "
 "billing is active. Keys are created in the Partner Portal."
 msgstr ""
+"استخدم مفاتيح الاختبار أثناء التدريب على التدريج؛ انتقل لمفاتيح مباشرة بمجرد"
+" تفعيل الفواتير. يتم إنشاء المفاتيح في Partner Portal."
 
 #: app/templates/partner/api_docs.html:151
 msgid "Test key:"
@@ -28432,6 +28565,10 @@ msgid ""
 " sites register both <code>www.</code> and the short domain if readers use "
 "either."
 msgstr ""
+"كل اسم مضيف تستضيف عليه iframe يجب أن يظهر ضمن <strong>Domains</strong> بعد "
+"التحقق من DNS — بشكل منفصل للتدريج (<strong>test</strong>) والإنتاج "
+"(<strong>live</strong>). عادة تسجل المواقع الإخبارية كلا من "
+"<code>www.</code> والنطاق القصير إذا كان القراء يستخدمون أحدهما."
 
 #: app/templates/partner/api_docs.html:160
 msgid ""
@@ -28439,6 +28576,9 @@ msgid ""
 "traffic; your hosting team should keep our public web address "
 "(<code>BASE_URL</code> on our side) matching what browsers expect."
 msgstr ""
+"القراء يتفاعلون دائماً مع Society Speaks عبر حركة ويب مشفرة عادية؛ يجب على "
+"فريق الاستضافة لديك الحفاظ على عنوان الويب العام لدينا "
+"(<code>BASE_URL</code> من جانبنا) متطابقاً مع ما يتوقعه المتصفحات."
 
 #: app/templates/partner/api_docs.html:162
 msgid "Server-to-server only for write operations"
@@ -28547,6 +28687,8 @@ msgid ""
 "support materials — skim this once and the rest of the docs stay "
 "predictable."
 msgstr ""
+"نستخدم هذه الكلمات بشكل متسق في Partner Portal وردود API ومواد الدعم — اطلع "
+"على هذا مرة واحدة والبقية من الوثائق ستبقى متوقعة."
 
 #: app/templates/partner/api_docs.html:344
 msgid ""
@@ -28556,6 +28698,10 @@ msgid ""
 "embed/consensus URLs, and the combined participation underneath it. Creating"
 " a discussion via API establishes this container first."
 msgstr ""
+"المظلة لتجربة تصويت واحدة موجهة للقارئ: عنوان العنوان، وكيفية ربطه بموقعك "
+"(<code>article_url</code> و/أو <code>external_id</code>)، بيئة الشريك "
+"(اختبار/مباشر)، عناوين URL للتضمين/الإجماع، والمشاركة المدمجة أسفله. ينشئ "
+"إنشاء نقاش عبر API هذه الحاوية أولاً."
 
 #: app/templates/partner/api_docs.html:348
 msgid ""
@@ -28565,6 +28711,11 @@ msgid ""
 " add/edit them afterward in the portal; optionally allow anonymous readers "
 "to propose more when embed submissions are toggled on for that discussion."
 msgstr ""
+"الطلبات الفردية داخل تلك المظلة — كل منها يجمع عدد أصواتها الخاصة بالموافقة "
+"/ عدم الموافقة / غير متأكد. املأها أثناء الإنشاء باستخدام "
+"<code>seed_statements</code> أو <code>excerpt</code> يوقد بذور الذكاء "
+"الاصطناعي؛ أضفها/عدّلها لاحقاً في البوابة؛ اسمح اختيارياً للقراء المجهولين "
+"بالمساهمة بالمزيد عندما تكون حقول تقديم التضمين مفعّلة لهذا النقاش."
 
 #: app/templates/partner/api_docs.html:357
 msgid ""
@@ -28573,6 +28724,9 @@ msgid ""
 "attach a CMS id without a public article, or mix both so reporting stays "
 "consistent across your stack."
 msgstr ""
+"النمط المعتاد هو «نقاش واحد لكل عنوان URL منشور»، لكن هذا اختيار وليس شرطاً."
+" يمكنك إنشاء نقاشات لصفحات المقالات، وإرفاق معرّف CMS بدون مقالة عامة، أو "
+"الدمج بينهما حتى تبقى التقارير متسقة عبر مكدسك."
 
 #: app/templates/partner/api_docs.html:358
 msgid ""
@@ -28580,6 +28734,9 @@ msgid ""
 "<code>discussion_id</code>; statements are modeled separately and surfaced "
 "through the embed, portal statement tools, and snapshot payloads."
 msgstr ""
+"بغض النظر عن المعرّفات، تذكر الفصل: الإرجاع/الإنشاء يعيد "
+"<code>discussion_id</code>؛ البيانات تُنمذج بشكل منفصل وتُعرض عبر التضمين، "
+"أدوات بيان البوابة، وحمولات لقطات المحتوى."
 
 #: app/templates/partner/api_docs.html:361
 msgid "Programmatic embed (recommended)"
@@ -28594,13 +28751,16 @@ msgid ""
 "2) If none exists, create the discussion shell (seed statements optionally "
 "in the same call)"
 msgstr ""
+"2) إذا لم يكن موجوداً، أنشئ قشرة النقاش (البيانات الأولية اختيارياً في نفس "
+"الاستدعاء)"
 
 #: app/templates/partner/api_docs.html:365
-#, fuzzy
 msgid ""
 "3) Store <code>discussion_id</code> and use <code>embed_url</code>; review "
 "statements inside the portal if you need tweaks"
-msgstr "3) احفظ <code>discussion_id</code> واستخدم <code>embed_url</code>"
+msgstr ""
+"3) احفظ <code>discussion_id</code> واستخدم <code>embed_url</code>؛ راجع "
+"البيانات داخل البوابة إذا احتجت إلى تعديلات"
 
 #: app/templates/partner/api_docs.html:381
 msgid "Manual embed (quick start)"
@@ -28624,11 +28784,12 @@ msgid ""
 "Editors and producers can skim the section below; share the engineering "
 "notes with IT."
 msgstr ""
+"يمكن للمحررين والمنتجين تصفح القسم أدناه؛ شارك ملاحظات الهندسة مع قسم "
+"تكنولوجيا المعلومات."
 
 #: app/templates/partner/api_docs.html:400
-#, fuzzy
 msgid "For editorial & product teams"
-msgstr "لفرق المنتج"
+msgstr "لفريق التحرير والمنتج"
 
 #: app/templates/partner/api_docs.html:402
 msgid ""
@@ -28636,11 +28797,13 @@ msgid ""
 "plus its embed wrapper; several <strong>statements</strong> sit underneath —"
 " the lines readers answer with agree / disagree / unsure."
 msgstr ""
+"ملخص المفردات: <strong>نقاش</strong> واحد = موضوع تصويت واحد بالإضافة إلى "
+"غلاف التضمين الخاص به؛ عدة <strong>بيانات</strong> تجلس تحتها — الأسطر التي "
+"يجيب عليها القراء بموافقة / عدم موافقة / غير متأكد."
 
 #: app/templates/partner/api_docs.html:402
-#, fuzzy
 msgid "Longer explanation →"
-msgstr "فصل قوي"
+msgstr "شرح أطول →"
 
 #: app/templates/partner/api_docs.html:403
 msgid ""
@@ -28648,60 +28811,71 @@ msgid ""
 "article tie-in is optional; live blogs, hubs, and special projects can use a"
 " stable id instead of a story URL."
 msgstr ""
+"أنت تقرر ما يُطلق على كل موضوع تصويت وما يراه القراء أولاً — ربط المقالة "
+"اختياري؛ المدونات المباشرة والمحاور والمشاريع الخاصة يمكنها استخدام معرّف "
+"مستقر بدلاً من عنوان URL للقصة."
 
 #: app/templates/partner/api_docs.html:404
 msgid ""
 "Every web address where the snippet might load must be approved in your "
 "Partner Portal — rehearsal sites and live sites are separate."
 msgstr ""
+"يجب الموافقة على كل عنوان ويب قد تحمّل عليه الجزء في بوابة الشريك الخاصة بك "
+"— مواقع البروفة والمواقع المباشرة منفصلة."
 
 #: app/templates/partner/api_docs.html:405
 msgid ""
 "If your readers type both <code>www.</code> and bare domain names, register "
 "<strong>two</strong> approvals."
 msgstr ""
+"إذا كان القراء يكتبون كلاً من <code>www.</code> واسم النطاق المجرد، سجّل "
+"<strong>موافقتين</strong>."
 
 #: app/templates/partner/api_docs.html:406
 msgid ""
 "Ask engineering to add the short tracking tag (<code>?ref=…</code>) so "
 "reports stay attributable."
 msgstr ""
+"اطلب من الهندسة إضافة علامة التتبع القصيرة (<code>?ref=…</code>) حتى تبقى "
+"التقارير قابلة للنسب."
 
 #: app/templates/partner/api_docs.html:406
-#, fuzzy
 msgid "What the tags mean →"
-msgstr "ما معنى ذلك"
+msgstr "ما تعنيه العلامات →"
 
 #: app/templates/partner/api_docs.html:407
 msgid ""
 "Optional: ask for automatic height on the box so long articles do not clip "
 "(one small script on your side)."
 msgstr ""
+"اختياري: اطلب ارتفاعاً تلقائياً على الصندوق حتى لا تُقطع المقالات الطويلة "
+"(سكريبت صغير واحد من جانبك)."
 
 #: app/templates/partner/api_docs.html:407
-#, fuzzy
 msgid "How it works →"
-msgstr "كيف يعمل"
+msgstr "كيف يعمل →"
 
 #: app/templates/partner/api_docs.html:408
 msgid ""
 "Prefer automatic “something changed” pings to your systems over manual "
 "checking."
-msgstr ""
+msgstr "فضّل «شيء ما تغيّر» الأصوات التلقائية لأنظمتك على الفحص اليدوي."
 
 #: app/templates/partner/api_docs.html:408
 msgid "Webhooks overview →"
-msgstr ""
+msgstr "نظرة عامة على Webhooks →"
 
 #: app/templates/partner/api_docs.html:412
 msgid "For engineering & hosting"
-msgstr ""
+msgstr "لفريق الهندسة والاستضافة"
 
 #: app/templates/partner/api_docs.html:414
 msgid ""
 "Match test API keys only with rehearsal domains; live keys only with "
 "verified production domains."
 msgstr ""
+"ضع مفاتيح API للاختبار فقط مع نطاقات البروفة؛ مفاتيح مباشرة فقط مع نطاقات "
+"الإنتاج المُتحقق منها."
 
 #: app/templates/partner/api_docs.html:415
 msgid ""
@@ -28709,6 +28883,9 @@ msgid ""
 "parent page from the browser — even without "
 "<code>PARTNER_EMBED_REQUIRE_PARENT_ORIGIN</code>."
 msgstr ""
+"تضمينات البروفة (<code>test</code>) في الإنتاج تحتاج دائماً إلى صفحة الوالد "
+"قابلة للحل من المتصفح — حتى بدون "
+"<code>PARTNER_EMBED_REQUIRE_PARENT_ORIGIN</code>."
 
 #: app/templates/partner/api_docs.html:416
 msgid ""
@@ -28718,6 +28895,11 @@ msgid ""
 " from <code>Origin</code> or <code>Referer</code> — stricter, and may affect"
 " uncommon browsers or privacy settings."
 msgstr ""
+"بيئة التصليب الاختيارية: "
+"<code>PARTNER_EMBED_REQUIRE_PARENT_ORIGIN=true</code> (الإنتاج فقط، تضمينات "
+"الشريك المباشرة) تحظر HTML iframe عندما لا نستطيع حل صفحة الوالد من "
+"<code>Origin</code> أو <code>Referer</code> — أقسى، وقد تؤثر على المتصفحات "
+"غير الشائعة أو إعدادات الخصوصية."
 
 #: app/templates/partner/api_docs.html:417
 msgid ""
@@ -28726,6 +28908,10 @@ msgid ""
 "<code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP</code> in configuration (plus "
 "per-person limits)."
 msgstr ""
+"تقديمات القارئ المضمّنة من التضمين تحترم "
+"<code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR</code> "
+"و<code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP</code> في الإعدادات (بالإضافة "
+"إلى حدود شخصية)."
 
 #: app/templates/partner/api_docs.html:426
 msgid ""
@@ -28734,6 +28920,9 @@ msgid ""
 "statements readers vote on arrive with that discussion’s embed and snapshot "
 "payloads."
 msgstr ""
+"ابحث عن نقاش من خلال عنوان URL لمقالتك. يرجع البحث بيانات وصفية للنقاش "
+"(<code>discussion_id</code>, <code>embed_url</code>, إلخ)؛ البيانات التي "
+"يصوّت عليها القراء تصل مع تضمين ذلك النقاش وحمولات لقطات المحتوى."
 
 #: app/templates/partner/api_docs.html:437
 #: app/templates/partner/api_docs.html:768
@@ -28913,6 +29102,10 @@ msgid ""
 "matching test/live environment. Native public discussions are not subject to"
 " that framing gate."
 msgstr ""
+"النقاشات المُنشأة من خلال API الشريك الخاص بك محدودة النطاق بالشريك: تتحقق "
+"صفحة التضمين من أصل الموقع الأب (باستخدام <code>Origin</code> أو "
+"<code>Referer</code> عند الحاجة) مقابل نطاقاتك المُتحقق منها للبيئة المطابقة"
+" للاختبار/المباشر. النقاشات العامة الأصلية لا تخضع لتلك بوابة الإطار."
 
 #: app/templates/partner/api_docs.html:692
 msgid ""
@@ -29014,6 +29207,10 @@ msgid ""
 "public link; use <code>external_id</code> when you do not (or use both for "
 "traceability). Requires API key."
 msgstr ""
+"أنشئ نقاشاً لقصة محددة، أو لأي سياق تحريري يمكنك تسميته بمعرّف مستقر. وفّر "
+"<code>article_url</code> عندما يكون لديك رابط عام؛ استخدم "
+"<code>external_id</code> عندما لا يكون لديك (أو استخدم كليهما لتتبع "
+"الحقيقة). يتطلب مفتاح API."
 
 #: app/templates/partner/api_docs.html:834
 msgid ""
@@ -29022,11 +29219,14 @@ msgid ""
 "<code>seed_statements</code> or supply an <code>excerpt</code> so we can "
 "generate seeds; otherwise add statements afterward from the Partner Portal."
 msgstr ""
+"ينشئ هذا الـ endpoint دائماً النقاش أولاً. جمّع <strong>البيانات</strong> "
+"الأولية في نفس الطلب عبر <code>seed_statements</code> أو وفّر "
+"<code>excerpt</code> حتى نتمكن من إنشاء بذور؛ وإلا أضف البيانات لاحقاً من "
+"بوابة الشريك."
 
 #: app/templates/partner/api_docs.html:834
-#, fuzzy
 msgid "Read how discussion vs statements map to fields →"
-msgstr "ابدأ نقاشك بالبيانات"
+msgstr "اقرأ كيف ينطبق النقاش مقابل البيانات على الحقول →"
 
 #: app/templates/partner/api_docs.html:845
 msgid "Headers"
@@ -29458,11 +29658,11 @@ msgstr "10 طلبات / دقيقة / IP"
 
 #: app/templates/partner/api_docs.html:1258
 msgid "Inline statement from embed (partner-scoped discussions)"
-msgstr ""
+msgstr "بيان مضمّن من التضمين (نقاشات محدودة النطاق بالشريك)"
 
 #: app/templates/partner/api_docs.html:1259
 msgid "Default 25 / reader / hour + IP ceiling; see env"
-msgstr ""
+msgstr "افتراضي 25 / قارئ / ساعة + سقف IP؛ انظر env"
 
 #: app/templates/partner/api_docs.html:1263
 msgid "30 req / hr / key"
@@ -29494,6 +29694,11 @@ msgid ""
 "<code>config.py</code>). Per-user caps also apply before statements are "
 "stored."
 msgstr ""
+"<strong>بيانات مضمّنة للتضمين:</strong> يستخدم Flask-Limiter "
+"<code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_ACTOR</code> "
+"و<code>EMBED_STATEMENT_SUBMIT_RATE_LIMIT_IP</code> (انظر "
+"<code>config.py</code>). الحدود الشاملة لكل مستخدم تنطبق أيضاً قبل تخزين "
+"البيانات."
 
 #: app/templates/partner/api_docs.html:1283
 msgid "All errors return JSON with a consistent format."
@@ -29876,6 +30081,9 @@ msgid ""
 "voting topic and opening statements yourself or via your CMS—we do not "
 "scrape your newsroom."
 msgstr ""
+"ضمّن Society Speaks على المقالات أو الصفحات الأخرى التي تختارها: أنت تحدد كل"
+" موضوع تصويت والبيانات الافتتاحية بنفسك أو عبر CMS الخاص بك — نحن لا نتجسس "
+"على غرفة أخبارك."
 
 #: app/templates/partner/hub.html:17
 msgid "Replace comment sections with structured public opinion"
@@ -29897,6 +30105,9 @@ msgid ""
 "several <strong>statements</strong> sit inside it — the individual lines "
 "people rate with agree / disagree / unsure."
 msgstr ""
+"التسمية: <strong>نقاش</strong> هو غلاف الموضوع والتضمين؛ عدة "
+"<strong>بيانات</strong> تجلس بداخله — الأسطر الفردية التي يقيّمها الناس "
+"بموافقة / عدم موافقة / غير متأكد."
 
 #: app/templates/partner/hub.html:24
 msgid ""
@@ -29905,6 +30116,10 @@ msgid ""
 "opening statements, or paste a short excerpt so we can suggest wording; your"
 " team can automate any of that from your servers when you are ready."
 msgstr ""
+"أنت تختار كل موضوع وكيفية تسميته — نحن لا نتجسس على موقعك. ربط نقاش بعنوان "
+"URL قصة، وإرفاق المرجع CMS الخاص بك، واكتب البيانات الافتتاحية، أو الصق "
+"مقتطفاً قصيراً حتى نتمكن من اقتراح الصيغة؛ يمكن لفريقك أتمتة أي من ذلك من "
+"خوادمك عندما تكون جاهزاً."
 
 #: app/templates/partner/hub.html:31
 msgid ""
@@ -29940,27 +30155,23 @@ msgstr "اقرأ التوثيق"
 
 #: app/templates/partner/hub.html:57
 msgid "New to setup? Follow the"
-msgstr ""
+msgstr "جديد في الإعداد؟ اتبع "
 
 #: app/templates/partner/hub.html:57
-#, fuzzy
 msgid "guided setup"
-msgstr "فتح الإعداد الموجه →"
+msgstr "الإعداد الموجه"
 
 #: app/templates/partner/hub.html:57
-#, fuzzy
 msgid "or the"
-msgstr "أخرى"
+msgstr "أو "
 
 #: app/templates/partner/hub.html:57
-#, fuzzy
 msgid "simple checklist"
-msgstr "قائمة التحقق من التنفيذ"
+msgstr "قائمة التحقق البسيطة"
 
 #: app/templates/partner/hub.html:57
-#, fuzzy
 msgid "in the reference docs."
-msgstr "في وثائق API."
+msgstr "في مستندات المرجع."
 
 #: app/templates/partner/hub.html:58
 msgid ""
@@ -31497,6 +31708,10 @@ msgid ""
 "Discussions tab for manual topics (including contexts without a public URL)."
 " Run these commands from your backend (not browser JavaScript)."
 msgstr ""
+"البحث حسب الرابط، إنشاء إذا كان مفقوداً، ثم التضمين. النقاشات تبدأ دائماً "
+"لأنك تنشئها — استخدم نمط API هذا للمقالات، أو علامة النقاشات للمواضيع "
+"اليدوية (بما في ذلك السياقات بدون رابط عام). قم بتشغيل هذه الأوامر من خادمك "
+"الخلفي (وليس من JavaScript في المتصفح)."
 
 #: app/templates/partner/portal/dashboard.html:227
 msgid "Prefer Python or Node.js?"
@@ -31554,6 +31769,10 @@ msgid ""
 "tied to your partner account, iframe loading is gated on verified domains in"
 " the matching <strong>test</strong> or <strong>live</strong> environment."
 msgstr ""
+"أضف أسماء المضيفين للتطوير والإنتاج بالضبط كما يراها المتصفح "
+"(<code>www.</code> والنطاق الجذري غالباً ما يحتاجان إلى إدخالات منفصلة). "
+"للنقاشات المرتبطة بحسابك الشريك، تحميل iframe مقيد بالنطاقات المتحققة في "
+"بيئة ‹test› أو ‹live› المطابقة."
 
 #: app/templates/partner/portal/dashboard.html:302
 #: app/templates/partner/portal/discussions.html:98
@@ -31853,6 +32072,8 @@ msgid ""
 "lists every <strong>statement</strong> inside it — each is a distinct line "
 "readers voted on (agree / disagree / unsure)."
 msgstr ""
+"‹أنت تعرض نقاشاً واحداً.› تحليلات البيان أدناه يسرد كل ‹statement› داخله — "
+"كل واحد هو سطر متميز صوّت عليه القراء (موافق / معارض / غير متأكد)."
 
 #: app/templates/partner/portal/discussion_detail.html:119
 msgid "View full consensus ↗"
@@ -31901,6 +32122,9 @@ msgid ""
 "discussion—directly from the embed. Leave off for tighter control; turn on "
 "when moderation can review inbound ideas."
 msgstr ""
+"اختر ما إذا كان يمكن للقراء اقتراح ‹statements› جديدة—سطور موافق/معارض "
+"إضافية داخل هذا النقاش—مباشرة من التضمين. اتركها معطلة للتحكم الأكثر "
+"إحكاماً؛ فعّلها عندما تتمكن الإشراف من مراجعة الأفكار الواردة."
 
 #: app/templates/partner/portal/discussion_detail.html:158
 msgid "Quick presets:"
@@ -32011,6 +32235,9 @@ msgid ""
 "(10–500 characters), specific, and debatable; they behave like seeded lines "
 "and ship pre-approved."
 msgstr ""
+"هذا يضيف ‹statement row› آخر للنقاش أعلاه—نفس البنية التي يتفاعل معها القراء"
+" داخل التضمين. احتفظ بكل سطر موجزاً (10–500 حرف)، محدداً، وقابلاً للنقاش؛ "
+"تتصرف مثل السطور المُغروسة مسبقاً وتُسلّم معتمدة مسبقاً."
 
 #: app/templates/partner/portal/discussion_detail.html:290
 msgid "(10–500 characters)"
@@ -32047,6 +32274,8 @@ msgid ""
 " it to view or add the <strong>statements</strong> — the agree/disagree "
 "lines readers see inside that topic."
 msgstr ""
+"كل صف هو ‹discussion› واحد (موضوع تصويت واحد + تضمين). افتحه لعرض أو إضافة "
+"‹statements› — سطور الموافقة/المعارضة التي يراها القراء داخل هذا الموضوع."
 
 #: app/templates/partner/portal/discussions.html:18
 msgid "+ New discussion"
@@ -32065,6 +32294,11 @@ msgid ""
 "address <em>or</em> your own reference id (campaign codes, hubs, "
 "newsletters), optionally both."
 msgstr ""
+"كل نقاش هو موضوع تصويت واحد تتحكم به — وليس شيئاً نستورده من موقعك. أنت تنشئ"
+" المجموعة أولاً؛ أضف ‹statements› (السطور القابلة للتصويت) لاحقاً على صفحة "
+"النقاش إلا إذا كان استدعاء API الخاص بك يتضمن بذوراً بالفعل. أرفق عنوان ويب "
+"للمقالة ‹أو› معرّف مرجعي خاص بك (رموز الحملات، المحاور، النشرات)، اختياراً "
+"كليهما."
 
 #: app/templates/partner/portal/discussions.html:49
 msgid "Discussion title"
@@ -32287,9 +32521,8 @@ msgid "Follow the steps below to launch on your site."
 msgstr "اتبع الخطوات أدناه لإطلاق النظام على موقعك."
 
 #: app/templates/partner/portal/getting_started.html:15
-#, fuzzy
 msgid "How this works — in plain terms"
-msgstr "كيفية العمل في 3 خطوات"
+msgstr "كيفية عمل هذا — بعبارات واضحة"
 
 #: app/templates/partner/portal/getting_started.html:16
 msgid ""
@@ -32298,10 +32531,14 @@ msgid ""
 "we host the box, collect votes, and give you clear results — similar in "
 "spirit to a structured poll, not an open comment thread."
 msgstr ""
+"Society Speaks عبارة عن صندوق تصويت خاضع للإشراف تضعه على الصفحات التي "
+"تختارها. تقرر سؤال العنوان والبيانات الافتتاحية التي يراها القراء أولاً؛ نحن"
+" نستضيف الصندوق، ونجمع الأصوات، ونعطيك نتائج واضحة — مشابهة روحاً لاستطلاع "
+"منظم، وليس خيط تعليقات مفتوحاً."
 
 #: app/templates/partner/portal/getting_started.html:18
 msgid "Quick vocabulary"
-msgstr ""
+msgstr "مفردات سريعة"
 
 #: app/templates/partner/portal/getting_started.html:20
 msgid ""
@@ -32309,6 +32546,8 @@ msgid ""
 "headline title, how it connects to your site, and one shared tally for that "
 "topic."
 msgstr ""
+"‹Discussion› — موضوع تصويت واحد مرتبط بتضمين واحد: عنوان العنوان، وكيفية "
+"ارتباطه بموقعك، وعداد واحد مشترك لهذا الموضوع."
 
 #: app/templates/partner/portal/getting_started.html:21
 msgid ""
@@ -32316,12 +32555,17 @@ msgid ""
 " disagree / unsure inside that discussion; expect several per topic, not "
 "just one."
 msgstr ""
+"‹Statements› — السطور الفردية التي يقيّمها القراء باستخدام الموافقة / "
+"المعارضة / غير المتأكد داخل هذا النقاش؛ توقع عدة سطور لكل موضوع، وليس واحداً"
+" فقط."
 
 #: app/templates/partner/portal/getting_started.html:25
 msgid ""
 "Tell us each website address where the voting box may appear — we prove you "
 "control it with a one-line DNS step (similar to verifying email)."
 msgstr ""
+"أخبرنا بكل عنوان موقع حيث قد يظهر صندوق التصويت — نثبت أنك تتحكم به باستخدام"
+" خطوة DNS واحدة (مشابهة لتحقق البريد الإلكتروني)."
 
 #: app/templates/partner/portal/getting_started.html:26
 msgid ""
@@ -32331,18 +32575,26 @@ msgid ""
 "can suggest balanced <strong>statements</strong> for that discussion. We do "
 "not crawl your site or invent topics for you."
 msgstr ""
+"تنشئ كل ‹discussion› بنفسك (في المجال أو من خلال أتمتة فريقك التقني): عنوان،"
+" رابط لمقالة ‹و/أو› معرّف CMS مستقر خاص بك، بالإضافة إلى بيانات يصيغها "
+"المحررون أو مقتطف قصير حتى نتمكن من اقتراح ‹statements› متوازنة لهذا النقاش."
+" نحن لا نزحف موقعك أو نخترع مواضيع لك."
 
 #: app/templates/partner/portal/getting_started.html:27
 msgid ""
 "You paste a small embed snippet on the page. Readers vote without leaving "
 "your site; optional notifications can update your systems automatically."
 msgstr ""
+"تلصق مقطع تضمين صغير على الصفحة. يصوّت القراء دون مغادرة موقعك؛ يمكن "
+"للإشعارات الاختيارية تحديث أنظمتك تلقائياً."
 
 #: app/templates/partner/portal/getting_started.html:29
 msgid ""
 "Not technical? Share this page with engineering and keep the DNS emails "
 "handy — they only need to do the domain step once per hostname."
 msgstr ""
+"غير تقني؟ شارك هذه الصفحة مع الهندسة واحتفظ برسائل البريد الإلكتروني DNS في "
+"متناول اليد — يحتاجون فقط إلى إكمال خطوة المجال مرة واحدة لكل اسم مضيف."
 
 #: app/templates/partner/portal/getting_started.html:34
 msgid ""
@@ -32361,12 +32613,17 @@ msgid ""
 "servers</strong>, not from a browser — that keeps your secret keys safe. "
 "Free “read” checks can still be tried from ordinary web tools."
 msgstr ""
+"أي شيء ينشئ أو يغير النقاشات يجب أن يعمل من ‹خوادمك›، وليس من متصفح — هذا "
+"يحافظ على مفاتيحك السرية آمنة. فحوصات ‹read› المجانية يمكن محاولتها بسهولة "
+"من أدوات الويب العادية."
 
 #: app/templates/partner/portal/getting_started.html:52
 msgid ""
 "Technical detail: <code>POST/PATCH /api/partner/...</code> rejects browser-"
 "origin requests."
 msgstr ""
+"تفصيل تقني: <code>POST/PATCH /api/partner/...</code> يرفض طلبات الأصل من "
+"المتصفح."
 
 #: app/templates/partner/portal/getting_started.html:57
 msgid ""
@@ -32429,7 +32686,7 @@ msgstr "كل ما تحتاجه للبناء بسرعة."
 
 #: app/templates/partner/portal/getting_started.html:95
 msgid "Simple checklist (readable)"
-msgstr ""
+msgstr "قائمة تحقق بسيطة (قابلة للقراءة)"
 
 #: app/templates/partner/portal/getting_started.html:96
 msgid "API reference"
@@ -32462,6 +32719,10 @@ msgid ""
 "staging verification, live sites use production. If readers can open both "
 "<code>www.yoursite.com</code> and <code>yoursite.com</code>, register both."
 msgstr ""
+"أدوات التصويت التي تنشئها من خلال هذا الحساب تظهر فقط على عناوين المواقع "
+"التي تحققنا منها لك — مواقع ‹test› تستخدم تحققك من التطوير، المواقع المباشرة"
+" تستخدم الإنتاج. إذا كان بإمكان القراء فتح <code>www.yoursite.com</code> و "
+"<code>yoursite.com</code>، سجل كليهما."
 
 #: app/templates/partner/portal/getting_started.html:138
 msgid "Verify now"
@@ -32498,6 +32759,12 @@ msgid ""
 "discussion id in your CMS for consistent embeds. Use an <code>Idempotency-"
 "Key</code> on create to safely retry failed requests."
 msgstr ""
+"كل نقاش يمثل موضوعاً واحداً يصوّت عليه قراؤك — عادة مقالة، لكنه يمكن أن يكون"
+" بالتساوي صفحة حملة، أو محور، أو هبوط نشرة إذا حددتها بـ "
+"<code>external_id</code> مستقر. بعد وجوده، تحسن ‹statements› (سطور الموافقة "
+"/ المعارضة / غير المتأكد الفردية) من شاشة النقاشات أو أتمتتك. خزّن معرّف "
+"النقاش في CMS الخاص بك لتضمينات متسقة. استخدم <code>Idempotency-Key</code> "
+"عند الإنشاء لإعادة محاولة الطلبات الفاشلة بأمان."
 
 #: app/templates/partner/portal/getting_started.html:199
 msgid "Prefer Python or Node.js over raw HTTP?"
@@ -32528,10 +32795,12 @@ msgid ""
 "Add your portal slug as the <code>ref</code> query parameter when you paste "
 "the iframe <code>src</code>, so dashboards and lookups stay attributable."
 msgstr ""
+"أضف slug المجال الخاص بك كمعامل الاستعلام <code>ref</code> عندما تلصق "
+"<code>src</code> iframe، حتى تبقى لوحات التحكم والبحث قابلة للنسب."
 
 #: app/templates/partner/portal/getting_started.html:260
 msgid "Open the simple launch checklist →"
-msgstr ""
+msgstr "افتح قائمة التحقق من الإطلاق البسيطة →"
 
 #: app/templates/partner/portal/getting_started.html:268
 msgid "I embedded it successfully →"

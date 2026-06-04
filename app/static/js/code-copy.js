@@ -48,6 +48,13 @@
     });
   }
 
+  // Delegated handler for data-reload-page buttons (CSP-safe page reload)
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("[data-reload-page]")) {
+      window.location.reload();
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".code-block").forEach(function (block) {
       var btn = block.querySelector(".copy-btn");
