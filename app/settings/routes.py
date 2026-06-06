@@ -234,6 +234,22 @@ def delete_account():
         _delete_briefing_data('user', user_id)
 
         # 2. Delete user's created content that can't exist without them
+
+        # Delete Evidence for the user's own responses BEFORE deleting those
+        # responses.  Evidence.response_id is NOT NULL, so deleting a Response
+        # without first removing its Evidence rows violates the FK constraint on
+        # PostgreSQL.  This covers responses to *other* users' discussions; the
+        # per-discussion loop below handles evidence inside discussions owned by
+        # this user.
+        user_response_ids = _pluck_ids(
+            Response.query.filter_by(user_id=user_id),
+            Response.id,
+        )
+        if user_response_ids:
+            Evidence.query.filter(
+                Evidence.response_id.in_(user_response_ids)
+            ).delete(synchronize_session=False)
+
         # Delete responses (requires user_id)
         Response.query.filter_by(user_id=user_id).delete(synchronize_session=False)
         
@@ -322,6 +338,8 @@ def delete_account():
         
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error deleting user account {user_id}: {str(e)}")
+        current_app.logger.error(
+            "Error deleting user account %s: %s", user_id, e, exc_info=True
+        )
         flash(_('Account deletion failed. Please try again.'), 'error')
         return redirect(url_for('settings.view_settings'))
