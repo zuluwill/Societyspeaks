@@ -379,6 +379,13 @@ class ResendClient:
             return success
 
         except Exception as e:
+            # Surface the real error so send_to_subscribers can log it instead of
+            # falling back to the generic "Resend: unknown error" placeholder.
+            self.last_send_error = str(e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             logger.error(f"Failed to send brief to {subscriber.email}: {e}")
             return False
 
@@ -478,7 +485,14 @@ class ResendClient:
             return html
         except Exception as e:
             logger.error(f"Template rendering failed: {e}")
-            # Fallback to simple HTML
+            # The DB connection may have dropped mid-render (e.g. SSL EOF), leaving
+            # the session in an error state. Roll back before the fallback renderer
+            # attempts any further queries — otherwise SQLAlchemy raises
+            # "Can't reconnect until invalid transaction is rolled back".
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             return self._fallback_html(brief, magic_link_url, unsubscribe_url)
 
     def _fallback_html(self, brief: DailyBrief, magic_link_url: str, unsubscribe_url: str) -> str:
@@ -494,7 +508,12 @@ class ResendClient:
             str: Simple HTML email
         """
         items_html = ""
-        for item in self._get_sorted_brief_items(brief):
+        try:
+            brief_items = self._get_sorted_brief_items(brief)
+        except Exception as e:
+            logger.warning(f"Fallback HTML: could not fetch brief items ({e}), sending items-free fallback")
+            brief_items = []
+        for item in brief_items:
             bullets_html = "".join([f"<li>{bullet}</li>" for bullet in (item.summary_bullets or [])])
             items_html += f"""
             <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #333;">
