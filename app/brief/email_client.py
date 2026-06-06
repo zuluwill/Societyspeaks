@@ -25,6 +25,11 @@ from app.resend_client import (
 from app.briefing.link_tracker import wrap_links as _wrap_links, sign_url as _sign_url
 from app.storage_utils import get_base_url
 
+try:
+    import sentry_sdk as _sentry_sdk
+except ImportError:
+    _sentry_sdk = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -266,6 +271,11 @@ class ResendClient:
         Returns:
             bool: True if sent successfully
         """
+        # Reset from any prior call so a stale error from subscriber N-1 cannot
+        # bleed into subscriber N when send_brief returns False early (e.g.
+        # invalid email) before _send_with_retry ever runs.
+        self.last_send_error = None
+
         try:
             # Validate and normalise the stored address (handles "Name <addr>",
             # bare "<addr>", and other malformed variants) via the shared
@@ -386,7 +396,14 @@ class ResendClient:
                 db.session.rollback()
             except Exception:
                 pass
-            logger.error(f"Failed to send brief to {subscriber.email}: {e}")
+            logger.error(
+                f"Failed to send brief to {subscriber.email}: {e}",
+                exc_info=True,
+                extra={
+                    'subscriber_id': getattr(subscriber, 'id', None),
+                    'brief_id': getattr(brief, 'id', None),
+                },
+            )
             return False
 
     def _send_with_retry(self, email_data: dict, idempotency_key: str = None) -> bool:
@@ -527,18 +544,29 @@ class ResendClient:
             </div>
             """
 
+        # Read brief scalar attributes defensively: after a DB error + rollback
+        # SQLAlchemy marks ORM attributes as expired and will re-query them on
+        # access.  If the connection is still unstable that triggers a second
+        # exception inside this fallback.  getattr with safe defaults prevents
+        # the fallback itself from crashing and ensures the subscriber always
+        # gets at least a minimal email they can click through on.
+        brief_title = getattr(brief, 'title', None) or 'Daily Brief'
+        brief_date = getattr(brief, 'date', None)
+        brief_date_str = brief_date.strftime('%A, %B %d, %Y') if brief_date else ''
+        brief_intro = getattr(brief, 'intro_text', None) or ''
+
         html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{brief.title}</title>
+            <title>{brief_title}</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px;">
                 <h1 style="margin: 0; font-size: 24px;">SOCIETY SPEAKS DAILY BRIEF</h1>
-                <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">{brief.date.strftime('%A, %B %d, %Y')}</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">{brief_date_str}</p>
             </div>
 
             <div style="text-align: center; margin-bottom: 25px;">
@@ -547,7 +575,7 @@ class ResendClient:
 
             <div style="margin-bottom: 30px; padding: 15px; background: #fffbf0; border-left: 4px solid #f0ad4e;">
                 <p style="margin: 0; font-size: 14px; font-style: italic;">
-                    {brief.intro_text}
+                    {brief_intro}
                 </p>
             </div>
 
@@ -748,15 +776,16 @@ class BriefEmailScheduler:
         }
 
         for subscriber in subscribers:
+            subscriber_id = getattr(subscriber, 'id', None)
             try:
                 # Re-fetch latest subscriber state before each send to reduce race risk.
                 current_subscriber = DailyBriefSubscriber.query.filter_by(
-                    id=subscriber.id
+                    id=subscriber_id
                 ).with_for_update().first()
 
                 if not current_subscriber:
                     results['failed'] += 1
-                    results['errors'].append(f"Subscriber {subscriber.id} no longer exists")
+                    results['errors'].append(f"Subscriber {subscriber_id} no longer exists")
                     db.session.rollback()
                     continue
 
@@ -784,7 +813,25 @@ class BriefEmailScheduler:
                 # Ensure every subscriber has a stable unsubscribe token before
                 # their email goes out. Idempotent — only writes if token is None.
                 current_subscriber.ensure_unsubscribe_token()
-                db.session.flush()
+
+                # Flush is a write — protect it explicitly so a DB error here
+                # doesn't propagate as an unrecoverable exception into the outer
+                # loop and abort sends for all subsequent subscribers.
+                try:
+                    db.session.flush()
+                except Exception as flush_err:
+                    db.session.rollback()
+                    results['failed'] += 1
+                    err_msg = f"DB flush failed for subscriber {current_subscriber.id}: {flush_err}"
+                    results['errors'].append(err_msg)
+                    logger.error(err_msg, exc_info=True)
+                    continue
+
+                # Attach Sentry context so every error in this iteration is
+                # tagged with the subscriber and brief for fast triage at scale.
+                if _sentry_sdk:
+                    _sentry_sdk.set_tag('brief_subscriber_id', current_subscriber.id)
+                    _sentry_sdk.set_tag('brief_id', getattr(brief, 'id', None))
 
                 success = self.client.send_brief(current_subscriber, brief)
                 if success:
@@ -792,17 +839,28 @@ class BriefEmailScheduler:
                 else:
                     results['failed'] += 1
                     resend_error = getattr(self.client, 'last_send_error', None) or 'unknown error'
-                    results['errors'].append(
-                        f"Failed to send to {current_subscriber.email} [Resend: {resend_error}]"
+                    error_entry = (
+                        f"Failed to send to {current_subscriber.email} [{resend_error}]"
+                    )
+                    results['errors'].append(error_entry)
+                    logger.error(
+                        error_entry,
+                        extra={
+                            'subscriber_id': current_subscriber.id,
+                            'brief_id': getattr(brief, 'id', None),
+                        },
                     )
                     db.session.rollback()
 
             except Exception as e:
                 db.session.rollback()
                 results['failed'] += 1
-                error_msg = f"Error sending to {subscriber.email}: {str(e)}"
+                # Use subscriber_id (captured before the re-fetch) so the log
+                # is useful even if current_subscriber was never assigned or its
+                # .email attribute was what caused the failure.
+                error_msg = f"Error sending to subscriber {subscriber_id}: {str(e)}"
                 results['errors'].append(error_msg)
-                logger.error(error_msg)
+                logger.error(error_msg, exc_info=True)
 
         logger.info(f"Batch send complete: {results['sent']} sent, {results['failed']} failed")
         return results
