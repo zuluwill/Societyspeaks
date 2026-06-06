@@ -129,6 +129,7 @@ def get_or_start_daily_run(
         raise GameRunError('Identity required')
 
     from sqlalchemy import or_
+    from sqlalchemy.exc import IntegrityError
 
     def _scoped(query):
         """Match runs owned by *either* this user_id or this fingerprint.
@@ -148,20 +149,21 @@ def get_or_start_daily_run(
 
     base = GameRun.query.filter_by(scenario_slug=scenario_slug, mode='daily')
 
-    # Same UTC day completed → caller redirects to outcome (no replay grind, plan §3.1).
-    # Scenarios recur in the rotation, so scope the lookup to today's UTC window
-    # rather than "any completed run with this slug, ever."
+    # Completed for this scheduled day → caller redirects to outcome (plan §3.1).
+    # Scope by the schedule date (``seed_date``), not wall-clock today, so grace-
+    # window replays of yesterday's daily cannot start fresh after completion.
     today_utc = utc_game_date()
-    day_start = datetime.combine(today_utc, time.min)
+    replay_date = seed_date or today_utc
+    day_start = datetime.combine(replay_date, time.min)
     day_end = day_start + timedelta(days=1)
-    completed_today = (
+    completed_for_day = (
         _scoped(base.filter_by(status=GAME_RUN_STATUS_COMPLETED))
         .filter(GameRun.started_at >= day_start, GameRun.started_at < day_end)
         .order_by(GameRun.completed_at.desc())
         .first()
     )
-    if completed_today:
-        return completed_today
+    if completed_for_day:
+        return completed_for_day
 
     run = (
         _scoped(base.filter_by(status=GAME_RUN_STATUS_IN_PROGRESS))
@@ -219,6 +221,18 @@ def get_or_start_daily_run(
     db.session.add(run)
     try:
         db.session.commit()
+    except IntegrityError:
+        # Concurrent hub loads can race past the in-progress lookup; the partial
+        # unique index on daily in-progress runs guarantees at most one winner.
+        db.session.rollback()
+        raced = (
+            _scoped(base.filter_by(status=GAME_RUN_STATUS_IN_PROGRESS))
+            .order_by(GameRun.started_at.desc())
+            .first()
+        )
+        if raced:
+            return raced
+        raise GameRunError('Could not create run — please try again')
     except Exception:
         db.session.rollback()
         raise GameRunError('Could not create run — please try again')

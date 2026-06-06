@@ -16,7 +16,7 @@ from app import db
 from app.game.constants import GAME_RUN_STATUS_COMPLETED
 from app.models.game import GameRun, GameRunOutcome
 
-_DEFAULT_MIN_N = 20
+_DEFAULT_MIN_N = 30
 
 # Axis endpoints. trust_autonomy: 0 = Trust-led, 100 = Autonomy-led.
 # prosperity_fairness: 0 = Prosperity-led, 100 = Fairness-led.

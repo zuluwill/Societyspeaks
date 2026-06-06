@@ -62,6 +62,7 @@ def choose(run_uuid: str):
 
 
 @game_bp.route('/api/run/<run_uuid>/state')
+@limiter.limit(lambda: current_app.config.get('GAME_RATE_LIMIT_STATE', '60 per minute'))
 def run_state(run_uuid: str):
     _assert_game_enabled()
 

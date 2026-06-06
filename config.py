@@ -597,6 +597,7 @@ class Config:
     # (aggregate-only) at this size; raise via env for stricter k-anonymity.
     GAME_COHORT_MIN_N = _env_int('GAME_COHORT_MIN_N', 30)
     GAME_RATE_LIMIT_CHOOSE = os.getenv('GAME_RATE_LIMIT_CHOOSE', '30 per minute')
+    GAME_RATE_LIMIT_STATE = os.getenv('GAME_RATE_LIMIT_STATE', '60 per minute')
 
     # Opt-in daily re-engagement email ("today's scenario is live / keep your
     # streak"). Reuses the Resend + APScheduler pipeline; disable to silence all

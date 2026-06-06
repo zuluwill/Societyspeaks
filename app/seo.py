@@ -8,7 +8,7 @@ from datetime import date, datetime
 from typing import Iterator, Optional, Sequence
 from xml.sax.saxutils import escape as xml_escape
 
-from flask import current_app, request, url_for
+from flask import current_app, has_request_context, request, url_for
 
 from app.discussions.query_utils import crawlable_discussions_query
 from app.models import (
@@ -46,7 +46,7 @@ def get_base_url() -> str:
     configured = (current_app.config.get('BASE_URL') or '').strip().rstrip('/')
     if configured:
         return configured
-    if request:
+    if has_request_context():
         proto = request.headers.get('X-Forwarded-Proto') or request.scheme
         host = request.headers.get('Host') or request.host
         if host:
@@ -56,7 +56,6 @@ def get_base_url() -> str:
 
 def _external(endpoint: str, **values) -> str:
     """Build an absolute URL using configured BASE_URL, not the request Host header."""
-    from flask import has_request_context
     if has_request_context():
         path = url_for(endpoint, _external=False, **values)
     else:

@@ -60,6 +60,38 @@ def _delete_briefing_data(owner_type, owner_id):
     InputSource.query.filter_by(owner_type=owner_type, owner_id=owner_id).delete(synchronize_session=False)
 
 
+def _delete_game_data_for_user(user_id: int) -> None:
+    """Delete Society Play runs, outcomes, challenges, and reminders for a user.
+
+    Explicit application-level cleanup keeps account deletion reliable on SQLite
+    (tests) and honours the privacy-policy cascade promise on PostgreSQL even if
+    a migration has not yet been applied.
+    """
+    from app.models.game import (
+        GameChallenge,
+        GameReminderSubscription,
+        GameRun,
+        GameRunOutcome,
+    )
+
+    run_ids = _pluck_ids(
+        GameRun.query.filter_by(user_id=user_id),
+        GameRun.id,
+    )
+    if run_ids:
+        GameChallenge.query.filter(
+            GameChallenge.creator_run_id.in_(run_ids)
+        ).delete(synchronize_session=False)
+        GameRunOutcome.query.filter(
+            GameRunOutcome.run_id.in_(run_ids)
+        ).delete(synchronize_session=False)
+        GameRun.query.filter(GameRun.id.in_(run_ids)).delete(synchronize_session=False)
+
+    GameReminderSubscription.query.filter_by(user_id=user_id).delete(
+        synchronize_session=False
+    )
+
+
 @settings_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 def view_settings():
@@ -147,8 +179,8 @@ def delete_account():
     from app.models import (
         IndividualProfile, CompanyProfile, Discussion, Notification,
         DiscussionParticipant, Statement, StatementVote, Response,
-        StatementFlag, ApiKey, DailyQuestionSubscriber, DailyQuestionResponse,
-        ProfileView, DiscussionView, StatementEvidence, ConsensusAnalysis,
+        StatementFlag, UserAPIKey, DailyQuestionSubscriber, DailyQuestionResponse,
+        ProfileView, DiscussionView, Evidence, ConsensusAnalysis,
         DiscussionSourceArticle, TrendingTopic, BriefItem, DailyQuestion,
         DailyQuestionSelection,
         SendingDomain
@@ -179,7 +211,7 @@ def delete_account():
         StatementVote.query.filter_by(user_id=user_id).update(
             {'user_id': None}, synchronize_session=False
         )
-        StatementEvidence.query.filter_by(added_by_user_id=user_id).update(
+        Evidence.query.filter_by(added_by_user_id=user_id).update(
             {'added_by_user_id': None}, synchronize_session=False
         )
         StatementFlag.query.filter_by(reviewed_by_user_id=user_id).update(
@@ -212,7 +244,7 @@ def delete_account():
         Notification.query.filter_by(user_id=user_id).delete(synchronize_session=False)
         
         # Delete API keys
-        ApiKey.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+        UserAPIKey.query.filter_by(user_id=user_id).delete(synchronize_session=False)
         
         # 3. Handle user's discussions (delete them completely)
         user_discussion_ids = [d.id for d in Discussion.query.filter_by(creator_id=user_id).all()]
@@ -238,7 +270,14 @@ def delete_account():
             stmt_ids = [s.id for s in Statement.query.filter_by(discussion_id=disc_id).all()]
             if stmt_ids:
                 StatementFlag.query.filter(StatementFlag.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
-                StatementEvidence.query.filter(StatementEvidence.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+                resp_ids = _pluck_ids(
+                    Response.query.filter(Response.statement_id.in_(stmt_ids)),
+                    Response.id,
+                )
+                if resp_ids:
+                    Evidence.query.filter(Evidence.response_id.in_(resp_ids)).delete(
+                        synchronize_session=False
+                    )
                 Response.query.filter(Response.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
                 StatementVote.query.filter(StatementVote.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
             
@@ -267,7 +306,10 @@ def delete_account():
             SendingDomain.query.filter_by(org_id=org_id).delete(synchronize_session=False)
 
             db.session.delete(user.company_profile)
-        
+
+        # 4b. Society Play — runs, outcomes, challenges, reminder subscriptions
+        _delete_game_data_for_user(user_id)
+
         # 5. Finally delete the user
         db.session.delete(user)
         db.session.commit()

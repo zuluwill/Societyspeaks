@@ -27,6 +27,34 @@ class GameRun(db.Model):
             postgresql_where=db.text("status = 'completed'"),
             sqlite_where=db.text("status = 'completed'"),
         ),
+        # One in-progress daily per identity — prevents duplicate runs on concurrent
+        # hub loads; abandoned/completed rows fall outside the partial predicate.
+        db.Index(
+            'idx_game_run_daily_in_progress_user',
+            'user_id',
+            'scenario_slug',
+            unique=True,
+            postgresql_where=db.text(
+                "mode = 'daily' AND status = 'in_progress' AND user_id IS NOT NULL"
+            ),
+            sqlite_where=db.text(
+                "mode = 'daily' AND status = 'in_progress' AND user_id IS NOT NULL"
+            ),
+        ),
+        db.Index(
+            'idx_game_run_daily_in_progress_fp',
+            'session_fingerprint',
+            'scenario_slug',
+            unique=True,
+            postgresql_where=db.text(
+                "mode = 'daily' AND status = 'in_progress' "
+                "AND user_id IS NULL AND session_fingerprint IS NOT NULL"
+            ),
+            sqlite_where=db.text(
+                "mode = 'daily' AND status = 'in_progress' "
+                "AND user_id IS NULL AND session_fingerprint IS NOT NULL"
+            ),
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -35,7 +63,11 @@ class GameRun(db.Model):
     scenario_slug = db.Column(db.String(80), nullable=False)
     mode = db.Column(db.String(20), nullable=False, default='daily')
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=True,
+    )
     session_fingerprint = db.Column(db.String(64), nullable=True)
     # PostHog identity resolved once at run creation, so every event in a run
     # shares one distinct_id and stitches to the JS SDK's person (the browser's
@@ -78,7 +110,12 @@ class GameRunOutcome(db.Model):
     __tablename__ = 'game_run_outcome'
 
     id = db.Column(db.Integer, primary_key=True)
-    run_id = db.Column(db.Integer, db.ForeignKey('game_run.id'), nullable=False, unique=True)
+    run_id = db.Column(
+        db.Integer,
+        db.ForeignKey('game_run.id', ondelete='CASCADE'),
+        nullable=False,
+        unique=True,
+    )
 
     headline = db.Column(db.String(300), nullable=False)
     governance_label = db.Column(db.String(120), nullable=True)

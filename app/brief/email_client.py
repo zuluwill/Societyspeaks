@@ -397,7 +397,9 @@ class ResendClient:
             except Exception:
                 pass
             logger.error(
-                f"Failed to send brief to {subscriber.email}: {e}",
+                "Failed to send brief to %s: %s",
+                getattr(subscriber, 'email', '<unknown>'),
+                e,
                 exc_info=True,
                 extra={
                     'subscriber_id': getattr(subscriber, 'id', None),
