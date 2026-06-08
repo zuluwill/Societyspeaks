@@ -28,8 +28,10 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <h2 class="font-bold text-gray-900 mb-2">{{ story.title }}</h2>
-                        <p class="text-gray-600 text-sm mb-3">{{ story.description[:200] }}...</p>
+                        <h2 class="font-bold text-gray-900 mb-2">{{ story.topic.title }}</h2>
+                        {% if story.topic.description %}
+                        <p class="text-gray-600 text-sm mb-3">{{ story.topic.description[:200] }}...</p>
+                        {% endif %}
                         <div class="flex items-center gap-4 text-sm">
                             <span class="inline-flex items-center text-orange-600">
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
