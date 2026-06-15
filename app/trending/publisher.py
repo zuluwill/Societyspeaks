@@ -77,7 +77,7 @@ def publish_topic(
     max_retries = 5
     discussion = None
     for attempt in range(max_retries):
-        slug = get_unique_slug(Discussion, base_slug)
+        slug = get_unique_slug(Discussion, base_slug, max_length=150)
         
         discussion = Discussion(
             title=topic.title,

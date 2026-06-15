@@ -36,13 +36,16 @@ def generate_slug(name):
     return name
 
 
-def get_unique_slug(model_class, base_slug, max_attempts=100, exclude_id=None):
+def get_unique_slug(model_class, base_slug, max_attempts=100, exclude_id=None, max_length=None):
     """Return a slug that does not collide with any existing row on `model_class`.
 
     Appends numeric suffixes for the first 10 attempts (``-1`` … ``-10``), then
     falls back to random 6-char suffixes. Pass ``exclude_id`` when renaming an
-    existing row so the row does not collide with itself.
+    existing row so the row does not collide with itself. Pass ``max_length`` to
+    cap the slug at that many characters (reserves 7 chars for the longest suffix).
     """
+    if max_length is not None:
+        base_slug = base_slug[:max(1, max_length - 7)].rstrip('-')
     slug = base_slug
     for attempt in range(max_attempts):
         query = model_class.query.filter_by(slug=slug)
