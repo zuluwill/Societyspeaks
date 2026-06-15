@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block title %}{{ _('Public Programmes') }} — Society Speaks{% endblock %}
+{% block canonical %}{{ url_for('programmes.list_programmes', _external=True) }}{% endblock %}
 {% block content %}
 {% set _ptm = programme_translation_map if programme_translation_map is defined else {} %}
 <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6">
