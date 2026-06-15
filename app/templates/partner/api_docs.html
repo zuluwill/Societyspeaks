@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('API Reference - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('partner.api_docs', _external=True) }}{% endblock %}
 
 {% block meta_description %}{{ _('API documentation for Society Speaks partner integration. Lookup discussions by article URL, show participation snapshots, and embed voting widgets with developer-friendly endpoints and clear governance for publishers.') }}{% endblock %}
 

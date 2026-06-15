@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block title %}{{ _('%(name)s — Journey recap', name=programme.name) }} | Society Speaks{% endblock %}
+{% block canonical %}{{ url_for('programmes.programme_journey_recap', slug=programme.slug, _external=True) }}{% endblock %}
 {% block meta_description %}{{ _('Crowd patterns and your votes across themes on %(name)s. Per-theme consensus analysis — not a single left–right score.', name=programme.name) }}{% endblock %}
 {% block og_title %}{{ _('%(name)s — Big Questions journey recap', name=programme.name) }}{% endblock %}
 {% block og_description %}{{ _('See where people agree, disagree, and which bridge ideas emerge — theme by theme.') }}{% endblock %}

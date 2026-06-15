@@ -4,9 +4,9 @@
 {% set disc_title = discussion_translation.title if discussion_translation else discussion.title %}
 
 {% block title %}{{ _('Consensus Analysis') }} — {{ disc_title }}{% endblock %}
+{% block canonical %}{{ url_for('consensus.view_results', discussion_id=discussion.id, _external=True) }}{% endblock %}
 
 {% block extra_head %}
-<link rel="canonical" href="{{ url_for('consensus.view_results', discussion_id=discussion.id, _external=True) }}" />
 <link
   rel="alternate"
   type="application/json+oembed"

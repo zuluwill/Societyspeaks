@@ -3,6 +3,7 @@
 {% from "components/ui_tokens.html" import btn_primary_md, btn_primary_sm, btn_secondary_md, btn_secondary_sm %}
 
 {% block title %}{{ _('The Platform — Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('main.platform', _external=True) }}{% endblock %}
 {% block meta_description %}{{ _('Nuanced debate backed by rigorous analysis. Society Speaks discussions and programmes give individuals a voice and organisations the tools to run structured deliberation at any scale — from a single conversation to a national consultation.') }}{% endblock %}
 {% block og_title %}{{ _('The Platform — Society Speaks') }}{% endblock %}
 {% block og_description %}{{ _("Vote on statements. Discover where you agree with people you thought you didn't. Society Speaks reveals how opinion actually clusters — not just percentages, but the real structure of public views.") }}{% endblock %}

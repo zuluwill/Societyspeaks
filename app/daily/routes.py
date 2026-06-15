@@ -324,15 +324,13 @@ def get_discussion_participation_data(question):
 
 @daily_bp.route('/daily')
 def today():
-    """Display today's daily question"""
-    # Track social media clicks (conversion tracking)
+    """Redirect to today's dated permalink (single canonical URL per question)."""
     user_id = str(current_user.id) if current_user.is_authenticated else None
     track_social_click(request, user_id)
-    
+
     question = DailyQuestion.get_today()
-    
+
     if not question:
-        # Fallback: try to auto-publish if scheduler missed (e.g., autoscale cold start)
         try:
             from app.daily.auto_selection import auto_publish_todays_question
             question = auto_publish_todays_question()
@@ -340,37 +338,14 @@ def today():
                 current_app.logger.info(f"Fallback auto-published daily question #{question.question_number}")
         except Exception as e:
             current_app.logger.error(f"Fallback auto-publish failed: {e}")
-    
+
     if not question:
         return render_template('daily/no_question.html')
-    
-    user_response = get_user_response(question)
-    has_voted = user_response is not None
-    
-    if has_voted:
-        participation_data = get_discussion_participation_data(question)
-        public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
-        reasons_stats = get_public_reasons_stats(question)
-        streak_data = get_user_streak_data()
-        return render_template('daily/results.html',
-                             question=question,
-                             user_response=user_response,
-                             stats=question.vote_percentages,
-                             is_cold_start=question.is_cold_start,
-                             early_signal=question.early_signal_message,
-                             share_snippet=generate_share_snippet(question, user_response),
-                             source_discussion=question.source_discussion,
-                             source_articles=get_source_articles(question),
-                             related_discussions=get_related_discussions(question),
-                             participation=participation_data,
-                             public_reasons=public_reasons,
-                             reasons_stats=reasons_stats,
-                             streak_data=streak_data)
-    else:
-        source_articles = get_source_articles(question, limit=3)
-        return render_template('daily/question.html',
-                             question=question,
-                             source_articles=source_articles)
+
+    return redirect(
+        url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d')),
+        code=301,
+    )
 
 
 @daily_bp.route('/daily/<date_str>')

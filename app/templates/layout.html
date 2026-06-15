@@ -50,6 +50,9 @@
       href="/feed"
     />
     <link rel="canonical" href="{% block canonical %}{{ request.base_url }}{% endblock %}" />
+    {% block hreflang %}{% if supported_languages|default({})|length > 1 %}{% set _hreflang_base = self.canonical() %}{% for code in supported_languages %}
+    <link rel="alternate" hreflang="{{ code }}" href="{{ _hreflang_base }}?lang={{ code }}" />{% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{{ _hreflang_base }}" />{% endif %}{% endblock %}
     {% block extra_head %}{% endblock %}
 
     <!-- Open Graph Meta Tags for Social Media Sharing -->
@@ -65,7 +68,7 @@
       property="og:image"
       content="{% block og_image %}{{ url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
     />
-    <meta property="og:url" content="{% block og_url %}{{ request.url }}{% endblock %}" />
+    <meta property="og:url" content="{% block og_url %}{{ self.canonical() }}{% endblock %}" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:site_name" content="Society Speaks" />
 

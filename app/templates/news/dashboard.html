@@ -1,7 +1,8 @@
 {% extends "layout.html" %} {% from "components/email_capture.html" import
 email_capture_inline, email_capture_compact, paid_brief_crosssell %} {% block
-title %}{{ _('News Transparency Dashboard - Society Speaks') }}{% endblock %} {% block
-content %}
+title %}{{ _('News Transparency Dashboard - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('news.dashboard', _external=True) }}{% endblock %}
+{% block content %}
 <!-- Header -->
 <div class="bg-gradient-to-r from-blue-800 to-blue-600 text-white py-12 px-4">
   <div class="max-w-6xl mx-auto">

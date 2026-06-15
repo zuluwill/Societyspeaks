@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ brief.title }} - Society Speaks {% if brief.brief_type == 'weekly' %}{{ _('Weekly') }}{% else %}{{ _('Daily') }}{% endif %} {{ _('Brief') }}</title>
     <meta name="description" content="{{ (brief.intro_text or '')[:160] }}">
+    <meta name="robots" content="noindex, follow">
+    {% if brief.brief_type == 'weekly' %}
+    <link rel="canonical" href="{{ url_for('brief.weekly_by_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">
+    {% else %}
+    <link rel="canonical" href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">
+    {% endif %}
 
     <!-- Open Graph for reader apps -->
     <meta property="og:title" content="{{ brief.title }}">
     <meta property="og:description" content="{{ (brief.intro_text or '')[:200] }}">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:url" content="{% if brief.brief_type == 'weekly' %}{{ url_for('brief.weekly_by_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% else %}{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endif %}">
 
     <!-- Article metadata for reader apps -->
     <meta property="article:published_time" content="{{ brief.date.isoformat() }}">

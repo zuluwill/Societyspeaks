@@ -2,6 +2,7 @@
 {% from "components/ui_tokens.html" import btn_primary_md, btn_primary_sm, btn_secondary_md, btn_secondary_sm %}
 
 {% block title %}{{ _('For Publishers - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('partner.hub', _external=True) }}{% endblock %}
 
 {% block meta_description %}{{ _('Embed Society Speaks on articles or other pages you choose: you define each voting topic and opening statements yourself or via your CMS—we do not scrape your newsroom.') }}{% endblock %}
 

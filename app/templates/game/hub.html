@@ -1,6 +1,8 @@
 {% extends "game/base.html" %}
 
 {% block game_title %}{{ _('Tradeoffs') }}{% endblock %}
+{% block meta_robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}
+{% block canonical %}{{ url_for('game.index', _external=True) }}{% endblock %}
 
 {% block game_header_width %}max-w-4xl{% endblock %}
 {% block game_main_width %}max-w-4xl{% endblock %}

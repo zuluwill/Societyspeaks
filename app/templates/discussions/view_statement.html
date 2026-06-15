@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% from 'components/vote_buttons.html' import vote_buttons_form_post, statement_vote_stats_footer %}
 {% block title %}{{ _('Statement') }} - {{ discussion.title }}{% endblock %}
-{% block canonical %}{{ url_for('statements.view_statement', statement_id=statement.id, _external=True) }}{% endblock %}
+{% block canonical %}{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}{% endblock %}
 {% block content %}
 <div class="container mx-auto px-4 py-8">
   <!-- Back Button (Top) -->

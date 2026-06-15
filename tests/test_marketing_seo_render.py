@@ -159,3 +159,223 @@ def test_faq_funding_jsonld_matches_visible(client, db):
     assert '£49/month' in html
     assert '£249/month' in html
     assert '£4.99/month' in html
+
+
+def test_core_marketing_pages_emit_single_explicit_canonical(client, db):
+    """High-traffic hubs must declare one stable canonical URL each."""
+    cases = {
+        '/': 'main.index',
+        '/platform': 'main.platform',
+        '/news': 'news.dashboard',
+        '/for-publishers/': 'partner.hub',
+        '/privacy-policy': 'main.privacy_policy',
+        '/terms-and-conditions': 'main.terms_and_conditions',
+        '/content-policy': 'main.content_policy',
+        '/brief/methodology': 'brief.methodology',
+    }
+    for path in cases:
+        html = _get(client, db, path)
+        assert html.count('rel="canonical"') == 1, f"{path}: expected exactly one canonical"
+
+
+def test_og_url_matches_canonical_on_marketing_pages(client, db):
+    for path in ('/', '/about', '/platform', '/faq', '/donate'):
+        html = _get(client, db, path)
+        canonical = re.search(r'<link rel="canonical" href="([^"]+)"', html)
+        og_url = re.search(r'property="og:url" content="([^"]+)"', html)
+        assert canonical and og_url, f"{path}: missing canonical or og:url"
+        assert canonical.group(1) == og_url.group(1), f"{path}: og:url must match canonical"
+
+
+def test_daily_and_brief_today_redirect_to_dated_permalinks(app, client, db):
+    from datetime import date
+
+    from app.models import DailyBrief, DailyQuestion
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=1,
+            question_text='Should councils invest in flood defences?',
+            status='published',
+        )
+        b = DailyBrief(
+            date=date.today(),
+            status='published',
+            brief_type='daily',
+            title='Today brief',
+        )
+        db.session.add_all([q, b])
+        db.session.commit()
+
+    for alias in ('/daily', '/brief', '/brief/today'):
+        resp = client.get(alias, follow_redirects=False)
+        assert resp.status_code == 301, alias
+        assert date.today().isoformat() in resp.headers['Location']
+
+    weekly = DailyBrief(
+        date=date(2026, 6, 8),
+        status='published',
+        brief_type='weekly',
+        title='Weekly brief',
+    )
+    with app.app_context():
+        db.session.add(weekly)
+        db.session.commit()
+
+    resp = client.get('/brief/weekly', follow_redirects=False)
+    assert resp.status_code == 301
+    assert '2026-06-08' in resp.headers['Location']
+    assert '/brief/weekly/' in resp.headers['Location']
+
+
+def test_brief_reader_is_noindexed_with_canonical_to_main_brief(app, client, db):
+    from datetime import date
+
+    from app.models import DailyBrief
+
+    with app.app_context():
+        db.create_all()
+        brief = DailyBrief(
+            date=date(2026, 6, 1),
+            status='published',
+            brief_type='daily',
+            title='June brief',
+        )
+        db.session.add(brief)
+        db.session.commit()
+
+    html = _get(client, db, '/brief/2026-06-01/reader')
+    assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html)
+    canonical = re.search(r'<link rel="canonical" href="([^"]+)"', html)
+    assert canonical and canonical.group(1).endswith('/brief/2026-06-01')
+    og_url = re.search(r'property="og:url" content="([^"]+)"', html)
+    assert og_url and og_url.group(1) == canonical.group(1)
+
+
+def test_consensus_gate_has_single_canonical(client, db):
+    from app.models import Discussion
+
+    with client.application.app_context():
+        db.create_all()
+        discussion = Discussion(
+            title='Canonical consensus topic',
+            slug='canonical-consensus-topic',
+            geographic_scope='global',
+            partner_env='live',
+        )
+        db.session.add(discussion)
+        db.session.commit()
+        discussion_id = discussion.id
+
+    html = client.get(f'/discussions/{discussion_id}/consensus').get_data(as_text=True)
+    assert html.count('rel="canonical"') == 1
+    assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html)
+
+
+def test_play_hub_is_indexable_game_sessions_are_not(client, db):
+    resp = client.get('/play/', follow_redirects=True)
+    assert resp.status_code == 200
+    hub = resp.get_data(as_text=True)
+    robots = re.search(r'name="robots"[^>]*content="([^"]+)"', hub)
+    assert robots is None or 'noindex' not in robots.group(1)
+    assert hub.count('rel="canonical"') == 1
+
+    turn = client.get('/play/daily', follow_redirects=False)
+    if turn.status_code == 200:
+        html = turn.get_data(as_text=True)
+        assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html)
+
+
+def test_auth_login_emits_single_noindex_robots_tag(client, db):
+    html = client.get('/auth/login').get_data(as_text=True)
+    robots_tags = re.findall(r'name="robots"[^>]*content="([^"]+)"', html, re.S)
+    assert len(robots_tags) == 1
+    assert 'noindex' in robots_tags[0]
+
+
+def test_search_with_query_is_noindexed(client, db):
+    html = client.get('/discussions/search?q=climate').get_data(as_text=True)
+    assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html)
+    assert html.count('rel="canonical"') == 1
+
+
+def test_search_hub_without_filters_is_indexable(client, db):
+    html = _get(client, db, '/discussions/search')
+    robots = re.search(r'name="robots"[^>]*content="([^"]+)"', html)
+    assert robots and 'noindex' not in robots.group(1)
+
+
+def test_sitemap_static_hubs_have_canonical_matching_og_url(client, db):
+    """Every major sitemap hub must emit exactly one canonical == og:url."""
+    paths = [
+        '/',
+        '/about',
+        '/platform',
+        '/faq',
+        '/donate',
+        '/discussions/search',
+        '/news',
+        '/brief/archive',
+        '/brief/methodology',
+        '/programmes/',
+        '/sources/',
+        '/for-publishers/',
+        '/help/',
+    ]
+    for path in paths:
+        resp = client.get(path, follow_redirects=True)
+        assert resp.status_code == 200, path
+        html = resp.get_data(as_text=True)
+        assert html.count('rel="canonical"') == 1, path
+        canonical = re.search(r'<link rel="canonical" href="([^"]+)"', html)
+        og_url = re.search(r'property="og:url" content="([^"]+)"', html)
+        assert canonical and og_url, path
+        assert canonical.group(1) == og_url.group(1), path
+
+
+def test_index_emits_hreflang_for_supported_locales(client, db):
+    from app.lib.locale_utils import SUPPORTED_LANGUAGES
+
+    html = _get(client, db, '/')
+    assert 'hreflang="x-default"' in html
+    for code in SUPPORTED_LANGUAGES:
+        assert f'hreflang="{code}"' in html, code
+    # One alternate per locale plus x-default (not duplicated per page).
+    assert html.count('rel="alternate" hreflang=') == len(SUPPORTED_LANGUAGES) + 1
+
+
+def test_no_layout_template_uses_raw_robots_meta_in_extra_head():
+    """Raw <meta name="robots"> in extra_head duplicates layout's robots block."""
+    import re
+    from pathlib import Path
+
+    templates = Path(__file__).resolve().parents[1] / 'app' / 'templates'
+    pat = re.compile(r'block\s+extra_head[\s\S]*?<meta\s+name="robots"', re.I)
+    offenders = [
+        str(p.relative_to(templates))
+        for p in templates.rglob('*.html')
+        if pat.search(p.read_text(encoding='utf-8'))
+    ]
+    assert not offenders, f"use {{% block meta_robots %}} instead: {offenders}"
+
+
+def test_no_indexable_template_defines_hreflang_inside_conditional_block():
+    """Jinja registers {% block %} at compile time — hreflang must use layout default."""
+    from pathlib import Path
+
+    templates = Path(__file__).resolve().parents[1] / 'app' / 'templates'
+    offenders = []
+    for path in templates.rglob('*.html'):
+        text = path.read_text(encoding='utf-8')
+        if 'hreflang=' in text and 'block hreflang' not in text and path.name != 'layout.html':
+            # Allow reader.html (standalone) and embed templates
+            if 'extends' not in text or 'embed' in path.name:
+                continue
+            if 'rel="alternate" hreflang=' in text:
+                offenders.append(str(path.relative_to(templates)))
+    assert not offenders, (
+        'page-level hreflang duplicates layout; remove manual tags from: '
+        + ', '.join(offenders)
+    )

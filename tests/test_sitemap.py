@@ -63,11 +63,8 @@ def test_sitemap_includes_core_product_hubs(sitemap_body):
         '/platform',
         '/discussions/search',
         '/discussions/news',
-        '/daily',
-        '/brief/today',
         '/brief/archive',
         '/brief/methodology',
-        '/brief/weekly',
         '/news',
         '/programmes/',
         '/sources/',
@@ -92,8 +89,10 @@ def test_sitemap_includes_play_when_game_enabled(app, client, db):
     locs = _locs(body)
     assert any(loc.rstrip('/').endswith('/play') for loc in locs)
     assert any('/play/editorial-principles' in loc for loc in locs)
-    assert any('/play/run/' in loc for loc in locs)
     assert any('/help/tradeoffs' in loc for loc in locs)
+    assert not any('/play/run/' in loc for loc in locs)
+    assert not any(loc.rstrip('/').endswith('/play/daily') for loc in locs)
+    assert not any(loc.rstrip('/').endswith('/brief/weekly') for loc in locs)
 
 
 def test_sitemap_omits_play_when_game_disabled(app, client, db):

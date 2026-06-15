@@ -27,10 +27,6 @@
 {% block canonical %}{{ _disc_canonical }}{% endblock %}
 
 {% block extra_head %}
-{% for code in supported_languages %}
-<link rel="alternate" hreflang="{{ code }}" href="{{ _disc_canonical }}?lang={{ code }}" />
-{% endfor %}
-<link rel="alternate" hreflang="x-default" href="{{ _disc_canonical }}" />
 <link rel="alternate" type="application/json+oembed" href="{{ url_for('partner_api.oembed', url=_disc_canonical, _external=True) }}" title="{{ seo_title }}" />
 <script type="application/ld+json">
 {{ {

@@ -119,11 +119,8 @@ def _static_entries(*, game_enabled: bool, self_serve_trial: bool) -> list[Sitem
         SitemapUrl(_external('main.content_policy'), changefreq='monthly', priority='0.5'),
         SitemapUrl(_external('discussions.search_discussions'), changefreq='daily', priority='0.9'),
         SitemapUrl(_external('discussions.news_feed'), changefreq='hourly', priority='0.9'),
-        SitemapUrl(_external('daily.today'), changefreq='daily', priority='0.9'),
-        SitemapUrl(_external('brief.today'), changefreq='daily', priority='0.9'),
         SitemapUrl(_external('brief.archive'), changefreq='weekly', priority='0.8'),
         SitemapUrl(_external('brief.methodology'), changefreq='monthly', priority='0.6'),
-        SitemapUrl(_external('brief.weekly_latest'), changefreq='weekly', priority='0.8'),
         SitemapUrl(_external('brief.underreported'), changefreq='weekly', priority='0.7'),
         SitemapUrl(_external('news.dashboard'), changefreq='hourly', priority='0.9'),
         SitemapUrl(_external('programmes.list_programmes'), changefreq='weekly', priority='0.8'),
@@ -152,10 +149,8 @@ def _static_entries(*, game_enabled: bool, self_serve_trial: bool) -> list[Sitem
     if game_enabled:
         entries.extend([
             SitemapUrl(_external('game.index'), changefreq='daily', priority='0.9'),
-            SitemapUrl(_external('game.daily'), changefreq='daily', priority='0.85'),
             SitemapUrl(_external('game.editorial_principles'), changefreq='monthly', priority='0.6'),
         ])
-        entries.extend(_game_quick_run_entries())
     if game_enabled:
         entries.append(
             SitemapUrl(_external('help.tradeoffs'), changefreq='weekly', priority='0.7'),
@@ -163,24 +158,6 @@ def _static_entries(*, game_enabled: bool, self_serve_trial: bool) -> list[Sitem
     if self_serve_trial:
         entries.append(
             SitemapUrl(_external('briefing.sample_brief'), changefreq='monthly', priority='0.7'),
-        )
-    return entries
-
-
-def _game_quick_run_entries() -> list[SitemapUrl]:
-    from app.game.services.quick_run_service import quick_run_pool
-
-    entries: list[SitemapUrl] = []
-    for item in quick_run_pool(exclude_today=False):
-        slug = item.get('scenario_slug')
-        if not slug:
-            continue
-        entries.append(
-            SitemapUrl(
-                _external('game.quick_run', scenario_slug=slug),
-                changefreq='monthly',
-                priority='0.65',
-            )
         )
     return entries
 

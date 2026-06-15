@@ -16,6 +16,15 @@ Guidance for AI tools and developers working in this repository (Flask, Flask-Ba
 - **Email templates** that pass HTML fragments into `gettext`: use `email_anchor_html` from `app/email_utils.py` (registered as Jinja global) so `href` / attributes are escaped and link bodies are `Markup` where needed. See existing email templates for patterns.
 - **babel:** `babel.cfg` documents where to look for `escape_i18n` when editing templates.
 
+## SEO (canonical, robots, sitemap)
+
+- **Canonical:** indexable templates must set `{% block canonical %}{{ url_for(..., _external=True) }}{% endblock %}` — never rely on `request.base_url` for public content. `og:url` defaults to `self.canonical()` in `layout.html`.
+- **hreflang:** emitted globally from `layout.html` (`{% block hreflang %}`) using the canonical URL + `?lang=`. Do not add per-page hreflang tags.
+- **robots:** use `{% block meta_robots %}` only — never `<meta name="robots">` inside `{% block extra_head %}` (duplicates layout). Utility, admin, auth, errors, filtered search, and game sessions are `noindex`; marketing hubs stay `index, follow`.
+- **URL aliases:** `/daily`, `/brief`, `/brief/today`, `/brief/weekly` 301 to dated permalinks. Sitemap lists stable URLs only (no aliases, game sessions, or quick-run paths).
+- **Statements:** canonical points at the parent discussion, not the statement URL.
+- **Tests:** `tests/test_marketing_seo_render.py` and `tests/test_sitemap.py` guard regressions — run when touching templates or `app/seo.py`.
+
 ## Participation & vote semantics
 
 - **Published vs audit:** Participant-facing counts and aligned aggregates exclude votes on deleted or negatively moderated statements (`visible_statement_vote_filters` in `app/lib/participation_metrics.py`). Raw `statement_vote` rows may still exist for audit; do not mix definitions without labelling the export or UI. Full rationale: [adr/0001-published-vs-audit-vote-semantics.md](./adr/0001-published-vs-audit-vote-semantics.md).

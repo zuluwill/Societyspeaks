@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('Embed Code Generator - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('partner.embed_generator', _external=True) }}{% endblock %}
 
 {% block meta_description %}{{ _('Generate embed code for Society Speaks. Publishers can add a clean voting widget to articles, with developer-friendly customization and clear audience insight for editors.') }}{% endblock %}
 

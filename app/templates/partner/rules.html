@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('Rules of the Record - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('partner.rules_of_record', _external=True) }}{% endblock %}
 
 {% block meta_description %}{{ _('Rules of the Record for Society Speaks partners. Clear guidance for publishers on embedding, attribution, and use of analysis results.') }}{% endblock %}
 

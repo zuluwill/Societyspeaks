@@ -121,61 +121,22 @@ def _items_with_topic_articles(brief):
 @brief_bp.route('/brief/today')
 @limiter.limit("60/minute")
 def today():
-    """Show today's brief - open to everyone, reading is free"""
-    # Track social media clicks (conversion tracking)
+    """Redirect to today's dated brief permalink (single canonical URL per edition)."""
     user_id = str(current_user.id) if current_user.is_authenticated else None
     track_social_click(request, user_id)
 
     brief = DailyBrief.get_today()
-
-    # Check subscriber status for personalization (not access control)
-    subscriber, is_subscriber = get_subscriber_status()
-
-    # No brief available for today - show most recent daily brief instead
     if not brief:
-        latest_brief = DailyBrief.query.filter_by(
+        brief = DailyBrief.query.filter_by(
             status='published', brief_type='daily'
         ).order_by(DailyBrief.date.desc()).first()
-        
-        if latest_brief:
-            items, topic_articles_by_topic_id = _items_with_topic_articles(latest_brief)
-            latest_weekly = DailyBrief.query.filter_by(
-                status='published', brief_type='weekly'
-            ).order_by(DailyBrief.date.desc()).first()
-            return render_template(
-                'brief/view.html',
-                brief=latest_brief,
-                items=items,
-                topic_articles_by_topic_id=topic_articles_by_topic_id,
-                subscriber=subscriber,
-                is_subscriber=is_subscriber,
-                is_today=False,
-                waiting_for_today=True,
-                show_email_capture=(not is_subscriber),
-                tts_available=False,
-                latest_weekly=latest_weekly
-            )
-        else:
-            return render_template('brief/no_brief.html')
 
-    # Get items with topic and article data eager-loaded (avoids N+1)
-    items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
+    if not brief:
+        return render_template('brief/no_brief.html')
 
-    latest_weekly = DailyBrief.query.filter_by(
-        status='published', brief_type='weekly'
-    ).order_by(DailyBrief.date.desc()).first()
-
-    return render_template(
-        'brief/view.html',
-        brief=brief,
-        items=items,
-        topic_articles_by_topic_id=topic_articles_by_topic_id,
-        subscriber=subscriber,
-        is_subscriber=is_subscriber,
-        is_today=True,
-        show_email_capture=(not is_subscriber),
-        tts_available=False,
-        latest_weekly=latest_weekly
+    return redirect(
+        url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d')),
+        code=301,
     )
 
 
@@ -272,41 +233,35 @@ def reader_today():
         ).order_by(DailyBrief.date.desc()).first()
 
         if latest_brief:
-            return redirect(url_for('brief.reader_view', date_str=latest_brief.date.strftime('%Y-%m-%d')))
+            return redirect(
+                url_for('brief.reader_view', date_str=latest_brief.date.strftime('%Y-%m-%d')),
+                code=301,
+            )
         else:
             return render_template('brief/no_brief.html')
 
-    return redirect(url_for('brief.reader_view', date_str=brief.date.strftime('%Y-%m-%d')))
+    return redirect(
+        url_for('brief.reader_view', date_str=brief.date.strftime('%Y-%m-%d')),
+        code=301,
+    )
 
 
 @brief_bp.route('/brief/weekly')
 @limiter.limit("60/minute")
 def weekly_latest():
-    """Show the latest weekly brief"""
-    subscriber, is_subscriber = get_subscriber_status()
-
-    # Find the most recent published weekly brief
+    """Redirect to the latest weekly brief permalink (single canonical URL per edition)."""
     brief = DailyBrief.query.filter_by(
         brief_type='weekly',
-        status='published'
+        status='published',
     ).order_by(DailyBrief.date.desc()).first()
 
     if not brief:
         flash(_('No weekly brief available yet. Check back on Sunday!'), 'info')
         return redirect(url_for('brief.today'))
 
-    items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
-
-    return render_template(
-        'brief/view.html',
-        brief=brief,
-        items=items,
-        topic_articles_by_topic_id=topic_articles_by_topic_id,
-        subscriber=subscriber,
-        is_subscriber=is_subscriber,
-        is_today=False,
-        show_email_capture=(not is_subscriber),
-        tts_available=False
+    return redirect(
+        url_for('brief.weekly_by_date', date_str=brief.date.strftime('%Y-%m-%d')),
+        code=301,
     )
 
 

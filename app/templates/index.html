@@ -3,6 +3,7 @@
 {% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_primary_sm, btn_secondary_lg, btn_secondary_md, link_primary, link_primary_semibold %}
 
 {% block title %}{{ _('Making Disagreement Useful Again — Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('main.index', _external=True) }}{% endblock %}
 
 {% block meta_description %}{{ _('Society Speaks is a civic technology platform that uses machine learning to find where people genuinely agree, reveal bridge ideas that unite opposing groups, and surface real divisions worth addressing. Vote on the big questions. See what society actually thinks.') }}{% endblock %}
 

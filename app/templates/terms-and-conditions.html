@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block title %}{{ _('Terms and Conditions - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('main.terms_and_conditions', _external=True) }}{% endblock %}
 {% block meta_description %}{{ _('Society Speaks Terms and Conditions covering use of the platform, accounts, payments, and your rights and responsibilities.') }}{% endblock %}
 {% block content %}
 

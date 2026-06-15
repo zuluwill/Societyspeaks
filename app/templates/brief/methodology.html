@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('How We Create the Daily Brief - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('brief.methodology', _external=True) }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">

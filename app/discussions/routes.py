@@ -1413,6 +1413,15 @@ def search_discussions():
     current_lang = resolve_language(request)
     discussion_translation_map = get_cached_discussion_translations_map(discussions.items, current_lang)
 
+    seo_noindex = bool(
+        search_term
+        or page > 1
+        or topic
+        or country
+        or keywords
+        or programme_id
+    )
+
     return render_template(
         'discussions/search_discussions.html',
         discussions=discussions,
@@ -1422,6 +1431,7 @@ def search_discussions():
         programmes=programmes,
         discussion_translation_map=discussion_translation_map,
         current_lang=current_lang,
+        seo_noindex=seo_noindex,
     )
 
 
