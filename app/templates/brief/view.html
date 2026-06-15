@@ -6,7 +6,7 @@
 {% from "components/listen_with.html" import listen_with %}
 
 {% block title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
-
+{% block canonical %}{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endblock %}
 {% block meta_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
 
 {% block content %}

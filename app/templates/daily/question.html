@@ -6,6 +6,7 @@
 {% block meta_description %}{{ _("Today's civic question: %(text)s... Share your perspective in under 2 minutes.", text=question.question_text[:100]) }}{% endblock %}
 
 {% set share_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
+{% block canonical %}{{ share_url }}{% endblock %}
 {% if question.question_text|length <= 200 %}
   {% set share_text = _('"%(text)s" - Powered by https://societyspeaks.io', text=question.question_text) %}
 {% else %}

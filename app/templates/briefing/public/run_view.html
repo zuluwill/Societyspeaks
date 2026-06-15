@@ -3,6 +3,7 @@
 {% from "components/dive_deeper_links.html" import dive_deeper_links %}
 {% from "components/listen_with.html" import listen_with %}
 
+{% block canonical %}{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=brief_run.id, _external=True) }}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

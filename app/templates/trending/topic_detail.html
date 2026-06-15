@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block title %}{{ topic.title }} - {{ _('Trending Topics') }}{% endblock %}
-
+{% block canonical %}{{ url_for('trending.view_topic', topic_id=topic.id, _external=True) }}{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="mb-6">

@@ -6,6 +6,7 @@
 {% block meta_description %}{{ _("Results for today's civic question: %(text)s...", text=question.question_text[:100]) }}{% endblock %}
 
 {% set results_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
+{% block canonical %}{{ results_url }}{% endblock %}
 {% set base_share_text = '"' ~ question.question_text[:150] ~ '"' %}
 
 {% block og_title %}{{ _('%(pct)s%% Agree: %(text)s... - Daily Question Results', pct=stats.agree, text=question.question_text[:50]) }}{% endblock %}

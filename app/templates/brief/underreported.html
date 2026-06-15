@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('Underreported Stories - Society Speaks') }}{% endblock %}
-
+{% block canonical %}{{ url_for('brief.underreported', _external=True) }}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">

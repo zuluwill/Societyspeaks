@@ -24,8 +24,9 @@
   {{ discussion.keywords | join(', ') if discussion.keywords else _('discussion, society, topics') }}
 {% endblock %}
 
+{% block canonical %}{{ _disc_canonical }}{% endblock %}
+
 {% block extra_head %}
-<link rel="canonical" href="{{ _disc_canonical }}" />
 {% for code in supported_languages %}
 <link rel="alternate" hreflang="{{ code }}" href="{{ _disc_canonical }}?lang={{ code }}" />
 {% endfor %}
