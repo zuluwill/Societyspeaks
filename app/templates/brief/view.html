@@ -6,11 +6,7 @@
 {% from "components/listen_with.html" import listen_with %}
 
 {% block title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
-{% if brief.brief_type == 'weekly' %}
-{% block canonical %}{{ url_for('brief.weekly_by_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endblock %}
-{% else %}
-{% block canonical %}{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endblock %}
-{% endif %}
+{% block canonical %}{{ url_for('brief.weekly_by_date' if brief.brief_type == 'weekly' else 'brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endblock %}
 {% block meta_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
 
 {% block content %}
