@@ -540,7 +540,7 @@ def publish_single_source_article(
             db.session.commit()
         return existing_by_slug
     
-    slug = get_unique_slug(Discussion, base_slug, max_length=150)
+    slug = get_unique_slug(Discussion, base_slug, max_length=Discussion.__table__.c.slug.type.length)
 
     source_name = article.source.name if article.source else "Unknown"
     source_type = article.source.source_category if article.source else "article"
