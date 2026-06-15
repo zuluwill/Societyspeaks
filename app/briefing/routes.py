@@ -3370,7 +3370,10 @@ def public_brief_run(briefing_id, run_id):
         flash(_('This briefing is not publicly accessible'), 'error')
         return redirect(url_for('main.index'))
 
-    brief_run = BriefRun.query.filter_by(
+    brief_run = BriefRun.query.options(
+        selectinload(BriefRun.items).joinedload(BriefRunItem.ingested_item),
+        selectinload(BriefRun.items).joinedload(BriefRunItem.trending_topic),
+    ).filter_by(
         id=run_id,
         briefing_id=briefing_id,
         status='sent'
@@ -3423,7 +3426,10 @@ def public_brief_run_reader(briefing_id, run_id):
             is_owner=is_owner
         )
 
-    brief_run = BriefRun.query.filter_by(
+    brief_run = BriefRun.query.options(
+        selectinload(BriefRun.items).joinedload(BriefRunItem.ingested_item),
+        selectinload(BriefRun.items).joinedload(BriefRunItem.trending_topic),
+    ).filter_by(
         id=run_id,
         briefing_id=briefing_id,
         status='sent'
