@@ -3,13 +3,12 @@
 {% block game_title %}{{ _('Tradeoffs') }}{% endblock %}
 {% block meta_robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}
 {% block canonical %}{{ url_for('game.index', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('Govern a nation under pressure. Five turns, three choices each — every decision trades one value against another. The societal strategy game on Society Speaks.') }}{% endblock %}
+{% block og_title %}{{ _('Tradeoffs') }} · Society Speaks{% endblock %}
+{% block og_description %}{{ _('Govern a nation under pressure. Five turns, three choices each — every decision trades one value against another.') }}{% endblock %}
 
 {% block game_header_width %}max-w-4xl{% endblock %}
 {% block game_main_width %}max-w-4xl{% endblock %}
-
-{% block game_head %}
-<meta name="description" content="{{ _('Govern a nation under pressure. Five turns, three choices each — every decision trades one value against another. The societal strategy game on Society Speaks.') }}">
-{% endblock %}
 
 {% block game_content %}
 {% set fresh = not in_progress and not completed_today_uuid %}

@@ -1,11 +1,7 @@
 {% extends "game/base.html" %}
 
 {% block game_title %}{{ _('Your governing self') }}{% endblock %}
-
-{% block game_head %}
-<meta name="robots" content="noindex">
-<meta name="description" content="{{ _('The values you protect and trade away across every society you govern.') }}">
-{% endblock %}
+{% block meta_description %}{{ _('The values you protect and trade away across every society you govern.') }}{% endblock %}
 
 {% block game_content %}
 <div class="game-profile">

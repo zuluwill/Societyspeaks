@@ -321,6 +321,35 @@ def test_sitemap_includes_public_briefing_archive(app, db):
         assert f'/briefings/public/{briefing.id}' in body
 
 
+def test_sitemap_includes_public_profiles_with_discussions(app, db):
+    from app.models import IndividualProfile, User
+
+    with app.app_context():
+        db.create_all()
+        user = User(username='creator', email='creator@example.com', password='hashed')
+        db.session.add(user)
+        db.session.flush()
+        db.session.add(
+            IndividualProfile(
+                user_id=user.id,
+                full_name='Ada Creator',
+                slug='ada-creator',
+            )
+        )
+        db.session.add(
+            Discussion(
+                title='Profile sitemap topic',
+                slug='profile-sitemap-topic',
+                geographic_scope='global',
+                partner_env='live',
+                creator_id=user.id,
+            )
+        )
+        db.session.commit()
+        body = generate_sitemap()
+        assert '/profile/individual/ada-creator' in body
+
+
 def test_crawlable_discussions_query_matches_search_semantics(app, db):
     with app.app_context():
         db.create_all()

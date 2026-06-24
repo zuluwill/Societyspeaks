@@ -2,6 +2,12 @@
 
 {% block title %}{{ _('Brief Archive') }} - Society Speaks{% endblock %}
 {% block canonical %}{{ url_for('brief.archive', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('Browse past Daily and Weekly sense-making briefs from Society Speaks — curated civic intelligence you can read any time.') }}{% endblock %}
+{% block og_title %}{{ _('Brief Archive') }} — Society Speaks{% endblock %}
+{% block og_description %}{{ _('Past Daily and Weekly briefs: curated civic intelligence from Society Speaks.') }}{% endblock %}
+{% block twitter_title %}{{ _('Brief Archive') }} — Society Speaks{% endblock %}
+{% block twitter_description %}{{ _('Past Daily and Weekly briefs: curated civic intelligence from Society Speaks.') }}{% endblock %}
+{% block meta_robots %}{% if seo_noindex|default(false) %}noindex, follow{% else %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endif %}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">

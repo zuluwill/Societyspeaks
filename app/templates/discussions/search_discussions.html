@@ -3,6 +3,10 @@
 
 {% block title %}{% if search_term %}{{ _('Explore Discussions — results for %(term)s', term=search_term) }} | Society Speaks{% else %}{{ _('Explore Discussions | Society Speaks') }}{% endif %}{% endblock %}
 {% block meta_description %}{% if search_term %}{{ _('Discover and join meaningful discussions. Results for %(term)s.', term=search_term) }}{% else %}{{ _('Discover and join meaningful discussions on topics that matter.') }}{% endif %}{% endblock %}
+{% block og_title %}{% if search_term %}{{ _('Explore Discussions — results for %(term)s', term=search_term) }} | Society Speaks{% else %}{{ _('Explore Discussions | Society Speaks') }}{% endif %}{% endblock %}
+{% block og_description %}{% if search_term %}{{ _('Discover and join meaningful discussions. Results for %(term)s.', term=search_term) }}{% else %}{{ _('Discover and join meaningful discussions on topics that matter.') }}{% endif %}{% endblock %}
+{% block twitter_title %}{% if search_term %}{{ _('Explore Discussions — results for %(term)s', term=search_term) }} | Society Speaks{% else %}{{ _('Explore Discussions | Society Speaks') }}{% endif %}{% endblock %}
+{% block twitter_description %}{% if search_term %}{{ _('Discover and join meaningful discussions. Results for %(term)s.', term=search_term) }}{% else %}{{ _('Discover and join meaningful discussions on topics that matter.') }}{% endif %}{% endblock %}
 {% block meta_keywords %}{{ _('society discussions, explore discussions') }}{% if search_term %}, {{ search_term }}{% endif %}{% endblock %}
 {% block canonical %}{{ url_for('discussions.search_discussions', _external=True) }}{% endblock %}
 {% block meta_robots %}{% if seo_noindex|default(false) %}noindex, follow{% else %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endif %}{% endblock %}

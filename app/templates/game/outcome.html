@@ -3,26 +3,24 @@
 {% from "game/components/emblem.html" import society_emblem %}
 
 {% block game_title %}{{ headline }}{% endblock %}
-
-{% block game_head %}
 {% set og_alt = _('%(headline)s — Tradeoffs on Society Speaks', headline=headline) %}
-<meta property="og:site_name" content="Society Speaks">
-<meta property="og:title" content="{{ headline }}">
-<meta property="og:description" content="{{ governance_label or _('Tradeoffs on Society Speaks') }}">
-<meta property="og:image" content="{{ url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) }}">
-<meta property="og:image:secure_url" content="{{ url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) }}">
+{% set og_png = url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) %}
+{% block meta_description %}{{ governance_label or _('My Tradeoffs result on Society Speaks.') }}{% endblock %}
+{% block og_title %}{{ headline }}{% endblock %}
+{% block og_description %}{{ governance_label or _('Tradeoffs on Society Speaks') }}{% endblock %}
+{% block og_image %}{{ og_png }}{% endblock %}
+{% block og_image_alt %}{{ og_alt }}{% endblock %}
+{% block og_image_extra %}
+<meta property="og:image:secure_url" content="{{ og_png }}">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="{{ og_alt }}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="{{ share_url }}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ headline }}">
-<meta name="twitter:description" content="{{ governance_label or _('Tradeoffs on Society Speaks') }}">
-<meta name="twitter:image" content="{{ url_for('game.outcome_og_png', run_uuid=run.uuid, _external=True) }}">
-<meta name="twitter:image:alt" content="{{ og_alt }}">
 {% endblock %}
+{% block og_url %}{{ share_url }}{% endblock %}
+{% block twitter_title %}{{ headline }}{% endblock %}
+{% block twitter_description %}{{ governance_label or _('Tradeoffs on Society Speaks') }}{% endblock %}
+{% block twitter_image %}{{ og_png }}{% endblock %}
+{% block twitter_image_alt %}{{ og_alt }}{% endblock %}
 
 {% block game_content %}
 <div class="game-outcome" style="--emblem-accent: {{ emblem.accent }}; --emblem-soft: {{ emblem.accent_soft }};">

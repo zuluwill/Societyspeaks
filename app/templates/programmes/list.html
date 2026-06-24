@@ -1,6 +1,11 @@
 {% extends "layout.html" %}
 {% block title %}{{ _('Public Programmes') }} — Society Speaks{% endblock %}
 {% block canonical %}{{ url_for('programmes.list_programmes', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('Browse live public programmes on Society Speaks — structured civic journeys and open discussions you can join today.') }}{% endblock %}
+{% block og_title %}{{ _('Public Programmes') }} — Society Speaks{% endblock %}
+{% block og_description %}{{ _('Structured public deliberation programmes with open discussions — join live civic journeys on Society Speaks.') }}{% endblock %}
+{% block twitter_title %}{{ _('Public Programmes') }} — Society Speaks{% endblock %}
+{% block twitter_description %}{{ _('Structured public deliberation programmes with open discussions — join live civic journeys on Society Speaks.') }}{% endblock %}
 {% block content %}
 {% set _ptm = programme_translation_map if programme_translation_map is defined else {} %}
 <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6">

@@ -1,6 +1,11 @@
 {% extends "layout.html" %}
 {% block title %}{{ _('API Playground - Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('partner.api_playground', _external=True) }}{% endblock %}
 {% block meta_description %}{{ _('Try the Society Speaks Partner API from your browser. Interactive requests for lookup, snapshot, and oEmbed with clear steps for developers and publishers.') }}{% endblock %}
+{% block og_title %}{{ _('API Playground - Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('Try the Society Speaks Partner API from your browser. Interactive requests for lookup, snapshot, and oEmbed with clear steps for developers and publishers.') }}{% endblock %}
+{% block twitter_title %}{{ _('API Playground - Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('Try the Society Speaks Partner API from your browser. Interactive requests for lookup, snapshot, and oEmbed with clear steps for developers and publishers.') }}{% endblock %}
 
 {% block content %}
 {% if partner %}

@@ -1,6 +1,12 @@
 {% extends "layout.html" %}
 
+{% block title %}{{ briefing.name }} — {{ _('Public Brief Archive') }} | Society Speaks{% endblock %}
+{% block meta_description %}{% if briefing.description %}{{ briefing.description[:160] }}{% else %}{{ _('Public archive of %(name)s briefs on Society Speaks.', name=briefing.name) }}{% endif %}{% endblock %}
 {% block canonical %}{{ url_for('briefing.public_briefing', briefing_id=briefing.id, _external=True) }}{% endblock %}
+{% block og_title %}{{ briefing.name }} — Society Speaks{% endblock %}
+{% block og_description %}{% if briefing.description %}{{ briefing.description[:200] }}{% else %}{{ _('Public Personal Brief archive on Society Speaks.') }}{% endif %}{% endblock %}
+{% block twitter_title %}{{ briefing.name }} — Society Speaks{% endblock %}
+{% block twitter_description %}{% if briefing.description %}{{ briefing.description[:200] }}{% else %}{{ _('Public Personal Brief archive on Society Speaks.') }}{% endif %}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -379,3 +379,145 @@ def test_no_indexable_template_defines_hreflang_inside_conditional_block():
         'page-level hreflang duplicates layout; remove manual tags from: '
         + ', '.join(offenders)
     )
+
+
+def test_no_game_template_uses_raw_description_or_og_in_game_head():
+    """Tradeoffs pages must use layout SEO blocks, not duplicate tags in game_head."""
+    import re
+    from pathlib import Path
+
+    game_dir = Path(__file__).resolve().parents[1] / 'app' / 'templates' / 'game'
+    pat = re.compile(
+        r'block\s+game_head[\s\S]*?<meta\s+(?:name="description"|property="og:|name="twitter:)',
+        re.I,
+    )
+    offenders = [
+        str(p.relative_to(game_dir.parent))
+        for p in game_dir.glob('*.html')
+        if pat.search(p.read_text(encoding='utf-8'))
+    ]
+    assert not offenders, offenders
+
+
+def test_programme_pages_use_programme_specific_meta_description(client, db):
+    generic = 'sense-making system that turns disagreement into understanding'
+    html = _get(client, db, '/programmes/')
+    assert generic not in re.search(r'name="description"[^>]*content="([^"]+)"', html, re.S).group(1)
+
+
+def test_play_hub_has_single_meta_description(client, db):
+    resp = client.get('/play/', follow_redirects=True)
+    html = resp.get_data(as_text=True)
+    assert html.count('name="description"') == 1
+
+
+def test_brief_archive_page_two_is_noindexed(client, db):
+    html = client.get('/brief/archive?page=2').get_data(as_text=True)
+    assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html, re.S)
+
+
+def test_sources_filtered_view_is_noindexed(client, db):
+    html = client.get('/sources/?q=bbc').get_data(as_text=True)
+    assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html, re.S)
+
+
+def test_source_profile_page_two_is_noindexed(client, db):
+    from app.models import NewsSource
+
+    with client.application.app_context():
+        db.create_all()
+        source = NewsSource(
+            name='Test Source SEO',
+            slug='test-source-seo',
+            feed_url='https://example.com/rss',
+            is_active=True,
+        )
+        db.session.add(source)
+        db.session.commit()
+        slug = source.slug
+
+    html = client.get(f'/sources/{slug}?page=2').get_data(as_text=True)
+    assert re.search(r'name="robots"[^>]*content="[^"]*noindex', html, re.S)
+    canonical = re.search(r'<link rel="canonical" href="([^"]+)"', html)
+    assert canonical and canonical.group(1).endswith(f'/sources/{slug}')
+
+
+def test_underreported_has_page_specific_meta_and_social(client, db):
+    html = _get(client, db, '/brief/underreported')
+    generic = 'sense-making system that turns disagreement into understanding'
+    desc = re.search(r'name="description"[^>]*content="([^"]+)"', html, re.S)
+    og_desc = re.search(r'property="og:description"[^>]*content="([^"]+)"', html, re.S)
+    assert desc and generic not in desc.group(1)
+    assert og_desc and 'underreported' in og_desc.group(1).lower() or 'blindspot' in og_desc.group(1).lower()
+    assert html.count('rel="canonical"') == 1
+
+
+def test_llms_txt_uses_canonical_url_patterns(client, db):
+    text = client.get('/llms.txt').get_data(as_text=True)
+    assert 'https://societyspeaks.io/brief/today' not in text
+    assert 'https://societyspeaks.io/daily\n' not in text
+    assert '/daily/YYYY-MM-DD' in text
+    assert '/brief/YYYY-MM-DD' in text
+    assert '/brief/archive' in text
+    assert '/brief/underreported' in text
+    assert 'Canonical URL patterns' in text
+
+
+def test_indexable_templates_with_canonical_define_social_blocks():
+    """Public templates must not fall back to generic layout OG/Twitter defaults."""
+    import re
+    from pathlib import Path
+
+    templates = Path(__file__).resolve().parents[1] / 'app' / 'templates'
+    skip = {
+        'layout.html',
+        'macros.html',
+        'game/base.html',
+    }
+    skip_prefixes = ('auth/', 'admin/', 'errors/', 'settings/', 'partner/portal/', 'trending/')
+    pat_noindex = re.compile(
+        r'block meta_robots\s*%}\s*noindex',
+        re.I,
+    )
+    offenders = []
+    for path in templates.rglob('*.html'):
+        rel = str(path.relative_to(templates))
+        if path.name in skip or any(rel.startswith(p) for p in skip_prefixes):
+            continue
+        text = path.read_text(encoding='utf-8')
+        if 'extends' not in text or 'layout.html' not in text:
+            continue
+        if 'block canonical' not in text:
+            continue
+        if pat_noindex.search(text):
+            continue
+        for block in ('og_title', 'og_description', 'twitter_title', 'twitter_description'):
+            if f'block {block}' not in text:
+                offenders.append(f'{rel} missing {block}')
+                break
+    assert not offenders, 'Indexable templates missing social blocks:\n' + '\n'.join(offenders[:20])
+
+
+def test_help_hub_og_description_is_page_specific(client, db):
+    html = _get(client, db, '/help/')
+    generic = 'Discover where society agrees, where it divides'
+    og_desc = re.search(r'property="og:description"[^>]*content="([^"]+)"', html, re.S)
+    assert og_desc and generic not in og_desc.group(1)
+    assert 'Help' in og_desc.group(1) or 'help' in og_desc.group(1).lower()
+
+
+def test_every_template_compiles(client):
+    """Every Jinja template parses — catches unclosed {% if %}/{% block %} tags
+    in templates no render test exercises (e.g. public briefing archive)."""
+    from pathlib import Path
+
+    env = client.application.jinja_env
+    root = Path(client.application.template_folder)
+    broken = []
+    for path in root.rglob('*.html'):
+        try:
+            env.parse(path.read_text(encoding='utf-8'))
+        except Exception as exc:  # noqa: BLE001 - report all, fail once
+            broken.append(f'{path.relative_to(root)}: {exc}')
+    assert not broken, 'Templates with syntax errors:\n' + '\n'.join(broken)
+

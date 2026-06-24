@@ -1,5 +1,6 @@
 # Society Speaks - LLM Context File
 # This file provides context for AI/LLM systems about what Society Speaks is and does.
+# Spec: https://llmstxt.org
 
 ## What is Society Speaks?
 
@@ -52,20 +53,35 @@ Social platforms reward outrage, certainty, and speed, making society appear mor
 
 Society Speaks is a sense-making system that turns disagreement into understanding, and understanding into insight for better decisions.
 
+## Canonical URL patterns
+
+Permanent URLs use ISO dates. Convenience aliases 301-redirect to the dated permalink:
+
+- `/daily` → `/daily/YYYY-MM-DD` (today's Daily Question)
+- `/brief` and `/brief/today` → `/brief/YYYY-MM-DD` (today's Daily Brief)
+- `/brief/weekly` → `/brief/weekly/YYYY-MM-DD` (week start date)
+
+Prefer dated permalinks and stable hub URLs in citations—not alias paths.
+
 ## Links
 
 - Website: https://societyspeaks.io
 - About: https://societyspeaks.io/about
 - Platform overview: https://societyspeaks.io/platform
-- Daily Question: https://societyspeaks.io/daily
-- Daily Brief: https://societyspeaks.io/brief/today
+- Daily Question (dated permalink): https://societyspeaks.io/daily/YYYY-MM-DD
+- Daily Brief archive: https://societyspeaks.io/brief/archive
+- Daily Brief (dated permalink): https://societyspeaks.io/brief/YYYY-MM-DD
+- Underreported stories: https://societyspeaks.io/brief/underreported
+- Brief methodology: https://societyspeaks.io/brief/methodology
 - News dashboard: https://societyspeaks.io/news
 - Explore discussions: https://societyspeaks.io/discussions/search
+- News discussions feed: https://societyspeaks.io/discussions/news
 - Programmes: https://societyspeaks.io/programmes/
 - Source profiles: https://societyspeaks.io/sources/
 - Tradeoffs: https://societyspeaks.io/play
 - Personal Briefs: https://societyspeaks.io/briefings/landing
 - For publishers: https://societyspeaks.io/for-publishers/
+- Partner API docs: https://societyspeaks.io/for-publishers/api-docs
 - Help centre: https://societyspeaks.io/help/
 - FAQ: https://societyspeaks.io/faq
 - Sitemap: https://societyspeaks.io/sitemap.xml

@@ -1,7 +1,12 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('Underreported Stories - Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('High civic importance, low media coverage — Society Speaks surfaces underreported stories the mainstream may be missing.') }}{% endblock %}
 {% block canonical %}{{ url_for('brief.underreported', _external=True) }}{% endblock %}
+{% block og_title %}{{ _('Underreported Stories') }} — Society Speaks{% endblock %}
+{% block og_description %}{{ _('Media blindspots: civic stories with high importance but low coverage across 140+ sources.') }}{% endblock %}
+{% block twitter_title %}{{ _('Underreported Stories') }} — Society Speaks{% endblock %}
+{% block twitter_description %}{{ _('Media blindspots: civic stories with high importance but low coverage across 140+ sources.') }}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">

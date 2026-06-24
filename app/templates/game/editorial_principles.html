@@ -3,12 +3,11 @@
 {% block game_title %}{{ _('How Tradeoffs is written') }}{% endblock %}
 {% block meta_robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}
 {% block canonical %}{{ url_for('game.editorial_principles', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('How Tradeoffs is written — the editorial principles behind a five-minute civic game that simulates pressure, not ideology.') }}{% endblock %}
+{% block og_title %}{{ _('How Tradeoffs is written') }} · Society Speaks{% endblock %}
+{% block og_description %}{{ _('The editorial discipline behind Tradeoffs: scenarios designed to surface real trade-offs, not ideology.') }}{% endblock %}
 
 {% block game_main_width %}max-w-2xl{% endblock %}
-
-{% block game_head %}
-<meta name="description" content="{{ _('How Tradeoffs is written — the editorial principles behind a five-minute civic game that simulates pressure, not ideology.') }}">
-{% endblock %}
 
 {% block game_content %}
 <article class="game-editorial">

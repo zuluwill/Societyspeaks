@@ -3,7 +3,13 @@
 {% from "components/dive_deeper_links.html" import dive_deeper_links %}
 {% from "components/listen_with.html" import listen_with %}
 
+{% block title %}{{ briefing.name }} — {% if brief_run.scheduled_at %}{{ brief_run.scheduled_at.strftime('%B %d, %Y') }}{% else %}{{ _('Brief') }}{% endif %} | Society Speaks{% endblock %}
+{% block meta_description %}{{ _('Public brief edition from %(name)s on Society Speaks.', name=briefing.name) }}{% endblock %}
 {% block canonical %}{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=brief_run.id, _external=True) }}{% endblock %}
+{% block og_title %}{{ briefing.name }} — Society Speaks{% endblock %}
+{% block og_description %}{{ _('Public Personal Brief edition on Society Speaks.') }}{% endblock %}
+{% block twitter_title %}{{ briefing.name }} — Society Speaks{% endblock %}
+{% block twitter_description %}{{ _('Public Personal Brief edition on Society Speaks.') }}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,7 +1,12 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ _('How We Create the Daily Brief - Society Speaks') }}{% endblock %}
+{% block meta_description %}{{ _('How Society Speaks builds the Daily Brief: editorial criteria, AI-assisted curation, and spectrum-balanced sourcing from 140+ outlets.') }}{% endblock %}
 {% block canonical %}{{ url_for('brief.methodology', _external=True) }}{% endblock %}
+{% block og_title %}{{ _('Daily Brief Methodology') }} — Society Speaks{% endblock %}
+{% block og_description %}{{ _('Editorial criteria and AI-assisted curation behind the free Daily Brief from 140+ sources.') }}{% endblock %}
+{% block twitter_title %}{{ _('Daily Brief Methodology') }} — Society Speaks{% endblock %}
+{% block twitter_description %}{{ _('Editorial criteria and AI-assisted curation behind the free Daily Brief from 140+ sources.') }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">

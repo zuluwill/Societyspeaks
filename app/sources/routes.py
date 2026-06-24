@@ -59,7 +59,12 @@ def index():
         current_country=country,
         current_leaning=leaning,
         current_search=search,
-        current_sort=sort_by
+        current_sort=sort_by,
+        seo_noindex=(
+            page > 1
+            or bool(category or country or leaning or search)
+            or sort_by != 'name'
+        ),
     )
 
 
@@ -101,7 +106,8 @@ def view_source(slug):
         discussions=discussions,
         stats=stats,
         can_claim=can_claim,
-        has_pending_claim=has_pending_claim
+        has_pending_claim=has_pending_claim,
+        seo_noindex=page > 1,
     )
 
 

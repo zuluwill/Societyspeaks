@@ -24,6 +24,9 @@ Guidance for AI tools and developers working in this repository (Flask, Flask-Ba
 - **URL aliases:** `/daily`, `/brief`, `/brief/today`, `/brief/weekly` 301 to dated permalinks. Sitemap lists stable URLs only (no aliases, game sessions, or quick-run paths).
 - **Statements:** canonical points at the parent discussion, not the statement URL.
 - **Tests:** `tests/test_marketing_seo_render.py` and `tests/test_sitemap.py` guard regressions — run when touching templates or `app/seo.py`.
+- **List pages:** hub URL is indexable; paginated or filtered variants (`?page=`, `?q=`, `?type=`, etc.) use `seo_noindex` + canonical to the hub (same pattern as search).
+- **Social (OG/Twitter):** indexable templates with `{% block canonical %}` must also set `og_title`, `og_description`, `twitter_title`, and `twitter_description` — never rely on layout defaults on public pages.
+- **GEO:** keep `app/static/llms.txt` aligned with canonical URL patterns (dated permalinks, not redirect aliases). Linked from `robots.txt` as `LLMsTXT`. Site-wide `meta name="ai-model-context"` lives in `layout.html`.
 
 ## Participation & vote semantics
 

@@ -451,7 +451,12 @@ def view_individual_profile(username):
     discussions = Discussion.query.filter_by(creator_id=profile.user_id).order_by(
         Discussion.created_at.desc()
     ).paginate(page=page, per_page=10, error_out=False)
-    return render_template('profiles/individual_profile.html', profile=profile, discussions=discussions)
+    return render_template(
+        'profiles/individual_profile.html',
+        profile=profile,
+        discussions=discussions,
+        seo_noindex=page > 1,
+    )
 
 @profiles_bp.route('/profile/company/<company_name>')
 @track_profile_view  # Add this decorator
@@ -466,7 +471,13 @@ def view_company_profile(company_name):
         visibility='public',
         status='active'
     ).order_by(Programme.created_at.desc()).all()
-    return render_template('profiles/company_profile.html', profile=profile, discussions=discussions, programmes=programmes)
+    return render_template(
+        'profiles/company_profile.html',
+        profile=profile,
+        discussions=discussions,
+        programmes=programmes,
+        seo_noindex=page > 1,
+    )
 
 
 #Unified view_profile Route (This is the new route that acts as the primary link):

@@ -2,11 +2,7 @@
 {% from "game/components/emblem.html" import society_emblem %}
 
 {% block game_title %}{{ _('Your societies') }}{% endblock %}
-
-{% block game_head %}
-<meta name="robots" content="noindex">
-<meta name="description" content="{{ _('Every society you have governed on Tradeoffs.') }}">
-{% endblock %}
+{% block meta_description %}{{ _('Every society you have governed on Tradeoffs.') }}{% endblock %}
 
 {% block game_content %}
 <div class="game-archive">

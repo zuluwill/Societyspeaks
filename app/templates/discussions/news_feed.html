@@ -5,6 +5,8 @@ discussion_card %}
 {% block canonical %}{{ url_for('discussions.news_feed', _external=True) }}{% endblock %}
 {% block og_title %}{{ _('News Discussions - Society Speaks') }}{% endblock %}
 {% block og_description %}{{ _('Trending news transformed into structured debates. Join the conversation on current affairs.') }}{% endblock %}
+{% block twitter_title %}{{ _('News Discussions - Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('Trending news transformed into structured debates. Join the conversation on current affairs.') }}{% endblock %}
 
 {% block extra_head %}
 {% set _news_feed_url = url_for('discussions.news_feed', _external=True) %}

@@ -68,6 +68,8 @@
       property="og:image"
       content="{% block og_image %}{{ url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
     />
+    <meta property="og:image:alt" content="{% block og_image_alt %}{{ _('Society Speaks — making disagreement useful again') }}{% endblock %}" />
+    {% block og_image_extra %}{% endblock %}
     <meta property="og:url" content="{% block og_url %}{{ self.canonical() }}{% endblock %}" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:site_name" content="Society Speaks" />
@@ -86,6 +88,7 @@
       name="twitter:image"
       content="{% block twitter_image %}{{ url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
     />
+    <meta name="twitter:image:alt" content="{% block twitter_image_alt %}{{ self.og_image_alt() }}{% endblock %}" />
     <meta name="twitter:site" content="@societyspeaksio" />
 
     <!-- Stylesheets and Scripts -->

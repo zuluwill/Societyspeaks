@@ -348,7 +348,8 @@ def archive():
         briefs=briefs,
         pagination=pagination,
         subscriber=subscriber,
-        brief_type_filter=brief_type
+        brief_type_filter=brief_type,
+        seo_noindex=(page > 1 or brief_type in ('daily', 'weekly')),
     )
 
 

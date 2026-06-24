@@ -8,6 +8,10 @@
 {% block title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
 {% block canonical %}{{ url_for('brief.weekly_by_date' if brief.brief_type == 'weekly' else 'brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endblock %}
 {% block meta_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
+{% block og_title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
+{% block og_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
+{% block twitter_title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
+{% block twitter_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-100 to-white">

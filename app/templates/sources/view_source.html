@@ -6,8 +6,11 @@
 {% block meta_description %}{{ _('Explore discussions sourced from %(name)s. ', name=source.name) }}{{ source.display_description[:150] if source.display_description else _('View civic discussions and engagement insights.') }}{% endblock %}
 {% block meta_keywords %}{{ source.name }}, {{ _('discussions, civic discourse') }}, {{ source.source_category }}{% endblock %}
 {% block canonical %}{{ url_for('sources.view_source', slug=source.slug, _external=True) }}{% endblock %}
+{% block meta_robots %}{% if seo_noindex|default(false) %}noindex, follow{% else %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endif %}{% endblock %}
 {% block og_title %}{{ _('%(name)s on SocietySpeaks', name=source.name) }}{% endblock %}
 {% block og_description %}{{ _('Explore discussions sourced from %(name)s', name=source.name) }}{% endblock %}
+{% block twitter_title %}{{ _('%(name)s on SocietySpeaks', name=source.name) }}{% endblock %}
+{% block twitter_description %}{{ _('Explore discussions sourced from %(name)s', name=source.name) }}{% endblock %}
 {% block og_type %}profile{% endblock %}
 
 {% block extra_head %}

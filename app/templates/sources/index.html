@@ -2,8 +2,13 @@
 source_logo %}
 {% block title %}{{ _('News Sources') }} - SocietySpeaks{% if current_search %} - "{{ current_search }}"{% endif %}{% endblock %}
 {% block meta_description %}{{ _('Explore news sources and podcasts on SocietySpeaks. Discover discussions from your favorite media outlets.') }}{% endblock %}
+{% block og_title %}{{ _('News Sources') }} - SocietySpeaks{% if current_search %} - "{{ current_search }}"{% endif %}{% endblock %}
+{% block og_description %}{{ _('Explore news sources and podcasts on SocietySpeaks. Discover discussions from your favorite media outlets.') }}{% endblock %}
+{% block twitter_title %}{{ _('News Sources') }} - SocietySpeaks{% if current_search %} - "{{ current_search }}"{% endif %}{% endblock %}
+{% block twitter_description %}{{ _('Explore news sources and podcasts on SocietySpeaks. Discover discussions from your favorite media outlets.') }}{% endblock %}
 {% block meta_keywords %}{{ _('news sources, podcasts, media outlets, discussions, civic discourse') }}{% endblock %}
 {% block canonical %}{{ url_for('sources.index', _external=True) }}{% endblock %}
+{% block meta_robots %}{% if seo_noindex|default(false) %}noindex, follow{% else %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endif %}{% endblock %}
 
 {% block extra_head %}
 <script type="application/ld+json">

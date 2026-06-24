@@ -13,9 +13,11 @@ from flask import current_app, has_request_context, request, url_for
 from app.discussions.query_utils import crawlable_discussions_query
 from app.models import (
     Briefing,
+    CompanyProfile,
     DailyBrief,
     DailyQuestion,
     Discussion,
+    IndividualProfile,
     NewsSource,
     Programme,
 )
@@ -333,6 +335,62 @@ def _public_briefing_entries() -> Iterator[SitemapUrl]:
         )
 
 
+def _profile_entries() -> Iterator[SitemapUrl]:
+    """Public creator/org profiles with at least one discussion or public programme."""
+    from sqlalchemy import or_
+
+    creator_ids = {
+        row[0]
+        for row in Discussion.query.with_entities(Discussion.creator_id).distinct().all()
+        if row[0] is not None
+    }
+    programme_company_ids = {
+        row[0]
+        for row in Programme.query.with_entities(Programme.company_profile_id)
+        .filter(
+            Programme.visibility == 'public',
+            Programme.status == 'active',
+            Programme.company_profile_id.isnot(None),
+        )
+        .distinct()
+        .all()
+        if row[0] is not None
+    }
+
+    if creator_ids:
+        individuals = IndividualProfile.query.filter(
+            IndividualProfile.slug.isnot(None),
+            IndividualProfile.slug != '',
+            IndividualProfile.user_id.in_(creator_ids),
+        ).all()
+        for profile in individuals:
+            yield SitemapUrl(
+                _external('profiles.view_individual_profile', username=profile.slug),
+                changefreq='weekly',
+                priority='0.55',
+            )
+
+    company_filters = [CompanyProfile.slug.isnot(None), CompanyProfile.slug != '']
+    company_clauses = []
+    if creator_ids:
+        company_clauses.append(CompanyProfile.user_id.in_(creator_ids))
+    if programme_company_ids:
+        company_clauses.append(CompanyProfile.id.in_(programme_company_ids))
+    if not company_clauses:
+        return
+
+    companies = CompanyProfile.query.filter(
+        *company_filters,
+        or_(*company_clauses),
+    ).all()
+    for profile in companies:
+        yield SitemapUrl(
+            _external('profiles.view_company_profile', company_name=profile.slug),
+            changefreq='weekly',
+            priority='0.55',
+        )
+
+
 def _collect_dynamic_entries() -> list[SitemapUrl]:
     entries: list[SitemapUrl] = []
     collectors = (
@@ -342,6 +400,7 @@ def _collect_dynamic_entries() -> list[SitemapUrl]:
         _daily_brief_entries,
         _daily_question_entries,
         _public_briefing_entries,
+        _profile_entries,
     )
     for collector in collectors:
         try:

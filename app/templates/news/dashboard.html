@@ -2,6 +2,11 @@
 email_capture_inline, email_capture_compact, paid_brief_crosssell %} {% block
 title %}{{ _('News Transparency Dashboard - Society Speaks') }}{% endblock %}
 {% block canonical %}{{ url_for('news.dashboard', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('See today\'s news from 140+ sources across the political spectrum — filter by outlet, compare coverage, and spot what your usual outlets miss.') }}{% endblock %}
+{% block og_title %}{{ _('News Transparency Dashboard') }} — Society Speaks{% endblock %}
+{% block og_description %}{{ _('Daily news transparency across 140+ sources — compare coverage and political spectrum on Society Speaks.') }}{% endblock %}
+{% block twitter_title %}{{ _('News Transparency Dashboard') }} — Society Speaks{% endblock %}
+{% block twitter_description %}{{ _('Daily news transparency across 140+ sources — compare coverage and political spectrum on Society Speaks.') }}{% endblock %}
 {% block content %}
 <!-- Header -->
 <div class="bg-gradient-to-r from-blue-800 to-blue-600 text-white py-12 px-4">
