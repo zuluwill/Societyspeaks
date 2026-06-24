@@ -4,7 +4,7 @@
 set -e
 
 echo "[post-merge] Installing Python dependencies..."
-pip install --quiet --disable-pip-version-check -r requirements.txt
+pip install --quiet --disable-pip-version-check --timeout 60 --retries 5 -r requirements.txt
 
 echo "[post-merge] Running database migrations..."
 SQLALCHEMY_MIGRATE=1 flask db upgrade
