@@ -94,6 +94,15 @@
           statement.controversy_score,
           viewer_vote_value is not none
       ) }}
+      {% if current_user.is_authenticated %}
+      <div class="mt-3 text-right">
+        <a href="{{ url_for('statements.flag_statement', statement_id=statement.id) }}"
+           class="text-xs text-gray-400 hover:text-red-500 transition-colors"
+           title="{{ _('Report this statement') }}">
+          🚩 {{ _('Report') }}
+        </a>
+      </div>
+      {% endif %}
     </div>
   </div>
 
