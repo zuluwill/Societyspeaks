@@ -2056,6 +2056,100 @@ def resend_daily_question(subscriber_id):
 
 
 # ============================================================================
+# STATEMENT MODERATION ROUTES (direct admin delete, no flag required)
+# ============================================================================
+
+@admin_bp.route('/discussions/<int:discussion_id>/statements')
+@login_required
+@admin_required
+def admin_discussion_statements(discussion_id):
+    """View all statements for a discussion so admin can delete spam directly."""
+    discussion = db.get_or_404(Discussion, discussion_id)
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = 50
+    show_deleted = request.args.get('show_deleted', '0') == '1'
+
+    query = (
+        Statement.query
+        .options(joinedload(Statement.user))
+        .filter_by(discussion_id=discussion_id)
+    )
+    if not show_deleted:
+        query = query.filter_by(is_deleted=False)
+    query = query.order_by(Statement.created_at.desc())
+    statements = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template(
+        'admin/discussions/statements.html',
+        discussion=discussion,
+        statements=statements,
+        show_deleted=show_deleted,
+    )
+
+
+@admin_bp.route('/statements/<int:statement_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_statement(statement_id):
+    """Soft-delete a statement directly as admin (no flag required)."""
+    statement = db.get_or_404(Statement, statement_id)
+    discussion_id = statement.discussion_id
+    try:
+        statement.is_deleted = True
+        statement.mod_status = -1
+        db.session.commit()
+        _log_admin_audit_event(
+            'delete_statement',
+            target_type='statement',
+            target_id=statement_id,
+            metadata={'discussion_id': discussion_id, 'content_preview': statement.content[:100]},
+        )
+        flash('Statement deleted.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting statement {statement_id}: {e}")
+        flash('Error deleting statement. Please try again.', 'error')
+
+    return redirect(url_for(
+        'admin.admin_discussion_statements',
+        discussion_id=discussion_id,
+        page=request.args.get('page', 1),
+        show_deleted=request.args.get('show_deleted', '0'),
+    ))
+
+
+@admin_bp.route('/statements/<int:statement_id>/restore', methods=['POST'])
+@login_required
+@admin_required
+def admin_restore_statement(statement_id):
+    """Restore a previously deleted statement."""
+    statement = db.get_or_404(Statement, statement_id)
+    discussion_id = statement.discussion_id
+    try:
+        statement.is_deleted = False
+        statement.mod_status = 0
+        db.session.commit()
+        _log_admin_audit_event(
+            'restore_statement',
+            target_type='statement',
+            target_id=statement_id,
+            metadata={'discussion_id': discussion_id},
+        )
+        flash('Statement restored.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error restoring statement {statement_id}: {e}")
+        flash('Error restoring statement.', 'error')
+
+    return redirect(url_for(
+        'admin.admin_discussion_statements',
+        discussion_id=discussion_id,
+        page=request.args.get('page', 1),
+        show_deleted=request.args.get('show_deleted', '1'),
+    ))
+
+
+# ============================================================================
 # FLAG MODERATION ROUTES
 # ============================================================================
 
