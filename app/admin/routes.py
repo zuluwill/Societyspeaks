@@ -2172,7 +2172,7 @@ def list_statement_flags():
         joinedload(StatementFlag.statement),
         joinedload(StatementFlag.flagger),
         joinedload(StatementFlag.reviewer)
-    ).join(Statement, StatementFlag.statement_id == Statement.id).outerjoin(flagger, StatementFlag.flagged_by_user_id == flagger.id)
+    ).join(Statement, StatementFlag.statement_id == Statement.id).outerjoin(flagger, StatementFlag.flagger_user_id == flagger.id)
 
     # Apply filters
     if status_filter and status_filter != 'all':
