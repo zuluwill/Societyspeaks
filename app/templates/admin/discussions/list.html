@@ -79,6 +79,8 @@
                             <div class="flex justify-end space-x-2">
                                 <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
                                    class="text-primary-600 hover:text-primary-900">View</a>
+                                <a href="{{ url_for('admin.admin_discussion_statements', discussion_id=discussion.id) }}"
+                                   class="text-indigo-600 hover:text-indigo-900">Statements</a>
                                 <form action="{{ url_for('admin.toggle_discussion_closed', discussion_id=discussion.id) }}" method="POST" class="inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit"
