@@ -36706,3 +36706,12 @@ msgid ""
 msgstr ""
 "Bluesky postet automatisch. X öffnet sich in einem neuen Tab mit "
 "vorgefülltem Text."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "Für Behörden"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "Für Regierungen, öffentliche Einrichtungen und Organisationen"

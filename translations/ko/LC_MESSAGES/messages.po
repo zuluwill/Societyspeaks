@@ -33734,3 +33734,12 @@ msgstr "X에서 공유"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky에 자동으로 게시됩니다. X는 미리 작성된 텍스트와 함께 새 탭에서 열립니다."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "정부 기관용"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "정부, 공공 기관 및 단체용"

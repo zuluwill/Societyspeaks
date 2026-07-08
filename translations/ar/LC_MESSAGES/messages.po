@@ -35077,3 +35077,12 @@ msgstr "مشاركة على X"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky ينشر تلقائيًا. X يفتح في علامة تبويب جديدة مع نص معبأ مسبقًا."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "للجهات الحكومية"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "للحكومات والهيئات العامة والمنظمات"

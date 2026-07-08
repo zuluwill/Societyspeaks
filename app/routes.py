@@ -553,6 +553,7 @@ User-agent: *
 Allow: /
 Allow: /about
 Allow: /platform
+Allow: /consultations
 Allow: /donate
 Allow: /faq
 Allow: /daily

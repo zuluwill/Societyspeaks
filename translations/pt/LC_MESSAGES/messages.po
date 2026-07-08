@@ -36409,3 +36409,12 @@ msgid ""
 msgstr ""
 "Bluesky publica automaticamente. X abre em uma nova aba com texto pré-"
 "preenchido."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "Para governos"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "Para governos, organismos públicos e organizações"

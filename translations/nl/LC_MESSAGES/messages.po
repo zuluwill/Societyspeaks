@@ -36438,3 +36438,12 @@ msgid ""
 msgstr ""
 "Bluesky plaatst automatisch. X opent in een nieuw tabblad met vooringevulde "
 "tekst."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "Voor overheden"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "Voor overheden, publieke instellingen en organisaties"

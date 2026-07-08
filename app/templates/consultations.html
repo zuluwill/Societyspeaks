@@ -41,11 +41,11 @@
   "@type": "FAQPage",
   "mainEntity": [
     {"@type": "Question", "name": "Do participants need an account?", "acceptedAnswer": {"@type": "Answer", "text": "No. Anyone can take part anonymously; results distinguish returning participants without identifying them."}},
-    {"@type": "Question", "name": "Can we use our own branding?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — the embedded consultation widget is themeable to your identity (colours, typography, presets), so on your own website it looks like yours."}},
+    {"@type": "Question", "name": "Can we use our own branding?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The embedded consultation widget can be themed to your identity — colours, typography and presets — so on your own website it looks like yours."}},
     {"@type": "Question", "name": "How many participants do we need?", "acceptedAnswer": {"@type": "Answer", "text": "Meaningful clustering starts at around 100 participants; the method has been used with thousands — and, in Kentucky, with nearly 8,000."}},
     {"@type": "Question", "name": "Who owns the data?", "acceptedAnswer": {"@type": "Answer", "text": "You do. Full export at any time, in CSV and JSON."}},
-    {"@type": "Question", "name": "Is this a survey?", "acceptedAnswer": {"@type": "Answer", "text": "No — participants respond to short statements and contribute their own. That is what surfaces the ideas you did not know to ask about."}},
-    {"@type": "Question", "name": "Is it really free to try?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Participating, creating a profile and trying the platform are free — including for council officers. A consultation run under your organisation's name and promoted to your residents is a paid plan, which is what keeps the platform free for citizens."}}
+    {"@type": "Question", "name": "Is this a survey?", "acceptedAnswer": {"@type": "Answer", "text": "No. Participants respond to short statements and contribute their own, which surfaces the ideas you did not know to ask about."}},
+    {"@type": "Question", "name": "Is it really free to try?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Participating, creating a profile and trying the platform are all free, including for public-sector officers. You pay when a consultation runs under your organisation's name and is promoted to your residents."}}
   ]
 }
 </script>
@@ -58,16 +58,16 @@
   <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
     <div class="mx-auto max-w-3xl text-center">
       <div class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-primary-700 mb-6">
-        <span>{{ _('For councils, public bodies and organisations') }}</span>
+        <span>{{ _('For governments, public bodies and organisations') }}</span>
       </div>
       <h1 id="consultations-hero-heading" class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
         {{ _('Find out where your community actually agrees.') }}
       </h1>
       <p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-        {{ _('Society Speaks runs online consultations that go beyond surveys. Residents respond to short statements — and to each other’s — and our analysis shows you where there is genuine consensus, which ideas bridge opposing groups, and where divisions are real and need attention.') }}
+        {{ _('Society Speaks runs online consultations that go beyond surveys. Residents vote on short statements and add their own, and the analysis shows where people agree, which ideas bridge opposing groups, and where the disagreement really lies.') }}
       </p>
       <p class="mt-4 text-lg font-semibold text-gray-800 max-w-2xl mx-auto">
-        {{ _('The result is not a stack of survey responses. It’s a map of common ground — with the evidence to defend every finding.') }}
+        {{ _('You get a map of common ground, with the evidence to defend every finding.') }}
       </p>
       <div class="mt-10 flex flex-wrap justify-center gap-4">
         <a href="mailto:info@societyspeaks.io?subject={{ _('Consultation scoping call')|urlencode }}" class="{{ btn_primary_lg() }}">
@@ -87,7 +87,7 @@
         {% endif %}
       </div>
       <p class="mt-6 text-sm text-gray-500">
-        {{ _('Free for citizens and community groups — paid public-sector plans keep it that way.') }}
+        {{ _('Free to take part. Paid public-sector plans keep it that way.') }}
       </p>
     </div>
   </div>
@@ -114,7 +114,7 @@
           </div>
           <div>
             <dt class="text-base font-semibold text-gray-900">{{ _('Participants set the agenda too.') }}</dt>
-            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('They vote on your statements and submit their own, so the issues you didn’t anticipate surface early — while you can still act on them.') }}</dd>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('They vote on your statements and submit their own, so the issues you didn’t anticipate surface early, while there is still time to act on them.') }}</dd>
           </div>
         </div>
         <div class="flex gap-4">
@@ -125,7 +125,7 @@
           </div>
           <div>
             <dt class="text-base font-semibold text-gray-900">{{ _('One tap, not one essay.') }}</dt>
-            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Voting takes seconds, so you hear from the silent majority — not just the people with time to write.') }}</dd>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Voting takes seconds, so you hear from the silent majority, not just the people with time to write.') }}</dd>
           </div>
         </div>
         <div class="flex gap-4">
@@ -136,7 +136,7 @@
           </div>
           <div>
             <dt class="text-base font-semibold text-gray-900">{{ _('The analysis finds the common ground.') }}</dt>
-            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Statistical clustering — the approach behind Pol.is, used from Taiwan to Kentucky — identifies consensus statements, bridge ideas that unite otherwise-opposed groups, and genuinely divisive issues, each with confidence intervals, not vibes.') }}</dd>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Statistical clustering — the method behind Pol.is, used from Taiwan to Kentucky — identifies consensus statements, bridge ideas that unite otherwise opposed groups, and genuinely divisive issues, each with a confidence interval.') }}</dd>
           </div>
         </div>
       </dl>
@@ -166,9 +166,9 @@
       {% set steps = [
         (_('Scoping'), _('We turn your consultation question into seed statements that are neutral, clear, and answerable — we draft, you approve.')),
         (_('A consultation space in your colours'), _('Hosted by us and embeddable on your own website with your palette and typography. Works on any phone, no account required to take part, available in 11 languages, built for accessibility.')),
-        (_('Live participation'), _('Residents vote, respond, and add their own statements. Moderation, anti-abuse and bot protection are built in. Want to compare groups — town by town, or residents versus businesses? We run parallel consultations on the same statements and deliver the side-by-side comparison in your report.')),
-        (_('Consensus analysis'), _('Updated continuously, not just at the end: opinion groups, consensus statements, bridge statements, divisive statements — all with published statistical methodology.')),
-        (_('Reporting and raw data'), _('A findings summary you can put in front of members, plus full CSV and JSON export of every statement and aggregate for your own analysts. Your data is yours — export everything, always.'))
+        (_('Live participation'), _('Residents vote, respond and add their own statements, with moderation, anti-abuse and bot protection built in. To compare groups — town by town, or residents versus businesses — we run parallel consultations on the same statements and deliver a side-by-side comparison in your report.')),
+        (_('Consensus analysis'), _('Updated throughout the consultation, not just at the end: opinion groups, consensus statements, bridge statements and divisive statements, all with published statistical methodology.')),
+        (_('Reporting and raw data'), _('A findings summary you can put in front of members, plus full CSV and JSON export of every statement and aggregate for your own analysts.'))
       ] %}
       {% for step_title, step_body in steps %}
       <li class="flex gap-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
@@ -181,8 +181,8 @@
       {% endfor %}
     </ol>
     <p class="mx-auto mt-8 max-w-3xl text-base text-gray-700 leading-relaxed">
-      <strong>{{ _('And because our platform is open source, there is no lock-in:') }}</strong>
-      {{ _('your consultation runs on software you can inspect, audit, and — if you ever wanted to — host yourself.') }}
+      <strong>{{ _('Because the platform is open source, there is no lock-in:') }}</strong>
+      {{ _('your consultation runs on software you can inspect, audit and, if you choose, host yourself.') }}
     </p>
   </div>
 </section>
@@ -193,7 +193,7 @@
     <div class="mx-auto max-w-3xl text-center">
       <h2 id="pricing-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Pricing') }}</h2>
       <p class="mt-4 text-lg text-gray-600">
-        {{ _('Everything included at every tier — no per-map, per-feature or per-response surcharges.') }}
+        {{ _('Every tier includes the full platform and analysis. No per-feature or per-response surcharges.') }}
       </p>
     </div>
 
@@ -248,7 +248,7 @@
         <p class="mt-4 text-base text-gray-600 leading-relaxed">
           {{ _('Unlimited consultations on a supported instance, priority support, and a quarterly review.') }}
         </p>
-        <p class="mt-3 text-sm text-gray-500">{{ _('Best for councils and organisations consulting year-round.') }}</p>
+        <p class="mt-3 text-sm text-gray-500">{{ _('Best for governments and organisations consulting year-round.') }}</p>
         <div class="mt-auto pt-6">
           <a href="mailto:info@societyspeaks.io?subject={{ _('Annual partnership')|urlencode }}" class="{{ btn_secondary_md() }} w-full min-h-11">
             {{ _('Talk to us') }}
@@ -259,10 +259,10 @@
 
     <div class="mx-auto mt-10 max-w-3xl text-center">
       <p class="text-sm text-gray-500">
-        {{ _('All prices exclude VAT. No procurement exercise is usually required at these values — most authorities can purchase directly under their own thresholds. Major programmes (for example local plans) are typically £8,000–£15,000, quoted after scoping.') }}
+        {{ _('All prices exclude VAT. At these values most authorities can purchase directly, without a formal procurement exercise. Major programmes, such as local plans, are typically £8,000–£15,000, quoted after scoping.') }}
       </p>
       <p class="mt-4 text-base text-gray-700">
-        {{ _('Free to participate, free to try — including for council officers. A consultation run under your organisation’s name and promoted to your residents is a paid plan.') }}
+        {{ _('Free to participate and free to try, including for public-sector officers. A consultation run under your organisation’s name and promoted to your residents is a paid plan.') }}
       </p>
       <p class="mt-2 text-base font-medium text-primary-700">
         {{ _('Paid public-sector plans keep Society Speaks free for citizens and community groups.') }}
@@ -293,7 +293,7 @@
       <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
         <h3 class="text-lg font-semibold text-gray-900">{{ _('Newsrooms and membership organisations') }}</h3>
         <p class="mt-3 text-base text-gray-600 leading-relaxed">
-          {{ _('Put the consultation where your audience already is, with our embeddable widget — a separate publisher product with free sandbox and live plans from £49/month.') }}
+          {{ _('Put the consultation where your audience already is, with our embeddable widget — a separate publisher product with a free sandbox and live plans from £49/month.') }}
         </p>
         <a href="{{ url_for('partner.hub') }}" class="mt-4 inline-flex items-center text-sm font-semibold text-primary-600 hover:text-primary-800 min-h-11">
           {{ _('Publisher embed pricing') }}
@@ -320,7 +320,7 @@
       <div>
         <dt class="text-base font-semibold text-gray-900">{{ _('Open source.') }}</dt>
         <dd class="mt-2 text-base text-gray-600 leading-relaxed">
-          {{ _('Full transparency about how conclusions are reached. No vendor lock-in, ever.') }}
+          {{ _('The full codebase is public, so anyone can inspect exactly how conclusions are reached.') }}
         </dd>
       </div>
       <div>
@@ -332,7 +332,7 @@
       <div>
         <dt class="text-base font-semibold text-gray-900">{{ _('UK company, privacy by design.') }}</dt>
         <dd class="mt-2 text-base text-gray-600 leading-relaxed">
-          {{ _('Anonymous participation by default, GDPR-aligned data practices, and the minimum data necessary — export or delete everything at any time.') }}
+          {{ _('Anonymous participation by default, GDPR-aligned data practices and the minimum data necessary. Export or delete everything at any time.') }}
         </dd>
       </div>
     </dl>
@@ -348,11 +348,11 @@
     <div class="mt-10 divide-y divide-gray-200">
       {% set faqs = [
         (_('Do participants need an account?'), _('No. Anyone can take part anonymously; results distinguish returning participants without identifying them.')),
-        (_('Can we use our own branding?'), _('Yes — the embedded consultation widget is themeable to your identity (colours, typography, presets), so on your own website it looks like yours.')),
+        (_('Can we use our own branding?'), _('Yes. The embedded consultation widget can be themed to your identity — colours, typography and presets — so on your own website it looks like yours.')),
         (_('How many participants do we need?'), _('Meaningful clustering starts at around 100 participants; the method has been used with thousands — and, in Kentucky, with nearly 8,000.')),
         (_('Who owns the data?'), _('You do. Full export at any time, in CSV and JSON.')),
-        (_('Is this a survey?'), _('No — participants respond to short statements and contribute their own. That’s what surfaces the ideas you didn’t know to ask about.')),
-        (_('Is it really free to try?'), _('Yes. Participating, creating a profile and trying the platform are free — including for council officers. A consultation run under your organisation’s name and promoted to your residents is a paid plan, which is what keeps the platform free for citizens.'))
+        (_('Is this a survey?'), _('No. Participants respond to short statements and contribute their own, which surfaces the ideas you didn’t know to ask about.')),
+        (_('Is it really free to try?'), _('Yes. Participating, creating a profile and trying the platform are all free, including for public-sector officers. You pay when a consultation runs under your organisation’s name and is promoted to your residents.'))
       ] %}
       {% for q, a in faqs %}
       <details class="group py-5">
@@ -378,7 +378,7 @@
       {{ _('Ready to see where your community agrees?') }}
     </h2>
     <p class="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
-      {{ _('A 20-minute scoping call is enough to tell whether your question fits the method — and you can try the platform yourself today, free.') }}
+      {{ _('A 20-minute scoping call is enough to tell whether your question suits the method. You can also try the platform yourself today, free.') }}
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-4">
       <a href="mailto:info@societyspeaks.io?subject={{ _('Consultation scoping call')|urlencode }}"

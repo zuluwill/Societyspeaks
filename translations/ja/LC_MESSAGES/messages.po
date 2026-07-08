@@ -33462,3 +33462,12 @@ msgstr "Xでシェア"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "BlueSkyは自動的に投稿されます。Xは新しいタブで事前入力されたテキストとともに開きます。"
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "行政機関向け"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "政府・公共機関・団体向け"

@@ -32991,3 +32991,12 @@ msgstr "在 X 上分享"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky 将自动发布。X 会在新标签页中打开，预填充文本。"
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "面向政府机构"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "面向政府、公共机构与组织"

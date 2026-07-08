@@ -36055,3 +36055,12 @@ msgid ""
 msgstr ""
 "Bluesky स्वचालित रूप से पोस्ट करता है। X पूर्व-भरे गए पाठ के साथ एक नई टैब "
 "में खुलता है।"
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "सरकारी निकायों के लिए"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "सरकारों, सार्वजनिक निकायों और संगठनों के लिए"

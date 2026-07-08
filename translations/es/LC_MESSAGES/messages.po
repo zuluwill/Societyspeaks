@@ -36353,3 +36353,12 @@ msgid ""
 msgstr ""
 "Bluesky publica automáticamente. X se abre en una pestaña nueva con texto "
 "prellenado."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "Para gobiernos"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "Para gobiernos, organismos públicos y organizaciones"

@@ -36813,3 +36813,12 @@ msgid ""
 msgstr ""
 "Les publications Bluesky se font automatiquement. X s'ouvre dans un nouvel "
 "onglet avec le texte pré-rempli."
+
+#: app/templates/layout.html:628 app/templates/layout.html:1017
+#: app/templates/layout.html:1322
+msgid "For Government"
+msgstr "Pour les gouvernements"
+
+#: app/templates/consultations.html:61
+msgid "For governments, public bodies and organisations"
+msgstr "Pour les gouvernements, organismes publics et organisations"
