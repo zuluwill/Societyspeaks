@@ -5,5 +5,10 @@ All rights reserved except as granted under the license terms in this repository
 Primary open-source license: GNU Affero General Public License v3.0 (`AGPL-3.0`).
 See `LICENSE` for the full license text.
 
-For non-AGPL commercial licensing terms (including partner and publisher use cases),
-contact the maintainers.
+The consensus analysis engine (`app/lib/consensus_engine.py`) is an original,
+independent implementation of published methodology (references in the module
+docstring). Two small sparsity-scaling helper functions within it are adapted
+from the red-dwarf library (AGPL-3.0, copyright its authors); see NOTICE.
+
+For commercial licensing of Society Speaks' original code, contact the
+maintainers. The adapted helper functions noted above remain AGPL-3.0 only.

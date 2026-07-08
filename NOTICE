@@ -11,5 +11,12 @@ Key examples include:
 - scikit-learn, numpy, pandas
 - Tailwind CSS
 
+The consensus analysis engine (`app/lib/consensus_engine.py`) independently
+implements published methodology (Small et al. 2021; Wilson 1927; Benjamini &
+Hochberg 1995; Monti et al. 2003). Its sparsity-aware scaling helpers
+(`calculate_scaling_factors`, `apply_sparsity_scaling`) are adapted from the
+red-dwarf library (https://github.com/polis-community/red-dwarf, AGPL-3.0,
+copyright its authors) and remain licensed under AGPL-3.0.
+
 Where required, attribution and license obligations for third-party components remain with
 their original authors and license terms.

@@ -8,7 +8,10 @@ test for statement representativeness, Benjamini–Hochberg FDR correction
 across the full (cluster × statement) test surface, and stability metrics
 computed for every analysis (not just oversize).
 
-Based on pol.is clustering patterns (AGPL-3.0).
+Original, independent implementation of the published pol.is methodology
+(references below). Exception: the sparsity-aware scaling helpers
+(calculate_scaling_factors, apply_sparsity_scaling) are adapted from the
+red-dwarf library (AGPL-3.0) — see NOTICE.
 
 Method references:
   - Small, C. T., Bjorkegren, M., Erkkilä, T., Shaw, L., & Megill, C. (2021).
