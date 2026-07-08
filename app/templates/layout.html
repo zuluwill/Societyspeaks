@@ -620,6 +620,17 @@
                     >{{ _('Pro') }}</span
                   >
                 </a>
+                <a
+                  href="{{ url_for('main.consultations') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                >
+                  {{ _('For Councils') }}
+                  <span
+                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-primary-800"
+                    >{{ _('Pro') }}</span
+                  >
+                </a>
               </div>
             </div>
 
@@ -999,6 +1010,16 @@
                   >{{ _('Pro') }}</span
                 >
               </a>
+              <a
+                href="{{ url_for('main.consultations') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
+              >
+                {{ _('For Councils') }}
+                <span
+                  class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white"
+                  >{{ _('Pro') }}</span
+                >
+              </a>
             </div>
 
             <!-- Explore Section -->
@@ -1291,6 +1312,14 @@
                   href="{{ url_for('partner.hub') }}"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _('For Publishers') }}
+                  <span class="text-xs text-primary-400">{{ _('Pro') }}</span></a
+                >
+              </li>
+              <li>
+                <a
+                  href="{{ url_for('main.consultations') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >{{ _('For Councils') }}
                   <span class="text-xs text-primary-400">{{ _('Pro') }}</span></a
                 >
               </li>
