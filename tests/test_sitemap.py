@@ -61,6 +61,7 @@ def test_sitemap_includes_core_product_hubs(sitemap_body):
         '/',
         '/about',
         '/platform',
+        '/consultations',
         '/discussions/search',
         '/discussions/news',
         '/brief/archive',

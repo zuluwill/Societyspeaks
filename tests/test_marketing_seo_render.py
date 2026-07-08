@@ -166,6 +166,7 @@ def test_core_marketing_pages_emit_single_explicit_canonical(client, db):
     cases = {
         '/': 'main.index',
         '/platform': 'main.platform',
+        '/consultations': 'main.consultations',
         '/news': 'news.dashboard',
         '/for-publishers/': 'partner.hub',
         '/privacy-policy': 'main.privacy_policy',
@@ -178,8 +179,26 @@ def test_core_marketing_pages_emit_single_explicit_canonical(client, db):
         assert html.count('rel="canonical"') == 1, f"{path}: expected exactly one canonical"
 
 
+def test_consultations_page_seo_and_pricing(client, db):
+    """Civic offer page: SEO blocks, locked pricing ladder, FAQ JSON-LD, free-for-citizens line."""
+    html = _get(client, db, '/consultations')
+    m = re.search(r'<title>(.*?)</title>', html, re.S)
+    assert m and 'Run a Consultation' in m.group(1)
+    assert html.count('rel="canonical"') == 1
+    # Locked civic ladder (8 Jul 2026) — one set of numbers everywhere
+    assert '£2,500' in html
+    assert '£5,000' in html
+    assert '£6,000' in html
+    # Boundary + mission framing
+    assert 'free for citizens' in html.lower()
+    # Structured data
+    blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+    types = {json.loads(b).get('@type') for b in blocks}
+    assert {'FAQPage', 'Service', 'BreadcrumbList'} <= types, f"consultations JSON-LD types: {types}"
+
+
 def test_og_url_matches_canonical_on_marketing_pages(client, db):
-    for path in ('/', '/about', '/platform', '/faq', '/donate'):
+    for path in ('/', '/about', '/platform', '/consultations', '/faq', '/donate'):
         html = _get(client, db, path)
         canonical = re.search(r'<link rel="canonical" href="([^"]+)"', html)
         og_url = re.search(r'property="og:url" content="([^"]+)"', html)

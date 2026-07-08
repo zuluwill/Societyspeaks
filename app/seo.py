@@ -114,6 +114,7 @@ def _static_entries(*, game_enabled: bool, self_serve_trial: bool) -> list[Sitem
         SitemapUrl(_external('main.index'), changefreq='daily', priority='1.0'),
         SitemapUrl(_external('main.about'), changefreq='monthly', priority='0.8'),
         SitemapUrl(_external('main.platform'), changefreq='weekly', priority='0.9'),
+        SitemapUrl(_external('main.consultations'), changefreq='monthly', priority='0.9'),
         SitemapUrl(_external('main.donate'), changefreq='monthly', priority='0.7'),
         SitemapUrl(_external('main.faq'), changefreq='monthly', priority='0.6'),
         SitemapUrl(_external('main.privacy_policy'), changefreq='monthly', priority='0.5'),

@@ -1,0 +1,396 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_secondary_lg, btn_secondary_md, link_primary %}
+
+{% block title %}{{ _('Run a Consultation — Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('main.consultations', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('Online public consultations that go beyond surveys. Society Speaks maps where your community actually agrees — consensus, bridge ideas and real divisions, with the statistics to defend every finding. Facilitated consultations from £2,500.') }}{% endblock %}
+{% block og_title %}{{ _('Find out where your community actually agrees — Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('Consultations that map common ground, not just collect comments. Residents vote on short statements and add their own; rigorous analysis shows consensus, bridge ideas and genuine divisions.') }}{% endblock %}
+{% block twitter_title %}{{ _('Find out where your community actually agrees — Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('Consultations that map common ground, not just collect comments. Residents vote on short statements and add their own; rigorous analysis shows consensus, bridge ideas and genuine divisions.') }}{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ url_for('main.index', _external=True) }}"},
+    {"@type": "ListItem", "position": 2, "name": "Consultations", "item": "{{ url_for('main.consultations', _external=True) }}"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Society Speaks public consultations",
+  "serviceType": "Facilitated online public consultation",
+  "provider": {"@type": "Organization", "name": "Society Speaks", "url": "{{ url_for('main.index', _external=True) }}"},
+  "areaServed": "GB",
+  "offers": [
+    {"@type": "Offer", "name": "Pilot consultation", "price": "2500", "priceCurrency": "GBP"},
+    {"@type": "Offer", "name": "Full consultation", "price": "5000", "priceCurrency": "GBP"},
+    {"@type": "Offer", "name": "Annual partner", "price": "6000", "priceCurrency": "GBP"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Do participants need an account?", "acceptedAnswer": {"@type": "Answer", "text": "No. Anyone can take part anonymously; results distinguish returning participants without identifying them."}},
+    {"@type": "Question", "name": "Can we use our own branding?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — the embedded consultation widget is themeable to your identity (colours, typography, presets), so on your own website it looks like yours."}},
+    {"@type": "Question", "name": "How many participants do we need?", "acceptedAnswer": {"@type": "Answer", "text": "Meaningful clustering starts at around 100 participants; the method has been used with thousands — and, in Kentucky, with nearly 8,000."}},
+    {"@type": "Question", "name": "Who owns the data?", "acceptedAnswer": {"@type": "Answer", "text": "You do. Full export at any time, in CSV and JSON."}},
+    {"@type": "Question", "name": "Is this a survey?", "acceptedAnswer": {"@type": "Answer", "text": "No — participants respond to short statements and contribute their own. That is what surfaces the ideas you did not know to ask about."}},
+    {"@type": "Question", "name": "Is it really free to try?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Participating, creating a profile and trying the platform are free — including for council officers. A consultation run under your organisation's name and promoted to your residents is a paid plan, which is what keeps the platform free for citizens."}}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────── #}
+<section class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white" aria-labelledby="consultations-hero-heading">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+    <div class="mx-auto max-w-3xl text-center">
+      <div class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-primary-700 mb-6">
+        <span>{{ _('For councils, public bodies and organisations') }}</span>
+      </div>
+      <h1 id="consultations-hero-heading" class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+        {{ _('Find out where your community actually agrees.') }}
+      </h1>
+      <p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        {{ _('Society Speaks runs online consultations that go beyond surveys. Residents respond to short statements — and to each other’s — and our analysis shows you where there is genuine consensus, which ideas bridge opposing groups, and where divisions are real and need attention.') }}
+      </p>
+      <p class="mt-4 text-lg font-semibold text-gray-800 max-w-2xl mx-auto">
+        {{ _('The result is not a stack of survey responses. It’s a map of common ground — with the evidence to defend every finding.') }}
+      </p>
+      <div class="mt-10 flex flex-wrap justify-center gap-4">
+        <a href="mailto:info@societyspeaks.io?subject={{ _('Consultation scoping call')|urlencode }}" class="{{ btn_primary_lg() }}">
+          {{ _('Book a scoping call') }}
+          <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+        {% if demo_discussion %}
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}" class="{{ btn_secondary_lg() }}">
+          {{ _('See a live consultation') }}
+        </a>
+        {% else %}
+        <a href="{{ url_for('discussions.search_discussions') }}" class="{{ btn_secondary_lg() }}">
+          {{ _('See a live consultation') }}
+        </a>
+        {% endif %}
+      </div>
+      <p class="mt-6 text-sm text-gray-500">
+        {{ _('Free for citizens and community groups — paid public-sector plans keep it that way.') }}
+      </p>
+    </div>
+  </div>
+</section>
+
+{# ── The problem with the usual tools ────────────────────────────────── #}
+<section class="bg-white py-16 sm:py-20" aria-labelledby="problem-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+      <h2 id="problem-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        {{ _('The problem with the usual tools') }}
+      </h2>
+      <p class="mt-4 text-lg text-gray-600 leading-relaxed">
+        {{ _('Surveys tell you what you thought to ask. Comment boxes reward the loudest voices. Public meetings reach the same thirty people every time.') }}
+      </p>
+      <p class="mt-3 text-lg font-medium text-gray-800">{{ _('A Society Speaks consultation is different:') }}</p>
+
+      <dl class="mt-8 space-y-8">
+        <div class="flex gap-4">
+          <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-primary-600" aria-hidden="true">
+            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+          </div>
+          <div>
+            <dt class="text-base font-semibold text-gray-900">{{ _('Participants set the agenda too.') }}</dt>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('They vote on your statements and submit their own, so the issues you didn’t anticipate surface early — while you can still act on them.') }}</dd>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-primary-600" aria-hidden="true">
+            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+            </svg>
+          </div>
+          <div>
+            <dt class="text-base font-semibold text-gray-900">{{ _('One tap, not one essay.') }}</dt>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Voting takes seconds, so you hear from the silent majority — not just the people with time to write.') }}</dd>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-primary-600" aria-hidden="true">
+            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div>
+            <dt class="text-base font-semibold text-gray-900">{{ _('The analysis finds the common ground.') }}</dt>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Statistical clustering — the approach behind Pol.is, used from Taiwan to Kentucky — identifies consensus statements, bridge ideas that unite otherwise-opposed groups, and genuinely divisive issues, each with confidence intervals, not vibes.') }}</dd>
+          </div>
+        </div>
+      </dl>
+
+      <figure class="mt-10 rounded-2xl bg-blue-50 p-6 sm:p-8 border-l-4 border-primary-600">
+        <blockquote class="text-base text-gray-800 leading-relaxed">
+          <p>{{ _('In 2025, Bowling Green, Kentucky used this method to plan its next 25 years: 7,890 residents — about 10%% of the city — cast over one million votes on 3,940 resident-submitted ideas. Over half reached 80%%+ agreement.') }}</p>
+        </blockquote>
+        <figcaption class="mt-3 text-sm text-gray-500">
+          {{ _('Covered by MIT Technology Review, Fast Company and PBS NewsHour.') }}
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+{# ── What you get ────────────────────────────────────────────────────── #}
+<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="what-you-get-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+      <h2 id="what-you-get-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        {{ _('What you get') }}
+      </h2>
+      <p class="mt-3 text-lg text-gray-600">{{ _('A complete consultation, run end-to-end:') }}</p>
+    </div>
+    <ol class="mx-auto mt-10 max-w-3xl space-y-6">
+      {% set steps = [
+        (_('Scoping'), _('We turn your consultation question into seed statements that are neutral, clear, and answerable — we draft, you approve.')),
+        (_('A consultation space in your colours'), _('Hosted by us and embeddable on your own website with your palette and typography. Works on any phone, no account required to take part, available in 11 languages, built for accessibility.')),
+        (_('Live participation'), _('Residents vote, respond, and add their own statements. Moderation, anti-abuse and bot protection are built in. Want to compare groups — town by town, or residents versus businesses? We run parallel consultations on the same statements and deliver the side-by-side comparison in your report.')),
+        (_('Consensus analysis'), _('Updated continuously, not just at the end: opinion groups, consensus statements, bridge statements, divisive statements — all with published statistical methodology.')),
+        (_('Reporting and raw data'), _('A findings summary you can put in front of members, plus full CSV and JSON export of every statement and aggregate for your own analysts. Your data is yours — export everything, always.'))
+      ] %}
+      {% for step_title, step_body in steps %}
+      <li class="flex gap-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+        <div class="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary-600 text-base font-bold text-white" aria-hidden="true">{{ loop.index }}</div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">{{ step_title }}</h3>
+          <p class="mt-1 text-base text-gray-600 leading-relaxed">{{ step_body }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="mx-auto mt-8 max-w-3xl text-base text-gray-700 leading-relaxed">
+      <strong>{{ _('And because our platform is open source, there is no lock-in:') }}</strong>
+      {{ _('your consultation runs on software you can inspect, audit, and — if you ever wanted to — host yourself.') }}
+    </p>
+  </div>
+</section>
+
+{# ── Pricing ─────────────────────────────────────────────────────────── #}
+<section class="bg-white py-16 sm:py-20" aria-labelledby="pricing-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 id="pricing-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Pricing') }}</h2>
+      <p class="mt-4 text-lg text-gray-600">
+        {{ _('Everything included at every tier — no per-map, per-feature or per-response surcharges.') }}
+      </p>
+    </div>
+
+    <div class="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
+      {# Pilot #}
+      <div class="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Pilot consultation') }}</h3>
+        <p class="mt-3 flex items-baseline gap-1">
+          <span class="text-4xl font-bold tracking-tight text-gray-900">£2,500</span>
+        </p>
+        <p class="mt-1 text-sm text-gray-500">{{ _('one consultation, up to 4 weeks live') }}</p>
+        <p class="mt-4 text-base text-gray-600 leading-relaxed">
+          {{ _('One facilitated consultation: scoping, seed statements, moderation support, findings summary and full data export.') }}
+        </p>
+        <p class="mt-3 text-sm text-gray-500">{{ _('Best for a single decision or “have your say” exercise.') }}</p>
+        <div class="mt-auto pt-6">
+          <a href="mailto:info@societyspeaks.io?subject={{ _('Pilot consultation')|urlencode }}" class="{{ btn_secondary_md() }} w-full min-h-11">
+            {{ _('Start a pilot') }}
+          </a>
+        </div>
+      </div>
+
+      {# Full — highlighted #}
+      <div class="relative flex flex-col rounded-2xl bg-white p-8 shadow-md ring-2 ring-primary-600">
+        <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white">{{ _('Recommended') }}</span>
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Full consultation') }}</h3>
+        <p class="mt-3 flex items-baseline gap-1">
+          <span class="text-sm font-medium text-gray-500">{{ _('from') }}</span>
+          <span class="text-4xl font-bold tracking-tight text-gray-900">£5,000</span>
+        </p>
+        <p class="mt-1 text-sm text-gray-500">{{ _('multi-phase or multi-group work') }}</p>
+        <p class="mt-4 text-base text-gray-600 leading-relaxed">
+          {{ _('Scoping workshop, parallel consultation strands, a delivered comparison report, and presentation support for members.') }}
+        </p>
+        <p class="mt-3 text-sm text-gray-500">{{ _('Best for budget priorities, contested local issues and cross-town programmes.') }}</p>
+        <div class="mt-auto pt-6">
+          <a href="mailto:info@societyspeaks.io?subject={{ _('Full consultation')|urlencode }}" class="{{ btn_primary_md() }} w-full min-h-11">
+            {{ _('Book a scoping call') }}
+          </a>
+        </div>
+      </div>
+
+      {# Annual #}
+      <div class="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Annual partner') }}</h3>
+        <p class="mt-3 flex items-baseline gap-1">
+          <span class="text-sm font-medium text-gray-500">{{ _('from') }}</span>
+          <span class="text-4xl font-bold tracking-tight text-gray-900">£6,000</span>
+          <span class="text-sm font-medium text-gray-500">{{ _('/year') }}</span>
+        </p>
+        <p class="mt-1 text-sm text-gray-500">{{ _('custom annual agreement') }}</p>
+        <p class="mt-4 text-base text-gray-600 leading-relaxed">
+          {{ _('Unlimited consultations on a supported instance, priority support, and a quarterly review.') }}
+        </p>
+        <p class="mt-3 text-sm text-gray-500">{{ _('Best for councils and organisations consulting year-round.') }}</p>
+        <div class="mt-auto pt-6">
+          <a href="mailto:info@societyspeaks.io?subject={{ _('Annual partnership')|urlencode }}" class="{{ btn_secondary_md() }} w-full min-h-11">
+            {{ _('Talk to us') }}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mx-auto mt-10 max-w-3xl text-center">
+      <p class="text-sm text-gray-500">
+        {{ _('All prices exclude VAT. No procurement exercise is usually required at these values — most authorities can purchase directly under their own thresholds. Major programmes (for example local plans) are typically £8,000–£15,000, quoted after scoping.') }}
+      </p>
+      <p class="mt-4 text-base text-gray-700">
+        {{ _('Free to participate, free to try — including for council officers. A consultation run under your organisation’s name and promoted to your residents is a paid plan.') }}
+      </p>
+      <p class="mt-2 text-base font-medium text-primary-700">
+        {{ _('Paid public-sector plans keep Society Speaks free for citizens and community groups.') }}
+      </p>
+    </div>
+  </div>
+</section>
+
+{# ── Who it's for ────────────────────────────────────────────────────── #}
+<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="who-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 id="who-heading" class="mx-auto max-w-3xl text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      {{ _('Who it’s for') }}
+    </h2>
+    <div class="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
+      <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Local authorities') }}</h3>
+        <p class="mt-3 text-base text-gray-600 leading-relaxed">
+          {{ _('Local plan engagement, budget consultations, regeneration, transport schemes — and the “difficult conversations” where a survey would inflame rather than inform.') }}
+        </p>
+      </div>
+      <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Deliberation and research organisations') }}</h3>
+        <p class="mt-3 text-base text-gray-600 leading-relaxed">
+          {{ _('We supply the platform and analysis inside your projects — citizens’ assemblies, public dialogues — under your brand if you prefer.') }}
+        </p>
+      </div>
+      <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Newsrooms and membership organisations') }}</h3>
+        <p class="mt-3 text-base text-gray-600 leading-relaxed">
+          {{ _('Put the consultation where your audience already is, with our embeddable widget — a separate publisher product with free sandbox and live plans from £49/month.') }}
+        </p>
+        <a href="{{ url_for('partner.hub') }}" class="mt-4 inline-flex items-center text-sm font-semibold text-primary-600 hover:text-primary-800 min-h-11">
+          {{ _('Publisher embed pricing') }}
+          <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── Why us ──────────────────────────────────────────────────────────── #}
+<section class="bg-white py-16 sm:py-20" aria-labelledby="why-us-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 id="why-us-heading" class="mx-auto max-w-3xl text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      {{ _('Why us') }}
+    </h2>
+    <dl class="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2">
+      <div>
+        <dt class="text-base font-semibold text-gray-900">{{ _('Rigorous by design.') }}</dt>
+        <dd class="mt-2 text-base text-gray-600 leading-relaxed">
+          {{ _('Our consensus engine implements the peer-reviewed clustering approach behind Pol.is, with additional statistical safeguards — confidence intervals on every figure, multiple-comparison correction, stability testing — so findings survive scrutiny, including hostile scrutiny.') }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-base font-semibold text-gray-900">{{ _('Open source.') }}</dt>
+        <dd class="mt-2 text-base text-gray-600 leading-relaxed">
+          {{ _('Full transparency about how conclusions are reached. No vendor lock-in, ever.') }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-base font-semibold text-gray-900">{{ _('Accessible and inclusive.') }}</dt>
+        <dd class="mt-2 text-base text-gray-600 leading-relaxed">
+          {{ _('Built for accessibility, available in 11 languages, no login required, works on the cheapest phone.') }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-base font-semibold text-gray-900">{{ _('UK company, privacy by design.') }}</dt>
+        <dd class="mt-2 text-base text-gray-600 leading-relaxed">
+          {{ _('Anonymous participation by default, GDPR-aligned data practices, and the minimum data necessary — export or delete everything at any time.') }}
+        </dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+{# ── FAQ ─────────────────────────────────────────────────────────────── #}
+<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="faq-heading">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <h2 id="faq-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      {{ _('Frequently asked questions') }}
+    </h2>
+    <div class="mt-10 divide-y divide-gray-200">
+      {% set faqs = [
+        (_('Do participants need an account?'), _('No. Anyone can take part anonymously; results distinguish returning participants without identifying them.')),
+        (_('Can we use our own branding?'), _('Yes — the embedded consultation widget is themeable to your identity (colours, typography, presets), so on your own website it looks like yours.')),
+        (_('How many participants do we need?'), _('Meaningful clustering starts at around 100 participants; the method has been used with thousands — and, in Kentucky, with nearly 8,000.')),
+        (_('Who owns the data?'), _('You do. Full export at any time, in CSV and JSON.')),
+        (_('Is this a survey?'), _('No — participants respond to short statements and contribute their own. That’s what surfaces the ideas you didn’t know to ask about.')),
+        (_('Is it really free to try?'), _('Yes. Participating, creating a profile and trying the platform are free — including for council officers. A consultation run under your organisation’s name and promoted to your residents is a paid plan, which is what keeps the platform free for citizens.'))
+      ] %}
+      {% for q, a in faqs %}
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 rounded-md">
+          <span class="text-base font-semibold text-gray-900">{{ q }}</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-base text-gray-600 leading-relaxed pr-8">{{ a }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ── Final CTA ───────────────────────────────────────────────────────── #}
+<section class="bg-primary-600 py-14" aria-labelledby="final-cta-heading">
+  <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+    <h2 id="final-cta-heading" class="text-2xl font-bold text-white sm:text-3xl">
+      {{ _('Ready to see where your community agrees?') }}
+    </h2>
+    <p class="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
+      {{ _('A 20-minute scoping call is enough to tell whether your question fits the method — and you can try the platform yourself today, free.') }}
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-4">
+      <a href="mailto:info@societyspeaks.io?subject={{ _('Consultation scoping call')|urlencode }}"
+         class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition-colors min-h-11">
+        {{ _('Book a scoping call') }}
+      </a>
+      <a href="{{ url_for('main.platform') }}"
+         class="inline-flex items-center justify-center rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors min-h-11">
+        {{ _('Explore the platform') }}
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

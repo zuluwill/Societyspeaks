@@ -246,6 +246,12 @@ def platform():
     return render_template('platform.html', demo_discussion=demo_discussion, featured_discussions=featured_discussions)
 
 
+@main_bp.route('/consultations')
+def consultations():
+    demo_discussion = db.session.get(Discussion, 25)
+    return render_template('consultations.html', demo_discussion=demo_discussion)
+
+
 @main_bp.route('/set-language', methods=['POST'])
 def set_language():
     """Cookie-based language switch; also persists to User.language if authenticated."""

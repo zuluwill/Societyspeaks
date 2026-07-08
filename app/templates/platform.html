@@ -536,7 +536,7 @@
               <td class="px-4 py-3.5 text-center"><span class="text-gray-400 text-base">~</span></td>
             </tr>
             <tr class="hover:bg-gray-50">
-              <td class="px-5 py-3.5 text-gray-700 font-medium">{{ _('Free to use') }}</td>
+              <td class="px-5 py-3.5 text-gray-700 font-medium">{{ _('Free for citizens and community use') }}</td>
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
@@ -848,6 +848,11 @@
              class="{{ btn_secondary_sm() }} min-h-11">
             {{ _('How Programmes work') }}
           </a>
+          <a href="{{ url_for('main.consultations') }}"
+             class="inline-flex items-center text-sm font-semibold text-purple-700 hover:text-purple-900 min-h-11">
+            {{ _('Facilitated consultations for councils') }}
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </div>
       </div>
 
@@ -893,13 +898,13 @@
           </a>
         </div>
         <div class="flex flex-wrap gap-3">
-          <a href="{{ url_for('programmes.create_programme') }}"
-             class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors min-h-11">
-            {{ _('Create a Programme') }}
+          <a href="{{ url_for('main.consultations') }}"
+             class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-colors min-h-11">
+            {{ _('See consultation pricing') }}
           </a>
           <a href="mailto:info@societyspeaks.io?subject=Government%20%2F%20national%20consultation%20enquiry"
              class="{{ btn_secondary_sm() }} min-h-11">
-            {{ _('Get in touch') }}
+            {{ _('Book a scoping call') }}
           </a>
         </div>
       </div>
@@ -1009,6 +1014,62 @@
   </div>
 </div>
 
+{# ── Who pays ── #}
+<div class="bg-gray-50 py-16 border-t border-gray-100">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-10">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">{{ _('Pricing') }}</p>
+      <h2 class="text-3xl font-bold text-gray-900">{{ _('Who pays?') }}</h2>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">{{ _('Free for citizens. Facilitated plans for public bodies. Separate self-serve pricing for publisher embeds.') }}</p>
+    </div>
+
+    <div class="mx-auto max-w-4xl overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200">
+            <th class="text-left px-5 py-4 text-gray-600 font-semibold">{{ _('Who') }}</th>
+            <th class="text-left px-5 py-4 text-gray-600 font-semibold">{{ _('What') }}</th>
+            <th class="text-right px-5 py-4 text-gray-600 font-semibold whitespace-nowrap">{{ _('Price') }}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Individuals, community groups, journalists') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Full platform, self-serve — participate, create discussions and profiles') }}</td>
+            <td class="px-5 py-4 text-right font-semibold text-emerald-700 whitespace-nowrap align-top">{{ _('Free') }}</td>
+          </tr>
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Councils and public bodies — trying it out') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Self-serve trial — run a test consultation before you commit') }}</td>
+            <td class="px-5 py-4 text-right font-semibold text-emerald-700 whitespace-nowrap align-top">{{ _('Free') }}</td>
+          </tr>
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Councils and public bodies — official consultations') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Facilitated consultation: scoping, seed statements, moderation support, branded embed, findings summary') }}</td>
+            <td class="px-5 py-4 text-right font-semibold text-gray-900 whitespace-nowrap align-top">
+              <a href="{{ url_for('main.consultations') }}" class="text-primary-600 hover:underline">{{ _('from £2,500') }}</a>
+            </td>
+          </tr>
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Publishers and embed partners') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Embed voting on your site — free sandbox, live plans with API and domain controls') }}</td>
+            <td class="px-5 py-4 text-right font-semibold text-gray-900 whitespace-nowrap align-top">
+              <a href="{{ url_for('partner.hub') }}" class="text-primary-600 hover:underline">{{ _('from £49/mo') }}</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mx-auto mt-6 max-w-3xl text-center text-sm text-gray-600">
+      {{ _('Free to participate, free to try — including for council officers. A consultation run under your organisation’s name and promoted to your residents is a paid plan.') }}
+    </p>
+    <p class="mx-auto mt-2 max-w-3xl text-center text-sm font-medium text-primary-700">
+      {{ _('Paid public-sector plans keep Society Speaks free for citizens and community groups.') }}
+    </p>
+  </div>
+</div>
+
 {# ── FAQs ── #}
 <div class="bg-white py-16 border-t border-gray-100">
   <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -1027,8 +1088,10 @@
           </span>
         </summary>
         <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">
-          {{ _('Yes — participating in discussions, creating discussions, and creating individual and organisation profiles are all free. Programmes are also free for most use cases. For large-scale institutional deployments with dedicated support, white-labelling, or advanced integrations,') }}
-          <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:underline font-medium">{{ _('get in touch') }}</a>.
+          {{ _('Yes, for citizens and community use — participating in discussions, creating discussions, and creating individual and organisation profiles are all free, and paid public-sector plans are what keep it that way. Councils and public bodies can try the platform free too; running an official consultation under your organisation’s name is a paid, facilitated service starting at £2,500 —') }}
+          <a href="{{ url_for('main.consultations') }}" class="text-primary-600 hover:underline font-medium">{{ _('see consultation pricing') }}</a>.
+          {{ _('Publishers embedding discussions have separate self-serve plans') }}
+          <a href="{{ url_for('partner.hub') }}" class="text-primary-600 hover:underline font-medium">{{ _('from £49/month') }}</a>.
         </p>
       </details>
 
