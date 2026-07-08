@@ -753,7 +753,7 @@
              class="{{ btn_secondary_sm() }} min-h-11">
             {{ _("Today's Question") }}
           </a>
-          <a href="{{ url_for('discussions.create_discussion') }}"
+          <a href="{{ url_for('discussions.create_discussion') if current_user.is_authenticated else url_for('auth.register') }}"
              class="{{ btn_secondary_sm() }} min-h-11">
             {{ _('Start a discussion') }}
           </a>
@@ -796,7 +796,7 @@
           {{ _('<strong>Example:</strong> A podcast creates a discussion around a controversial episode topic. Listeners vote on statements, and the hosts see where their audience clusters — who agrees on what, and what genuinely divides them. Better signal than comments. Citable data.')|safe }}
         </div>
         <div class="flex flex-wrap gap-3">
-          <a href="{{ url_for('discussions.create_discussion') }}"
+          <a href="{{ url_for('discussions.create_discussion') if current_user.is_authenticated else url_for('auth.register') }}"
              class="{{ btn_primary_sm() }} min-h-11">
             {{ _('Start a discussion') }}
           </a>
@@ -840,7 +840,7 @@
           </li>
         </ul>
         <div class="flex flex-wrap gap-3">
-          <a href="{{ url_for('programmes.create_programme') }}"
+          <a href="{{ url_for('programmes.create_programme') if current_user.is_authenticated else url_for('auth.register') }}"
              class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors min-h-11">
             {{ _('Create a Programme') }}
           </a>
@@ -959,7 +959,7 @@
               <span class="text-sm text-gray-700">{{ _('Free — no subscription, no time limit') }}</span>
             </li>
           </ul>
-          <a href="{{ url_for('profiles.create_individual_profile') }}"
+          <a href="{{ url_for('profiles.create_individual_profile') if current_user.is_authenticated else url_for('auth.register') }}"
              class="{{ btn_primary_md() }}">
             {{ _('Create an individual profile') }}
             <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -1002,7 +1002,7 @@
               <span class="text-sm text-gray-700">{{ _('Embed discussions on your own site under your brand') }}</span>
             </li>
           </ul>
-          <a href="{{ url_for('profiles.create_company_profile') }}"
+          <a href="{{ url_for('profiles.create_company_profile') if current_user.is_authenticated else url_for('auth.register') }}"
              class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors">
             {{ _('Create an organisation profile') }}
             <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
