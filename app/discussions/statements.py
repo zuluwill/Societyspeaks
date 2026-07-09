@@ -1031,9 +1031,8 @@ def vote_statement(statement_id):
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'csrf_failed'}), 400
 
-    user_agent = request.headers.get('User-Agent', '').lower()
-    bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
-    if any(indicator in user_agent for indicator in bot_indicators):
+    from app.lib.session_policy import user_agent_is_bot
+    if user_agent_is_bot(request.headers.get('User-Agent')):
         if is_form_post:
             flash(_('Automated requests are not allowed.'), 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))

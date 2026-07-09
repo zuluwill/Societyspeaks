@@ -378,8 +378,13 @@ class Config:
     # provides the relevant entropy and avoids deprecated Flask-Session config.
     SESSION_ID_LENGTH = _env_int('SESSION_ID_LENGTH', 32)
     # 24 hours keeps users logged in across a normal day without forcing
-    # frequent re-authentication; adjust upward for "remember me" style UX.
+    # frequent re-authentication; ProductionConfig extends this to 7 days.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
+    # Storage TTL for sessions with no authenticated principal (see
+    # app/lib/session_policy.py). Anonymous sessions only carry CSRF tokens
+    # and transient UI state; a short TTL stops visitor/crawler traffic from
+    # accumulating weeks of dead keys in Redis.
+    ANONYMOUS_SESSION_LIFETIME = timedelta(hours=48)
     SESSION_REDIS_RETRY_ON_TIMEOUT = True
     SESSION_REDIS_RETRY_NUMBER = 3
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'

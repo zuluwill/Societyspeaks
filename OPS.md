@@ -1,6 +1,6 @@
 # Production operations — Society Speaks
 #
-# Stack: Render (Frankfurt) + Neon (London) + S3 (London) + Upstash
+# Stack: Render (Frankfurt) + Neon (London) + S3 (London) + Redis Cloud (London)
 # Deploy: push to GitHub `main` → Render Blueprint auto-deploy
 # Detail: RENDER_DEPLOY.md
 
@@ -13,6 +13,8 @@ git push origin main
 Render rebuilds web + scheduler + consensus worker. Web runs `flask db upgrade` pre-deploy.
 
 After env-only changes: Render → service → **Manual Deploy**.
+
+**Scheduler “Application exited early” emails:** expected on deploys (SIGTERM). Recurring every ~30 minutes meant the old Replit timed self-exit was still on — Render uses `SCHEDULER_MAX_RUNTIME_SECONDS=0` so the process stays up. Watch Metrics RSS; only re-enable a timed recycle if memory grows without bound.
 
 ## Automated backups
 
@@ -76,6 +78,26 @@ See checklist in `RENDER_DEPLOY.md` §5. Confirm scheduler and consensus **logs*
 2. UptimeRobot / Better Stack → ping production URL every 5 minutes  
 3. AWS Billing → alarm if estimated charges > e.g. $50  
 4. Neon → keep Launch PITR; retain an independent dump via the cron above  
+
+## Redis session policy
+
+Server-side sessions live in Redis Cloud (London, 250MB free tier). Storage
+policy (`app/lib/session_policy.py`): authenticated sessions keep
+`PERMANENT_SESSION_LIFETIME` (7 days in production); anonymous sessions get
+`ANONYMOUS_SESSION_LIFETIME` (48h); crawler user agents store no session at
+all. Without this, ~40k visitor/bot sessions a day at 7-day TTL filled the
+instance and volatile-lru evicted logged-in users (July 2026 incident: 275k
+keys, 17 of them authenticated).
+
+If Redis memory climbs again:
+
+```bash
+export REDIS_URL='rediss://…'
+python3 scripts/purge_anonymous_sessions.py            # dry run
+python3 scripts/purge_anonymous_sessions.py --execute  # delete anonymous sessions
+```
+
+Deleting anonymous sessions logs nobody out (they hold only CSRF/UI state).
 
 ## Secrets hygiene
 

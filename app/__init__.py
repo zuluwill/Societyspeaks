@@ -499,9 +499,9 @@ def create_app():
     # propagating a 500.  Only applied when Redis is actually in use.
     if app.config.get('SESSION_TYPE') == 'redis' and app.config.get('SESSION_REDIS'):
         try:
-            from app.lib.resilient_session import ResilientRedisSessionInterface
+            from app.lib.session_policy import PolicyRedisSessionInterface
             redis_client = app.config['SESSION_REDIS']
-            app.session_interface = ResilientRedisSessionInterface(
+            app.session_interface = PolicyRedisSessionInterface(
                 app=app,
                 client=redis_client,
                 key_prefix=app.config.get('SESSION_KEY_PREFIX', 'session:'),
@@ -851,11 +851,12 @@ def create_app():
         )
 
     # Security settings
+    # PERMANENT_SESSION_LIFETIME is intentionally NOT set here — config.py is
+    # the single source (24h base, 7 days in ProductionConfig).
     app.config.update(
         SESSION_COOKIE_SECURE=True,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
-        PERMANENT_SESSION_LIFETIME=timedelta(days=7)
     )
 
     # Note: Sentry already initialized at top of create_app() for production
