@@ -1,7 +1,7 @@
 """
 DOCX Text Extractor
 
-Extracts text from DOCX/Word files stored in Replit Object Storage.
+Extracts text from DOCX/Word files stored in object storage (S3 in production).
 Handles large files efficiently using temporary files when needed.
 """
 
@@ -21,7 +21,7 @@ MAX_TEXT_LENGTH = 5 * 1024 * 1024  # 5 MB max extracted text
 
 def extract_text_from_docx(storage_key: str) -> Optional[str]:
     """
-    Extract text from a DOCX file in Replit Object Storage.
+    Extract text from a DOCX file in object storage.
 
     Handles large files efficiently:
     - Files under 10MB: Process in memory
@@ -29,17 +29,19 @@ def extract_text_from_docx(storage_key: str) -> Optional[str]:
     - Files over 50MB: Rejected
 
     Args:
-        storage_key: Replit Object Storage key (e.g., 'uploads/user_123/document.docx')
+        storage_key: Object storage key (e.g., 'briefing_uploads/123/document.docx')
 
     Returns:
         Extracted text as string, or None if extraction fails
     """
     try:
-        from replit.object_storage import Client
-        client = Client()
+        from app.storage_utils import download_bytes_from_object_storage
 
         # Download DOCX from storage
-        docx_data = client.download_bytes(storage_key)
+        docx_data = download_bytes_from_object_storage(storage_key)
+        if docx_data is None:
+            logger.error(f"DOCX not found in object storage: {storage_key}")
+            return None
         file_size = len(docx_data)
 
         logger.info(f"Processing DOCX {storage_key} ({file_size / 1024 / 1024:.2f} MB)")

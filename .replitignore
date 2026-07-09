@@ -1,9 +1,0 @@
-.cache/
-.git/
-.local/
-attached_assets/
-node_modules/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/

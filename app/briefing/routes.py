@@ -2318,7 +2318,7 @@ def upload_source():
     
     if request.method == 'POST':
         try:
-            from replit.object_storage import Client
+            from app.storage_utils import upload_bytes_to_object_storage
             from werkzeug.utils import secure_filename
             from app.billing.abuse_guardrails import check_upload_rate_limit, record_upload
             import secrets
@@ -2351,12 +2351,13 @@ def upload_source():
             # Extract file extension
             file_ext = '.' + filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
 
-            # Upload to Replit Object Storage
-            client = Client()
+            # Upload to object storage (S3 in production)
             storage_key = f"briefing_uploads/{current_user.id}/{secrets.token_urlsafe(16)}{file_ext}"
-            
+
             file_content = file.read()
-            client.upload_from_bytes(storage_key, file_content)
+            if not upload_bytes_to_object_storage(storage_key, file_content):
+                flash(_('An error occurred while uploading the file'), 'error')
+                return redirect(url_for('briefing.upload_source'))
             
             # Create InputSource with status='extracting'
             source = InputSource(

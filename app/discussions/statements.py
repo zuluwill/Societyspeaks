@@ -2017,7 +2017,7 @@ def get_response_children(response_id):
 def add_evidence(response_id):
     """
     Add evidence to a response (citation, URL, or file upload)
-    Uses Replit Object Storage for file uploads
+    Uses object storage (S3 in production) for file uploads
     """
     from app.discussions.statement_forms import EvidenceForm
     from app.models import Evidence
@@ -2043,7 +2043,7 @@ def add_evidence(response_id):
                 added_by_user_id=current_user.id
             )
             
-            # Handle file upload to Replit Object Storage
+            # Handle file upload to object storage
             if 'file' in request.files and request.files['file'].filename:
                 file = request.files['file']
                 
@@ -2056,26 +2056,25 @@ def add_evidence(response_id):
                     flash(_("File size must be under 10MB"), "danger")
                     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
                 
-                # Upload to Replit Object Storage
+                # Upload to object storage (S3 in production)
                 try:
-                    from replit.object_storage import Client
-                    storage_client = Client()
-                    
+                    from app.storage_utils import upload_bytes_to_object_storage
+
                     # Generate unique key
                     import uuid
                     file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
                     storage_key = f"evidence/{response.statement.discussion_id}/{response.id}/{uuid.uuid4()}.{file_extension}"
-                    
+
                     # Upload file
                     file_content = file.read()
-                    storage_client.upload_from_bytes(storage_key, file_content)
-                    
-                    # Get public URL
+                    if not upload_bytes_to_object_storage(storage_key, file_content):
+                        raise RuntimeError(f"object storage upload failed for {storage_key}")
+
                     evidence.storage_key = storage_key
-                    evidence.storage_url = None  # Files are served via /api/evidence/<id>/download using the SDK key
-                    
+                    evidence.storage_url = None  # Files are served via /api/evidence/<id>/download using the storage key
+
                 except Exception as e:
-                    current_app.logger.error(f"Error uploading to Replit storage: {e}")
+                    current_app.logger.error(f"Error uploading evidence to object storage: {e}")
                     flash(_("Error uploading file. Please try again."), "danger")
                     return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
             
@@ -2098,7 +2097,7 @@ def add_evidence(response_id):
 @login_required
 def delete_evidence(evidence_id):
     """
-    Delete evidence (and remove file from Replit Object Storage if applicable)
+    Delete evidence (and remove file from object storage if applicable)
     Only the user who added it or discussion owner can delete
     """
     from app.models import Evidence
@@ -2113,12 +2112,11 @@ def delete_evidence(evidence_id):
         flash(_("You don't have permission to delete this evidence"), "danger")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
-    # Delete file from Replit Object Storage if exists
+    # Delete file from object storage if exists
     if evidence.storage_key:
         try:
-            from replit.object_storage import Client
-            storage_client = Client()
-            storage_client.delete(evidence.storage_key)
+            from app.storage_utils import delete_bytes_from_object_storage
+            delete_bytes_from_object_storage(evidence.storage_key)
         except Exception as e:
             current_app.logger.error(f"Error deleting file from storage: {e}")
             # Continue with database deletion even if storage deletion fails
@@ -2163,7 +2161,7 @@ def update_evidence_quality(evidence_id):
 @statements_bp.route('/api/evidence/<int:evidence_id>/download')
 def download_evidence(evidence_id):
     """
-    Download evidence file from Replit Object Storage
+    Download evidence file from object storage
     """
     from app.models import Evidence
     from flask import send_file
@@ -2177,12 +2175,13 @@ def download_evidence(evidence_id):
         return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
     
     try:
-        from replit.object_storage import Client
-        storage_client = Client()
-        
+        from app.storage_utils import download_bytes_from_object_storage
+
         # Download file from storage
-        file_content = storage_client.download_as_bytes(evidence.storage_key)
-        
+        file_content = download_bytes_from_object_storage(evidence.storage_key)
+        if file_content is None:
+            raise FileNotFoundError(evidence.storage_key)
+
         # Get original filename
         filename = evidence.storage_key.split('/')[-1]
         

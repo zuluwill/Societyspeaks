@@ -1,14 +1,14 @@
 """
 PDF Text Extractor
 
-Extracts text from PDF files stored in Replit Object Storage.
+Extracts text from PDF files stored in object storage (S3 in production).
 Handles large files efficiently using streaming and temporary files.
 """
 
 import logging
 import tempfile
 import os
-from typing import Optional, Tuple
+from typing import Optional
 from io import BytesIO
 
 logger = logging.getLogger(__name__)
@@ -20,76 +20,9 @@ MAX_PAGES = 500  # Maximum pages to process
 MAX_TEXT_LENGTH = 5 * 1024 * 1024  # 5 MB max extracted text
 
 
-def get_file_size(storage_key: str) -> Optional[int]:
-    """
-    Get file size from storage without downloading.
-
-    Args:
-        storage_key: Replit Object Storage key
-
-    Returns:
-        File size in bytes, or None if unable to determine
-    """
-    try:
-        from replit.object_storage import Client
-        client = Client()
-        # Try to get metadata/size
-        # Note: Replit's API may not support this, so we fall back to downloading
-        # For now, return None to indicate we need to download to check
-        return None
-    except Exception as e:
-        logger.debug(f"Could not get file size for {storage_key}: {e}")
-        return None
-
-
-def download_to_tempfile(storage_key: str) -> Tuple[Optional[str], Optional[int]]:
-    """
-    Download file to a temporary file, streaming to avoid memory issues.
-
-    Args:
-        storage_key: Replit Object Storage key
-
-    Returns:
-        Tuple of (temp_file_path, file_size) or (None, None) on error
-    """
-    try:
-        from replit.object_storage import Client
-        client = Client()
-
-        # Create temp file
-        fd, temp_path = tempfile.mkstemp(suffix='.pdf')
-
-        try:
-            # Download in chunks to temp file
-            data = client.download_bytes(storage_key)
-            file_size = len(data)
-
-            # Check size limit
-            if file_size > MAX_PDF_SIZE_BYTES:
-                os.close(fd)
-                os.unlink(temp_path)
-                logger.warning(f"PDF file too large: {file_size} bytes (max: {MAX_PDF_SIZE_BYTES})")
-                return None, file_size
-
-            # Write to temp file
-            os.write(fd, data)
-            os.close(fd)
-
-            return temp_path, file_size
-
-        except Exception as e:
-            os.close(fd)
-            os.unlink(temp_path)
-            raise e
-
-    except Exception as e:
-        logger.error(f"Error downloading to tempfile: {e}")
-        return None, None
-
-
 def extract_text_from_pdf(storage_key: str) -> Optional[str]:
     """
-    Extract text from a PDF file in Replit Object Storage.
+    Extract text from a PDF file in object storage.
 
     Handles large files efficiently:
     - Files under 10MB: Process in memory
@@ -97,19 +30,19 @@ def extract_text_from_pdf(storage_key: str) -> Optional[str]:
     - Files over 50MB: Rejected
 
     Args:
-        storage_key: Replit Object Storage key (e.g., 'uploads/user_123/document.pdf')
+        storage_key: Object storage key (e.g., 'briefing_uploads/123/document.pdf')
 
     Returns:
         Extracted text as string, or None if extraction fails
     """
-    temp_path = None
-
     try:
-        from replit.object_storage import Client
-        client = Client()
+        from app.storage_utils import download_bytes_from_object_storage
 
         # Download file
-        pdf_data = client.download_bytes(storage_key)
+        pdf_data = download_bytes_from_object_storage(storage_key)
+        if pdf_data is None:
+            logger.error(f"PDF not found in object storage: {storage_key}")
+            return None
         file_size = len(pdf_data)
 
         logger.info(f"Processing PDF {storage_key} ({file_size / 1024 / 1024:.2f} MB)")
