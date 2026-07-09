@@ -241,8 +241,9 @@ def _validate_consensus_oversize_config(app):
         return
 
     message = "Invalid consensus oversize configuration: " + "; ".join(errors)
-    is_deployed_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
-    if is_deployed_production:
+    from app.lib.deployed_env import is_deployed_production
+
+    if is_deployed_production():
         raise RuntimeError(message)
 
     app.logger.warning("%s. Falling back to safe defaults for local/dev.", message)
@@ -258,6 +259,9 @@ def create_app():
     if _role == 'web':
         os.environ.setdefault('DISABLE_SCHEDULER', '1')
     elif _role == 'scheduler':
+        # Enable production job/email gates without relying on Replit-only flags.
+        os.environ.setdefault('DEPLOYED_PRODUCTION', '1')
+        # Legacy alias for any remaining direct REPLIT_DEPLOYMENT checks.
         os.environ.setdefault('REPLIT_DEPLOYMENT', '1')
     elif _role == 'worker':
         os.environ.setdefault('DISABLE_SCHEDULER', '1')
@@ -1068,7 +1072,9 @@ def create_app():
         r.headers['Retry-After'] = str(retry_after)
         return r
 
-    _is_deployed = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    from app.lib.deployed_env import is_deployed_production
+
+    _is_deployed = is_deployed_production()
     # Treat DISABLE_SCHEDULER=1/true/yes as skip; empty/0/false/no → don't skip.
     _disable_scheduler_env = os.environ.get('DISABLE_SCHEDULER', '').strip().lower()
     _skip_scheduler = (

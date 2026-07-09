@@ -145,9 +145,9 @@ def test_app_role_bootstrap_translates_to_low_level_flags():
         "APP_ROLE bootstrap must appear before DISABLE_SCHEDULER gate in create_app()"
     )
     # All three roles must be covered
-    role_section = source[role_pos: role_pos + 700]
+    role_section = source[role_pos: role_pos + 900]
     assert "DISABLE_SCHEDULER" in role_section
-    assert "REPLIT_DEPLOYMENT" in role_section
+    assert "DEPLOYED_PRODUCTION" in role_section
     assert "CONSENSUS_WORKER_PROCESS" in role_section
 
 

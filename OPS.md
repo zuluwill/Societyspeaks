@@ -79,7 +79,9 @@ See checklist in `RENDER_DEPLOY.md` §5. Confirm scheduler and consensus **logs*
 
 ## Secrets hygiene
 
-- Never commit `.env`, dumps, or access keys  
-- Rotate Neon password if it was shared in chat  
-- Remove temporary AWS keys from Replit Secrets after migrations  
+- Never commit `.env`, dumps, or access keys
+- Rotate Neon password if it was shared in chat
+- Remove temporary AWS keys from Replit Secrets after migrations
 - Production secrets live only in Render (and password manager)
+- `DEPLOYED_PRODUCTION=1` enables real email/social sends — never set it on a second live host while another is still sending
+- Keep Replit paused (not running) while Render owns production sends

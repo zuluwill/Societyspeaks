@@ -84,6 +84,8 @@ Render reads `render.yaml` and creates three services + config env group:
 
 Non-secret config (`APP_BASE_URL`, from-addresses, Stripe price IDs, etc.) lives in Blueprint group `societyspeaks-config`.
 
+**Production sends:** `DEPLOYED_PRODUCTION=1` is set in that group. Email/social/scheduler jobs use this flag (not `FLASK_ENV`). Keep Replit **paused** (or off) while it is set on Render so you never run two senders.
+
 ---
 
 ## 3. Object storage migration (from Replit)
@@ -155,12 +157,23 @@ Remove temporary AWS secrets from Replit after a successful run. Do **not** dele
 
 ## 6. DNS cutover
 
-1. Render → web service → **Custom Domains** → add `societyspeaks.io` (+ `www` if used)
-2. At the DNS host, apply the records Render shows
-3. Wait for TLS / verified status
-4. Confirm `https://societyspeaks.io` serves Render (images + login)
-5. Keep Replit available briefly as rollback; then stop relying on it
-6. Update Stripe/Resend webhooks only if they used a Replit-only hostname (domain-based URLs usually keep working)
+**Do this now that Replit is paused** — the public domain is otherwise down until DNS points at Render.
+
+1. Render → **`societyspeaks-web`** → **Settings** → **Custom Domains**
+2. Add `societyspeaks.io` and `www.societyspeaks.io` (if you use www)
+3. At your DNS host, apply the records Render shows (usually CNAME / A / ALIAS)
+4. Wait until Render shows the domain **Verified** with TLS
+5. Confirm `https://societyspeaks.io` serves Render (homepage, login, images)
+6. Keep Replit **Paused** as rollback for a few days; only **Shut down** later
+7. Stripe/Resend webhooks that use `societyspeaks.io` keep working; update only if they pointed at a Replit-only hostname
+
+### After DNS
+
+- [ ] Uptime monitor → `https://societyspeaks.io`
+- [ ] Remove temporary AWS keys from Replit Secrets (if still present)
+- [ ] Rotate Neon password if it was ever pasted into chat
+- [ ] Confirm scheduler logs show jobs running (with `DEPLOYED_PRODUCTION=1`)
+- [ ] Confirm one successful `societyspeaks-db-backup` run (or trigger manually)
 
 ---
 

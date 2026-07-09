@@ -175,32 +175,20 @@ def _mark_ops_alert_sent(fingerprint: str) -> None:
 def _is_production_environment() -> bool:
     """
     Check if we're running in the DEPLOYED production environment.
-    
+
     Used to prevent development environments from sending real emails,
     social media posts, etc. to avoid duplicates when both dev and prod run.
-    
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! CRITICAL: DO NOT ADD FLASK_ENV CHECK HERE!                       !!
     !! FLASK_ENV=production is set in dev, causing DUPLICATE EMAILS!    !!
     !! This bug has caused duplicate emails to users MULTIPLE TIMES.    !!
-    !! Only REPLIT_DEPLOYMENT=1 reliably indicates deployed production. !!
+    !! Use DEPLOYED_PRODUCTION=1 (Render) or REPLIT_DEPLOYMENT=1 only. !!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
-    Returns True ONLY if:
-    - REPLIT_DEPLOYMENT is set to '1' (Replit deployments only)
     """
-    import os
-    
-    # ONLY check Replit deployment environment variable
-    # This is the ONLY reliable indicator that we're in a deployed environment
-    #
-    # WARNING: Do NOT add checks for:
-    # - FLASK_ENV (is 'production' in dev too!)
-    # - REPLIT_DEV_DOMAIN (unreliable)
-    # - Any other heuristics
-    #
-    # REPLIT_DEPLOYMENT=1 is set ONLY by Replit when app is deployed
-    return os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    from app.lib.deployed_env import is_deployed_production
+
+    return is_deployed_production()
 
 
 def _send_ops_alert(message: str) -> None:

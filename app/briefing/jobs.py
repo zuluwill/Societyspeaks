@@ -11,7 +11,6 @@ Features:
 - Metrics logging for monitoring
 """
 
-import os
 import json
 import logging
 import threading
@@ -20,10 +19,10 @@ from app.lib.time import utcnow_naive
 from typing import Optional, Dict, Any, List
 from flask_babel import gettext as _
 from app.lib.redis_client import get_client as _get_shared_redis
+from app.lib.deployed_env import is_deployed_production
 
 logger = logging.getLogger(__name__)
 
-IS_REPLIT_DEPLOYMENT = os.environ.get('REPLIT_DEPLOYMENT') == '1'
 JOB_PREFIX = 'briefing:job:'
 JOB_EXPIRY = 3600  # Jobs expire after 1 hour
 
@@ -194,7 +193,7 @@ class GenerationJob:
         self.updated_at = utcnow_naive().isoformat()
 
         if not client:
-            if IS_REPLIT_DEPLOYMENT:
+            if is_deployed_production():
                 logger.error(
                     f"Redis unavailable in deployed environment; refusing in-memory fallback for job {self.job_id}"
                 )
@@ -223,7 +222,7 @@ class GenerationJob:
         """Get job from Redis."""
         client = get_redis_client()
         if not client:
-            if IS_REPLIT_DEPLOYMENT:
+            if is_deployed_production():
                 logger.error(
                     f"Redis unavailable in deployed environment; job lookup aborted for {job_id}"
                 )
@@ -306,7 +305,7 @@ def queue_brief_generation(briefing_id: int, user_id: int) -> Optional[str]:
 
     client = get_redis_client()
     if not client:
-        if IS_REPLIT_DEPLOYMENT:
+        if is_deployed_production():
             logger.error(
                 "Redis unavailable in deployed environment; refusing to queue brief generation in-memory fallback"
             )

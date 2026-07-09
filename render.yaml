@@ -18,6 +18,10 @@ envVarGroups:
         value: production
       - key: FLASK_APP
         value: run.py
+      # Explicit production-send gate (do NOT use FLASK_ENV for this).
+      # Keep Replit paused/off while this is set on Render.
+      - key: DEPLOYED_PRODUCTION
+        value: "1"
       - key: APP_BASE_URL
         value: https://societyspeaks.io
       - key: SITE_URL

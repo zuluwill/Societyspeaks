@@ -71,7 +71,9 @@ def _email_sending_allowed_for_environment() -> bool:
     """
     if os.environ.get('ALLOW_EMAIL_IN_NON_PROD') == '1':
         return True
-    return os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    from app.lib.deployed_env import is_deployed_production
+
+    return is_deployed_production()
 
 
 _RESEND_API_URL = 'https://api.resend.com/emails'
