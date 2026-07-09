@@ -181,4 +181,6 @@ docs/
 replit.md
 
 # Dev preview output from tests/test_paid_brief_preview.py — not for commit
-tmp_paid_brief_*.html
+tmp_paid_brief_*.html*.dump
+*.sql
+still-fire_*.dump
