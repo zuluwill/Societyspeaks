@@ -214,19 +214,24 @@ def resend_batch_with_retry(
     cannot deliver the whole batch twice.
 
     Returns:
-        (success, sent_count, failed_count, errors)
+        (success, sent_count, failed_count, errors, failed_indices)
+
+    failed_indices are positions in ``payloads`` that Resend reported as
+    failed. It may be shorter than failed_count when Resend returns errors
+    without an index — callers must not assume every failure is attributed.
     """
+    all_failed = list(range(len(payloads or [])))
     response, error = _resend_http_post(
         api_key, payloads, url, max_retries, retry_delay, timeout,
         log_prefix="Resend batch", idempotency_key=idempotency_key,
     )
     if response is None:
-        return False, 0, len(payloads or []), [error or "Unknown error"]
+        return False, 0, len(payloads or []), [error or "Unknown error"], all_failed
 
     try:
         data = response.json() or {}
     except Exception as e:
-        return False, 0, len(payloads or []), [f"Invalid JSON response from Resend batch API: {e}"]
+        return False, 0, len(payloads or []), [f"Invalid JSON response from Resend batch API: {e}"], all_failed
 
     created = data.get("data") or []
     raw_errors = data.get("errors") or []
@@ -237,11 +242,13 @@ def resend_batch_with_retry(
     # If Resend returns no structured errors, treat the call as fully successful.
     # This matches strict validation mode (atomic success) responses.
     errors: List[str] = []
+    failed_indices: List[int] = []
     for err in raw_errors:
         if isinstance(err, dict):
             idx = err.get("index")
             msg = err.get("message") or err.get("error") or str(err)
-            if idx is not None:
+            if isinstance(idx, int):
+                failed_indices.append(idx)
                 errors.append(f"[{idx}] {msg}")
             else:
                 errors.append(msg)
@@ -254,7 +261,7 @@ def resend_batch_with_retry(
         sent_count = len(payloads or [])
 
     success = failed_count == 0
-    return success, sent_count, failed_count, errors
+    return success, sent_count, failed_count, errors, failed_indices
 
 
 class ResendEmailClient:
@@ -392,9 +399,13 @@ class ResendEmailClient:
             idempotency_key: Stable key so an HTTP retry cannot double-send the batch
 
         Returns:
-            dict: {'sent': count, 'failed': count, 'errors': list}
+            dict: {'sent': count, 'failed': count, 'errors': list,
+                   'failed_indices': positions in ``emails`` known to have failed}
+
+            failed_indices may undercount when Resend reports failures without
+            attributing them to a payload — check 'failed' vs len(failed_indices).
         """
-        results: Dict[str, Any] = {'sent': 0, 'failed': 0, 'errors': []}
+        results: Dict[str, Any] = {'sent': 0, 'failed': 0, 'errors': [], 'failed_indices': []}
 
         if not emails:
             return results
@@ -405,8 +416,11 @@ class ResendEmailClient:
             return results
 
         # Validate and normalise each payload's 'to' field before sending.
+        # valid_indices maps each entry of valid_emails back to its position
+        # in the caller's list so failures land on the right recipient.
         valid_emails = []
-        for payload in emails:
+        valid_indices = []
+        for original_index, payload in enumerate(emails):
             raw_to = payload.get('to') or []
             cleaned_to = []
             all_valid = True
@@ -416,11 +430,13 @@ class ResendEmailClient:
                     logger.error(f"Batch: dropping email with invalid 'to' address: {repr(raw_addr)}")
                     results['failed'] += 1
                     results['errors'].append(f"Invalid address: {repr(raw_addr)}")
+                    results['failed_indices'].append(original_index)
                     all_valid = False
                     break
                 cleaned_to.append(clean)
             if all_valid:
                 valid_emails.append({**payload, 'to': cleaned_to})
+                valid_indices.append(original_index)
 
         if not valid_emails:
             return results
@@ -428,7 +444,7 @@ class ResendEmailClient:
         if len(valid_emails) > self.BATCH_SIZE:
             raise ValueError(f"Batch size {len(valid_emails)} exceeds maximum {self.BATCH_SIZE}")
 
-        success, sent_count, failed_count, errors = resend_batch_with_retry(
+        success, sent_count, failed_count, errors, failed_positions = resend_batch_with_retry(
             self.api_key,
             valid_emails,
             max_retries=self.MAX_RETRIES,
@@ -439,6 +455,9 @@ class ResendEmailClient:
         if not success:
             results['failed'] += failed_count or (len(valid_emails) - sent_count)
             results['errors'].extend(errors)
+            results['failed_indices'].extend(
+                valid_indices[pos] for pos in failed_positions if 0 <= pos < len(valid_indices)
+            )
         return results
 
     # =========================================================================
@@ -1070,11 +1089,13 @@ class ResendEmailClient:
 
             if batch_emails:
                 # Stable per-batch key: an HTTP retry of the same batch cannot
-                # deliver twice. (Cross-restart protection comes from the
-                # per-batch commit below, not from this key.)
+                # deliver twice. Fingerprint the subscribers whose payloads
+                # actually built, so key and request body always match.
+                # (Cross-restart protection comes from the per-batch commit
+                # below, not from this key.)
                 import hashlib
                 batch_fingerprint = hashlib.sha256(
-                    ','.join(str(s.id) for s in batch_subscribers).encode()
+                    ','.join(str(s.id) for s in built_subscribers).encode()
                 ).hexdigest()[:16]
                 batch_result = self._send_batch(
                     batch_emails,
@@ -1136,11 +1157,26 @@ class ResendEmailClient:
                     results['failed'] += batch_result['failed']
                     results['errors'].extend(batch_errors)
 
-                # Update last_email_sent for successful batch sends
+                # Update last_email_sent for successful batch sends.
+                # batch_emails was built in lockstep with built_subscribers, so
+                # failed_indices from _send_batch map straight onto it. Failures
+                # Resend did not attribute to a payload stay marked as sent:
+                # re-sending ~100 people on the next run is worse than one
+                # missed email, and the failure is still logged/counted.
                 if batch_result['sent'] > 0:
-                    for subscriber in built_subscribers:
+                    failed_indices = set(batch_result.get('failed_indices') or [])
+                    if batch_result['failed'] > len(failed_indices):
+                        logger.warning(
+                            f"Batch reported {batch_result['failed']} failure(s) but only "
+                            f"{len(failed_indices)} attributed to a recipient — "
+                            f"unattributed failures will not be retried."
+                        )
+                    for subscriber_index, subscriber in enumerate(built_subscribers):
+                        if subscriber_index in failed_indices:
+                            results['failed_emails'].append(subscriber.email)
+                            continue
                         subscriber.last_email_sent = utcnow_naive()
-                        
+
                         # Record analytics event for each successful send
                         try:
                             from app.lib.email_analytics import EmailAnalytics

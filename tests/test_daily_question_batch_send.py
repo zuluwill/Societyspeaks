@@ -30,7 +30,16 @@ class _BatchClient(resend_client.ResendEmailClient):
     def _send_batch(self, emails, idempotency_key=None):
         self.batches.append(list(emails))
         self.batch_keys.append(idempotency_key)
-        return {'sent': len(emails), 'failed': 0, 'errors': []}
+        failed_indices = [
+            i for i, email in enumerate(emails)
+            if email['to'][0] in getattr(self, 'reject_emails', ())
+        ]
+        return {
+            'sent': len(emails) - len(failed_indices),
+            'failed': len(failed_indices),
+            'errors': [f'[{i}] rejected' for i in failed_indices],
+            'failed_indices': failed_indices,
+        }
 
 
 class _FakeSession:
@@ -116,3 +125,21 @@ def test_build_failure_does_not_mark_or_misalign_other_subscribers(monkeypatch):
     assert good_two.last_email_sent is not None
     # Only the two built emails reached the batch API.
     assert [e['to'] for e in client.batches[0]] == [[good_one.email], [good_two.email]]
+
+
+def test_partial_batch_failure_only_marks_accepted_recipients(monkeypatch):
+    """A recipient Resend rejects must stay unmarked so the next run retries them."""
+    client = _BatchClient(batch_size=3)
+    accepted = _subscriber(1)
+    rejected = _subscriber(2)
+    also_accepted = _subscriber(3)
+    client.reject_emails = {rejected.email}
+
+    result, _ = _run(monkeypatch, client, [accepted, rejected, also_accepted])
+
+    assert result['sent'] == 2
+    assert result['failed'] == 1
+    assert rejected.last_email_sent is None
+    assert rejected.email in result['failed_emails']
+    assert accepted.last_email_sent is not None
+    assert also_accepted.last_email_sent is not None

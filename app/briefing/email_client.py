@@ -894,11 +894,28 @@ class BriefingEmailClient:
                         for error in batch_result['errors']:
                             logger.warning(f"Batch error: {error}")
                     
-                    # Step 2: Mark all recipients in this batch as sent
-                    # Note: Batch API sends all or fails all, so we mark all as sent
+                    # Step 2: Mark recipients as sent, skipping any failure
+                    # Resend attributed to a specific payload (batch_emails is
+                    # parallel to email_to_recipient). Unattributed failures
+                    # stay marked as sent — duplicating the whole batch on a
+                    # retry is worse for paid recipients than one missed brief,
+                    # and the failure is still logged for manual follow-up.
                     if batch_sent > 0:
-                        for recipient in email_to_recipient:
-                            self._mark_recipient_sent(brief_run.id, recipient.id)
+                        failed_indices = set(batch_result.get('failed_indices') or [])
+                        if batch_failed > len(failed_indices):
+                            logger.warning(
+                                f"Brief run {brief_run.id}: {batch_failed} failure(s) but only "
+                                f"{len(failed_indices)} attributed — unattributed failures "
+                                f"will not be retried automatically."
+                            )
+                        for recipient_index, recipient in enumerate(email_to_recipient):
+                            if recipient_index in failed_indices:
+                                self._mark_recipient_failed(
+                                    brief_run.id, recipient.id,
+                                    reason="Resend rejected this recipient's email in the batch"
+                                )
+                            else:
+                                self._mark_recipient_sent(brief_run.id, recipient.id)
                     else:
                         # Batch failed completely - mark as failed with reason
                         batch_errors = batch_result.get('errors', ['Unknown batch error'])
