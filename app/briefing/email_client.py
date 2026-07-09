@@ -874,8 +874,17 @@ class BriefingEmailClient:
 
             if batch_emails:
                 try:
-                    # Use base client's batch send method
-                    batch_result = self.base_client._send_batch(batch_emails)
+                    # Use base client's batch send method. Stable per-batch
+                    # idempotency key: an HTTP retry Resend already accepted
+                    # cannot deliver the batch twice.
+                    import hashlib
+                    batch_fingerprint = hashlib.sha256(
+                        ','.join(str(r.id) for r in email_to_recipient).encode()
+                    ).hexdigest()[:16]
+                    batch_result = self.base_client._send_batch(
+                        batch_emails,
+                        idempotency_key=f'brief-run-{brief_run.id}-{batch_fingerprint}',
+                    )
                     batch_sent = batch_result.get('sent', 0)
                     batch_failed = batch_result.get('failed', 0)
                     total_sent += batch_sent

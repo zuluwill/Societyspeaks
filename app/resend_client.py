@@ -205,15 +205,20 @@ def resend_batch_with_retry(
     max_retries: int = 3,
     retry_delay: float = 2.0,
     timeout: int = 60,
+    idempotency_key: Optional[str] = None,
 ) -> Tuple[bool, int, int, List[str]]:
     """
     POST a batch of emails to the Resend batch API with exponential-backoff retry.
+
+    Pass idempotency_key so a retried 5xx/timeout that Resend actually accepted
+    cannot deliver the whole batch twice.
 
     Returns:
         (success, sent_count, failed_count, errors)
     """
     response, error = _resend_http_post(
-        api_key, payloads, url, max_retries, retry_delay, timeout, log_prefix="Resend batch"
+        api_key, payloads, url, max_retries, retry_delay, timeout,
+        log_prefix="Resend batch", idempotency_key=idempotency_key,
     )
     if response is None:
         return False, 0, len(payloads or []), [error or "Unknown error"]
@@ -374,12 +379,17 @@ class ResendEmailClient:
             self.last_send_error = result
         return success
 
-    def _send_batch(self, emails: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _send_batch(
+        self,
+        emails: List[Dict[str, Any]],
+        idempotency_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Send a batch of emails via the Resend Batch API.
 
         Args:
             emails: List of email payloads (max 100 per Resend limit)
+            idempotency_key: Stable key so an HTTP retry cannot double-send the batch
 
         Returns:
             dict: {'sent': count, 'failed': count, 'errors': list}
@@ -423,6 +433,7 @@ class ResendEmailClient:
             valid_emails,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
+            idempotency_key=idempotency_key,
         )
         results['sent'] += sent_count
         if not success:
@@ -997,7 +1008,10 @@ class ResendEmailClient:
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                # Doubles as the Idempotency-Key on individual-send fallback,
+                # so a retried 5xx cannot deliver twice.
+                'X-Entity-Ref-ID': f'daily-question-{question.id}-{subscriber.id}',
             }
         }
 
@@ -1040,18 +1054,32 @@ class ResendEmailClient:
         for i in range(0, total, self.BATCH_SIZE):
             batch_subscribers = subscribers[i:i + self.BATCH_SIZE]
             batch_emails = []
+            # Kept parallel to batch_emails so send results map back to the
+            # right subscriber even when some payload builds fail.
+            built_subscribers = []
 
             for subscriber in batch_subscribers:
                 try:
                     email_payload = self._build_daily_question_email(subscriber, question)
                     batch_emails.append(email_payload)
+                    built_subscribers.append(subscriber)
                 except Exception as e:
                     logger.error(f"Failed to build email for {subscriber.email}: {e}")
                     results['failed'] += 1
                     results['failed_emails'].append(subscriber.email)
 
             if batch_emails:
-                batch_result = self._send_batch(batch_emails)
+                # Stable per-batch key: an HTTP retry of the same batch cannot
+                # deliver twice. (Cross-restart protection comes from the
+                # per-batch commit below, not from this key.)
+                import hashlib
+                batch_fingerprint = hashlib.sha256(
+                    ','.join(str(s.id) for s in batch_subscribers).encode()
+                ).hexdigest()[:16]
+                batch_result = self._send_batch(
+                    batch_emails,
+                    idempotency_key=f'daily-question-{question.id}-{batch_fingerprint}',
+                )
 
                 batch_errors = batch_result.get('errors', [])
                 is_validation_failure = (
@@ -1071,7 +1099,7 @@ class ResendEmailClient:
                     )
                     individual_sent = 0
                     individual_failed = 0
-                    for sub, payload in zip(batch_subscribers, batch_emails):
+                    for sub, payload in zip(built_subscribers, batch_emails):
                         ok = self._send_with_retry(payload, use_rate_limit=True)
                         if ok:
                             individual_sent += 1
@@ -1110,7 +1138,7 @@ class ResendEmailClient:
 
                 # Update last_email_sent for successful batch sends
                 if batch_result['sent'] > 0:
-                    for subscriber in batch_subscribers:
+                    for subscriber in built_subscribers:
                         subscriber.last_email_sent = utcnow_naive()
                         
                         # Record analytics event for each successful send
@@ -1126,6 +1154,15 @@ class ResendEmailClient:
                         except Exception as analytics_error:
                             logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
 
+            # Commit per batch: if the process dies mid-run (deploy, crash),
+            # subscribers already mailed keep their last_email_sent marker and
+            # the restarted job's filter skips them instead of re-sending.
+            try:
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Failed to commit batch send markers: {e}")
+                db.session.rollback()
+
             processed += len(batch_subscribers)
 
             if on_progress:
@@ -1135,12 +1172,6 @@ class ResendEmailClient:
                 f"Batch {i // self.BATCH_SIZE + 1}: "
                 f"{results['sent']} sent, {results['failed']} failed of {total}"
             )
-
-        # Commit last_email_sent updates
-        try:
-            db.session.commit()
-        except Exception as e:
-            logger.error(f"Failed to commit last_email_sent updates: {e}")
 
         return results
 
