@@ -5,7 +5,6 @@ from app import db
 from app.lib.posthog_utils import safe_posthog_capture
 from app.models import IndividualProfile, CompanyProfile, Discussion, Programme, generate_unique_slug
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
-from replit.object_storage import Client
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from app.storage_utils import (
@@ -24,7 +23,23 @@ from app.profiles.helpers import apply_form_to_profile
 
 profiles_bp = Blueprint('profiles', __name__, template_folder='../templates/profiles')
 
-client = Client()
+# Replit Object Storage is optional — unavailable on Render/local until S3 is wired.
+try:
+    from replit.object_storage import Client as _ReplitStorageClient
+except (ImportError, ModuleNotFoundError, AttributeError):
+    _ReplitStorageClient = None
+
+_storage_client = None
+
+
+def _get_replit_client():
+    """Lazy Replit storage client; returns None when the package/API is absent."""
+    global _storage_client
+    if _ReplitStorageClient is None:
+        return None
+    if _storage_client is None:
+        _storage_client = _ReplitStorageClient()
+    return _storage_client
 
 
 
@@ -38,6 +53,15 @@ def get_image(filename):
             return send_file('static/images/default-avatar.png', mimetype='image/png')
         
         storage_path = f"profile_images/{filename}"
+
+        client = _get_replit_client()
+        if client is None:
+            current_app.logger.warning(
+                "Object storage unavailable; serving default for %s", filename
+            )
+            if 'banner' in filename:
+                return send_file('static/images/default-banner.jpg', mimetype='image/jpeg')
+            return send_file('static/images/default-avatar.png', mimetype='image/png')
 
         # Download the file data as bytes
         file_data = client.download_as_bytes(storage_path)
@@ -81,6 +105,13 @@ def get_static_asset(filename):
             abort(404)
         
         storage_path = f"static_assets/{filename}"
+        client = _get_replit_client()
+        if client is None:
+            current_app.logger.warning(
+                "Object storage unavailable; cannot serve asset %s", filename
+            )
+            abort(404)
+
         file_data = client.download_as_bytes(storage_path)
         
         if file_data:

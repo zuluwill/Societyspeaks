@@ -16,6 +16,8 @@ RUN apt-get update \
         libffi-dev \
         libxml2-dev \
         libxslt1-dev \
+        libgomp1 \
+        libopenblas0 \
         curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
