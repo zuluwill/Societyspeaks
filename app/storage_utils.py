@@ -121,6 +121,11 @@ def _detect_provider() -> str:
     return _provider
 
 
+def storage_provider() -> str:
+    """Public accessor for the detected provider ('s3', 'replit', 'filesystem')."""
+    return _detect_provider()
+
+
 def _get_s3_client():
     global _s3_client
     if _s3_client is None:
