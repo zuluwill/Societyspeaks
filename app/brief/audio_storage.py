@@ -28,6 +28,12 @@ class AudioStorage:
         from app.storage_utils import storage_provider
         return storage_provider() == 's3'
 
+    @staticmethod
+    def _filesystem_allowed() -> bool:
+        """Ephemeral local disk is a development convenience only."""
+        from app.lib.deployed_env import is_deployed_production
+        return not is_deployed_production()
+
     def save(self, audio_data: bytes, filename: str) -> Optional[str]:
         """
         Save audio data to storage.
@@ -46,6 +52,12 @@ class AudioStorage:
             if upload_bytes_to_object_storage(f"audio/{filename}", audio_data):
                 return f"/audio/{filename}"
             return None
+        if not self._filesystem_allowed():
+            logger.error(
+                "Refusing filesystem audio storage in production without S3 — "
+                "set AWS_* env vars on the service."
+            )
+            return None
         return self._save_filesystem(audio_data, filename)
 
     def get(self, filename: str) -> Optional[bytes]:
@@ -57,6 +69,8 @@ class AudioStorage:
         if self._object_storage_backed():
             from app.storage_utils import download_bytes_from_object_storage
             return download_bytes_from_object_storage(f"audio/{filename}")
+        if not self._filesystem_allowed():
+            return None
         return self._get_filesystem(filename)
 
     def delete(self, filename: str) -> bool:
@@ -68,6 +82,8 @@ class AudioStorage:
         if self._object_storage_backed():
             from app.storage_utils import delete_bytes_from_object_storage
             return delete_bytes_from_object_storage(f"audio/{filename}")
+        if not self._filesystem_allowed():
+            return False
         return self._delete_filesystem(filename)
 
     def _save_filesystem(self, audio_data: bytes, filename: str) -> Optional[str]:
