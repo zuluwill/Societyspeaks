@@ -75,6 +75,8 @@ def test_sitemap_includes_core_product_hubs(sitemap_body):
         '/help/',
         '/faq',
         '/donate',
+        '/security',
+        '/accessibility',
     ]
     for path in required:
         assert any(loc.rstrip('/').endswith(path.rstrip('/')) or f'{path}' in loc for loc in locs), (

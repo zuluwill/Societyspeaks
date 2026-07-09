@@ -1,8 +1,9 @@
 """Tests for source discussion listing (Postgres DISTINCT + JSON columns)."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from app import db
+from app.lib.time import utcnow_naive
 from app.models import Discussion, DiscussionSourceArticle, NewsArticle, NewsSource
 from app.models._base import generate_slug
 from app.sources.utils import get_source_discussions
@@ -27,7 +28,7 @@ def _make_article(source, title='Article'):
         source_id=source.id,
         title=title,
         url=f'https://example.com/{title.replace(" ", "-").lower()}',
-        published_at=datetime.utcnow(),
+        published_at=utcnow_naive(),
     )
     db.session.add(article)
     db.session.flush()
@@ -48,7 +49,7 @@ def _make_discussion(title, created_at=None, information_links=None):
             if information_links is not None
             else [{'url': 'https://example.com'}]
         ),
-        created_at=created_at or datetime.utcnow(),
+        created_at=created_at or utcnow_naive(),
     )
     db.session.add(discussion)
     db.session.flush()
@@ -64,12 +65,12 @@ def test_get_source_discussions_dedupes_and_handles_json(app, db):
         a2 = _make_article(source, 'Two')
         older = _make_discussion(
             'Older Source Disc',
-            created_at=datetime.utcnow() - timedelta(days=2),
+            created_at=utcnow_naive() - timedelta(days=2),
             information_links=[{'url': 'https://a.example'}],
         )
         newer = _make_discussion(
             'Newer Source Disc',
-            created_at=datetime.utcnow() - timedelta(days=1),
+            created_at=utcnow_naive() - timedelta(days=1),
             information_links=[{'url': 'https://b.example'}, {'url': 'https://c.example'}],
         )
         db.session.add_all(

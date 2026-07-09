@@ -143,3 +143,67 @@ def test_partial_batch_failure_only_marks_accepted_recipients(monkeypatch):
     assert rejected.email in result['failed_emails']
     assert accepted.last_email_sent is not None
     assert also_accepted.last_email_sent is not None
+
+
+def test_daily_send_query_is_deterministically_ordered():
+    """The batch Idempotency-Key fingerprints each subscriber slice, so the
+    scheduler's subscriber query must be deterministically ordered — an
+    unordered query re-forms different batches on restart and defeats
+    Resend's dedup of an already-sent-but-uncommitted batch."""
+    import pathlib
+
+    source = pathlib.Path(app_pkg.__file__).with_name('scheduler.py').read_text()
+    idx = source.find("email_frequency='daily'")
+    assert idx != -1, 'daily subscriber query not found in scheduler.py'
+    window = source[idx:idx + 600]
+    assert '.order_by(DailyQuestionSubscriber.id)' in window, (
+        'daily subscriber query must be ordered by id for stable batch keys'
+    )
+
+
+def test_weekly_and_monthly_digests_carry_stable_idempotency_key(app, monkeypatch):
+    """Digest sends must carry a per-recipient X-Entity-Ref-ID so a retried
+    5xx or a crash before the caller's commit cannot deliver twice."""
+    captured = []
+
+    class _DigestClient(resend_client.ResendEmailClient):
+        def __init__(self):
+            self.base_url = 'https://example.test'
+            self.from_email_daily = 'daily@example.test'
+
+        def _send_with_retry(self, email_data, use_rate_limit=False):
+            captured.append(email_data)
+            return True
+
+    monkeypatch.setattr(resend_client, '_render_for_user', lambda *a, **k: '<html></html>')
+    monkeypatch.setattr(resend_client, '_wrap_links', lambda html, **k: html)
+    monkeypatch.setattr(resend_client, '_subject_for_user', lambda sub, text, **k: text)
+    import app.daily.utils as daily_utils
+    monkeypatch.setattr(daily_utils, 'build_question_email_data', lambda *a, **k: {})
+
+    subscriber = SimpleNamespace(
+        id=7,
+        email='sub7@example.com',
+        magic_token='tok',
+        unsubscribe_token='untok',
+        preferred_send_hour=9,
+        get_send_day_name=lambda: 'Monday',
+        last_email_sent=None,
+        last_weekly_email_sent=None,
+        last_monthly_email_sent=None,
+    )
+    questions = [SimpleNamespace(id=42, question_text='A question?')]
+
+    client = _DigestClient()
+    with app.app_context():
+        assert client.send_weekly_questions_digest(subscriber, questions)
+        assert client.send_monthly_questions_digest(subscriber, questions)
+
+    from app.lib.time import utcnow_naive
+
+    iso_year, iso_week, _ = utcnow_naive().date().isocalendar()
+    weekly, monthly = captured
+    # Calendar-bucketed, not content-derived: a crashed run that retries with
+    # differently-selected questions must still produce the same key.
+    assert weekly['headers']['X-Entity-Ref-ID'] == f'weekly-digest-{iso_year}w{iso_week:02d}-7'
+    assert monthly['headers']['X-Entity-Ref-ID'] == f'monthly-digest-{utcnow_naive():%Y-%m}-7'

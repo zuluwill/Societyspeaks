@@ -27,6 +27,14 @@ def test_query_string_survives_redirect(app):
     assert resp.headers['Location'] == 'https://societyspeaks.io/search?q=housing'
 
 
+def test_query_value_ending_in_question_mark_survives_redirect(app):
+    """rstrip('?') on full_path would eat a '?' that belongs to the query value."""
+    client = app.test_client()
+    resp = client.get('/search?q=a?', base_url=ONRENDER)
+    assert resp.status_code == 301
+    assert resp.headers['Location'] == 'https://societyspeaks.io/search?q=a?'
+
+
 def test_post_redirects_with_308_even_with_csrf_enabled(app):
     """The redirect must run before CSRF, or onrender POSTs 400 instead."""
     app.config['WTF_CSRF_ENABLED'] = True
@@ -53,6 +61,25 @@ def test_canonical_host_untouched(app):
     client = app.test_client()
     resp = client.get('/health', base_url='https://societyspeaks.io')
     assert resp.status_code == 200
+
+
+def test_production_boot_fails_with_default_secret_key():
+    """FLASK_ENV=production must refuse to boot on the 'dev' fallback
+    SECRET_KEY — it would make session/CSRF/partner-key signing forgeable."""
+    import subprocess
+    import sys
+
+    env = {**os.environ, 'FLASK_ENV': 'production'}
+    env.pop('SECRET_KEY', None)
+    proc = subprocess.run(
+        [sys.executable, '-c', 'import config'],
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    )
+    assert proc.returncode != 0
+    assert 'SECRET_KEY is not set' in proc.stderr
 
 
 def test_production_boot_fails_when_session_redis_unreachable(monkeypatch):

@@ -158,7 +158,20 @@ while not _SHUTDOWN:
         )
         break
 
-# Drain in-flight work before shutting down. Render sends SIGTERM on every
+# Stop APScheduler BEFORE draining so no new job (e.g. the 07:30 daily send,
+# if a deploy coincides) can start inside the drain window only to be
+# SIGKILLed mid-flight. shutdown(wait=False) stops job dispatch but lets
+# already-running jobs and their send threads continue — those are what the
+# drain below waits for. This also prevents "RuntimeError: cannot schedule
+# new futures after shutdown" spam during interpreter teardown.
+try:
+    if apscheduler is not None and apscheduler.running:
+        apscheduler.shutdown(wait=False)
+        logger.info("APScheduler shut down — no new jobs will start during drain")
+except Exception as exc:
+    logger.warning("APScheduler shutdown warning (non-fatal): %s", exc)
+
+# Drain in-flight work before exiting. Render sends SIGTERM on every
 # deploy and SIGKILLs shortly after (~30 s), while email sends run in daemon
 # threads that die instantly at process exit. Per-recipient/per-batch commits
 # make an interrupted send resumable, but finishing cleanly avoids relying on
@@ -191,17 +204,6 @@ if _SHUTDOWN and _DRAIN_SECONDS > 0:
             )
 
 logger.info("Scheduler process exiting cleanly")
-
-# Explicitly stop APScheduler's job-dispatch loop before sys.exit() so the
-# background thread pool is drained gracefully.  Without this, APScheduler's
-# _process_jobs loop keeps firing after Python starts tearing down the process,
-# causing "RuntimeError: cannot schedule new futures after shutdown" spam.
-try:
-    if apscheduler is not None and apscheduler.running:
-        apscheduler.shutdown(wait=False)
-        logger.info("APScheduler shut down cleanly")
-except Exception as exc:
-    logger.warning("APScheduler shutdown warning (non-fatal): %s", exc)
 
 # Release the Redis scheduler lock before exiting so the replacement process
 # can acquire it immediately rather than waiting up to TTL=120 s for it to

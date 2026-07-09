@@ -111,6 +111,15 @@ _CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
+    # Hard-fail in production if SECRET_KEY was never set: the 'dev' fallback
+    # would make session/CSRF signing forgeable, and PARTNER_KEY_SECRET
+    # defaults to SECRET_KEY, so partner API-key HMACs would be forgeable too.
+    # Same fail-closed policy as the DATABASE_URL and REDIS_URL guards below.
+    if os.getenv('FLASK_ENV') == 'production' and SECRET_KEY in ('', 'dev'):
+        raise RuntimeError(
+            "SECRET_KEY is not set. A production process must not boot with the "
+            "'dev' fallback key — set SECRET_KEY on the Render service."
+        )
     # Prefer DATABASE_URL; fall back to NEON_DATABASE_URL. Treat blank as unset —
     # Render Blueprint `sync: false` can create an empty DATABASE_URL key that
     # would otherwise block boot even when NEON_DATABASE_URL is populated.

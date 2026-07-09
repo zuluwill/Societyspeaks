@@ -117,7 +117,7 @@ def _resend_http_post(
             response = requests.post(url, json=body, headers=headers, timeout=timeout)
             if response.status_code == 200:
                 return response, None
-            elif response.status_code in (429, 502, 503, 504):
+            elif response.status_code in (429, 500, 502, 503, 504):
                 if attempt < max_retries - 1:
                     wait = retry_delay * (2 ** attempt)
                     if response.status_code == 429:
@@ -160,6 +160,16 @@ def _resend_http_post(
             logger.error(f"{log_prefix}: {err}")
             return None, err
     return None, "Max retries exceeded"
+
+
+def _weekly_digest_ref(prefix: str, recipient_id) -> str:
+    """Idempotency ref for weekly sends, stable across a retried run.
+
+    Keyed by ISO calendar week so a crash-and-retry cannot deliver twice,
+    even if the retried run selects different content.
+    """
+    iso_year, iso_week, _ = utcnow_naive().date().isocalendar()
+    return f'{prefix}-{iso_year}w{iso_week:02d}-{recipient_id}'
 
 
 def resend_post_with_retry(
@@ -852,7 +862,13 @@ class ResendEmailClient:
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                # Doubles as the Idempotency-Key: a retried 5xx or a crash
+                # between the API 200 and the caller's commit cannot deliver
+                # this subscriber's digest twice. Keyed by calendar week, not
+                # question ids — a re-run may select different questions, and
+                # the key must stay stable across that.
+                'X-Entity-Ref-ID': _weekly_digest_ref('weekly-digest', subscriber.id),
             }
         }
 
@@ -947,7 +963,13 @@ class ResendEmailClient:
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                # Doubles as the Idempotency-Key: a retried 5xx or a crash
+                # between the API 200 and the caller's commit cannot deliver
+                # this subscriber's digest twice. Keyed by calendar month, not
+                # question ids — a re-run may select different questions, and
+                # the key must stay stable across that.
+                'X-Entity-Ref-ID': f'monthly-digest-{utcnow_naive():%Y-%m}-{subscriber.id}',
             }
         }
 
@@ -1870,7 +1892,10 @@ def send_weekly_discussion_digest(user, digest_data: dict) -> bool:
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{settings_url}>',
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                # Doubles as the Idempotency-Key so a retried 5xx cannot
+                # deliver this week's digest twice.
+                'X-Entity-Ref-ID': _weekly_digest_ref('weekly-discussion-digest', user.id),
             }
         }
         
@@ -2094,6 +2119,10 @@ def send_journey_reminder_email(
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                # Doubles as the Idempotency-Key. reminder_count increments
+                # only after a committed send, so a retry of the same reminder
+                # reuses the key while the next scheduled one gets a fresh one.
+                'X-Entity-Ref-ID': f'journey-reminder-{subscription.id}-{(subscription.reminder_count or 0) + 1}',
             },
         }
 
@@ -2180,6 +2209,10 @@ def send_game_reminder_email(
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                # Doubles as the Idempotency-Key. reminder_count increments
+                # only after a committed send, so a retry of the same reminder
+                # reuses the key while the next scheduled one gets a fresh one.
+                'X-Entity-Ref-ID': f'game-reminder-{subscription.id}-{(subscription.reminder_count or 0) + 1}',
             },
         }
 

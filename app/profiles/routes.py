@@ -1,5 +1,5 @@
 # app/profiles/routes.py
-from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app, abort, make_response
+from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.lib.posthog_utils import safe_posthog_capture
@@ -9,7 +9,6 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from app.storage_utils import (
     delete_from_object_storage,
-    download_bytes_from_object_storage,
     get_image_from_storage,
     get_recent_activity,
     upload_to_object_storage,
@@ -17,7 +16,6 @@ from app.storage_utils import (
 from app.middleware import track_profile_view
 
 
-import io
 from app.lib.url_utils import safe_next_url as _safe_next_url
 from flask_babel import gettext as _
 
@@ -56,46 +54,13 @@ def get_image(filename):
 
 @profiles_bp.route('/assets/<path:filename>')
 def get_static_asset(filename):
-    """Serve static assets (hero, speakers) from object storage with local fallback."""
-    try:
-        if '..' in filename or filename.startswith('/'):
-            current_app.logger.warning(f"Blocked path traversal: {filename}")
-            abort(404)
+    """Serve static assets (hero, speakers) from object storage.
 
-        storage_path = f"static_assets/{filename}"
-        file_data = download_bytes_from_object_storage(storage_path)
-
-        if file_data:
-            file_like = io.BytesIO(file_data)
-
-            mime_type = 'image/jpeg'
-            lower_filename = filename.lower()
-            if lower_filename.endswith('.png'):
-                mime_type = 'image/png'
-            elif lower_filename.endswith('.gif'):
-                mime_type = 'image/gif'
-            elif lower_filename.endswith('.webp'):
-                mime_type = 'image/webp'
-            elif lower_filename.endswith('.svg'):
-                mime_type = 'image/svg+xml'
-
-            response = make_response(
-                send_file(
-                    file_like,
-                    mimetype=mime_type,
-                    as_attachment=False,
-                    download_name=filename.split('/')[-1],
-                )
-            )
-            response.headers['Cache-Control'] = 'public, max-age=3600'
-            return response
-
-        current_app.logger.warning(f"Asset not found in storage: {filename}")
-        abort(404)
-
-    except Exception as e:
-        current_app.logger.error(f"Error serving asset {filename}: {str(e)}")
-        abort(404)
+    Delegates to the shared helper so transient storage errors get the same
+    retry + 503 treatment as /static-assets/ instead of a misleading 404.
+    """
+    from app.routes import _serve_object_storage_asset
+    return _serve_object_storage_asset(filename)
 
 
 # Function to SELECT an individual or company profile page to create

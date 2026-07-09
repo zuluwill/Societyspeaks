@@ -1688,6 +1688,10 @@ def init_scheduler(app):
                 from sqlalchemy import or_
                 today_utc = _date.today()
                 today_utc_start = datetime(today_utc.year, today_utc.month, today_utc.day)
+                # Deterministic order matters: the batch Idempotency-Key is a
+                # fingerprint of each 100-subscriber slice, so an unordered
+                # query would re-form different batches on restart and defeat
+                # Resend's dedup of an already-sent-but-uncommitted batch.
                 daily_subscribers = DailyQuestionSubscriber.query.filter_by(
                     is_active=True,
                     email_frequency='daily'
@@ -1696,7 +1700,7 @@ def init_scheduler(app):
                         DailyQuestionSubscriber.last_email_sent.is_(None),
                         DailyQuestionSubscriber.last_email_sent < today_utc_start
                     )
-                ).all()
+                ).order_by(DailyQuestionSubscriber.id).all()
                 
                 logger.info(f"Found {len(daily_subscribers)} daily frequency subscribers (not yet sent today)")
                 

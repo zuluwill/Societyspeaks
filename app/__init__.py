@@ -428,7 +428,11 @@ def create_app():
         if not host.endswith('.onrender.com') or request.path == '/health':
             return None
         from app.storage_utils import get_base_url
-        target = get_base_url() + request.full_path.rstrip('?')
+        # Rebuild from path + query_string rather than full_path.rstrip('?'):
+        # rstrip strips ALL trailing '?', which would corrupt a querystring
+        # whose last value itself ends in '?' (e.g. /x?q=a?).
+        query = request.query_string.decode('utf-8', 'replace')
+        target = get_base_url() + request.path + (f'?{query}' if query else '')
         return redirect(target, code=301 if request.method in ('GET', 'HEAD') else 308)
 
     # Load cities data once during app startup and cache it
@@ -797,13 +801,14 @@ def create_app():
                     redis_url = env_redis_url.strip()
                     app.logger.info("Using REDIS_URL from environment variable for rate limiting")
                 else:
-                    # In production, we need Redis for security, but allow graceful degradation with warning
-                    app.logger.error("CRITICAL: Redis-backed rate limiting is strongly recommended in production.")
-                    app.logger.error("REDIS_URL environment variable is not set or empty.")
-                    app.logger.error("Falling back to memory-based rate limiting - this is not recommended for production.")
-                    # Don't raise an exception, but allow memory fallback with strong warning
-                    app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
-            
+                    # Fail closed: memory:// limits are per-worker and per-instance,
+                    # so falling back would silently stop sharing rate limits.
+                    # Same policy as the Redis session guard at boot.
+                    raise RuntimeError(
+                        "REDIS_URL is not set — production refuses memory-based "
+                        "rate limiting. Set REDIS_URL on the Render service."
+                    )
+
             # Test Redis connectivity in production if we have a URL
             if redis_url and not redis_url.startswith('memory://'):
                 try:
@@ -815,10 +820,13 @@ def create_app():
                     app.config['RATELIMIT_STORAGE_URL'] = redis_url
                     app.logger.info("Rate limiter configured with Redis (production)")
                 except Exception as redis_error:
-                    app.logger.error(f"Redis connection failed in production: {redis_error}")
-                    app.logger.error("Falling back to memory-based rate limiting - this is not ideal for production.")
-                    app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
-                    app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
+                    # Fail closed rather than degrade to per-worker memory limits;
+                    # config load already pinged Redis successfully moments earlier,
+                    # so this only fires on a genuine connectivity regression.
+                    raise RuntimeError(
+                        f"Rate limiter Redis connection failed in production: {redis_error}. "
+                        "Refusing memory-based fallback — resolve Redis connectivity before deploying."
+                    ) from redis_error
 
         # Development mode - allow memory fallback but warn
         elif redis_url and not redis_url.startswith('memory://'):
@@ -840,28 +848,37 @@ def create_app():
         
         limiter.init_app(app)
         
-        # Verify the limiter is actually using Redis (not memory) - informational only
+        # Verify the limiter is actually using Redis (not memory)
+        _limiter_memory_despite_redis = False
         try:
             storage_type = str(type(limiter.storage))
             final_redis_url = app.config.get('RATELIMIT_STORAGE_URL', '')
             if final_redis_url and not final_redis_url.startswith('memory://'):
                 if 'memory' in storage_type.lower() or 'dict' in storage_type.lower():
+                    _limiter_memory_despite_redis = True
                     app.logger.warning(f"Rate limiter using memory storage despite Redis config. Storage type: {storage_type}")
-                    if env == 'production':
-                        app.logger.error("This is not recommended for production - rate limits won't be shared across instances")
                 else:
                     app.logger.info(f"Rate limiter storage verified: {storage_type}")
             else:
                 app.logger.info(f"Rate limiter using memory storage: {storage_type}")
         except Exception as storage_check_error:
             app.logger.warning(f"Could not verify rate limiter storage type: {storage_check_error}")
+        if _limiter_memory_despite_redis and env == 'production':
+            # Fail closed: Flask-Limiter silently fell back to per-worker
+            # memory storage, which un-shares rate limits across instances.
+            raise RuntimeError(
+                "Rate limiter fell back to memory storage despite a Redis URL "
+                "being configured — refusing to run production with per-worker limits."
+            )
         
     except Exception as e:
-        app.logger.error(f"Rate limiter initialization failed: {e}")
-        # Always initialize limiter to prevent startup failure
-        limiter.init_app(app)
+        # Production fails closed: memory-based limits are per-worker and
+        # per-instance, which silently defeats shared rate limiting.
         if env == 'production':
-            app.logger.error("Rate limiter initialized with memory fallback in production - not ideal for scaling")
+            raise
+        app.logger.error(f"Rate limiter initialization failed: {e}")
+        # In development, initialize with memory fallback to prevent startup failure
+        limiter.init_app(app)
 
     # Database check
     if not try_connect_db(app):
