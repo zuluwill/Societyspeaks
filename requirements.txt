@@ -93,6 +93,9 @@ pytz>=2023.3
 # TLS CA bundle (journey link checker, urllib clients on constrained hosts)
 certifi>=2024.7.4
 
+# AWS S3 — audio storage (AudioStorage._save_s3) and object-storage migration
+boto3>=1.35.0
+
 # Testing
 pytest>=9.0.3
 pytest-cov>=4.1.0
