@@ -247,6 +247,34 @@ class Config:
                 "Connectivity is unaffected (IPv4 patch handles IPv6)."
             )
 
+    # Neon is deprecated. If DATABASE_URL still resolves to any Neon hostname
+    # after the pooler-rewrite above, switch transparently to the Replit-managed
+    # Helium database whose PG* connection parameters are injected automatically
+    # when a production database is connected via the Replit dashboard.
+    if SQLALCHEMY_DATABASE_URI and '.neon.tech' in SQLALCHEMY_DATABASE_URI:
+        _pg_host = os.getenv('PGHOST', '').strip()
+        _pg_user = os.getenv('PGUSER', '').strip()
+        _pg_password = os.getenv('PGPASSWORD', '').strip()
+        _pg_db = os.getenv('PGDATABASE', '').strip()
+        _pg_port = os.getenv('PGPORT', '5432').strip()
+
+        if _pg_host and _pg_user and _pg_password and _pg_db and '.neon.tech' not in _pg_host:
+            import urllib.parse as _urllib_parse
+            _encoded_pw = _urllib_parse.quote(_pg_password, safe='')
+            SQLALCHEMY_DATABASE_URI = (
+                f"postgresql://{_pg_user}:{_encoded_pw}@{_pg_host}:{_pg_port}/{_pg_db}"
+            )
+            logging.info(
+                "DATABASE_URL points to Neon (deprecated); switched to Replit Helium DB "
+                "using PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT environment variables."
+            )
+        else:
+            logging.warning(
+                "DATABASE_URL is a Neon URL (deprecated) and PG* vars are unavailable "
+                "or also Neon. Database connectivity may be degraded. "
+                "Update DATABASE_URL to a non-Neon database."
+            )
+
     # Stripe billing configuration
     STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
     STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
