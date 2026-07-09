@@ -103,5 +103,11 @@ Alternatively, use Neon's built-in branch restore if both are on the same organi
 - **Port:** Gunicorn binds to `5000`; `PORT=5000` is set in `render.yaml` so Render routes correctly.
 - **Docker workers:** Background services override the image `CMD` with `dockerCommand` (Render rejects `startCommand` for `runtime: docker`).
 - **Scheduler:** Only one `societyspeaks-scheduler` instance should run. The scheduler uses a Redis lock internally, so running a second instance is safe but wasteful.
-- **Replit Object Storage:** Any features using `replit.object_storage` will not work on Render. Replace with S3-compatible storage (Cloudflare R2, AWS S3) when ready.
+- **Object storage:** `app/storage_utils.py` prefers S3 when these env vars are set on all services:
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `AWS_S3_BUCKET` (e.g. `societyspeaks-assets`)
+  - `AWS_REGION=eu-west-2` (London)
+  - optional `AWS_ENDPOINT_URL` (for R2 / MinIO)
+  Without S3, marketing images that ship in `app/static/images/` still serve via filesystem fallback. Profile uploads and Replit-only assets need S3 (or a one-off migration from Replit Object Storage). Upload repo statics with `python3 scripts/upload_static_assets.py` after credentials are set.
 - **`replit` package:** The `replit` Python package in `requirements.txt` installs fine on Render and is safe to leave. Its APIs simply return errors if Replit env vars are absent.

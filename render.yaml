@@ -104,6 +104,14 @@ services:
         sync: false
       - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
         sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_REGION
+        value: eu-west-2
 
   - type: worker
     name: societyspeaks-scheduler
@@ -150,6 +158,14 @@ services:
         sync: false
       - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
         sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_REGION
+        value: eu-west-2
 
   - type: worker
     name: societyspeaks-consensus-worker
@@ -200,3 +216,11 @@ services:
         sync: false
       - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
         sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_REGION
+        value: eu-west-2

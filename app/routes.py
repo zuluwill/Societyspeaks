@@ -12,17 +12,11 @@ from app import cache, db, limiter
 from datetime import datetime, date
 from slugify import slugify
 from app.seo import generate_sitemap, get_base_url as seo_get_base_url
-try:
-    from replit.object_storage import Client
-    from replit.object_storage.errors import ObjectNotFoundError
-except (ImportError, ModuleNotFoundError, AttributeError):
-    Client = None
-    class ObjectNotFoundError(Exception):
-        pass
 from sqlalchemy.orm import joinedload
 from app.lib.time import utcnow_naive
 from app.lib.url_utils import safe_next_url
 from app.lib.locale_utils import language_preference_cookie_params
+from app.storage_utils import download_bytes_from_object_storage
 import io
 import mimetypes
 import os
@@ -30,7 +24,6 @@ import time
 from flask_babel import gettext as _
 
 main_bp = Blueprint('main', __name__)
-asset_client = Client() if Client is not None else None
 
 def init_routes(app):
     app.register_blueprint(main_bp)
@@ -346,7 +339,7 @@ def _is_transient_storage_error(error):
 
 
 def _serve_object_storage_asset(filename):
-    """Serve static assets from object storage to avoid disk I/O."""
+    """Serve static assets from S3 / Replit / local static fallback."""
     if '..' in filename or filename.startswith('/'):
         current_app.logger.warning(f"Blocked path traversal attempt for asset: {filename}")
         abort(404)
@@ -357,30 +350,34 @@ def _serve_object_storage_asset(filename):
     storage_path = f"static_assets/{filename}"
 
     max_attempts = 3
+    file_data = None
     last_error = None
     for attempt in range(max_attempts):
         try:
-            file_data = asset_client.download_as_bytes(storage_path)
+            file_data = download_bytes_from_object_storage(storage_path)
             last_error = None
             break
-        except ObjectNotFoundError:
-            current_app.logger.warning(f"Asset not found in storage: {storage_path}")
-            abort(404)
         except Exception as error:
             error_msg = str(error)
-            if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower() or 'could not be found' in error_msg.lower():
+            if (
+                'not found' in error_msg.lower()
+                or 'does not exist' in error_msg.lower()
+                or 'could not be found' in error_msg.lower()
+                or 'nosuchkey' in error_msg.lower()
+            ):
                 current_app.logger.warning(f"Asset not found in storage: {storage_path}")
                 abort(404)
             last_error = error
             if _is_transient_storage_error(error) and attempt < max_attempts - 1:
                 time.sleep(0.1 * (attempt + 1))
                 continue
-            # Non-transient error — log and bail immediately
             current_app.logger.error(f"Error fetching asset {storage_path}: {error}")
             return Response("Service unavailable", status=503)
 
     if last_error is not None:
-        current_app.logger.warning(f"Transient error fetching asset {storage_path} after {max_attempts} attempts: {last_error}")
+        current_app.logger.warning(
+            f"Transient error fetching asset {storage_path} after {max_attempts} attempts: {last_error}"
+        )
         return Response("Service unavailable", status=503)
 
     if not file_data:

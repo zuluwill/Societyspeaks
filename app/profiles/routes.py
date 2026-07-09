@@ -9,6 +9,8 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from app.storage_utils import (
     delete_from_object_storage,
+    download_bytes_from_object_storage,
+    get_image_from_storage,
     get_recent_activity,
     upload_to_object_storage,
 )
@@ -23,64 +25,24 @@ from app.profiles.helpers import apply_form_to_profile
 
 profiles_bp = Blueprint('profiles', __name__, template_folder='../templates/profiles')
 
-# Replit Object Storage is optional — unavailable on Render/local until S3 is wired.
-try:
-    from replit.object_storage import Client as _ReplitStorageClient
-except (ImportError, ModuleNotFoundError, AttributeError):
-    _ReplitStorageClient = None
-
-_storage_client = None
-
-
-def _get_replit_client():
-    """Lazy Replit storage client; returns None when the package/API is absent."""
-    global _storage_client
-    if _ReplitStorageClient is None:
-        return None
-    if _storage_client is None:
-        _storage_client = _ReplitStorageClient()
-    return _storage_client
-
 
 
 @profiles_bp.route('/get-image/<path:filename>')
 def get_image(filename):
-    """Retrieve image from Replit's object storage"""
+    """Retrieve a profile image from object storage (S3 / Replit / fallback)."""
     try:
-        # Validate filename to prevent path traversal
         if '..' in filename or filename.startswith('/'):
             current_app.logger.warning(f"Blocked potential path traversal attempt: {filename}")
             return send_file('static/images/default-avatar.png', mimetype='image/png')
-        
-        storage_path = f"profile_images/{filename}"
 
-        client = _get_replit_client()
-        if client is None:
-            current_app.logger.warning(
-                "Object storage unavailable; serving default for %s", filename
+        file_like, mime_type = get_image_from_storage(filename)
+        if file_like and mime_type:
+            return send_file(
+                file_like,
+                mimetype=mime_type,
+                as_attachment=False,
+                download_name=filename,
             )
-            if 'banner' in filename:
-                return send_file('static/images/default-banner.jpg', mimetype='image/jpeg')
-            return send_file('static/images/default-avatar.png', mimetype='image/png')
-
-        # Download the file data as bytes
-        file_data = client.download_as_bytes(storage_path)
-
-        if file_data:
-            file_like = io.BytesIO(file_data)
-
-            # Determine MIME type based on file extension
-            mime_type = 'image/jpeg'
-            if filename.lower().endswith('.png'):
-                mime_type = 'image/png'
-            elif filename.lower().endswith('.gif'):
-                mime_type = 'image/gif'
-            elif filename.lower().endswith('.svg'):
-                mime_type = 'image/svg+xml'
-            elif filename.lower().endswith('.webp'):
-                mime_type = 'image/webp'
-
-            return send_file(file_like, mimetype=mime_type, as_attachment=False, download_name=filename)
 
         current_app.logger.error(f"Image not found: {filename}")
         return send_file('static/images/default-avatar.png', mimetype='image/png')
@@ -94,29 +56,18 @@ def get_image(filename):
 
 @profiles_bp.route('/assets/<path:filename>')
 def get_static_asset(filename):
-    """Serve static assets (hero, speakers) from Replit Object Storage.
-    
-    This avoids disk I/O errors (OSError [Errno 5]) by reading from object storage
-    instead of the app's filesystem. Assets are cached for 1 hour.
-    """
+    """Serve static assets (hero, speakers) from object storage with local fallback."""
     try:
         if '..' in filename or filename.startswith('/'):
             current_app.logger.warning(f"Blocked path traversal: {filename}")
             abort(404)
-        
-        storage_path = f"static_assets/{filename}"
-        client = _get_replit_client()
-        if client is None:
-            current_app.logger.warning(
-                "Object storage unavailable; cannot serve asset %s", filename
-            )
-            abort(404)
 
-        file_data = client.download_as_bytes(storage_path)
-        
+        storage_path = f"static_assets/{filename}"
+        file_data = download_bytes_from_object_storage(storage_path)
+
         if file_data:
             file_like = io.BytesIO(file_data)
-            
+
             mime_type = 'image/jpeg'
             lower_filename = filename.lower()
             if lower_filename.endswith('.png'):
@@ -127,14 +78,21 @@ def get_static_asset(filename):
                 mime_type = 'image/webp'
             elif lower_filename.endswith('.svg'):
                 mime_type = 'image/svg+xml'
-            
-            response = make_response(send_file(file_like, mimetype=mime_type, as_attachment=False, download_name=filename.split('/')[-1]))
+
+            response = make_response(
+                send_file(
+                    file_like,
+                    mimetype=mime_type,
+                    as_attachment=False,
+                    download_name=filename.split('/')[-1],
+                )
+            )
             response.headers['Cache-Control'] = 'public, max-age=3600'
             return response
-        
+
         current_app.logger.warning(f"Asset not found in storage: {filename}")
         abort(404)
-        
+
     except Exception as e:
         current_app.logger.error(f"Error serving asset {filename}: {str(e)}")
         abort(404)
