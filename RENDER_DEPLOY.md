@@ -1,17 +1,35 @@
 # Render Deployment Checklist
 
+Production stack (July 2026):
+
+| Piece | Provider / region |
+|---|---|
+| App (web) | Render Frankfurt — `societyspeaks-web` |
+| Scheduler | Render Frankfurt — `societyspeaks-scheduler` |
+| Consensus worker | Render Frankfurt — `societyspeaks-consensus-worker` |
+| Postgres | Neon London (`aws-eu-west-2`) |
+| Redis | Upstash (`REDIS_URL`) |
+| Object storage | AWS S3 London (`eu-west-2`) — bucket e.g. `societyspeaks-assets-uk` |
+| Source of truth | GitHub `main` → Render auto-deploy |
+
+Residency Q&A line (honest): **Primary data store and object storage: UK (London). Application processing: EEA (Frankfurt).**
+
+---
+
 ## Prerequisites
 
-- [ ] New Neon account created — copy the **connection string** (pooler endpoint, `?sslmode=require`)
-- [ ] Redis provisioned — [Upstash](https://upstash.com) (free tier, EU region) recommended; copy the `rediss://` URL
-- [ ] GitHub repo connected to Render (or use Render's Git deploy)
+- [ ] Neon project in **London**; you own the account; pooler `DATABASE_URL` with `sslmode=require`
+- [ ] Upstash (or other) Redis; copy the `rediss://` URL
+- [ ] S3 bucket in **`eu-west-2`** + IAM user with least-privilege access to that bucket only
+- [ ] GitHub repo connected to Render
+- [ ] Secrets copied from the previous host (Replit) — **except** `DATABASE_URL` (use Neon) and storage (use AWS_*)
 
 ---
 
 ## 1. Create services from Blueprint
 
-In the Render dashboard → **Blueprints** → **New Blueprint Instance** → point at this repo.  
-Render reads `render.yaml` and creates three services automatically:
+In the Render dashboard → **+ New → Blueprint** → point at this repo / branch `main`.  
+Render reads `render.yaml` and creates three services + config env group:
 
 | Service | Type | Plan |
 |---|---|---|
@@ -19,95 +37,131 @@ Render reads `render.yaml` and creates three services automatically:
 | `societyspeaks-scheduler` | Background Worker | Standard |
 | `societyspeaks-consensus-worker` | Background Worker | Standard |
 
+**Render quirk:** `sync: false` inside an `envVarGroup` is ignored. Put secrets on each service (or edit a linked group after create). See §2.
+
 ---
 
-## 2. Set secret environment variables
+## 2. Environment variables
 
-**Render quirk:** `sync: false` inside an `envVarGroup` is ignored — those keys never appear.
-After the Blueprint creates services, open **Environment Groups → societyspeaks-secrets → Edit**
-(or each service → **Environment**) and add the secrets below by hand. Set once in the
-shared group if it is still linked to all three services.
+### Required on all three services
 
-If `societyspeaks-secrets` only shows `FLASK_*`, that means the secret keys were dropped;
-click **Edit** → **Add environment variable** for each row in the tables below.
-
-### Required (all services)
-| Variable | Where to get it |
+| Variable | Source |
 |---|---|
-| `DATABASE_URL` | Neon dashboard → Connection string (pooler) |
-| `REDIS_URL` | Upstash dashboard → Connection URL |
-| `SECRET_KEY` | Generate: `python3 -c "import secrets; print(secrets.token_hex(32))"` |
-| `ENCRYPTION_KEY` | Same as above (must be 32 bytes hex) |
+| `DATABASE_URL` | Neon London **pooler** URL (`?sslmode=require`). Not Helium. |
+| `REDIS_URL` | Upstash |
+| `SECRET_KEY` | Copy from previous production (changing logs everyone out) |
+| `ENCRYPTION_KEY` | Copy from previous production |
+| `AWS_ACCESS_KEY_ID` | IAM user for the assets bucket |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret |
+| `AWS_S3_BUCKET` | e.g. `societyspeaks-assets-uk` |
+| `AWS_REGION` | `eu-west-2` |
 
-### Required (web + scheduler)
-| Variable | Where to get it |
+`NEON_DATABASE_URL` is an optional fallback if `DATABASE_URL` is blank; prefer a filled `DATABASE_URL`.
+
+### Required for mail / AI / billing (web + scheduler at minimum)
+
+| Variable | Source |
 |---|---|
-| `RESEND_API_KEY` | Resend dashboard |
-| `ANTHROPIC_API_KEY` | Anthropic console |
-| `OPENAI_API_KEY` | OpenAI platform |
-| `STRIPE_SECRET_KEY` | Stripe dashboard |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe dashboard |
-| `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → signing secret |
+| `RESEND_API_KEY` | Resend |
+| `RESEND_WEBHOOK_SECRET` | Resend |
+| `ANTHROPIC_API_KEY` | Anthropic |
+| `OPENAI_API_KEY` | OpenAI |
+| `STRIPE_SECRET_KEY` | Stripe |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe |
+| `STRIPE_WEBHOOK_SECRET` | Stripe |
 
-### Optional but recommended
+### Optional
+
 | Variable | Notes |
 |---|---|
-| `SENTRY_DSN` | Error tracking |
+| `SENTRY_DSN` | Errors |
 | `POSTHOG_API_KEY` | Analytics |
 | `GUARDIAN_API_KEY` | News ingestion |
+| `PARTNER_KEY_SECRET` / partner Stripe price IDs | Partner embeds |
+
+Non-secret config (`APP_BASE_URL`, from-addresses, Stripe price IDs, etc.) lives in Blueprint group `societyspeaks-config`.
 
 ---
 
-## 3. Trigger first deploy
+## 3. Object storage migration (from Replit)
 
-- Push to `main` (or click **Manual Deploy** in the dashboard)
-- The **web service** runs `flask db upgrade` as a pre-deploy command before going live
-- Watch logs — a healthy first deploy ends with `Listening at: http://0.0.0.0:5000`
-
----
-
-## 4. Verify
-
-- [ ] `GET /` returns 200
-- [ ] Admin login works
-- [ ] Scheduler logs show jobs starting (check `societyspeaks-scheduler` logs)
-- [ ] Consensus worker logs show it polling the queue
-
----
-
-## 5. DNS cutover
-
-Update `societyspeaks.io` DNS → Render's provided hostname (shown in the web service dashboard).  
-Render provisions TLS automatically via Let's Encrypt.
-
----
-
-## 6. Data migration (if needed)
-
-If you need to restore data from the Neon backup into the new Neon account:
+Repo statics:
 
 ```bash
-# Export from old account
-pg_dump "OLD_NEON_CONNECTION_STRING" --no-owner --no-acl -Fc -f backup.dump
-
-# Restore to new account
-pg_restore -d "NEW_NEON_CONNECTION_STRING" --no-owner --no-acl backup.dump
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_S3_BUCKET=societyspeaks-assets-uk
+export AWS_REGION=eu-west-2
+python3 scripts/upload_static_assets.py
 ```
 
-Alternatively, use Neon's built-in branch restore if both are on the same organisation.
+User uploads / audio / evidence / exports (run **inside Replit** while Object Storage is still available):
+
+```bash
+python3 scripts/migrate_object_storage_to_s3.py --dry-run
+python3 scripts/migrate_object_storage_to_s3.py
+```
+
+Remove temporary AWS secrets from Replit after a successful run. Do **not** delete Replit Object Storage until Render has served images correctly for a while.
+
+---
+
+## 4. Deploy
+
+- Push to `main` or **Manual Deploy** on each service
+- Web runs `flask db upgrade` as `preDeployCommand`
+- Healthy web logs end with gunicorn listening on `0.0.0.0:5000`
+
+---
+
+## 5. Verify before DNS (do not skip)
+
+“Deployed” in the Render UI is **not** enough. Check logs and behaviour.
+
+### Web (`societyspeaks-web`)
+
+- [ ] `GET /` returns 200 on the `.onrender.com` URL
+- [ ] Login works
+- [ ] Hero / static image loads (S3 or filesystem fallback)
+- [ ] Known profile image: `/get-image/<filename>` returns an image
+- [ ] A discussion page loads; voting works (needs Redis)
+
+### Scheduler (`societyspeaks-scheduler`)
+
+- [ ] Logs show process start with `APP_ROLE=scheduler` (not crash-looping)
+- [ ] Logs show the scheduler cycle / jobs registering (not only “Deployed”)
+- [ ] No repeated `DATABASE_URL` / Redis / import tracebacks
+
+### Consensus worker (`societyspeaks-consensus-worker`)
+
+- [ ] Logs show worker start / queue polling
+- [ ] Triggering consensus on a discussion (or waiting for a queued job) completes without worker crash
+
+### Ops
+
+- [ ] AWS secrets removed from Replit Secrets (still present on Render)
+- [ ] Neon backups / dump retained off-platform
+- [ ] Uptime monitor pointed at the Render URL (then at the domain after cutover)
+
+---
+
+## 6. DNS cutover
+
+1. Render → web service → **Custom Domains** → add `societyspeaks.io` (+ `www` if used)
+2. At the DNS host, apply the records Render shows
+3. Wait for TLS / verified status
+4. Confirm `https://societyspeaks.io` serves Render (images + login)
+5. Keep Replit available briefly as rollback; then stop relying on it
+6. Update Stripe/Resend webhooks only if they used a Replit-only hostname (domain-based URLs usually keep working)
 
 ---
 
 ## Notes
 
-- **Port:** Gunicorn binds to `5000`; `PORT=5000` is set in `render.yaml` so Render routes correctly.
-- **Docker workers:** Background services override the image `CMD` with `dockerCommand` (Render rejects `startCommand` for `runtime: docker`).
-- **Scheduler:** Only one `societyspeaks-scheduler` instance should run. The scheduler uses a Redis lock internally, so running a second instance is safe but wasteful.
-- **Object storage:** `app/storage_utils.py` prefers S3 when these env vars are set on all services:
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-  - `AWS_S3_BUCKET` (e.g. `societyspeaks-assets`)
-  - `AWS_REGION=eu-west-2` (London)
-  - optional `AWS_ENDPOINT_URL` (for R2 / MinIO)
-  Without S3, marketing images that ship in `app/static/images/` still serve via filesystem fallback. Profile uploads and Replit-only assets need S3 (or a one-off migration from Replit Object Storage). Upload repo statics with `python3 scripts/upload_static_assets.py` after credentials are set.
-- **`replit` package:** The `replit` Python package in `requirements.txt` installs fine on Render and is safe to leave. Its APIs simply return errors if Replit env vars are absent.
+- **Port:** Gunicorn binds to `5000`; `PORT=5000` is set in `render.yaml`.
+- **Docker workers:** use `dockerCommand` (Render rejects `startCommand` for `runtime: docker`).
+- **Scheduler:** keep a **single** scheduler instance (`DISABLE_SCHEDULER=1` on web).
+- **APScheduler:** do not scale web to multiple instances with in-process scheduler enabled.
+- **Object storage:** `app/storage_utils.py` provider order is S3 → Replit → local static fallback.
+- **`replit` package:** may remain in `requirements.txt`; unused outside Replit.
+- **Cost:** three Standard Render services ≈ $75/mo plus Neon Launch + S3 + Upstash.

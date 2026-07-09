@@ -29,7 +29,7 @@ To see our future plans and ideas, check out [IDEAS.md](./IDEAS.md).
 ### Core Discussion System
 - **Native Statement System** - One-click voting (Agree/Disagree/Unsure) with progressive disclosure
 - **Threaded Responses** - Pro/con/neutral responses to statements with evidence linking
-- **Evidence Attachments** - Citations, URLs, and file uploads via Replit Object Storage
+- **Evidence Attachments** - Citations, URLs, and file uploads via object storage (S3 in production)
 - **Moderation Queue** - Flag and review system for discussion owners
 - **Edit Windows** - 10-minute edit window for statements, then immutable for integrity
 - **Programmes** - Multi-discussion dialogue containers with phases, themes, cohorts, steward access, and streaming export
@@ -89,12 +89,13 @@ Publishers can embed Society Speaks on their articles and use the Partner API fo
 | Category | Technology |
 |----------|------------|
 | Backend | Python 3.11+ / Flask 3.0+ |
-| Database | PostgreSQL |
-| Caching | Redis |
-| Storage | Replit Object Storage |
+| Database | PostgreSQL (Neon London in production) |
+| Caching | Redis (Upstash) |
+| Storage | S3-compatible object storage (`eu-west-2`; Replit Object Storage legacy only) |
+| App hosting | Render (Frankfurt) — web + scheduler + consensus worker |
 | Frontend | Tailwind CSS |
 | ML/Clustering | scikit-learn, numpy, pandas |
-| Background Jobs | APScheduler |
+| Background Jobs | APScheduler (dedicated scheduler process) |
 | Encryption | cryptography (Fernet) |
 | Social Integration | atproto (Bluesky) |
 | News Fetching | feedparser |
@@ -102,7 +103,9 @@ Publishers can embed Society Speaks on their articles and use the Partner API fo
 | Security | Flask-Talisman, Flask-SeaSurf |
 | Session Management | Flask-Session with Redis |
 | Rate Limiting | Flask-Limiter |
-| Email | Flask-Mail |
+| Email | Resend / Flask-Mail |
+
+Production deploy checklist: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md).
 
 ## Requirements
 
@@ -259,13 +262,13 @@ flask db upgrade
 
 **Alembic / multiple heads:** If `flask db upgrade` fails with "multiple head revisions", the migration history has branched. Merge heads before deploying: `flask db merge heads -m "merge_heads"`, then run `flask db upgrade` again.
 
-#### Replit production database
+#### Production database (current)
 
-Production PostgreSQL is provided by **Replit (Helium)**. The app expects a single **`DATABASE_URL`** (SQLAlchemy); it does not read split `PGHOST` / `PGPORT` variables.
+Production PostgreSQL is **Neon in AWS London (`eu-west-2`)**, owned in your Neon account. The app expects a single **`DATABASE_URL`** (SQLAlchemy); it does not read split `PGHOST` / `PGPORT` variables.
 
-If you (re)publish from Replit and need a **dedicated production database** seeded from the Repl’s current development data, enable both in the Publishing UI: **Create production database**, and **Set up your production database with your current development data**. Replit may require migration away from legacy setups (for example an external Neon dev DB used as production); after migration, `DATABASE_URL` in production points at the Helium instance.
+`config.py` rewrites Neon direct endpoints to the **pooler** host when needed (recommended for web apps). Do not point production at Replit Helium.
 
-`config.py` may still contain a **dormant Neon URL rewriter** (pooler rewrite for hosts containing `.neon.tech`). It only runs when the active `DATABASE_URL` matches that pattern and is harmless on Helium-only deployments.
+See [RENDER_DEPLOY.md](./RENDER_DEPLOY.md) for Render + Neon + S3 + worker setup.
 
 ## Project Structure
 
@@ -359,7 +362,7 @@ External pull requests are currently paused while the project is maintained by a
 
 ## Known Issues
 
-- Image upload size limited to 10MB on Replit Object Storage
+- Profile image uploads are capped (see `MAX_IMAGE_SIZE` in `app/storage_utils.py`)
 - Clustering requires minimum 7 users with votes
 - Large vote matrices (>1000 users) may slow clustering
 
@@ -374,7 +377,7 @@ For support, please open an issue or contact the maintainers.
 - [Tailwind CSS](https://tailwindcss.com) - Styling framework
 - [Flask](https://flask.palletsprojects.com) - Web framework
 - [APScheduler](https://apscheduler.readthedocs.io) - Background job scheduling
-- [Replit](https://replit.com) - Hosting and development environment
+- [Neon](https://neon.tech) / [Render](https://render.com) / [AWS S3](https://aws.amazon.com/s3/) - Production data, app hosting, and object storage
 - [AllSides](https://www.allsides.com) - Media bias ratings reference
 
 ## License
