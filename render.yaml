@@ -1,0 +1,148 @@
+# Render Blueprint — Society Speaks
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Three services share the same Docker image:
+#   societyspeaks-web        – Gunicorn/Gevent HTTP workers
+#   societyspeaks-scheduler  – APScheduler background jobs
+#   societyspeaks-consensus  – scikit-learn clustering worker
+#
+# Before first deploy, set every "sync: false" env var in the Render
+# dashboard (Environment tab of each service, or via the Secret Files
+# feature for bulk import). See RENDER_DEPLOY.md for the full checklist.
+
+envVarGroups:
+  # Secrets shared across all three services.
+  # Values must be set manually in the Render dashboard.
+  - name: societyspeaks-secrets
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_APP
+        value: run.py
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: POSTHOG_API_KEY
+        sync: false
+      - key: GUARDIAN_API_KEY
+        sync: false
+      - key: PARTNER_KEY_SECRET
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_STARTER
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
+        sync: false
+
+  # Non-secret config shared across services.
+  - name: societyspeaks-config
+    envVars:
+      - key: APP_BASE_URL
+        value: https://societyspeaks.io
+      - key: SITE_URL
+        value: https://societyspeaks.io
+      - key: POSTHOG_HOST
+        value: https://eu.i.posthog.com
+      - key: BRIEF_FROM_EMAIL
+        value: hello@brief.societyspeaks.io
+      - key: RESEND_FROM_EMAIL
+        value: "Society Speaks <hello@brief.societyspeaks.io>"
+      - key: RESEND_DAILY_FROM_EMAIL
+        value: "Daily Questions <daily@brief.societyspeaks.io>"
+      - key: RESEND_TRANSACTIONAL_FROM_EMAIL
+        value: "Society Speaks <hello@societyspeaks.io>"
+      - key: RESEND_REPLY_TO
+        value: hello@societyspeaks.io
+      - key: AUDIO_ENABLED
+        value: "false"
+      - key: X_POSTING_ENABLED
+        value: "false"
+      - key: EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS
+        value: "false"
+      - key: STRIPE_PERSONAL_MONTHLY_PRICE_ID
+        value: price_1T0InvAjRojnyfWfBrvh6xe8
+      - key: STRIPE_PERSONAL_YEARLY_PRICE_ID
+        value: price_1T0IoaAjRojnyfWfKlEFMxme
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Web — Gunicorn + Gevent HTTP workers
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: web
+    name: societyspeaks-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard          # 2 GB RAM — adjust up if workers OOM under load
+    region: frankfurt       # EU West — change to oregon/singapore as needed
+    healthCheckPath: /
+    # Runs once before each new version goes live (zero-downtime migrations)
+    preDeployCommand: flask db upgrade
+    envVars:
+      - fromGroup: societyspeaks-secrets
+      - fromGroup: societyspeaks-config
+      - key: APP_ROLE
+        value: web
+      - key: DISABLE_SCHEDULER
+        value: "1"
+      - key: PORT
+        value: "5000"
+      - key: WEB_CONCURRENCY
+        value: "4"
+      - key: SELF_SERVE_TRIAL_ENABLED
+        value: "true"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Scheduler — APScheduler background jobs (news ingestion, emails, briefs)
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: worker
+    name: societyspeaks-scheduler
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard          # Scheduler launches subprocesses; 2 GB is safe
+    region: frankfurt
+    startCommand: python3 scripts/run_scheduler.py
+    envVars:
+      - fromGroup: societyspeaks-secrets
+      - fromGroup: societyspeaks-config
+      - key: APP_ROLE
+        value: scheduler
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Consensus Worker — scikit-learn clustering (memory-intensive)
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: worker
+    name: societyspeaks-consensus-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard          # sklearn clustering peaks at ~500 MB; standard is safe
+    region: frankfurt
+    startCommand: python3 scripts/run_consensus_worker.py
+    envVars:
+      - fromGroup: societyspeaks-secrets
+      - fromGroup: societyspeaks-config
+      - key: APP_ROLE
+        value: worker
+      - key: CONSENSUS_WORKER_PROCESS
+        value: "1"
+      - key: CONSENSUS_WORKER_ID
+        value: worker-1
