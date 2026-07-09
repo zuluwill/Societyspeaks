@@ -453,21 +453,19 @@ def create_app():
     app.config['POSTHOG_API_KEY'] = posthog_api_key
     app.config['POSTHOG_HOST'] = posthog_host
     if posthog_api_key:
-        # posthog.api_key is what the SDK's setup() function reads to create the
-        # default_client and start the consumer thread.  posthog.project_api_key is
-        # a separate module-level variable that exists but is NOT read by setup() —
-        # only api_key is.  Setting only project_api_key (the previous state) left
-        # api_key=None, so setup() raised ValueError("API key is required") on every
-        # posthog.capture() call, silently dropped by all the try/except wrappers.
-        # Both are set here: api_key drives the SDK; project_api_key keeps the guard
-        # checks (getattr(posthog, 'project_api_key', None)) working.
-        posthog.api_key = posthog_api_key
-        posthog.project_api_key = posthog_api_key
-        posthog.host = posthog_host
-        posthog.debug = env != "production"
+        # Credentials only here. With gunicorn preload_app=True the master must
+        # not be the sole owner of the PostHog consumer — each worker re-inits
+        # in gunicorn_config.post_fork (see reinitialize_posthog_after_fork).
+        from app.lib.posthog_utils import (
+            configure_posthog_credentials,
+            register_posthog_atexit,
+        )
 
-        from app.lib.posthog_utils import register_posthog_atexit
-
+        configure_posthog_credentials(
+            posthog_api_key,
+            posthog_host,
+            debug=env != "production",
+        )
         register_posthog_atexit()
 
     # Initialize Talisman with simplified CSP

@@ -144,6 +144,19 @@ def post_fork(server, worker):
     except Exception as exc:
         _log.warning("post_fork [%s]: Flask-Caching pool reset failed: %s", worker.pid, exc)
 
+    # ------------------------------------------------------------------
+    # 5. PostHog client (preload_app + fork)
+    #    Master-created consumers never see worker enqueues (COW queue).
+    #    Rebuild the default client in each worker. See posthog-python#290.
+    # ------------------------------------------------------------------
+    try:
+        from app.lib.posthog_utils import reinitialize_posthog_after_fork
+
+        reinitialize_posthog_after_fork()
+        _log.info("post_fork [%s]: PostHog client reinitialized OK", worker.pid)
+    except Exception as exc:
+        _log.warning("post_fork [%s]: PostHog reinitialize failed: %s", worker.pid, exc)
+
 
 class _NoWinchFilter(logging.Filter):
     """Suppress the high-frequency SIGWINCH noise Replit emits on terminal resize."""

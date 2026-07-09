@@ -5,10 +5,17 @@ Architecture (intentional):
 - **Never** call ``posthog.flush()`` on the HTTP request path. It blocks on the
   PostHog API and harms TTFB / Core Web Vitals. Capture only; the SDK batches.
 
+- **Gunicorn ``preload_app=True``**: the master must not own the only PostHog
+  consumer. After each fork, call :func:`reinitialize_posthog_after_fork` so the
+  worker gets its own client/queue (PostHog/posthog-python#290). Otherwise
+  captures enqueue into a COW-copied queue the master's consumer never sees.
+
+- **Gevent**: monkey-patched ``queue.Queue`` lacks ``all_tasks_done``, so
+  ``flush()``/``shutdown()`` can raise ``AttributeError``. Drain is best-effort;
+  do not let that fail worker exit.
+
 - **Drain on shutdown**: ``register_posthog_atexit()`` (from ``create_app``) and
-  ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()`` so each worker
-  flushes its queue when the process exits gracefully (including ``max_requests``
-  recycle). This matches multi-worker deployments with ``preload_app=True``.
+  ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()``.
 
 - **Best-effort delivery**: SIGKILL, OOM, or hard crashes can lose buffered events.
   For revenue‑critical attribution, persist facts in your DB first; analytics mirror
@@ -19,9 +26,63 @@ Architecture (intentional):
 from __future__ import annotations
 
 import atexit
+import logging
 from typing import Any, Optional
 
 _shutdown_done = False
+_log = logging.getLogger(__name__)
+
+
+def configure_posthog_credentials(
+    api_key: str,
+    host: str,
+    *,
+    debug: bool = False,
+) -> None:
+    """Set module-level PostHog credentials used by ``capture`` / ``setup``.
+
+    Does not force a client to start; the first capture (or an explicit
+    :func:`reinitialize_posthog_after_fork`) creates the default client.
+    """
+    import posthog as ph
+
+    # api_key drives setup(); project_api_key is what our call-site guards check.
+    ph.api_key = api_key
+    ph.project_api_key = api_key
+    ph.host = host
+    ph.debug = debug
+
+
+def reinitialize_posthog_after_fork() -> None:
+    """Replace any pre-fork PostHog client with a worker-local one.
+
+    Safe to call when PostHog is not configured (no-op). Must run in each
+    gunicorn worker ``post_fork`` when ``preload_app=True``.
+    """
+    global _shutdown_done
+    try:
+        import posthog as ph
+
+        api_key = getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)
+        if not api_key:
+            return
+
+        # Drop inherited client/consumers from the master process.
+        old = getattr(ph, "default_client", None)
+        if old is not None:
+            try:
+                old.shutdown()
+            except Exception:
+                pass
+            ph.default_client = None
+
+        _shutdown_done = False
+        # setup() builds a fresh Client + consumer threads for this worker.
+        if hasattr(ph, "setup"):
+            ph.setup()
+        _log.info("PostHog client reinitialized after fork")
+    except Exception as exc:
+        _log.warning("PostHog post-fork reinitialize failed: %s", exc)
 
 
 def shutdown_server_posthog() -> None:
