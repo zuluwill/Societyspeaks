@@ -481,20 +481,34 @@ def create_app():
             content_security_policy_nonce_in=['script-src']
         )
 
-    # Initialize extensions with better session handling
+    # Initialize extensions with better session handling.
+    # In production a Redis failure at boot must fail the boot: with health-
+    # checked deploys the previous instance keeps serving, whereas silently
+    # falling back to cachelib would pin this instance to ephemeral filesystem
+    # sessions — not shared across instances and wiped on every restart.
+    from app.lib.deployed_env import is_deployed_production as _sess_is_prod
     try:
         if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
             try:
                 Config.SESSION_REDIS.ping()
                 app.config['SESSION_REDIS'] = Config.SESSION_REDIS
             except Exception as e:
+                if _sess_is_prod():
+                    raise RuntimeError(
+                        f"Redis session ping failed at boot ({type(e).__name__}: {e}) — "
+                        "refusing filesystem-session fallback in production."
+                    ) from e
                 app.logger.warning(f"Redis session ping failed ({type(e).__name__}): {e}, falling back to cachelib filesystem sessions")
                 app.config['SESSION_TYPE'] = 'cachelib'
                 app.config['SESSION_REDIS'] = None
                 app.config['SESSION_CACHELIB'] = Config.SESSION_CACHELIB
-        
+
         sess.init_app(app)
+    except RuntimeError:
+        raise
     except Exception as e:
+        if _sess_is_prod():
+            raise
         app.logger.error(f"Session initialization error: {e}")
         app.config['SESSION_TYPE'] = 'cachelib'
         app.config['SESSION_REDIS'] = None
@@ -1118,6 +1132,21 @@ def create_app():
     _LATENCY_MAX_SAMPLES = 2000  # rolling window size
 
     import random as _random
+
+    @app.before_request
+    def _redirect_noncanonical_host():
+        """Send direct *.onrender.com hits to the canonical domain.
+
+        The Render origin is publicly reachable; anyone landing there would
+        get session cookies and auth-email links minted for the wrong host.
+        /health is exempt — Render's health checks address the service host.
+        """
+        host = (request.host or '').split(':')[0].lower()
+        if not host.endswith('.onrender.com') or request.path == '/health':
+            return None
+        from app.storage_utils import get_base_url
+        target = get_base_url() + request.full_path.rstrip('?')
+        return redirect(target, code=301 if request.method in ('GET', 'HEAD') else 308)
 
     @app.before_request
     def _assign_request_id():

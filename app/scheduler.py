@@ -835,9 +835,15 @@ def init_scheduler(app):
 
                     days_remaining = max(1, (sub.trial_end - now).days) if sub.trial_end else 23
 
+                    # Scheduler jobs have no request context, and SERVER_NAME
+                    # is unset, so a bare url_for(_external=True) raises here.
+                    # Bind a request context to the configured base URL so the
+                    # links are built from route names, not hardcoded paths.
+                    from app.storage_utils import get_base_url
                     try:
-                        manage_billing_url = url_for('billing.stripe_recovery_card_update', _external=True)
-                        briefings_url = url_for('briefing.list_briefings', _external=True)
+                        with app.test_request_context(base_url=get_base_url()):
+                            manage_billing_url = url_for('billing.stripe_recovery_card_update', _external=True)
+                            briefings_url = url_for('briefing.list_briefings', _external=True)
                     except Exception:
                         manage_billing_url = None
                         briefings_url = None
