@@ -31,7 +31,6 @@ from functools import lru_cache
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
-import posthog
 from flask_caching import Cache
 from flask_compress import Compress
 from flask_limiter import Limiter
