@@ -22,6 +22,9 @@ envVarGroups:
       # Keep Replit paused/off while this is set on Render.
       - key: DEPLOYED_PRODUCTION
         value: "1"
+      # Single Sentry environment label for all services (avoid "prod" vs "production").
+      - key: SENTRY_ENVIRONMENT
+        value: production
       - key: APP_BASE_URL
         value: https://societyspeaks.io
       - key: SITE_URL
@@ -128,6 +131,9 @@ services:
       - fromGroup: societyspeaks-config
       - key: APP_ROLE
         value: scheduler
+      # Keep the process long-lived on Render (0 = no timed self-exit).
+      - key: SCHEDULER_MAX_RUNTIME_SECONDS
+        value: "0"
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL

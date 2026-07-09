@@ -349,8 +349,16 @@ def create_app():
                     return None
             return event
 
+        from app.lib.sentry_config import (
+            resolve_sentry_app_role,
+            resolve_sentry_environment,
+            resolve_sentry_release,
+        )
+
         sentry_sdk.init(
             dsn=os.getenv("SENTRY_DSN"),
+            environment=resolve_sentry_environment(),
+            release=resolve_sentry_release(),
             integrations=[FlaskIntegration()],
             traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
             profiles_sample_rate=float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1")),
@@ -359,6 +367,7 @@ def create_app():
                 "continuous_profiling_auto_start": True,
             },
         )
+        sentry_sdk.set_tag("app_role", resolve_sentry_app_role())
 
     app = Flask(__name__, 
         static_url_path='',

@@ -62,10 +62,26 @@ from app.scheduler import _running_jobs, _running_jobs_lock, scheduler as apsche
 logger.info("Scheduler process initialised — APScheduler supervisor running in background threads")
 
 _START_TIME = time.time()
-_MAX_RUNTIME_SECONDS = 1800  # Proactively restart after 30 min — SIGBUS crashes occur at ~45 min
+# Proactive process recycle was a Replit-era workaround (SIGBUS ~45 min).
+# On Render it looks like a crash: the platform restarts the worker and may
+# email "Application exited early" every cycle. Default off (0); set
+# SCHEDULER_MAX_RUNTIME_SECONDS only if you still need timed recycles.
+try:
+    _MAX_RUNTIME_SECONDS = int(os.getenv("SCHEDULER_MAX_RUNTIME_SECONDS", "0") or "0")
+except ValueError:
+    _MAX_RUNTIME_SECONDS = 0
+    logger.warning(
+        "Invalid SCHEDULER_MAX_RUNTIME_SECONDS=%r — proactive restart disabled",
+        os.getenv("SCHEDULER_MAX_RUNTIME_SECONDS"),
+    )
 _GC_INTERVAL_TICKS = 2       # gc.collect() every 2 ticks × 5 s = every 10 seconds
 _MEM_LOG_INTERVAL_TICKS = 60 # Log RSS every 60 ticks × 5 s = every 5 minutes
 _tick = 0
+if _MAX_RUNTIME_SECONDS > 0:
+    logger.info(
+        "Scheduler proactive restart enabled (max runtime=%d s)",
+        _MAX_RUNTIME_SECONDS,
+    )
 
 while not _SHUTDOWN:
     time.sleep(5)
@@ -104,15 +120,12 @@ while not _SHUTDOWN:
         except Exception:
             pass
 
-    # Proactive clean restart: exit cleanly so the deployment restart loop
-    # gives this process a fresh memory slate.  This prevents the gradual
-    # growth that caused the ~45-minute SIGBUS crash.
-    #
+    # Optional proactive clean restart (see SCHEDULER_MAX_RUNTIME_SECONDS).
     # Safety: we never restart while a job is mid-flight (email sends, brief
     # generation, trending pipeline).  We wait up to 5 extra minutes for any
     # active job to finish, then exit regardless to avoid being permanently
     # stuck behind a stalled job.
-    if time.time() - _START_TIME > _MAX_RUNTIME_SECONDS:
+    if _MAX_RUNTIME_SECONDS > 0 and time.time() - _START_TIME > _MAX_RUNTIME_SECONDS:
         _SAFE_RESTART_DEADLINE = _MAX_RUNTIME_SECONDS + 300  # +5 min grace
         with _running_jobs_lock:
             active = set(_running_jobs)
