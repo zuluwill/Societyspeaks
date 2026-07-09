@@ -111,7 +111,14 @@ _CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    # Prefer DATABASE_URL; fall back to NEON_DATABASE_URL. Treat blank as unset —
+    # Render Blueprint `sync: false` can create an empty DATABASE_URL key that
+    # would otherwise block boot even when NEON_DATABASE_URL is populated.
+    SQLALCHEMY_DATABASE_URI = (
+        (os.getenv('DATABASE_URL') or '').strip()
+        or (os.getenv('NEON_DATABASE_URL') or '').strip()
+        or None
+    )
 
     # Flask-Babel: absolute path so catalogs resolve regardless of process CWD
     BABEL_TRANSLATION_DIRECTORIES = os.path.join(_CONFIG_DIR, 'translations')
@@ -204,7 +211,10 @@ class Config:
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:
-        raise ValueError("DATABASE_URL environment variable not set")
+        raise ValueError(
+            "DATABASE_URL environment variable not set "
+            "(or set NEON_DATABASE_URL as a fallback)"
+        )
 
     # Add near start of Config class
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
