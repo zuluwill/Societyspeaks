@@ -76,6 +76,19 @@ services:
         value: "5000"
       - key: WEB_CONCURRENCY
         value: "4"
+      # Gevent's native monitor thread logs the stack of any greenlet that
+      # blocks the event loop longer than GEVENT_MAX_BLOCKING_TIME seconds.
+      # Diagnoses the recurring WORKER TIMEOUT / health-check failures by
+      # naming the blocking code path before it escalates to a 120s kill.
+      # gunicorn_config.post_worker_init also starts the monitor explicitly
+      # after hub.reinit() so it attaches to the worker hub that serves traffic.
+      # 5s (not the 0.1s default) avoids log spam from brief CPU bursts.
+      - key: GEVENT_MONITOR_THREAD_ENABLE
+        value: "true"
+      - key: GEVENT_MAX_BLOCKING_TIME
+        value: "5"
+      - key: GEVENT_MONITOR_PRINT_BLOCKING_REPORTS
+        value: "true"
       - key: SELF_SERVE_TRIAL_ENABLED
         value: "true"
       # Secrets — set in dashboard (Blueprint create prompts; updates ignore these)
