@@ -7,7 +7,7 @@ Guidance for AI tools and developers working in this repository (Flask, Flask-Ba
 - **Python:** use `python3`.
 - **Tests:** `python3 -m pytest` (from repo root; target files or `-k` as needed).
 - **Translations:** see `scripts/compile_translations.sh` for the full extract → update → compile workflow.
-- **Production hosting:** Render (Frankfurt) + Neon London + S3 London + Upstash. Deploy checklist: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md). Day-to-day ops: [OPS.md](./OPS.md). Do not treat Replit as production source of truth.
+- **Production hosting:** Render (Frankfurt) + Neon London + S3 London + Redis Cloud (London). Deploy checklist: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md). Day-to-day ops: [OPS.md](./OPS.md). Do not treat Replit as production source of truth.
 
 ## i18n and HTML escaping
 

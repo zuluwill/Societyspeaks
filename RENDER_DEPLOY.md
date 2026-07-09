@@ -9,7 +9,7 @@ Production stack (July 2026):
 | Consensus worker | Render Frankfurt — `societyspeaks-consensus-worker` |
 | DB backup cron | Render Frankfurt — `societyspeaks-db-backup` (daily 03:00 UTC → S3) |
 | Postgres | Neon London (`aws-eu-west-2`) |
-| Redis | Upstash (`REDIS_URL`) |
+| Redis | Redis Cloud, London (`REDIS_URL`) |
 | Object storage | AWS S3 London (`eu-west-2`) — bucket e.g. `societyspeaks-assets-uk` |
 | Source of truth | GitHub `main` → Render auto-deploy |
 
@@ -22,7 +22,7 @@ Residency Q&A line (honest): **Primary data store and object storage: UK (London
 ## Prerequisites
 
 - [ ] Neon project in **London**; you own the account; pooler `DATABASE_URL` with `sslmode=require`
-- [ ] Upstash (or other) Redis; copy the `rediss://` URL
+- [ ] Redis Cloud (or other) Redis; copy the `rediss://` URL
 - [ ] S3 bucket in **`eu-west-2`** + IAM user with least-privilege access to that bucket only
 - [ ] GitHub repo connected to Render
 - [ ] Secrets copied from the previous host (Replit) — **except** `DATABASE_URL` (use Neon) and storage (use AWS_*)
@@ -51,7 +51,7 @@ Render reads `render.yaml` and creates three services + config env group:
 | Variable | Source |
 |---|---|
 | `DATABASE_URL` | Neon London **pooler** URL (`?sslmode=require`). Not Helium. |
-| `REDIS_URL` | Upstash |
+| `REDIS_URL` | Redis Cloud |
 | `SECRET_KEY` | Copy from previous production (changing logs everyone out) |
 | `ENCRYPTION_KEY` | Copy from previous production |
 | `AWS_ACCESS_KEY_ID` | IAM user for the assets bucket |
@@ -78,6 +78,7 @@ Render reads `render.yaml` and creates three services + config env group:
 | Variable | Notes |
 |---|---|
 | `SENTRY_DSN` | Errors |
+| `SENTRY_ENVIRONMENT` | Set to `production` in `societyspeaks-config` (do not use `prod`) |
 | `POSTHOG_API_KEY` | Analytics |
 | `GUARDIAN_API_KEY` | News ingestion |
 | `PARTNER_KEY_SECRET` / partner Stripe price IDs | Partner embeds |
@@ -136,6 +137,7 @@ Remove temporary AWS secrets from Replit after a successful run. Do **not** dele
 - [ ] Logs show process start with `APP_ROLE=scheduler` (not crash-looping)
 - [ ] Logs show the scheduler cycle / jobs registering (not only “Deployed”)
 - [ ] No repeated `DATABASE_URL` / Redis / import tracebacks
+- [ ] No recurring “Application exited early” emails outside deploys — the process stays up (`SCHEDULER_MAX_RUNTIME_SECONDS=0` on Render; do not re-enable timed self-exit unless you accept those alerts)
 
 ### Consensus worker (`societyspeaks-consensus-worker`)
 
@@ -185,4 +187,4 @@ Remove temporary AWS secrets from Replit after a successful run. Do **not** dele
 - **APScheduler:** do not scale web to multiple instances with in-process scheduler enabled.
 - **Object storage:** `app/storage_utils.py` provider order is S3 → Replit → local static fallback.
 - **`replit` package:** may remain in `requirements.txt`; unused outside Replit.
-- **Cost:** three Standard Render services ≈ $75/mo plus Neon Launch + S3 + Upstash.
+- **Cost:** three Standard Render services ≈ $75/mo plus Neon Launch + S3 + Redis Cloud.

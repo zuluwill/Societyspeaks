@@ -12,9 +12,9 @@
   <h1 class="text-4xl font-extrabold mb-8 text-center text-gray-800">{{ _('Privacy Policy') }}</h1>
 
   <div class="space-y-6 text-gray-600">
-    <p class="font-bold">{{ _('Effective Date: November 2, 2024') }}</p>
+    <p class="font-bold">{{ _('Effective Date: 9 July 2026') }}</p>
 
-    <p>{{ _('William Roberts Coaching and Advisory Ltd ("we", "us", or "our"), a company incorporated in England (company number 15629688), operates SocietySpeaks.io (the "website"). SocietySpeaks.io is a platform for community discussion and collective intelligence, powered by Pol.is technology. We are committed to protecting and respecting your privacy. This Privacy Policy sets out how we collect, use, and protect your personal data.') }}</p>
+    <p>{{ _('William Roberts Coaching and Advisory Ltd ("we", "us", or "our"), a company incorporated in England (company number 15629688), operates SocietySpeaks.io (the "website"). SocietySpeaks.io is a platform for community discussion and collective intelligence. We are committed to protecting and respecting your privacy. This Privacy Policy sets out how we collect, use, and protect your personal data.') }}</p>
 
     <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('Key Contacts') }}</h2>
 
@@ -47,7 +47,7 @@
 
     <h3 class="text-xl font-bold text-gray-800 mt-6 mb-3">{{ _('1.2 Discussion Platform Data') }}</h3>
 
-    <p>{{ _('As an integral part of our service, we use Pol.is to power our community discussions. When you participate in discussions, we collect:') }}</p>
+    <p>{{ _('Discussions run on our own open-source consensus engine; a small number of older discussions may use an embedded Pol.is conversation. When you participate in discussions, we collect:') }}</p>
     <ul class="list-disc pl-6 space-y-2">
       <li>{{ _('Your comments and contributions to discussions') }}</li>
       <li>{{ _('Your voting patterns and interactions') }}</li>
@@ -126,7 +126,7 @@
 
     <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('3. Data Processing and Storage') }}</h2>
 
-    <p>{{ _('SocietySpeaks.io is hosted on Replit, which uses Google Cloud infrastructure for secure data storage and processing. Our discussion platform is powered by Pol.is, with discussion data processed and stored in accordance with applicable data protection laws.') }}</p>
+    <p>{{ _('Your data is stored at rest in the United Kingdom: our primary database runs on Neon (PostgreSQL) in London, and uploaded files and backups are stored in Amazon Web Services S3 in London. The application itself runs on Render in Frankfurt, Germany (EEA). Discussion data is processed by our own open-source consensus engine in accordance with applicable data protection laws.') }}</p>
 
     <h3 class="text-xl font-bold text-gray-800 mt-6 mb-3">{{ _('Our Service Providers and Subprocessors') }}</h3>
 
@@ -142,19 +142,24 @@
         </thead>
         <tbody>
             <tr>
-                <td class="border px-4 py-2">Pol.is</td>
-                <td class="border px-4 py-2">{{ _('USA') }}</td>
-                <td class="border px-4 py-2">{{ _('Core discussion platform technology and collective intelligence gathering') }}</td>
+                <td class="border px-4 py-2">Render</td>
+                <td class="border px-4 py-2">{{ _('Germany (EEA)') }}</td>
+                <td class="border px-4 py-2">{{ _('Application hosting') }}</td>
             </tr>
             <tr>
-                <td class="border px-4 py-2">Replit</td>
-                <td class="border px-4 py-2">{{ _('USA') }}</td>
-                <td class="border px-4 py-2">{{ _('Platform hosting and infrastructure') }}</td>
+                <td class="border px-4 py-2">Neon</td>
+                <td class="border px-4 py-2">{{ _('United Kingdom') }}</td>
+                <td class="border px-4 py-2">{{ _('Primary database (PostgreSQL)') }}</td>
             </tr>
             <tr>
-                <td class="border px-4 py-2">Google Cloud Services</td>
-                <td class="border px-4 py-2">{{ _('USA') }}</td>
-                <td class="border px-4 py-2">{{ _('Cloud infrastructure (via Replit)') }}</td>
+                <td class="border px-4 py-2">Amazon Web Services (S3)</td>
+                <td class="border px-4 py-2">{{ _('United Kingdom') }}</td>
+                <td class="border px-4 py-2">{{ _('File storage and database backups') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">Redis Cloud (Redis Ltd)</td>
+                <td class="border px-4 py-2">{{ _('United Kingdom') }}</td>
+                <td class="border px-4 py-2">{{ _('Transient cache, sessions and rate limiting (Redis)') }}</td>
             </tr>
             <tr>
                 <td class="border px-4 py-2">Stripe</td>
@@ -167,9 +172,34 @@
                 <td class="border px-4 py-2">{{ _('Email communications and transactional messaging') }}</td>
             </tr>
             <tr>
-                <td class="border px-4 py-2">Google Analytics</td>
+                <td class="border px-4 py-2">PostHog</td>
+                <td class="border px-4 py-2">{{ _('EU') }}</td>
+                <td class="border px-4 py-2">{{ _('Product analytics') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">Google (Tag Manager / Analytics)</td>
                 <td class="border px-4 py-2">{{ _('USA') }}</td>
                 <td class="border px-4 py-2">{{ _('Site analytics and usage tracking') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">Sentry</td>
+                <td class="border px-4 py-2">{{ _('EU') }}</td>
+                <td class="border px-4 py-2">{{ _('Error monitoring and diagnostics') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">Anthropic</td>
+                <td class="border px-4 py-2">{{ _('USA') }}</td>
+                <td class="border px-4 py-2">{{ _('Translation and content generation (public statement text only; no account identifiers)') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">CookieYes</td>
+                <td class="border px-4 py-2">{{ _('Global') }}</td>
+                <td class="border px-4 py-2">{{ _('Cookie consent management') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">Pol.is</td>
+                <td class="border px-4 py-2">{{ _('USA') }}</td>
+                <td class="border px-4 py-2">{{ _('Legacy embedded discussions only') }}</td>
             </tr>
         </tbody>
     </table>
@@ -182,17 +212,18 @@
         <li>{{ _('Your contributions to discussions are public by default and visible to other users') }}</li>
         <li>{{ _('Your voting patterns contribute to collective opinion mapping') }}</li>
         <li>{{ _('Your interactions help generate group insights and patterns') }}</li>
-        <li>{{ _('Discussion data is processed using Pol.is technology to identify areas of consensus and disagreement') }}</li>
+        <li>{{ _('Discussion data is processed by our open-source consensus engine to identify areas of consensus and disagreement') }}</li>
         <li>{{ _('Comments and votes cannot be retroactively deleted from group analysis once submitted') }}</li>
     </ul>
 
     <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('5. International Data Transfers') }}</h2>
 
-    <p>{{ _('Your data is primarily processed and stored in data centers located in the United States through our hosting provider Replit, our discussion platform Pol.is, and their infrastructure providers. When you use SocietySpeaks.io, your data may be transferred to, stored, and processed in the United States and other countries where our service providers maintain facilities.') }}</p>
+    <p>{{ _('Your data is stored at rest in the United Kingdom (database, uploaded files and backups) and processed by our application in the European Economic Area (Germany). Some of our service providers — for example Stripe, Resend, Google and Anthropic — process limited data in the United States, as set out in the subprocessor table above.') }}</p>
 
-    <p>{{ _('For users in the European Economic Area (EEA), United Kingdom, or Switzerland: We ensure appropriate safeguards are in place through:') }}</p>
+    <p>{{ _('Where data is transferred outside the UK or EEA, we ensure appropriate safeguards are in place through:') }}</p>
     <ul class="list-disc pl-6 space-y-2">
-        <li>{{ _('Standard Contractual Clauses (SCCs) approved by the European Commission') }}</li>
+        <li>{{ _('The UK International Data Transfer Agreement or the UK Addendum to the EU Standard Contractual Clauses') }}</li>
+        <li>{{ _('The UK Extension to the EU–US Data Privacy Framework, where the provider is certified') }}</li>
         <li>{{ _('Appropriate security measures and data protection agreements with our service providers') }}</li>
         <li>{{ _('Compliance with UK and EU data protection laws') }}</li>
     </ul>
