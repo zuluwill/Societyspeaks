@@ -414,6 +414,23 @@ def create_app():
 
     app.config.from_object(Config)
 
+    # Registered before every extension so it outranks their before_request
+    # hooks — CSRF in particular must not 400 a POST that should redirect.
+    @app.before_request
+    def _redirect_noncanonical_host():
+        """Send direct *.onrender.com hits to the canonical domain.
+
+        The Render origin is publicly reachable; anyone landing there would
+        get session cookies and auth-email links minted for the wrong host.
+        /health is exempt — Render's health checks address the service host.
+        """
+        host = (request.host or '').split(':')[0].lower()
+        if not host.endswith('.onrender.com') or request.path == '/health':
+            return None
+        from app.storage_utils import get_base_url
+        target = get_base_url() + request.full_path.rstrip('?')
+        return redirect(target, code=301 if request.method in ('GET', 'HEAD') else 308)
+
     # Load cities data once during app startup and cache it
     json_path = os.path.join(app.root_path, 'static', 'data', 'cities_by_country.json')
     try:
@@ -1132,21 +1149,6 @@ def create_app():
     _LATENCY_MAX_SAMPLES = 2000  # rolling window size
 
     import random as _random
-
-    @app.before_request
-    def _redirect_noncanonical_host():
-        """Send direct *.onrender.com hits to the canonical domain.
-
-        The Render origin is publicly reachable; anyone landing there would
-        get session cookies and auth-email links minted for the wrong host.
-        /health is exempt — Render's health checks address the service host.
-        """
-        host = (request.host or '').split(':')[0].lower()
-        if not host.endswith('.onrender.com') or request.path == '/health':
-            return None
-        from app.storage_utils import get_base_url
-        target = get_base_url() + request.full_path.rstrip('?')
-        return redirect(target, code=301 if request.method in ('GET', 'HEAD') else 308)
 
     @app.before_request
     def _assign_request_id():
