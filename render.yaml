@@ -6,57 +6,18 @@
 #   societyspeaks-scheduler  – APScheduler background jobs
 #   societyspeaks-consensus  – scikit-learn clustering worker
 #
-# Before first deploy, set every "sync: false" env var in the Render
-# dashboard (Environment tab of each service, or via the Secret Files
-# feature for bulk import). See RENDER_DEPLOY.md for the full checklist.
+# IMPORTANT: Render IGNORES `sync: false` inside envVarGroups (those keys
+# never appear). Put secrets on each service with sync: false, or add them
+# manually in Environment Groups → Edit. See RENDER_DEPLOY.md.
 
 envVarGroups:
-  # Secrets shared across all three services.
-  # Values must be set manually in the Render dashboard.
-  - name: societyspeaks-secrets
+  # Non-secret config shared across services (safe to commit values).
+  - name: societyspeaks-config
     envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: SECRET_KEY
-        sync: false
-      - key: ENCRYPTION_KEY
-        sync: false
       - key: FLASK_ENV
         value: production
       - key: FLASK_APP
         value: run.py
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: RESEND_API_KEY
-        sync: false
-      - key: RESEND_WEBHOOK_SECRET
-        sync: false
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_PUBLISHABLE_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: SENTRY_DSN
-        sync: false
-      - key: POSTHOG_API_KEY
-        sync: false
-      - key: GUARDIAN_API_KEY
-        sync: false
-      - key: PARTNER_KEY_SECRET
-        sync: false
-      - key: PARTNER_STRIPE_PRICE_STARTER
-        sync: false
-      - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
-        sync: false
-
-  # Non-secret config shared across services.
-  - name: societyspeaks-config
-    envVars:
       - key: APP_BASE_URL
         value: https://societyspeaks.io
       - key: SITE_URL
@@ -92,13 +53,11 @@ services:
     name: societyspeaks-web
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: standard          # 2 GB RAM — adjust up if workers OOM under load
-    region: frankfurt       # EU West — change to oregon/singapore as needed
+    plan: standard
+    region: frankfurt
     healthCheckPath: /
-    # Runs once before each new version goes live (zero-downtime migrations)
     preDeployCommand: flask db upgrade
     envVars:
-      - fromGroup: societyspeaks-secrets
       - fromGroup: societyspeaks-config
       - key: APP_ROLE
         value: web
@@ -110,36 +69,96 @@ services:
         value: "4"
       - key: SELF_SERVE_TRIAL_ENABLED
         value: "true"
+      # Secrets — set in dashboard (Blueprint create prompts; updates ignore these)
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: POSTHOG_API_KEY
+        sync: false
+      - key: GUARDIAN_API_KEY
+        sync: false
+      - key: PARTNER_KEY_SECRET
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_STARTER
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
+        sync: false
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Scheduler — APScheduler background jobs (news ingestion, emails, briefs)
-  # ─────────────────────────────────────────────────────────────────────────
   - type: worker
     name: societyspeaks-scheduler
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: standard          # Scheduler launches subprocesses; 2 GB is safe
+    plan: standard
     region: frankfurt
-    # Docker services must use dockerCommand (not startCommand)
     dockerCommand: python3 scripts/run_scheduler.py
     envVars:
-      - fromGroup: societyspeaks-secrets
       - fromGroup: societyspeaks-config
       - key: APP_ROLE
         value: scheduler
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: POSTHOG_API_KEY
+        sync: false
+      - key: GUARDIAN_API_KEY
+        sync: false
+      - key: PARTNER_KEY_SECRET
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_STARTER
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
+        sync: false
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Consensus Worker — scikit-learn clustering (memory-intensive)
-  # ─────────────────────────────────────────────────────────────────────────
   - type: worker
     name: societyspeaks-consensus-worker
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: standard          # sklearn clustering peaks at ~500 MB; standard is safe
+    plan: standard
     region: frankfurt
     dockerCommand: python3 scripts/run_consensus_worker.py
     envVars:
-      - fromGroup: societyspeaks-secrets
       - fromGroup: societyspeaks-config
       - key: APP_ROLE
         value: worker
@@ -147,3 +166,37 @@ services:
         value: "1"
       - key: CONSENSUS_WORKER_ID
         value: worker-1
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: POSTHOG_API_KEY
+        sync: false
+      - key: GUARDIAN_API_KEY
+        sync: false
+      - key: PARTNER_KEY_SECRET
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_STARTER
+        sync: false
+      - key: PARTNER_STRIPE_PRICE_PROFESSIONAL
+        sync: false

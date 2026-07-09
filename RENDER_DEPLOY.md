@@ -23,8 +23,13 @@ Render reads `render.yaml` and creates three services automatically:
 
 ## 2. Set secret environment variables
 
-Go to each service → **Environment** tab and fill in the `sync: false` vars.  
-All three services share the `societyspeaks-secrets` group — set once, Render propagates.
+**Render quirk:** `sync: false` inside an `envVarGroup` is ignored — those keys never appear.
+After the Blueprint creates services, open **Environment Groups → societyspeaks-secrets → Edit**
+(or each service → **Environment**) and add the secrets below by hand. Set once in the
+shared group if it is still linked to all three services.
+
+If `societyspeaks-secrets` only shows `FLASK_*`, that means the secret keys were dropped;
+click **Edit** → **Add environment variable** for each row in the tables below.
 
 ### Required (all services)
 | Variable | Where to get it |
