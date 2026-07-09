@@ -41,8 +41,17 @@ def shutdown_server_posthog() -> None:
             getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)
         ):
             return
-        ph.flush()
-        ph.shutdown()
+        # Under gunicorn+gevent, PostHog's consumer flush can raise
+        # AttributeError on gevent.Queue (no all_tasks_done). Capture still
+        # works; drain is best-effort on worker exit.
+        try:
+            ph.flush()
+        except AttributeError:
+            pass
+        try:
+            ph.shutdown()
+        except AttributeError:
+            pass
     except Exception:
         pass
 

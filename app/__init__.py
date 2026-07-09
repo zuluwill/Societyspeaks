@@ -316,6 +316,10 @@ def create_app():
                 # generates no user-visible impact; suppress the noise from Sentry.
                 if drop_if(msg, "was sent SIGTERM", "Worker was sent SIGTERM"):
                     return None
+                # PostHog flush uses threading.Queue APIs that gevent's Queue
+                # does not implement; harmless at request time / worker recycle.
+                if drop_if(msg, "all_tasks_done"):
+                    return None
             exc_info = hint.get("exc_info")
             if exc_info:
                 exc_msg = str(exc_info[1] or "")
@@ -323,6 +327,8 @@ def create_app():
                 if exc_type is RuntimeError and drop_if(exc_msg, "cannot schedule new futures"):
                     return None
                 if drop_if(exc_msg, "multiple head revisions"):
+                    return None
+                if drop_if(exc_msg, "all_tasks_done"):
                     return None
                 if "PendingRollbackError" in (getattr(exc_type, "__name__", "") or ""):
                     return None
@@ -340,6 +346,8 @@ def create_app():
                 if typ == "RuntimeError" and drop_if(val, "cannot schedule new futures"):
                     return None
                 if drop_if(val, "multiple head revisions"):
+                    return None
+                if drop_if(val, "all_tasks_done"):
                     return None
                 if "PendingRollbackError" in typ:
                     return None

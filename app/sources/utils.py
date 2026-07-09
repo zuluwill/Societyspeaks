@@ -21,19 +21,33 @@ def get_source_discussions(source_id, page=1, per_page=12):
 
     Returns:
         Paginated list of Discussion objects
+
+    Note: DISTINCT must apply to discussion.id only. ``Discussion.query.distinct()``
+    selects every column, and PostgreSQL cannot DISTINCT on ``json`` columns
+    (``information_links``) — that produced production ProgrammingErrors on
+    ``sources.view_source``.
     """
-    return Discussion.query.distinct().join(
-        DiscussionSourceArticle,
-        Discussion.id == DiscussionSourceArticle.discussion_id
-    ).join(
-        NewsArticle,
-        DiscussionSourceArticle.article_id == NewsArticle.id
-    ).filter(
-        NewsArticle.source_id == source_id,
-        Discussion.partner_env != 'test'
-    ).order_by(
-        Discussion.created_at.desc()
-    ).paginate(page=page, per_page=per_page, error_out=False)
+    discussion_ids = (
+        db.session.query(Discussion.id)
+        .join(
+            DiscussionSourceArticle,
+            Discussion.id == DiscussionSourceArticle.discussion_id,
+        )
+        .join(
+            NewsArticle,
+            DiscussionSourceArticle.article_id == NewsArticle.id,
+        )
+        .filter(
+            NewsArticle.source_id == source_id,
+            Discussion.partner_env != 'test',
+        )
+        .distinct()
+    )
+    return (
+        Discussion.query.filter(Discussion.id.in_(discussion_ids))
+        .order_by(Discussion.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
 
 
 def get_source_discussion_ids(source_id):
