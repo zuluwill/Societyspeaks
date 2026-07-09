@@ -40,6 +40,10 @@ args = "Consensus Worker Pool (x3)"
 task = "workflow.run"
 args = "Fill Translations"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "DB Restore"
+
 [[workflows.workflow]]
 name = "Flask App"
 author = "agent"
@@ -87,6 +91,17 @@ outputType = "console"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python3 scripts/translate_po_with_haiku.py --batch-size 40 && ./scripts/compile_translations.sh"
+
+[[workflows.workflow]]
+name = "DB Restore"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo 'restore complete'"
 
 [agent]
 expertMode = true

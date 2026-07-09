@@ -1,1 +1,2 @@
 - [Stable unsubscribe token pattern](brief-unsubscribe-token.md) — both DailyBriefSubscriber and DailyQuestionSubscriber use stable unsubscribe_token; never use rotating magic_token for unsubscribe URLs.
+- [Neon → Helium migration recovery](neon-helium-migration.md) — config.py must use DATABASE_URL only; per-table restore via workflow (not background shell) to survive Replit's ~120s orphan-process kill.
