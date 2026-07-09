@@ -62,7 +62,9 @@ services:
     dockerfilePath: ./Dockerfile
     plan: standard
     region: frankfurt
-    healthCheckPath: /
+    # Lightweight liveness only — do not use "/" (homepage hits DB/Redis/sessions
+    # and fails during worker warmup, which triggers deploy "connection refused" alerts).
+    healthCheckPath: /health
     preDeployCommand: flask db upgrade
     envVars:
       - fromGroup: societyspeaks-config
