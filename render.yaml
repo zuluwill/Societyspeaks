@@ -120,7 +120,8 @@ services:
     dockerfilePath: ./Dockerfile
     plan: standard          # Scheduler launches subprocesses; 2 GB is safe
     region: frankfurt
-    startCommand: python3 scripts/run_scheduler.py
+    # Docker services must use dockerCommand (not startCommand)
+    dockerCommand: python3 scripts/run_scheduler.py
     envVars:
       - fromGroup: societyspeaks-secrets
       - fromGroup: societyspeaks-config
@@ -136,7 +137,7 @@ services:
     dockerfilePath: ./Dockerfile
     plan: standard          # sklearn clustering peaks at ~500 MB; standard is safe
     region: frankfurt
-    startCommand: python3 scripts/run_consensus_worker.py
+    dockerCommand: python3 scripts/run_consensus_worker.py
     envVars:
       - fromGroup: societyspeaks-secrets
       - fromGroup: societyspeaks-config

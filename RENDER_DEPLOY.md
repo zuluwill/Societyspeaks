@@ -96,6 +96,7 @@ Alternatively, use Neon's built-in branch restore if both are on the same organi
 ## Notes
 
 - **Port:** Gunicorn binds to `5000`; `PORT=5000` is set in `render.yaml` so Render routes correctly.
+- **Docker workers:** Background services override the image `CMD` with `dockerCommand` (Render rejects `startCommand` for `runtime: docker`).
 - **Scheduler:** Only one `societyspeaks-scheduler` instance should run. The scheduler uses a Redis lock internally, so running a second instance is safe but wasteful.
 - **Replit Object Storage:** Any features using `replit.object_storage` will not work on Render. Replace with S3-compatible storage (Cloudflare R2, AWS S3) when ready.
 - **`replit` package:** The `replit` Python package in `requirements.txt` installs fine on Render and is safe to leave. Its APIs simply return errors if Replit env vars are absent.
