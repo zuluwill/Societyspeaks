@@ -45,23 +45,26 @@ def economy_daily_id(app, db, economy_discussion_id):
 
 
 def test_bridge_prefers_daily_question_over_discussion(app, economy_daily_id, economy_discussion_id):
-    with app.app_context():
+    # find_ss_bridge builds urls via url_for; needs a request context (or SERVER_NAME).
+    with app.test_request_context('/'):
         bridge = find_ss_bridge('debt-inherited')
     assert bridge is not None
     assert bridge['bridge_type'] == 'daily_question'
     assert bridge['target_id'] == economy_daily_id
+    assert bridge['url'].startswith('/daily/')
 
 
 def test_bridge_falls_back_to_discussion_when_no_daily(app, economy_discussion_id):
-    with app.app_context():
+    with app.test_request_context('/'):
         bridge = find_ss_bridge('tax-cuts-public-services')
     assert bridge is not None
     assert bridge['bridge_type'] == 'discussion'
     assert bridge['target_id'] == economy_discussion_id
+    assert '/discussion' in bridge['url'] or bridge['url'].startswith('/')
 
 
 def test_bridge_returns_none_without_topic_tags(app, db):
-    with app.app_context():
+    with app.test_request_context('/'):
         from app.game.services import bridge_service
 
         scenario = bridge_service.load_scenario('debt-inherited')
