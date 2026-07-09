@@ -405,7 +405,7 @@ class Config:
         raise RuntimeError(
             "REDIS_URL is not set. Redis is required in production for sessions, "
             "rate limiting, distributed locks, and the job queue. "
-            "Set REDIS_URL in Replit secrets (use a rediss:// TLS URL from Upstash or similar)."
+            "Set REDIS_URL on the Render service (use the rediss:// TLS URL from Redis Cloud)."
         )
 
     if _redis_url:

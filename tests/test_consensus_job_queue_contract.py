@@ -74,48 +74,12 @@ def test_worker_script_has_heartbeat_key():
     assert "consensus_worker:heartbeat:" in source
 
 
-def test_replit_workflow_includes_worker_pool_topology():
-    source = _read(".replit")
-    assert "Consensus Worker Pool (x3)" in source
-    assert "Project (Worker Pool x3)" in source
-
-
-def test_worker_pool_runs_in_parallel_not_sequential():
-    """
-    Worker Pool (x3) must start workers in parallel.
-
-    The workflow must either:
-    (a) use Replit's native mode = "parallel" with 3 separate shell.exec tasks, OR
-    (b) use a bash command with background (&) operators — NOT && which is sequential.
-
-    The && operator would start worker-2 only when worker-1 exits, making the pool
-    effectively single-worker under normal operation.
-    """
-    source = _read(".replit")
-    # Find the Worker Pool *definition* block (name = "..."), not an args reference
-    pool_start = source.index('name = "Consensus Worker Pool (x3)"')
-    # Grab everything from the definition until the next workflow section or EOF
-    next_workflow = source.find("\n[[workflows.workflow]]", pool_start + 1)
-    pool_section = source[pool_start: next_workflow if next_workflow != -1 else len(source)]
-
-    # If there are multiple tasks (native parallel), verify no && usage
-    # If single task (bash wrapper), verify & parallel not && sequential
-    if pool_section.count("shell.exec") >= 3:
-        # Native 3-task parallel mode — sequential chaining forbidden
-        assert "&&" not in pool_section, (
-            "Worker pool tasks must not use && (sequential). Use separate tasks with mode=parallel."
-        )
-    else:
-        # Single bash task — must use & background operators, not && sequential chaining
-        assert "&&" not in pool_section, (
-            "Worker pool bash command must not use && (sequential). "
-            "Use & to background workers so all 3 start simultaneously."
-        )
-        # Must have at least 2 background operator & references for worker-2 and worker-3
-        bg_count = pool_section.count(" & ")
-        assert bg_count >= 2, (
-            f"Worker pool bash command must background workers with &, found only {bg_count} & operators."
-        )
+def test_render_blueprint_defines_consensus_worker_service():
+    """Render topology must include a dedicated consensus worker service."""
+    source = _read("render.yaml")
+    assert "societyspeaks-consensus-worker" in source
+    assert "run_consensus_worker.py" in source
+    assert "CONSENSUS_WORKER_PROCESS" in source
 
 
 def test_get_consensus_queue_metrics_exists():
@@ -174,51 +138,31 @@ def test_run_scheduler_has_clean_shutdown():
     assert "signal.signal" in source
 
 
-def test_deployment_run_command_uses_role_separation():
+def test_render_blueprint_uses_role_separation():
     """
-    The .replit deployment run command must start the scheduler with APP_ROLE=scheduler
-    and gunicorn with APP_ROLE=web as separate processes.
+    Render topology must run web, scheduler, and consensus worker as separate
+    services with the right APP_ROLE, so create_app() bootstraps each role
+    correctly (scheduler off on web, jobs owned by the scheduler service).
     """
-    source = _read(".replit")
-    assert "APP_ROLE=scheduler" in source, (
-        "Deployment run command must pass APP_ROLE=scheduler to the scheduler process"
-    )
-    assert "APP_ROLE=web" in source, (
-        "Deployment run command must pass APP_ROLE=web to gunicorn"
-    )
+    source = _read("render.yaml")
+    for role in ("web", "scheduler", "worker"):
+        assert f"value: {role}" in source, (
+            f"render.yaml must set APP_ROLE={role} on its service"
+        )
     assert "run_scheduler.py" in source, (
-        "Deployment run command must reference scripts/run_scheduler.py"
+        "Scheduler service must run scripts/run_scheduler.py"
+    )
+    assert "DISABLE_SCHEDULER" in source, (
+        "Web service must disable the in-process scheduler (jobs belong to the scheduler service)"
     )
 
 
-def test_deployment_run_command_supervises_scheduler_and_web_lifecycle():
+def test_run_scheduler_drains_inflight_work_on_sigterm():
     """
-    Deployment shell ties the deployment lifetime to the web process, not the scheduler.
-
-    The scheduler runs inside a `while true` restart loop so it recovers from crashes
-    (including SIGBUS) without bringing down the web server.  Only a gunicorn exit
-    triggers a full deployment restart.  On any signal the trap ensures both child
-    processes are terminated cleanly.
-
-    Old behaviour (wait -n) failed the deployment whenever *either* process exited,
-    meaning a scheduler SIGBUS crash would kill the web server too.  The current
-    strategy keeps gunicorn alive across scheduler restarts.
+    Render sends SIGTERM on every deploy. The scheduler must wait (bounded)
+    for running jobs and detached email-send threads before exiting, so a
+    deploy cannot cut off a send mid-batch.
     """
-    source = _read(".replit")
-
-    # Scheduler must self-restart — a plain exec without a loop is not acceptable.
-    assert "while true" in source, (
-        "Deployment command must wrap the scheduler in a 'while true' restart loop "
-        "so scheduler crashes do not bring down the web server."
-    )
-
-    # Deployment lifetime is tied to the web process, not to the scheduler.
-    assert "wait $WEB_PID" in source, (
-        "Deployment command must use 'wait $WEB_PID' so only a gunicorn exit "
-        "triggers a full deployment restart — scheduler restarts are transparent."
-    )
-
-    # Both child processes must be cleaned up on SIGTERM/SIGINT.
-    assert "trap 'kill $SCHED_PID $WEB_PID" in source, (
-        "Deployment command should trap shutdown signals and terminate both child processes."
-    )
+    source = _read("scripts/run_scheduler.py")
+    assert "inflight_work_summary" in source
+    assert "SCHEDULER_SIGTERM_DRAIN_SECONDS" in source

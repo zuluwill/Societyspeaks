@@ -258,10 +258,10 @@ def create_app():
     if _role == 'web':
         os.environ.setdefault('DISABLE_SCHEDULER', '1')
     elif _role == 'scheduler':
-        # Enable production job/email gates without relying on Replit-only flags.
-        os.environ.setdefault('DEPLOYED_PRODUCTION', '1')
-        # Legacy alias for any remaining direct REPLIT_DEPLOYMENT checks.
-        os.environ.setdefault('REPLIT_DEPLOYMENT', '1')
+        # NOTE: production gates (DEPLOYED_PRODUCTION=1) come from render.yaml,
+        # not from the role. Deriving them here made any local
+        # `APP_ROLE=scheduler` run silently enable real email sends.
+        pass
     elif _role == 'worker':
         os.environ.setdefault('DISABLE_SCHEDULER', '1')
         os.environ.setdefault('CONSENSUS_WORKER_PROCESS', '1')
@@ -468,12 +468,14 @@ def create_app():
         register_posthog_atexit()
 
     # Initialize Talisman with simplified CSP
-    # Note: force_https=False because Replit's proxy handles HTTPS termination
-    # The proxy receives HTTPS requests and forwards them as HTTP internally
+    # Note: force_https=False because TLS terminates at the edge (Cloudflare →
+    # Render proxy), which also owns the HTTP→HTTPS redirect. Talisman still
+    # emits HSTS: ProxyFix trusts X-Forwarded-Proto, so request.is_secure is
+    # true behind the proxy.
     if talisman:
         talisman.init_app(
             app,
-            force_https=False,  # Replit proxy handles HTTPS
+            force_https=False,  # edge proxy owns the HTTPS redirect
             session_cookie_secure=env == 'production',
             content_security_policy=csp,
             content_security_policy_nonce_in=['script-src']

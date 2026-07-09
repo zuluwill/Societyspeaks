@@ -10,7 +10,6 @@ Jinja2>=3.1.5
 python-slugify==8.0.1
 Flask-WTF==1.2.2
 wtforms==3.2.1
-replit>=4.1.0
 email_validator==2.2.0
 python-dotenv>=1.2.2
 flask-limiter==3.8.0
@@ -100,5 +99,5 @@ boto3>=1.35.0
 pytest>=9.0.3
 pytest-cov>=4.1.0
 
-# Pin protobuf to compatible version (required by replit, googleapis packages)
+# Pin protobuf to compatible version (required by googleapis packages)
 protobuf>=4.21.8,<5.0.0
