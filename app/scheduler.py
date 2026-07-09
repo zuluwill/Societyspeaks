@@ -7,7 +7,8 @@ Uses APScheduler to run periodic tasks:
 - Cleanup old analysis data
 - Statistics updates
 
-Designed for Replit deployment (single-instance friendly)
+Single-instance friendly: a Redis lock (app/__init__.py) ensures only one
+process runs the jobs; on Render this is the dedicated scheduler worker.
 """
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as APSThreadPoolExecutor
@@ -124,6 +125,33 @@ def _on_job_done(event):
     """Remove a job from the running set when it finishes (success, error, or missed)."""
     with _running_jobs_lock:
         _running_jobs.discard(event.job_id)
+
+
+# Detached email-send threads (daily question, weekly/monthly digests) are not
+# APScheduler jobs, so _running_jobs cannot see them. Track them here so the
+# SIGTERM drain in run_scheduler.py can wait for in-flight sends too — daemon
+# threads are killed instantly at process exit.
+_send_threads: list = []
+_send_threads_lock = threading.Lock()
+
+
+def _start_tracked_send_thread(target, args, name):
+    """Start a daemon send thread and register it for shutdown draining."""
+    thread = threading.Thread(target=target, args=args, daemon=True, name=name)
+    with _send_threads_lock:
+        _send_threads[:] = [t for t in _send_threads if t.is_alive()]
+        _send_threads.append(thread)
+    thread.start()
+    return thread
+
+
+def inflight_work_summary() -> tuple[list, list]:
+    """(running job ids, live send-thread names) — read by the shutdown drain."""
+    with _running_jobs_lock:
+        jobs = sorted(_running_jobs)
+    with _send_threads_lock:
+        threads = sorted(t.name for t in _send_threads if t.is_alive())
+    return jobs, threads
 
 
 def _ops_alert_fingerprint(message: str) -> str:
@@ -1713,13 +1741,11 @@ def init_scheduler(app):
         _email_send_in_progress.set()
         logger.info("Launching daily question email send in background thread")
         
-        email_thread = threading.Thread(
+        _start_tracked_send_thread(
             target=_run_email_send_in_thread,
             args=(app,),
-            daemon=True,
-            name="daily-email-sender"
+            name="daily-email-sender",
         )
-        email_thread.start()
         logger.info("Daily question email thread launched, scheduler continuing")
 
 
@@ -1995,13 +2021,11 @@ def init_scheduler(app):
         _weekly_digest_in_progress.set()
         logger.info("Launching weekly digest processing in background thread")
 
-        digest_thread = threading.Thread(
+        _start_tracked_send_thread(
             target=_run_weekly_digest_in_thread,
             args=(app,),
-            daemon=True,
-            name="weekly-digest-sender"
+            name="weekly-digest-sender",
         )
-        digest_thread.start()
         logger.info("Weekly digest thread launched, scheduler continuing")
 
     @scheduler.scheduled_job('cron', minute=0, id='process_monthly_digest_sends', max_instances=1, coalesce=True)
@@ -2028,13 +2052,11 @@ def init_scheduler(app):
         _monthly_digest_in_progress.set()
         logger.info("Launching monthly digest send in background thread")
         
-        email_thread = threading.Thread(
+        _start_tracked_send_thread(
             target=_run_monthly_digest_in_thread,
             args=(app,),
-            daemon=True,
-            name="monthly-digest-sender"
+            name="monthly-digest-sender",
         )
-        email_thread.start()
         logger.info("Monthly digest thread launched, scheduler continuing")
 
     @scheduler.scheduled_job('cron', hour=14, minute=0, id='post_daily_question_to_social', max_instances=1, coalesce=True, misfire_grace_time=3600)

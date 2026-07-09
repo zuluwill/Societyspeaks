@@ -57,7 +57,12 @@ from app import create_app  # noqa: E402
 app = create_app()
 
 # Import running-job tracker AFTER create_app() so init_scheduler() has run
-from app.scheduler import _running_jobs, _running_jobs_lock, scheduler as apscheduler  # noqa: E402
+from app.scheduler import (  # noqa: E402
+    _running_jobs,
+    _running_jobs_lock,
+    inflight_work_summary,
+    scheduler as apscheduler,
+)
 
 logger.info("Scheduler process initialised — APScheduler supervisor running in background threads")
 
@@ -152,6 +157,38 @@ while not _SHUTDOWN:
             _MAX_RUNTIME_SECONDS // 60,
         )
         break
+
+# Drain in-flight work before shutting down. Render sends SIGTERM on every
+# deploy and SIGKILLs shortly after (~30 s), while email sends run in daemon
+# threads that die instantly at process exit. Per-recipient/per-batch commits
+# make an interrupted send resumable, but finishing cleanly avoids relying on
+# that. Bounded so a stalled job cannot hold the deploy past the kill window.
+try:
+    _DRAIN_SECONDS = int(os.getenv("SCHEDULER_SIGTERM_DRAIN_SECONDS", "20") or "0")
+except ValueError:
+    _DRAIN_SECONDS = 20
+if _SHUTDOWN and _DRAIN_SECONDS > 0:
+    _drain_deadline = time.time() + _DRAIN_SECONDS
+    while time.time() < _drain_deadline:
+        _jobs, _send_threads = inflight_work_summary()
+        if not _jobs and not _send_threads:
+            break
+        logger.info(
+            "Draining in-flight work before exit: jobs=%s send_threads=%s (%.0fs left)",
+            _jobs or "none",
+            _send_threads or "none",
+            _drain_deadline - time.time(),
+        )
+        time.sleep(1)
+    else:
+        _jobs, _send_threads = inflight_work_summary()
+        if _jobs or _send_threads:
+            logger.warning(
+                "Drain window expired with work still in flight: jobs=%s send_threads=%s — "
+                "exiting anyway (interrupted sends resume via DB markers)",
+                _jobs or "none",
+                _send_threads or "none",
+            )
 
 logger.info("Scheduler process exiting cleanly")
 
