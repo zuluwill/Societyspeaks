@@ -1,0 +1,186 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Security & Data Protection — Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('main.security', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('How Society Speaks protects your data: UK data residency, encryption, tested backups, our full subprocessor list and data protection practices.') }}{% endblock %}
+{% block og_title %}{{ _('Security & Data Protection — Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('All data at rest is stored in the United Kingdom. Read our security measures, subprocessor list and data protection practices.') }}{% endblock %}
+{% block twitter_title %}{{ _('Security & Data Protection — Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('All data at rest is stored in the United Kingdom. Read our security measures, subprocessor list and data protection practices.') }}{% endblock %}
+
+{% block content %}
+
+<div class="bg-gradient-to-b from-blue-50 to-white">
+  <div class="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
+    <div class="text-center">
+      <div class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-primary-700 mb-6">
+        <span>{{ _('For procurement, IT and data protection teams') }}</span>
+      </div>
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">{{ _('Security & data protection') }}</h1>
+      <p class="mt-5 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        {{ _('All data at rest — database, uploaded files, backups and cache — is stored in the United Kingdom. Application processing takes place in the EEA (Frankfurt, Germany).') }}
+      </p>
+      <p class="mt-4 text-sm text-gray-500">
+        {{ _('Last reviewed: July 2026. Questions, our DPA, or a completed security questionnaire:') }}
+        <a href="mailto:info@societyspeaks.io" class="text-primary-600 font-medium hover:underline">info@societyspeaks.io</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white pb-16">
+  <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-14">
+
+    {# ── Data residency ── #}
+    <section aria-labelledby="residency-heading">
+      <h2 id="residency-heading" class="text-2xl font-bold text-gray-800 mb-4">{{ _('Where your data lives') }}</h2>
+      <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-gray-700 font-semibold">{{ _('Data') }}</th>
+              <th class="px-4 py-3 text-left text-gray-700 font-semibold">{{ _('Provider') }}</th>
+              <th class="px-4 py-3 text-left text-gray-700 font-semibold">{{ _('Location') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr>
+              <td class="px-4 py-3 text-gray-900">{{ _('Primary database (accounts, discussions, votes)') }}</td>
+              <td class="px-4 py-3 text-gray-600">Neon (PostgreSQL)</td>
+              <td class="px-4 py-3 font-medium text-gray-900">{{ _('United Kingdom (London)') }}</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-gray-900">{{ _('Uploaded files and media') }}</td>
+              <td class="px-4 py-3 text-gray-600">Amazon Web Services S3</td>
+              <td class="px-4 py-3 font-medium text-gray-900">{{ _('United Kingdom (London)') }}</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-gray-900">{{ _('Database backups') }}</td>
+              <td class="px-4 py-3 text-gray-600">Amazon Web Services S3</td>
+              <td class="px-4 py-3 font-medium text-gray-900">{{ _('United Kingdom (London)') }}</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-gray-900">{{ _('Cache and rate limiting (transient)') }}</td>
+              <td class="px-4 py-3 text-gray-600">Redis Cloud</td>
+              <td class="px-4 py-3 font-medium text-gray-900">{{ _('United Kingdom (London)') }}</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-gray-900">{{ _('Application hosting') }}</td>
+              <td class="px-4 py-3 text-gray-600">Render</td>
+              <td class="px-4 py-3 font-medium text-gray-900">{{ _('EEA (Frankfurt, Germany)') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-sm text-gray-500">{{ _('No personal data is stored at rest outside the United Kingdom.') }}</p>
+    </section>
+
+    {# ── Subprocessors ── #}
+    <section aria-labelledby="subprocessors-heading">
+      <h2 id="subprocessors-heading" class="text-2xl font-bold text-gray-800 mb-4">{{ _('Subprocessors') }}</h2>
+      <p class="text-gray-600 mb-4">{{ _('The full list of service providers that may process data on our behalf, and where that processing happens. This list is kept in step with our') }} <a href="{{ url_for('main.privacy_policy') }}" class="text-primary-600 hover:underline">{{ _('Privacy Policy') }}</a>.</p>
+      <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-gray-700 font-semibold">{{ _('Provider') }}</th>
+              <th class="px-4 py-3 text-left text-gray-700 font-semibold">{{ _('Purpose') }}</th>
+              <th class="px-4 py-3 text-left text-gray-700 font-semibold">{{ _('Processing location') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr><td class="px-4 py-3">Neon</td><td class="px-4 py-3 text-gray-600">{{ _('Managed PostgreSQL database') }}</td><td class="px-4 py-3">{{ _('United Kingdom') }}</td></tr>
+            <tr><td class="px-4 py-3">Render</td><td class="px-4 py-3 text-gray-600">{{ _('Application hosting') }}</td><td class="px-4 py-3">{{ _('Germany (EEA)') }}</td></tr>
+            <tr><td class="px-4 py-3">Amazon Web Services</td><td class="px-4 py-3 text-gray-600">{{ _('Object storage and backups') }}</td><td class="px-4 py-3">{{ _('United Kingdom') }}</td></tr>
+            <tr><td class="px-4 py-3">Redis Cloud (Redis Ltd)</td><td class="px-4 py-3 text-gray-600">{{ _('Managed cache (transient data)') }}</td><td class="px-4 py-3">{{ _('United Kingdom') }}</td></tr>
+            <tr><td class="px-4 py-3">Stripe</td><td class="px-4 py-3 text-gray-600">{{ _('Payment processing — card data never touches our servers') }}</td><td class="px-4 py-3">{{ _('USA') }}</td></tr>
+            <tr><td class="px-4 py-3">Resend</td><td class="px-4 py-3 text-gray-600">{{ _('Transactional and subscription email') }}</td><td class="px-4 py-3">{{ _('USA') }}</td></tr>
+            <tr><td class="px-4 py-3">PostHog</td><td class="px-4 py-3 text-gray-600">{{ _('Product analytics') }}</td><td class="px-4 py-3">{{ _('EU') }}</td></tr>
+            <tr><td class="px-4 py-3">Google (Tag Manager / Analytics)</td><td class="px-4 py-3 text-gray-600">{{ _('Site analytics') }}</td><td class="px-4 py-3">{{ _('USA') }}</td></tr>
+            <tr><td class="px-4 py-3">Sentry</td><td class="px-4 py-3 text-gray-600">{{ _('Error monitoring and diagnostics') }}</td><td class="px-4 py-3">{{ _('EU') }}</td></tr>
+            <tr><td class="px-4 py-3">Anthropic</td><td class="px-4 py-3 text-gray-600">{{ _('Translation and content generation — public statement text only, no account identifiers') }}</td><td class="px-4 py-3">{{ _('USA') }}</td></tr>
+            <tr><td class="px-4 py-3">CookieYes</td><td class="px-4 py-3 text-gray-600">{{ _('Cookie consent management') }}</td><td class="px-4 py-3">{{ _('Global CDN') }}</td></tr>
+            <tr><td class="px-4 py-3">Pol.is</td><td class="px-4 py-3 text-gray-600">{{ _('Legacy embedded discussions only — not used for new consultations') }}</td><td class="px-4 py-3">{{ _('USA') }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-sm text-gray-500">{{ _('Transfers to US providers are safeguarded by the UK International Data Transfer Agreement / UK Addendum and, where the provider is certified, the UK Extension to the EU–US Data Privacy Framework.') }}</p>
+    </section>
+
+    {# ── Security measures ── #}
+    <section aria-labelledby="measures-heading">
+      <h2 id="measures-heading" class="text-2xl font-bold text-gray-800 mb-4">{{ _('Security measures') }}</h2>
+      <dl class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div class="rounded-xl border border-gray-200 p-5">
+          <dt class="font-semibold text-gray-900">{{ _('Encryption') }}</dt>
+          <dd class="mt-1 text-sm text-gray-600 leading-relaxed">{{ _('TLS 1.2+ for all traffic; AES-256 encryption at rest for the database and object storage.') }}</dd>
+        </div>
+        <div class="rounded-xl border border-gray-200 p-5">
+          <dt class="font-semibold text-gray-900">{{ _('Backups and recovery') }}</dt>
+          <dd class="mt-1 text-sm text-gray-600 leading-relaxed">{{ _('Automated daily database backups to UK object storage with 30-day retention, plus provider point-in-time recovery. The restore procedure is documented and tested.') }}</dd>
+        </div>
+        <div class="rounded-xl border border-gray-200 p-5">
+          <dt class="font-semibold text-gray-900">{{ _('Change control') }}</dt>
+          <dd class="mt-1 text-sm text-gray-600 leading-relaxed">{{ _('All changes flow through version control with automated deployments. No manual server access in the normal course of operation.') }}</dd>
+        </div>
+        <div class="rounded-xl border border-gray-200 p-5">
+          <dt class="font-semibold text-gray-900">{{ _('Access control') }}</dt>
+          <dd class="mt-1 text-sm text-gray-600 leading-relaxed">{{ _('Least-privilege credentials per service. Secrets are held in the hosting platform’s encrypted store, never in source code.') }}</dd>
+        </div>
+        <div class="rounded-xl border border-gray-200 p-5">
+          <dt class="font-semibold text-gray-900">{{ _('Abuse prevention') }}</dt>
+          <dd class="mt-1 text-sm text-gray-600 leading-relaxed">{{ _('Rate limiting, bot detection and moderation tooling are built into the platform — including protections against automated voting.') }}</dd>
+        </div>
+        <div class="rounded-xl border border-gray-200 p-5">
+          <dt class="font-semibold text-gray-900">{{ _('Monitoring') }}</dt>
+          <dd class="mt-1 text-sm text-gray-600 leading-relaxed">{{ _('Independent uptime monitoring and error alerting across all services.') }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    {# ── Data protection ── #}
+    <section aria-labelledby="dp-heading">
+      <h2 id="dp-heading" class="text-2xl font-bold text-gray-800 mb-4">{{ _('Data protection') }}</h2>
+      <ul class="space-y-3 text-gray-600">
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Controller: William Roberts Coaching and Advisory Ltd (England, company no. 15629688), processing under UK GDPR and the Data Protection Act 2018.') }}</li>
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Anonymous by default: participants do not need an account. Anonymous participation uses a hashed identifier, not identity.') }}</li>
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Data minimisation: we collect the minimum needed to run a consultation. Individual votes are never shown to other participants or to the consultation owner.') }}</li>
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Your data is yours: full export in CSV and JSON at any time; deletion on request. Consultation data is owned by the commissioning organisation.') }}</li>
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('DPIA support: we provide a pre-completed Data Protection Impact Assessment template for public-sector clients.') }}</li>
+      </ul>
+    </section>
+
+    {# ── Assurance ── #}
+    <section aria-labelledby="assurance-heading">
+      <h2 id="assurance-heading" class="text-2xl font-bold text-gray-800 mb-4">{{ _('Assurance') }}</h2>
+      <ul class="space-y-3 text-gray-600">
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Inherited provider certifications: AWS (ISO 27001, SOC 2), Render (SOC 2 Type II), Neon (SOC 2 Type II), Stripe (PCI DSS Level 1).') }}</li>
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Cyber Essentials certification is in progress.') }}</li>
+        <li class="flex gap-3"><span class="text-primary-600 font-bold" aria-hidden="true">✓</span>{{ _('Open source: the platform and its consensus methodology are publicly auditable — no vendor lock-in. The software can be independently inspected or self-hosted.') }}</li>
+      </ul>
+    </section>
+
+    {# ── Documents & disclosure ── #}
+    <section aria-labelledby="docs-heading" class="rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200">
+      <h2 id="docs-heading" class="text-2xl font-bold text-gray-800 mb-4">{{ _('Available on request') }}</h2>
+      <ul class="list-disc pl-6 space-y-2 text-gray-600">
+        <li>{{ _('Data Processing Agreement (DPA)') }}</li>
+        <li>{{ _('Pre-completed DPIA template for public-sector consultations') }}</li>
+        <li>{{ _('Completed security questionnaires') }}</li>
+      </ul>
+      <p class="mt-4 text-gray-600">
+        {{ _('Email') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 font-medium hover:underline">info@societyspeaks.io</a>{{ _(' and we will respond promptly.') }}
+      </p>
+      <h3 class="mt-8 text-lg font-semibold text-gray-900">{{ _('Reporting a vulnerability') }}</h3>
+      <p class="mt-2 text-gray-600">
+        {{ _('We welcome good-faith security research. Please report suspected vulnerabilities to') }}
+        <a href="mailto:security@societyspeaks.io" class="text-primary-600 font-medium hover:underline">security@societyspeaks.io</a>
+        {{ _('and allow us reasonable time to remediate before public disclosure. See also') }}
+        <a href="{{ url_for('main.security_txt') }}" class="text-primary-600 font-medium hover:underline">/.well-known/security.txt</a>.
+      </p>
+    </section>
+
+  </div>
+</div>
+
+{% endblock %}

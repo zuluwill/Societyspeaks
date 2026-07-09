@@ -333,6 +333,10 @@
         <dt class="text-base font-semibold text-gray-900">{{ _('UK company, privacy by design.') }}</dt>
         <dd class="mt-2 text-base text-gray-600 leading-relaxed">
           {{ _('Anonymous participation by default, GDPR-aligned data practices and the minimum data necessary. Export or delete everything at any time.') }}
+          <a href="{{ url_for('main.security') }}" class="mt-2 inline-flex items-center text-sm font-semibold text-primary-600 hover:text-primary-800">
+            {{ _('Read our security and data overview') }}
+            <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </dd>
       </div>
     </dl>

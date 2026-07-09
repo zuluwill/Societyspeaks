@@ -167,6 +167,8 @@ def test_core_marketing_pages_emit_single_explicit_canonical(client, db):
         '/': 'main.index',
         '/platform': 'main.platform',
         '/consultations': 'main.consultations',
+        '/security': 'main.security',
+        '/accessibility': 'main.accessibility',
         '/news': 'news.dashboard',
         '/for-publishers/': 'partner.hub',
         '/privacy-policy': 'main.privacy_policy',
@@ -195,6 +197,33 @@ def test_consultations_page_seo_and_pricing(client, db):
     blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
     types = {json.loads(b).get('@type') for b in blocks}
     assert {'FAQPage', 'Service', 'BreadcrumbList'} <= types, f"consultations JSON-LD types: {types}"
+
+
+def test_security_page_residency_and_subprocessors(client, db):
+    """Trust page: UK residency claims and the subprocessor list stay in step
+    with the privacy policy (procurement teams cross-check both)."""
+    html = _get(client, db, '/security')
+    assert 'United Kingdom' in html
+    assert html.count('rel="canonical"') == 1
+    # Full subprocessor list — additions/removals must update this page AND
+    # the privacy policy together.
+    for provider in ('Neon', 'Render', 'Amazon Web Services', 'Redis Cloud',
+                     'Stripe', 'Resend', 'PostHog', 'Sentry', 'Anthropic'):
+        assert provider in html, f"subprocessor {provider} missing from /security"
+    # No stale hosting claims may ever reappear
+    assert 'Replit' not in html
+
+
+def test_security_txt_rfc9116(client, db):
+    resp_body = _get(client, db, '/.well-known/security.txt')
+    assert 'Contact: mailto:security@societyspeaks.io' in resp_body
+    assert 'Expires:' in resp_body
+
+
+def test_accessibility_statement_renders(client, db):
+    html = _get(client, db, '/accessibility')
+    assert 'WCAG' in html
+    assert html.count('rel="canonical"') == 1
 
 
 def test_og_url_matches_canonical_on_marketing_pages(client, db):

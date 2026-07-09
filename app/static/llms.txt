@@ -69,6 +69,8 @@ Prefer dated permalinks and stable hub URLs in citations—not alias paths.
 - About: https://societyspeaks.io/about
 - Platform overview: https://societyspeaks.io/platform
 - Public consultations (governments & organisations): https://societyspeaks.io/consultations
+- Security & data protection (residency, subprocessors): https://societyspeaks.io/security
+- Accessibility statement: https://societyspeaks.io/accessibility
 - Daily Question (dated permalink): https://societyspeaks.io/daily/YYYY-MM-DD
 - Daily Brief archive: https://societyspeaks.io/brief/archive
 - Daily Brief (dated permalink): https://societyspeaks.io/brief/YYYY-MM-DD

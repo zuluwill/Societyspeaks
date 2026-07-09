@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Accessibility Statement — Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('main.accessibility', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('Society Speaks accessibility statement: our commitment to WCAG 2.2 AA, what we have built in, known limitations and how to give feedback.') }}{% endblock %}
+{% block og_title %}{{ _('Accessibility Statement — Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('Our commitment to accessible public participation: WCAG 2.2 AA as our standard, no account required, works on any phone, available in 11 languages.') }}{% endblock %}
+{% block twitter_title %}{{ _('Accessibility Statement — Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('Our commitment to accessible public participation: WCAG 2.2 AA as our standard, no account required, works on any phone, available in 11 languages.') }}{% endblock %}
+
+{% block content %}
+
+<div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-12 mb-12">
+  <h1 class="text-4xl font-extrabold mb-8 text-center text-gray-800">{{ _('Accessibility statement') }}</h1>
+
+  <div class="space-y-6 text-gray-600">
+    <p class="font-bold">{{ _('Last reviewed: July 2026') }}</p>
+
+    <p>{{ _('Public participation only works if everyone can take part. Society Speaks is designed so that residents can read, vote and contribute regardless of device, connection, language or assistive technology.') }}</p>
+
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('Our standard') }}</h2>
+    <p>{{ _('We work to the Web Content Accessibility Guidelines (WCAG) 2.2 level AA as our target standard across the platform, and we treat accessibility issues as bugs, not feature requests.') }}</p>
+
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('What we have built in') }}</h2>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>{{ _('Keyboard navigation throughout, including a skip-to-content link, visible focus states and keyboard-operable menus and forms') }}</li>
+      <li>{{ _('Semantic HTML with labelled landmarks, headings and ARIA attributes for screen readers') }}</li>
+      <li>{{ _('Colour contrast that meets AA on text and interactive elements, and information never conveyed by colour alone') }}</li>
+      <li>{{ _('A responsive layout that works on small screens and low-cost devices — voting takes one tap') }}</li>
+      <li>{{ _('No account required to participate, which removes the biggest barrier of all') }}</li>
+      <li>{{ _('The interface is available in 11 languages') }}</li>
+    </ul>
+
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('Known limitations') }}</h2>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>{{ _('Some data visualisations (for example opinion cluster charts) are inherently visual; we provide the underlying figures in text and tables wherever they appear') }}</li>
+      <li>{{ _('A small number of older discussions use an embedded third-party tool (Pol.is) whose accessibility we do not control') }}</li>
+      <li>{{ _('Some older pages have not yet been re-audited against WCAG 2.2 and may contain issues; we fix these as they are found') }}</li>
+    </ul>
+
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('Feedback and contact') }}</h2>
+    <p>{{ _('If you find something on Society Speaks that is difficult or impossible to use with your device or assistive technology, please tell us — it genuinely helps:') }}</p>
+    <p><a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:text-primary-800 font-medium">info@societyspeaks.io</a></p>
+    <p>{{ _('We aim to acknowledge accessibility reports within five working days and to prioritise fixes that block participation.') }}</p>
+
+    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('For public-sector clients') }}</h2>
+    <p>{{ _('If your organisation is subject to the Public Sector Bodies (Websites and Mobile Applications) Accessibility Regulations 2018, we can support your compliance assessment for consultations run on Society Speaks, including embedded consultations on your own website. Ask us at') }} <a href="mailto:info@societyspeaks.io" class="text-primary-600 hover:text-primary-800 font-medium">info@societyspeaks.io</a>.</p>
+  </div>
+</div>
+
+{% endblock %}

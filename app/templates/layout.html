@@ -1389,6 +1389,20 @@
               </li>
               <li>
                 <a
+                  href="{{ url_for('main.security') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >{{ _('Security & Data')|escape_i18n }}</a
+                >
+              </li>
+              <li>
+                <a
+                  href="{{ url_for('main.accessibility') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >{{ _('Accessibility') }}</a
+                >
+              </li>
+              <li>
+                <a
                   href="mailto:info@societyspeaks.io?subject={{ _('SocietySpeaks inquiry')|urlencode }}"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _('Contact') }}</a

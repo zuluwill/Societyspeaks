@@ -245,6 +245,31 @@ def consultations():
     return render_template('consultations.html', demo_discussion=demo_discussion)
 
 
+@main_bp.route('/security')
+def security():
+    """Public trust page: data residency, subprocessors, security measures.
+    Keep in step with the privacy policy subprocessor table and
+    docs/commercial/SECURITY_AND_DATA_RESIDENCY.md (internal master)."""
+    return render_template('security.html')
+
+
+@main_bp.route('/accessibility')
+def accessibility():
+    return render_template('accessibility.html')
+
+
+@main_bp.route('/.well-known/security.txt')
+def security_txt():
+    """RFC 9116 vulnerability disclosure contact."""
+    body = f"""Contact: mailto:security@societyspeaks.io
+Expires: 2027-07-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: {url_for('main.security_txt', _external=True)}
+Policy: {url_for('main.security', _external=True)}
+"""
+    return Response(body, mimetype='text/plain')
+
+
 @main_bp.route('/set-language', methods=['POST'])
 def set_language():
     """Cookie-based language switch; also persists to User.language if authenticated."""
@@ -551,6 +576,8 @@ Allow: /
 Allow: /about
 Allow: /platform
 Allow: /consultations
+Allow: /security
+Allow: /accessibility
 Allow: /donate
 Allow: /faq
 Allow: /daily
