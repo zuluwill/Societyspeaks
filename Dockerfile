@@ -7,6 +7,7 @@ FROM python:3.11-slim
 #   libffi-dev       – cryptography package
 #   libxml2-dev + libxslt1-dev – readability-lxml (briefing ingestion)
 #   curl             – used below to install Node.js 20 LTS, then removed
+#   postgresql-client – pg_dump for scripts/backup_neon_to_s3.py (Render cron)
 # psycopg2-binary bundles libpq so no libpq-dev needed at runtime.
 # ---------------------------------------------------------------------------
 RUN apt-get update \
@@ -18,6 +19,7 @@ RUN apt-get update \
         libxslt1-dev \
         libgomp1 \
         libopenblas0 \
+        postgresql-client \
         curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \

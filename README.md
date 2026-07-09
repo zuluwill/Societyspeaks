@@ -105,7 +105,7 @@ Publishers can embed Society Speaks on their articles and use the Partner API fo
 | Rate Limiting | Flask-Limiter |
 | Email | Resend / Flask-Mail |
 
-Production deploy checklist: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md).
+Production deploy checklist: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md). Ops (backups, health, alerts): [OPS.md](./OPS.md).
 
 ## Requirements
 

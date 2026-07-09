@@ -7,10 +7,13 @@ Production stack (July 2026):
 | App (web) | Render Frankfurt — `societyspeaks-web` |
 | Scheduler | Render Frankfurt — `societyspeaks-scheduler` |
 | Consensus worker | Render Frankfurt — `societyspeaks-consensus-worker` |
+| DB backup cron | Render Frankfurt — `societyspeaks-db-backup` (daily 03:00 UTC → S3) |
 | Postgres | Neon London (`aws-eu-west-2`) |
 | Redis | Upstash (`REDIS_URL`) |
 | Object storage | AWS S3 London (`eu-west-2`) — bucket e.g. `societyspeaks-assets-uk` |
 | Source of truth | GitHub `main` → Render auto-deploy |
+
+Day-to-day ops (deploy, backups, health, alerts): [OPS.md](./OPS.md).
 
 Residency Q&A line (honest): **Primary data store and object storage: UK (London). Application processing: EEA (Frankfurt).**
 
@@ -140,8 +143,13 @@ Remove temporary AWS secrets from Replit after a successful run. Do **not** dele
 ### Ops
 
 - [ ] AWS secrets removed from Replit Secrets (still present on Render)
-- [ ] Neon backups / dump retained off-platform
+- [ ] Neon password rotated if it was ever pasted into chat
+- [ ] `societyspeaks-db-backup` cron present; `DATABASE_URL` + `AWS_*` set on it
+- [ ] One-time: `python3 scripts/enable_s3_bucket_best_practice.py` (versioning + lifecycle)
 - [ ] Uptime monitor pointed at the Render URL (then at the domain after cutover)
+- [ ] Render failed-deploy notifications enabled
+- [ ] AWS billing alarm set (optional but recommended)
+- [ ] `python3 scripts/ops_health_check.py` with `RENDER_HEALTH_URL` passes
 
 ---
 

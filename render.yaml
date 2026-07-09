@@ -224,3 +224,31 @@ services:
         sync: false
       - key: AWS_REGION
         value: eu-west-2
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Daily Neon → S3 backup (03:00 UTC)
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: cron
+    name: societyspeaks-db-backup
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: frankfurt
+    schedule: "0 3 * * *"
+    dockerCommand: python3 scripts/backup_neon_to_s3.py
+    envVars:
+      - fromGroup: societyspeaks-config
+      - key: DATABASE_URL
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_REGION
+        value: eu-west-2
+      - key: BACKUP_S3_PREFIX
+        value: db-backups/
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
