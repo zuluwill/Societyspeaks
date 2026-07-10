@@ -20,13 +20,27 @@ worker_connections = 1000
 max_requests = 1000
 max_requests_jitter = 100
 
-# Load the application in the master process before forking workers.
-# This ensures gevent's monkey.patch_all() (called at the top of run.py)
-# executes before any worker or library imports ssl/socket/threading.
-# Without this, gunicorn's own internals pull in urllib3 → ssl before each
-# worker runs run.py, so gevent can't patch ssl and outbound HTTPS calls
-# (Stripe, Resend, PostHog) block the worker during the network wait.
-preload_app = True
+# DO NOT preload. With preload_app=True, run.py's monkey.patch_all() executes
+# in the gunicorn MASTER, replacing os.fork/os.waitpid/SIGCHLD handling with
+# gevent versions that the arbiter's reaping loop cannot use. Every worker
+# that exits (max_requests recycle, deploy SIGTERM) then becomes a zombie the
+# master never reaps: no replacement is spawned, the stale heartbeat is logged
+# as a phantom "WORKER TIMEOUT" ~120s later, capacity decays worker by worker
+# until /health fails and Render restarts the container ("connection refused"
+# alerts, every ~90 min in production). Reproduced and bisected locally
+# 2026-07-10: patched-master+preload hangs; either alone recycles cleanly.
+#
+# With preload off, gunicorn's gevent worker runs monkey.patch_all() itself in
+# each child (workers/ggevent.py init_process) BEFORE the app imports
+# ssl/socket/threading in load_wsgi, so the original ssl-patching concern is
+# still covered; run.py's own patch is then a harmless re-patch that keeps
+# direct `python run.py` runs working. psycogreen and the IPv4 patch run at
+# app import inside the worker, after patching — correct order.
+#
+# No pre-fork state also means no shared-socket hazard: SQLAlchemy, Redis
+# session/cache pools and the PostHog client are all created per-worker, so
+# the old post_fork reset hooks are unnecessary and were removed.
+preload_app = False
 
 
 # Dump stacks 30s before gunicorn's 120s timeout kill so the culprit is in
@@ -197,118 +211,6 @@ def worker_exit(server, worker):
         logging.getLogger("gunicorn.error").warning(
             "worker_exit [%s]: PostHog shutdown failed: %s", worker.pid, exc
         )
-
-
-def post_fork(server, worker):
-    """Reset all inherited connection pools in each worker after forking.
-
-    With preload_app=True the master process runs create_app() (via run.py)
-    before forking, so every connection pool — SQLAlchemy, session Redis,
-    Flask-Caching Redis — is open before any worker is created.  After fork()
-    the parent and child share the same underlying socket file descriptors.
-    Using those sockets from multiple processes simultaneously corrupts
-    protocol streams (Redis) or libpq state (PostgreSQL).
-
-    This hook runs in each worker immediately after the fork, before the
-    first request is handled, and discards every inherited socket so the
-    worker opens its own fresh connections on first use.
-
-    Each reset is isolated in its own try/except so a failure in one does
-    not prevent the others from running.
-    """
-    _log = logging.getLogger("gunicorn.error")
-
-    def _reset_redis_pool(label, pool):
-        """Disconnect all sockets in a Redis ConnectionPool.
-
-        ConnectionPool.reset() closes every socket in the pool without
-        waiting for in-flight commands.  The next command issued by this
-        worker will open a fresh socket owned solely by this process.
-        Logs at INFO so the reset is visible in production startup output.
-        """
-        if pool is None:
-            _log.debug("post_fork [%s]: %s — no pool (Redis not configured)", worker.pid, label)
-            return
-        pool.reset()
-        _log.info("post_fork [%s]: %s pool reset OK", worker.pid, label)
-
-    # ------------------------------------------------------------------
-    # 1. SQLAlchemy connection pool
-    #    db.engine is a Flask-SQLAlchemy 3.x property that resolves through
-    #    current_app, so it must be called inside an application context.
-    #    We import the Flask app from run (the module gunicorn loaded via
-    #    run:app) to build that context without re-running create_app().
-    #    dispose() (close=True by default) actively closes inherited sockets.
-    #    SQLAlchemy opens fresh ones on the next query in this worker.
-    # ------------------------------------------------------------------
-    try:
-        from run import app as _flask_app
-        from app import db as _db
-        with _flask_app.app_context():
-            _db.engine.dispose()
-        _log.info("post_fork [%s]: SQLAlchemy engine disposed OK", worker.pid)
-    except Exception as exc:
-        _log.warning("post_fork [%s]: SQLAlchemy engine dispose failed: %s", worker.pid, exc)
-
-    # ------------------------------------------------------------------
-    # 2. Session Redis pool
-    #    Config.SESSION_REDIS is created at class-body execution time
-    #    (before create_app()), so it is always pre-fork.
-    # ------------------------------------------------------------------
-    try:
-        from config import Config
-        pool = getattr(getattr(Config, "SESSION_REDIS", None), "connection_pool", None)
-        _reset_redis_pool("SESSION_REDIS", pool)
-    except Exception as exc:
-        _log.warning("post_fork [%s]: SESSION_REDIS pool reset failed: %s", worker.pid, exc)
-
-    # ------------------------------------------------------------------
-    # 3. Shared Redis connection pool (app.lib.redis_client)
-    #    All Redis consumers (briefing jobs, ingestion queue, abuse
-    #    guardrails, counters, etc.) share a persistent pool per
-    #    REDIS_URL/decode_responses combination.  With preload_app=True the
-    #    pools are created in the master process before forking.  We must
-    #    reset every pool so each worker opens its own fresh sockets and
-    #    does not share file descriptors with the master or sibling
-    #    workers (sharing FDs corrupts the Redis protocol stream).
-    # ------------------------------------------------------------------
-    try:
-        from app.lib.redis_client import reset_pools_after_fork
-        _count = reset_pools_after_fork()
-        _log.info("post_fork [%s]: shared redis_client pools reset OK (%d)", worker.pid, _count)
-    except Exception as exc:
-        _log.warning("post_fork [%s]: shared redis_client pool reset failed: %s", worker.pid, exc)
-
-    # ------------------------------------------------------------------
-    # 4. Flask-Caching Redis pool
-    #    Flask-Caching's RedisCache backend exposes _read_client and
-    #    _write_client.  In a single-server setup they are the same object
-    #    sharing one ConnectionPool, so resetting either one covers both.
-    #    This client is created inside create_app() which runs in the master
-    #    with preload_app=True, so it is pre-fork.
-    # ------------------------------------------------------------------
-    try:
-        from app import cache as _cache
-        backend = getattr(_cache, "cache", None)
-        # Prefer _write_client; fall back to _read_client for read-only configs.
-        client = getattr(backend, "_write_client", None) or getattr(backend, "_read_client", None)
-        pool = getattr(client, "connection_pool", None)
-        _reset_redis_pool("Flask-Caching", pool)
-    except Exception as exc:
-        _log.warning("post_fork [%s]: Flask-Caching pool reset failed: %s", worker.pid, exc)
-
-    # ------------------------------------------------------------------
-    # 5. PostHog client (preload_app + fork)
-    #    Master-created consumers never see worker enqueues (COW queue).
-    #    Rebuild the default client in each worker. See posthog-python#290.
-    # ------------------------------------------------------------------
-    try:
-        from app.lib.posthog_utils import reinitialize_posthog_after_fork
-
-        reinitialize_posthog_after_fork()
-        _log.info("post_fork [%s]: PostHog client reinitialized OK", worker.pid)
-    except Exception as exc:
-        _log.warning("post_fork [%s]: PostHog reinitialize failed: %s", worker.pid, exc)
 
 
 class _NoWinchFilter(logging.Filter):

@@ -74,8 +74,12 @@ services:
         value: "1"
       - key: PORT
         value: "5000"
+      # 3 (not 4): preload_app is off (see gunicorn_config.py — preloading
+      # monkey-patches the master and breaks worker reaping), so workers no
+      # longer share copy-on-write memory. Each gevent worker handles up to
+      # 1000 concurrent connections; worker count here is a memory knob.
       - key: WEB_CONCURRENCY
-        value: "4"
+        value: "3"
       # Gevent's native monitor thread logs the stack of any greenlet that
       # blocks the event loop longer than GEVENT_MAX_BLOCKING_TIME seconds.
       # Diagnoses the recurring WORKER TIMEOUT / health-check failures by
