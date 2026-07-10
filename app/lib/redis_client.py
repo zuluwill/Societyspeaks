@@ -20,10 +20,9 @@ Tunables (all overridable via env var)
 
 Sizing notes
 ------------
-``max_connections`` is per-process.  With ``preload_app=True`` gunicorn
-each worker inherits the pool object created in the master and resets it
-in ``post_fork`` (see gunicorn_config.py), so the per-worker connection
-budget is the same value.  The default 50 is right for typical traffic;
+``max_connections`` is per-process.  preload_app is off (gunicorn_config.py),
+so each worker builds its own pool at app import; the per-worker connection
+budget is this value.  The default 50 is right for typical traffic;
 tune via env if you scale workers or worker_connections.
 """
 import os
@@ -141,12 +140,12 @@ def reset_clients():
 def reset_pools_after_fork() -> int:
     """Disconnect every inherited socket and clear the cache after a fork.
 
-    Called by gunicorn's ``post_fork`` hook so each worker opens its own
-    sockets rather than sharing file descriptors with the master process
-    or sibling workers (sharing those FDs corrupts the Redis protocol
-    stream).  ``ConnectionPool.reset()`` closes every connection in the
-    pool without waiting for in-flight commands; the next operation
-    issued in this worker opens a fresh socket.
+    Currently unwired: preload_app is off (gunicorn_config.py), so pools
+    are created per-worker and there are no inherited sockets to reset.
+    Retained (tested) for any future pre-fork configuration, where sharing
+    inherited FDs would corrupt the Redis protocol stream.
+    ``ConnectionPool.reset()`` closes every connection in the pool without
+    waiting for in-flight commands; the next operation opens a fresh socket.
 
     Returns the number of pools reset (informational, for logging).
     """

@@ -5,10 +5,11 @@ Architecture (intentional):
 - **Never** call ``posthog.flush()`` on the HTTP request path. It blocks on the
   PostHog API and harms TTFB / Core Web Vitals. Capture only; the SDK batches.
 
-- **Gunicorn ``preload_app=True``**: the master must not own the only PostHog
-  consumer. After each fork, call :func:`reinitialize_posthog_after_fork` so the
-  worker gets its own client/queue (PostHog/posthog-python#290). Otherwise
-  captures enqueue into a COW-copied queue the master's consumer never sees.
+- **Gunicorn**: ``preload_app`` is **off** (see gunicorn_config.py — preloading
+  monkey-patches the master and breaks worker reaping), so each worker builds
+  its own PostHog client at app import and no fork handling is needed.
+  :func:`reinitialize_posthog_after_fork` is retained (tested, unwired) in case
+  a preload configuration ever returns (PostHog/posthog-python#290).
 
 - **Gevent**: monkey-patched ``queue.Queue`` lacks ``all_tasks_done``, so
   ``flush()``/``shutdown()`` can raise ``AttributeError``. Drain is best-effort;
@@ -56,8 +57,9 @@ def configure_posthog_credentials(
 def reinitialize_posthog_after_fork() -> None:
     """Replace any pre-fork PostHog client with a worker-local one.
 
-    Safe to call when PostHog is not configured (no-op). Must run in each
-    gunicorn worker ``post_fork`` when ``preload_app=True``.
+    Safe to call when PostHog is not configured (no-op). Currently unwired:
+    preload_app is off, so workers never inherit a pre-fork client. Wire this
+    into a post-fork hook again only if preload_app is ever re-enabled.
     """
     global _shutdown_done
     try:

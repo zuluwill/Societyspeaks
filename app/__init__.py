@@ -473,9 +473,9 @@ def create_app():
     app.config['POSTHOG_API_KEY'] = posthog_api_key
     app.config['POSTHOG_HOST'] = posthog_host
     if posthog_api_key:
-        # Credentials only here. With gunicorn preload_app=True the master must
-        # not be the sole owner of the PostHog consumer — each worker re-inits
-        # in gunicorn_config.post_fork (see reinitialize_posthog_after_fork).
+        # Credentials only here. With preload_app off (gunicorn_config.py),
+        # create_app() runs inside each worker, so the client and its consumer
+        # threads are worker-local from the start — no fork handling needed.
         from app.lib.posthog_utils import (
             configure_posthog_credentials,
             register_posthog_atexit,
@@ -610,14 +610,12 @@ def create_app():
     # ── Pre-warm Flask-Babel translation cache ────────────────────────────────
     # Flask-Babel lazily loads each locale's .po file on the first request that
     # uses that locale, storing the result in Domain.cache (a shared dict).
-    # Under gunicorn with preload_app=True, the app is created in the master
-    # process before workers are forked.  If the cache is still empty at fork
-    # time, every worker's first concurrent request for the same locale races
-    # to read the .po file from disk, causing a KeyError (and chained I/O
-    # error) when two greenlets collide on the unprotected dict write.
+    # Without this, the first concurrent requests for the same locale race to
+    # read the .po file from disk, causing a KeyError (and chained I/O error)
+    # when two greenlets collide on the unprotected dict write.
     #
-    # Fix: force-load every supported locale here, in the master, before any
-    # fork.  Workers inherit the pre-populated cache and never race on it.
+    # Fix: force-load every supported locale during create_app(), which runs
+    # once per worker at boot (preload_app is off), before any request.
     from flask_babel import get_translations as _babel_get_translations
     _prewarm_failed = []
     for _lang in SUPPORTED_LANGUAGES:
