@@ -491,7 +491,9 @@ def sitemap():
         sitemap_xml = generate_sitemap()
         response = Response(sitemap_xml, mimetype='application/xml')
         response.headers['X-Robots-Tag'] = 'noarchive'  # Allow Google to crawl but not cache
-        response.headers['Cache-Control'] = 'public, max-age=3600'  # Cache for 1 hour
+        # s-maxage: Cloudflare edge may hold it a day (crawlers poll sitemaps
+        # aggressively); browsers/Google revalidate hourly via max-age.
+        response.headers['Cache-Control'] = 'public, max-age=3600, s-maxage=86400'
         return response
     except Exception as e:
         current_app.logger.error(f"Error generating sitemap: {e}")
@@ -567,8 +569,42 @@ Allow: /
 User-agent: Cohere-ai
 Allow: /
 
+# Blocked crawlers — bandwidth cost with no discovery benefit.
+# Meta-ExternalAgent harvests training data for Llama and does not cite or
+# refer users back (unlike the AI answer engines allowed above). Measured as
+# the single largest bandwidth consumer on 2026-07-10 (~15 MB/hr).
+# Link previews for FB/WhatsApp use facebookexternalhit, which stays allowed.
 User-agent: Meta-ExternalAgent
-Allow: /
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+# SEO-audit and scraping crawlers: they index the site for their paying
+# customers, not for user discovery.
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
 
 # Default rules for all other crawlers
 User-agent: *
@@ -612,7 +648,11 @@ Sitemap: {base_url}/sitemap.xml
 # LLM Context File (emerging standard for AI discoverability)
 # See: https://llmstxt.org
 LLMsTXT: {base_url}/llms.txt"""
-        return Response(robots_txt, mimetype='text/plain')
+        response = Response(robots_txt, mimetype='text/plain')
+        # s-maxage lets the Cloudflare edge serve crawlers directly (needs a
+        # Cache Rule for this path); browsers revalidate hourly.
+        response.headers['Cache-Control'] = 'public, max-age=3600, s-maxage=86400'
+        return response
     except Exception as e:
         current_app.logger.error(f"Error serving robots.txt: {str(e)}")
         return Response("Error generating robots.txt", status=500)
@@ -666,7 +706,9 @@ def test_robots():
 def llms_txt():
     """Serve the llms.txt file for LLM/AI discoverability (GEO)"""
     try:
-        return current_app.send_static_file('llms.txt')
+        response = current_app.send_static_file('llms.txt')
+        response.headers['Cache-Control'] = 'public, max-age=3600, s-maxage=86400'
+        return response
     except Exception as e:
         current_app.logger.error(f"Error serving llms.txt: {str(e)}")
         return Response("LLMs context file not found", status=404)
