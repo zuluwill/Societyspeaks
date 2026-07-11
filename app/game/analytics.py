@@ -9,8 +9,19 @@ try:
 except ImportError:
     posthog = None
 
-from app.lib.posthog_utils import posthog_js_distinct_id, safe_posthog_capture
+from app.lib.posthog_utils import (
+    posthog_js_distinct_id,
+    request_has_browser_evidence,
+    safe_posthog_capture,
+)
 from app.models.game import GameRun
+
+# Events emitted by a bare GET (run rows are created on page load — see
+# routes.quick_run). Crawlers with ordinary browser UAs inflated these ~40x
+# (2026-07: ~800 single-run fingerprints vs ~20 players with completed turns),
+# so they require browser evidence. Turn/completion events are POST-driven
+# and exempt.
+_PAGE_LOAD_EVENTS = frozenset({'game_run_started'})
 
 
 def resolve_distinct_id_for_run(run: GameRun) -> str:
@@ -51,6 +62,8 @@ def track_game_event(
     properties: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Fire a game analytics event; never raises into callers."""
+    if event in _PAGE_LOAD_EVENTS and not request_has_browser_evidence():
+        return
     props = {
         'run_uuid': run.uuid,
         'scenario_slug': run.scenario_slug,

@@ -120,3 +120,97 @@ def test_journey_events_share_one_anonymous_identity(app):
         first = _journey_distinct_id()
         second = _journey_distinct_id()
     assert first == second == '019e8792-visitor'
+
+
+def test_scripted_clients_are_detected_and_browsers_are_not(app):
+    """UA gate: scripted clients (python-requests, curl, declared bots) are
+    detected; ordinary browsers and no-request contexts are not."""
+    from app.lib.posthog_utils import request_is_scripted_client
+
+    with app.test_request_context('/', headers={'User-Agent': 'python-requests/2.32.4'}):
+        assert request_is_scripted_client() is True
+    with app.test_request_context('/', headers={'User-Agent': 'Googlebot/2.1'}):
+        assert request_is_scripted_client() is True
+    with app.test_request_context(
+        '/', headers={'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+    ):
+        assert request_is_scripted_client() is False
+    # Outside a request (cron/scheduler captures) nothing is blocked.
+    assert request_is_scripted_client() is False
+
+
+def test_browser_evidence_requires_posthog_cookie(app):
+    """Page-load-triggered events must only fire for visitors who demonstrably
+    executed the JS snippet (the ph cookie). Browser-UA crawlers never carry it
+    — that's what made journey_started 99.9% bots."""
+    from app.lib.posthog_utils import request_has_browser_evidence
+
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+    browser_ua = {'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+    cookie = _ph_cookie_header('019e8792-visitor')
+
+    # Browser UA but no cookie (crawler or first-ever render): no evidence.
+    with app.test_request_context('/', headers=browser_ua):
+        assert request_has_browser_evidence() is False
+    # Cookie + browser UA: evidence.
+    with app.test_request_context('/', headers=browser_ua, environ_base=cookie):
+        assert request_has_browser_evidence() is True
+    # Cookie forged by a scripted client: still blocked.
+    with app.test_request_context(
+        '/', headers={'User-Agent': 'python-requests/2.32.4'}, environ_base=cookie
+    ):
+        assert request_has_browser_evidence() is False
+
+
+def test_safe_capture_drops_scripted_client_requests(app):
+    """safe_posthog_capture silently drops events fired by scripted-client UAs
+    so scanner noise can never re-enter analytics from any call site."""
+    captured = []
+
+    class _Client:
+        project_api_key = 'phc_x'
+
+        def capture(self, **kwargs):
+            captured.append(kwargs)
+
+    from app.lib.posthog_utils import safe_posthog_capture
+
+    with app.test_request_context('/', headers={'User-Agent': 'python-requests/2.32.4'}):
+        safe_posthog_capture(posthog_client=_Client(), distinct_id='fp-1', event='x')
+    assert captured == []
+
+    with app.test_request_context(
+        '/', headers={'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+    ):
+        safe_posthog_capture(posthog_client=_Client(), distinct_id='fp-1', event='x')
+    assert len(captured) == 1
+
+
+def test_game_run_started_requires_browser_evidence(app):
+    """game_run_started fires on a bare GET (runs are created on page load), so
+    it must be gated on browser evidence; POST-driven turn events must not be."""
+    from unittest.mock import patch
+
+    from app.game.analytics import track_game_event
+    from app.models.game import GameRun
+
+    run = GameRun(
+        uuid='test-uuid', scenario_slug='s', mode='quick',
+        session_fingerprint='fp-1', turn_index=0, total_turns=10,
+    )
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+    browser_ua = {'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+    cookie = _ph_cookie_header('019e8792-visitor')
+
+    with patch('app.game.analytics.safe_posthog_capture') as capture:
+        # No cookie (crawler page load): run-started suppressed…
+        with app.test_request_context('/run/s', headers=browser_ua):
+            track_game_event(run, 'game_run_started')
+            assert capture.call_count == 0
+            # …but action-gated events still fire.
+            track_game_event(run, 'game_turn_completed')
+            assert capture.call_count == 1
+        # Real browser (cookie present): run-started fires.
+        with app.test_request_context('/run/s', headers=browser_ua, environ_base=cookie):
+            track_game_event(run, 'game_run_started')
+            assert capture.call_count == 2

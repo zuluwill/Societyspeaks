@@ -170,6 +170,44 @@ def posthog_js_distinct_id() -> Optional[str]:
         return None
 
 
+def request_is_scripted_client() -> bool:
+    """True when the current request's User-Agent is a known scripted client.
+
+    Reuses the aggressive session-policy list (python-requests, curl, headless
+    browsers, declared bots). Returns False outside a request context or when
+    no User-Agent is present, so cron/scheduler captures are unaffected.
+    """
+    try:
+        from app.lib.session_policy import (
+            SESSION_SKIP_UA_INDICATORS,
+            user_agent_is_bot,
+        )
+
+        ua = _get_request_user_agent()
+        if not ua:
+            return False
+        return user_agent_is_bot(ua, SESSION_SKIP_UA_INDICATORS)
+    except Exception:
+        return False
+
+
+def request_has_browser_evidence() -> bool:
+    """True when the current request demonstrably comes from a JS-executing browser.
+
+    The only reliable crawler signal at our traffic mix is cookie carriage:
+    most crawlers present ordinary browser User-Agents but never execute the
+    PostHog JS snippet, so they never send the ``ph_<key>_posthog`` cookie
+    (measured 2026-07: 6,952 of 6,962 ``journey_started`` distinct_ids had no
+    client-side event, ~99.9% crawler share). Use this to gate any server-side
+    capture that fires on a bare GET; action-gated events (votes, POSTs) do
+    not need it. Trade-off: a human's very first page render is skipped too —
+    they are captured on any subsequent navigation once the cookie exists.
+    """
+    if request_is_scripted_client():
+        return False
+    return posthog_js_distinct_id() is not None
+
+
 def resolve_request_distinct_id(
     user_id: Any = None,
     anon_fallback: Optional[str] = None,
@@ -330,6 +368,12 @@ def safe_posthog_capture(
         return
     # Never invent a 'None'/empty person when identity could not be resolved.
     if not distinct_id:
+        return
+    # Scripted clients (python-requests, curl, declared bots) are never worth
+    # capturing; UA-based filtering downstream cannot recover once they are in.
+    # Browser-UA crawlers are NOT caught here — page-load-triggered call sites
+    # must additionally gate on request_has_browser_evidence().
+    if request_is_scripted_client():
         return
 
     try:

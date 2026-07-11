@@ -10,7 +10,11 @@ from io import BytesIO
 
 from app import cache, csrf, db, limiter
 from app.lib.auth_utils import normalize_email
-from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
+from app.lib.posthog_utils import (
+    request_has_browser_evidence,
+    resolve_request_distinct_id,
+    safe_posthog_capture,
+)
 from app.lib.participation_metrics import visible_statement_vote_filters
 from app.lib.time import utcnow_naive
 from app.models import (
@@ -478,7 +482,9 @@ def view_programme(slug):
         # PostHog: fire journey_started once per user per journey per 24 h.
         # Cache-based dedup (not session): the old Redis session gate persisted
         # indefinitely and permanently blocked the event for returning users.
-        if _posthog and getattr(_posthog, 'project_api_key', None):
+        # Browser-evidence gate: this fires on a bare GET, so crawlers with
+        # ordinary browser UAs flooded it (99.9% of distinct_ids, 2026-07).
+        if _posthog and getattr(_posthog, 'project_api_key', None) and request_has_browser_evidence():
             try:
                 _ph_id = _journey_distinct_id()
                 _start_cache_key = f'ph_journey_started:{programme.id}:{_ph_id[:32]}'
@@ -565,7 +571,9 @@ def programme_journey_recap(slug):
     # PostHog: fire journey_completed once per user per journey (30-day dedup).
     # Cache-based dedup (not session): the old Redis session gate persisted
     # indefinitely and permanently blocked the event for returning users.
-    if _posthog and getattr(_posthog, 'project_api_key', None):
+    # Browser-evidence gate: fires on a bare GET of the recap page, so it was
+    # crawler-dominated (667 of 669 distinct_ids had no client-side event).
+    if _posthog and getattr(_posthog, 'project_api_key', None) and request_has_browser_evidence():
         try:
             _ph_id = _journey_distinct_id()
             _complete_cache_key = f'ph_journey_completed:{programme.id}:{_ph_id[:32]}'
