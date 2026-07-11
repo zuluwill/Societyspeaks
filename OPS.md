@@ -152,6 +152,34 @@ python3 scripts/purge_anonymous_sessions.py --execute  # delete anonymous sessio
 
 Deleting anonymous sessions logs nobody out (they hold only CSRF/UI state).
 
+## Subscriber segment sync & staged activation
+
+`scripts/import_subscriber_segments.py` syncs segment metadata
+(chapter/function/country) onto `daily_brief_subscriber` from a CSV export.
+Addresses not already subscribed land as `status='imported'` — segmented but
+excluded from every send path, which all gate on `status='active'`. Existing
+rows only ever receive metadata; the sync never touches
+status/tier/preferences, so unsubscribed/bounced/paused subscribers are
+structurally out of reach.
+
+Activate in batches, watching deliverability between batches:
+
+```bash
+export DATABASE_URL='postgres://…'   # Neon owner URL
+python3 scripts/activate_imported_subscribers.py --batch 250 --source <label>           # dry run
+python3 scripts/activate_imported_subscribers.py --batch 250 --source <label> --commit
+```
+
+Ramp rules (deliverability failures are hard to recover from — ramp slowly):
+
+1. No activation while any send pipeline change is unverified or a bounce
+   spike is under observation.
+2. Batches of 250–500; after each batch, check bounce + complaint rates in
+   `email_event` for the following two sends before the next batch.
+   Kill-switch: complaints >0.1% or bounces >2% → stop the ramp.
+3. Both dry-run by default; `--commit` applies. Only rows with
+   `status='imported'` can ever be activated.
+
 ## Secrets hygiene
 
 - Never commit `.env`, dumps, or access keys

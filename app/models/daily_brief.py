@@ -456,6 +456,7 @@ class DailyBriefSubscriber(db.Model):
         db.Index('idx_dbs_team', 'team_id'),
         db.Index('idx_dbs_status', 'status'),
         db.Index('idx_dbs_tier_status', 'tier', 'status'),  # Composite index for tier+status queries
+        db.Index('idx_dbs_source_status', 'source', 'status'),  # Segment queries (imported cohorts)
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -477,9 +478,23 @@ class DailyBriefSubscriber(db.Model):
     cadence = db.Column(db.String(10), default='daily')  # daily|weekly
     preferred_weekly_day = db.Column(db.Integer, default=6)  # Day for weekly delivery (0=Mon, 6=Sun)
 
-    # Status
-    status = db.Column(db.String(20), default='active')  # active|unsubscribed|bounced|payment_failed
+    # Status. 'imported' = on the list with segment metadata but excluded from
+    # all sends until explicitly activated (deliverability ramp) — every send
+    # path gates on status == 'active'.
+    status = db.Column(db.String(20), default='active')  # active|imported|paused|unsubscribed|bounced|payment_failed
     unsubscribed_at = db.Column(db.DateTime)
+
+    # Import segmentation — NULL for organic signups. Populated from the list
+    # source file (never user-editable); status/tier/preferences are owned by
+    # the subscriber and must never be written by import tooling.
+    source = db.Column(db.String(50))       # provenance label for the sync run
+    chapter = db.Column(db.String(120))     # chapter/group as provided, e.g. 'London - LDN'
+    function = db.Column(db.String(100))    # professional function, e.g. 'Sales'
+    job_title = db.Column(db.String(255))
+    company = db.Column(db.String(255))
+    country = db.Column(db.String(100))
+    city = db.Column(db.String(100))
+    imported_at = db.Column(db.DateTime)
 
     # Magic link auth (reuse pattern from DailyQuestionSubscriber)
     magic_token = db.Column(db.String(64), unique=True)
