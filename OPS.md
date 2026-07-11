@@ -85,9 +85,16 @@ Namecheap; only nameservers moved (`dexter.ns.cloudflare.com`,
 `venus.ns.cloudflare.com`). DNS source of truth: `societyspeaks.io.zone`
 (BIND export) — update it whenever records change in the dashboard.
 
-**Proxy status:** only apex `A` and `www` CNAME are proxied (orange).
+**Proxy status:** only the apex and `www` CNAMEs are proxied (orange).
 Everything else — MX, SPF/DKIM/DMARC TXT, SES DKIM CNAMEs, `hello` — must
 stay DNS-only (grey) or mail auth breaks.
+
+**Apex must be a CNAME to `societyspeaks-web.onrender.com`, never an A
+record.** Render fronts through Cloudflare too; our zone's WAF and cache
+rules only run when orange-to-orange routing is triggered, and O2O only
+triggers on a proxied CNAME (an A record to Render's IP hands traffic
+straight to Render's zone, silently bypassing all our rules — found the
+hard way on 2026-07-11).
 
 **Settings that must hold:**
 

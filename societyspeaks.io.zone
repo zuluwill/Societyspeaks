@@ -6,7 +6,10 @@ $ORIGIN societyspeaks.io.
 $TTL 3600
 
 ; --- Site (proxy these two orange after import) ---
-@                       IN  A      216.24.57.1
+; Apex MUST be a CNAME, not an A record: Cloudflare O2O (our zone's WAF and
+; cache rules running before Render's) only triggers on a proxied CNAME to
+; the Render hostname. Cloudflare flattens it at the apex automatically.
+@                       IN  CNAME  societyspeaks-web.onrender.com.
 www                     IN  CNAME  societyspeaks-web.onrender.com.
 
 ; --- Alias ---
