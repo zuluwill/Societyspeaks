@@ -491,9 +491,10 @@ def sitemap():
         sitemap_xml = generate_sitemap()
         response = Response(sitemap_xml, mimetype='application/xml')
         response.headers['X-Robots-Tag'] = 'noarchive'  # Allow Google to crawl but not cache
-        # s-maxage: Cloudflare edge may hold it a day (crawlers poll sitemaps
-        # aggressively); browsers/Google revalidate hourly via max-age.
-        response.headers['Cache-Control'] = 'public, max-age=3600, s-maxage=86400'
+        # s-maxage kept short: daily brief permalinks must appear in the
+        # sitemap within the hour of publishing, and the Cloudflare edge
+        # cache honours this once the zone is active.
+        response.headers['Cache-Control'] = 'public, max-age=3600, s-maxage=3600'
         return response
     except Exception as e:
         current_app.logger.error(f"Error generating sitemap: {e}")

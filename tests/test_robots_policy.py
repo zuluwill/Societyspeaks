@@ -78,10 +78,16 @@ def test_facebook_link_previews_not_blocked(robots_body):
     )
 
 
-@pytest.mark.parametrize('path', ['/robots.txt', '/sitemap.xml', '/llms.txt'])
-def test_discovery_endpoints_are_edge_cacheable(client, path):
+@pytest.mark.parametrize('path, edge_ttl', [
+    # Sitemap stays short so daily brief permalinks surface within the hour;
+    # robots/llms change rarely and can sit at the edge for a day.
+    ('/robots.txt', 86400),
+    ('/sitemap.xml', 3600),
+    ('/llms.txt', 86400),
+])
+def test_discovery_endpoints_are_edge_cacheable(client, path, edge_ttl):
     response = client.get(path)
     assert response.status_code == 200
     cache_control = response.headers.get('Cache-Control', '')
     assert 'public' in cache_control
-    assert 's-maxage=86400' in cache_control
+    assert f's-maxage={edge_ttl}' in cache_control
