@@ -386,7 +386,7 @@ If you are a publisher, enterprise, or partner and need non-AGPL commercial term
 
 ### Contributing and the CLA
 
-Contributions are accepted under the [Individual Contributor License Agreement](./CLA.md). You keep the copyright on your work; the CLA grants the maintainer the right to license it, including commercially — which is what funds the platform while the code stays open. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+Contributions are accepted under the [Individual Contributor Licence Agreement](./CLA.md). You keep the copyright on your work; the CLA grants the company behind Society Speaks the right to license it, including commercially — which is what funds the platform while the code stays open. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 

@@ -37,6 +37,6 @@ When external pull requests are reopened, this workflow will apply:
 
 This codebase is licensed under `AGPL-3.0`. Two consensus-engine helper functions adapted from the red-dwarf library remain AGPL-3.0-only regardless of any other terms — see `COPYRIGHT` and `NOTICE`.
 
-All contributions require agreement to the [Individual Contributor License Agreement](./CLA.md). In short: you keep the copyright on your work, and you grant the maintainer the right to license it — including under commercial terms, which is what funds the platform while the code stays open. In return, the CLA commits us to always offering the Project under an OSI-approved open-source licence.
+All contributions require agreement to the [Individual Contributor Licence Agreement](./CLA.md). In short: you keep the copyright on your work, and you grant William Roberts Coaching and Advisory Ltd (the company behind Society Speaks) the right to license it — including under commercial terms, which is what funds the platform while the code stays open. In return, the CLA commits us to always offering the Project under an OSI-approved open-source licence.
 
 When pull requests reopen, a CLA bot will ask you to accept the agreement on your first pull request. Nothing is merged without it.

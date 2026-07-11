@@ -1,16 +1,16 @@
-# Society Speaks Individual Contributor License Agreement (v1.0)
+# Society Speaks — Individual Contributor Licence Agreement (v1.0)
 
-**Plain-English summary** *(for orientation only — the numbered terms below are what you agree to)*: You keep ownership of everything you contribute. You give the maintainer of Society Speaks permission to use, modify, distribute, and re-license your contribution, including under commercial terms. That permission is what lets Society Speaks stay open source under AGPL-3.0 for everyone while offering the identical code under a commercial licence to organisations that cannot adopt AGPL — the revenue model that keeps the public platform free and ad-free. In return, we commit to always offering the project under an open-source licence. You promise the work is yours to give, and you are not promising support or warranties.
+**Plain-English summary** *(for orientation only — the numbered terms below are what you agree to)*: You keep ownership of everything you contribute. You give the company behind Society Speaks permission to use, modify, distribute, and re-license your contribution, including under commercial terms. That permission is what lets Society Speaks stay open source under AGPL-3.0 for everyone while offering the identical code under a commercial licence to organisations that cannot adopt AGPL — the revenue model that keeps the public platform free and ad-free. In return, we commit to always offering the project under an open-source licence. You promise the work is yours to give, and you are not promising support or warranties.
 
 ---
 
-Thank you for your interest in contributing to Society Speaks (the "Project"). This Contributor License Agreement (the "Agreement") documents the rights you grant to William Roberts, the maintainer of the Project ("We", "Us"), for contributions you make. This is a legally binding agreement — please read it before accepting.
+Thank you for your interest in contributing to Society Speaks (the "Project"), maintained by **William Roberts Coaching and Advisory Ltd**, a company registered in England and Wales (company no. 15629688), trading as Society Speaks (the "Company", "We", "Us" — including the Company's successors and assigns). This Contributor Licence Agreement (the "Agreement") documents the rights You grant Us in Your contributions. It is a legally binding agreement — please read it before accepting.
 
 ## 1. Definitions
 
-**"You"** means the individual who submits a Contribution to Us and accepts this Agreement.
+**"You"** means the individual who submits a Contribution to Us and accepts this Agreement, or the legal entity on whose behalf that individual is authorised to accept it.
 
-**"Contribution"** means any original work of authorship, including any modification of or addition to an existing work, that You intentionally submit to Us for inclusion in the Project.
+**"Contribution"** means any original work of authorship — code, documentation, designs, or other material — including any modification of or addition to an existing work, that You intentionally submit to Us for inclusion in the Project.
 
 **"Submit"** means any form of communication sent to Us or our representatives to propose material for inclusion in the Project — including pull requests, patches, issues, and email — excluding communication that You conspicuously mark "Not a Contribution."
 
@@ -37,8 +37,12 @@ You represent that:
 
 ## 6. No obligation and no warranty
 
-You are not expected to provide support for Your Contributions, except to the extent You choose to. Except for the representations in Section 5, Your Contributions are provided "AS IS", without warranties or conditions of any kind, express or implied, including any warranties of merchantability or fitness for a particular purpose.
+You are not expected to provide support for Your Contributions, except to the extent You choose to. We are not obliged to use or include any Contribution. Except for the representations in Section 5, Your Contributions are provided "AS IS", without warranties or conditions of any kind, express or implied, including any warranties of merchantability or fitness for a particular purpose.
 
 ## 7. General
 
-This Agreement is governed by the laws of England and Wales. It is effective on the date You accept it (for example, by confirming agreement through the CLA bot on Your first pull request) and covers all Contributions You submit before and after that date. It does not transfer ownership of Your Contributions, and it grants no rights in the Society Speaks name or trademarks.
+This Agreement is governed by the laws of England and Wales. It is effective on the date You accept it and covers all Contributions You submit before and after that date. It does not transfer ownership of Your Contributions, and it grants no rights in the Society Speaks name or trademarks.
+
+---
+
+*Signed electronically via CLA Assistant by ticking the agreement box on your first pull request, which records your GitHub username, name, and email address.*
