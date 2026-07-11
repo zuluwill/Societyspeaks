@@ -78,6 +78,46 @@ App user should allow at least:
 
 See checklist in `RENDER_DEPLOY.md` §5. Confirm scheduler and consensus **logs**, not only “Deployed”.
 
+## Cloudflare (DNS + edge)
+
+Cloudflare Free fronts Render since 2026-07-11. Registration stays at
+Namecheap; only nameservers moved (`dexter.ns.cloudflare.com`,
+`venus.ns.cloudflare.com`). DNS source of truth: `societyspeaks.io.zone`
+(BIND export) — update it whenever records change in the dashboard.
+
+**Proxy status:** only apex `A` and `www` CNAME are proxied (orange).
+Everything else — MX, SPF/DKIM/DMARC TXT, SES DKIM CNAMEs, `hello` — must
+stay DNS-only (grey) or mail auth breaks.
+
+**Settings that must hold:**
+
+- SSL/TLS mode: **Full (Strict)** (Render serves a valid cert; anything
+  weaker invites MITM between edge and origin).
+- **Bot Fight Mode: OFF.** It challenges the answer-engine bots our GEO
+  strategy depends on (GPTBot, ClaudeBot, PerplexityBot). Blocking is done
+  by one WAF custom rule instead.
+- WAF custom rule `block-scraper-uas`: block requests whose User-Agent
+  contains any of the robots.txt deny-list (Meta-ExternalAgent, Bytespider,
+  AhrefsBot, SemrushBot, DataForSeoBot, PetalBot, MJ12bot, DotBot, BLEXBot).
+  Keep this list in sync with `robots()` in `app/routes.py`.
+- Cache rule `cache-discovery-files`: eligible for cache on
+  `/robots.txt`, `/sitemap.xml`, `/llms.txt`, TTL "respect origin".
+  Origin sends `s-maxage=86400` for robots/llms and `s-maxage=3600` for
+  the sitemap (kept short so daily brief permalinks surface within the
+  hour) — pinned by `tests/test_robots_policy.py`.
+
+**Purge after out-of-band content changes** (dashboard: Caching → Purge, or):
+
+```bash
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+  -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
+  --data '{"files":["https://societyspeaks.io/sitemap.xml"]}'
+```
+
+**Escape hatch:** Render itself fronts through Cloudflare
+(Cloudflare-on-Cloudflare is supported); if cert or redirect loops appear,
+grey-cloud the affected record and the site serves direct from Render.
+
 ## Alerts (dashboard — cannot automate from git)
 
 1. Render → account notifications → failed deploy emails  

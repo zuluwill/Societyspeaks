@@ -1,0 +1,55 @@
+; Cloudflare BIND import for societyspeaks.io
+; Source: live DNS + full Namecheap Advanced DNS export (2026-07-11).
+; After import: Proxy ON only for @ A and www CNAME; everything else DNS-only.
+;
+$ORIGIN societyspeaks.io.
+$TTL 3600
+
+; --- Site (proxy these two orange after import) ---
+@                       IN  A      216.24.57.1
+www                     IN  CNAME  societyspeaks-web.onrender.com.
+
+; --- Alias ---
+hello                   IN  CNAME  societyspeaks.io.
+
+; --- SES DKIM (email subdomain) ---
+4ccmtb7vpv34gyy5ugyvoxrb32rjfi3r._domainkey.email  IN  CNAME  4ccmtb7vpv34gyy5ugyvoxrb32rjfi3r.dkim.amazonses.com.
+aqgj2xfq5zrctad52ouxvvysisb6u3g3._domainkey.email  IN  CNAME  aqgj2xfq5zrctad52ouxvvysisb6u3g3.dkim.amazonses.com.
+vtvizh6fyfmjxk3w7gxzzxfnd67ykccd._domainkey.email  IN  CNAME  vtvizh6fyfmjxk3w7gxzzxfnd67ykccd.dkim.amazonses.com.
+
+; --- SES DKIM (hey subdomain) ---
+kw3n63gdt52n37zg2xgzifj3xkzbjwyz._domainkey.hey    IN  CNAME  kw3n63gdt52n37zg2xgzifj3xkzbjwyz.dkim.amazonses.com.
+mpp5phhdxiozpfz57rkdvqnaua2eoyzq._domainkey.hey    IN  CNAME  mpp5phhdxiozpfz57rkdvqnaua2eoyzq.dkim.amazonses.com.
+vgsh2xhcdty3euofxb3zeaod4wr5toko._domainkey.hey    IN  CNAME  vgsh2xhcdty3euofxb3zeaod4wr5toko.dkim.amazonses.com.
+
+; --- Inbound mail (Google Workspace) ---
+@                       IN  MX  1  smtp.google.com.
+
+; --- SES feedback MX ---
+send                    IN  MX  10 feedback-smtp.eu-west-1.amazonses.com.
+send.brief              IN  MX  10 feedback-smtp.eu-west-1.amazonses.com.
+bounce.email            IN  MX  10 feedback-smtp.eu-west-2.amazonses.com.
+envelope.hey            IN  MX  10 feedback-smtp.us-east-1.amazonses.com.
+
+; --- Apex TXT (one SPF only) ---
+@                       IN  TXT  "v=spf1 include:_spf.google.com include:resend.com include:amazonses.com ~all"
+@                       IN  TXT  "google-site-verification=J6NZb8IHtbBqfQ5THld-a1G1r6cgzisZLWwWhziNV-E"
+@                       IN  TXT  "replit-verify=5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9"
+
+; --- DMARC ---
+_dmarc                  IN  TXT  "v=DMARC1; p=none; rua=mailto:dmarc@societyspeaks.io; fo=1"
+_dmarc.brief            IN  TXT  "v=DMARC1;p=quarantine;pct=100;adkim=r;aspf=r"
+_dmarc.email            IN  TXT  "v=DMARC1; p=none;"
+_dmarc.hey              IN  TXT  "v=DMARC1; p=none;"
+
+; --- Sending subdomain SPF ---
+email                   IN  TXT  "v=spf1 include:amazonses.com ~all"
+send                    IN  TXT  "v=spf1 include:amazonses.com ~all"
+send.brief              IN  TXT  "v=spf1 include:amazonses.com ~all"
+bounce.email            IN  TXT  "v=spf1 include:amazonses.com ~all"
+envelope.hey            IN  TXT  "v=spf1 include:amazonses.com ~all"
+
+; --- DKIM (Google Workspace + Resend) ---
+google._domainkey       IN  TXT  "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtsnSuJBv6XqSYZp+SWH3OXCG5c9KD5tamS5co/024WqiMdZUy2MT7Cwd6b5bHZqg34Ja7+NY31kHAqUsOLViw0nslesg+TYexd7nMzdCm8HR4LcL+saoA+kRIs9prv+7P9A7sgtQIJ2/dsfWnulKdNJhwgpkmW6SU9tM1GnEBsYKG1O00EGWbp47gaZL61oRX2gf4qyv5/gs9ao7lyq4h2RnmiX4A8C4PHZ/WwZa19blxfgupI0LTkCwWBVzXBVrPwleclamCdKDhXr3KkrVDULEvRnwGOAIk8qAHDc+ZR8PZWETRK8SXxx7VIK15cwIei2lo+80QslDebtavW8BIwIDAQAB"
+resend._domainkey       IN  TXT  "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3uDcuI/KhgLj60qCfxPxi0KfmHZNjfo3NjBbEz57Q6gu9F+/1YkPG75fVQ6UaoNNvXohhfs/0aq2nmZZMUisM4S6OvTcpqxHO9HT7VXIHzMF7AfW0K3E957v27NLhJE4a6H6z+yGUiyGUGcX6qwTL8kqeuNc49IuR++yi/fw0HwIDAQAB"
+resend._domainkey.brief IN  TXT  "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDkGV8KDEI4o3Yki67HNMZ+npHnwqob4eW2VSW2OhO098FhT6pZFeTDR39Czds0PLFjRDMiwl0Ozc5tQZ4o+vxXk5cUaaKEFW7Er1x+rBJm/N1AJi5C4wlfw/jQiC2Fepwr1AqblPkqQxqwX4RZQyZgYyG4PnfIBboSMW1Y0pbsSQIDAQAB"
