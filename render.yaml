@@ -51,6 +51,12 @@ envVarGroups:
         value: price_1T0InvAjRojnyfWfBrvh6xe8
       - key: STRIPE_PERSONAL_YEARLY_PRICE_ID
         value: price_1T0IoaAjRojnyfWfKlEFMxme
+      # Non-secret — bake into the group so cron/workers get it without a
+      # manual sync:false fill (backup cron failed with this unset).
+      - key: AWS_S3_BUCKET
+        value: societyspeaks-assets-uk
+      - key: AWS_REGION
+        value: eu-west-2
 
 services:
   # ─────────────────────────────────────────────────────────────────────────
@@ -134,10 +140,7 @@ services:
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
-      - key: AWS_S3_BUCKET
-        sync: false
-      - key: AWS_REGION
-        value: eu-west-2
+      # AWS_S3_BUCKET + AWS_REGION come from societyspeaks-config
 
   - type: worker
     name: societyspeaks-scheduler
@@ -191,10 +194,7 @@ services:
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
-      - key: AWS_S3_BUCKET
-        sync: false
-      - key: AWS_REGION
-        value: eu-west-2
+      # AWS_S3_BUCKET + AWS_REGION come from societyspeaks-config
 
   - type: worker
     name: societyspeaks-consensus-worker
@@ -249,10 +249,7 @@ services:
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
-      - key: AWS_S3_BUCKET
-        sync: false
-      - key: AWS_REGION
-        value: eu-west-2
+      # AWS_S3_BUCKET + AWS_REGION come from societyspeaks-config
 
   # ─────────────────────────────────────────────────────────────────────────
   # Daily Neon → S3 backup (03:00 UTC)
@@ -273,10 +270,7 @@ services:
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
-      - key: AWS_S3_BUCKET
-        sync: false
-      - key: AWS_REGION
-        value: eu-west-2
+      # AWS_S3_BUCKET + AWS_REGION come from societyspeaks-config
       - key: BACKUP_S3_PREFIX
         value: db-backups/
       - key: BACKUP_RETENTION_DAYS

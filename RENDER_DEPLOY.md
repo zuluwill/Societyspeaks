@@ -56,8 +56,8 @@ Render reads `render.yaml` and creates three services + config env group:
 | `ENCRYPTION_KEY` | Copy from previous production |
 | `AWS_ACCESS_KEY_ID` | IAM user for the assets bucket |
 | `AWS_SECRET_ACCESS_KEY` | IAM secret |
-| `AWS_S3_BUCKET` | e.g. `societyspeaks-assets-uk` |
-| `AWS_REGION` | `eu-west-2` |
+| `AWS_S3_BUCKET` | Set in Blueprint group `societyspeaks-config` (`societyspeaks-assets-uk`) |
+| `AWS_REGION` | Set in Blueprint group (`eu-west-2`) |
 
 `NEON_DATABASE_URL` is an optional fallback if `DATABASE_URL` is blank; prefer a filled `DATABASE_URL`.
 
@@ -148,7 +148,7 @@ Remove temporary AWS secrets from Replit after a successful run. Do **not** dele
 
 - [ ] AWS secrets removed from Replit Secrets (still present on Render)
 - [ ] Neon password rotated if it was ever pasted into chat
-- [ ] `societyspeaks-db-backup` cron present; `DATABASE_URL` + `AWS_*` set on it
+- [ ] `societyspeaks-db-backup` cron present; `DATABASE_URL` + `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` set on it (`AWS_S3_BUCKET` / `AWS_REGION` come from `societyspeaks-config`)
 - [ ] One-time: `python3 scripts/enable_s3_bucket_best_practice.py` (versioning + lifecycle)
 - [ ] Uptime monitor pointed at the Render URL (then at the domain after cutover)
 - [ ] Render failed-deploy notifications enabled
