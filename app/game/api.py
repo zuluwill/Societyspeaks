@@ -58,6 +58,16 @@ def choose(run_uuid: str):
     except InvalidChoice as exc:
         return jsonify({'error': str(exc)}), 400
 
+    # Subscriber↔visitor bridge: a completed turn is real participation, so
+    # join email-acquired players to their run identity (no-op otherwise).
+    from app.lib.subscriber_identity import link_subscriber_identity_from_request
+
+    link_subscriber_identity_from_request(
+        source='game_turn',
+        session_fingerprint=run.session_fingerprint,
+        user_id=run.user_id,
+    )
+
     return jsonify(result)
 
 

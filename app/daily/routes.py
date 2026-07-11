@@ -1528,6 +1528,33 @@ def one_click_vote(token, vote_choice):
     session['daily_subscriber_id'] = subscriber.id
     session.modified = True
 
+    # Durable subscriber↔visitor bridge: session expires in 48h, the signed
+    # cookie lasts 180 days, so later anonymous participation still joins back
+    # to this subscriber. after_this_request covers every exit path below.
+    from flask import after_this_request
+
+    from app.lib.posthog_utils import posthog_js_distinct_id
+    from app.lib.subscriber_identity import (
+        record_identity_link,
+        set_subscriber_ref_cookie,
+    )
+
+    _sub_id_for_cookie = subscriber.id
+    _sub_user_id = subscriber.user_id
+
+    @after_this_request
+    def _set_subscriber_ref(response):
+        return set_subscriber_ref_cookie(
+            response, question_subscriber_id=_sub_id_for_cookie
+        )
+
+    record_identity_link(
+        source='email_vote',
+        question_subscriber_id=_sub_id_for_cookie,
+        user_id=_sub_user_id,
+        posthog_distinct_id=posthog_js_distinct_id(),
+    )
+
     # Log in if user has account
     if subscriber.user:
         login_user(subscriber.user)
@@ -1813,6 +1840,16 @@ def vote():
 
         _invalidate_programme_summary_if_daily_question_synced(question)
 
+        # Subscriber↔visitor bridge: joins email-acquired visitors to this
+        # anonymous response (no-op unless they arrived via a signed email link).
+        from app.lib.subscriber_identity import link_subscriber_identity_from_request
+
+        link_subscriber_identity_from_request(
+            source='daily_question',
+            session_fingerprint=get_session_fingerprint(),
+            user_id=current_user.id if current_user.is_authenticated else None,
+        )
+
         _track_context_engagement(question, response, source='daily_web')
 
         try:
@@ -1984,10 +2021,12 @@ def daily_track_click(question_id):
         )
         return redirect('/')
 
+    verified_subscriber = None
     try:
         subscriber_id = int(subscriber_id_str)
         subscriber = db.session.get(DailyQuestionSubscriber, subscriber_id)
         if subscriber:
+            verified_subscriber = subscriber
             # Verify the question still exists — old emails may be clicked long after
             # the DailyQuestion row is deleted, which would violate the FK constraint.
             question_exists = db.session.get(DailyQuestion, question_id) is not None
@@ -2006,7 +2045,24 @@ def daily_track_click(question_id):
             f"Error recording daily question click for question {question_id}: {e}"
         )
 
-    return redirect(target_url)
+    response = redirect(target_url)
+    if verified_subscriber:
+        # Durable subscriber↔visitor bridge: the signed cookie lets later
+        # anonymous participation (votes, games) join back to this subscriber.
+        from app.lib.posthog_utils import posthog_js_distinct_id
+        from app.lib.subscriber_identity import (
+            record_identity_link,
+            set_subscriber_ref_cookie,
+        )
+
+        set_subscriber_ref_cookie(response, question_subscriber_id=verified_subscriber.id)
+        record_identity_link(
+            source='email_click',
+            question_subscriber_id=verified_subscriber.id,
+            user_id=verified_subscriber.user_id,
+            posthog_distinct_id=posthog_js_distinct_id(),
+        )
+    return response
 
 
 def get_subscriber_streak():

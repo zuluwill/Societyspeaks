@@ -1164,10 +1164,12 @@ def brief_track_click(brief_id):
         logger.warning(f"Invalid click-tracking signature for brief {brief_id}: {target_url[:100]}")
         return redirect('/')
 
+    verified_subscriber = None
     try:
         subscriber_id = int(subscriber_id_str)
         subscriber = db.session.get(DailyBriefSubscriber, subscriber_id)
         if subscriber:
+            verified_subscriber = subscriber
             # Verify the brief still exists — old emails may be clicked long after
             # the brief row is deleted, which would violate the FK constraint.
             brief_exists = db.session.get(DailyBrief, brief_id) is not None
@@ -1187,7 +1189,24 @@ def brief_track_click(brief_id):
         db.session.rollback()
         logger.warning(f"Error recording brief click for brief {brief_id}: {e}")
 
-    return redirect(target_url)
+    response = redirect(target_url)
+    if verified_subscriber:
+        # Durable subscriber↔visitor bridge: the signed cookie lets later
+        # anonymous participation (votes, games) join back to this subscriber.
+        from app.lib.posthog_utils import posthog_js_distinct_id
+        from app.lib.subscriber_identity import (
+            record_identity_link,
+            set_subscriber_ref_cookie,
+        )
+
+        set_subscriber_ref_cookie(response, brief_subscriber_id=verified_subscriber.id)
+        record_identity_link(
+            source='email_click',
+            brief_subscriber_id=verified_subscriber.id,
+            user_id=verified_subscriber.user_id,
+            posthog_distinct_id=posthog_js_distinct_id(),
+        )
+    return response
 
 
 @brief_bp.route('/brief/admin/analytics')

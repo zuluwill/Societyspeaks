@@ -1245,6 +1245,16 @@ def vote_statement(statement_id):
     except Exception:
         pass
 
+    # Subscriber↔visitor bridge: if this voter arrived via a signed email link,
+    # join their subscriber identity to this fingerprint (no-op otherwise).
+    from app.lib.subscriber_identity import link_subscriber_identity_from_request
+
+    link_subscriber_identity_from_request(
+        source='vote',
+        session_fingerprint=session_fingerprint or get_statement_vote_fingerprint(),
+        user_id=current_user.id if current_user.is_authenticated else None,
+    )
+
     # Track vote with PostHog (batched by SDK consumer; avoid flush() blocking the response).
     if posthog and getattr(posthog, 'project_api_key', None):
         try:

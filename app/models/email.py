@@ -335,3 +335,43 @@ class EmailEvent(db.Model):
 
 # Backward compatibility alias
 BriefEmailEvent = EmailEvent
+
+
+class SubscriberIdentityLink(db.Model):
+    """Bridge between an email subscriber and an anonymous site visitor.
+
+    The product is intentionally anonymous-first: participants vote without
+    accounts, so a subscriber (email) and a fingerprint (site) are otherwise
+    unjoinable identities. Rows are written by app/lib/subscriber_identity.py
+    when a visitor who arrived via a signed email link participates.
+    Measurement-only; deleting rows loses joins, never product data.
+    """
+    __tablename__ = 'subscriber_identity_link'
+    __table_args__ = (
+        db.Index('idx_sil_brief_subscriber', 'brief_subscriber_id'),
+        db.Index('idx_sil_question_subscriber', 'question_subscriber_id'),
+        db.Index('idx_sil_fingerprint', 'session_fingerprint'),
+        db.Index('idx_sil_posthog', 'posthog_distinct_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_brief_subscriber.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+    question_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_question_subscriber.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True
+    )
+    session_fingerprint = db.Column(db.String(64), nullable=True)
+    posthog_distinct_id = db.Column(db.String(255), nullable=True)
+    # Which flow created the link: email_click, email_vote, vote,
+    # daily_question, game_turn
+    source = db.Column(db.String(30), nullable=False)
+    first_seen_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    last_seen_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
