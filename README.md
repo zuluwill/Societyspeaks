@@ -376,9 +376,17 @@ This project is licensed under the GNU Affero General Public License v3.0 (`AGPL
 
 If you run a modified version of this software over a network, AGPL requires you to make the corresponding source available to users of that service.
 
+### Code and data
+
+The code and the data are licensed separately. The platform is open source under AGPL-3.0 so the methodology stays auditable by everyone. Individual votes and responses are **never sold and never licensed to anyone**. Only aggregate, anonymised patterns — what society agrees on, where it divides, how judgement shifts over time — may be licensed to institutions, and that revenue keeps the public platform free and ad-free. The same commitment appears in our [privacy policy](https://societyspeaks.io/privacy-policy).
+
 ### Commercial Licensing
 
-If you are a publisher, enterprise, or partner and need non-AGPL commercial terms for embeds, API usage, or distribution, contact the maintainers to discuss a commercial license.
+If you are a publisher, enterprise, or partner and need non-AGPL commercial terms for embeds, API usage, or distribution, contact the maintainers to discuss a commercial license. See `COPYRIGHT` for scope: two consensus-engine helper functions adapted from red-dwarf remain AGPL-3.0-only.
+
+### Contributing and the CLA
+
+Contributions are accepted under the [Individual Contributor License Agreement](./CLA.md). You keep the copyright on your work; the CLA grants the maintainer the right to license it, including commercially — which is what funds the platform while the code stays open. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 
