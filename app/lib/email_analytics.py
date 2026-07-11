@@ -175,6 +175,21 @@ class EmailAnalytics:
             # Normalize event type (remove 'email.' prefix)
             normalized_type = event_type.replace('email.', '')
 
+            # Ignore Resend email.sent by default: sends are recorded first-party
+            # at API-call time without a resend_email_id, so the idempotency check
+            # below cannot dedupe against them and webhook sends would double-count.
+            if normalized_type == cls.EVENT_SENT:
+                if not (
+                    has_app_context()
+                    and current_app.config.get(
+                        "EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_SENDS", False
+                    )
+                ):
+                    logger.info(
+                        "Skipping Resend email.sent webhook (first-party send recording is authoritative)"
+                    )
+                    return None
+
             # Optional: ignore Resend email.clicked when first-party tracking is authoritative
             # (set EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS=false; see admin email analytics).
             if normalized_type == cls.EVENT_CLICKED:

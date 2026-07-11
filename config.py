@@ -510,6 +510,14 @@ class Config:
         os.getenv("EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_CLICKS", "true").lower() == "true"
     )
 
+    # If false (default), ignore Resend `email.sent` webhooks: the app already
+    # records every send first-party at API-call time (EmailAnalytics.record_send),
+    # and those rows carry no resend_email_id, so the webhook dedup cannot match
+    # them — recording both would double-count every send (~5k/day).
+    EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_SENDS = (
+        os.getenv("EMAIL_ANALYTICS_RECORD_RESEND_WEBHOOK_SENDS", "false").lower() == "true"
+    )
+
     # Legacy SMTP Configuration (kept for backwards compatibility, not actively used)
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
