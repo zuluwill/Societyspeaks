@@ -310,12 +310,22 @@ def quick_run(scenario_slug: str):
     society_name = request.args.get('name', '').strip() or None
     name_was_custom = _name_was_custom(request.args.get('name_source'))
 
+    # Scripted clients get an ephemeral run: no DB row, no analytics event.
+    # Runs were minted on every GET, so crawlers created ~40x more rows than
+    # real players (2026-07: ~800 single-run fingerprints vs ~20 turn-takers).
+    from app.lib.session_policy import SESSION_SKIP_UA_INDICATORS, user_agent_is_bot
+
+    is_scripted = user_agent_is_bot(
+        request.headers.get('User-Agent'), SESSION_SKIP_UA_INDICATORS
+    )
+
     run = start_quick_run(
         scenario_slug=scenario_slug,
         user_id=user_id,
         session_fingerprint=fingerprint,
         society_name=society_name,
         name_was_custom=name_was_custom,
+        persist=not is_scripted,
     )
 
     view = build_turn_view(run)

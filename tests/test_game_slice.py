@@ -369,3 +369,26 @@ def test_outcome_og_meta_points_to_png(app, client, db):
     assert 'og:image:alt' in body
     assert 'og:image:type' in body
     assert 'image/png' in body
+
+
+def test_quick_run_persist_false_creates_no_row_or_event(app, db):
+    """Scripted clients (crawlers) get an ephemeral quick run: fully rendered,
+    but no game_run row and no game_run_started analytics event."""
+    from unittest.mock import patch
+
+    from app.game.services.run_service import start_quick_run
+    from app.models.game import GameRun
+
+    with app.app_context():
+        before = GameRun.query.count()
+        with patch('app.game.services.run_service.track_game_event') as track:
+            run = start_quick_run(
+                scenario_slug='brain-drain',
+                user_id=None,
+                session_fingerprint='fp-crawler',
+                persist=False,
+            )
+            assert track.call_count == 0
+        assert run.uuid  # fully-formed for rendering
+        assert run.state_json
+        assert GameRun.query.count() == before

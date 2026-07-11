@@ -51,9 +51,24 @@ def upgrade():
     op.create_index('idx_sil_question_subscriber', 'subscriber_identity_link', ['question_subscriber_id'])
     op.create_index('idx_sil_fingerprint', 'subscriber_identity_link', ['session_fingerprint'])
     op.create_index('idx_sil_posthog', 'subscriber_identity_link', ['posthog_distinct_id'])
+    # NULL-safe uniqueness: plain UNIQUE treats NULLs as distinct, so duplicate
+    # identity pairs would slip through. COALESCE makes the pair truly unique;
+    # the application upsert catches the resulting IntegrityError on races.
+    op.create_index(
+        'uq_sil_identity_pair',
+        'subscriber_identity_link',
+        [
+            sa.text("coalesce(brief_subscriber_id, 0)"),
+            sa.text("coalesce(question_subscriber_id, 0)"),
+            sa.text("coalesce(session_fingerprint, '')"),
+            sa.text("coalesce(posthog_distinct_id, '')"),
+        ],
+        unique=True,
+    )
 
 
 def downgrade():
+    op.drop_index('uq_sil_identity_pair', table_name='subscriber_identity_link')
     op.drop_index('idx_sil_posthog', table_name='subscriber_identity_link')
     op.drop_index('idx_sil_fingerprint', table_name='subscriber_identity_link')
     op.drop_index('idx_sil_question_subscriber', table_name='subscriber_identity_link')

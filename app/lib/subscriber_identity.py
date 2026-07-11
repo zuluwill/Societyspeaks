@@ -120,7 +120,9 @@ def record_identity_link(
     if not (session_fingerprint or posthog_distinct_id or user_id):
         return
 
-    try:
+    from sqlalchemy.exc import IntegrityError
+
+    def _touch_existing() -> bool:
         existing = SubscriberIdentityLink.query.filter_by(
             brief_subscriber_id=brief_subscriber_id,
             question_subscriber_id=question_subscriber_id,
@@ -130,7 +132,11 @@ def record_identity_link(
         if existing:
             existing.last_seen_at = utcnow_naive()
             existing.user_id = existing.user_id or user_id
-        else:
+            return True
+        return False
+
+    try:
+        if not _touch_existing():
             db.session.add(
                 SubscriberIdentityLink(
                     brief_subscriber_id=brief_subscriber_id,
@@ -143,6 +149,17 @@ def record_identity_link(
             )
         if commit:
             db.session.commit()
+    except IntegrityError:
+        # Concurrent insert of the same identity pair lost the race against
+        # the uq_sil_identity_pair index — the row exists now; just touch it.
+        db.session.rollback()
+        try:
+            _touch_existing()
+            if commit:
+                db.session.commit()
+        except Exception as exc:
+            logger.warning("Identity link race recovery failed: %s", exc)
+            db.session.rollback()
     except Exception as exc:
         logger.warning("Failed to record subscriber identity link: %s", exc)
         try:

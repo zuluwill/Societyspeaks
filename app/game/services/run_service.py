@@ -255,6 +255,7 @@ def start_quick_run(
     session_fingerprint: Optional[str],
     society_name: Optional[str] = None,
     name_was_custom: Optional[bool] = None,
+    persist: bool = True,
 ) -> GameRun:
     """Fresh Quick Run — plan §3.2: replay anytime, no streak credit.
 
@@ -262,6 +263,11 @@ def start_quick_run(
     can try multiple paths through the same scenario in one session. The
     ``mode='quick'`` tag keeps these out of the daily streak and outcome-grid
     calculations.
+
+    ``persist=False`` renders an ephemeral run without a DB row or analytics
+    event — used for scripted-client requests (runs were minted on every GET,
+    so crawlers created ~40x more rows than there were real players; a
+    scripted client never POSTs a turn, and if one does, the uuid 404s).
     """
     scenario = load_scenario(scenario_slug)
     turns = scenario.get('turns') or []
@@ -292,6 +298,8 @@ def start_quick_run(
         status=GAME_RUN_STATUS_IN_PROGRESS,
     )
     run.posthog_distinct_id = resolve_distinct_id_for_run(run)
+    if not persist:
+        return run
     db.session.add(run)
     try:
         db.session.commit()

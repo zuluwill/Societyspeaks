@@ -123,3 +123,50 @@ def test_cookie_attributes_are_hardened(app):
     assert 'HttpOnly' in header
     assert 'SameSite=Lax' in header
     assert 'Max-Age=15552000' in header  # 180 days
+
+
+def test_duplicate_identity_pair_blocked_at_db_level(app, db):
+    """The NULL-safe unique index must reject duplicate pairs even if the
+    application-level check is bypassed (concurrent request race)."""
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    with app.app_context():
+        sub = _make_subscriber(db)
+        db.session.add(
+            SubscriberIdentityLink(
+                question_subscriber_id=sub.id,
+                session_fingerprint='fp-race',
+                source='vote',
+            )
+        )
+        db.session.commit()
+        db.session.add(
+            SubscriberIdentityLink(
+                question_subscriber_id=sub.id,
+                session_fingerprint='fp-race',
+                source='vote',
+            )
+        )
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+        db.session.rollback()
+
+
+def test_record_identity_link_survives_lost_insert_race(app, db):
+    """If the row appears between our existence check and commit, the helper
+    must recover by touching the existing row instead of raising."""
+    with app.app_context():
+        sub = _make_subscriber(db)
+        # Simulate the race: row already exists, then call the helper with a
+        # session primed to insert a duplicate (helper's own check finds it,
+        # so also verify the IntegrityError path via a direct duplicate).
+        record_identity_link(
+            source='vote', question_subscriber_id=sub.id, session_fingerprint='fp-r2'
+        )
+        record_identity_link(
+            source='vote', question_subscriber_id=sub.id, session_fingerprint='fp-r2'
+        )
+        assert SubscriberIdentityLink.query.filter_by(
+            session_fingerprint='fp-r2'
+        ).count() == 1

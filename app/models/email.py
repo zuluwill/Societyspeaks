@@ -352,6 +352,16 @@ class SubscriberIdentityLink(db.Model):
         db.Index('idx_sil_question_subscriber', 'question_subscriber_id'),
         db.Index('idx_sil_fingerprint', 'session_fingerprint'),
         db.Index('idx_sil_posthog', 'posthog_distinct_id'),
+        # NULL-safe uniqueness (plain UNIQUE treats NULLs as distinct); the
+        # application upsert catches IntegrityError on concurrent inserts.
+        db.Index(
+            'uq_sil_identity_pair',
+            db.text("coalesce(brief_subscriber_id, 0)"),
+            db.text("coalesce(question_subscriber_id, 0)"),
+            db.text("coalesce(session_fingerprint, '')"),
+            db.text("coalesce(posthog_distinct_id, '')"),
+            unique=True,
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)
