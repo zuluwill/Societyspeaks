@@ -4,12 +4,31 @@ from flask_login import current_user
 from app import db
 from app.models import ProfileView, DiscussionView, Discussion, IndividualProfile, CompanyProfile
 from app.analytics.events import record_event
+from app.lib.session_policy import SESSION_SKIP_UA_INDICATORS, user_agent_is_bot
+
+
+def _viewer_is_scripted_client():
+    """Skip view tracking for scripted clients (crawlers, python-requests, curl).
+
+    View rows are written on every GET, so crawler floods dominated both
+    discussion_view and analytics_event (June 2026: 556k crawler views in one
+    month; 99.99% of discussion_viewed rows carried no user). Browser-UA
+    crawlers still pass this check — analysis must additionally filter — but
+    the scripted flood stops here.
+    """
+    return user_agent_is_bot(
+        request.headers.get('User-Agent'), SESSION_SKIP_UA_INDICATORS
+    )
+
 
 def track_profile_view(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         username = kwargs.get('username')
         company_name = kwargs.get('company_name')
+
+        if _viewer_is_scripted_client():
+            return f(*args, **kwargs)
 
         if username:
             current_app.logger.debug(f"Tracking view for individual profile: {username}")
@@ -43,7 +62,7 @@ def track_discussion_view(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         discussion_id = kwargs.get('discussion_id')
-        if discussion_id:
+        if discussion_id and not _viewer_is_scripted_client():
             # Check if the discussion exists before tracking the view
             discussion = db.session.get(Discussion, discussion_id)
             if discussion:
