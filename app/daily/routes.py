@@ -730,6 +730,11 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
                 statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
             
             existing_vote.vote = vote_value
+            if not existing_vote.posthog_distinct_id:
+                existing_vote.posthog_distinct_id = resolve_request_distinct_id(
+                    user_id=current_user.id if current_user.is_authenticated else None,
+                    anon_fallback=fingerprint,
+                )
             return False, True
         return False, False
     else:
@@ -739,7 +744,11 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
             discussion_id=question.source_discussion_id,
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
-            vote=vote_value
+            vote=vote_value,
+            posthog_distinct_id=resolve_request_distinct_id(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                anon_fallback=fingerprint,
+            ),
         )
         db.session.add(stmt_vote)
         

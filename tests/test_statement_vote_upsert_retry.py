@@ -200,3 +200,53 @@ def test_vote_conflict_409_response_exists():
     source = STATEMENTS_PATH.read_text(encoding="utf-8")
     assert "vote_conflict" in source
     assert "), 409" in source
+
+
+# ---------------------------------------------------------------------------
+# posthog_distinct_id stamping — AST assertions
+# ---------------------------------------------------------------------------
+
+def test_insert_values_contains_posthog_distinct_id():
+    """Votes must stamp the PostHog identity at insert (mirrors game_run) so
+    votes — mostly by intentionally-anonymous users — join to web sessions."""
+    func = _get_function("_upsert_statement_vote_row")
+    keys = _dict_str_keys(_find_dict_assignment(func, "insert_values"))
+    assert "posthog_distinct_id" in keys, (
+        f"'posthog_distinct_id' missing from insert_values dict; found: {sorted(keys)}"
+    )
+
+
+def test_set_values_never_unconditionally_writes_posthog_distinct_id():
+    """A re-vote without a resolved identity must not wipe a stamped id:
+    posthog_distinct_id may only enter set_values behind a truthiness guard,
+    never in the initial dict literal."""
+    func = _get_function("_upsert_statement_vote_row")
+    keys = _dict_str_keys(_find_dict_assignment(func, "set_values"))
+    assert "posthog_distinct_id" not in keys, (
+        "posthog_distinct_id must not be in the unconditional set_values literal"
+    )
+    # And the guarded assignment must exist somewhere in the function.
+    guarded = any(
+        isinstance(node, ast.If)
+        and any(
+            isinstance(sub, ast.Assign)
+            and any(
+                isinstance(t, ast.Subscript)
+                and isinstance(t.slice, ast.Constant)
+                and t.slice.value == "posthog_distinct_id"
+                for t in sub.targets
+            )
+            for sub in ast.walk(node)
+        )
+        for node in ast.walk(func)
+    )
+    assert guarded, "expected a guarded set_values['posthog_distinct_id'] assignment"
+
+
+def test_persist_vote_resolves_identity_and_passes_it_through():
+    """_persist_vote_with_upsert must resolve the request identity once and
+    hand it to the row upsert."""
+    func = _get_function("_persist_vote_with_upsert")
+    src = ast.unparse(func)
+    assert "resolve_request_distinct_id" in src
+    assert "posthog_distinct_id=posthog_distinct_id" in src

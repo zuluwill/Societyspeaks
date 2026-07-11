@@ -743,6 +743,12 @@ class StatementVote(db.Model):
     partner_ref = db.Column(db.String(50), nullable=True)
     cohort_slug = db.Column(db.String(80), nullable=True)
 
+    # PostHog identity at vote time (mirrors game_run.posthog_distinct_id):
+    # browser cookie id for anonymous voters, str(user_id) when logged in.
+    # The join key between votes and web sessions — votes are mostly cast by
+    # intentionally-anonymous users, so without it they are identity islands.
+    posthog_distinct_id = db.Column(db.String(255), nullable=True)
+
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
     

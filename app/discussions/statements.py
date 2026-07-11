@@ -146,7 +146,8 @@ def _upsert_statement_vote_row(
     partner_ref,
     cohort_slug,
     user_id=None,
-    session_fingerprint=None
+    session_fingerprint=None,
+    posthog_distinct_id=None
 ):
     """
     Persist vote row via INSERT ... ON CONFLICT ... DO UPDATE.
@@ -169,6 +170,7 @@ def _upsert_statement_vote_row(
         'confidence': confidence,
         'partner_ref': partner_ref,
         'cohort_slug': cohort_slug,
+        'posthog_distinct_id': posthog_distinct_id,
         # created_at must be set explicitly: raw dialect insert() does not
         # trigger SQLAlchemy ORM column defaults, so omitting it produces NULL.
         'created_at': now,
@@ -187,6 +189,10 @@ def _upsert_statement_vote_row(
         'cohort_slug': cohort_slug,
         'updated_at': now,
     }
+    # On re-vote, refresh the identity only when this request resolved one —
+    # never wipe a previously stamped id with NULL.
+    if posthog_distinct_id:
+        set_values['posthog_distinct_id'] = posthog_distinct_id
 
     if user_id is not None:
         stmt = stmt.on_conflict_do_update(
@@ -216,6 +222,12 @@ def _persist_vote_with_upsert(
     """
     Persist vote and update denormalized counters in one transaction.
     """
+    # Stamp the PostHog identity here (single choke point for all vote paths)
+    # so votes stitch to the JS SDK person — same pattern as game_run.
+    posthog_distinct_id = resolve_request_distinct_id(
+        user_id=user_id, anon_fallback=session_fingerprint
+    )
+
     _lock_vote_identity(
         statement_id=statement.id,
         user_id=user_id,
@@ -239,7 +251,8 @@ def _persist_vote_with_upsert(
         partner_ref=partner_ref,
         cohort_slug=cohort_slug,
         user_id=user_id,
-        session_fingerprint=session_fingerprint
+        session_fingerprint=session_fingerprint,
+        posthog_distinct_id=posthog_distinct_id
     )
 
     counts = _apply_vote_counter_delta(statement.id, old_vote, vote_value)
