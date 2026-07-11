@@ -29,7 +29,7 @@ What actually happened.
 - OS:
 - Browser (if relevant):
 - Python version (if relevant):
-- App environment (local/Replit/production):
+- App environment (local/production):
 
 ## Logs / screenshots
 

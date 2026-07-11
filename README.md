@@ -90,8 +90,8 @@ Publishers can embed Society Speaks on their articles and use the Partner API fo
 |----------|------------|
 | Backend | Python 3.11+ / Flask 3.0+ |
 | Database | PostgreSQL (Neon London in production) |
-| Caching | Redis (Upstash) |
-| Storage | S3-compatible object storage (`eu-west-2`; Replit Object Storage legacy only) |
+| Caching | Redis (Redis Cloud, London) |
+| Storage | S3-compatible object storage (`eu-west-2`) with local static fallback |
 | App hosting | Render (Frankfurt) — web + scheduler + consensus worker |
 | Frontend | Tailwind CSS |
 | ML/Clustering | scikit-learn, numpy, pandas |
@@ -152,7 +152,6 @@ sentry-sdk==2.17.0
 
 # Infrastructure
 redis==5.2.0
-replit>=4.1.0
 gunicorn==21.2.0
 ```
 
@@ -243,22 +242,9 @@ flask run
 gunicorn --bind 0.0.0.0:5000 run:app
 ```
 
-### Replit Setup
+### Production (Render)
 
-1. Fork the Repl
-2. Configure Secrets:
-   - `DATABASE_URL`
-   - `SECRET_KEY`
-   - `REDIS_URL`
-   - `SENTRY_DSN` (optional)
-   - `MAIL_*` configurations
-   - `BLUESKY_*` configurations (optional)
-
-3. Install dependencies and initialize:
-```bash
-pip install -r requirements.txt
-flask db upgrade
-```
+Production runs on Render (Frankfurt): web service + dedicated scheduler + consensus worker, deployed from `main` via the `Dockerfile` and `render.yaml`. Follow [RENDER_DEPLOY.md](./RENDER_DEPLOY.md) for the full checklist (secrets, Neon, S3, workers).
 
 **Alembic / multiple heads:** If `flask db upgrade` fails with "multiple head revisions", the migration history has branched. Merge heads before deploying: `flask db merge heads -m "merge_heads"`, then run `flask db upgrade` again.
 

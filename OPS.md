@@ -184,7 +184,6 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 
 - Never commit `.env`, dumps, or access keys
 - Rotate Neon password if it was shared in chat
-- Remove temporary AWS keys from Replit Secrets after migrations
 - Production secrets live only in Render (and password manager)
 - `DEPLOYED_PRODUCTION=1` enables real email/social sends — never set it on a second live host while another is still sending
-- Keep Replit paused (not running) while Render owns production sends
+- Replit is decommissioned (shut down 2026-07-11) — Render is the only live host; if any Replit-era secrets are still valid anywhere, rotate them

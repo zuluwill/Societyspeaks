@@ -15,6 +15,8 @@ Production stack (July 2026):
 
 Day-to-day ops (deploy, backups, health, alerts): [OPS.md](./OPS.md).
 
+> **Status:** migration off Replit is complete — the Repl was shut down on 2026-07-11. Replit steps below are kept as a record of the migration; they are not live instructions.
+
 Residency Q&A line (honest): **Primary data store and object storage: UK (London). Application processing: EEA (Frankfurt).**
 
 ---
@@ -85,7 +87,7 @@ Render reads `render.yaml` and creates three services + config env group:
 
 Non-secret config (`APP_BASE_URL`, from-addresses, Stripe price IDs, etc.) lives in Blueprint group `societyspeaks-config`.
 
-**Production sends:** `DEPLOYED_PRODUCTION=1` is set in that group. Email/social/scheduler jobs use this flag (not `FLASK_ENV`). Keep Replit **paused** (or off) while it is set on Render so you never run two senders.
+**Production sends:** `DEPLOYED_PRODUCTION=1` is set in that group. Email/social/scheduler jobs use this flag (not `FLASK_ENV`). Never set it on a second live host while Render is sending (Replit, the original second host, is now shut down).
 
 ---
 
@@ -185,6 +187,5 @@ Remove temporary AWS secrets from Replit after a successful run. Do **not** dele
 - **Docker workers:** use `dockerCommand` (Render rejects `startCommand` for `runtime: docker`).
 - **Scheduler:** keep a **single** scheduler instance (`DISABLE_SCHEDULER=1` on web).
 - **APScheduler:** do not scale web to multiple instances with in-process scheduler enabled.
-- **Object storage:** `app/storage_utils.py` provider order is S3 → Replit → local static fallback.
-- **`replit` package:** may remain in `requirements.txt`; unused outside Replit.
+- **Object storage:** `app/storage_utils.py` provider order is S3 → Replit → local static fallback. The `replit` package has been removed from `requirements.txt`, so the Replit tier is inert; it only activates if the package is installed.
 - **Cost:** three Standard Render services ≈ $75/mo plus Neon Launch + S3 + Redis Cloud.
