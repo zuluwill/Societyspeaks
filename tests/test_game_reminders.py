@@ -267,11 +267,26 @@ def test_unsubscribe_route_get_renders_confirmation(app, client, db):
         token = sub.unsubscribe_token
     resp = client.get(f'/play/reminders/unsubscribe?token={token}')
     assert resp.status_code == 200
-    assert b'Reminders stopped' in resp.data
+    assert b'Stop reminders?' in resp.data
     with app.app_context():
         sub = GameReminderSubscription.query.filter_by(email='human@example.com').first()
-        assert not sub.is_active
+        assert sub.is_active  # GET must not opt the person out
 
+
+def test_unsubscribe_route_confirm_post(app, client, db):
+    with app.app_context():
+        sub = subscribe_to_reminders(email='confirm@example.com')
+        token = sub.unsubscribe_token
+    resp = client.post(
+        f'/play/reminders/unsubscribe?token={token}',
+        data={'confirm': '1', 'token': token},
+    )
+    assert resp.status_code == 200
+    assert b'Reminders stopped' in resp.data
+    with app.app_context():
+        sub = GameReminderSubscription.query.filter_by(email='confirm@example.com').first()
+        assert not sub.is_active
+        assert sub.unsubscribe_reason == 'user'
 
 def test_unsubscribe_route_invalid_token_post_is_silent(app, client, db):
     resp = client.post('/play/reminders/unsubscribe?token=bogus',

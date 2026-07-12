@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ _('Stop reminders - %(name)s', name=programme.name) }}{% endblock %}
+{% block meta_robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md mx-auto">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
+        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h1 id="unsubscribe-heading" class="text-2xl font-bold text-gray-900 mb-2">{{ _('Stop journey reminders?') }}</h1>
+      {% if email %}<p class="text-gray-600">{{ email }}</p>{% endif %}
+      <p class="text-sm text-gray-500 mt-2">{{ programme.name }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <p class="text-gray-700 mb-6">
+        {{ _('Stop email reminders for this programme?') }}
+      </p>
+
+      <form method="POST"
+            action="{{ url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug, token=token) if token else url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug) }}"
+            aria-labelledby="unsubscribe-heading">
+        <input type="hidden" name="confirm" value="1">
+        {% if token %}<input type="hidden" name="token" value="{{ token }}">{% endif %}
+        <button type="submit"
+                class="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition">
+          {{ _('Stop reminders') }}
+        </button>
+      </form>
+
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
+         class="block text-center mt-4 text-sm text-gray-500 hover:text-gray-700">
+        {{ _('Never mind — keep reminding me') }}
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

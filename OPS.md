@@ -205,6 +205,15 @@ Open tracking is a per-domain Resend setting (tracking subdomain
 `link.brief.societyspeaks.io`, DNS-only CNAME). Click tracking stays OFF —
 clicks are tracked first-party and webhook copies are dropped.
 
+## Email unsubscribe compliance (RFC 8058)
+
+Every product that sends `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
+must keep its unsubscribe route CSRF-exempt and return an empty `200` for
+machine POSTs. Human clicks use GET → confirm page → POST (never unsubscribe
+on GET — corporate scanners prefetch every link). Covered routes: Daily Brief,
+Daily Question, paid Briefings, game reminders, journey reminders. A
+regression test asserts all five are registered in `csrf._exempt_views`.
+
 ## Subscriber import runbook
 
 Any bulk data import, in order:

@@ -295,20 +295,53 @@ class TestDailyQuestionUnsubscribe:
 # ---------------------------------------------------------------------------
 
 class TestBriefingUnsubscribe:
+    def test_get_shows_confirm_without_unsubscribing(self, app, db, client):
+        """GET must never change state: scanners prefetch unsubscribe links."""
+        with app.app_context():
+            briefing, recipient = _make_brief_recipient(db, email='confirm_recip@example.com')
+            briefing_id = briefing.id
+            token = recipient.unsubscribe_token
+
+        resp = client.get(f'/briefings/{briefing_id}/unsubscribe/{token}')
+        assert resp.status_code == 200
+        assert b'Confirm Unsubscribe' in resp.data
+        with app.app_context():
+            refreshed = BriefRecipient.query.filter_by(briefing_id=briefing_id).first()
+            assert refreshed.status == 'active'
+
+    def test_confirm_form_post_unsubscribes(self, app, db, client):
+        with app.app_context():
+            briefing, recipient = _make_brief_recipient(db, email='form_recip@example.com')
+            briefing_id = briefing.id
+            token = recipient.unsubscribe_token
+
+        resp = client.post(
+            f'/briefings/{briefing_id}/unsubscribe/{token}',
+            data={'confirm': '1'},
+        )
+        assert resp.status_code == 200
+        assert b'Unsubscribed' in resp.data
+        with app.app_context():
+            refreshed = BriefRecipient.query.filter_by(briefing_id=briefing_id).first()
+            assert refreshed.status == 'unsubscribed'
+
     def test_one_click_post_unsubscribes_empty_200(self, app, db, client):
         with app.app_context():
             briefing, recipient = _make_brief_recipient(db)
             briefing_id = briefing.id
             token = recipient.unsubscribe_token
 
-        resp = client.post(f'/briefings/{briefing_id}/unsubscribe/{token}')
+        resp = client.post(
+            f'/briefings/{briefing_id}/unsubscribe/{token}',
+            data={'List-Unsubscribe': 'One-Click'},
+        )
         assert resp.status_code == 200
         assert resp.data == b''
         with app.app_context():
             refreshed = BriefRecipient.query.filter_by(briefing_id=briefing_id).first()
             assert refreshed.status == 'unsubscribed'
 
-    def test_falls_back_to_magic_token(self, app, db, client):
+    def test_falls_back_to_magic_token_on_confirm_post(self, app, db, client):
         with app.app_context():
             briefing = Briefing(owner_type='user', owner_id=1, name='Legacy Briefing')
             db.session.add(briefing)
@@ -320,7 +353,16 @@ class TestBriefingUnsubscribe:
             briefing_id = briefing.id
             magic = recipient.magic_token
 
-        resp = client.get(f'/briefings/{briefing_id}/unsubscribe/{magic}')
+        # GET shows confirm; must not unsubscribe yet
+        get_resp = client.get(f'/briefings/{briefing_id}/unsubscribe/{magic}')
+        assert get_resp.status_code == 200
+        with app.app_context():
+            assert BriefRecipient.query.filter_by(briefing_id=briefing_id).first().status == 'active'
+
+        resp = client.post(
+            f'/briefings/{briefing_id}/unsubscribe/{magic}',
+            data={'confirm': '1'},
+        )
         assert resp.status_code == 200
         with app.app_context():
             refreshed = BriefRecipient.query.filter_by(briefing_id=briefing_id).first()
@@ -334,3 +376,117 @@ class TestBriefingUnsubscribe:
         resp = client.post(f'/briefings/{briefing_id}/unsubscribe/unknown-token')
         assert resp.status_code == 200
         assert resp.data == b''
+
+
+# ---------------------------------------------------------------------------
+# Journey reminder unsubscribe (RFC 8058 + prefetch-safe GET)
+# ---------------------------------------------------------------------------
+
+class TestJourneyReminderUnsubscribe:
+    def _make_sub(self, db, email='journey@example.com'):
+        from app.models import JourneyReminderSubscription, Programme, User, generate_slug
+
+        u = User(username='jrs_owner', email='jrs_owner@example.com', password='pw')
+        db.session.add(u)
+        db.session.flush()
+        programme = Programme(
+            name='JRS Prog',
+            slug=generate_slug('jrs-prog'),
+            creator_id=u.id,
+            visibility='public',
+            status='active',
+        )
+        db.session.add(programme)
+        db.session.flush()
+        sub = JourneyReminderSubscription(
+            programme_id=programme.id,
+            email=email,
+            cadence='weekly',
+            timezone='UTC',
+        )
+        sub.generate_resume_token()
+        sub.ensure_unsubscribe_token()
+        db.session.add(sub)
+        db.session.commit()
+        return programme, sub
+
+    def test_get_shows_confirm_without_unsubscribing(self, app, db, client):
+        with app.app_context():
+            programme, sub = self._make_sub(db)
+            slug = programme.slug
+            token = sub.unsubscribe_token
+
+        resp = client.get(f'/programmes/{slug}/journey-reminder/unsubscribe?token={token}')
+        assert resp.status_code == 200
+        assert b'Stop journey reminders' in resp.data
+        with app.app_context():
+            from app.models import JourneyReminderSubscription
+            refreshed = JourneyReminderSubscription.query.filter_by(email='journey@example.com').first()
+            assert refreshed.unsubscribed_at is None
+
+    def test_one_click_post_unsubscribes_empty_200(self, app, db, client):
+        with app.app_context():
+            programme, sub = self._make_sub(db, email='jrs_oneclick@example.com')
+            slug = programme.slug
+            token = sub.unsubscribe_token
+
+        resp = client.post(
+            f'/programmes/{slug}/journey-reminder/unsubscribe?token={token}',
+            data={'List-Unsubscribe': 'One-Click'},
+        )
+        assert resp.status_code == 200
+        assert resp.data == b''
+        with app.app_context():
+            from app.models import JourneyReminderSubscription
+            refreshed = JourneyReminderSubscription.query.filter_by(
+                email='jrs_oneclick@example.com'
+            ).first()
+            assert refreshed.unsubscribed_at is not None
+
+    def test_legacy_resume_token_still_unsubscribes(self, app, db, client):
+        """Emails sent before jrs004 used resume_token in the unsubscribe URL."""
+        with app.app_context():
+            programme, sub = self._make_sub(db, email='jrs_legacy@example.com')
+            slug = programme.slug
+            legacy = sub.resume_token
+
+        resp = client.post(
+            f'/programmes/{slug}/journey-reminder/unsubscribe?token={legacy}',
+            data={'List-Unsubscribe': 'One-Click'},
+        )
+        assert resp.status_code == 200
+        with app.app_context():
+            from app.models import JourneyReminderSubscription
+            refreshed = JourneyReminderSubscription.query.filter_by(
+                email='jrs_legacy@example.com'
+            ).first()
+            assert refreshed.unsubscribed_at is not None
+
+    def test_confirm_form_post_unsubscribes(self, app, db, client):
+        with app.app_context():
+            programme, sub = self._make_sub(db, email='jrs_form@example.com')
+            slug = programme.slug
+            token = sub.unsubscribe_token
+
+        resp = client.post(
+            f'/programmes/{slug}/journey-reminder/unsubscribe?token={token}',
+            data={'confirm': '1', 'token': token},
+            follow_redirects=False,
+        )
+        assert resp.status_code == 302
+        with app.app_context():
+            from app.models import JourneyReminderSubscription
+            refreshed = JourneyReminderSubscription.query.filter_by(
+                email='jrs_form@example.com'
+            ).first()
+            assert refreshed.unsubscribed_at is not None
+
+    def test_unsubscribe_token_survives_resume_rotation(self, app, db):
+        with app.app_context():
+            from app.models import JourneyReminderSubscription
+            _, sub = self._make_sub(db, email='jrs_stable@example.com')
+            stable = sub.unsubscribe_token
+            sub.generate_resume_token()
+            db.session.commit()
+            assert sub.unsubscribe_token == stable
+            assert JourneyReminderSubscription.find_by_unsubscribe_token(stable) is sub

@@ -1,0 +1,26 @@
+{% extends "game/base.html" %}
+
+{% block game_title %}{{ _('Stop reminders?') }}{% endblock %}
+
+{% block game_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block game_content %}
+<section class="game-card text-center p-8 rounded-2xl border border-game-border bg-game-surface/60 mt-8">
+  <h1 id="unsubscribe-heading" class="text-xl font-semibold text-game-text mb-2">{{ _('Stop reminders?') }}</h1>
+  <p class="text-sm text-game-muted mb-6">
+    {% if email %}{{ _('Stop emailing %(email)s when new scenarios go live?', email=email) }}{% else %}{{ _('Stop email reminders for new scenarios?') }}{% endif %}
+  </p>
+
+  <form method="POST" action="{{ url_for('game.reminders_unsubscribe', token=token) }}" aria-labelledby="unsubscribe-heading" class="space-y-4">
+    <input type="hidden" name="confirm" value="1">
+    <input type="hidden" name="token" value="{{ token }}">
+    <button type="submit" class="game-btn-primary w-full">{{ _('Stop reminders') }}</button>
+  </form>
+
+  <a href="{{ url_for('game.index') }}" class="inline-block mt-4 text-sm text-game-muted hover:text-game-text underline">
+    {{ _('Never mind — keep reminding me') }}
+  </a>
+</section>
+{% endblock %}

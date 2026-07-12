@@ -84,14 +84,43 @@ def test_webhook_events_carry_was_created_flag(app, db):
         assert second.was_created is False
 
 
+def test_resend_webhook_fails_closed_without_secret(app, client, monkeypatch):
+    """Production must reject unverified webhooks when the secret is unset —
+    never fall through to process the payload."""
+    monkeypatch.delenv('RESEND_WEBHOOK_SECRET', raising=False)
+    was_testing, was_debug = app.testing, app.debug
+    app.testing = False
+    app.debug = False
+    try:
+        resp = client.post(
+            '/brief/webhooks/resend',
+            json={'type': 'email.delivered', 'data': {'to': ['a@b.c']}},
+            headers={'Content-Type': 'application/json'},
+        )
+        assert resp.status_code == 503
+        assert resp.get_json()['error'] == 'webhook secret not configured'
+    finally:
+        app.testing = was_testing
+        app.debug = was_debug
+
+
 def test_unsubscribe_routes_are_csrf_exempt(app):
     """RFC 8058 one-click unsubscribe POSTs come from mail clients with no
     CSRF token; Gmail bulk-sender compliance requires them to succeed."""
     from app import csrf
     from app.brief.routes import unsubscribe as brief_unsub
+    from app.briefing.routes import unsubscribe as briefing_unsub
     from app.daily.routes import unsubscribe as daily_unsub
+    from app.game.routes import reminders_unsubscribe
+    from app.programmes.routes import journey_reminder_unsubscribe
 
-    for view in (brief_unsub, daily_unsub):
+    for view in (
+        brief_unsub,
+        daily_unsub,
+        briefing_unsub,
+        reminders_unsubscribe,
+        journey_reminder_unsubscribe,
+    ):
         assert f'{view.__module__}.{view.__name__}' in csrf._exempt_views
 
 

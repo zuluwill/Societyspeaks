@@ -691,6 +691,7 @@ def journey_reminder_subscribe(slug):
             sub.set_next_send_at()
             db.session.add(sub)
 
+        sub.ensure_unsubscribe_token()
         db.session.flush()
 
         if not user_id:
@@ -765,35 +766,65 @@ def journey_reminder_subscribe(slug):
 
 
 @programmes_bp.route('/<slug>/journey-reminder/unsubscribe', methods=['GET', 'POST'])
+@csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def journey_reminder_unsubscribe(slug):
-    """One-click unsubscribe from journey reminders via token or login.
+    """Prefetch-safe confirm (GET) + RFC 8058 / form unsubscribe (POST).
 
-    Accepts POST so mail clients honouring RFC 8058 ``List-Unsubscribe-Post:
-    List-Unsubscribe=One-Click`` (required by Gmail for bulk senders from 2024)
-    can unsubscribe the recipient without a user-visible browser round-trip.
+    Email one-click uses ``?token=``; logged-in visitors on the programme page
+    can confirm without a token. GET never changes state.
     """
     programme = Programme.query.filter_by(slug=slug).first_or_404()
-    token = request.args.get('token', '').strip() or None
+    token = (
+        request.args.get('token', '').strip()
+        or (request.form.get('token') or '').strip()
+        or None
+    )
 
     sub = None
     if token:
-        # Use the no-expiry lookup — unsubscribe links must work indefinitely
-        # regardless of the 72-hour magic-link window (CAN-SPAM / GDPR compliance).
+        # No-expiry lookup — unsubscribe links must work indefinitely
+        # regardless of the 72-hour magic-link window (CAN-SPAM / GDPR).
         sub = JourneyReminderSubscription.find_by_unsubscribe_token(token)
     elif current_user.is_authenticated:
         sub = JourneyReminderSubscription.query.filter_by(
             programme_id=programme.id, user_id=current_user.id
         ).first()
 
-    if sub and sub.programme_id == programme.id:
+    if sub and sub.programme_id != programme.id:
+        sub = None
+
+    is_one_click = (
+        request.method == 'POST'
+        and request.form.get('List-Unsubscribe') == 'One-Click'
+    )
+    already_unsubscribed = bool(sub and sub.unsubscribed_at)
+
+    if not sub:
+        if request.method == 'POST' and (is_one_click or not request.form.get('confirm')):
+            return '', 200
+        flash(_('Could not find that subscription — it may have already been removed.'), 'info')
+        return redirect(url_for('programmes.view_programme', slug=slug))
+
+    if request.method == 'GET':
+        if already_unsubscribed:
+            flash(_("You're already unsubscribed from journey reminders."), 'info')
+            return redirect(url_for('programmes.view_programme', slug=slug))
+        return render_template(
+            'programmes/journey_unsubscribe_confirm.html',
+            programme=programme,
+            email=sub.email,
+            token=token,
+        )
+
+    if not already_unsubscribed:
         sub.unsubscribed_at = utcnow_naive()
         db.session.commit()
-        # Clear the session reference so anonymous users stop seeing the "set" pill
         session.pop('journey_resume_sub_id', None)
-        flash(_('You\'ve been unsubscribed from journey reminders.'), 'success')
-    else:
-        flash(_('Could not find that subscription — it may have already been removed.'), 'info')
 
+    if is_one_click or not request.form.get('confirm'):
+        return '', 200
+
+    flash(_("You've been unsubscribed from journey reminders."), 'success')
     return redirect(url_for('programmes.view_programme', slug=slug))
 
 

@@ -708,6 +708,7 @@ class ResendEmailClient:
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
         unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
 
         # Generate question-specific vote URLs using helper
         vote_urls = self._build_vote_urls(subscriber, question.id)
@@ -738,6 +739,7 @@ class ResendEmailClient:
                 question_url=question_url,
                 streak_message=streak_message,
                 unsubscribe_url=unsubscribe_url,
+                preferences_url=preferences_url,
                 vote_agree_url=vote_urls['agree'],
                 vote_disagree_url=vote_urls['disagree'],
                 vote_unsure_url=vote_urls['unsure'],
@@ -1007,6 +1009,7 @@ class ResendEmailClient:
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
         unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
 
         # Generate question-specific vote URLs using helper (DRY)
         vote_urls = self._build_vote_urls(subscriber, question.id)
@@ -1035,6 +1038,7 @@ class ResendEmailClient:
             question_url=question_url,
             streak_message=streak_message,
             unsubscribe_url=unsubscribe_url,
+            preferences_url=preferences_url,
             vote_agree_url=vote_urls['agree'],
             vote_disagree_url=vote_urls['disagree'],
             vote_unsure_url=vote_urls['unsure'],
@@ -2066,13 +2070,17 @@ def send_journey_reminder_email(
         _base = base_url or client.base_url
 
         resume_token = subscription.generate_resume_token(expires_hours=72)
+        unsub_token = subscription.ensure_unsubscribe_token()
         programme_url = f"{_base}/programmes/{programme.slug}"
         continue_url = (
             f"{programme_url}?jrt={resume_token}"
             if not subscription.user_id
             else f"{_base}/programmes/{programme.slug}"
         )
-        unsubscribe_url = f"{_base}/programmes/{programme.slug}/journey-reminder/unsubscribe?token={resume_token}"
+        unsubscribe_url = (
+            f"{_base}/programmes/{programme.slug}/journey-reminder/unsubscribe"
+            f"?token={unsub_token}"
+        )
 
         pct = int((completed_themes / total_themes * 100)) if total_themes else 0
         next_theme_name = (

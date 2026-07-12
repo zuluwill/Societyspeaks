@@ -2784,14 +2784,15 @@ def manage_recipients(briefing_id):
 
 @briefing_bp.route('/<int:briefing_id>/unsubscribe/<token>', methods=['GET', 'POST'])
 @limiter.limit("60/minute")
+@csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def unsubscribe(briefing_id, token):
     """
     Unsubscribe recipient from briefing.
 
-    Accepts both GET (human click) and POST (RFC 8058 one-click, triggered by
-    mail clients that honour the paired ``List-Unsubscribe`` +
-    ``List-Unsubscribe-Post: List-Unsubscribe=One-Click`` headers — required
-    by Gmail for bulk senders from 2024 onward).
+    - GET shows a confirmation page and never changes state (mail scanners
+      prefetch unsubscribe links).
+    - POST performs the unsubscribe — confirmation form or RFC 8058 one-click
+      (``List-Unsubscribe-Post: List-Unsubscribe=One-Click``).
 
     Note: We intentionally do NOT enforce token expiry for unsubscribe.
     CAN-SPAM and GDPR require that unsubscribe links work indefinitely.
@@ -2818,6 +2819,23 @@ def unsubscribe(briefing_id, token):
         return redirect(url_for('main.index'))
 
     already_unsubscribed = recipient.status == 'unsubscribed'
+    is_one_click = (
+        request.method == 'POST'
+        and request.form.get('List-Unsubscribe') == 'One-Click'
+    )
+
+    if request.method == 'GET':
+        if already_unsubscribed:
+            return render_template(
+                'briefing/unsubscribed.html', briefing=briefing, recipient=recipient
+            )
+        return render_template(
+            'briefing/unsubscribe_confirm.html',
+            briefing=briefing,
+            recipient=recipient,
+            token=token,
+        )
+
     if not already_unsubscribed:
         recipient.status = 'unsubscribed'
         recipient.unsubscribed_at = utcnow_naive()
@@ -2829,18 +2847,14 @@ def unsubscribe(briefing_id, token):
             'briefing_id': briefing_id,
             'briefing_name': briefing.name,
             'recipient_id': recipient.id,
-            'method': 'one_click' if request.method == 'POST' else 'link',
+            'method': 'one_click' if is_one_click else 'link',
         })
 
-    # RFC 8058 one-click POST — mail client expects 200 with no body
-    if request.method == 'POST':
+    # RFC 8058 / machine POST — empty 200. Human confirm form gets the page.
+    if is_one_click or not request.form.get('confirm'):
         return '', 200
 
-    if not already_unsubscribed:
-        flash(_('You have been unsubscribed from this briefing'), 'success')
-    else:
-        flash(_('You are already unsubscribed from this briefing'), 'info')
-
+    flash(_('You have been unsubscribed from this briefing'), 'success')
     return render_template('briefing/unsubscribed.html', briefing=briefing, recipient=recipient)
 
 

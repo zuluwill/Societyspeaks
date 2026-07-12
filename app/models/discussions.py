@@ -905,6 +905,8 @@ class JourneyReminderSubscription(db.Model):
     reminder_count = db.Column(db.Integer, default=0, nullable=False)
     resume_token = db.Column(db.String(255), nullable=True, unique=True)
     token_expires_at = db.Column(db.DateTime, nullable=True)
+    # Stable forever — unlike resume_token, never rotated (CAN-SPAM / GDPR).
+    unsubscribe_token = db.Column(db.String(64), nullable=True, unique=True)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     unsubscribed_at = db.Column(db.DateTime, nullable=True)
 
@@ -918,6 +920,13 @@ class JourneyReminderSubscription(db.Model):
         self.resume_token = secrets.token_urlsafe(32)
         self.token_expires_at = utcnow_naive() + timedelta(hours=expires_hours)
         return self.resume_token
+
+    def ensure_unsubscribe_token(self):
+        """Set-once stable token for indefinite unsubscribe links."""
+        if not self.unsubscribe_token:
+            import secrets
+            self.unsubscribe_token = secrets.token_urlsafe(32)
+        return self.unsubscribe_token
 
     @staticmethod
     def verify_resume_token(token):
@@ -940,13 +949,16 @@ class JourneyReminderSubscription(db.Model):
     @staticmethod
     def find_by_unsubscribe_token(token):
         """
-        Return the subscription matching this token regardless of expiry.
-        Used for email unsubscribe links — CAN-SPAM / GDPR require these to
-        work indefinitely, not just within the 72-hour resume window.
-        Returns None only if the token doesn't match any row.
+        Return the subscription for an unsubscribe link.
+
+        Prefers the stable ``unsubscribe_token``; falls back to ``resume_token``
+        for emails sent before jrs004 so old links keep working until they age out.
         """
         if not token:
             return None
+        sub = JourneyReminderSubscription.query.filter_by(unsubscribe_token=token).first()
+        if sub:
+            return sub
         return JourneyReminderSubscription.query.filter_by(resume_token=token).first()
 
     def set_next_send_at(self, from_dt=None):

@@ -610,7 +610,11 @@ def reminders_subscribe():
 @limiter.limit('20 per minute')
 @csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def reminders_unsubscribe():
-    """One-click unsubscribe (RFC 8058) and human GET — token never expires."""
+    """Prefetch-safe confirm (GET) + RFC 8058 / form unsubscribe (POST).
+
+    Token never expires (CAN-SPAM / GDPR). GET never changes state — corporate
+    mail scanners prefetch every link and must not silently opt people out.
+    """
     token = request.args.get('token') or request.form.get('token')
     sub = GameReminderSubscription.find_by_unsubscribe_token(token)
 
@@ -626,13 +630,20 @@ def reminders_unsubscribe():
         return redirect(url_for('game.index'))
 
     if not sub.is_active:
-        if request.method == 'POST':
+        if request.method == 'POST' and (is_one_click or not request.form.get('confirm')):
             return '', 200
         return render_template('game/reminders_unsubscribed.html', email=sub.email)
 
+    if request.method == 'GET':
+        return render_template(
+            'game/reminders_unsubscribe_confirm.html',
+            email=sub.email,
+            token=token,
+        )
+
     unsubscribe_reminder(sub, reason='one_click' if is_one_click else 'user')
 
-    if is_one_click:
+    if is_one_click or not request.form.get('confirm'):
         return '', 200
     return render_template('game/reminders_unsubscribed.html', email=sub.email)
 

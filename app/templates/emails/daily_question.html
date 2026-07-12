@@ -258,6 +258,10 @@
 {% block footer_links %}
 <tr>
     <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569;">
+        {% if preferences_url %}
+        <a href="{{ preferences_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">{{ _('Manage preferences') }}</a>
+        <span style="color: #cbd5e1; margin: 0 6px;">·</span>
+        {% endif %}
         <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">{{ _('Unsubscribe') }}</a>
     </td>
 </tr>

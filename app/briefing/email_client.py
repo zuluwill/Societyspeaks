@@ -300,7 +300,7 @@ class BriefingEmailClient:
         # Build URLs
         view_url = f"{base_url}/briefings/{briefing.id}/runs/{brief_run.id}"
         reader_url = f"{base_url}/briefings/public/{briefing.id}/runs/{brief_run.id}/reader"
-        unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
+        unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.unsubscribe_token or recipient.magic_token or ''}"
         
         # Get company logo if org briefing
         company_logo_url = None
