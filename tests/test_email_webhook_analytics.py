@@ -72,3 +72,16 @@ def test_webhook_click_on_first_party_tracked_link_is_skipped(app, db):
         )
         assert result is None
         assert EmailEvent.query.filter_by(event_type='clicked').count() == 0
+
+
+def test_resend_webhook_route_is_csrf_exempt(app):
+    """Resend/svix POSTs carry no CSRF token. Without the exemption every
+    webhook delivery 400s at the framework and delivered/opened/bounced/
+    complained data silently stops — the suite can't catch this via the test
+    client because conftest disables CSRF globally, so assert the exemption
+    registration directly."""
+    from app import csrf
+    from app.brief.routes import resend_webhook
+
+    dest = f'{resend_webhook.__module__}.{resend_webhook.__name__}'
+    assert dest in csrf._exempt_views

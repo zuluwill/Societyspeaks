@@ -1007,6 +1007,7 @@ def admin_test_send():
 
 
 @brief_bp.route('/brief/webhooks/resend', methods=['POST'])
+@csrf.exempt  # Machine-to-machine POST authenticated by svix signature, not session CSRF
 def resend_webhook():
     """
     Unified Resend webhook handler for ALL email types.
