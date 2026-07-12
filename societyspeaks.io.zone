@@ -15,6 +15,9 @@ www                     IN  CNAME  societyspeaks-web.onrender.com.
 ; --- Alias ---
 hello                   IN  CNAME  societyspeaks.io.
 
+; --- Resend tracking subdomain (open-tracking pixel; DNS-only, never proxy) ---
+link.brief              IN  CNAME  links1.resend-dns.com.
+
 ; --- SES DKIM (email subdomain) ---
 4ccmtb7vpv34gyy5ugyvoxrb32rjfi3r._domainkey.email  IN  CNAME  4ccmtb7vpv34gyy5ugyvoxrb32rjfi3r.dkim.amazonses.com.
 aqgj2xfq5zrctad52ouxvvysisb6u3g3._domainkey.email  IN  CNAME  aqgj2xfq5zrctad52ouxvvysisb6u3g3.dkim.amazonses.com.
