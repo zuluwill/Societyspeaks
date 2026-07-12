@@ -35,7 +35,7 @@ requests = ">=2.33.0"
 pygments = ">=2.20.0"
 cachelib = "^0.13.0"
 markdown = ">=3.7"
-pypdf = ">=4.0.0"
+pypdf = ">=6.13.3"
 certifi = ">=2024.7.4"
 deep-translator = "^1.11.4"
 
