@@ -67,7 +67,7 @@ Pillow>=10.4.0
 flask-cors>=6.0.2
 
 # Billing
-stripe>=12.0.0
+stripe>=12.0.0,<13  # v13+ removed dict-style access on StripeObject (.get crashes); migrate deliberately before unpinning
 
 # News ingestion
 feedparser>=6.0.12
