@@ -1,0 +1,30 @@
+# Weekly + on-demand vulnerability audit of the dependencies as actually
+# resolved (installs requirements.txt fresh, then pip-audits the environment —
+# the same resolution the production image build performs).
+name: Security audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC, before the Dependabot PRs land
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - requirements.txt
+      - Dockerfile
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies as production would
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Audit installed environment
+        run: |
+          pip install pip-audit
+          pip-audit --skip-editable

@@ -1,5 +1,5 @@
 # Runs the pytest suite on every PR and every push to main.
-# Python 3.11 matches the Replit runtime (.replit: python-3.11).
+# Python 3.11 matches the production runtime (Dockerfile: python:3.11-slim).
 # No external services — tests use SQLite in-memory + in-memory rate limiting (see tests/conftest.py).
 name: Tests
 
