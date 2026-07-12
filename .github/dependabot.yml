@@ -1,0 +1,35 @@
+# Automated dependency update PRs. Each PR runs the full test suite (CI),
+# so upgrades are reviewed+tested individually instead of arriving silently
+# on the next image rebuild (see OPS.md "Dependency pinning policy").
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-patch:
+        update-types: ["minor", "patch"]
+    # Majors arrive as individual PRs so breaking changes are reviewed alone.
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      npm-all:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: monthly

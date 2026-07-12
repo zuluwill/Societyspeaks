@@ -41,7 +41,9 @@ numpy>=1.24.0,<3
 APScheduler==3.10.4
 
 # Encryption for API keys (Phase 4)
-# Upper bound <47 required: atproto (0.0.65) requires cryptography<47. Upgrade atproto when a version supporting >=47 is released.
+# <47 forced by atproto (Bluesky posting, active in prod). KNOWN RISK:
+# GHSA-537c-gmf6-5ccf (vulnerable bundled OpenSSL) is fixed only in 48.0.1;
+# raise both pins the moment atproto allows cryptography>=47.
 cryptography>=46.0.4,<47
 pandas>=2.0.0,<4
 dnspython>=2.6.1,<3
@@ -97,6 +99,3 @@ certifi>=2024.7.4,<2027
 # Testing
 pytest>=9.0.3,<10
 pytest-cov>=4.1.0,<8
-
-# Pin protobuf to compatible version (required by googleapis packages)
-protobuf>=4.21.8,<5.0.0
