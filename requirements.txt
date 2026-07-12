@@ -21,7 +21,7 @@ sentry-sdk==2.17.0
 Flask-Caching==2.3.0
 Flask-Compress>=1.14,<2
 redis==5.2.0
-gunicorn>=22.0.0,<27
+gunicorn>=26.0.0,<27
 gevent>=23.9.1,<27
 psycogreen>=1.0.1,<2
 boto3>=1.35.0,<2
