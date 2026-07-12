@@ -251,6 +251,19 @@ findings (extra DB indexes, unique-rule-as-index) are listed but non-fatal.
 Run it after any incident touching the schema and before/after risky data
 imports.
 
+## Dependency pinning policy
+
+Every runtime dependency in `requirements.txt` carries an upper bound at the
+major version production currently runs (0.x packages bound at the next
+minor). Render rebuilds the image from scratch on every deploy, so an
+unbounded `>=` floor silently installs whatever PyPI serves that day — that
+is how stripe v15 replaced v12 during the Replit→Render migration and broke
+every Stripe webhook until 2026-07-12.
+
+Upgrading a dependency is a deliberate act: raise the bound in its own
+commit, run the full suite, deploy, watch Sentry. Never widen a bound as a
+side effect of other work.
+
 ## Secrets hygiene
 
 - Never commit `.env`, dumps, or access keys
