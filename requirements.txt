@@ -24,7 +24,7 @@ redis==5.2.0
 gunicorn>=22.0.0,<27
 gevent>=23.9.1,<27
 psycogreen>=1.0.1,<2
-boto3>=1.35.0,<2
+boto3>=1.43.46,<2
 
 # Email Service (Resend)
 resend>=2.0.0,<3
