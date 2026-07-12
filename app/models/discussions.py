@@ -358,7 +358,7 @@ class Discussion(db.Model):
     # Audit: which API key (by DB id) was used to create this discussion.
     # Nullable for RSS-ingested and legacy rows. Allows "who created this?" lookups without
     # exposing the raw key — join to PartnerApiKey for key_prefix / key_last4.
-    created_by_key_id = db.Column(db.Integer, db.ForeignKey('partner_api_key.id'), nullable=True)
+    created_by_key_id = db.Column(db.Integer, db.ForeignKey('partner_api_key.id', ondelete='SET NULL'), nullable=True)
 
     # Integrity controls (§8)
     # Enable stricter rate limits and monitoring for high-profile or sensitive discussions

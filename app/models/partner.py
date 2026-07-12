@@ -120,7 +120,7 @@ class PartnerApiKey(db.Model):
 class PartnerWebhookEndpoint(db.Model):
     __table_args__ = (
         db.Index('idx_partner_webhook_partner_status', 'partner_id', 'status'),
-        db.Index('idx_partner_webhook_event_types', 'event_types'),
+        # No index on event_types: it's a json column, which btree cannot index.
     )
 
     id = db.Column(db.Integer, primary_key=True)

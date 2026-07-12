@@ -180,6 +180,29 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 3. Both dry-run by default; `--commit` applies. Only rows with
    `status='imported'` can ever be activated.
 
+## Schema drift check
+
+The July 2026 incident: a doubled data import left eight tables (brief_run,
+brief_recipient, brief_item, analytics_event, analytics_daily_aggregate,
+admin_audit_event, audio_generation_job, alembic_version) with every row
+physically duplicated and **no primary keys** — which also silently blocked
+their foreign keys and unique constraints from ever being created. Symptoms:
+ORM `StaleDataError`, `INSERT … ON CONFLICT` failing outright, doubled
+analytics counts. Repaired in migrations `bes001`/`pk001`/`pk002`.
+
+To catch model-vs-database drift early:
+
+```bash
+export DATABASE_URL='postgres://…'
+python3 scripts/check_schema_drift.py
+```
+
+Exit 1 = HIGH-severity drift (missing PK/unique/FK/column/table in the DB) —
+fix via a guarded migration, mirroring the pk001/pk002 pattern. Cosmetic
+findings (extra DB indexes, unique-rule-as-index) are listed but non-fatal.
+Run it after any incident touching the schema and before/after risky data
+imports.
+
 ## Secrets hygiene
 
 - Never commit `.env`, dumps, or access keys
