@@ -228,6 +228,7 @@ class EmailAnalytics:
                         f"Duplicate webhook event ignored: {normalized_type} "
                         f"for {recipient_email} ({resend_email_id})"
                     )
+                    duplicate.was_created = False
                     return duplicate
             
             # Determine email category and find related records
@@ -274,6 +275,9 @@ class EmailAnalytics:
             
             db.session.commit()
             logger.info(f"Recorded webhook event: {normalized_type} for {recipient_email}")
+            # was_created lets callers distinguish a fresh event from a
+            # returned duplicate (svix retries) when updating counters.
+            event.was_created = True
             return event
             
         except Exception as e:

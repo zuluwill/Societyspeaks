@@ -110,12 +110,27 @@ class TestEnsureUnsubscribeTokenIdempotency:
 # ---------------------------------------------------------------------------
 
 class TestBriefUnsubscribe:
-    def test_get_with_stable_token_unsubscribes(self, app, db, client):
+    def test_get_shows_confirm_page_without_unsubscribing(self, app, db, client):
+        """GET must never change state: unsubscribe links are prefetched by
+        corporate mail scanners, which would silently unsubscribe recipients."""
         with app.app_context():
             sub = _make_brief_subscriber(db)
             token = sub.unsubscribe_token
 
         resp = client.get(f'/brief/unsubscribe/{token}')
+        assert resp.status_code == 200
+        assert b'Confirm Unsubscribe' in resp.data
+
+        with app.app_context():
+            refreshed = DailyBriefSubscriber.query.filter_by(email='brief@example.com').first()
+            assert refreshed.status == 'active'
+
+    def test_confirm_form_post_unsubscribes(self, app, db, client):
+        with app.app_context():
+            sub = _make_brief_subscriber(db)
+            token = sub.unsubscribe_token
+
+        resp = client.post(f'/brief/unsubscribe/{token}', data={'confirm': '1'})
         assert resp.status_code == 200
 
         with app.app_context():
@@ -132,7 +147,7 @@ class TestBriefUnsubscribe:
             db.session.commit()
             magic = sub.magic_token
 
-        resp = client.get(f'/brief/unsubscribe/{magic}')
+        resp = client.post(f'/brief/unsubscribe/{magic}', data={'confirm': '1'})
         assert resp.status_code == 200
         with app.app_context():
             refreshed = DailyBriefSubscriber.query.filter_by(email='legacy_brief@example.com').first()
@@ -148,7 +163,7 @@ class TestBriefUnsubscribe:
             db.session.commit()
             assert sub.unsubscribe_token == token
 
-        resp = client.get(f'/brief/unsubscribe/{token}')
+        resp = client.post(f'/brief/unsubscribe/{token}', data={'confirm': '1'})
         assert resp.status_code == 200
         with app.app_context():
             refreshed = DailyBriefSubscriber.query.filter_by(email='rotate_brief@example.com').first()

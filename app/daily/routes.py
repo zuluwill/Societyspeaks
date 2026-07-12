@@ -9,7 +9,7 @@ from app.daily.constants import (
     VALID_VISIBILITY_OPTIONS, DEFAULT_EMAIL_VOTE_VISIBILITY,
     VALID_REASON_TAGS, VALID_CONFIDENCE_LEVELS
 )
-from app import db, limiter
+from app import db, limiter, csrf
 from app.lib.posthog_utils import email_subscriber_distinct_id, resolve_request_distinct_id, safe_posthog_capture
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant, Statement, StatementVote
 from app.trending.conversion_tracking import track_social_click
@@ -845,6 +845,7 @@ def subscribe_success():
 
 
 @daily_bp.route('/daily/unsubscribe/<token>', methods=['GET', 'POST'])
+@csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def unsubscribe(token):
     """
     Unsubscribe from daily question emails with optional reason tracking.

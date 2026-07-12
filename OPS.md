@@ -180,6 +180,45 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 3. Both dry-run by default; `--commit` applies. Only rows with
    `status='imported'` can ever be activated.
 
+## Resend webhook verification
+
+The webhook endpoint is `https://societyspeaks.io/brief/webhooks/resend`
+(CSRF-exempt; svix-signature authenticated; fails closed if
+`RESEND_WEBHOOK_SECRET` is unset). It is the ONLY source of
+delivered/opened/bounced/complained events — if it is down, deliverability
+monitoring is blind and the activation ramp must stay frozen.
+
+Verification checklist (run after any Resend or webhook change):
+
+1. Resend dashboard → confirm the webhook lives in the **same team** as the
+   API key that sends (the team's Emails tab must show real sends).
+2. All 8 event types enabled; signing secret (including `whsec_` prefix)
+   matches `RESEND_WEBHOOK_SECRET` in the Render secrets env group.
+3. Send a test event from the dashboard → Render web logs show
+   `Resend webhook received: …` (a 401 `Invalid webhook signature` means
+   secret mismatch; silence means Resend isn't routing to this endpoint).
+4. After the next real send: `SELECT event_type, count(*) FROM email_event
+   WHERE created_at > now() - interval '1 hour' GROUP BY 1;` must include
+   `delivered` rows within minutes.
+
+Open tracking is a per-domain Resend setting (tracking subdomain
+`link.brief.societyspeaks.io`, DNS-only CNAME). Click tracking stays OFF —
+clicks are tracked first-party and webhook copies are dropped.
+
+## Subscriber import runbook
+
+Any bulk data import, in order:
+
+1. Import with `scripts/import_subscriber_segments.py` (dry-run first) —
+   never a hand-rolled INSERT; the script preserves status/preferences.
+2. Duplicate check: totals vs `count(DISTINCT …)` on the affected tables.
+3. `python3 scripts/check_schema_drift.py` before and after.
+4. Only then consider activation (see "Subscriber segment sync & staged
+   activation" above).
+
+The July 2026 corruption came from a doubled import into tables that had no
+primary keys to reject it — steps 2–3 exist so that can never be silent again.
+
 ## Schema drift check
 
 The July 2026 incident: a doubled data import left eight tables (brief_run,

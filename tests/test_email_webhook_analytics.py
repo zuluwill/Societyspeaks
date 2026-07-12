@@ -74,6 +74,27 @@ def test_webhook_click_on_first_party_tracked_link_is_skipped(app, db):
         assert EmailEvent.query.filter_by(event_type='clicked').count() == 0
 
 
+def test_webhook_events_carry_was_created_flag(app, db):
+    """Counter updates key off was_created: fresh events True, svix-retry
+    duplicates False — otherwise retries inflate per-subscriber open counts."""
+    with app.app_context():
+        first = EmailAnalytics.record_from_webhook(_payload('email.opened'))
+        assert first.was_created is True  # read immediately, as the webhook route does
+        second = EmailAnalytics.record_from_webhook(_payload('email.opened'))
+        assert second.was_created is False
+
+
+def test_unsubscribe_routes_are_csrf_exempt(app):
+    """RFC 8058 one-click unsubscribe POSTs come from mail clients with no
+    CSRF token; Gmail bulk-sender compliance requires them to succeed."""
+    from app import csrf
+    from app.brief.routes import unsubscribe as brief_unsub
+    from app.daily.routes import unsubscribe as daily_unsub
+
+    for view in (brief_unsub, daily_unsub):
+        assert f'{view.__module__}.{view.__name__}' in csrf._exempt_views
+
+
 def test_resend_webhook_route_is_csrf_exempt(app):
     """Resend/svix POSTs carry no CSRF token. Without the exemption every
     webhook delivery 400s at the framework and delivered/opened/bounced/

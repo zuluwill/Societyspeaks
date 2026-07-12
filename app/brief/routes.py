@@ -499,13 +499,15 @@ def subscribe_inline():
 
 
 @brief_bp.route('/brief/unsubscribe/<token>', methods=['GET', 'POST'])
+@csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def unsubscribe(token):
     """Unsubscribe from daily brief emails.
 
-    Accepts both GET (human click from email) and POST (RFC 8058 one-click
-    unsubscribe triggered by Gmail/Yahoo mail clients that honour the paired
-    List-Unsubscribe + List-Unsubscribe-Post: List-Unsubscribe=One-Click
-    headers — required by Gmail for bulk senders).
+    - GET shows a confirmation page and never changes state: unsubscribe links
+      get prefetched/scanned by corporate mail security, and a state-changing
+      GET would let a scanner silently unsubscribe the recipient.
+    - POST performs the unsubscribe — either the confirmation form or an
+      RFC 8058 one-click request from Gmail/Yahoo (required for bulk senders).
     """
     # Try stable unsubscribe_token first; fall back to magic_token for links
     # sent before the unsubscribe_token column was added.
@@ -522,8 +524,23 @@ def unsubscribe(token):
     # Track whether they were on daily (to offer weekly as alternative)
     was_daily = (not subscriber.cadence or subscriber.cadence == 'daily')
 
-    # Update database — idempotent: safe to call even if already unsubscribed
     already_unsubscribed = subscriber.status == 'unsubscribed'
+
+    if request.method == 'GET':
+        if already_unsubscribed:
+            return render_template(
+                'brief/unsubscribed.html',
+                email=subscriber.email,
+                show_weekly_option=was_daily,
+                token=token
+            )
+        return render_template(
+            'brief/unsubscribe_confirm.html',
+            email=subscriber.email,
+            token=token
+        )
+
+    # POST — RFC 8058 one-click or the confirmation form. Idempotent.
     if not already_unsubscribed:
         subscriber.status = 'unsubscribed'
         subscriber.unsubscribed_at = utcnow_naive()
@@ -545,7 +562,7 @@ def unsubscribe(token):
                     properties={
                         'email': subscriber.email,
                         'was_cadence': 'daily' if was_daily else 'weekly',
-                        'method': 'one_click' if request.method == 'POST' else 'link',
+                        'method': 'one_click' if request.form.get('List-Unsubscribe') == 'One-Click' else 'link',
                     }
                 )
                 logger.info(
@@ -557,8 +574,9 @@ def unsubscribe(token):
 
         logger.info(f"Brief unsubscribe ({request.method}): {subscriber.email}")
 
-    # RFC 8058 one-click POST — mail client expects 200 with no body
-    if request.method == 'POST':
+    # RFC 8058 one-click POST — mail client expects 200 with no body.
+    # A human form submission carries the 'confirm' field and gets the page.
+    if request.form.get('List-Unsubscribe') == 'One-Click' or not request.form.get('confirm'):
         return '', 200
 
     flash(_('You have been unsubscribed from the daily brief.'), 'success')
@@ -1036,8 +1054,13 @@ def resend_webhook():
         # Verify webhook signature (Resend uses svix for webhooks)
         webhook_secret = os.environ.get('RESEND_WEBHOOK_SECRET')
 
-        # Check for both None and empty string
-        if webhook_secret and webhook_secret.strip():
+        # Fail closed: without a secret we cannot authenticate the sender, so
+        # reject rather than accept unverified events (except in local dev).
+        if not (webhook_secret and webhook_secret.strip()):
+            if not (current_app.debug or current_app.testing):
+                logger.error("RESEND_WEBHOOK_SECRET is not set; rejecting webhook")
+                return jsonify({'error': 'webhook secret not configured'}), 503
+        else:
             # Get signature headers from Resend/Svix
             svix_timestamp = request.headers.get('svix-timestamp')
             svix_signature = request.headers.get('svix-signature')
@@ -1106,13 +1129,15 @@ def resend_webhook():
             except Exception as cache_error:
                 logger.warning(f"Webhook dedupe cache write failed: {cache_error}")
         
-        # Update subscriber metrics in a separate transaction for isolation
+        # Update subscriber metrics in a separate transaction for isolation.
+        # Only when a NEW event was recorded — svix retries and skipped
+        # events must not inflate per-subscriber open/click counters.
         try:
             data = payload.get('data', {})
             to_list = data.get('to', [])
             to_email = to_list[0] if to_list else None
-            
-            if to_email:
+
+            if to_email and event is not None and getattr(event, 'was_created', False):
                 subscriber = DailyBriefSubscriber.query.filter_by(email=to_email).first()
                 if subscriber:
                     normalized_type = event_type.replace('email.', '')

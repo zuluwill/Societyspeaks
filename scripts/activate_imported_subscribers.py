@@ -32,6 +32,9 @@ def main():
         sys.exit('DATABASE_URL is not set')
     if args.batch <= 0:
         sys.exit('--batch must be positive')
+    if args.batch > 1000:
+        sys.exit('--batch is capped at 1000: the ramp rules (OPS.md) require '
+                 'checking bounce/complaint rates between batches of 250-500')
     if args.source and not re.fullmatch(r'[a-z0-9_]+', args.source):
         sys.exit('--source must be a lowercase slug (a-z, 0-9, _)')
 
