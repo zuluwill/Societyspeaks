@@ -9,6 +9,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # Only open a PR when the existing specifier no longer admits the new
+    # version. Without this, ranged pins (gunicorn>=22,<27) generate noisy
+    # "raise the floor" PRs that change nothing about what pip installs.
+    versioning-strategy: increase-if-necessary
     groups:
       python-minor-patch:
         update-types: ["minor", "patch"]
@@ -23,6 +27,10 @@ updates:
     groups:
       npm-all:
         update-types: ["minor", "patch"]
+    ignore:
+      # Tailwind 4 is a deliberate CSS rewrite, not a Dependabot drive-by.
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
@@ -33,3 +41,8 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
+    ignore:
+      # Stay on the Python minor we build and test against (3.11). Major
+      # bumps (3.12+) are a deliberate platform change, not weekly drive-bys.
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]

@@ -109,51 +109,10 @@ Production deploy checklist: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md). Ops (backup
 
 ## Requirements
 
-```txt
-# Core Flask (see requirements.txt for full pinned list)
-Flask>=3.0.0
-Flask-SQLAlchemy==3.0.5
-Flask-Migrate==4.0.0
-Flask-Login==0.6.3
-Flask-WTF==1.2.2
-WTForms==3.2.1
-Flask-Session==0.8.0
-Flask-Caching==2.3.0
-Flask-Talisman==1.1.0
-Flask-SeaSurf==2.0.0
-Flask-Limiter==3.8.0
-Flask-Mail==0.10.0
-
-# Database
-psycopg2-binary==2.9.10
-
-# Machine Learning & Data
-scikit-learn>=1.3.0
-numpy>=1.24.0
-pandas>=2.0.0
-
-# Background Tasks
-APScheduler==3.10.4
-
-# Encryption
-cryptography>=41.0.0
-
-# Social & News
-atproto
-feedparser
-
-# Utilities
-python-slugify==8.0.1
-email_validator==2.2.0
-python-dotenv
-
-# Monitoring
-sentry-sdk==2.17.0
-
-# Infrastructure
-redis==5.2.0
-gunicorn==21.2.0
-```
+Python runtime dependencies are pinned in [`requirements.txt`](./requirements.txt)
+(upper-bounded at the majors production runs — see OPS.md “Dependency pinning
+policy”). Frontend build deps live in `package.json`. Do not maintain a second
+Poetry/lockfile ledger alongside those files.
 
 ## Environment Variables
 

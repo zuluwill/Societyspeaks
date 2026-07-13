@@ -281,6 +281,14 @@ Upgrading a dependency is a deliberate act: raise the bound in its own
 commit, run the full suite, deploy, watch Sentry. Never widen a bound as a
 side effect of other work.
 
+Dependabot (`.github/dependabot.yml`) opens grouped minor/patch PRs weekly
+for pip + npm, and monthly for Actions/Docker. Pip uses
+`versioning-strategy: increase-if-necessary` so ranged pins do not spawn
+noise PRs that only raise the floor. Exact `==` pins are bumped in the
+`python-minor-patch` group. Docker Python majors and Tailwind CSS majors
+are ignored — those are deliberate platform/CSS migrations, not drive-bys.
+Source of truth for Python deps is `requirements.txt` only (no Poetry lock).
+
 ## Billing webhook Sentry alert
 
 Stripe webhooks hit `POST /billing/webhook`. A silent 5xx here means missed
