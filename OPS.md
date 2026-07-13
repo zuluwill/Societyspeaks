@@ -289,6 +289,12 @@ noise PRs that only raise the floor. Exact `==` pins are bumped in the
 are ignored — those are deliberate platform/CSS migrations, not drive-bys.
 Source of truth for Python deps is `requirements.txt` only (no Poetry lock).
 
+Exception: when a GHSA shows the current floor still admits a vulnerable
+release, raise that floor (or add an explicit transitive pin) in its own
+commit so fresh installs cannot resolve the bad version. That is not
+Dependabot noise — it is the security control the upper-bound policy
+expects alongside `pip-audit` in `.github/workflows/security.yml`.
+
 ## Billing webhook Sentry alert
 
 Stripe webhooks hit `POST /billing/webhook`. A silent 5xx here means missed
