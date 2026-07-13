@@ -8,7 +8,7 @@
 from app.lib.network_patches import apply_ipv4_preference as _apply_ipv4_preference
 _apply_ipv4_preference()
 
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify, make_response, g
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify, make_response, g, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
@@ -1054,6 +1054,14 @@ def create_app():
     def page_not_found(e):
         # Log at debug level to avoid log pollution from bots/crawlers
         app.logger.debug(f"404 Page Not Found: {e}")
+        # Missing static/object-storage assets should not render the full HTML
+        # chrome (and its CSRF token). Plain 404 keeps responses tiny and
+        # avoids any session write on CDN-cacheable paths.
+        from app.lib.cdn_cache import should_set_static_cache_control
+        if should_set_static_cache_control(request.path):
+            resp = Response("Not Found", status=404, mimetype="text/plain")
+            resp.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+            return resp
         return render_template('errors/404.html', error_code=404, error_message=_("The page you're looking for doesn't exist.")), 404
 
     # Error handler for 500 Internal Server Error

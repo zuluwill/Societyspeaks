@@ -123,21 +123,35 @@ def apply_cdn_cacheable_response_headers(path: str, response):
 
 
 def wrap_session_interface_for_cdn(app) -> None:
-    """Skip sessions on CDN-cacheable paths for whatever session backend is active.
+    """Skip persisting sessions on CDN-cacheable paths.
 
-    Flask calls ``save_session`` *after* ``after_request`` handlers. Returning a
-    null session here means Flask skips ``save_session`` entirely (no
-    ``Vary: Cookie`` / ``Set-Cookie``), which is required for edge HITs.
+    Flask calls ``save_session`` *after* ``after_request`` handlers. Skipping
+    save means no ``Vary: Cookie`` / ``Set-Cookie`` from the session layer,
+    which is required for edge HITs.
+
+    Important: do **not** return Flask's ``NullSession`` here. Missing assets
+    ``abort(404)`` into HTML error pages that call ``csrf_token()``, and
+    ``generate_csrf`` writes ``session['csrf_token']``. NullSession raises
+    RuntimeError("...no secret key was set") on any write — a misleading
+    message that is really "session is read-only/null", and it turns asset
+    404s into 500s in Sentry.
     """
     from flask import has_request_context, request
 
     iface = app.session_interface
     orig_open = iface.open_session
     orig_save = iface.save_session
+    session_class = getattr(iface, 'session_class', None)
 
     def open_session(app_, req):
-        if is_cdn_cacheable_path(req.path):
-            return iface.make_null_session(app_)
+        if is_cdn_cacheable_path(req.path) and session_class is not None:
+            # Transient empty writable session for this request only.
+            # Never loaded from / saved to Redis (save_session is a no-op).
+            try:
+                return session_class(sid=None, permanent=False)
+            except TypeError:
+                # SecureCookieSession (cachelib fallback) takes no sid=.
+                return session_class()
         return orig_open(app_, req)
 
     def save_session(app_, session, response):

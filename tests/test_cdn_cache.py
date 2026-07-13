@@ -143,6 +143,34 @@ def test_policy_interface_skips_storage_on_static(app):
         assert iface.should_set_storage(app, session) is False
 
 
+def test_missing_static_image_returns_404_not_500(client):
+    """Regression: NullSession + csrf_token() on HTML 404 turned misses into 500s.
+
+    Sentry: RuntimeError 'session is unavailable because no secret key was set'
+    on main:serve_static_image — misleading; real cause was writing CSRF into
+    a NullSession after abort(404) on a CDN-cacheable path.
+    """
+    with patch(
+        'app.routes.download_bytes_from_object_storage',
+        side_effect=FileNotFoundError('NoSuchKey'),
+    ):
+        response = client.get('/images/definitely-missing-asset.jpg')
+    assert response.status_code == 404
+    assert 'Set-Cookie' not in response.headers
+    assert b'secret key' not in response.data.lower()
+
+
+def test_cdn_path_session_is_writable_for_csrf(app):
+    """CDN open_session must allow CSRF writes (error pages / edge cases)."""
+    from flask import session
+    from flask_wtf.csrf import generate_csrf
+
+    with app.test_request_context('/css/output.css'):
+        token = generate_csrf()
+        assert token
+        assert 'csrf_token' in session
+
+
 def test_homepage_preloads_hero(client, db):
     response = client.get('/')
     assert response.status_code == 200
