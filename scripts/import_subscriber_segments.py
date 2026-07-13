@@ -81,6 +81,50 @@ CITY_ONLY_COUNTRY = {
 }
 CITY_ONLY_CITY = {'sfo': 'San Francisco', 'washington dc': 'Washington, DC'}
 
+# IANA timezone by US chapter code; everything else falls to the country map.
+US_CHAPTER_TZ = {
+    'SFO': 'America/Los_Angeles', 'LAX': 'America/Los_Angeles',
+    'SEA': 'America/Los_Angeles', 'PDX': 'America/Los_Angeles',
+    'SAN': 'America/Los_Angeles', 'SLO': 'America/Los_Angeles',
+    'DEN': 'America/Denver', 'SLC': 'America/Denver', 'PHX': 'America/Phoenix',
+    'CHI': 'America/Chicago', 'ATX': 'America/Chicago', 'DFW': 'America/Chicago',
+    'HOU': 'America/Chicago', 'MSP': 'America/Chicago', 'KC': 'America/Chicago',
+    'NOLA': 'America/Chicago', 'OMA': 'America/Chicago', 'SATX': 'America/Chicago',
+    'NASH': 'America/Chicago', 'BHM': 'America/Chicago',
+}
+
+COUNTRY_TZ = {
+    'United States': 'America/New_York', 'Canada': 'America/Toronto',
+    'United Kingdom': 'Europe/London', 'Ireland': 'Europe/Dublin',
+    'Netherlands': 'Europe/Amsterdam', 'Germany': 'Europe/Berlin',
+    'Singapore': 'Asia/Singapore', 'Australia': 'Australia/Sydney',
+    'New Zealand': 'Pacific/Auckland', 'Spain': 'Europe/Madrid',
+    'France': 'Europe/Paris', 'Italy': 'Europe/Rome', 'Belgium': 'Europe/Brussels',
+    'Portugal': 'Europe/Lisbon', 'Austria': 'Europe/Vienna', 'Poland': 'Europe/Warsaw',
+    'Finland': 'Europe/Helsinki', 'Denmark': 'Europe/Copenhagen',
+    'Norway': 'Europe/Oslo', 'Sweden': 'Europe/Stockholm',
+    'Switzerland': 'Europe/Zurich', 'Brazil': 'America/Sao_Paulo',
+    'India': 'Asia/Kolkata', 'Israel': 'Asia/Jerusalem', 'Hong Kong': 'Asia/Hong_Kong',
+    'Japan': 'Asia/Tokyo', 'United Arab Emirates': 'Asia/Dubai',
+    'South Africa': 'Africa/Johannesburg', 'Mexico': 'America/Mexico_City',
+}
+
+
+def resolve_timezone(chapter, country):
+    """Best-effort IANA timezone so the brief arrives at 18:00 local, not UTC.
+
+    Only used for NEW rows — existing subscribers own their timezone setting.
+    Unknown geography stays 'UTC' (conservative; the send matcher handles any
+    valid zone).
+    """
+    if country == 'United States' and chapter and ' - ' in chapter:
+        code = chapter.rsplit('-', 1)[1].strip()
+        if code in US_CHAPTER_TZ:
+            return US_CHAPTER_TZ[code]
+    if country == 'Canada' and chapter and chapter.rstrip().endswith('- VAN'):
+        return 'America/Vancouver'
+    return COUNTRY_TZ.get(country, 'UTC')
+
 
 def normalize_country(raw):
     key = raw.strip().lower().rstrip('.')
@@ -206,7 +250,8 @@ def main():
         for r in rows:
             writer.writerow([r['email'], r['chapter'], r['function'], r['job_title'],
                              r['company'], r['country'], r['city'],
-                             secrets.token_urlsafe(32)])
+                             secrets.token_urlsafe(32),
+                             resolve_timezone(r['chapter'], r['country'])])
         staged_path = staged.name
 
     final = 'COMMIT' if args.commit else 'ROLLBACK'
@@ -216,7 +261,7 @@ BEGIN;
 CREATE TEMP TABLE staging_import (
     email text PRIMARY KEY,
     chapter text, func text, job_title text, company text,
-    country text, city text, unsubscribe_token text
+    country text, city text, unsubscribe_token text, timezone text
 );
 \\copy staging_import FROM '{staged_path}' WITH (FORMAT csv)
 
@@ -244,7 +289,7 @@ WITH ins AS (
          preferred_weekly_day, created_at, total_briefs_received, total_opens,
          total_clicks, unsubscribe_token, source, chapter, "function",
          job_title, company, country, city, imported_at)
-    SELECT t.email, 'free', 'imported', 'UTC', 18, 'daily',
+    SELECT t.email, 'free', 'imported', coalesce(nullif(t.timezone, ''), 'UTC'), 18, 'daily',
            6, now(), 0, 0,
            0, t.unsubscribe_token, '{args.source}', nullif(t.chapter, ''),
            nullif(t.func, ''), nullif(t.job_title, ''), nullif(t.company, ''),

@@ -1970,15 +1970,14 @@ def bulk_import_subscribers():
             skipped_invalid += 1
             continue
         
-        # Check if already exists (by email)
+        # Check if already exists (by email). Never reactivate an inactive
+        # row: inactive means the person unsubscribed or their address
+        # bounced, and a bulk import silently overriding that is a
+        # PECR/CAN-SPAM violation waiting to happen. Re-subscribing must be
+        # the subscriber's own act (signup form / magic link).
         existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
         if existing:
-            if not existing.is_active:
-                existing.is_active = True
-                db.session.commit()
-                added += 1
-            else:
-                skipped_duplicate += 1
+            skipped_duplicate += 1
             continue
         
         # Check if there's a user with this email

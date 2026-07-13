@@ -87,8 +87,36 @@ def reinitialize_posthog_after_fork() -> None:
         _log.warning("PostHog post-fork reinitialize failed: %s", exc)
 
 
+def _drain_client_queue(client: Any, timeout: float = 3.0) -> None:
+    """Wait for the client's consumer threads to empty the capture queue.
+
+    ``flush()`` relies on ``Queue.all_tasks_done``, which gevent's patched
+    Queue lacks — so under gunicorn+gevent it raises AttributeError and the
+    tail batch of events was lost on every worker exit. Polling ``qsize()``
+    needs nothing gevent lacks: the consumer keeps uploading batches while we
+    (cooperatively) sleep, achieving a real drain instead of a tolerated loss.
+    """
+    import time
+
+    queue = getattr(client, "queue", None)
+    if queue is None:
+        return
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            if queue.qsize() == 0:
+                return
+        except Exception:
+            return
+        time.sleep(0.05)
+    _log.warning(
+        "PostHog queue not fully drained at shutdown (%s events left)",
+        queue.qsize(),
+    )
+
+
 def shutdown_server_posthog() -> None:
-    """Flush and shut down the PostHog client for this OS process.
+    """Drain and shut down the PostHog client for this OS process.
 
     Safe to call multiple times (e.g. gunicorn ``worker_exit`` + interpreter
     ``atexit``). No-ops when the SDK was not configured.
@@ -104,9 +132,12 @@ def shutdown_server_posthog() -> None:
             getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)
         ):
             return
-        # Under gunicorn+gevent, PostHog's consumer flush can raise
-        # AttributeError on gevent.Queue (no all_tasks_done). Capture still
-        # works; drain is best-effort on worker exit.
+        client = getattr(ph, "default_client", None)
+        if client is not None:
+            _drain_client_queue(client)
+        # flush()/shutdown() still raise AttributeError on gevent's Queue
+        # (no all_tasks_done); after the drain above they have nothing left
+        # to save, so swallowing the error no longer loses events.
         try:
             ph.flush()
         except AttributeError:
