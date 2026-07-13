@@ -32,7 +32,10 @@ WORKDIR /app
 # requirements.txt changes, so expensive pip compilation only re-runs when
 # a dependency actually changes.
 COPY requirements.txt .
-RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+# Force cryptography>=48.0.1 after resolve: atproto still caps <47 but
+# GHSA-537c-gmf6-5ccf is fixed only in 48.0.1 (see requirements.txt comment).
+RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt \
+    && pip install --no-cache-dir --force-reinstall --no-deps 'cryptography>=48.0.1,<50'
 
 # Node dependencies — cached until package.json / package-lock.json change
 COPY package.json package-lock.json* ./

@@ -41,9 +41,11 @@ numpy>=1.24.0,<3
 APScheduler==3.11.3
 
 # Encryption for API keys (Phase 4)
-# <47 forced by atproto (Bluesky posting, active in prod). KNOWN RISK:
-# GHSA-537c-gmf6-5ccf (vulnerable bundled OpenSSL) is fixed only in 48.0.1;
-# raise both pins the moment atproto allows cryptography>=47.
+# <47 forced by atproto metadata (MarshalX/atproto#688; Bluesky posting is
+# active in prod). GHSA-537c-gmf6-5ccf (bundled OpenSSL) is fixed only in
+# >=48.0.1 — keep this pin so `pip install -r` resolves, then force-reinstall
+# the patched wheel in Dockerfile / scripts/install_python_deps.sh / CI.
+# Drop the force-reinstall the moment atproto allows cryptography>=48.
 cryptography>=46.0.4,<47
 pandas>=2.0.0,<4
 dnspython>=2.6.1,<3

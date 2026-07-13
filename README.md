@@ -156,7 +156,7 @@ cd societyspeaks
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+bash scripts/install_python_deps.sh
 ```
 
 3. Install Node dependencies:

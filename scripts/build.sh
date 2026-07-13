@@ -2,7 +2,7 @@
 set -e
 
 echo "Installing Python dependencies..."
-pip install --quiet --disable-pip-version-check -r requirements.txt
+bash "$(dirname "$0")/install_python_deps.sh"
 
 echo "Running database migrations..."
 # Never delete alembic_version rows here: a1b2c3d4e5f6 is a legitimate revision

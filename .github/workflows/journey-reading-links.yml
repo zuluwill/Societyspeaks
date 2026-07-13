@@ -41,7 +41,7 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: bash scripts/install_python_deps.sh
 
       - name: Probe journey reading URLs
         env:

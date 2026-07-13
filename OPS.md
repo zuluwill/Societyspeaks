@@ -326,6 +326,15 @@ commit so fresh installs cannot resolve the bad version. That is not
 Dependabot noise — it is the security control the upper-bound policy
 expects alongside `pip-audit` in `.github/workflows/security.yml`.
 
+Special case — `cryptography` / `atproto`: atproto still declares
+`cryptography<47` (upstream [MarshalX/atproto#688](https://github.com/MarshalX/atproto/issues/688)),
+while GHSA-537c-gmf6-5ccf is fixed only in `cryptography>=48.0.1`. Keep the
+`<47` pin in `requirements.txt` so a plain resolve succeeds, then
+force-reinstall the patched wheel in the Dockerfile and
+`scripts/install_python_deps.sh` (used by Tests + Security audit CI). Do not
+“fix” the audit by ignoring the GHSA; drop the force-reinstall once
+atproto relaxes its upper bound.
+
 ## Billing webhook Sentry alert
 
 Stripe webhooks hit `POST /billing/webhook`. A silent 5xx here means missed
