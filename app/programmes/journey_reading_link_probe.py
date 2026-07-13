@@ -34,12 +34,13 @@ class ProbeOutcome:
     soft_forbidden: bool
 
 
-# Hosts that refuse automated probes (TLS fingerprinting, aggressive WAF, or
-# geo-blocked from GitHub Actions / US cloud IPs) but load fine in a real
-# browser. The probe flags them as "soft" failures (WARN, not FAIL) so CI
-# stays green while the URLs remain discoverable to users. If any of these
-# genuinely go down, users will notice — the probe is not a useful signal
-# for them regardless of the soft flag.
+# Hosts that refuse automated probes (TLS fingerprinting, aggressive WAF,
+# incomplete public CA chains, or geo-blocked from GitHub Actions / US cloud
+# IPs) but load fine in a real browser. The probe flags them as "soft"
+# failures (WARN, not FAIL) so CI stays green while the URLs remain
+# discoverable to users. If any of these genuinely go down, users will
+# notice — the probe is not a useful signal for them regardless of the soft
+# flag.
 _BOT_WALLED_HOSTS = (
     "canada.ca",
     "cjc-ccm.ca",
@@ -55,6 +56,11 @@ _BOT_WALLED_HOSTS = (
     "www.ccomptes.fr",
     "www.conseil-constitutionnel.fr",
     "www.conseil-etat.fr",
+    "www.bmvg.de",  # nginx 444 / TLS fingerprinting from cloud IPs
+    "www.dataprotection.ie",  # incomplete intermediate chain for certifi
+    "www.ihrec.ie",  # frequent timeouts from GH Actions
+    "www.pbo-dpb.ca",  # frequent timeouts from GH Actions
+    "www.ncid.sg",  # aggressive 429 rate limits from CI
 )
 
 
@@ -162,9 +168,12 @@ def probe_url(url: str, timeout: float) -> ProbeOutcome:
         time.sleep(2.0)
         get_status, get_err = _request_once(url, "GET", timeout, ctx)
         if get_err:
-            return ProbeOutcome(False, None, "GET", get_err, walled)
+            # Still failing after a 429 backoff — treat as soft (rate wall).
+            return ProbeOutcome(False, None, "GET", get_err, True)
     assert get_status is not None
     if 200 <= get_status < 400:
         return ProbeOutcome(True, get_status, "GET", f"GET {get_status}", False)
-    soft = walled or get_status in (401, 403)
+    # 401/403: auth/geo walls. 429: rate limit (not a dead link). 444: nginx
+    # closes without a response body — common anti-bot from gov CDNs.
+    soft = walled or get_status in (401, 403, 429, 444)
     return ProbeOutcome(False, get_status, "GET", f"GET {get_status}", soft)

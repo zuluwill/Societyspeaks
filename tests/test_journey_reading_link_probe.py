@@ -47,3 +47,32 @@ def test_probe_url_head_404_and_get_404_fails():
         out = probe_mod.probe_url("https://example.com/missing", timeout=5.0)
     assert not out.ok and out.status == 404
     assert m.call_count == 2
+
+
+def test_probe_url_persistent_429_is_soft():
+    with patch.object(probe_mod, "_request_once", return_value=(429, None)):
+        with patch.object(probe_mod.time, "sleep"):
+            out = probe_mod.probe_url("https://example.com/rate-limited", timeout=5.0)
+    assert not out.ok and out.status == 429 and out.soft_forbidden
+
+
+def test_probe_url_444_is_soft():
+    calls = []
+
+    def side_effect(url, method, timeout, ctx):
+        calls.append(method)
+        return 444, None
+
+    with patch.object(probe_mod, "_request_once", side_effect=side_effect):
+        out = probe_mod.probe_url("https://www.bmvg.de/en", timeout=5.0)
+    assert not out.ok and out.status == 444 and out.soft_forbidden
+
+
+def test_probe_url_bot_walled_timeout_is_soft():
+    def side_effect(url, method, timeout, ctx):
+        return None, "The read operation timed out"
+
+    with patch.object(probe_mod, "_request_once", side_effect=side_effect):
+        with patch.object(probe_mod.time, "sleep"):
+            out = probe_mod.probe_url("https://www.ihrec.ie/", timeout=5.0)
+    assert not out.ok and out.soft_forbidden

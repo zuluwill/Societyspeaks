@@ -350,7 +350,7 @@ _IE: Dict[str, Pack] = {
     "AI & technology": _pack(
         "Consider **EU digital law**, national data protection, and public-sector digitisation.\n\n"
         "**Optional references:** "
-        "[Data Protection Commission (Ireland)](https://www.dataprotection.ie/) · "
+        "[Data Protection Commission (Ireland)](https://www.dataprotection.ie/en) · "
         "[gov.ie — digital strategy](https://www.gov.ie/en/department-of-the-taoiseach/campaigns/digital-ireland-connecting-our-people-securing-our-future/) · "
         "[EUR-Lex — EU AI Act](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) · "
         "[European Data Protection Board](https://edpb.europa.eu/edpb_en)",
@@ -580,7 +580,7 @@ _FR: Dict[str, Pack] = {
         "**Optional references:** "
         "[Ministère de la Santé et de la Prévention](https://sante.gouv.fr/) · "
         "[HAS — Haute Autorité de santé](https://www.has-sante.fr/) · "
-        "[DREES — statistics](https://drees.solidarites-sante.gouv.fr/etudes-et-statistiques/publications/) · "
+        "[DREES — statistics](https://drees.solidarites-sante.gouv.fr/) · "
         "[WHO Europe](https://www.who.int/europe)",
         _L("Santé publique France", "https://www.santepubliquefrance.fr/en"),
         _L("Eurostat — health", "https://ec.europa.eu/eurostat/web/health"),
@@ -1012,7 +1012,7 @@ _CN: Dict[str, Pack] = {
         "**Optional references:** "
         "[NPC — National People's Congress (English)](https://www.iiss.org/online-analysis/online-analysis/2024/03/chinas-national-peoples-congress-more-continuity-than-change/) · "
         "[State Council — rule of law & governance white papers](https://english.www.gov.cn/archive/whitepaper/) · "
-        "[UN OHCHR — treaty bodies & UPR](https://www.ohchr.org/en/human-rights-bodies) · "
+        "[UN OHCHR — treaty bodies & UPR](https://www.ohchr.org/en/treaty-bodies) · "
         "[Worldwide Governance Indicators (World Bank)](https://www.worldbank.org/en/publication/worldwide-governance-indicators)",
         _L("IDEA — global democracy data", "https://www.idea.int/"),
         _L("Venice Commission — comparative opinions", "https://www.venice.coe.int/"),

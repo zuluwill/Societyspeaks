@@ -104,7 +104,10 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"FAIL {outcome.message}  {refs[0].url}")
 
     if warnings:
-        print(f"\n{len(warnings)} URL(s) returned 401/403 (not counted as failures unless --strict-forbidden).")
+        print(
+            f"\n{len(warnings)} URL(s) soft-failed "
+            "(401/403/429/444 or bot-walled host — not counted as failures unless --strict-forbidden)."
+        )
 
     if failures:
         print(f"\n{len(failures)} URL probe failure(s):\n")
