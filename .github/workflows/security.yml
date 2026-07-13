@@ -1,6 +1,6 @@
 # Weekly + on-demand vulnerability audit of the dependencies as actually
-# resolved (installs requirements.txt fresh, then pip-audits the environment —
-# the same resolution the production image build performs).
+# resolved (scripts/install_python_deps.sh — same path the production image
+# and Tests CI use, including the cryptography override past atproto's <47).
 name: Security audit
 
 on:
@@ -11,6 +11,8 @@ on:
     paths:
       - requirements.txt
       - Dockerfile
+      - scripts/install_python_deps.sh
+      - .github/workflows/security.yml
 
 jobs:
   pip-audit:
@@ -22,7 +24,19 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies as production would
         run: bash scripts/install_python_deps.sh
+      - name: Assert cryptography override landed
+        # Guard against a future edit that drops the force-reinstall while
+        # atproto still caps <47 — pip-audit would then fail, but only after
+        # a full resolve; this fails fast with a clear message.
+        run: |
+          python3 - <<'PY'
+          from importlib.metadata import version
+          raw = version("cryptography")
+          parts = tuple(int(p) for p in raw.split(".")[:3])
+          assert parts >= (48, 0, 1), f"expected cryptography>=48.0.1 after override, got {raw}"
+          print(f"cryptography {raw} OK (GHSA-537c override)")
+          PY
       - name: Audit installed environment
         run: |
-          pip install pip-audit
+          python3 -m pip install pip-audit
           pip-audit --skip-editable

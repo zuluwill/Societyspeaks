@@ -56,15 +56,11 @@ def test_probe_url_persistent_429_is_soft():
     assert not out.ok and out.status == 429 and out.soft_forbidden
 
 
-def test_probe_url_444_is_soft():
-    calls = []
-
-    def side_effect(url, method, timeout, ctx):
-        calls.append(method)
-        return 444, None
-
-    with patch.object(probe_mod, "_request_once", side_effect=side_effect):
-        out = probe_mod.probe_url("https://www.bmvg.de/en", timeout=5.0)
+def test_probe_url_444_is_soft_even_when_host_not_walled():
+    # Use a non-walled host so soft_forbidden comes from the 444 status
+    # classifier, not from _BOT_WALLED_HOSTS (bmvg.de is already walled).
+    with patch.object(probe_mod, "_request_once", return_value=(444, None)):
+        out = probe_mod.probe_url("https://example.com/closed", timeout=5.0)
     assert not out.ok and out.status == 444 and out.soft_forbidden
 
 

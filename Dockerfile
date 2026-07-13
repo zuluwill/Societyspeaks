@@ -29,13 +29,11 @@ RUN apt-get update \
 WORKDIR /app
 
 # Python dependencies — this layer is re-used by Docker cache until
-# requirements.txt changes, so expensive pip compilation only re-runs when
-# a dependency actually changes.
+# requirements.txt or the install script changes. The script is the single
+# source of truth for the cryptography override (GHSA-537c / atproto <47).
 COPY requirements.txt .
-# Force cryptography>=48.0.1 after resolve: atproto still caps <47 but
-# GHSA-537c-gmf6-5ccf is fixed only in 48.0.1 (see requirements.txt comment).
-RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt \
-    && pip install --no-cache-dir --force-reinstall --no-deps 'cryptography>=48.0.1,<50'
+COPY scripts/install_python_deps.sh scripts/install_python_deps.sh
+RUN PIP_NO_CACHE_DIR=1 bash scripts/install_python_deps.sh
 
 # Node dependencies — cached until package.json / package-lock.json change
 COPY package.json package-lock.json* ./

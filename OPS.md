@@ -330,10 +330,12 @@ Special case — `cryptography` / `atproto`: atproto still declares
 `cryptography<47` (upstream [MarshalX/atproto#688](https://github.com/MarshalX/atproto/issues/688)),
 while GHSA-537c-gmf6-5ccf is fixed only in `cryptography>=48.0.1`. Keep the
 `<47` pin in `requirements.txt` so a plain resolve succeeds, then
-force-reinstall the patched wheel in the Dockerfile and
-`scripts/install_python_deps.sh` (used by Tests + Security audit CI). Do not
-“fix” the audit by ignoring the GHSA; drop the force-reinstall once
-atproto relaxes its upper bound.
+force-reinstall the patched wheel via **`scripts/install_python_deps.sh` only**
+(Dockerfile, Tests, Security audit, and local/setup scripts all call it — do
+not duplicate the override pin). Security CI also asserts
+`cryptography>=48.0.1` before `pip-audit`. Do not “fix” the audit by
+ignoring the GHSA; drop the force-reinstall once atproto relaxes its upper
+bound.
 
 ## Billing webhook Sentry alert
 
