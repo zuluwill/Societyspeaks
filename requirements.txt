@@ -20,7 +20,7 @@ flask-session==0.8.0
 sentry-sdk==2.64.0
 Flask-Caching==2.4.1
 Flask-Compress>=1.14,<2
-redis==5.2.0
+redis==8.0.1
 gunicorn>=22.0.0,<27
 gevent>=23.9.1,<27
 psycogreen>=1.0.1,<2
