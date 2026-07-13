@@ -63,6 +63,10 @@ class EmailAnalytics:
     EVENT_CLICKED = EmailEvent.EVENT_CLICKED
     EVENT_BOUNCED = EmailEvent.EVENT_BOUNCED
     EVENT_COMPLAINED = EmailEvent.EVENT_COMPLAINED
+    # Resend refused to send: the address is on its suppression list
+    # (prior hard bounce or complaint). Not defined on EmailEvent because it
+    # only ever arrives via webhook.
+    EVENT_SUPPRESSED = 'suppressed'
 
     @classmethod
     def record_send(cls, email: str, category: str, resend_id: Optional[str] = None,
@@ -269,8 +273,8 @@ class EmailAnalytics:
                 logger.warning(f"Failed to create event for webhook: {normalized_type}")
                 return None
             
-            # Handle status updates for bounces/complaints
-            if normalized_type in [cls.EVENT_BOUNCED, cls.EVENT_COMPLAINED]:
+            # Handle status updates for bounces/complaints/suppressions
+            if normalized_type in [cls.EVENT_BOUNCED, cls.EVENT_COMPLAINED, cls.EVENT_SUPPRESSED]:
                 cls._handle_deliverability_issue(recipient_email, normalized_type, bounce_type)
             
             db.session.commit()
@@ -379,6 +383,7 @@ class EmailAnalytics:
         try:
             is_hard_bounce = event_type == cls.EVENT_BOUNCED and bounce_type == 'hard'
             is_complaint = event_type == cls.EVENT_COMPLAINED
+            is_suppressed = event_type == cls.EVENT_SUPPRESSED
 
             # For soft bounces, check whether the threshold has been crossed.
             # The current event has already been written to EmailEvent before this
@@ -398,7 +403,7 @@ class EmailAnalytics:
                         f"({soft_count}/{cls.SOFT_BOUNCE_SUPPRESS_THRESHOLD} before suppression)"
                     )
 
-            should_suppress = is_hard_bounce or is_complaint or suppress_soft
+            should_suppress = is_hard_bounce or is_complaint or suppress_soft or is_suppressed
 
             if not should_suppress:
                 return
@@ -410,6 +415,12 @@ class EmailAnalytics:
                     brief_sub.status = 'unsubscribed'
                     brief_sub.unsubscribed_at = utcnow_naive()
                     logger.info(f"Unsubscribed brief subscriber {email} due to complaint")
+                elif is_suppressed:
+                    # Distinct status: Resend will never deliver to this address,
+                    # so it must leave the active pool — but 'suppressed' keeps it
+                    # distinguishable from our own bounce handling for audits.
+                    brief_sub.status = 'suppressed'
+                    logger.info(f"Marked brief subscriber {email} as suppressed (Resend suppression list)")
                 else:
                     brief_sub.status = 'bounced'
                     reason = 'hard bounce' if is_hard_bounce else f'repeated soft bounces'

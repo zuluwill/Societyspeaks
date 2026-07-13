@@ -756,6 +756,28 @@ class BriefEmailScheduler:
         logger.info(f"Found {len(subscribers_to_send)} {cadence} subscribers for hour {utc_hour}")
         return subscribers_to_send
 
+    def _release_claim(self, subscriber_id, brief_id, prev_brief_id, prev_sent_at):
+        """Undo a send claim after a failed send so catch-up runs can retry.
+
+        Conditional on the claim still being ours (last_brief_id_sent ==
+        brief_id) so we never clobber a claim a concurrent loop later won.
+        Never raises — the send error being handled takes precedence.
+        """
+        try:
+            DailyBriefSubscriber.query.filter(
+                DailyBriefSubscriber.id == subscriber_id,
+                DailyBriefSubscriber.last_brief_id_sent == brief_id,
+            ).update(
+                {'last_brief_id_sent': prev_brief_id, 'last_sent_at': prev_sent_at},
+                synchronize_session=False,
+            )
+            db.session.commit()
+        except Exception as release_err:
+            db.session.rollback()
+            logger.error(
+                f"Failed to release send claim for subscriber {subscriber_id}: {release_err}"
+            )
+
     def send_to_subscribers(
         self,
         subscribers: List[DailyBriefSubscriber],
@@ -779,6 +801,9 @@ class BriefEmailScheduler:
 
         for subscriber in subscribers:
             subscriber_id = getattr(subscriber, 'id', None)
+            claim_committed = False
+            prev_brief_id = None
+            prev_sent_at = None
             try:
                 # Re-fetch latest subscriber state before each send to reduce race risk.
                 current_subscriber = DailyBriefSubscriber.query.filter_by(
@@ -816,18 +841,41 @@ class BriefEmailScheduler:
                 # their email goes out. Idempotent — only writes if token is None.
                 current_subscriber.ensure_unsubscribe_token()
 
-                # Flush is a write — protect it explicitly so a DB error here
-                # doesn't propagate as an unrecoverable exception into the outer
-                # loop and abort sends for all subsequent subscribers.
+                # Atomically claim this (subscriber, brief) pair BEFORE sending.
+                # The row lock above is released at the first commit inside the
+                # send path, so two concurrent loops (deploy-overlap zombie,
+                # catch-up run, manual resume) can otherwise both pass the
+                # check and double-send — observed 2026-07-12 (295 duplicate
+                # send records). A conditional UPDATE makes exactly one loop
+                # win; a crash after claiming skips one day for that subscriber
+                # instead of ever duplicating.
+                prev_brief_id = current_subscriber.last_brief_id_sent
+                prev_sent_at = current_subscriber.last_sent_at
                 try:
-                    db.session.flush()
-                except Exception as flush_err:
+                    claimed = DailyBriefSubscriber.query.filter(
+                        DailyBriefSubscriber.id == current_subscriber.id,
+                        db.or_(
+                            DailyBriefSubscriber.last_brief_id_sent.is_(None),
+                            DailyBriefSubscriber.last_brief_id_sent != brief.id,
+                        ),
+                    ).update(
+                        {'last_brief_id_sent': brief.id, 'last_sent_at': utcnow_naive()},
+                        synchronize_session=False,
+                    ) == 1
+                    # Commit persists the claim and any tokens generated above,
+                    # so links in the email always match the database.
+                    db.session.commit()
+                    claim_committed = claimed
+                except Exception as claim_err:
                     db.session.rollback()
                     results['failed'] += 1
-                    err_msg = f"DB flush failed for subscriber {current_subscriber.id}: {flush_err}"
+                    err_msg = f"Claim failed for subscriber {current_subscriber.id}: {claim_err}"
                     results['errors'].append(err_msg)
                     logger.error(err_msg, exc_info=True)
                     continue
+
+                if not claimed:
+                    continue  # another send loop owns this subscriber+brief
 
                 # Attach Sentry context so every error in this iteration is
                 # tagged with the subscriber and brief for fast triage at scale.
@@ -853,6 +901,7 @@ class BriefEmailScheduler:
                         },
                     )
                     db.session.rollback()
+                    self._release_claim(current_subscriber.id, brief.id, prev_brief_id, prev_sent_at)
 
             except Exception as e:
                 db.session.rollback()
@@ -863,6 +912,10 @@ class BriefEmailScheduler:
                 error_msg = f"Error sending to subscriber {subscriber_id}: {str(e)}"
                 results['errors'].append(error_msg)
                 logger.error(error_msg, exc_info=True)
+                # If the claim had been committed before the failure, release
+                # it so a later catch-up run can retry this subscriber.
+                if claim_committed:
+                    self._release_claim(subscriber_id, brief.id, prev_brief_id, prev_sent_at)
 
         logger.info(f"Batch send complete: {results['sent']} sent, {results['failed']} failed")
         return results

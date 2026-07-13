@@ -135,3 +135,25 @@ def test_resend_webhook_route_is_csrf_exempt(app):
 
     dest = f'{resend_webhook.__module__}.{resend_webhook.__name__}'
     assert dest in csrf._exempt_views
+
+
+def test_suppressed_event_removes_subscriber_from_active_pool(app, db):
+    """email.suppressed means Resend will never deliver to this address —
+    leaving it 'active' distorts every rate computed on the list."""
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='suppressed@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+
+        result = EmailAnalytics.record_from_webhook(
+            _payload('email.suppressed', email='suppressed@example.com')
+        )
+        assert result is not None and result.event_type == 'suppressed'
+
+        db.session.expire_all()
+        refreshed = DailyBriefSubscriber.query.filter_by(
+            email='suppressed@example.com'
+        ).first()
+        assert refreshed.status == 'suppressed'

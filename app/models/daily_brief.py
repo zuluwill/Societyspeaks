@@ -479,9 +479,11 @@ class DailyBriefSubscriber(db.Model):
     preferred_weekly_day = db.Column(db.Integer, default=6)  # Day for weekly delivery (0=Mon, 6=Sun)
 
     # Status. 'imported' = on the list with segment metadata but excluded from
-    # all sends until explicitly activated (deliverability ramp) — every send
-    # path gates on status == 'active'.
-    status = db.Column(db.String(20), default='active')  # active|imported|paused|unsubscribed|bounced|payment_failed
+    # all sends until explicitly activated (deliverability ramp). 'suppressed'
+    # = on Resend's suppression list (prior hard bounce/complaint) — Resend
+    # refuses delivery, so keeping them 'active' would only distort metrics.
+    # Every send path gates on status == 'active'.
+    status = db.Column(db.String(20), default='active')  # active|imported|paused|suppressed|unsubscribed|bounced|payment_failed
     unsubscribed_at = db.Column(db.DateTime)
 
     # Import segmentation — NULL for organic signups. Populated from the list

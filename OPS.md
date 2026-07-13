@@ -180,6 +180,23 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 3. Both dry-run by default; `--commit` applies. Only rows with
    `status='imported'` can ever be activated.
 
+## Daily brief send integrity
+
+Sends are duplicate-proof at three layers: an atomic per-(subscriber, brief)
+claim in the database (conditional UPDATE on `last_brief_id_sent` — exactly
+one loop can win; failed sends release the claim for catch-up retry), a
+stable Resend `Idempotency-Key` (`brief:{brief_id}:{subscriber_id}`), and the
+hourly job's catch-up behaviour, which re-covers subscribers missed by a
+mid-send restart. Deploys during the send window (~17:00–21:30 UTC) are
+therefore safe but still ungraceful — they abort the in-flight loop and
+delay the tail to the next hourly tick, so prefer deploying outside it.
+
+**Suppressions:** `email.suppressed` webhook events mark the subscriber
+`status='suppressed'` automatically (Resend refuses these addresses — prior
+hard bounces/complaints). They leave the active pool so every rate stays
+honest. 801 backfilled on 2026-07-13 (791 of them from the imported cohort ≈
+17% of it — expect a similar rate as dormant batches activate).
+
 ## Resend webhook verification
 
 The webhook endpoint is `https://societyspeaks.io/brief/webhooks/resend`
@@ -263,6 +280,25 @@ every Stripe webhook until 2026-07-12.
 Upgrading a dependency is a deliberate act: raise the bound in its own
 commit, run the full suite, deploy, watch Sentry. Never widen a bound as a
 side effect of other work.
+
+## Billing webhook Sentry alert
+
+Stripe webhooks hit `POST /billing/webhook`. A silent 5xx here means missed
+renewals, failed cancellations, and stuck subscriptions — page someone.
+
+Create (or verify) this alert in Sentry:
+
+1. Sentry → Alerts → Create Alert → **Issues** (or Metric if you prefer
+   transaction volume).
+2. Filter: `transaction:"/billing/webhook"` **or**
+   `http.url:*\/billing\/webhook*` and status `5xx` /
+   `status_code:[500 TO 599]`.
+3. Threshold: **any** matching event (count ≥ 1) in 5 minutes.
+4. Action: email/Slack the on-call owner (William).
+5. Environment: `production` only.
+
+If you use Metric Alerts instead of Issue Alerts, set dataset to Transactions,
+query `transaction:/billing/webhook http.status_code:>=500`, critical at ≥1.
 
 ## Secrets hygiene
 
