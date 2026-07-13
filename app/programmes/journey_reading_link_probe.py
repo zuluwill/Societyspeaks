@@ -36,11 +36,10 @@ class ProbeOutcome:
 
 # Hosts that refuse automated probes (TLS fingerprinting, aggressive WAF,
 # incomplete public CA chains, or geo-blocked from GitHub Actions / US cloud
-# IPs) but load fine in a real browser. The probe flags them as "soft"
-# failures (WARN, not FAIL) so CI stays green while the URLs remain
-# discoverable to users. If any of these genuinely go down, users will
-# notice — the probe is not a useful signal for them regardless of the soft
-# flag.
+# IPs) but load fine in a real browser. Soft-fail *all* non-success outcomes
+# for these hosts — including WAF-fake 404s — because the probe cannot tell
+# "dead" from "blocked" for them. Prefer fixing definitive 404s on
+# non-walled hosts; expand this list only for hosts that flake from CI.
 _BOT_WALLED_HOSTS = (
     "canada.ca",
     "cjc-ccm.ca",
@@ -61,6 +60,8 @@ _BOT_WALLED_HOSTS = (
     "www.ihrec.ie",  # frequent timeouts from GH Actions
     "www.pbo-dpb.ca",  # frequent timeouts from GH Actions
     "www.ncid.sg",  # aggressive 429 rate limits from CI
+    "www.debatpublic.fr",  # timeouts from GH Actions (200 from browsers)
+    "www.ecologie.gouv.fr",  # timeouts from GH Actions (200 from browsers)
 )
 
 
@@ -163,7 +164,12 @@ def probe_url(url: str, timeout: float) -> ProbeOutcome:
         get_status, get_err = _request_once(url, "GET", timeout, ctx)
     walled = _is_bot_walled(url)
     if get_err:
-        return ProbeOutcome(False, None, "GET", get_err, walled)
+        # After one retry, timeouts / resets from CI are not a reliable
+        # "dead link" signal (gov CDNs slow-path or drop cloud IPs). Soft
+        # them globally; keep hard fails for non-transient errors (e.g.
+        # certificate verify failed) unless the host is bot-walled.
+        soft = walled or _transient_network_error(get_err)
+        return ProbeOutcome(False, None, "GET", get_err, soft)
     if get_status == 429:
         time.sleep(2.0)
         get_status, get_err = _request_once(url, "GET", timeout, ctx)
@@ -175,5 +181,6 @@ def probe_url(url: str, timeout: float) -> ProbeOutcome:
         return ProbeOutcome(True, get_status, "GET", f"GET {get_status}", False)
     # 401/403: auth/geo walls. 429: rate limit (not a dead link). 444: nginx
     # closes without a response body — common anti-bot from gov CDNs.
+    # Bot-walled hosts: soft even on 404 (WAFs often return fake 404s).
     soft = walled or get_status in (401, 403, 429, 444)
     return ProbeOutcome(False, get_status, "GET", f"GET {get_status}", soft)

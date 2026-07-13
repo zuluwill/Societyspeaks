@@ -106,7 +106,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if warnings:
         print(
             f"\n{len(warnings)} URL(s) soft-failed "
-            "(401/403/429/444 or bot-walled host — not counted as failures unless --strict-forbidden)."
+            "(401/403/429/444, post-retry timeout, or bot-walled host — "
+            "not counted as failures unless --strict-forbidden for 401/403)."
         )
 
     if failures:

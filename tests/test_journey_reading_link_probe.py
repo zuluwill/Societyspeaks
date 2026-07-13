@@ -72,3 +72,23 @@ def test_probe_url_bot_walled_timeout_is_soft():
         with patch.object(probe_mod.time, "sleep"):
             out = probe_mod.probe_url("https://www.ihrec.ie/", timeout=5.0)
     assert not out.ok and out.soft_forbidden
+
+
+def test_probe_url_timeout_after_retry_is_soft_even_when_host_not_walled():
+    # CI timeouts against live gov sites are flake, not dead links.
+    with patch.object(
+        probe_mod, "_request_once", return_value=(None, "The read operation timed out")
+    ):
+        with patch.object(probe_mod.time, "sleep"):
+            out = probe_mod.probe_url("https://example.com/slow", timeout=5.0)
+    assert not out.ok and out.soft_forbidden
+
+
+def test_probe_url_certificate_error_on_non_walled_host_is_hard():
+    with patch.object(
+        probe_mod,
+        "_request_once",
+        return_value=(None, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed"),
+    ):
+        out = probe_mod.probe_url("https://example.com/bad-tls", timeout=5.0)
+    assert not out.ok and not out.soft_forbidden

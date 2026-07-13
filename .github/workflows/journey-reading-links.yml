@@ -1,6 +1,10 @@
 # Probes HTTPS targets in guided-journey optional-reading URLs (global curriculum + country packs).
-# Fails on dead links, TLS errors, and most 4xx/5xx. HTTP 401/403 default to warn
-# (set JOURNEY_READING_LINK_STRICT=1 or --strict-forbidden to fail the job).
+# Purpose: catch genuinely dead references (404/410/DNS/TLS) before readers hit them.
+# Not a site-uptime monitor — gov/WAF hosts often timeout or 403 from GitHub
+# Actions IPs while loading fine in a browser; those are WARN (soft), not FAIL.
+# Fails on definitive dead links. HTTP 401/403/429/444 and post-retry timeouts
+# default to warn (set JOURNEY_READING_LINK_STRICT=1 or --strict-forbidden to
+# fail on 401/403 only — timeouts stay soft).
 name: Journey reading links
 
 permissions:
@@ -46,4 +50,6 @@ jobs:
       - name: Probe journey reading URLs
         env:
           PYTHONPATH: .
-        run: python3 scripts/verify_journey_reading_links.py --workers 18 --timeout 28
+        # Keep concurrency modest: 18 parallel probes from one cloud IP
+        # trips rate limits / WAF slow-paths on gov CDNs and creates flake.
+        run: python3 scripts/verify_journey_reading_links.py --workers 8 --timeout 28
