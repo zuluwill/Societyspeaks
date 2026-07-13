@@ -448,10 +448,9 @@ def create_app():
         app.config['CITIES_BY_COUNTRY'] = {}
 
 
-    # Static file configuration
-    # Set cache age for static files (1 hour) to reduce file I/O and improve resilience
-    # This helps prevent OSError [Errno 5] I/O errors during high load
-    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 3600  # 1 hour in seconds
+    # Static file configuration — browser max-age for Flask send_file defaults.
+    # Edge TTL is set via Cache-Control s-maxage in apply_cdn_cacheable_response_headers.
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400  # 1 day
     app.config['STATIC_FOLDER'] = 'static'
 
     # Add correct MIME types
@@ -554,6 +553,19 @@ def create_app():
             app.logger.info("Resilient Redis session interface installed")
         except Exception as e:
             app.logger.warning(f"Failed to install resilient session interface: {e}")
+
+    # Skip sessions on static/discovery paths so Flask does not emit
+    # Vary: Cookie after after_request (required for Cloudflare HITs).
+    from app.lib.cdn_cache import (
+        apply_cdn_cacheable_response_headers,
+        wrap_session_interface_for_cdn,
+    )
+    wrap_session_interface_for_cdn(app)
+
+    @app.after_request
+    def _cdn_cacheable_response_headers(response):
+        """Edge-cache static/discovery responses: drop Vary: Cookie, set TTLs."""
+        return apply_cdn_cacheable_response_headers(request.path, response)
 
     # Initialize cache — set config on app.config so flask-caching reads it reliably
     try:

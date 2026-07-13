@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="{{ url_for('main.serve_asset', filename='images/hero-optimized.jpg') }}" fetchpriority="high">
 <script type="application/ld+json">
 {{ {
   "@context": "https://schema.org",
@@ -170,6 +171,10 @@
                     <img src="{{ url_for('main.serve_asset', filename='images/hero-optimized.jpg') }}"
                          alt="{{ _('Discussion visualisation showing opinion clusters and consensus') }}"
                          class="absolute inset-0 w-full h-full object-cover"
+                         width="1200"
+                         height="800"
+                         decoding="async"
+                         fetchpriority="high"
                          loading="eager"/>
                 </div>
             </div>

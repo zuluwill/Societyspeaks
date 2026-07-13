@@ -100,6 +100,9 @@ hard way on 2026-07-11).
 
 - SSL/TLS mode: **Full (Strict)** (Render serves a valid cert; anything
   weaker invites MITM between edge and origin).
+- **Browser Cache TTL: Respect Existing Headers.** Do not force a global
+  override (e.g. 4 hours) — origin `Cache-Control` / `s-maxage` is the source
+  of truth for static and discovery files.
 - **Bot Fight Mode: OFF.** It challenges the answer-engine bots our GEO
   strategy depends on (GPTBot, ClaudeBot, PerplexityBot). Blocking is done
   by one WAF custom rule instead.
@@ -112,6 +115,18 @@ hard way on 2026-07-11).
   Origin sends `s-maxage=86400` for robots/llms and `s-maxage=3600` for
   the sitemap (kept short so daily brief permalinks surface within the
   hour) — pinned by `tests/test_robots_policy.py`.
+- Cache rule `cache-static-assets`: eligible for cache on
+  `/assets/*`, `/images/*`, `/css/*`, `/js/*`, `/fonts/*`, `/icons/*`,
+  `/logos/*`, `/data/*`, `/dist/*`, `/profiles/assets/*`,
+  `/profiles/get-image/*`, `/favicon.ico`, `/favicon.png`, `/favicon.svg`;
+  Edge TTL **Respect origin**; enable **Cache eligibility: Eligible for
+  cache**. Origin sends `public, max-age=86400, s-maxage=604800` and strips
+  `Vary: Cookie` / `Set-Cookie` on these paths (`app/lib/cdn_cache.py`) so
+  the Free-plan CDN can actually HIT. Do **not** cache HTML (`/`,
+  discussions, etc.) — sessions and CSRF require DYNAMIC HTML.
+- After deploy of changed unversioned assets (hero image, `/js/*.js` without
+  a cache-bust query), purge those URLs (or "Custom Purge" for `/assets/*`
+  and `/js/*`) so edges do not serve stale bodies for up to `s-maxage`.
 
 **Purge after out-of-band content changes** (dashboard: Caching → Purge, or):
 
@@ -120,6 +135,22 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache
   -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
   --data '{"files":["https://societyspeaks.io/sitemap.xml"]}'
 ```
+
+**Cache health check** (expect `cf-cache-status: HIT` on a second request):
+
+```bash
+curl -sI "https://societyspeaks.io/css/output.css" | grep -iE 'cf-cache-status|cache-control|vary'
+curl -sI "https://societyspeaks.io/assets/images/hero-optimized.jpg" | grep -iE 'cf-cache-status|cache-control|vary'
+```
+
+Static responses must **not** include `Vary: Cookie`. HTML may stay
+`cf-cache-status: DYNAMIC` — that is correct.
+
+**Speed Observatory / Web Analytics:** a low overall cache hit ratio is
+expected while HTML is DYNAMIC; judge CDN health by HIT rate on `/css/*`,
+`/js/*`, and `/assets/*`, plus origin TTFB and 5xx — not the site-wide %.
+Investigate Cloudflare 5xx spikes (522/524 = origin timeout) in Analytics
+→ Traffic alongside Render logs; P99 LCP outliers usually track those.
 
 **Escape hatch:** Render itself fronts through Cloudflare
 (Cloudflare-on-Cloudflare is supported); if cert or redirect loops appear,

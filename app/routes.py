@@ -17,6 +17,7 @@ from app.lib.time import utcnow_naive
 from app.lib.url_utils import safe_next_url
 from app.lib.locale_utils import language_preference_cookie_params
 from app.storage_utils import download_bytes_from_object_storage
+from app.lib.cdn_cache import STATIC_ASSET_CACHE_CONTROL, strip_cookie_from_vary
 import io
 import mimetypes
 import os
@@ -421,18 +422,22 @@ def _serve_object_storage_asset(filename):
             download_name=os.path.basename(filename)
         )
     )
-    response.headers['Cache-Control'] = 'public, max-age=3600'
+    response.headers['Cache-Control'] = STATIC_ASSET_CACHE_CONTROL
+    strip_cookie_from_vary(response)
     return response
 
 
 @main_bp.route('/favicon.ico')
 def favicon():
     """Serve favicon from static files."""
-    return send_from_directory(
+    response = send_from_directory(
         os.path.join(current_app.root_path, 'static'),
         'favicon.png',
         mimetype='image/png'
     )
+    response.headers['Cache-Control'] = STATIC_ASSET_CACHE_CONTROL
+    strip_cookie_from_vary(response)
+    return response
 
 
 @main_bp.route('/assets/<path:filename>')

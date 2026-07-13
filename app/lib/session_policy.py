@@ -15,12 +15,15 @@ Policy applied here:
     session at all (no Redis key, no Set-Cookie).
   - Authenticated sessions (Flask-Login user or partner portal) are
     unaffected: full PERMANENT_SESSION_LIFETIME.
+  - CDN-cacheable paths never persist sessions (see ``is_cdn_cacheable_path``
+    and ``wrap_session_interface_for_cdn`` in ``app/lib/cdn_cache.py``).
 
 One-off cleanup of pre-policy keys: scripts/purge_anonymous_sessions.py.
 """
 
 from flask import current_app, has_request_context, request
 
+from app.lib.cdn_cache import is_cdn_cacheable_path
 from app.lib.resilient_session import ResilientRedisSessionInterface
 
 # Shared with the vote endpoint (app/discussions/statements.py). Keep this
@@ -54,6 +57,8 @@ class PolicyRedisSessionInterface(ResilientRedisSessionInterface):
 
     def should_set_storage(self, app, session):
         if not super().should_set_storage(app, session):
+            return False
+        if has_request_context() and is_cdn_cacheable_path(request.path):
             return False
         if session_is_authenticated(session):
             return True
