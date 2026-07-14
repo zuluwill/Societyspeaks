@@ -86,6 +86,7 @@ from app.brief.topic_selector import select_todays_topics
 from app.brief.email_client import send_brief_to_subscriber
 from app.brief.underreported import get_underreported_stories
 from app.trending.allsides_seed import update_source_leanings
+from app.discussions.thresholds import CONSENSUS_RECOMMENDED_STATEMENT_COUNT
 from datetime import date as date_type
 
 def init_commands(app):
@@ -670,6 +671,147 @@ def init_commands(app):
         except Exception as e:
             db.session.rollback()
             click.echo(f"Error during backfill: {str(e)}", err=True)
+            import traceback
+            traceback.print_exc()
+
+    @app.cli.command('backfill-seed-statements')
+    @click.option('--min', 'min_count', default=CONSENSUS_RECOMMENDED_STATEMENT_COUNT,
+                  help='Minimum seed statements a discussion should have (default: 7)')
+    @click.option('--limit', default=50, help='Max discussions to process this run')
+    @click.option('--discussion-id', default=None, type=int,
+                  help='Only process this discussion id (ignores --limit)')
+    @click.option('--dry-run', is_flag=True, help='Report changes without writing to the database')
+    def backfill_seed_statements_cmd(min_count, limit, discussion_id, dry_run):
+        """Top up native-statement discussions below the recommended seed count.
+
+        Finds discussions with fewer than --min visible statements (not deleted,
+        not negatively moderated) and generates additional balanced pro/con/neutral
+        seed statements via the LLM seed generator, skipping duplicates.
+
+        Examples:
+            flask backfill-seed-statements --dry-run
+            flask backfill-seed-statements --limit 20
+            flask backfill-seed-statements --discussion-id 9154
+        """
+        from sqlalchemy import func
+        from app.models import Statement, User
+        from app.trending.seed_generator import generate_seed_statements_from_content
+
+        def _visible_query(disc_id):
+            return (
+                Statement.query
+                .filter_by(discussion_id=disc_id, is_deleted=False)
+                .filter(Statement.mod_status != -1)
+            )
+
+        try:
+            if discussion_id is not None:
+                disc = db.session.get(Discussion, discussion_id)
+                if not disc:
+                    click.echo(f"Discussion {discussion_id} not found", err=True)
+                    return
+                discussions = [disc]
+            else:
+                # Count visible statements per discussion, then keep the ones
+                # below the floor. LEFT JOIN so discussions with zero statements
+                # (coalesced to 0) are included.
+                visible = (
+                    db.session.query(
+                        Statement.discussion_id.label('did'),
+                        func.count(Statement.id).label('n'),
+                    )
+                    .filter(Statement.is_deleted.is_(False))
+                    .filter(Statement.mod_status != -1)
+                    .group_by(Statement.discussion_id)
+                    .subquery()
+                )
+                rows = (
+                    db.session.query(Discussion)
+                    .outerjoin(visible, visible.c.did == Discussion.id)
+                    .filter(Discussion.has_native_statements.is_(True))
+                    .filter(func.coalesce(visible.c.n, 0) < min_count)
+                    .order_by(Discussion.id.desc())
+                    .limit(limit)
+                    .all()
+                )
+                discussions = list(rows)
+
+            if not discussions:
+                click.echo(f"✓ No native-statement discussions below {min_count} statements")
+                return
+
+            click.echo(f"Found {len(discussions)} discussion(s) below {min_count} statements"
+                       + (" (dry run)" if dry_run else ""))
+
+            default_admin = User.query.filter_by(is_admin=True).order_by(User.id).first()
+
+            total_added = 0
+            for disc in discussions:
+                existing = _visible_query(disc.id).all()
+                existing_contents = {
+                    " ".join((s.content or "").split()).lower() for s in existing
+                }
+                current = len(existing)
+                needed = min_count - current
+                if needed <= 0:
+                    continue
+
+                click.echo(f"\n#{disc.id} '{(disc.title or '')[:60]}' — "
+                           f"{current} statement(s), need {needed} more")
+
+                # Ask only for novel fillers; exclude existing content so the
+                # generator's floor/padding produces statements we can actually add.
+                generated = generate_seed_statements_from_content(
+                    title=disc.title,
+                    excerpt=disc.description or "",
+                    count=needed,
+                    exclude_contents=existing_contents,
+                )
+
+                author_id = disc.creator_id or (default_admin.id if default_admin else None)
+
+                added_here = 0
+                for stmt in generated:
+                    if added_here >= needed:
+                        break
+                    content = " ".join(str(stmt.get('content', '')).split())[:500]
+                    if len(content) < 10 or content.lower() in existing_contents:
+                        continue
+                    existing_contents.add(content.lower())
+                    position = (stmt.get('position') or 'neutral').lower()
+                    if position not in ('pro', 'con', 'neutral'):
+                        position = 'neutral'
+                    click.echo(f"   + [{position}] {content[:80]}")
+                    if not dry_run:
+                        db.session.add(Statement(
+                            discussion_id=disc.id,
+                            user_id=author_id,
+                            content=content,
+                            statement_type='claim',
+                            is_seed=True,
+                            mod_status=1,
+                            source='ai_generated',
+                            seed_stance=position,
+                        ))
+                    added_here += 1
+
+                if added_here < needed:
+                    click.echo(
+                        f"   ! only produced {added_here}/{needed} novel statements for #{disc.id}",
+                        err=True,
+                    )
+
+                total_added += added_here
+                if not dry_run:
+                    db.session.commit()
+
+            verb = "would add" if dry_run else "added"
+            click.echo(f"\n✓ Backfill complete: {verb} {total_added} seed statement(s) "
+                       f"across {len(discussions)} discussion(s)")
+
+        except Exception as e:
+            db.session.rollback()
+            click.echo(f"Error backfilling seed statements: {str(e)}", err=True)
             import traceback
             traceback.print_exc()
 

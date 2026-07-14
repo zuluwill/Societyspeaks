@@ -1119,12 +1119,20 @@ def portal_create_discussion():
 
     if excerpt:
         try:
-            from app.trending.seed_generator import generate_seed_statements_from_content
+            from app.trending.seed_generator import (
+                DEFAULT_SEED_COUNT,
+                generate_seed_statements_from_content,
+            )
             seeds = generate_seed_statements_from_content(
                 title=title,
                 excerpt=excerpt[:5000],  # Mirror API _CREATE_MAX_EXCERPT cap
                 source_name=partner.name,
+                count=DEFAULT_SEED_COUNT,
             )
+            if len(seeds) < DEFAULT_SEED_COUNT:
+                raise RuntimeError(
+                    f"Seed generator returned {len(seeds)}/{DEFAULT_SEED_COUNT} statements"
+                )
             for s in seeds:
                 stmt = Statement(
                     content=s.get('content', ''),
@@ -1136,9 +1144,15 @@ def portal_create_discussion():
                 )
                 discussion.statements.append(stmt)
         except Exception:
+            db.session.rollback()
             current_app.logger.exception(
                 "Seed generation failed for portal discussion (partner=%s)", partner.slug
             )
+            flash(
+                _('Could not generate enough seed statements for this discussion. Please try again.'),
+                'error',
+            )
+            return redirect(_form_url)
 
     try:
         db.session.commit()

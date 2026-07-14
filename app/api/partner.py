@@ -1193,7 +1193,10 @@ def create_discussion():
         }
     """
     from app.lib.url_normalizer import normalize_url
-    from app.trending.seed_generator import generate_seed_statements_from_content
+    from app.trending.seed_generator import (
+        DEFAULT_SEED_COUNT,
+        generate_seed_statements_from_content,
+    )
     from app.trending.constants import get_unique_slug
     from app.models import generate_slug
 
@@ -1420,7 +1423,7 @@ def create_discussion():
                 title=title,
                 excerpt=excerpt,
                 source_name=source_name,
-                count=5
+                count=DEFAULT_SEED_COUNT,
             )
         except Exception as e:
             current_app.logger.error(f"Seed generation failed for partner {partner_slug}: {e}")
@@ -1430,10 +1433,10 @@ def create_discussion():
                 500
             )
 
-        if not statements_to_create:
+        if len(statements_to_create) < DEFAULT_SEED_COUNT:
             return api_error(
                 'generation_failed',
-                'Could not generate seed statements from the provided content. Please provide seed_statements.',
+                'Could not generate enough seed statements from the provided content. Please provide seed_statements.',
                 500
             )
 
