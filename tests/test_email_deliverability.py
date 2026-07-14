@@ -170,14 +170,14 @@ def test_entity_ref_id_header_attached(app, db, monkeypatch, captured_payload):
     headers = captured_payload['payload'].get('headers', {})
     assert 'X-Entity-Ref-ID' in headers
     assert str(user.id) in headers['X-Entity-Ref-ID']
+    assert headers['X-Entity-Ref-ID'].startswith(f'password-reset:{user.id}:')
 
 
-def test_entity_ref_id_stable_across_retries_of_same_send(app, db, monkeypatch, captured_payload):
-    """Same (user, token) produces the same Ref-ID on retry — lets ESPs dedup."""
+def test_password_reset_entity_ref_unique_per_send_attempt(app, db, monkeypatch, captured_payload):
+    """Reset tokens are deterministic per user — each send needs a fresh key."""
     user = _make_user(db)
     client = _client(monkeypatch)
-
-    token = 'stable-token-value-0987654321'
+    token = 'deterministic-reset-token'
 
     client.send_password_reset(user, token)
     ref_1 = captured_payload['payload']['headers']['X-Entity-Ref-ID']
@@ -185,4 +185,80 @@ def test_entity_ref_id_stable_across_retries_of_same_send(app, db, monkeypatch, 
     client.send_password_reset(user, token)
     ref_2 = captured_payload['payload']['headers']['X-Entity-Ref-ID']
 
+    assert ref_1 != ref_2
+    assert ref_1.startswith(f'password-reset:{user.id}:')
+    assert ref_2.startswith(f'password-reset:{user.id}:')
+
+
+def test_magic_login_entity_ref_stable_for_same_token(app, db, monkeypatch, captured_payload):
+    """Same magic-login URL ⇒ same Ref-ID so HTTP retries dedupe safely."""
+    user = _make_user(db)
+    client = _client(monkeypatch)
+    magic_url = 'https://societyspeaks.io/auth/login/magic-link/unique-iat-token.abc'
+
+    client.send_magic_login_link(user, magic_url)
+    ref_1 = captured_payload['payload']['headers']['X-Entity-Ref-ID']
+
+    client.send_magic_login_link(user, magic_url)
+    ref_2 = captured_payload['payload']['headers']['X-Entity-Ref-ID']
+
     assert ref_1 == ref_2
+
+
+def test_entity_ref_id_differs_for_distinct_tokens(app, db, monkeypatch, captured_payload):
+    """New tokens must not reuse the prior Idempotency-Key.
+
+    itsdangerous payloads share a long common prefix for the same user_id;
+    truncating to 16 chars caused Resend 409 invalid_idempotent_request on
+    every second magic-login within 24h.
+    """
+    from itsdangerous import URLSafeSerializer
+    from datetime import datetime
+
+    user = _make_user(db)
+    client = _client(monkeypatch)
+    s = URLSafeSerializer('test-secret')
+    t1 = s.dumps(
+        {'user_id': user.id, 'iat': datetime(2026, 7, 14, 12, 5, 33).isoformat()},
+        salt='magic-login-salt',
+    )
+    t2 = s.dumps(
+        {'user_id': user.id, 'iat': datetime(2026, 7, 14, 12, 6, 10).isoformat()},
+        salt='magic-login-salt',
+    )
+    # Guard: the old [:16] scheme would collide on these.
+    assert t1[:16] == t2[:16]
+
+    client.send_magic_login_link(
+        user, f'https://societyspeaks.io/auth/login/magic-link/{t1}'
+    )
+    ref_1 = captured_payload['payload']['headers']['X-Entity-Ref-ID']
+
+    client.send_magic_login_link(
+        user, f'https://societyspeaks.io/auth/login/magic-link/{t2}?next=%2Fbriefings'
+    )
+    ref_2 = captured_payload['payload']['headers']['X-Entity-Ref-ID']
+
+    assert ref_1 != ref_2
+    assert ref_1.startswith(f'magic-login:{user.id}:')
+    assert ref_2.startswith(f'magic-login:{user.id}:')
+
+
+def test_magic_login_entity_ref_strips_query_string(app, db, monkeypatch, captured_payload):
+    """Trial flow appends ?next=…; Ref-ID must key on the token alone."""
+    user = _make_user(db)
+    client = _client(monkeypatch)
+    token = 'signed.token.value'
+
+    client.send_magic_login_link(
+        user, f'https://societyspeaks.io/auth/login/magic-link/{token}'
+    )
+    ref_plain = captured_payload['payload']['headers']['X-Entity-Ref-ID']
+
+    client.send_magic_login_link(
+        user,
+        f'https://societyspeaks.io/auth/login/magic-link/{token}?next=%2Fbriefings%2Fstart',
+    )
+    ref_with_next = captured_payload['payload']['headers']['X-Entity-Ref-ID']
+
+    assert ref_plain == ref_with_next

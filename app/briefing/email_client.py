@@ -180,6 +180,7 @@ class BriefingEmailClient:
             unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.unsubscribe_token or recipient.magic_token or ''}"
             
             # Prepare email data
+            from app.lib.email_idempotency import scoped_entity_ref
             email_data = {
                 'from': f"{from_name} <{from_email}>",
                 'to': [recipient.email],
@@ -187,11 +188,14 @@ class BriefingEmailClient:
                 'html': html_content,
                 'headers': {
                     'List-Unsubscribe': f'<{unsubscribe_url}>',
-                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                    'X-Entity-Ref-ID': scoped_entity_ref(
+                        'brief-run', brief_run.id, recipient.id
+                    ),
                 }
             }
             
-            # Send via base client (handles rate limiting internally)
+            # Send via base client (handles rate limiting + idempotency)
             success = self.base_client._send_with_retry(email_data)
             resend_id = getattr(self.base_client, 'last_message_id', None)
             send_error = getattr(self.base_client, 'last_send_error', None) or ''
@@ -875,15 +879,14 @@ class BriefingEmailClient:
             if batch_emails:
                 try:
                     # Use base client's batch send method. Stable per-batch
-                    # idempotency key: an HTTP retry Resend already accepted
-                    # cannot deliver the batch twice.
-                    import hashlib
-                    batch_fingerprint = hashlib.sha256(
-                        ','.join(str(r.id) for r in email_to_recipient).encode()
-                    ).hexdigest()[:16]
+                    # idempotency key: fingerprint recipients so key matches body.
+                    from app.lib.email_idempotency import content_fingerprint, scoped_entity_ref
+                    batch_fingerprint = content_fingerprint(r.id for r in email_to_recipient)
                     batch_result = self.base_client._send_batch(
                         batch_emails,
-                        idempotency_key=f'brief-run-{brief_run.id}-{batch_fingerprint}',
+                        idempotency_key=scoped_entity_ref(
+                            'brief-run', brief_run.id, batch_fingerprint
+                        ),
                     )
                     batch_sent = batch_result.get('sent', 0)
                     batch_failed = batch_result.get('failed', 0)

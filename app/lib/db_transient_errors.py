@@ -43,6 +43,11 @@ TRANSIENT_DB_ERROR_PHRASES: tuple[str, ...] = (
     # Typically resolves within 1-3 s; always safe to retry.
     "couldn't connect to compute node",
     "compute node",
+    # Neon/PgBouncer: a backend was left with default_transaction_read_only=on
+    # (e.g. ops script used set_session(readonly=True) on the pooler URL).
+    # Safe to retry after invalidating the connection; checkout guard clears it.
+    "read-only transaction",
+    "readonlysqltransaction",
 )
 
 
@@ -50,3 +55,12 @@ def is_transient_db_connectivity_error(exc: BaseException) -> bool:
     """Return True when *exc* looks like a temporary network or server-side drop."""
     msg = str(exc).lower()
     return any(phrase in msg for phrase in TRANSIENT_DB_ERROR_PHRASES)
+
+
+def is_readonly_sql_transaction_error(exc: BaseException) -> bool:
+    """True when Postgres rejected a write because the session is READ ONLY."""
+    msg = str(exc).lower()
+    return (
+        "read-only transaction" in msg
+        or "readonlysqltransaction" in msg
+    )

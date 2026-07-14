@@ -106,6 +106,16 @@ def get_programme_export_queue_metrics():
 
 
 def process_next_programme_export_job():
+    from app.db_retry import with_db_retry
+
+    @with_db_retry(max_attempts=3, delay=0.2)
+    def _claim_and_run():
+        return _process_next_programme_export_job_once()
+
+    return _claim_and_run()
+
+
+def _process_next_programme_export_job_once():
     bind = db.session.get_bind()
     if bind.dialect.name == 'postgresql':
         job = ProgrammeExportJob.query.filter_by(

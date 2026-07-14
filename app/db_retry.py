@@ -34,11 +34,39 @@ from flask import current_app
 from sqlalchemy.exc import OperationalError, DBAPIError, DisconnectionError
 from werkzeug.exceptions import HTTPException
 
-from app.lib.db_transient_errors import is_transient_db_connectivity_error
+from app.lib.db_transient_errors import (
+    is_readonly_sql_transaction_error,
+    is_transient_db_connectivity_error,
+)
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
+
+
+def discard_db_session(*, invalidate_connection: bool = False) -> None:
+    """Rollback and remove the current session; optionally invalidate the socket.
+
+    When ``invalidate_connection`` is True (e.g. ReadOnlySqlTransaction from a
+    contaminated Neon/PgBouncer backend), the underlying DBAPI connection is
+    dropped from the pool so the next checkout cannot reuse the same socket.
+    """
+    from app import db
+
+    if invalidate_connection:
+        try:
+            conn = db.session.connection()
+            conn.invalidate()
+        except Exception:
+            pass
+    try:
+        db.session.rollback()
+    except Exception:
+        pass
+    try:
+        db.session.remove()
+    except Exception:
+        pass
 
 
 def is_connection_error(exc: Exception) -> bool:
@@ -98,29 +126,23 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
                             "Database error in %s (attempt %d/%d): %s",
                             func.__name__, attempt, attempts, e,
                         )
-                        try:
-                            db.session.rollback()
-                        except Exception:
-                            pass
+                        discard_db_session(
+                            invalidate_connection=is_readonly_sql_transaction_error(e),
+                        )
                         raise
 
                     logger.warning(
                         "Transient DB error in %s (attempt %d/%d): %s — retrying in %.1fs",
                         func.__name__, attempt, attempts, e, base_delay * attempt,
                     )
-                    try:
-                        db.session.rollback()
-                    except Exception:
-                        pass
-                    try:
-                        db.session.remove()
-                    except Exception:
-                        pass
+                    # Always invalidate on read-only contamination so the next
+                    # attempt does not reuse the same poisoned pooler backend.
+                    discard_db_session(
+                        invalidate_connection=is_readonly_sql_transaction_error(e),
+                    )
                     # NOTE: db.engine.dispose() is intentionally NOT called here.
                     # Disposing the engine drops every connection in the shared pool
                     # and would cascade failures to all concurrent requests.
-                    # The engine-level creator (config.py) retries new connections
-                    # automatically; session.remove() is sufficient for mid-request drops.
                     time.sleep(base_delay * attempt)
 
                 except HTTPException:
@@ -128,10 +150,7 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
 
                 except Exception as e:
                     logger.error("Unexpected error in %s: %s", func.__name__, e)
-                    try:
-                        db.session.rollback()
-                    except Exception:
-                        pass
+                    discard_db_session()
                     raise
 
             # Only reached if attempts == 0 (shouldn't happen) or all retries
@@ -150,8 +169,4 @@ def cleanup_db_session():
     to return the underlying connection to the pool and avoid session leaks
     between job executions.
     """
-    from app import db
-    try:
-        db.session.remove()
-    except Exception as e:
-        logger.debug("Session cleanup error (safe to ignore): %s", e)
+    discard_db_session()

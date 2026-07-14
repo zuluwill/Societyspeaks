@@ -22,6 +22,11 @@ from app.resend_client import (
     resend_post_with_retry,
     _email_sending_allowed_for_environment,
 )
+from app.lib.email_idempotency import (
+    ensure_email_idempotency,
+    scoped_entity_ref,
+    send_attempt_entity_ref,
+)
 from app.briefing.link_tracker import wrap_links as _wrap_links, sign_url as _sign_url
 from app.storage_utils import get_base_url
 
@@ -346,9 +351,9 @@ class ResendClient:
             # Send with rate limiting
             self.rate_limiter.acquire()
 
-            # Stable idempotency key ensures a retried 5xx cannot produce
-            # a duplicate email — Resend deduplicates on this key.
-            send_idempotency_key = f"brief:{brief.id}:{subscriber.id}"
+            # Stable idempotency key: one brief → one subscriber. Brief HTML is
+            # fixed for a given brief id; DB last_brief_id_sent guards restarts.
+            send_idempotency_key = scoped_entity_ref('brief', brief.id, subscriber.id)
             success = self._send_with_retry(email_data, idempotency_key=send_idempotency_key)
 
             if success:
@@ -415,7 +420,7 @@ class ResendClient:
         Args:
             email_data: Email payload for Resend API
             idempotency_key: Optional stable key to prevent duplicate delivery on
-                             retried 5xx responses. Use "brief:{brief_id}:{subscriber_id}".
+                             retried 5xx responses. Defaults to a per-attempt key.
 
         Returns:
             bool: True on success, False on failure
@@ -426,12 +431,15 @@ class ResendClient:
             self.last_send_error = None
             return True
 
+        email_data, resolved_key = ensure_email_idempotency(
+            email_data, idempotency_key=idempotency_key, default_prefix='brief'
+        )
         success, result = resend_post_with_retry(
             self.api_key,
             email_data,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
-            idempotency_key=idempotency_key,
+            idempotency_key=resolved_key,
         )
         self.last_send_error = result if not success else None
         return success
@@ -650,7 +658,12 @@ class ResendClient:
             }
 
             self.rate_limiter.acquire()
-            welcome_idempotency_key = f"brief-welcome:{subscriber.id}"
+            # Per-attempt key: business "send welcome once" is enforced by
+            # welcome_email_sent_at, not a forever-stable Resend key (template /
+            # From drift within 24h would otherwise 409).
+            welcome_idempotency_key = send_attempt_entity_ref(
+                'brief-welcome', subscriber.id
+            )
             success = self._send_with_retry(
                 email_data,
                 idempotency_key=welcome_idempotency_key,

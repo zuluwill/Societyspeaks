@@ -780,6 +780,7 @@ def _send_partner_reset_email(partner, reset_url):
     added, pass the member here instead of the partner.
     """
     from app.resend_client import get_resend_client, _render_for_user, _subject_for_user
+    from app.lib.email_idempotency import send_attempt_entity_ref
     client = get_resend_client()
     email_data = {
         'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
@@ -787,6 +788,12 @@ def _send_partner_reset_email(partner, reset_url):
         'subject': _subject_for_user(None, 'Reset your Society Speaks Partner Portal password'),
         'html': _render_for_user(None, 'emails/partner_password_reset.html',
                                  partner=partner, reset_url=reset_url),
+        # Partner reset tokens are deterministic per partner — per-attempt key.
+        'headers': {
+            'X-Entity-Ref-ID': send_attempt_entity_ref(
+                'partner-reset', partner.id
+            ),
+        },
     }
     return client._send_with_retry(email_data)
 
@@ -1461,7 +1468,9 @@ def portal_usage_csv():
 
 def _send_partner_member_invite_email(partner, email, invite_url, inviter_name=None):
     from app.resend_client import get_resend_client
+    from app.lib.email_idempotency import token_entity_ref, url_token_segment
     client = get_resend_client()
+    token = url_token_segment(invite_url)
     email_data = {
         'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
         'to': [email],
@@ -1472,6 +1481,11 @@ def _send_partner_member_invite_email(partner, email, invite_url, inviter_name=N
             invite_url=invite_url,
             inviter_name=inviter_name or partner.name,
         ),
+        'headers': {
+            'X-Entity-Ref-ID': token_entity_ref(
+                'partner-invite', partner.id, token or invite_url
+            ),
+        },
     }
     return client._send_with_retry(email_data)
 

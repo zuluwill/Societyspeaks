@@ -203,6 +203,7 @@ def _send_draft_notification_email(
             'html': html_content,
         }
 
+        # Idempotency key auto-attached by _send_with_retry (per-attempt).
         success = client._send_with_retry(email_data)
 
         if success:

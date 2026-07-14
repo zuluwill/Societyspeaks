@@ -603,6 +603,17 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    # Neon/PgBouncer: clear session-level READ ONLY on every pool checkout so
+    # a contaminated backend cannot fail INSERTs / FOR UPDATE across requests.
+    try:
+        with app.app_context():
+            from app.lib.db_engine_guards import register_engine_read_write_guard
+            register_engine_read_write_guard(db.engine)
+    except Exception:
+        app.logger.warning(
+            "Could not register DB read-write checkout guard",
+            exc_info=True,
+        )
     csrf.init_app(app)
     compress.init_app(app)
     login_manager.init_app(app)
@@ -1073,11 +1084,16 @@ def create_app():
     # Transient database connectivity → 503; other DB operational errors → 500.
     @app.errorhandler(Exception)
     def handle_exception(e):
-        from sqlalchemy.exc import OperationalError as _SAOperationalError, DisconnectionError as _SADisconnectionError
+        from sqlalchemy.exc import (
+            OperationalError as _SAOperationalError,
+            DisconnectionError as _SADisconnectionError,
+            InternalError as _SAInternalError,
+        )
         # Let HTTP exceptions (like 404, 403, etc.) be handled by their specific handlers
         if isinstance(e, HTTPException):
             return e
-        if isinstance(e, (_SAOperationalError, _SADisconnectionError)):
+        # InternalError covers psycopg2.ReadOnlySqlTransaction (not an OperationalError).
+        if isinstance(e, (_SAOperationalError, _SADisconnectionError, _SAInternalError)):
             ra = str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
             if is_transient_db_connectivity_error(e):
                 app.logger.error("Database connectivity error (503): %s", e, exc_info=True)

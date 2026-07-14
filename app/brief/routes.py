@@ -38,6 +38,7 @@ from app.trending.conversion_tracking import track_social_click
 from app.decorators import admin_required
 from app.brief.subscription import process_subscription
 from app.lib.partner_portal_session import sync_partner_portal_session_for_email
+from app.lib.db_utils import retry_on_db_disconnect
 from app.brief.constants import VALID_SEND_HOURS, DEFAULT_SEND_HOUR, WEEKLY_DAY_NAMES
 from flask_babel import gettext as _
 
@@ -1026,6 +1027,7 @@ def admin_test_send():
 
 @brief_bp.route('/brief/webhooks/resend', methods=['POST'])
 @csrf.exempt  # Machine-to-machine POST authenticated by svix signature, not session CSRF
+@retry_on_db_disconnect(max_attempts=3, backoff_s=0.15)
 def resend_webhook():
     """
     Unified Resend webhook handler for ALL email types.

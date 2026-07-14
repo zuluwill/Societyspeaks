@@ -97,7 +97,7 @@ def test_each_batch_gets_stable_distinct_idempotency_key(monkeypatch):
 
     _run(monkeypatch, client, subscribers)
 
-    assert all(key and key.startswith('daily-question-42-') for key in client.batch_keys)
+    assert all(key and key.startswith('daily-question:42:') for key in client.batch_keys)
     assert len(set(client.batch_keys)) == len(client.batch_keys)
 
     # Same batch composition → same key (safe for HTTP retries of one call).
@@ -200,10 +200,14 @@ def test_weekly_and_monthly_digests_carry_stable_idempotency_key(app, monkeypatc
         assert client.send_monthly_questions_digest(subscriber, questions)
 
     from app.lib.time import utcnow_naive
+    from app.lib.email_idempotency import content_fingerprint, scoped_entity_ref
 
     iso_year, iso_week, _ = utcnow_naive().date().isocalendar()
     weekly, monthly = captured
-    # Calendar-bucketed, not content-derived: a crashed run that retries with
-    # differently-selected questions must still produce the same key.
-    assert weekly['headers']['X-Entity-Ref-ID'] == f'weekly-digest-{iso_year}w{iso_week:02d}-7'
-    assert monthly['headers']['X-Entity-Ref-ID'] == f'monthly-digest-{utcnow_naive():%Y-%m}-7'
+    q_fp = content_fingerprint([42])
+    assert weekly['headers']['X-Entity-Ref-ID'] == scoped_entity_ref(
+        'weekly-digest', f'{iso_year}w{iso_week:02d}', 7, q_fp
+    )
+    assert monthly['headers']['X-Entity-Ref-ID'] == scoped_entity_ref(
+        'monthly-digest', f'{utcnow_naive():%Y-%m}', 7, q_fp
+    )

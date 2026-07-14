@@ -26,9 +26,12 @@ Canonical transient phrases live in :mod:`app.lib.db_transient_errors`.
 import time
 import logging
 import functools
-from sqlalchemy.exc import OperationalError, DisconnectionError
+from sqlalchemy.exc import OperationalError, DisconnectionError, InternalError
 
-from app.lib.db_transient_errors import is_transient_db_connectivity_error
+from app.lib.db_transient_errors import (
+    is_readonly_sql_transaction_error,
+    is_transient_db_connectivity_error,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +63,13 @@ def retry_on_db_disconnect(max_attempts: int = 2, backoff_s: float = 0.2):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             from app import db  # local import avoids circular imports at module load
+            from app.db_retry import discard_db_session
+
             last_exc = None
             for attempt in range(1, max_attempts + 1):
                 try:
                     return fn(*args, **kwargs)
-                except (OperationalError, DisconnectionError) as exc:
+                except (OperationalError, DisconnectionError, InternalError) as exc:
                     if not _is_transient_db_error(exc):
                         raise
                     last_exc = exc
@@ -72,11 +77,9 @@ def retry_on_db_disconnect(max_attempts: int = 2, backoff_s: float = 0.2):
                         "Transient DB disconnect on attempt %d/%d for %s: %s — retrying",
                         attempt, max_attempts, fn.__qualname__, exc,
                     )
-                    try:
-                        db.session.rollback()
-                        db.session.remove()
-                    except Exception:
-                        pass
+                    discard_db_session(
+                        invalidate_connection=is_readonly_sql_transaction_error(exc),
+                    )
                     if attempt < max_attempts:
                         time.sleep(backoff_s * attempt)
             raise last_exc

@@ -26,6 +26,9 @@ from app.models.briefing import BriefTemplate
 # ---------------------------------------------------------------------------
 
 def _seed_plan(db):
+    existing = PricingPlan.query.filter_by(code='starter').first()
+    if existing:
+        return existing
     plan = PricingPlan(
         code='starter', name='Personal',
         price_monthly=499, price_yearly=4900,
@@ -37,6 +40,9 @@ def _seed_plan(db):
 
 
 def _seed_template(db, slug='technology-ai-regulation', name='AI & Technology', featured=True):
+    existing = BriefTemplate.query.filter_by(slug=slug).first()
+    if existing:
+        return existing
     tpl = BriefTemplate(
         slug=slug,
         name=name,
@@ -178,9 +184,7 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
         })
         return True
 
-    with patch('app.briefing.routes.send_magic_login_email', _fake_send, create=True):
-        # send_magic_login_email is imported inside the function — patch the
-        # source so the late import resolves to our fake.
+    with patch('app.lib.magic_login_dispatch.send_magic_login_email', _fake_send):
         with patch('app.resend_client.send_magic_login_email', _fake_send):
             resp = client.post(
                 '/briefings/start',
@@ -207,11 +211,42 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
     # And the User was created.
     with trial_app.app_context():
         created = User.query.filter_by(email='newperson@example.com').first()
+    assert created is not None
+    assert created.email_verified is False
+
+
+def test_post_start_send_failure_redirects_with_error_not_inbox(trial_app, db):
+    """Resend failure must not show check-inbox or leave a dead token gate."""
+    with trial_app.app_context():
+        _seed_plan(db)
+        _seed_template(db)
+        db.session.commit()
+
+    client = trial_app.test_client()
+
+    with patch(
+        'app.lib.magic_login_dispatch.send_magic_login_email',
+        return_value=False,
+    ):
+        resp = client.post(
+            '/briefings/start',
+            data={
+                'email': 'failmail@example.com',
+                'template': 'technology-ai-regulation',
+                'csrf_token': 'test',
+            },
+            follow_redirects=False,
+        )
+
+    assert resp.status_code == 302
+    assert '/briefings/start' in resp.headers['Location']
+
+    with trial_app.app_context():
+        created = User.query.filter_by(email='failmail@example.com').first()
         assert created is not None
-        assert created.email_verified is False
+        # No successful send → valid_after restored to None (no prior link).
+        assert created.magic_login_valid_after is None
 
-
-def test_post_start_disposable_email_renders_generic_warning(trial_app, db):
     with trial_app.app_context():
         _seed_plan(db)
         _seed_template(db)

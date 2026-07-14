@@ -29,11 +29,36 @@ def _op_with_message(msg: str) -> OperationalError:
         "server closed the connection unexpectedly",
         "could not connect to server: Network is unreachable",
         "connection reset by peer",
+        "cannot execute INSERT in a read-only transaction",
+        "(psycopg2.errors.ReadOnlySqlTransaction) cannot execute SELECT FOR UPDATE",
     ),
 )
 def test_transient_classification_positive(message):
     assert is_transient_db_connectivity_error(_op_with_message(message))
     assert is_transient_db_connectivity_error(Exception(message))
+
+
+def test_readonly_sql_transaction_helper():
+    from app.lib.db_transient_errors import is_readonly_sql_transaction_error
+
+    assert is_readonly_sql_transaction_error(
+        Exception("cannot execute INSERT in a read-only transaction")
+    )
+    assert not is_readonly_sql_transaction_error(Exception("connection timed out"))
+
+
+def test_engine_read_write_guard_registers_once(app):
+    from app.lib.db_engine_guards import register_engine_read_write_guard, _GUARD_FLAG
+    from app import db
+
+    # create_app already registers on postgres; sqlite tests skip.
+    first = register_engine_read_write_guard(db.engine)
+    second = register_engine_read_write_guard(db.engine)
+    if "sqlite" in str(db.engine.url):
+        assert first is False and second is False
+    else:
+        assert getattr(db.engine, _GUARD_FLAG, False) is True
+        assert second is False
 
 
 @pytest.mark.parametrize(

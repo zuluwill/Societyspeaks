@@ -22,6 +22,40 @@ After env-only changes: Render → service → **Manual Deploy**.
 
 **Worker restart emails** (scheduler / consensus) on every push are normal — those services restart with the new image. Keep Render notifications on **failure-only**. After `/health` is the web check path, web “connection refused” during deploy should largely stop; if it continues after the new instance is live, investigate.
 
+## Neon pooler — never session READ ONLY
+
+Production `DATABASE_URL` is the Neon **`-pooler`** endpoint (PgBouncer transaction mode). Session settings stick on the backend and are reused by the next client.
+
+**Do not** open ops/analysis connections with `set_session(readonly=True)` or
+`SET default_transaction_read_only = on` against the pooler URL — that causes
+intermittent `ReadOnlySqlTransaction` failures on INSERT / `SELECT FOR UPDATE`
+across web, webhooks, and workers.
+
+Prefer:
+
+- a **direct** (non-pooler) Neon URL for one-off scripts that need session state, or
+- transaction-scoped `BEGIN TRANSACTION READ ONLY` (does not contaminate the pool).
+
+The app clears `default_transaction_read_only` on every SQLAlchemy checkout
+(`app/lib/db_engine_guards.py`) and treats `read-only transaction` as a
+retryable transient error.
+
+If Sentry shows a burst of `ReadOnlySqlTransaction` errors, detox the pool:
+
+```bash
+# From a machine with NEON_OWNER_DATABASE_URL (pooler or direct):
+python3 - <<'PY'
+import os, time, psycopg2
+url = os.environ['NEON_OWNER_DATABASE_URL']
+for _ in range(24):
+    c = psycopg2.connect(url); c.autocommit = True
+    cur = c.cursor()
+    cur.execute('SET default_transaction_read_only TO off')
+    cur.close(); c.close(); time.sleep(0.05)
+print('detox done')
+PY
+```
+
 ## Automated backups
 
 Render Cron `societyspeaks-db-backup` runs daily (`0 3 * * *` UTC):
@@ -204,29 +238,67 @@ python3 scripts/activate_imported_subscribers.py --batch 250 --source <label> --
 Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 
 1. No activation while any send pipeline change is unverified or a bounce
-   spike is under observation.
+   spike is under observation. **Clean week** (required before the first
+   batch): ≥7 consecutive Europe/London send-days with day-level bounce
+   **comfortably under 2%** and complaints **<0.1%**, after E0 webhook
+   reconnect (opens/delivers landing). A single day sitting on the 2% line
+   does **not** start the clock.
 2. Batches of 250–500; after each batch, check bounce + complaint rates in
    `email_event` for the following two sends before the next batch.
    Kill-switch: complaints >0.1% or bounces >2% → stop the ramp.
 3. Both dry-run by default; `--commit` applies. Only rows with
    `status='imported'` can ever be activated.
+4. Prefer real IANA `timezone` on the batch before `--commit`. Import sets
+   timezone for *new* rows from chapter/country; **activation does not**.
+   UTC leftovers still receive 18:00 UTC. Check readiness with section 7 of
+   `docs/analysis/sql/stance-loop-scoreboard.sql`.
+
+### Deliverability monitoring (how to read the numbers)
+
+- **Source of truth for kill-switch:** Neon `email_event` day totals for
+  `email_category = 'daily_brief'`, bucketed by **Europe/London** date (so
+  they match Resend dashboard "Yesterday"). Cross-check Resend after each
+  send wave; they should agree within ~1–2%.
+- **Canonical query:** `docs/analysis/sql/stance-loop-scoreboard.sql`
+  (sections 1–2).
+- **Day-level, not hourly.** Soft (Transient) bounces often arrive hours
+  after send. Morning Resend charts can show 10%+ "RISK" bars when almost
+  no mail was sent that hour — ignore those; use the day total.
+- **Transient vs Permanent:** both count toward the >2% kill-switch.
+  Permanent/hard bounces are worse for list hygiene (expect suppressions);
+  a day of only Transient near 2% is yellow — watch the next day before
+  declaring clean.
+- **Opens exist only for mail sent after 2026-07-12** (webhook reconnect).
+  Pre-12 Jul bounce/complaint history in Neon is incomplete.
+
+**Status snapshot (2026-07-14):** webhook + opens live since 12 Jul;
+complaints 0; 13 Jul bounce ~1.96% Neon / 2.11% Resend (all Transient) —
+on the fence, clean week **not** started. 4,526 still `imported`.
 
 ## Daily brief send integrity
 
 Sends are duplicate-proof at three layers: an atomic per-(subscriber, brief)
 claim in the database (conditional UPDATE on `last_brief_id_sent` — exactly
 one loop can win; failed sends release the claim for catch-up retry), a
-stable Resend `Idempotency-Key` (`brief:{brief_id}:{subscriber_id}`), and the
+stable Resend `Idempotency-Key` (`brief:{brief_id}:{subscriber_id}` — see
+`app/lib/email_idempotency.py`), and the
 hourly job's catch-up behaviour, which re-covers subscribers missed by a
-mid-send restart. Deploys during the send window (~17:00–21:30 UTC) are
-therefore safe but still ungraceful — they abort the in-flight loop and
-delay the tail to the next hourly tick, so prefer deploying outside it.
+mid-send restart. Deploys during the send window are therefore safe but
+still ungraceful — they abort the in-flight loop and delay the tail to the
+next hourly tick, so prefer deploying outside the active wave.
+
+**Local-time delivery:** each subscriber's `timezone` + `preferred_send_hour`
+(default 18) drives `next_send_at`. After the 2026-07 timezone backfill the
+daily wave is follow-the-sun (UK evening → US East → US West), not a single
+18:00 UTC spike. Expect day-over-day volume charts to stretch across UTC
+midnight; each subscriber still gets at most one copy per brief (claims).
 
 **Suppressions:** `email.suppressed` webhook events mark the subscriber
 `status='suppressed'` automatically (Resend refuses these addresses — prior
 hard bounces/complaints). They leave the active pool so every rate stays
-honest. 801 backfilled on 2026-07-13 (791 of them from the imported cohort ≈
-17% of it — expect a similar rate as dormant batches activate).
+honest. 801 backfilled on 2026-07-13 (791 from the imported cohort); pool
+was **874** suppressed as of 2026-07-14 — expect a similar rate as dormant
+batches activate.
 
 ## Resend webhook verification
 
@@ -251,7 +323,13 @@ Verification checklist (run after any Resend or webhook change):
 
 Open tracking is a per-domain Resend setting (tracking subdomain
 `link.brief.societyspeaks.io`, DNS-only CNAME). Click tracking stays OFF —
-clicks are tracked first-party and webhook copies are dropped.
+clicks are tracked first-party and webhook copies are dropped. Opens land
+in `email_event` only for mail sent after the 2026-07-12 webhook reconnect.
+
+After any Resend or webhook change, also spot-check that Resend dashboard
+day totals ≈ Neon London-day totals from the scoreboard SQL (within a
+couple of percent). Silence in Neon while Resend shows deliveries means
+the webhook is blind — freeze the activation ramp.
 
 ## Email unsubscribe compliance (RFC 8058)
 

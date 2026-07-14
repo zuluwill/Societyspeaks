@@ -910,33 +910,32 @@ def _handle_start_trial_post(featured_templates, default_slug):
 
     # Generate magic-link + send email.
     try:
-        token = user.get_magic_login_token()
-        db.session.commit()
+        from app.lib.magic_login_dispatch import dispatch_magic_login_email
+
+        sent = dispatch_magic_login_email(
+            user,
+            lambda token: url_for(
+                'auth.magic_link_landing',
+                token=token,
+                next=safe_next,
+                _external=True,
+            ),
+            submitted_email=email,
+        )
     except Exception as exc:
         db.session.rollback()
-        logger.error(f"Magic-link token gen failed for user {user.id}: {exc}", exc_info=True)
+        logger.error(f"Magic-link dispatch failed for user {user.id}: {exc}", exc_info=True)
         flash(_("We had trouble sending the sign-in link. Try again in a moment."), 'error')
         return redirect(url_for('briefing.start_trial', template=template_slug))
 
-    try:
-        # Embed ``next`` in the email link so cross-device clicks still reach
-        # /briefings/start/complete (session-only redirect is lost on another device).
-        magic_url = url_for(
-            'auth.magic_link_landing',
-            token=token,
-            next=safe_next,
-            _external=True,
-        )
-        from app.resend_client import send_magic_login_email
-        send_magic_login_email(user, magic_url, submitted_email=email)
-        _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
-            'template_slug': template_slug,
-            'is_returning_email': is_returning_email,
-        })
-    except Exception as exc:
-        logger.error(f"Magic-link send failed for user {user.id}: {exc}", exc_info=True)
+    if not sent:
         flash(_("We couldn't send the sign-in email. Try again in a moment."), 'error')
         return redirect(url_for('briefing.start_trial', template=template_slug))
+
+    _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
+        'template_slug': template_slug,
+        'is_returning_email': is_returning_email,
+    })
 
     account_notice = None
     if is_returning_email:

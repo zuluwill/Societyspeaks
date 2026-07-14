@@ -728,11 +728,17 @@ def journey_reminder_subscribe(slug):
                     'base_url': base_url,
                 }
                 html = _rt('emails/journey_reminder_confirm.html', **_mail_ctx)
+            from app.lib.email_idempotency import token_entity_ref
             email_data = {
                 'from': client.from_email,
                 'to': [email],
                 'subject': subject,
                 'html': html,
+                'headers': {
+                    'X-Entity-Ref-ID': token_entity_ref(
+                        'journey-reminder-confirm', sub.id, token
+                    ),
+                },
             }
             client._send_with_retry(email_data, use_rate_limit=False)
         else:
@@ -949,8 +955,10 @@ def unarchive_programme(slug):
 
 def _send_steward_invite_email(programme, email, invite_url):
     from app.resend_client import get_resend_client
+    from app.lib.email_idempotency import token_entity_ref, url_token_segment
 
     client = get_resend_client()
+    token = url_token_segment(invite_url)
     email_data = {
         'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
         'to': [email],
@@ -961,14 +969,21 @@ def _send_steward_invite_email(programme, email, invite_url):
             invite_url=invite_url,
             inviter_name=current_user.username
         ),
+        'headers': {
+            'X-Entity-Ref-ID': token_entity_ref(
+                'steward-invite', programme.id, token or invite_url
+            ),
+        },
     }
     return client._send_with_retry(email_data)
 
 
 def _send_pending_steward_invite_email(programme, email, invite_url, inviter_name):
     from app.resend_client import get_resend_client
+    from app.lib.email_idempotency import token_entity_ref, url_token_segment
 
     client = get_resend_client()
+    token = url_token_segment(invite_url)
     email_data = {
         'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
         'to': [email],
@@ -979,6 +994,11 @@ def _send_pending_steward_invite_email(programme, email, invite_url, inviter_nam
             invite_url=invite_url,
             inviter_name=inviter_name,
         ),
+        'headers': {
+            'X-Entity-Ref-ID': token_entity_ref(
+                'steward-invite-pending', programme.id, token or invite_url
+            ),
+        },
     }
     return client._send_with_retry(email_data)
 
@@ -1089,6 +1109,7 @@ def invite_steward(slug):
 
 def _send_access_grant_email(programme, email, programme_url):
     from app.resend_client import get_resend_client
+    from app.lib.email_idempotency import send_attempt_entity_ref
 
     client = get_resend_client()
     email_data = {
@@ -1101,6 +1122,11 @@ def _send_access_grant_email(programme, email, programme_url):
             programme_url=programme_url,
             inviter_name=current_user.username,
         ),
+        'headers': {
+            'X-Entity-Ref-ID': send_attempt_entity_ref(
+                'programme-access', programme.id
+            ),
+        },
     }
     return client._send_with_retry(email_data)
 

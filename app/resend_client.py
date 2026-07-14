@@ -22,6 +22,14 @@ from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_e
 from app.briefing.link_tracker import wrap_links as _wrap_links
 from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
 from app.programmes.journey import GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME
+from app.lib.email_idempotency import (
+    content_fingerprint,
+    ensure_email_idempotency,
+    scoped_entity_ref,
+    send_attempt_entity_ref as _send_attempt_entity_ref,
+    token_entity_ref as _token_entity_ref,
+    url_token_segment as _url_token_segment,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +147,25 @@ def _resend_http_post(
                 )
                 logger.error(f"{log_prefix}: {err}")
                 return None, err
+            elif response.status_code == 409:
+                # Resend distinguishes concurrent (safe to retry) from
+                # invalid_idempotent_request (same key, different body — don't retry).
+                err_name = ''
+                try:
+                    err_name = (response.json() or {}).get('name') or ''
+                except Exception:
+                    err_name = ''
+                if err_name == 'concurrent_idempotent_requests' and attempt < max_retries - 1:
+                    wait = retry_delay * (2 ** attempt)
+                    logger.warning(
+                        f"{log_prefix} concurrent idempotent request — waiting {wait:.1f}s "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(wait)
+                    continue
+                err = f"API error: {response.status_code} - {response.text}"
+                logger.error(f"{log_prefix}: {err}")
+                return None, err
             else:
                 err = f"API error: {response.status_code} - {response.text}"
                 logger.error(f"{log_prefix}: {err}")
@@ -162,14 +189,19 @@ def _resend_http_post(
     return None, "Max retries exceeded"
 
 
-def _weekly_digest_ref(prefix: str, recipient_id) -> str:
-    """Idempotency ref for weekly sends, stable across a retried run.
+def _weekly_digest_ref(prefix: str, recipient_id, *content_parts) -> str:
+    """Idempotency ref for weekly sends.
 
-    Keyed by ISO calendar week so a crash-and-retry cannot deliver twice,
-    even if the retried run selects different content.
+    Calendar week + recipient scopes the campaign; ``content_parts`` fingerprint
+    the body so Resend never sees the same key with a different payload
+    (409 ``invalid_idempotent_request``). Cross-restart "already mailed this
+    week" is enforced by DB markers such as ``last_weekly_email_sent``.
     """
     iso_year, iso_week, _ = utcnow_naive().date().isocalendar()
-    return f'{prefix}-{iso_year}w{iso_week:02d}-{recipient_id}'
+    parts = [f'{iso_year}w{iso_week:02d}', recipient_id]
+    if content_parts:
+        parts.append(content_fingerprint(content_parts))
+    return scoped_entity_ref(prefix, *parts)
 
 
 def resend_post_with_retry(
@@ -339,13 +371,24 @@ class ResendEmailClient:
         # Base URL for building links
         self.base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io')
 
-    def _send_with_retry(self, email_data: Dict[str, Any], use_rate_limit: bool = True) -> bool:
+    def _send_with_retry(
+        self,
+        email_data: Dict[str, Any],
+        use_rate_limit: bool = True,
+        idempotency_key: Optional[str] = None,
+    ) -> bool:
         """
         Send a single email via Resend with rate limiting and retry.
+
+        Always attaches a Resend Idempotency-Key (via ``X-Entity-Ref-ID``):
+        explicit key / existing header if present, otherwise a per-attempt UUID.
+        Call sites that omit a key still get HTTP-retry safety without 409 risk
+        on later unrelated sends.
 
         Args:
             email_data: Email payload for Resend API
             use_rate_limit: Whether to apply rate limiting (default True)
+            idempotency_key: Optional explicit key (overrides header)
 
         Returns:
             bool: True on success, False on failure
@@ -370,12 +413,8 @@ class ResendEmailClient:
                 return False
             cleaned_to.append(clean)
         email_data = {**email_data, 'to': cleaned_to}
-
-        # Use X-Entity-Ref-ID (already set on transactional emails) as the
-        # HTTP-level Idempotency-Key so that a retried 5xx cannot produce
-        # a duplicate delivery.
-        idempotency_key: Optional[str] = (
-            email_data.get('headers', {}).get('X-Entity-Ref-ID') or None
+        email_data, resolved_key = ensure_email_idempotency(
+            email_data, idempotency_key=idempotency_key
         )
 
         if use_rate_limit:
@@ -386,7 +425,7 @@ class ResendEmailClient:
             email_data,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
-            idempotency_key=idempotency_key,
+            idempotency_key=resolved_key,
         )
         if success:
             self.last_message_id = result
@@ -537,7 +576,8 @@ class ResendEmailClient:
             user,
             template_stem='emails/password_reset',
             subject_msgid='Reset Your Password - Society Speaks',
-            entity_ref_id=f"password-reset:{user.id}:{token[:16]}",
+            # Reset tokens are deterministic per user — per-attempt key required.
+            entity_ref_id=_send_attempt_entity_ref('password-reset', user.id),
             log_label='Password reset',
             username=user.username or 'User',
             reset_url=reset_url,
@@ -553,14 +593,13 @@ class ResendEmailClient:
         """
         from app.lib.user_display import friendly_display_name
 
-        # Tail of the URL is the signed token; use a short prefix as dedup key.
-        _token_tail = magic_url.rstrip('/').rsplit('/', 1)[-1][:16]
+        token = _url_token_segment(magic_url)
         greeting_name = friendly_display_name(user, submitted_email=submitted_email)
         return self._send_transactional_email(
             user,
             template_stem='emails/magic_login',
             subject_msgid='Your Society Speaks sign-in link',
-            entity_ref_id=f"magic-login:{user.id}:{_token_tail}",
+            entity_ref_id=_token_entity_ref('magic-login', user.id, token),
             log_label='Magic-login',
             username=greeting_name,
             magic_url=magic_url,
@@ -573,7 +612,7 @@ class ResendEmailClient:
             user,
             template_stem='emails/welcome',
             subject_msgid='Welcome to Society Speaks!',
-            entity_ref_id=f"welcome:{user.id}",
+            entity_ref_id=_send_attempt_entity_ref('welcome', user.id),
             log_label='Welcome',
             username=user.username or 'There',
             verification_url=verification_url,
@@ -582,14 +621,12 @@ class ResendEmailClient:
 
     def send_verification_email(self, user, verification_url: str) -> bool:
         """Send a standalone email verification email (used for resends)."""
-        # Last path segment of the verification URL is the token; short prefix
-        # keeps Ref-ID stable across retries of the same send.
-        _token_tail = verification_url.rstrip('/').rsplit('/', 1)[-1][:16]
         return self._send_transactional_email(
             user,
             template_stem='emails/verify_email',
             subject_msgid='Verify your Society Speaks email address',
-            entity_ref_id=f"verify:{user.id}:{_token_tail}",
+            # Verify tokens dump only user_id — deterministic; per-attempt key.
+            entity_ref_id=_send_attempt_entity_ref('verify', user.id),
             log_label='Verification',
             username=user.username or 'there',
             verification_url=verification_url,
@@ -612,7 +649,7 @@ class ResendEmailClient:
             user,
             template_stem='emails/account_activation',
             subject_msgid='Activate Your Society Speaks Account',
-            entity_ref_id=f"activate:{user.id}:{activation_token[:16]}",
+            entity_ref_id=_send_attempt_entity_ref('activate', user.id),
             log_label='Account activation',
             username=user.username or 'User',
             activation_url=activation_url,
@@ -661,7 +698,10 @@ class ResendEmailClient:
             'html': html,
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                'X-Entity-Ref-ID': _send_attempt_entity_ref(
+                    'daily-question-welcome', subscriber.id
+                ),
             }
         }
 
@@ -865,12 +905,14 @@ class ResendEmailClient:
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                # Doubles as the Idempotency-Key: a retried 5xx or a crash
-                # between the API 200 and the caller's commit cannot deliver
-                # this subscriber's digest twice. Keyed by calendar week, not
-                # question ids — a re-run may select different questions, and
-                # the key must stay stable across that.
-                'X-Entity-Ref-ID': _weekly_digest_ref('weekly-digest', subscriber.id),
+                # Idempotency-Key: week + subscriber + question-id fingerprint so
+                # key always matches this body. DB last_weekly_email_sent guards
+                # cross-restart "already sent this week".
+                'X-Entity-Ref-ID': _weekly_digest_ref(
+                    'weekly-digest',
+                    subscriber.id,
+                    *(q.id for q in questions),
+                ),
             }
         }
 
@@ -966,12 +1008,14 @@ class ResendEmailClient:
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                # Doubles as the Idempotency-Key: a retried 5xx or a crash
-                # between the API 200 and the caller's commit cannot deliver
-                # this subscriber's digest twice. Keyed by calendar month, not
-                # question ids — a re-run may select different questions, and
-                # the key must stay stable across that.
-                'X-Entity-Ref-ID': f'monthly-digest-{utcnow_naive():%Y-%m}-{subscriber.id}',
+                # Idempotency-Key: month + subscriber + question-id fingerprint.
+                # DB last_monthly_email_sent guards cross-restart duplicates.
+                'X-Entity-Ref-ID': scoped_entity_ref(
+                    'monthly-digest',
+                    f'{utcnow_naive():%Y-%m}',
+                    subscriber.id,
+                    content_fingerprint(q.id for q in questions),
+                ),
             }
         }
 
@@ -1056,7 +1100,9 @@ class ResendEmailClient:
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
                 # Doubles as the Idempotency-Key on individual-send fallback,
                 # so a retried 5xx cannot deliver twice.
-                'X-Entity-Ref-ID': f'daily-question-{question.id}-{subscriber.id}',
+                'X-Entity-Ref-ID': scoped_entity_ref(
+                    'daily-question', question.id, subscriber.id
+                ),
             }
         }
 
@@ -1114,18 +1160,16 @@ class ResendEmailClient:
                     results['failed_emails'].append(subscriber.email)
 
             if batch_emails:
-                # Stable per-batch key: an HTTP retry of the same batch cannot
-                # deliver twice. Fingerprint the subscribers whose payloads
+                # Stable per-batch key: fingerprint subscribers whose payloads
                 # actually built, so key and request body always match.
                 # (Cross-restart protection comes from the per-batch commit
                 # below, not from this key.)
-                import hashlib
-                batch_fingerprint = hashlib.sha256(
-                    ','.join(str(s.id) for s in built_subscribers).encode()
-                ).hexdigest()[:16]
+                batch_fingerprint = content_fingerprint(s.id for s in built_subscribers)
                 batch_result = self._send_batch(
                     batch_emails,
-                    idempotency_key=f'daily-question-{question.id}-{batch_fingerprint}',
+                    idempotency_key=scoped_entity_ref(
+                        'daily-question', question.id, batch_fingerprint
+                    ),
                 )
 
                 batch_errors = batch_result.get('errors', [])
@@ -1396,7 +1440,13 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
             'from': client.from_email,
             'to': [user.email],
             'subject': subject,
-            'html': html_content
+            'html': html_content,
+            'headers': {
+                'X-Entity-Ref-ID': _send_attempt_entity_ref(
+                    f'discussion-{notification_type}',
+                    getattr(discussion, 'id', 'na'),
+                ),
+            },
         }
 
         success = client._send_with_retry(email_data, use_rate_limit=False)
@@ -1459,6 +1509,13 @@ def send_org_invitation_email(email: str, org_name: str, inviter_name: str, invi
             'to': [email],
             'subject': _subject_for_user(invitee_user, "You've been invited to join %(org)s on Society Speaks", org=org_name),
             'html': html,
+            'headers': {
+                'X-Entity-Ref-ID': _token_entity_ref(
+                    'org-invite',
+                    org_name,
+                    _url_token_segment(invite_url) or invite_url,
+                ),
+            },
         }
         success = client._send_with_retry(email_data, use_rate_limit=False)
         if success:
@@ -1510,6 +1567,11 @@ def _send_user_transactional_email(
             'to': [recipient],
             'subject': localized_subject,
             'html': html,
+            'headers': {
+                'X-Entity-Ref-ID': _send_attempt_entity_ref(
+                    'user-tx', getattr(user, 'id', 'na')
+                ),
+            },
         }
         success = client._send_with_retry(email_data, use_rate_limit=False)
         if success:
@@ -1897,9 +1959,15 @@ def send_weekly_discussion_digest(user, digest_data: dict) -> bool:
             'headers': {
                 'List-Unsubscribe': f'<{settings_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                # Doubles as the Idempotency-Key so a retried 5xx cannot
-                # deliver this week's digest twice.
-                'X-Entity-Ref-ID': _weekly_digest_ref('weekly-discussion-digest', user.id),
+                # Week + user + fingerprint of discussion ids in this payload.
+                'X-Entity-Ref-ID': _weekly_digest_ref(
+                    'weekly-discussion-digest',
+                    user.id,
+                    *(
+                        d.get('id') or d.get('discussion_id') or ''
+                        for d in digest_data.get('discussions_with_activity', [])
+                    ),
+                ),
             }
         }
         
@@ -2127,10 +2195,14 @@ def send_journey_reminder_email(
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                # Doubles as the Idempotency-Key. reminder_count increments
-                # only after a committed send, so a retry of the same reminder
-                # reuses the key while the next scheduled one gets a fresh one.
-                'X-Entity-Ref-ID': f'journey-reminder-{subscription.id}-{(subscription.reminder_count or 0) + 1}',
+                # Idempotency-Key. reminder_count increments only after a
+                # committed send, so a retry of the same reminder reuses the key
+                # while the next scheduled one gets a fresh one.
+                'X-Entity-Ref-ID': scoped_entity_ref(
+                    'journey-reminder',
+                    subscription.id,
+                    (subscription.reminder_count or 0) + 1,
+                ),
             },
         }
 
@@ -2217,10 +2289,14 @@ def send_game_reminder_email(
             'headers': {
                 'List-Unsubscribe': f'<{unsubscribe_url}>',
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                # Doubles as the Idempotency-Key. reminder_count increments
-                # only after a committed send, so a retry of the same reminder
-                # reuses the key while the next scheduled one gets a fresh one.
-                'X-Entity-Ref-ID': f'game-reminder-{subscription.id}-{(subscription.reminder_count or 0) + 1}',
+                # Idempotency-Key. reminder_count increments only after a
+                # committed send, so a retry of the same reminder reuses the key
+                # while the next scheduled one gets a fresh one.
+                'X-Entity-Ref-ID': scoped_entity_ref(
+                    'game-reminder',
+                    subscription.id,
+                    (subscription.reminder_count or 0) + 1,
+                ),
             },
         }
 

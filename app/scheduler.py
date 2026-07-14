@@ -252,7 +252,12 @@ def _send_ops_alert(message: str) -> None:
         subject = f"[Society Speaks] CRITICAL Scheduler Alert ({utcnow_naive().strftime('%Y-%m-%d %H:%M UTC')})"
         try:
             from app.resend_client import resend_post_with_retry
+            from app.lib.email_idempotency import send_attempt_entity_ref
 
+            # Per-attempt key: ops wants at-least-once re-alerts every cooldown
+            # window. A fingerprint-only key would 409 for 24h because the
+            # subject embeds a minute timestamp (same key, different body).
+            # In-memory _should_send_ops_alert already suppresses duplicates.
             success, _message_id = resend_post_with_retry(
                 resend_api_key,
                 {
@@ -264,6 +269,7 @@ def _send_ops_alert(message: str) -> None:
                 max_retries=3,
                 retry_delay=2.0,
                 timeout=10,
+                idempotency_key=send_attempt_entity_ref('ops-alert'),
             )
             if success:
                 alert_sent = True

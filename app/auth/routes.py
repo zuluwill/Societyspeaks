@@ -10,7 +10,7 @@ from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
 from app.analytics.events import record_event
 # Email functions (migrated from Loops to Resend)
-from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email, send_magic_login_email
+from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email
 from app.email_utils import extract_clean_email, get_missing_individual_profile_fields, get_missing_company_profile_fields
 from app.lib.auth_utils import normalize_email
 from app.lib.url_utils import safe_next_url
@@ -1266,33 +1266,51 @@ def magic_link_request():
 
             if not on_cooldown:
                 user = User.query.filter(func.lower(User.email) == email).first()
+                send_ok = False
                 if user:
                     try:
-                        token = user.get_magic_login_token()
-                        db.session.commit()  # Commit valid_after BEFORE sending email.
-                        magic_url = url_for(
-                            'auth.magic_link_landing',
-                            token=token,
-                            _external=True,
+                        from app.lib.magic_login_dispatch import dispatch_magic_login_email
+
+                        send_ok = dispatch_magic_login_email(
+                            user,
+                            lambda token: url_for(
+                                'auth.magic_link_landing',
+                                token=token,
+                                _external=True,
+                            ),
                         )
-                        send_magic_login_email(user, magic_url)
-                        _track_posthog('magic_link_requested', user.id,
-                                       {'email': user.email})
-                        current_app.logger.info(
-                            f"Magic-link requested for user {user.id}")
+                        if send_ok:
+                            _track_posthog(
+                                'magic_link_requested',
+                                user.id,
+                                {'email': user.email},
+                            )
+                            current_app.logger.info(
+                                f"Magic-link requested for user {user.id}"
+                            )
+                        else:
+                            current_app.logger.error(
+                                f"Magic-link email not delivered for user {user.id}"
+                            )
                     except Exception as e:
                         db.session.rollback()
                         current_app.logger.error(
                             f"Magic-link request failed for user "
-                            f"{getattr(user, 'id', 'unknown')}: {e}")
+                            f"{getattr(user, 'id', 'unknown')}: {e}"
+                        )
 
-                # Set cooldown whether or not an account exists — prevents
-                # per-email enumeration via response-timing on repeated sends.
-                try:
-                    cache.set(cooldown_key, '1',
-                              timeout=_MAGIC_LINK_EMAIL_COOLDOWN_SECONDS)
-                except Exception:
-                    pass
+                # Cooldown for known accounts only after a successful send, and
+                # always for unknown emails (anti-enumeration timing). Skip on
+                # send failure so the user can retry immediately.
+                if user is None or send_ok:
+                    try:
+                        cache.set(
+                            cooldown_key,
+                            '1',
+                            timeout=_MAGIC_LINK_EMAIL_COOLDOWN_SECONDS,
+                        )
+                    except Exception:
+                        pass
 
         flash(_("If that email has a Society Speaks account, we've sent you a sign-in link. Check your inbox — it expires in 15 minutes."), 'info')
         return render_template('auth/magic_link_sent.html',

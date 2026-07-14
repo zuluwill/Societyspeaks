@@ -35,11 +35,13 @@ def captured_emails(monkeypatch):
     """Capture magic-link emails sent during a test without hitting Resend."""
     sent = []
 
-    def _fake_send(user, magic_url):
+    def _fake_send(user, magic_url, **kwargs):
         sent.append({'user_id': user.id, 'email': user.email, 'url': magic_url})
         return True
 
-    monkeypatch.setattr('app.auth.routes.send_magic_login_email', _fake_send)
+    monkeypatch.setattr(
+        'app.lib.magic_login_dispatch.send_magic_login_email', _fake_send
+    )
     return sent
 
 
@@ -72,6 +74,49 @@ def test_request_sends_email_and_sets_valid_after(app, db, captured_emails):
 
     db.session.refresh(user)
     assert user.magic_login_valid_after is not None
+
+
+def test_send_failure_restores_prior_valid_after(app, db, monkeypatch):
+    """A failed Resend send must not invalidate a previously delivered link."""
+    user = _create_user(db)
+    first_token = user.get_magic_login_token()
+    db.session.commit()
+    prior = user.magic_login_valid_after
+    assert User.verify_magic_login_token(first_token) is not None
+
+    monkeypatch.setattr(
+        'app.lib.magic_login_dispatch.send_magic_login_email',
+        lambda *a, **k: False,
+    )
+    client = app.test_client()
+    resp = _request_link(client, user.email)
+    assert resp.status_code == 200
+
+    db.session.refresh(user)
+    assert user.magic_login_valid_after == prior
+    assert User.verify_magic_login_token(first_token) is not None
+
+
+def test_send_exception_also_restores_prior_valid_after(app, db, monkeypatch):
+    """Dispatch must restore even if send raises (defense-in-depth)."""
+    user = _create_user(db)
+    first_token = user.get_magic_login_token()
+    db.session.commit()
+    prior = user.magic_login_valid_after
+
+    def _boom(*a, **k):
+        raise RuntimeError('resend client exploded')
+
+    monkeypatch.setattr(
+        'app.lib.magic_login_dispatch.send_magic_login_email', _boom
+    )
+    client = app.test_client()
+    resp = _request_link(client, user.email)
+    assert resp.status_code == 200
+
+    db.session.refresh(user)
+    assert user.magic_login_valid_after == prior
+    assert User.verify_magic_login_token(first_token) is not None
 
 
 def test_get_landing_does_not_consume(app, db, captured_emails):
