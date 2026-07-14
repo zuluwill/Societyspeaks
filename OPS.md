@@ -31,14 +31,23 @@ Production `DATABASE_URL` is the Neon **`-pooler`** endpoint (PgBouncer transact
 intermittent `ReadOnlySqlTransaction` failures on INSERT / `SELECT FOR UPDATE`
 across web, webhooks, and workers.
 
-Prefer:
+Prefer, in order:
 
+- the sanctioned helper — `from app.lib.ops_db import direct_db_connection`
+  (fails closed if it can only resolve a pooler URL; autocommit direct endpoint,
+  safe for `set_session(readonly=True)` and any session state), or
 - a **direct** (non-pooler) Neon URL for one-off scripts that need session state, or
 - transaction-scoped `BEGIN TRANSACTION READ ONLY` (does not contaminate the pool).
 
-The app clears `default_transaction_read_only` on every SQLAlchemy checkout
+Defence in depth, but **not** a substitute for the above: the app clears
+`default_transaction_read_only` on SQLAlchemy checkout
 (`app/lib/db_engine_guards.py`) and treats `read-only transaction` as a
-retryable transient error.
+retryable transient. That guard is **best-effort** — under transaction pooling
+the backend serving a later write may differ from the one cleaned at checkout,
+so it cleans the pool gradually rather than guaranteeing any single write. The
+hot paths (daily-send loop, scheduler phases, click tracking) self-heal on this
+error (claim-release + catch-up / next-tick retry), so a contaminated window
+degrades transiently rather than failing hard.
 
 If Sentry shows a burst of `ReadOnlySqlTransaction` errors, detox the pool:
 
