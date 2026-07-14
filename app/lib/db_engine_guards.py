@@ -6,10 +6,30 @@ across clients. A session-level ``SET default_transaction_read_only = on``
 causes later requests to fail with ``ReadOnlySqlTransaction`` on INSERT /
 UPDATE / ``SELECT FOR UPDATE``.
 
-These guards clear that flag on every pool checkout so a contaminated backend
-cannot poison production traffic. Pair with classifying
-``read-only transaction`` as transient in :mod:`app.lib.db_transient_errors`
-so mid-request failures still invalidate and retry.
+BEST-EFFORT, NOT A GUARANTEE. This checkout guard clears the flag on whichever
+backend serves the checkout statement. Under transaction pooling a backend is
+pinned only for the duration of a transaction, so the backend that later serves
+a write in the same SQLAlchemy connection may be a *different*, still-poisoned
+one. The guard therefore cleans the pool *gradually* as connections cycle; it
+does not guarantee any single write runs read-write.
+
+The reliable controls, in order:
+
+1. Prevention (primary): never run session-level READ ONLY against the
+   ``-pooler`` URL. Ops/investigation scripts must use a direct Neon URL or a
+   scoped ``BEGIN TRANSACTION READ ONLY``. See OPS.md.
+2. Self-healing call sites: hot paths (daily-send loop, scheduler phases,
+   click tracking) already catch, roll back, and recover via claim-release +
+   catch-up / next-tick retry, so a contaminated window degrades transiently.
+3. Transient classification: ``read-only transaction`` is transient in
+   :mod:`app.lib.db_transient_errors`; retry decorators invalidate the poisoned
+   connection before retrying so the next attempt gets a fresh backend.
+
+For a hard per-write guarantee (if prevention ever proves insufficient) the
+only pooling-safe mechanism is a per-transaction ``SET LOCAL
+default_transaction_read_only = off`` on a ``begin`` event — deliberately not
+enabled here: it adds a round-trip per transaction and must be verified against
+the live pooler first.
 """
 
 from __future__ import annotations
