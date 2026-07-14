@@ -47,18 +47,77 @@ def test_readonly_sql_transaction_helper():
     assert not is_readonly_sql_transaction_error(Exception("connection timed out"))
 
 
-def test_engine_read_write_guard_registers_once(app):
+def test_engine_read_write_guard_noop_for_none():
+    from app.lib.db_engine_guards import register_engine_read_write_guard
+
+    assert register_engine_read_write_guard(None) is False
+
+
+def test_engine_read_write_guard_noop_for_sqlite_app_engine(app):
+    """CI uses sqlite:///:memory:; guard must no-op and need an app context."""
     from app.lib.db_engine_guards import register_engine_read_write_guard, _GUARD_FLAG
     from app import db
 
-    # create_app already registers on postgres; sqlite tests skip.
-    first = register_engine_read_write_guard(db.engine)
-    second = register_engine_read_write_guard(db.engine)
-    if "sqlite" in str(db.engine.url):
-        assert first is False and second is False
-    else:
-        assert getattr(db.engine, _GUARD_FLAG, False) is True
-        assert second is False
+    with app.app_context():
+        assert "sqlite" in str(db.engine.url)
+        assert register_engine_read_write_guard(db.engine) is False
+        assert register_engine_read_write_guard(db.engine) is False
+        assert getattr(db.engine, _GUARD_FLAG, False) is False
+
+
+def test_engine_read_write_guard_registers_once_on_postgres_url(monkeypatch):
+    """Registration + idempotency without a live Postgres (CI is SQLite-only)."""
+    from sqlalchemy import create_engine
+
+    from app.lib.db_engine_guards import (
+        _GUARD_FLAG,
+        _force_read_write,
+        register_engine_read_write_guard,
+    )
+
+    engine = create_engine("postgresql://u:p@localhost/db")
+    listened = []
+
+    def _fake_listen(target, identifier, fn, *args, **kwargs):
+        listened.append((target, identifier, fn))
+
+    monkeypatch.setattr("app.lib.db_engine_guards.event.listen", _fake_listen)
+
+    assert register_engine_read_write_guard(engine) is True
+    assert register_engine_read_write_guard(engine) is False
+    assert getattr(engine, _GUARD_FLAG, False) is True
+    assert listened == [(engine, "checkout", _force_read_write)]
+
+
+def test_force_read_write_clears_session_flag():
+    from app.lib.db_engine_guards import _force_read_write
+
+    executed = []
+
+    class _Cursor:
+        def execute(self, sql):
+            executed.append(sql)
+
+        def close(self):
+            return None
+
+    class _Conn:
+        def cursor(self):
+            return _Cursor()
+
+    _force_read_write(_Conn(), None)
+    assert executed == ["SET default_transaction_read_only TO off"]
+
+
+def test_force_read_write_swallows_cursor_errors():
+    from app.lib.db_engine_guards import _force_read_write
+
+    class _BoomConn:
+        def cursor(self):
+            raise RuntimeError("backend gone")
+
+    # Must never raise — checkout hygiene is best-effort.
+    _force_read_write(_BoomConn(), None)
 
 
 @pytest.mark.parametrize(
