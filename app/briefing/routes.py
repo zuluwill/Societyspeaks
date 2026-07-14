@@ -868,6 +868,7 @@ def _handle_start_trial_post(featured_templates, default_slug):
         return redirect(url_for('briefing.list_briefings'))
 
     is_returning_email = user is not None  # set before potential creation
+    from app.lib.utm import peek_utms
 
     if user is None:
         from app.lib.email_normalize import normalize_trial_email
@@ -889,8 +890,24 @@ def _handle_start_trial_post(featured_templates, default_slug):
             flash(_("Something went wrong — please try again in a moment."), 'error')
             return redirect(url_for('briefing.start_trial', template=template_slug))
 
+        # Path-agnostic identity event so acquisition dashboards see trial
+        # signups alongside classic /auth/register. Product funnel events below
+        # remain additive for conversion-path breakdown.
+        from app.lib.identity_analytics import (
+            SIGNUP_METHOD_TRIAL_MAGIC_LINK,
+            track_user_signed_up,
+        )
+        track_user_signed_up(
+            user,
+            signup_method=SIGNUP_METHOD_TRIAL_MAGIC_LINK,
+            properties={
+                'template_slug': template_slug,
+                **peek_utms(),
+            },
+            source='briefing_trial',
+        )
+
     # Intent signal — fires after abuse check + user find/create, before magic link.
-    from app.lib.utm import peek_utms
     _track_posthog('paid_briefing_trial_signup_started', user.id, {
         'template_slug': template_slug,
         'is_returning_email': is_returning_email,

@@ -510,7 +510,11 @@ def verify_email(token):
         if not user.email_verified:
             user.email_verified = True
             db.session.commit()
-            _track_posthog('email_verified', user.id, {'user_id': user.id})
+            from app.lib.identity_analytics import (
+                VERIFICATION_METHOD_EMAIL_LINK,
+                track_email_verified,
+            )
+            track_email_verified(user, verification_method=VERIFICATION_METHOD_EMAIL_LINK)
         flash(_('Your email has been verified! You can now log in.'), 'success')
         return redirect(url_for('auth.login'))
     return render_template(
@@ -687,20 +691,19 @@ def register():
         new_user.email_verified = False
         db.session.add(new_user)
         db.session.commit()
-        record_event(
-            'account_created',
-            user_id=new_user.id,
-            source='web',
-            event_metadata={'username': username}
+
+        # Identity event — path-agnostic acquisition signal + campaign UTMs.
+        # peek (not pop) so a later trial conversion can still attribute.
+        from app.lib.identity_analytics import (
+            SIGNUP_METHOD_REGISTER,
+            track_user_signed_up,
         )
-        
-        # Track user signup with PostHog, attaching campaign attribution.
         from app.lib.utm import peek_utms
-        _signup_utms = peek_utms()  # peek — keep for downstream trial events
-        _track_posthog(
-            'user_signed_up',
-            new_user.id,
-            {'username': username, **_signup_utms},
+        track_user_signed_up(
+            new_user,
+            signup_method=SIGNUP_METHOD_REGISTER,
+            properties=peek_utms(),
+            source='web',
         )
 
         # Generate email verification token (24-hour expiry, separate salt from password reset)
@@ -1370,15 +1373,26 @@ def magic_link_consume(token):
     if current_user.is_authenticated and current_user.id != user.id:
         logout_user()
 
+    newly_verified = False
     try:
         user.consume_magic_login_token()
         if not user.email_verified:
             user.email_verified = True
+            newly_verified = True
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Magic-link consume failed for user {user.id}: {e}")
         flash(_("Something went wrong signing you in. Please request a new link."), 'danger')
         return redirect(url_for('auth.magic_link_request'))
+
+    # Magic-link prove-inbox is the verification step for trial + passwordless
+    # login — fire the same identity event as the classic verify-email link.
+    if newly_verified:
+        from app.lib.identity_analytics import (
+            VERIFICATION_METHOD_MAGIC_LINK,
+            track_email_verified,
+        )
+        track_email_verified(user, verification_method=VERIFICATION_METHOD_MAGIC_LINK)
 
     return _finalize_login(user, method='magic_link', next_url=None)

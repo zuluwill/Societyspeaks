@@ -1,11 +1,13 @@
 """
 UTM capture and event attachment.
 
-Stash UTM query params on key public-facing routes (landing, register, login),
-attach to identity/conversion events (user_signed_up, paid_briefing_trial_started,
-paid_briefing_subscribed), then clear so they don't leak onto later unrelated events.
+Stash UTM query params on key public-facing routes (landing, register, login,
+/briefings/start), attach to identity/conversion events (user_signed_up via
+``app.lib.identity_analytics``, paid_briefing_trial_*, paid_briefing_subscribed),
+then clear on the conversion event so they don't leak onto later unrelated events.
 
-See docs/PAID_BRIEFINGS_WORLD_CLASS_BUILD.md.
+Identity events always include ``signup_method`` so acquisition can break down
+register vs trial_magic_link (and other) paths without losing campaign attribution.
 """
 from __future__ import annotations
 

@@ -188,6 +188,40 @@ def test_consume_auto_verifies_email(app, db, captured_emails):
         assert refreshed.email_verified is True
 
 
+def test_consume_fires_email_verified_once(app, db, captured_emails, monkeypatch):
+    """First magic-link consume must emit email_verified; repeat logins must not."""
+    user = _create_user(db, verified=False)
+    client = app.test_client()
+    captured = []
+
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+        captured.append({
+            'event': event,
+            'distinct_id': distinct_id,
+            'properties': dict(properties or {}),
+        })
+
+    monkeypatch.setattr('app.lib.identity_analytics.safe_posthog_capture', _fake_capture)
+    monkeypatch.setattr('app.auth.routes.safe_posthog_capture', _fake_capture)
+
+    _request_link(client, user.email)
+    token = _extract_token(captured_emails[0]['url'])
+    client.post(f"/auth/login/magic-link/{token}")
+
+    verified = [e for e in captured if e['event'] == 'email_verified']
+    assert len(verified) == 1
+    assert verified[0]['properties']['verification_method'] == 'magic_link'
+    assert verified[0]['distinct_id'] == str(user.id)
+
+    # Second login after already verified: request a fresh link and consume.
+    captured.clear()
+    client.get('/auth/logout', follow_redirects=False)
+    _request_link(client, user.email)
+    token2 = _extract_token(captured_emails[-1]['url'])
+    client.post(f"/auth/login/magic-link/{token2}")
+    assert not any(e['event'] == 'email_verified' for e in captured)
+
+
 # ---------------------------------------------------------------------------
 # Invalidation semantics
 # ---------------------------------------------------------------------------

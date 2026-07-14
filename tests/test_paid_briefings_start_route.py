@@ -184,17 +184,29 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
         })
         return True
 
+    captured = []
+
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+        captured.append({
+            'event': event,
+            'distinct_id': distinct_id,
+            'properties': dict(properties or {}),
+            'identify_properties': dict(identify_properties or {}),
+        })
+
     with patch('app.lib.magic_login_dispatch.send_magic_login_email', _fake_send):
         with patch('app.resend_client.send_magic_login_email', _fake_send):
-            resp = client.post(
-                '/briefings/start',
-                data={
-                    'email': 'newperson@example.com',
-                    'template': 'technology-ai-regulation',
-                    'csrf_token': 'test',  # CSRF disabled in tests
-                },
-                follow_redirects=False,
-            )
+            with patch('app.lib.identity_analytics.safe_posthog_capture', _fake_capture):
+                with patch('app.briefing.routes.safe_posthog_capture', _fake_capture):
+                    resp = client.post(
+                        '/briefings/start',
+                        data={
+                            'email': 'newperson@example.com',
+                            'template': 'technology-ai-regulation',
+                            'csrf_token': 'test',  # CSRF disabled in tests
+                        },
+                        follow_redirects=False,
+                    )
 
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
@@ -214,6 +226,55 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
     assert created is not None
     assert created.email_verified is False
 
+    # Acquisition identity event must fire for trial-created accounts.
+    signup_events = [e for e in captured if e['event'] == 'user_signed_up']
+    assert len(signup_events) == 1
+    assert signup_events[0]['properties']['signup_method'] == 'trial_magic_link'
+    assert signup_events[0]['properties']['template_slug'] == 'technology-ai-regulation'
+    assert signup_events[0]['distinct_id'] == str(created.id)
+
+    # Product funnel event remains additive.
+    assert any(e['event'] == 'paid_briefing_trial_signup_started' for e in captured)
+
+
+def test_post_start_returning_email_skips_user_signed_up(trial_app, db):
+    """Returning find-or-create must not re-fire acquisition identity events."""
+    with trial_app.app_context():
+        _seed_plan(db)
+        _seed_template(db)
+        existing = _seed_user(db, username='returning', email='returning@example.com')
+        existing.email_verified = False
+        db.session.commit()
+        existing_id = existing.id
+
+    captured = []
+
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+        captured.append({'event': event, 'distinct_id': distinct_id, 'properties': dict(properties or {})})
+
+    def _fake_send(user, magic_url, **kwargs):
+        return True
+
+    client = trial_app.test_client()
+    with patch('app.lib.magic_login_dispatch.send_magic_login_email', _fake_send):
+        with patch('app.lib.identity_analytics.safe_posthog_capture', _fake_capture):
+            with patch('app.briefing.routes.safe_posthog_capture', _fake_capture):
+                resp = client.post(
+                    '/briefings/start',
+                    data={
+                        'email': 'returning@example.com',
+                        'template': 'technology-ai-regulation',
+                        'csrf_token': 'test',
+                    },
+                    follow_redirects=False,
+                )
+
+    assert resp.status_code == 200
+    assert not any(e['event'] == 'user_signed_up' for e in captured)
+    started = [e for e in captured if e['event'] == 'paid_briefing_trial_signup_started']
+    assert len(started) == 1
+    assert started[0]['properties']['is_returning_email'] is True
+    assert started[0]['distinct_id'] == str(existing_id)
 
 def test_post_start_send_failure_redirects_with_error_not_inbox(trial_app, db):
     """Resend failure must not show check-inbox or leave a dead token gate."""
