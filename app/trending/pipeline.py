@@ -26,7 +26,7 @@ from app.trending.clustering import (
     create_topic_from_cluster,
     recount_topic_source_count,
 )
-from app.trending.seed_generator import generate_seed_statements
+from app.trending.seed_generator import DEFAULT_SEED_COUNT, generate_seed_statements
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ def process_held_topics(batch_size: int = 50) -> int:
         try:
             topic = score_topic(topic)
             
-            seeds = generate_seed_statements(topic, count=7)
+            seeds = generate_seed_statements(topic, count=DEFAULT_SEED_COUNT)
             topic.seed_statements = seeds
             
             topic.status = 'pending_review'

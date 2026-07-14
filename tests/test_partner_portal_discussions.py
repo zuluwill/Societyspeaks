@@ -90,11 +90,17 @@ def test_portal_create_discussion_truncates_excerpt_for_seed_generation_and_sets
     client = app.test_client()
     _login_partner_session(client, partner.id, owner.id)
 
-    seen = {"excerpt": None}
+    seen = {"excerpt": None, "count": None}
 
-    def _fake_generate_seed_statements_from_content(*, title, excerpt, source_name):
+    from app.trending.seed_generator import DEFAULT_SEED_COUNT
+
+    def _fake_generate_seed_statements_from_content(*, title, excerpt, source_name, count):
         seen["excerpt"] = excerpt
-        return [{"content": "This is a generated seed statement.", "position": "neutral"}]
+        seen["count"] = count
+        return [
+            {"content": f"This is generated seed statement number {i}.", "position": "neutral"}
+            for i in range(count)
+        ]
 
     with patch(
         "app.trending.seed_generator.generate_seed_statements_from_content",
@@ -114,11 +120,13 @@ def test_portal_create_discussion_truncates_excerpt_for_seed_generation_and_sets
     assert response.status_code == 302
     assert seen["excerpt"] is not None
     assert len(seen["excerpt"]) == 5000
+    # Partner discussions use the same recommended seed floor as trending topics.
+    assert seen["count"] == DEFAULT_SEED_COUNT
 
     discussion = Discussion.query.filter_by(partner_fk_id=partner.id, title="Seed Generation Test").first()
     assert discussion is not None
-    assert len(discussion.statements) == 1
-    assert discussion.statements[0].source == "ai_generated"
+    assert len(discussion.statements) == DEFAULT_SEED_COUNT
+    assert all(s.source == "ai_generated" for s in discussion.statements)
 
 
 def test_portal_add_statement_invalidates_snapshot_cache_and_sets_source(app, db):

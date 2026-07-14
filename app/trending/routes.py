@@ -19,7 +19,7 @@ from app.models import TrendingTopic, NewsSource, Discussion, NewsArticle
 from app.trending import trending_bp
 from app.trending.pipeline import run_pipeline, get_review_queue, get_pipeline_stats, process_held_topics
 from app.trending.publisher import publish_topic, merge_topic_into_discussion
-from app.trending.seed_generator import generate_seed_statements
+from app.trending.seed_generator import DEFAULT_SEED_COUNT, generate_seed_statements
 from app.trending.scorer import score_topic
 from app.trending.news_fetcher import clean_summary
 from app.decorators import admin_required
@@ -227,7 +227,7 @@ def regenerate_seeds(topic_id):
     """Regenerate seed statements for a topic."""
     topic = db.get_or_404(TrendingTopic, topic_id)
     
-    seeds = generate_seed_statements(topic, count=7)
+    seeds = generate_seed_statements(topic, count=DEFAULT_SEED_COUNT)
     topic.seed_statements = seeds
     db.session.commit()
     

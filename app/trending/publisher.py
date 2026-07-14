@@ -23,6 +23,7 @@ from app.trending.constants import (
     extract_geographic_info_from_articles,
     get_unique_slug,
 )
+from app.trending.seed_generator import DEFAULT_SEED_COUNT, generate_seed_statements
 
 logger = logging.getLogger(__name__)
 
@@ -113,17 +114,33 @@ def publish_topic(
             )
             db.session.add(source_link)
     
-    if topic.seed_statements:
-        for stmt_data in topic.seed_statements:
-            statement = Statement(
-                discussion_id=discussion.id,
-                user_id=admin_user.id,
-                content=stmt_data.get('content', '')[:500],
-                statement_type='claim',
-                is_seed=True,
-                mod_status=1
-            )
-            db.session.add(statement)
+    seeds = list(topic.seed_statements or [])
+    if len(seeds) < DEFAULT_SEED_COUNT:
+        logger.warning(
+            "Topic %s has %d seed(s) below floor %d; regenerating before publish",
+            topic.id, len(seeds), DEFAULT_SEED_COUNT,
+        )
+        seeds = generate_seed_statements(topic, count=DEFAULT_SEED_COUNT)
+        topic.seed_statements = seeds
+
+    for stmt_data in seeds:
+        position = (stmt_data.get('position') or 'neutral').lower()
+        if position not in ('pro', 'con', 'neutral'):
+            position = 'neutral'
+        content = (stmt_data.get('content') or '').strip()
+        if not content:
+            continue
+        statement = Statement(
+            discussion_id=discussion.id,
+            user_id=admin_user.id,
+            content=content[:500],
+            statement_type='claim',
+            is_seed=True,
+            mod_status=1,
+            source='ai_generated',
+            seed_stance=position,
+        )
+        db.session.add(statement)
     
     topic.discussion_id = discussion.id
     topic.status = 'published'
@@ -211,13 +228,18 @@ def merge_topic_into_discussion(
             ).first()
             
             if not existing:
+                position = (stmt_data.get('position') or 'neutral').lower()
+                if position not in ('pro', 'con', 'neutral'):
+                    position = 'neutral'
                 statement = Statement(
                     discussion_id=discussion.id,
                     user_id=admin_user.id,
                     content=stmt_data.get('content', '')[:500],
                     statement_type='claim',
                     is_seed=True,
-                    mod_status=1
+                    mod_status=1,
+                    source='ai_generated',
+                    seed_stance=position,
                 )
                 db.session.add(statement)
     

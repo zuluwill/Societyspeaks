@@ -8,8 +8,6 @@ Reuses patterns from publisher.py and seed_generator.py (DRY principles).
 
 import logging
 import os
-import json
-import re
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from typing import Optional, List, Dict
@@ -335,155 +333,30 @@ Keep it under 200 characters. No quotes or attribution."""
         return fallback
 
 
-def generate_single_source_seed_statements(article: NewsArticle, count: int = 5) -> List[Dict]:
+def generate_single_source_seed_statements(
+    article: NewsArticle,
+    count: Optional[int] = None,
+) -> List[Dict]:
     """
     Generate seed statements for a single-source article discussion.
-    
-    Works for podcasts, newsletters, and other single-source content.
-    Uses the same LLM approach as trending topics.
+
+    Delegates to the shared seed generator so podcasts/newsletters get the same
+    floor, spectrum balance, retry, and fallback guarantees as trending topics.
     """
-    api_key = os.environ.get('OPENAI_API_KEY')
-    if not api_key:
-        api_key = os.environ.get('ANTHROPIC_API_KEY')
-        if api_key:
-            return _generate_with_anthropic(article, count, api_key)
-        logger.warning("No LLM API key available for seed generation")
-        return []
-    
-    return _generate_with_openai(article, count, api_key)
+    from app.trending.seed_generator import (
+        DEFAULT_SEED_COUNT,
+        generate_seed_statements_from_content,
+    )
 
-
-def _generate_with_openai(article: NewsArticle, count: int, api_key: str) -> List[Dict]:
-    """Generate seeds using OpenAI."""
-    try:
-        import openai
-    except ImportError:
-        logger.error("OpenAI library not installed")
-        return []
-    
-    try:
-        client = openai.OpenAI(api_key=api_key, timeout=60.0)
-    except Exception as e:
-        logger.error(f"Failed to create OpenAI client: {e}")
-        return []
-    
-    source_name = article.source.name if article.source else "Unknown Source"
-    source_type = article.source.source_category if article.source else "article"
+    target = DEFAULT_SEED_COUNT if count is None else max(1, int(count))
+    source_name = article.source.name if article.source else None
     summary = strip_html_tags(article.summary or "")[:500]
-    
-    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this {source_type}:
-
-Source: {source_name}
-Title: {article.title}
-{f"Summary: {summary}" if summary else ""}
-
-Requirements:
-- Generate statements representing DIFFERENT viewpoints (pro, con, neutral)
-- Each statement should be a clear, debatable claim (not a question)
-- Statements should encourage thoughtful discussion
-- Keep each statement under 200 characters
-- Focus on the key topics/themes discussed in this episode
-
-Return JSON array: [{{"content": "statement text", "position": "pro/con/neutral"}}]
-"""
-    
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=500
-        )
-        
-        content = response.choices[0].message.content.strip()
-        
-        json_match = re.search(r'\[[\s\S]*\]', content)
-        if json_match:
-            content = json_match.group()
-        
-        statements = json.loads(content)
-        
-        valid_statements = []
-        for stmt in statements:
-            if isinstance(stmt, dict) and 'content' in stmt:
-                text = stmt['content'].strip()
-                if 20 <= len(text) <= 500:
-                    valid_statements.append({
-                        'content': text,
-                        'position': stmt.get('position', 'neutral')
-                    })
-        
-        return valid_statements[:count]
-        
-    except Exception as e:
-        logger.error(f"OpenAI seed generation failed: {e}")
-        return []
-
-
-def _generate_with_anthropic(article: NewsArticle, count: int, api_key: str) -> List[Dict]:
-    """Generate seeds using Anthropic."""
-    try:
-        import anthropic
-    except ImportError:
-        logger.error("Anthropic library not installed")
-        return []
-    
-    try:
-        client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
-    except Exception as e:
-        logger.error(f"Failed to create Anthropic client: {e}")
-        return []
-    
-    source_name = article.source.name if article.source else "Unknown Source"
-    source_type = article.source.source_category if article.source else "article"
-    summary = strip_html_tags(article.summary or "")[:500]
-    
-    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this {source_type}:
-
-Source: {source_name}
-Title: {article.title}
-{f"Summary: {summary}" if summary else ""}
-
-Requirements:
-- Generate statements representing DIFFERENT viewpoints (pro, con, neutral)
-- Each statement should be a clear, debatable claim (not a question)
-- Statements should encourage thoughtful discussion
-- Keep each statement under 200 characters
-- Focus on the key topics/themes discussed in this episode
-
-Return ONLY a JSON array: [{{"content": "statement text", "position": "pro/con/neutral"}}]
-"""
-    
-    try:
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        content = response.content[0].text.strip()
-        
-        json_match = re.search(r'\[[\s\S]*\]', content)
-        if json_match:
-            content = json_match.group()
-        
-        statements = json.loads(content)
-        
-        valid_statements = []
-        for stmt in statements:
-            if isinstance(stmt, dict) and 'content' in stmt:
-                text = stmt['content'].strip()
-                if 20 <= len(text) <= 500:
-                    valid_statements.append({
-                        'content': text,
-                        'position': stmt.get('position', 'neutral')
-                    })
-        
-        return valid_statements[:count]
-        
-    except Exception as e:
-        logger.error(f"Anthropic seed generation failed: {e}")
-        return []
+    return generate_seed_statements_from_content(
+        title=article.title,
+        excerpt=summary or None,
+        source_name=source_name,
+        count=target,
+    )
 
 
 def publish_single_source_article(
@@ -512,12 +385,19 @@ def publish_single_source_article(
         logger.info(f"Article {article.id} already has discussion {existing.id}")
         return existing
     
+    from app.trending.seed_generator import DEFAULT_SEED_COUNT
+
     statements_to_add = seed_statements
     if not statements_to_add:
         statements_to_add = generate_single_source_seed_statements(article)
-    
-    if require_seeds and not statements_to_add:
-        logger.warning(f"Skipping article {article.id} - no seed statements generated")
+
+    if require_seeds and len(statements_to_add or []) < DEFAULT_SEED_COUNT:
+        logger.warning(
+            "Skipping article %s - seed floor not met (%s/%s)",
+            article.id,
+            len(statements_to_add or []),
+            DEFAULT_SEED_COUNT,
+        )
         return None
 
     base_slug = generate_slug(article.title)
@@ -587,13 +467,18 @@ def publish_single_source_article(
     db.session.add(source_link)
     
     for stmt_data in statements_to_add:
+        position = (stmt_data.get('position') or 'neutral').lower()
+        if position not in ('pro', 'con', 'neutral'):
+            position = 'neutral'
         statement = Statement(
             discussion_id=discussion.id,
             user_id=admin_user.id,
             content=stmt_data.get('content', '')[:500],
             statement_type='claim',
             is_seed=True,
-            mod_status=1
+            mod_status=1,
+            source='ai_generated',
+            seed_stance=position,
         )
         db.session.add(statement)
     
