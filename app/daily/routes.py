@@ -94,26 +94,36 @@ def _track_context_engagement(question, response, source='web'):
 
 
 def get_source_articles(question, limit=5):
-    """Get source articles from the source discussion if available.
+    """Get source articles from the source discussion or trending topic.
     
     Uses a direct query with eager loading to prevent N+1 queries when
     accessing article.source.name in templates.
     """
-    from app.models import DiscussionSourceArticle, NewsArticle
+    from app.models import DiscussionSourceArticle, NewsArticle, TrendingTopicArticle
     from sqlalchemy.orm import joinedload
     
-    if not question.source_discussion_id:
-        return []
-    
-    # Query directly with eager loading to prevent N+1
-    links = DiscussionSourceArticle.query.options(
-        joinedload(DiscussionSourceArticle.article)
-        .joinedload(NewsArticle.source)
-    ).filter_by(
-        discussion_id=question.source_discussion_id
-    ).limit(limit).all()
-    
-    return [link.article for link in links if link.article]
+    if question.source_discussion_id:
+        links = DiscussionSourceArticle.query.options(
+            joinedload(DiscussionSourceArticle.article)
+            .joinedload(NewsArticle.source)
+        ).filter_by(
+            discussion_id=question.source_discussion_id
+        ).limit(limit).all()
+        return [link.article for link in links if link.article]
+
+    if question.source_trending_topic_id:
+        links = TrendingTopicArticle.query.options(
+            joinedload(TrendingTopicArticle.article)
+            .joinedload(NewsArticle.source)
+        ).filter_by(
+            topic_id=question.source_trending_topic_id
+        ).order_by(
+            TrendingTopicArticle.similarity_score.desc().nullslast(),
+            TrendingTopicArticle.added_at.desc(),
+        ).limit(limit).all()
+        return [link.article for link in links if link.article]
+
+    return []
 
 
 def get_related_discussions(question, limit=3):
@@ -388,10 +398,12 @@ def by_date(date_str):
                              reasons_stats=reasons_stats,
                              streak_data=streak_data)
     else:
+        from app.daily.utils import get_brief_context_for_question
         source_articles = get_source_articles(question, limit=3)
         return render_template('daily/question.html',
                              question=question,
-                             source_articles=source_articles)
+                             source_articles=source_articles,
+                             brief_context=get_brief_context_for_question(question))
 
 
 @daily_bp.route('/daily/<date_str>/comments')
@@ -1598,6 +1610,7 @@ def one_click_vote(token, vote_choice):
     # GET request: Show confirmation page (prevents mail scanner prefetch from voting)
     if request.method == 'GET':
         source = request.args.get('source', '')
+        from app.daily.utils import get_brief_context_for_question
         return render_template('daily/confirm_vote.html',
                              question=question,
                              vote_choice=vote_choice,
@@ -1605,7 +1618,8 @@ def one_click_vote(token, vote_choice):
                              vote_emoji=VOTE_EMOJIS.get(vote_choice, ''),
                              token=token,
                              source=source,
-                             source_articles=get_source_articles(question, limit=3))
+                             source_articles=get_source_articles(question, limit=3),
+                             brief_context=get_brief_context_for_question(question))
     
     # POST request: Record the vote
     try:

@@ -301,6 +301,40 @@ def _send_ops_alert(message: str) -> None:
     _mark_ops_alert_sent(fingerprint)
 
 
+def _wire_daily_question_after_brief(brief_date, source_label):
+    """
+    Wire tomorrow's daily question from today's brief on every path that leaves
+    a ready/published brief — primary job, idempotent skip, safety nets, emergency.
+    """
+    from app.daily.auto_selection import wire_tomorrow_question_from_brief
+
+    try:
+        result = wire_tomorrow_question_from_brief(brief_date=brief_date, source=source_label)
+        if result.get('question'):
+            q = result['question']
+            logger.info(
+                "Brief→question wiring (%s): question #%s for %s (topic_id=%s)",
+                source_label,
+                q.question_number,
+                q.question_date,
+                q.source_trending_topic_id,
+            )
+        elif result.get('skipped'):
+            logger.info(
+                "Brief→question wiring (%s): skipped (%s)",
+                source_label,
+                result.get('reason'),
+            )
+        if result.get('alert'):
+            _send_ops_alert(result['alert'])
+        return result
+    except Exception as err:
+        msg = f"Brief→daily-question wiring failed ({source_label}): {err}"
+        logger.error(msg, exc_info=True)
+        _send_ops_alert(msg)
+        return {'ok': False, 'alert': msg, 'source': source_label}
+
+
 def init_scheduler(app):
     """
     Initialize the APScheduler with Flask app context
@@ -2440,6 +2474,7 @@ def init_scheduler(app):
                     existing_count = existing.item_count or 0
                     if existing_count >= DAILY_BRIEF_MIN_ITEMS_PRIMARY:
                         logger.info(f"Brief already exists with status '{existing.status}' and {existing_count} items, skipping")
+                        _wire_daily_question_after_brief(date.today(), 'primary_skip')
                         return
                     logger.warning(
                         f"Brief exists with status '{existing.status}' but only {existing_count} item(s). "
@@ -2488,6 +2523,8 @@ def init_scheduler(app):
                         return
 
                 logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
+
+                _wire_daily_question_after_brief(date.today(), 'primary_generate')
 
                 if brief.item_count < 3:
                     warning_msg = (
@@ -2552,6 +2589,7 @@ def init_scheduler(app):
                 existing_count = existing.item_count or 0
                 if existing_count >= DAILY_BRIEF_MIN_ITEMS_SAFETY_NET:
                     logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}, {existing_count} items), skipping")
+                    _wire_daily_question_after_brief(today, 'safety_net_1_skip')
                     return
                 # Brief exists but is under-populated — safety-net will regenerate it
                 msg = (
@@ -2591,6 +2629,7 @@ def init_scheduler(app):
                 brief = generate_daily_brief(brief_date=today, auto_publish=True)
                 if brief:
                     logger.info(f"Safety-net brief generated: {brief.title} ({brief.item_count} items)")
+                    _wire_daily_question_after_brief(today, 'safety_net_1_generate')
                 else:
                     logger.warning("Safety-net: no topics available — attempting self-healing pipeline run")
                     try:
@@ -2601,6 +2640,7 @@ def init_scheduler(app):
                         brief = generate_daily_brief(brief_date=today, auto_publish=True)
                         if brief:
                             logger.info(f"Safety-net self-healing succeeded: {brief.title} ({brief.item_count} items)")
+                            _wire_daily_question_after_brief(today, 'safety_net_1_heal')
                         else:
                             recovery_fail_msg = (
                                 f"CRITICAL: Daily brief safety-net also failed for {today}. "
@@ -2658,6 +2698,7 @@ def init_scheduler(app):
                 existing_count = existing.item_count or 0
                 if existing_count >= DAILY_BRIEF_MIN_ITEMS_SAFETY_NET:
                     logger.debug(f"Daily brief safety-net-2: brief already exists ({existing.status}, {existing_count} items), skipping")
+                    _wire_daily_question_after_brief(today, 'safety_net_2_skip')
                     return
                 msg = (
                     f"CRITICAL: Daily brief safety-net-2: brief for {today} has only {existing_count} item(s) "
@@ -2696,6 +2737,7 @@ def init_scheduler(app):
                 brief = generate_daily_brief(brief_date=today, auto_publish=True)
                 if brief:
                     logger.info(f"Safety-net-2 brief generated: {brief.title} ({brief.item_count} items)")
+                    _wire_daily_question_after_brief(today, 'safety_net_2_generate')
                 else:
                     logger.warning("Safety-net-2: no topics available — attempting self-healing pipeline run")
                     try:
@@ -2706,6 +2748,7 @@ def init_scheduler(app):
                         brief = generate_daily_brief(brief_date=today, auto_publish=True)
                         if brief:
                             logger.info(f"Safety-net-2 self-healing succeeded: {brief.title} ({brief.item_count} items)")
+                            _wire_daily_question_after_brief(today, 'safety_net_2_heal')
                         else:
                             logger.error(f"CRITICAL: No brief for {today} even after safety-net-2 pipeline run")
                             _send_ops_alert(
@@ -2852,6 +2895,7 @@ def init_scheduler(app):
                 
                 existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
                 if existing and existing.status == 'published':
+                    _wire_daily_question_after_brief(brief_date, 'emergency_skip_published')
                     r.set(status_key, 'done', ex=FINAL_STATUS_TTL_SECONDS)
                     r.set(step_key, 'Brief already published for today.', ex=FINAL_STATUS_TTL_SECONDS)
                     r.delete(queued_at_key)
@@ -2935,6 +2979,7 @@ def init_scheduler(app):
                     r.delete(heartbeat_key)
                     r.delete(claim_key)
                     logger.info(f"Emergency brief generated: {brief.title} ({brief.item_count} items)")
+                    _wire_daily_question_after_brief(brief_date, 'emergency_generate')
                     
             except RuntimeError as e:
                 if "Claim invalidated" in str(e):

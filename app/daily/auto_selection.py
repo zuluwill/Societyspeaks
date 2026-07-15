@@ -2,9 +2,10 @@
 Automatic Daily Question Selection Service
 
 Selects the next daily question from curated content sources:
-1. Existing discussion topics (primary)
-2. Published trending topics with high civic scores
-3. Statements from active discussions
+1. Brief-promoted topics (yesterday's brief → tomorrow's question)
+2. Existing discussion topics (fallback)
+3. Published trending topics with high civic scores (fallback)
+4. Statements from active discussions (fallback)
 
 Uses ENGAGEMENT-WEIGHTED SELECTION to maximize participation:
 - Civic relevance score
@@ -12,6 +13,7 @@ Uses ENGAGEMENT-WEIGHTED SELECTION to maximize participation:
 - Statement clarity (shorter = higher engagement)
 - Historical performance (learn from past questions)
 - Position diversity (alternate pro/con/neutral)
+- Brief coverage imbalance / underreported (press-vs-public signal)
 
 Avoids repeating content within a configurable time window.
 """
@@ -29,7 +31,9 @@ from app.models import (
     Programme,
     TrendingTopic,
     Statement,
-    DailyQuestionResponse
+    DailyQuestionResponse,
+    DailyBrief,
+    BriefItem,
 )
 import random
 import math
@@ -40,6 +44,7 @@ MIN_CIVIC_SCORE = 0.5
 MAX_QUESTION_LENGTH = 500
 MAX_CONTEXT_LENGTH = 400
 MAX_WHY_LENGTH = 300
+BRIEF_SOURCE_TYPE = 'brief'
 
 # Engagement scoring weights
 WEIGHT_CIVIC = 0.25        # Civic importance
@@ -149,7 +154,12 @@ def _build_trending_context(topic):
 def _build_why_this_question(source_type, topic_category=None, source=None):
     """Build a short relevance explanation for why a question was selected."""
     topic = (topic_category or '').strip()
-    if source_type == 'discussion':
+    if source_type == BRIEF_SOURCE_TYPE:
+        base = (
+            "This question comes from a story featured in the Daily Brief — where press "
+            "attention was uneven or a story sat under the radar."
+        )
+    elif source_type == 'discussion':
         base = "This statement comes from an active discussion and helps compare public views on a concrete claim."
     elif source_type == 'trending':
         base = "This statement is tied to a current news topic with high civic relevance and multiple viewpoints."
@@ -166,6 +176,315 @@ def _build_why_this_question(source_type, topic_category=None, source=None):
             base += " It reflects a recent development."
 
     return _trim_text(base, MAX_WHY_LENGTH)
+
+
+class BriefQuestionWiringError(RuntimeError):
+    """Raised when brief-eligible items exist but no labeled brief question was wired."""
+
+
+def _dominant_coverage_frame(distribution):
+    """Return left|center|right|balanced from a coverage distribution dict."""
+    if not distribution:
+        return 'unknown'
+    left = float(distribution.get('left') or 0)
+    center = float(distribution.get('center') or distribution.get('centre') or 0)
+    right = float(distribution.get('right') or 0)
+    total = left + center + right
+    if total <= 0:
+        return 'unknown'
+    shares = {'left': left / total, 'center': center / total, 'right': right / total}
+    dominant, share = max(shares.items(), key=lambda item: item[1])
+    if share < 0.45:
+        return 'balanced'
+    return dominant
+
+
+def build_coverage_frame_snapshot(brief_item, brief_date):
+    """Immutable press-posture snapshot stored on the daily question."""
+    dist = brief_item.coverage_distribution or {}
+    return {
+        'brief_date': brief_date.isoformat(),
+        'brief_item_id': brief_item.id,
+        'trending_topic_id': brief_item.trending_topic_id,
+        'section': brief_item.section,
+        'coverage_distribution': dist,
+        'coverage_imbalance': brief_item.coverage_imbalance,
+        'is_underreported': bool(brief_item.is_underreported),
+        'dominant_frame': _dominant_coverage_frame(dist),
+        'source_count': brief_item.source_count,
+    }
+
+
+def calculate_brief_item_contestability_score(brief_item):
+    """
+    Rank brief items for daily-question selection using press-posture signals.
+    Higher = more likely to produce a contested press-vs-public payoff.
+    """
+    score = float(brief_item.coverage_imbalance or 0) * 0.55
+    if brief_item.is_underreported:
+        score += 0.25
+    if (brief_item.section or '') == 'lead':
+        score += 0.12
+    if (brief_item.source_count or 0) <= 3:
+        score += 0.08
+    return score
+
+
+def _brief_topic_recently_used(topic_id, days_to_avoid=AVOID_REPEAT_DAYS):
+    cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
+    return DailyQuestionSelection.query.filter(
+        DailyQuestionSelection.selected_at >= cutoff,
+        DailyQuestionSelection.source_trending_topic_id == topic_id,
+    ).first() is not None
+
+
+def get_eligible_brief_items(brief_date, days_to_avoid=AVOID_REPEAT_DAYS):
+    """
+    Brief-promoted items with coverage metadata and voteable seed statements.
+
+    Coverage imbalance / underreported flags exist only on BriefItem (denormalized
+    at brief generation), not on the raw trending pool.
+    """
+    brief = DailyBrief.query.filter_by(
+        date=brief_date,
+        brief_type='daily',
+    ).filter(
+        DailyBrief.status.in_(('ready', 'published'))
+    ).first()
+    if not brief:
+        return []
+
+    items = (
+        BriefItem.query.filter_by(brief_id=brief.id)
+        .filter(BriefItem.trending_topic_id.isnot(None))
+        .order_by(BriefItem.position.asc())
+        .all()
+    )
+
+    eligible = []
+    for item in items:
+        topic = db.session.get(TrendingTopic, item.trending_topic_id)
+        if not topic or not topic.seed_statements:
+            continue
+        if _brief_topic_recently_used(topic.id, days_to_avoid):
+            continue
+        eligible.append((item, topic))
+
+    return eligible
+
+
+def select_from_brief_items(brief_date, question_date):
+    """
+    Pick tomorrow's question from today's brief items (clock constraint).
+
+    Returns source_info dict with source_type='brief' or None if no eligible item.
+    """
+    candidates = get_eligible_brief_items(brief_date)
+    if not candidates:
+        return None
+
+    scored = []
+    for brief_item, topic in candidates:
+        contestability = calculate_brief_item_contestability_score(brief_item)
+        seed_scores = [
+            (seed, calculate_controversy_potential(_extract_seed_content(seed)))
+            for seed in (topic.seed_statements or [])[:5]
+        ]
+        seed_scores.sort(key=lambda pair: pair[1], reverse=True)
+        best_seed = seed_scores[0][0] if seed_scores else topic.seed_statements[0]
+        seed_text = _extract_seed_content(best_seed)
+        clarity = calculate_clarity_score(seed_text)
+        total = contestability + (clarity * 0.15)
+        scored.append({
+            'brief_item': brief_item,
+            'topic': topic,
+            'seed': best_seed,
+            'seed_text': seed_text,
+            'score': total,
+            'contestability': contestability,
+        })
+
+    scored.sort(key=lambda row: row['score'], reverse=True)
+    top = scored[:5]
+    selected = weighted_random_choice(top, [row['score'] for row in top])
+    if not selected:
+        return None
+
+    brief_item = selected['brief_item']
+    topic = selected['topic']
+    coverage_frame = build_coverage_frame_snapshot(brief_item, brief_date)
+
+    current_app.logger.info(
+        "Selected brief-sourced daily question for %s from brief %s item %s "
+        "(imbalance=%.2f, underreported=%s, contestability=%.2f)",
+        question_date,
+        brief_date,
+        brief_item.id,
+        float(brief_item.coverage_imbalance or 0),
+        bool(brief_item.is_underreported),
+        selected['contestability'],
+    )
+
+    return {
+        'source_type': BRIEF_SOURCE_TYPE,
+        'source': topic,
+        'brief_item': brief_item,
+        'coverage_frame': coverage_frame,
+        'statement': None,
+        'question_text': _ensure_question_text(
+            selected['seed_text'],
+            topic.title,
+        ),
+        'context': _build_trending_context(topic),
+        'why_this_question': _build_why_this_question(
+            source_type=BRIEF_SOURCE_TYPE,
+            topic_category=topic.primary_topic,
+            source=topic,
+        ),
+        'topic_category': topic.primary_topic,
+        'discussion_slug': (
+            topic.created_discussion.slug
+            if getattr(topic, 'created_discussion', None)
+            else None
+        ),
+        'engagement_score': selected['score'],
+        'source_trending_topic_id': topic.id,
+        'source_brief_item_id': brief_item.id,
+        'source_discussion_id': topic.discussion_id,
+    }
+
+
+def verify_brief_sourced_question_wiring(brief_date=None, question_date=None):
+    """
+    Ops guard: fail if eligible brief items exist but the target question is not
+    brief-sourced with source_trending_topic_id labeled.
+
+    Guards the "path exists but never fired" failure mode from the dormant trending path.
+    """
+    brief_date = brief_date or date.today()
+    question_date = question_date or (brief_date + timedelta(days=1))
+
+    eligible = get_eligible_brief_items(brief_date)
+    if not eligible:
+        return {
+            'ok': True,
+            'skipped': True,
+            'reason': 'no_eligible_brief_items',
+            'brief_date': brief_date.isoformat(),
+            'question_date': question_date.isoformat(),
+        }
+
+    question = DailyQuestion.query.filter_by(question_date=question_date).first()
+    if (
+        question
+        and question.source_type == BRIEF_SOURCE_TYPE
+        and question.source_trending_topic_id
+        and question.source_brief_item_id
+        and question.coverage_frame_json
+    ):
+        return {
+            'ok': True,
+            'question_id': question.id,
+            'brief_date': brief_date.isoformat(),
+            'question_date': question_date.isoformat(),
+        }
+
+    raise BriefQuestionWiringError(
+        f"Brief wiring dormant: {len(eligible)} eligible brief item(s) on "
+        f"{brief_date} but question for {question_date} is not brief-sourced "
+        f"(source_type={getattr(question, 'source_type', None)!r}, "
+        f"topic_id={getattr(question, 'source_trending_topic_id', None)!r})."
+    )
+
+
+def schedule_question_from_brief(brief_date=None, question_date=None):
+    """
+    After brief generation: set tomorrow's question from today's brief items.
+
+    Replaces an existing scheduled (unpublished) question; never overwrites published.
+    """
+    brief_date = brief_date or date.today()
+    question_date = question_date or (brief_date + timedelta(days=1))
+
+    existing = DailyQuestion.query.filter_by(question_date=question_date).first()
+    if existing and existing.status == 'published':
+        current_app.logger.info(
+            "Question for %s already published; skipping brief re-wire",
+            question_date,
+        )
+        return existing
+
+    source_info = select_from_brief_items(brief_date, question_date)
+    if not source_info:
+        current_app.logger.warning(
+            "No brief-sourced question available for %s from brief %s",
+            question_date,
+            brief_date,
+        )
+        return None
+
+    question = upsert_daily_question_from_source(question_date, source_info)
+    verify_brief_sourced_question_wiring(brief_date=brief_date, question_date=question_date)
+    return question
+
+
+def wire_tomorrow_question_from_brief(brief_date=None, source='unknown'):
+    """
+    Idempotent scheduler entry point: wire D+1's question from date D's brief and
+    run the dormancy guard. Safe to call from every path that leaves a ready brief.
+    """
+    brief_date = brief_date or date.today()
+    question_date = brief_date + timedelta(days=1)
+
+    try:
+        question = schedule_question_from_brief(
+            brief_date=brief_date,
+            question_date=question_date,
+        )
+        if question:
+            return {
+                'ok': True,
+                'question': question,
+                'brief_date': brief_date,
+                'question_date': question_date,
+                'source': source,
+            }
+
+        eligible = get_eligible_brief_items(brief_date)
+        if not eligible:
+            return {
+                'ok': True,
+                'skipped': True,
+                'reason': 'no_eligible_brief_items',
+                'brief_date': brief_date,
+                'question_date': question_date,
+                'source': source,
+            }
+
+        verify_brief_sourced_question_wiring(
+            brief_date=brief_date,
+            question_date=question_date,
+        )
+        return {
+            'ok': True,
+            'skipped': True,
+            'reason': 'no_brief_source_selected',
+            'brief_date': brief_date,
+            'question_date': question_date,
+            'source': source,
+        }
+    except BriefQuestionWiringError as err:
+        alert = (
+            f"CRITICAL: Brief→daily-question wiring dormant ({source}): {err}"
+        )
+        current_app.logger.error(alert)
+        return {
+            'ok': False,
+            'alert': alert,
+            'brief_date': brief_date,
+            'question_date': question_date,
+            'source': source,
+        }
 
 
 def _ensure_question_text(question_text, fallback_text):
@@ -569,14 +888,15 @@ def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
     return statements
 
 
-def select_next_question_source():
+def select_next_question_source(question_date=None):
     """
     Select the next question source using ENGAGEMENT-WEIGHTED selection.
 
     Priority order:
-    1. Seed statements from curated discussions (THE main source)
-    2. High-quality trending topics (use their seed statements)
-    3. Direct statements as fallback
+    1. Yesterday's brief items (when question_date is set — clock constraint)
+    2. Seed statements from curated discussions (fallback)
+    3. High-quality trending topics (fallback)
+    4. Direct statements as fallback
 
     Selection is weighted by engagement potential:
     - Civic relevance
@@ -584,10 +904,17 @@ def select_next_question_source():
     - Statement clarity
     - Controversy potential (divisive = engaging)
     - Historical performance of similar topics
+    - Brief coverage imbalance / underreported (when brief path applies)
 
     Key insight: Daily questions should be actual voteable statements,
     not just discussion titles. Users need specific claims to agree/disagree with.
     """
+    if question_date is not None:
+        brief_date = question_date - timedelta(days=1)
+        brief_source = select_from_brief_items(brief_date, question_date)
+        if brief_source:
+            return brief_source
+
     # Try discussions first - collect all eligible statements with scores
     guided_first = get_guided_journey_priority_discussions()
     general = get_eligible_discussions()
@@ -756,6 +1083,109 @@ class DuplicateDateError(Exception):
     pass
 
 
+def _apply_source_info_to_question(question, source_info):
+    """Update an existing scheduled question from a new source selection."""
+    source = source_info['source']
+    source_type = source_info['source_type']
+    statement = source_info.get('statement')
+
+    question.question_text = source_info['question_text']
+    question.context = source_info.get('context')
+    question.why_this_question = source_info.get('why_this_question')
+    question.topic_category = source_info.get('topic_category')
+    question.source_type = source_type
+    question.source_discussion_id = None
+    question.source_statement_id = None
+    question.source_trending_topic_id = None
+    question.source_brief_item_id = None
+    question.coverage_frame_json = source_info.get('coverage_frame')
+
+    if source_type == 'discussion':
+        question.source_discussion_id = source.id
+        if statement:
+            question.source_statement_id = statement.id
+    elif source_type == BRIEF_SOURCE_TYPE:
+        question.source_trending_topic_id = source_info.get('source_trending_topic_id') or source.id
+        question.source_brief_item_id = source_info.get('source_brief_item_id')
+        if source_info.get('brief_item'):
+            question.source_brief_item_id = source_info['brief_item'].id
+        if source_info.get('source_discussion_id'):
+            question.source_discussion_id = source_info['source_discussion_id']
+        elif getattr(source, 'discussion_id', None):
+            question.source_discussion_id = source.discussion_id
+    elif source_type == 'trending':
+        question.source_trending_topic_id = source.id
+    elif source_type == 'statement':
+        question.source_statement_id = source.id
+        if hasattr(source, 'discussion') and source.discussion:
+            question.source_discussion_id = source.discussion.id
+
+
+def upsert_daily_question_from_source(question_date, source_info, created_by_id=None):
+    """
+    Create or replace a scheduled daily question from source_info.
+
+    Never overwrites a published question.
+    """
+    existing = DailyQuestion.query.filter_by(question_date=question_date).first()
+    if existing and existing.status == 'published':
+        return existing
+
+    if existing:
+        _apply_source_info_to_question(existing, source_info)
+        selection = DailyQuestionSelection.query.filter_by(
+            daily_question_id=existing.id
+        ).first()
+        if not selection:
+            selection = DailyQuestionSelection(
+                question_date=question_date,
+                daily_question_id=existing.id,
+            )
+            db.session.add(selection)
+        _update_selection_from_source_info(selection, source_info, question_date)
+        db.session.commit()
+        current_app.logger.info(
+            "Updated scheduled daily question for %s from %s",
+            question_date,
+            source_info['source_type'],
+        )
+        return existing
+
+    return create_daily_question_from_source(question_date, source_info, created_by_id=created_by_id)
+
+
+def _update_selection_from_source_info(selection, source_info, question_date):
+    source = source_info['source']
+    source_type = source_info['source_type']
+    statement = source_info.get('statement')
+
+    selection.source_type = source_type
+    selection.question_date = question_date
+    selection.source_discussion_id = None
+    selection.source_statement_id = None
+    selection.source_trending_topic_id = None
+    selection.source_brief_item_id = None
+    selection.selected_at = utcnow_naive()
+
+    if source_type == 'discussion':
+        selection.source_discussion_id = source.id
+        if statement:
+            selection.source_statement_id = statement.id
+    elif source_type == BRIEF_SOURCE_TYPE:
+        selection.source_trending_topic_id = source_info.get('source_trending_topic_id') or source.id
+        selection.source_brief_item_id = source_info.get('source_brief_item_id')
+        if source_info.get('source_discussion_id'):
+            selection.source_discussion_id = source_info['source_discussion_id']
+        elif getattr(source, 'discussion_id', None):
+            selection.source_discussion_id = source.discussion_id
+    elif source_type == 'trending':
+        selection.source_trending_topic_id = source.id
+    elif source_type == 'statement':
+        selection.source_statement_id = source.id
+        if hasattr(source, 'discussion') and source.discussion:
+            selection.source_discussion_id = source.discussion.id
+
+
 def create_daily_question_from_source(question_date, source_info, created_by_id=None):
     """Create a DailyQuestion from the selected source.
     
@@ -770,11 +1200,22 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
     source_discussion_id = None
     source_statement_id = None
     source_trending_topic_id = None
+    source_brief_item_id = None
+    coverage_frame_json = source_info.get('coverage_frame')
     
     if source_type == 'discussion':
         source_discussion_id = source.id
         if statement:
             source_statement_id = statement.id
+    elif source_type == BRIEF_SOURCE_TYPE:
+        source_trending_topic_id = source_info.get('source_trending_topic_id') or source.id
+        source_brief_item_id = source_info.get('source_brief_item_id')
+        if source_info.get('brief_item'):
+            source_brief_item_id = source_info['brief_item'].id
+        if source_info.get('source_discussion_id'):
+            source_discussion_id = source_info['source_discussion_id']
+        elif getattr(source, 'discussion_id', None):
+            source_discussion_id = source.discussion_id
     elif source_type == 'trending':
         source_trending_topic_id = source.id
     elif source_type == 'statement':
@@ -797,6 +1238,8 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
                 source_type=source_type,
                 source_discussion_id=source_discussion_id,
                 source_trending_topic_id=source_trending_topic_id,
+                source_brief_item_id=source_brief_item_id,
+                coverage_frame_json=coverage_frame_json,
                 source_statement_id=source_statement_id,
                 status='scheduled',
                 created_by_id=created_by_id
@@ -809,6 +1252,7 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
                 source_type=source_type,
                 source_discussion_id=source_discussion_id,
                 source_trending_topic_id=source_trending_topic_id,
+                source_brief_item_id=source_brief_item_id,
                 source_statement_id=source_statement_id,
                 question_date=question_date,
                 daily_question_id=question.id
@@ -847,7 +1291,7 @@ def auto_schedule_upcoming_questions(days_ahead=7):
         if existing:
             continue
         
-        source_info = select_next_question_source()
+        source_info = select_next_question_source(question_date=target_date)
         if source_info:
             try:
                 create_daily_question_from_source(target_date, source_info)
@@ -870,7 +1314,7 @@ def auto_publish_todays_question():
     question = DailyQuestion.query.filter_by(question_date=today).first()
     
     if not question:
-        source_info = select_next_question_source()
+        source_info = select_next_question_source(question_date=today)
         if source_info:
             try:
                 question = create_daily_question_from_source(today, source_info)

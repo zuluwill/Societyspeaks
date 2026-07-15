@@ -61,6 +61,56 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Source Provenance</h3>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+                <dt class="text-gray-500">Source type</dt>
+                <dd class="font-medium text-gray-900">{{ question.source_type or '—' }}</dd>
+            </div>
+            {% if question.source_discussion_id %}
+            <div>
+                <dt class="text-gray-500">Source discussion</dt>
+                <dd class="font-medium text-gray-900">#{{ question.source_discussion_id }}</dd>
+            </div>
+            {% endif %}
+            {% if question.source_trending_topic_id %}
+            <div>
+                <dt class="text-gray-500">Trending topic</dt>
+                <dd class="font-medium text-gray-900">#{{ question.source_trending_topic_id }}</dd>
+            </div>
+            {% endif %}
+            {% if question.source_brief_item_id %}
+            <div>
+                <dt class="text-gray-500">Brief item</dt>
+                <dd class="font-medium text-gray-900">#{{ question.source_brief_item_id }}</dd>
+            </div>
+            {% endif %}
+            {% if question.brief_source_date %}
+            <div>
+                <dt class="text-gray-500">Brief date</dt>
+                <dd class="font-medium text-gray-900">
+                    <a href="{{ url_for('brief.view_date', date_str=question.brief_source_date) }}" class="text-primary-600 hover:text-primary-800" target="_blank">
+                        {{ question.brief_source_date }}
+                    </a>
+                </dd>
+            </div>
+            {% endif %}
+            {% if question.coverage_dominant_frame %}
+            <div>
+                <dt class="text-gray-500">Dominant press frame</dt>
+                <dd class="font-medium text-gray-900">{{ question.coverage_dominant_frame }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% if question.coverage_frame_json %}
+        <details class="mt-4">
+            <summary class="text-sm text-gray-600 cursor-pointer hover:text-gray-900">Coverage frame JSON</summary>
+            <pre class="mt-2 p-3 bg-gray-50 rounded-lg text-xs overflow-x-auto">{{ question.coverage_frame_json | tojson(indent=2) }}</pre>
+        </details>
+        {% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Response Statistics</h3>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">

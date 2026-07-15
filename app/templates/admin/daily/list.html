@@ -71,6 +71,9 @@
             <div class="px-6 py-4 flex items-center justify-between">
                 <div>
                     <span class="text-sm font-medium text-gray-500">{{ q.question_date.strftime('%a, %b %d') }}</span>
+                    {% if q.source_type == 'brief' %}
+                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Brief</span>
+                    {% endif %}
                     <p class="text-gray-900">{{ q.question_text[:80] }}{% if q.question_text|length > 80 %}...{% endif %}</p>
                 </div>
                 <div class="flex items-center space-x-2">

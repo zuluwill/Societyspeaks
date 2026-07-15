@@ -57,6 +57,12 @@ class DailyQuestion(db.Model):
     source_discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
     source_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
     source_trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=True)
+    source_brief_item_id = db.Column(
+        db.Integer, db.ForeignKey('brief_item.id', ondelete='SET NULL'), nullable=True, index=True
+    )
+
+    # Snapshot of brief coverage metadata at question selection (press-vs-public axis)
+    coverage_frame_json = db.Column(db.JSON)
 
     topic_category = db.Column(db.String(100))
 
@@ -74,6 +80,7 @@ class DailyQuestion(db.Model):
     source_discussion = db.relationship('Discussion', backref='daily_questions')
     source_statement = db.relationship('Statement', backref='daily_questions')
     source_trending_topic = db.relationship('TrendingTopic', backref='daily_questions')
+    source_brief_item = db.relationship('BriefItem', backref='daily_questions')
     created_by = db.relationship('User', backref='created_daily_questions')
 
     @property
@@ -111,6 +118,20 @@ class DailyQuestion(db.Model):
             'unsure': round((unsure / total) * 100),
             'total': total
         }
+
+    @property
+    def is_brief_sourced(self):
+        return self.source_type == 'brief' and bool(self.source_brief_item_id)
+
+    @property
+    def coverage_dominant_frame(self):
+        frame = self.coverage_frame_json or {}
+        return frame.get('dominant_frame')
+
+    @property
+    def brief_source_date(self):
+        frame = self.coverage_frame_json or {}
+        return frame.get('brief_date')
 
     @property
     def early_signal_message(self):
@@ -781,6 +802,9 @@ class DailyQuestionSelection(db.Model):
     source_discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
     source_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
     source_trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=True)
+    source_brief_item_id = db.Column(
+        db.Integer, db.ForeignKey('brief_item.id', ondelete='SET NULL'), nullable=True
+    )
 
     selected_at = db.Column(db.DateTime, default=utcnow_naive)
     question_date = db.Column(db.Date, nullable=False)
