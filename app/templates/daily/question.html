@@ -64,9 +64,31 @@
                 "{{ question.question_text }}"
             </h1>
 
-            {% if question.context or question.why_this_question or (source_articles and source_articles|length > 0) %}
+            {% if question.context or question.why_this_question or brief_context or (source_articles and source_articles|length > 0) %}
             <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-100">
                 <p class="text-sm text-gray-500 mb-2 font-semibold">{{ _('Context in 15 seconds') }}</p>
+                {% if brief_context %}
+                <div class="mb-3 p-3 rounded-lg border border-amber-200 bg-amber-50">
+                    <p class="text-sm text-amber-900">
+                        <span class="font-semibold">{{ _('From the Daily Brief') }}</span>
+                        {% if brief_context.coverage_signals %}
+                        — {{ brief_context.coverage_signals|join(', ') }}
+                        {% endif %}
+                        {% if brief_context.dominant_frame_label %}
+                        <span class="block mt-1 text-xs text-amber-800">
+                            {{ _('Press coverage leaned toward %(frame)s.', frame=brief_context.dominant_frame_label) }}
+                        </span>
+                        {% endif %}
+                    </p>
+                    <a href="{{ brief_context.brief_url }}"
+                       class="inline-flex items-center mt-2 text-sm font-medium text-primary-700 hover:text-primary-900">
+                        {{ _('Read the %(date)s Daily Brief', date=brief_context.brief_date) }}
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+                {% endif %}
                 {% if question.context %}
                 <p class="text-gray-800 font-medium">{{ question.context }}</p>
                 {% endif %}

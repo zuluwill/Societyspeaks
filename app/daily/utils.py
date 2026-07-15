@@ -377,6 +377,54 @@ def get_discussion_stats_for_question(question):
     }
 
 
+def get_brief_context_for_question(question, base_url=None):
+    """
+    Brief-sourced question context for web/email: permalink + coverage posture labels.
+    """
+    from app.daily.auto_selection import BRIEF_SOURCE_TYPE
+
+    if question.source_type != BRIEF_SOURCE_TYPE or not question.coverage_frame_json:
+        return None
+
+    frame = question.coverage_frame_json or {}
+    brief_date_str = frame.get('brief_date')
+    if not brief_date_str:
+        return None
+
+    if base_url:
+        brief_url = f"{base_url.rstrip('/')}/brief/{brief_date_str}"
+    else:
+        try:
+            brief_url = url_for('brief.view_date', date_str=brief_date_str, _external=True)
+        except Exception:
+            brief_url = f"/brief/{brief_date_str}"
+
+    dominant = frame.get('dominant_frame') or 'unknown'
+    dominant_labels = {
+        'left': 'left-leaning outlets',
+        'center': 'centre outlets',
+        'right': 'right-leaning outlets',
+        'balanced': 'mixed outlets',
+        'unknown': 'the press',
+    }
+
+    signals = []
+    if frame.get('is_underreported'):
+        signals.append('underreported in mainstream coverage')
+    imbalance = frame.get('coverage_imbalance')
+    if imbalance is not None and float(imbalance) >= 0.5:
+        signals.append('uneven press attention')
+
+    return {
+        'brief_date': brief_date_str,
+        'brief_url': brief_url,
+        'dominant_frame': dominant,
+        'dominant_frame_label': dominant_labels.get(dominant, dominant_labels['unknown']),
+        'coverage_signals': signals,
+        'is_underreported': bool(frame.get('is_underreported')),
+    }
+
+
 def get_source_articles_for_question(question, limit=3):
     """
     Get source articles for a question for the "Learn More" section.
@@ -481,5 +529,6 @@ def build_question_email_data(question, subscriber, base_url=None):
         'discussion_stats': discussion_stats,
         'vote_urls': vote_urls,
         'source_articles': source_articles,
-        'question_url': question_url
+        'question_url': question_url,
+        'brief_context': get_brief_context_for_question(question),
     }

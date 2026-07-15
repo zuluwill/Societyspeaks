@@ -761,10 +761,12 @@ class ResendEmailClient:
         why_this = question.why_this_question or "This question helps us understand how the public thinks about important issues."
 
         try:
-            from app.daily.utils import get_source_articles_for_question
+            from app.daily.utils import get_source_articles_for_question, get_brief_context_for_question
             source_articles = get_source_articles_for_question(question, limit=3)
+            brief_context = get_brief_context_for_question(question, base_url=self.base_url)
         except Exception:
             source_articles = []
+            brief_context = None
         
         try:
             html = _render_for_user(
@@ -784,7 +786,8 @@ class ResendEmailClient:
                 vote_disagree_url=vote_urls['disagree'],
                 vote_unsure_url=vote_urls['unsure'],
                 base_url=self.base_url,
-                source_articles=source_articles
+                source_articles=source_articles,
+                brief_context=brief_context,
             )
         except Exception as e:
             logger.error(f"Template rendering failed for daily_question: {e}")
@@ -1065,10 +1068,12 @@ class ResendEmailClient:
         why_this = question.why_this_question or "This question helps us understand how the public thinks about important issues."
 
         try:
-            from app.daily.utils import get_source_articles_for_question
+            from app.daily.utils import get_source_articles_for_question, get_brief_context_for_question
             source_articles = get_source_articles_for_question(question, limit=3)
+            brief_context = get_brief_context_for_question(question, base_url=self.base_url)
         except Exception:
             source_articles = []
+            brief_context = None
         
         html = _render_for_user(
             subscriber,
@@ -1087,7 +1092,8 @@ class ResendEmailClient:
             vote_disagree_url=vote_urls['disagree'],
             vote_unsure_url=vote_urls['unsure'],
             base_url=self.base_url,
-            source_articles=source_articles
+            source_articles=source_articles,
+            brief_context=brief_context,
         )
 
         return {
