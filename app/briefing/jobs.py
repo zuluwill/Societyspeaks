@@ -583,6 +583,9 @@ def _process_retry_queue() -> int:
     Returns:
         int: Number of jobs moved to processing queue
     """
+    from redis.exceptions import ConnectionError as RedisConnectionError
+    from redis.exceptions import TimeoutError as RedisTimeoutError
+
     client = get_redis_client()
     if not client:
         return 0
@@ -604,6 +607,9 @@ def _process_retry_queue() -> int:
                 client.lpush('briefing:generation_queue', job_id)
                 moved += 1
                 logger.info(f"Moved job {job_id} from retry queue to processing queue")
+            except (RedisConnectionError, RedisTimeoutError) as e:
+                # Shared pool retries already exhausted; next scheduler tick will retry.
+                logger.warning("Transient Redis error moving retry job %s: %s", job_id, e)
             except Exception as e:
                 logger.error(f"Failed to move retry job {job_id}: {e}")
 
@@ -611,6 +617,11 @@ def _process_retry_queue() -> int:
             _log_metrics('retry_jobs_processed', {'count': moved})
 
         return moved
+    except (RedisConnectionError, RedisTimeoutError) as e:
+        # Seen in production as "Connection closed by server" (Redis Cloud blip).
+        # Not a brief-generation failure — warn and continue on the next tick.
+        logger.warning("Transient Redis error processing retry queue: %s", e)
+        return 0
     except Exception as e:
         logger.error(f"Failed to process retry queue: {e}")
         return 0

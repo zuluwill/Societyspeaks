@@ -31,6 +31,14 @@ def _op_with_message(msg: str) -> OperationalError:
         "connection reset by peer",
         "cannot execute INSERT in a read-only transaction",
         "(psycopg2.errors.ReadOnlySqlTransaction) cannot execute SELECT FOR UPDATE",
+        # Production Sentry 2026-07-16: Neon pooler SSL SYSCALL abort
+        (
+            "connection to server at \"ep-cold-king-ab8r79zc-pooler.eu-west-2.aws.neon.tech\" "
+            "failed: could not receive data from server: Software caused connection abort "
+            "SSL SYSCALL"
+        ),
+        # Production Sentry 2026-07-16: Redis Cloud blip on briefing retry queue
+        "Connection closed by server.",
     ),
 )
 def test_transient_classification_positive(message):
