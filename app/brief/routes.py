@@ -126,11 +126,7 @@ def today():
     user_id = str(current_user.id) if current_user.is_authenticated else None
     track_social_click(request, user_id)
 
-    brief = DailyBrief.get_today()
-    if not brief:
-        brief = DailyBrief.query.filter_by(
-            status='published', brief_type='daily'
-        ).order_by(DailyBrief.date.desc()).first()
+    brief = DailyBrief.get_latest_published(brief_type='daily')
 
     if not brief:
         return render_template('brief/no_brief.html')

@@ -119,6 +119,26 @@ def test_can_receive_allows_new_edition_on_new_local_day(db):
     assert s.can_receive_brief(brief_id=99) is True
 
 
+def test_can_receive_blocks_fresher_edition_same_local_day(db, monkeypatch):
+    """One send per local day — even when a newer edition publishes later that evening.
+
+    London BST (UTC+1): at 17:10 UTC (18:10 local) the prior edition is still
+    the latest published; at 18:10 UTC today's edition exists but the subscriber
+    already received mail on this local day. We do not double-send — the reader
+    gets the prior calendar-dated edition honestly labeled, not a second email.
+    """
+    s = DailyBriefSubscriber(email='london@t.test', timezone='Europe/London')
+    s.last_brief_id_sent = 100
+    s.last_sent_at = datetime(2026, 7, 15, 17, 10)   # 18:10 BST, prior edition
+    db.session.add(s)
+    db.session.commit()
+
+    later = datetime(2026, 7, 15, 18, 10)            # 19:10 BST, new edition live
+    monkeypatch.setattr('app.models.daily_brief.utcnow_naive', lambda: later)
+    assert s.has_received_brief_on_local_day() is True
+    assert s.can_receive_brief(brief_id=101) is False  # different edition, same local day
+
+
 def test_can_receive_blocks_inactive(db):
     s = DailyBriefSubscriber(email='gone@t.test', status='unsubscribed')
     db.session.add(s)
@@ -151,3 +171,61 @@ def test_title_derives_day_from_brief_date(db):
     expected_label = f"{d.strftime('%A')} {d.day} {d.strftime('%b')}"
     assert title.startswith(expected_label + " Brief:"), title
     assert 'Politics' in title and 'Economy' in title
+
+
+# --------------------------------------------------------------------------
+# scheduler send path — end-to-end that send_todays_brief_hourly() selects
+# get_latest_published() and skips gracefully with no published edition.
+# (Lock and the actual mail send are mocked; subscriber matching is unit-tested
+# above via can_receive_brief, so it is stubbed here to isolate orchestration.)
+# --------------------------------------------------------------------------
+
+def _mock_send_lock(monkeypatch):
+    from app.brief import email_client as ec
+    monkeypatch.setattr(ec, 'acquire_daily_send_lock',
+                        lambda **kw: (True, None, 'key', 'token', None))
+    monkeypatch.setattr(ec, 'release_daily_send_lock', lambda *a, **k: None)
+
+
+def test_send_hourly_selects_latest_published_edition(db, monkeypatch):
+    from app.brief import email_client as ec
+
+    _brief(db, date(2026, 7, 14), status='published')            # older published
+    newest = _brief(db, date(2026, 7, 15), status='published')   # newest published
+    _brief(db, date(2026, 7, 16), status='ready')                # newer draft — must NOT send
+    sub = DailyBriefSubscriber(email='e2e@t.test')
+    db.session.add(sub)
+    db.session.commit()
+
+    _mock_send_lock(monkeypatch)
+    scheduler = ec.BriefEmailScheduler()
+    captured = {}
+    monkeypatch.setattr(scheduler, 'get_subscribers_for_hour', lambda *a, **k: [sub])
+    monkeypatch.setattr(
+        scheduler, 'send_to_subscribers',
+        lambda subs, brief: (captured.update(brief=brief, n=len(subs))
+                             or {'sent': len(subs), 'failed': 0, 'errors': []}),
+    )
+
+    result = scheduler.send_todays_brief_hourly()
+
+    assert captured['brief'].id == newest.id     # newest published, never the draft
+    assert result['sent'] == 1
+
+
+def test_send_hourly_skips_when_no_published_edition(db, monkeypatch):
+    from app.brief import email_client as ec
+
+    _brief(db, date(2026, 7, 16), status='ready')   # only an unpublished draft exists
+    db.session.commit()
+
+    _mock_send_lock(monkeypatch)
+    scheduler = ec.BriefEmailScheduler()
+    called = {'sent': False}
+    monkeypatch.setattr(scheduler, 'send_to_subscribers',
+                        lambda *a, **k: called.update(sent=True))
+
+    result = scheduler.send_todays_brief_hourly()
+
+    assert result is None            # graceful skip
+    assert called['sent'] is False   # never attempts a send with no published edition
