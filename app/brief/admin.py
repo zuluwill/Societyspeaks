@@ -203,9 +203,7 @@ def generate(date_str=None):
 @brief_admin_bp.route('/send-missed', methods=['POST'])
 @admin_required
 def send_missed():
-    """Send today's published brief to all eligible subscribers who haven't received it yet."""
-    brief_date = date.today()
-    
+    """Send the latest published daily brief to eligible subscribers who haven't received it yet."""
     lock_acquired = False
     lock_client = None
     lock_key = None
@@ -218,17 +216,15 @@ def send_missed():
             acquire_daily_send_lock,
             release_daily_send_lock
         )
-        
-        brief = DailyBrief.query.filter_by(
-            date=brief_date, brief_type='daily', status='published'
-        ).first()
-        
+
+        brief = DailyBrief.get_latest_published(brief_type='daily')
+
         if not brief:
-            flash('No published brief for today. Generate and publish one first.', 'error')
+            flash('No published daily brief available. Generate and publish one first.', 'error')
             return redirect(url_for('brief_admin.dashboard'))
 
         lock_acquired, lock_client, lock_key, lock_token, lock_reason = acquire_daily_send_lock(
-            target_date=brief_date,
+            target_date=brief.date,
             ttl_seconds=3600
         )
         if not lock_acquired:
@@ -256,10 +252,13 @@ def send_missed():
             missed.append(sub)
         
         if not missed:
-            flash('All eligible subscribers have already received today\'s brief.', 'info')
+            flash(
+                f'All eligible subscribers have already received the {brief.date.isoformat()} edition.',
+                'info',
+            )
             return redirect(url_for('brief_admin.dashboard'))
         
-        logger.info(f"Sending catch-up brief to {len(missed)} missed subscribers")
+        logger.info(f"Sending catch-up brief ({brief.date}) to {len(missed)} missed subscribers")
         results = scheduler_obj.send_to_subscribers(missed, brief)
         
         flash(
@@ -837,24 +836,20 @@ def bulk_remove_subscribers():
 @brief_admin_bp.route('/subscribers/<int:subscriber_id>/resend', methods=['POST'])
 @admin_required
 def resend_to_subscriber(subscriber_id):
-    """Resend today's brief to a specific subscriber"""
+    """Resend the latest published daily brief to a specific subscriber"""
     from app.models import DailyBriefSubscriber
     from app.brief.email_client import send_brief_to_subscriber
     
     subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     
-    # Get today's published brief
-    today_brief = DailyBrief.query.filter_by(
-        date=date.today(),
-        status='published'
-    ).first()
+    latest_brief = DailyBrief.get_latest_published(brief_type='daily')
     
-    if not today_brief:
-        flash('No published brief for today.', 'error')
+    if not latest_brief:
+        flash('No published daily brief available.', 'error')
         return redirect(url_for('brief_admin.subscribers'))
     
     try:
-        success = send_brief_to_subscriber(subscriber.email, date.today().isoformat())
+        success = send_brief_to_subscriber(subscriber.email, latest_brief.date.isoformat())
         if success:
             flash(f'Brief resent to {subscriber.email}', 'success')
         else:

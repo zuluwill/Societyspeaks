@@ -97,11 +97,8 @@ def index():
         except Exception as e:
             current_app.logger.warning(f"Homepage: fallback auto-publish failed: {e}")
 
-    # Get today's or most recent daily brief for the homepage preview
-    daily_brief = DailyBrief.get_today()
-    if not daily_brief:
-        # Fall back to most recent published brief
-        daily_brief = DailyBrief.query.filter_by(status='published').order_by(DailyBrief.date.desc()).first()
+    # Latest published daily brief for the homepage preview (same resolver as email/web).
+    daily_brief = DailyBrief.get_latest_published(brief_type='daily')
     brief_items = []
     if daily_brief:
         brief_items = daily_brief.items.order_by(db.text('position')).limit(5).all()

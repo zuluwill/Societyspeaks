@@ -229,3 +229,73 @@ def test_send_hourly_skips_when_no_published_edition(db, monkeypatch):
 
     assert result is None            # graceful skip
     assert called['sent'] is False   # never attempts a send with no published edition
+
+
+# --------------------------------------------------------------------------
+# published_only + public resolver parity
+# --------------------------------------------------------------------------
+
+def test_get_by_date_published_only_excludes_ready(db):
+    d = date(2026, 7, 16)
+    _brief(db, d, status='ready')
+    db.session.commit()
+    assert DailyBrief.get_by_date(d, published_only=True) is None
+    assert DailyBrief.get_by_date(d).status == 'ready'
+
+
+def test_get_by_date_default_still_allows_ready_for_admin_paths(db):
+    d = date(2026, 7, 16)
+    ready = _brief(db, d, status='ready')
+    db.session.commit()
+    assert DailyBrief.get_by_date(d).id == ready.id
+
+
+def test_brief_today_redirects_to_latest_published_date(app, db):
+    d = date(2026, 7, 14)
+    _brief(db, d, status='published')
+    _brief(db, date(2026, 7, 16), status='ready')   # must not redirect to draft
+    db.session.commit()
+
+    client = app.test_client()
+    resp = client.get('/brief/today', follow_redirects=False)
+    assert resp.status_code == 301
+    assert resp.location.endswith('/brief/2026-07-14')
+
+
+def test_reader_today_redirects_to_latest_published_date(app, db):
+    d = date(2026, 7, 14)
+    _brief(db, d, status='published')
+    db.session.commit()
+
+    client = app.test_client()
+    resp = client.get('/brief/today/reader', follow_redirects=False)
+    assert resp.status_code == 301
+    assert '/brief/2026-07-14/reader' in resp.location
+
+
+def test_public_view_date_hides_ready_draft(app, db):
+    d = date(2026, 7, 16)
+    _brief(db, d, status='ready')
+    db.session.commit()
+
+    client = app.test_client()
+    resp = client.get('/brief/2026-07-16')
+    assert resp.status_code == 200
+    assert b'No brief available' in resp.data or b'no_brief' in resp.data.lower()
+
+
+def test_api_latest_returns_latest_published(app, db):
+    d = date(2026, 7, 14)
+    published = _brief(db, d, status='published')
+    _brief(db, date(2026, 7, 16), status='ready')
+    sub = DailyBriefSubscriber(email='api@t.test', status='active')
+    db.session.add(sub)
+    db.session.commit()
+
+    client = app.test_client()
+    with client.session_transaction() as sess:
+        sess['brief_subscriber_id'] = sub.id
+
+    resp = client.get('/api/brief/latest')
+    assert resp.status_code == 200
+    assert resp.get_json()['id'] == published.id

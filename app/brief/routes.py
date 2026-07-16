@@ -147,7 +147,7 @@ def view_date(date_str):
         flash(_('Invalid date format. Use YYYY-MM-DD.'), 'error')
         return redirect(url_for('brief.today'))
 
-    brief = DailyBrief.get_by_date(brief_date)
+    brief = DailyBrief.get_by_date(brief_date, published_only=True)
 
     # Check subscriber status for personalization (not access control)
     subscriber, is_subscriber = get_subscriber_status()
@@ -194,7 +194,7 @@ def reader_view(date_str):
         flash(_('Invalid date format. Use YYYY-MM-DD.'), 'error')
         return redirect(url_for('brief.today'))
 
-    brief = DailyBrief.get_by_date(brief_date)
+    brief = DailyBrief.get_by_date(brief_date, published_only=True)
 
     if not brief:
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
@@ -221,21 +221,10 @@ def reader_view(date_str):
 @limiter.limit("60/minute")
 def reader_today():
     """Reader view for today's brief - redirects to date-specific reader URL."""
-    brief = DailyBrief.get_today()
+    brief = DailyBrief.get_latest_published(brief_type='daily')
 
     if not brief:
-        # Fall back to most recent
-        latest_brief = DailyBrief.query.filter_by(
-            status='published'
-        ).order_by(DailyBrief.date.desc()).first()
-
-        if latest_brief:
-            return redirect(
-                url_for('brief.reader_view', date_str=latest_brief.date.strftime('%Y-%m-%d')),
-                code=301,
-            )
-        else:
-            return render_template('brief/no_brief.html')
+        return render_template('brief/no_brief.html')
 
     return redirect(
         url_for('brief.reader_view', date_str=brief.date.strftime('%Y-%m-%d')),
@@ -870,7 +859,7 @@ def api_latest():
             'subscribe_url': '/brief/subscribe'
         }), 401
 
-    brief = DailyBrief.get_today()
+    brief = DailyBrief.get_latest_published(brief_type='daily')
 
     if not brief:
         return jsonify({'error': _('No brief available')}), 404
@@ -898,7 +887,7 @@ def api_brief_by_date(date_str):
     except ValueError:
         return jsonify({'error': _('Invalid date format')}), 400
 
-    brief = DailyBrief.get_by_date(brief_date)
+    brief = DailyBrief.get_by_date(brief_date, published_only=True)
 
     if not brief:
         return jsonify({'error': _('No brief found')}), 404

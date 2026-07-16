@@ -120,10 +120,22 @@ class DailyBrief(db.Model):
                cls.query.filter_by(date=today, status='ready', brief_type=brief_type).first()
 
     @classmethod
-    def get_by_date(cls, brief_date, brief_type='daily'):
-        """Get brief for a specific date (optionally by type)"""
-        return cls.query.filter_by(date=brief_date, status='published', brief_type=brief_type).first() or \
-               cls.query.filter_by(date=brief_date, status='ready', brief_type=brief_type).first()
+    def get_by_date(cls, brief_date, brief_type='daily', *, published_only=False):
+        """Get brief for a specific date (optionally by type).
+
+        When ``published_only`` is True, returns only a published edition — the
+        same rule as ``get_latest_published`` and all public/send surfaces.
+        When False (default), falls back to ``ready`` for internal/admin paths
+        that may need to inspect a draft before publish.
+        """
+        published = cls.query.filter_by(
+            date=brief_date, status='published', brief_type=brief_type
+        ).first()
+        if published or published_only:
+            return published
+        return cls.query.filter_by(
+            date=brief_date, status='ready', brief_type=brief_type
+        ).first()
 
     @classmethod
     def get_latest_published(cls, brief_type='daily'):

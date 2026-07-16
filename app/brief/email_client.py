@@ -1083,7 +1083,7 @@ def send_brief_to_subscriber(subscriber_email: str, brief_date: Optional[str] = 
 
     if brief_date:
         brief_date_obj = datetime.strptime(brief_date, '%Y-%m-%d').date()
-        brief = DailyBrief.get_by_date(brief_date_obj)
+        brief = DailyBrief.get_by_date(brief_date_obj, published_only=True)
     else:
         # No explicit date → the current edition = the latest published brief
         # (get_today() is None for most of the UTC day, before generation).
