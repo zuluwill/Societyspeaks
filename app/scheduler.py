@@ -3704,10 +3704,12 @@ def init_scheduler(app):
     def auto_publish_daily_brief():
         """
         Auto-publish today's briefs at BRIEF_PUBLISH_UTC_HOUR UTC if still in 'ready' status.
-        Handles both daily and weekly briefs. Gives admin 1 hour review window (5pm-6pm).
+        Handles both daily and weekly briefs. Gives admin a review window after generation
+        (typically 17:00 UTC generate → 18:00 UTC publish).
 
-        Cron hour is imported from app.brief.constants.BRIEF_PUBLISH_UTC_HOUR (same value
-        BriefEmailScheduler uses to decide today's vs yesterday's content for morning sends).
+        Hourly email delivery uses DailyBrief.get_latest_published() — it does not branch
+        on this constant. This job only promotes ``ready`` → ``published`` so the next
+        hourly send can pick up today's edition.
         """
         with app.app_context():
             from app import db
@@ -3754,9 +3756,11 @@ def init_scheduler(app):
         remaining 'ready' briefs for today to 'published' so delivery can
         recover automatically without manual intervention.
 
-        Runs at 18:15 UTC — after emails go out at 18:10 (email job accepts
-        'ready' status) and before the social post at 18:30 (which requires
-        'published' status).
+        Runs at 18:15 UTC — after the 18:10 email job (which only sends
+        ``published`` editions via get_latest_published) and before the social
+        post at 18:30 (which requires 'published' status). Subscribers whose
+        local hour already ran in the 18:10 window may have received the prior
+        published edition; they are not double-sent the same local day.
         """
         with app.app_context():
             from app import db
@@ -4017,15 +4021,14 @@ def init_scheduler(app):
     @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails', max_instances=1, coalesce=True, misfire_grace_time=7200)
     def send_brief_emails_hourly():
         """
-        Send brief emails 10 minutes past each hour
-        Offset from minute=0 to avoid race condition with auto_publish_brief at 18:00 UTC
-        Checks which subscribers should receive at this UTC hour based on their timezone
-        Example: At 18:10 UTC, sends to subscribers with preferred_hour=18:
-        - UK users with preferred_hour=18 (6pm UK time)
-        - EST users with preferred_hour=13 (1pm EST = 18:00 UTC)
-        - PST users with preferred_hour=10 (10am PST = 18:00 UTC)
-        
-        IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
+        Send brief emails 10 minutes past each hour.
+
+        Offset from minute=0 so auto_publish_brief at 18:00 UTC can finish before
+        the 18:10 run. Each subscriber is matched to their preferred *local* hour
+        (plus a 2-hour catch-up window). The edition sent is always
+        DailyBrief.get_latest_published() — never a ``ready`` draft.
+
+        IMPORTANT: Only sends in production to prevent duplicate emails from dev.
         """
         # Skip email sending in development environment to prevent duplicates
         if not _is_production_environment():

@@ -21,6 +21,8 @@ use string references; no cross-submodule imports are required.
 
 from datetime import timedelta
 
+import pytz
+
 from app import db
 from app.lib.time import utcnow_naive
 
@@ -118,10 +120,41 @@ class DailyBrief(db.Model):
                cls.query.filter_by(date=today, status='ready', brief_type=brief_type).first()
 
     @classmethod
-    def get_by_date(cls, brief_date, brief_type='daily'):
-        """Get brief for a specific date (optionally by type)"""
-        return cls.query.filter_by(date=brief_date, status='published', brief_type=brief_type).first() or \
-               cls.query.filter_by(date=brief_date, status='ready', brief_type=brief_type).first()
+    def get_by_date(cls, brief_date, brief_type='daily', *, published_only=False):
+        """Get brief for a specific date (optionally by type).
+
+        When ``published_only`` is True, returns only a published edition — the
+        same rule as ``get_latest_published`` and all public/send surfaces.
+        When False (default), falls back to ``ready`` for internal/admin paths
+        that may need to inspect a draft before publish.
+        """
+        published = cls.query.filter_by(
+            date=brief_date, status='published', brief_type=brief_type
+        ).first()
+        if published or published_only:
+            return published
+        return cls.query.filter_by(
+            date=brief_date, status='ready', brief_type=brief_type
+        ).first()
+
+    @classmethod
+    def get_latest_published(cls, brief_type='daily'):
+        """The newest *published* brief of this type — the edition that should be sent/shown.
+
+        Resolving delivery by "latest published" rather than by the UTC calendar
+        date or a fixed publish hour means:
+        - each reader gets the freshest available edition at their local hour;
+        - a late or failed generation degrades gracefully to the prior edition
+          (subscribers get something, never nothing);
+        - an unpublished draft ('ready') is never delivered to the list.
+        Deliberately excludes 'ready' — only 'published' editions are sendable.
+        """
+        return (
+            cls.query
+            .filter_by(brief_type=brief_type, status='published')
+            .order_by(cls.date.desc())
+            .first()
+        )
 
     @property
     def is_sectioned(self):
@@ -629,30 +662,51 @@ class DailyBriefSubscriber(db.Model):
         """
         return self.status == 'active'
 
-    def has_received_brief_today(self, brief_date=None):
-        """Check if subscriber already received brief for given date (prevents duplicate sends)"""
-        from datetime import date as date_type
-        if brief_date is None:
-            brief_date = date_type.today()
+    def resolve_timezone(self):
+        """The subscriber's tzinfo, defaulting to UTC on a missing/invalid value."""
+        try:
+            return pytz.timezone(self.timezone or 'UTC')
+        except Exception:
+            return pytz.utc
 
+    def has_received_brief_on_local_day(self, reference_dt=None):
+        """True if the subscriber already received a brief on *their local* calendar day.
+
+        Keyed to the subscriber's timezone, not the server's UTC date. A UTC-day
+        check is wrong at both edges:
+        - it can double-send — two sends within one local evening that straddle
+          UTC midnight read as two different UTC days, so the second isn't blocked;
+        - it can lock out — a subscriber whose local day has advanced but whose UTC
+          date has not (or vice versa) is wrongly treated as "already sent today".
+        Capping at one send per *local* day, together with per-brief-id idempotency,
+        lets each timezone receive the latest-published edition once, at their hour.
+        """
         if not self.last_sent_at:
             return False
-
-        return self.last_sent_at.date() == brief_date
+        tz = self.resolve_timezone()
+        now = reference_dt or utcnow_naive()
+        now_local = now.replace(tzinfo=pytz.utc).astimezone(tz).date()
+        last_local = self.last_sent_at.replace(tzinfo=pytz.utc).astimezone(tz).date()
+        return last_local == now_local
 
     def has_received_this_brief(self, brief_id):
         """DB-level idempotency: check if this specific brief was already sent"""
         return self.last_brief_id_sent == brief_id
 
-    def can_receive_brief(self, brief_date=None, brief_id=None):
-        """Full eligibility check including duplicate prevention"""
+    def can_receive_brief(self, brief_id=None):
+        """Full eligibility check with duplicate prevention.
+
+        Two independent guards:
+        - per-brief-id idempotency — never send the same edition twice;
+        - at most one send per subscriber *local* calendar day.
+        """
         if not self.is_subscribed_eligible():
             return False
 
         if brief_id is not None and self.has_received_this_brief(brief_id):
             return False
 
-        if self.has_received_brief_today(brief_date):
+        if self.has_received_brief_on_local_day():
             return False
 
         return True
