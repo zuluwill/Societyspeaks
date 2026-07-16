@@ -676,7 +676,7 @@ def init_commands(app):
 
     @app.cli.command('backfill-seed-statements')
     @click.option('--min', 'min_count', default=CONSENSUS_RECOMMENDED_STATEMENT_COUNT,
-                  help='Minimum seed statements a discussion should have (default: 7)')
+                  help='Minimum seed statements a discussion should have (default: 10)')
     @click.option('--limit', default=50, help='Max discussions to process this run')
     @click.option('--discussion-id', default=None, type=int,
                   help='Only process this discussion id (ignores --limit)')

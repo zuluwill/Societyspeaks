@@ -5,8 +5,9 @@ CONSENSUS_MIN_PARTICIPANTS = 7
 CONSENSUS_MIN_TOTAL_VOTES = 20
 CONSENSUS_MIN_VOTES_PER_STATEMENT = 3
 
-# UX guidance threshold (not a hard gate).
-CONSENSUS_RECOMMENDED_STATEMENT_COUNT = 7
+# UX + seed-generation floor (not an analysis hard gate).
+# Pol.is recommends at least 10 seed comments to map the opinion space.
+CONSENSUS_RECOMMENDED_STATEMENT_COUNT = 10
 
 # Viewer participation gate (anti-anchoring); separate from analysis readiness.
 CONSENSUS_VIEW_RESULTS_MIN_VOTES = 5

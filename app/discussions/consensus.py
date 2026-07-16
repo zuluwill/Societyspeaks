@@ -272,7 +272,7 @@ def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_c
             'total_votes': int(total_votes or 0),
             'min_total_votes': int(thresholds.get('min_total_votes', 20)),
             'statement_count': int(statement_count or 0),
-            'recommended_statements': int(thresholds.get('recommended_statements', 7)),
+            'recommended_statements': int(thresholds.get('recommended_statements', 10)),
         }
     }
 

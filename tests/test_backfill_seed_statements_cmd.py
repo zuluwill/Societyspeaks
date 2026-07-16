@@ -5,6 +5,7 @@ Exercises the real command via Flask's CLI runner against an in-memory DB, with
 LLM API keys stripped so generation uses the deterministic fallback (no network).
 """
 
+from app.discussions.thresholds import CONSENSUS_RECOMMENDED_STATEMENT_COUNT
 from app.models import User, Discussion, Statement, generate_slug
 
 
@@ -58,14 +59,14 @@ def test_backfill_tops_up_single_discussion(app, db, monkeypatch):
         )
 
         assert result.exit_code == 0, result.output
-        assert _visible_count(disc_id) == 7
+        assert _visible_count(disc_id) == CONSENSUS_RECOMMENDED_STATEMENT_COUNT
 
         added = (
             Statement.query
             .filter_by(discussion_id=disc_id, source="ai_generated")
             .all()
         )
-        assert len(added) == 6
+        assert len(added) == CONSENSUS_RECOMMENDED_STATEMENT_COUNT - 1
         for s in added:
             assert s.is_seed is True
             assert s.mod_status == 1
@@ -95,13 +96,15 @@ def test_backfill_skips_discussions_already_at_floor(app, db, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
     with app.app_context():
-        disc = _make_discussion(db, "Healthy discussion", n_statements=7)
+        disc = _make_discussion(
+            db, "Healthy discussion", n_statements=CONSENSUS_RECOMMENDED_STATEMENT_COUNT
+        )
         disc_id = disc.id
 
         result = app.test_cli_runner().invoke(args=["backfill-seed-statements"])
 
         assert result.exit_code == 0, result.output
-        assert _visible_count(disc_id) == 7
+        assert _visible_count(disc_id) == CONSENSUS_RECOMMENDED_STATEMENT_COUNT
 
 
 def test_backfill_ignores_polis_embed_discussions(app, db, monkeypatch):

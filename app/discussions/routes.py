@@ -935,7 +935,7 @@ def view_discussion(discussion_id, slug):
                 'total_votes': 0,
                 'min_total_votes': int(_thresholds.get('min_total_votes', 20)),
                 'statement_count': 0,
-                'recommended_statements': int(_thresholds.get('recommended_statements', 7)),
+                'recommended_statements': int(_thresholds.get('recommended_statements', 10)),
             },
         }
         discussion_participant_count = consensus_ui_state['consensus_progress']['participant_count']
