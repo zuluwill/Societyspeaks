@@ -1,0 +1,213 @@
+{# E1: hero stance card at end of daily brief (web). Expects build_stance_card_context(). #}
+{% if stance_card and stance_card.question %}
+<section id="{{ stance_card.stance_anchor }}" class="mt-10 mb-4 scroll-mt-24" aria-labelledby="stance-card-heading">
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 shadow-sm overflow-hidden dark:border-amber-800/60 dark:bg-amber-950/40">
+        <div class="px-5 py-3 border-b border-amber-200/80 bg-amber-100/80 dark:border-amber-800/50 dark:bg-amber-900/30">
+            <p class="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-200">
+                {{ _('Daily Question #%(num)d', num=stance_card.question.question_number) }} · {{ _('~10 seconds') }}
+            </p>
+        </div>
+
+        <div class="p-5 sm:p-6">
+            <h2 id="stance-card-heading" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                {{ _('Your turn') }}
+            </h2>
+            <p class="text-sm text-amber-900/90 dark:text-amber-100/90 mb-4">{{ stance_card.subline }}</p>
+
+            {% if stance_card.is_brief_sourced and stance_card.sourcing_brief_url and stance_card.frame.brief_date %}
+            <p class="text-xs text-amber-800/80 dark:text-amber-200/70 mb-4">
+                <a href="{{ stance_card.sourcing_brief_url }}" class="underline hover:text-amber-950 dark:hover:text-amber-50">
+                    {{ _('From the %(date)s Daily Brief', date=stance_card.frame.brief_date) }}
+                </a>
+            </p>
+            {% endif %}
+
+            <blockquote class="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-50 leading-snug mb-5" style="font-family: Georgia, 'Times New Roman', Times, serif;">
+                &ldquo;{{ stance_card.question.question_text }}&rdquo;
+            </blockquote>
+
+            {% if stance_card.show_early_signal and stance_card.vote_pcts and stance_card.vote_pcts.total > 0 %}
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                {{ _('So far: %(agree)s%% agree · %(disagree)s%% disagree · %(unsure)s%% unsure',
+                    agree=stance_card.vote_pcts.agree,
+                    disagree=stance_card.vote_pcts.disagree,
+                    unsure=stance_card.vote_pcts.unsure) }}
+            </p>
+            {% elif stance_card.question.is_cold_start %}
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                {{ _('Be among the first to share your view.') }}
+            </p>
+            {% endif %}
+
+            {% if stance_card.has_voted %}
+            <div id="stanceVoteSuccess" class="rounded-xl bg-white/80 dark:bg-slate-900/50 border border-amber-200/60 dark:border-amber-800/40 p-4 text-center">
+                <p class="text-slate-700 dark:text-slate-200 font-medium mb-3">{{ _('Thanks — your stance is recorded.') }}</p>
+                <a href="{{ stance_card.results_url }}"
+                   class="inline-flex items-center text-sm font-semibold text-primary-700 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                    {{ _('See how others responded') }}
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+            </div>
+            {% else %}
+            <div id="stanceVoteSuccess" class="hidden rounded-xl bg-white/80 dark:bg-slate-900/50 border border-amber-200/60 dark:border-amber-800/40 p-4 text-center" role="status">
+                <p class="text-slate-700 dark:text-slate-200 font-medium mb-3">{{ _('Thanks — your stance is recorded.') }}</p>
+                <a id="stanceResultsLink" href="{{ stance_card.results_url }}"
+                   class="inline-flex items-center text-sm font-semibold text-primary-700 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                    {{ _('See how others responded') }}
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+            </div>
+
+            <div id="stanceVotePanel">
+                <p id="stanceVoteError" class="hidden text-sm text-red-700 dark:text-red-300 mb-3 text-center" role="alert"></p>
+
+                <form id="stanceVoteForm" action="{{ url_for('daily.vote') }}" method="POST" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="ajax" value="1">
+                    <input type="hidden" name="participation_source" value="brief_stance">
+                    <input type="hidden" id="stance-context_expanded" name="context_expanded" value="1">
+                    <input type="hidden" id="stance-source_link_click_count" name="source_link_click_count" value="0">
+                    <fieldset class="border-0 p-0 m-0 min-w-0">
+                        <legend class="sr-only">{{ _("Your vote on today's question") }}</legend>
+                        <div class="vote-buttons-grid">
+                            <button type="button" value="agree"
+                                    aria-label="{{ _('Agree with this statement') }}"
+                                    class="vote-btn vote-btn-agree min-h-[48px] text-base"
+                                    aria-pressed="false">
+                                <span class="vote-content"><span class="vote-label">{{ _('Agree') }}</span></span>
+                            </button>
+                            <button type="button" value="disagree"
+                                    aria-label="{{ _('Disagree with this statement') }}"
+                                    class="vote-btn vote-btn-disagree min-h-[48px] text-base"
+                                    aria-pressed="false">
+                                <span class="vote-content"><span class="vote-label">{{ _('Disagree') }}</span></span>
+                            </button>
+                            <button type="button" value="unsure"
+                                    aria-label="{{ _('Unsure about this statement') }}"
+                                    class="vote-btn vote-btn-unsure min-h-[48px] text-base"
+                                    aria-pressed="false">
+                                <span class="vote-content"><span class="vote-label">{{ _('Unsure') }}</span></span>
+                            </button>
+                        </div>
+                    </fieldset>
+
+                    {% set show_initially = false %}
+                    {% set include_submit_button = true %}
+                    {% set button_type = 'button' %}
+                    {% set submit_button_text = _('Submit My Response') %}
+                    {% set input_id_prefix = 'stance-' %}
+                    {% include 'daily/_reason_input.html' %}
+                </form>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">
+                    {{ _('Optional reason below · No account required') }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% if not stance_card.has_voted %}
+<script nonce="{{ csp_nonce() }}">
+document.addEventListener('DOMContentLoaded', function() {
+    const card = document.getElementById('{{ stance_card.stance_anchor }}');
+    if (!card) return;
+    const voteBtns = card.querySelectorAll('.vote-btn');
+    const reasonSection = document.getElementById('stance-reasonSection');
+    const reasonTextarea = document.getElementById('stance-reason');
+    const charCount = document.getElementById('stance-charCount');
+    const form = document.getElementById('stanceVoteForm');
+    const submitBtn = document.getElementById('stance-submitVoteBtn');
+    const votePanel = document.getElementById('stanceVotePanel');
+    const voteSuccess = document.getElementById('stanceVoteSuccess');
+    const voteError = document.getElementById('stanceVoteError');
+    const resultsLink = document.getElementById('stanceResultsLink');
+    const selectFirstMsg = {{ _('Please select Agree, Disagree, or Unsure first.')|tojson }};
+    let selectedVote = null;
+
+    function showVoteError(message) {
+        if (!voteError) return;
+        voteError.textContent = message;
+        voteError.classList.remove('hidden');
+    }
+
+    function clearVoteError() {
+        if (!voteError) return;
+        voteError.textContent = '';
+        voteError.classList.add('hidden');
+    }
+
+    voteBtns.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            selectedVote = this.value;
+            clearVoteError();
+            voteBtns.forEach(function(b) {
+                b.removeAttribute('data-vote-selected');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            this.setAttribute('data-vote-selected', '1');
+            this.setAttribute('aria-pressed', 'true');
+            if (reasonSection) reasonSection.classList.remove('hidden');
+            if (reasonTextarea) reasonTextarea.focus();
+        });
+    });
+
+    if (reasonTextarea && charCount) {
+        reasonTextarea.addEventListener('input', function() {
+            charCount.textContent = String(this.value.length);
+        });
+    }
+
+    if (submitBtn && form) {
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!selectedVote) {
+                showVoteError(selectFirstMsg);
+                return;
+            }
+            clearVoteError();
+            submitBtn.disabled = true;
+
+            const formData = new FormData(form);
+            formData.set('vote', selectedVote);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(response) {
+                return response.json().then(function(data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function(result) {
+                if (result.ok && result.data && result.data.success) {
+                    if (votePanel) votePanel.classList.add('hidden');
+                    if (voteSuccess) voteSuccess.classList.remove('hidden');
+                    if (resultsLink && result.data.results_url) {
+                        resultsLink.href = result.data.results_url;
+                    }
+                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    return;
+                }
+                const err = (result.data && result.data.error) || selectFirstMsg;
+                showVoteError(err);
+                submitBtn.disabled = false;
+            })
+            .catch(function() {
+                showVoteError({{ _('Something went wrong. Please try again.')|tojson }});
+                submitBtn.disabled = false;
+            });
+        });
+    }
+});
+</script>
+{% endif %}
+{% endif %}

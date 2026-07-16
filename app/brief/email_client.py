@@ -492,6 +492,13 @@ class ResendClient:
             utm_campaign='personal_briefs_cta',
             template_slug=DEFAULT_TRIAL_TEMPLATE_SLUG,
         )
+        from app.brief.stance_card import build_stance_email_handoff
+        stance_handoff = None
+        if brief.brief_type == 'daily':
+            stance_handoff = build_stance_email_handoff(
+                brief_date=brief.date,
+                base_url=base_url,
+            )
         try:
             html = _render_email_for_user(
                 None,
@@ -506,7 +513,8 @@ class ResendClient:
                 personal_briefs_cta_url=personal_briefs_url,
                 SECTIONS=SECTIONS,
                 TOPIC_DISPLAY_LABELS=TOPIC_DISPLAY_LABELS,
-                TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS
+                TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS,
+                stance_handoff=stance_handoff,
             )
             html = _minify_email_html(html)
             return html

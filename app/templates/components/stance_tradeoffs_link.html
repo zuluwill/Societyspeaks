@@ -1,0 +1,10 @@
+{# E1 secondary: permanent Tradeoffs entry (never topic-matched). #}
+{% if config.get('GAME_ENABLED', true) %}
+<p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-4 mb-2">
+    {{ _('Prefer to explore the trade-offs?') }}
+    <a href="{{ url_for('game.daily') }}"
+       class="font-medium text-primary-700 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 underline underline-offset-2">
+        {{ _("Play today's scenario") }} · {{ _('~2 min') }} &rarr;
+    </a>
+</p>
+{% endif %}

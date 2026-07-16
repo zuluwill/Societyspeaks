@@ -156,11 +156,15 @@ def view_date(date_str):
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
         return render_template('brief/no_brief.html', requested_date=brief_date)
 
+    from app.brief.stance_card import build_stance_card_context
+
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
     latest_weekly = DailyBrief.query.filter_by(
         status='published', brief_type='weekly'
     ).order_by(DailyBrief.date.desc()).first()
+
+    stance_card = build_stance_card_context(brief_date=brief_date)
 
     return render_template(
         'brief/view.html',
@@ -172,7 +176,8 @@ def view_date(date_str):
         is_today=(brief_date == date.today()),
         show_email_capture=(not is_subscriber),
         tts_available=False,
-        latest_weekly=latest_weekly
+        latest_weekly=latest_weekly,
+        stance_card=stance_card,
     )
 
 

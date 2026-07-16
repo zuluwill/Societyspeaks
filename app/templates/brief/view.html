@@ -926,6 +926,11 @@
         </article>
         {% endif %}
 
+        {% if brief.brief_type == 'daily' %}
+        {% include 'components/stance_card.html' %}
+        {% include 'components/stance_tradeoffs_link.html' %}
+        {% endif %}
+
         {% if show_email_capture %}
         <div class="mt-8">
             {{ email_capture_inline(context='brief') }}

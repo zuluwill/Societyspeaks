@@ -1753,7 +1753,13 @@ def vote():
     
     user_agent = request.headers.get('User-Agent', '').lower()
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
+    wants_json = (
+        request.form.get('ajax') == '1'
+        or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    )
     if any(indicator in user_agent for indicator in bot_indicators):
+        if wants_json:
+            return jsonify({'success': False, 'error': _('Automated requests are not allowed.')}), 403
         flash(_('Automated requests are not allowed.'), 'error')
         return redirect(url_for('daily.today'))
     
@@ -1767,7 +1773,10 @@ def vote():
     
     vote_value = request.form.get('vote')
     if vote_value is None or vote_value == '':
-        flash(_('Please select a vote option.'), 'error')
+        msg = _('Please select a vote option.')
+        if wants_json:
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'error')
         return redirect(url_for('daily.today'))
     reason = request.form.get('reason', '').strip()
     reason_visibility = request.form.get('reason_visibility', DEFAULT_EMAIL_VOTE_VISIBILITY)
@@ -1790,6 +1799,8 @@ def vote():
     
     if reason and len(reason) > 500:
         reason = reason[:500]
+
+    participation_source = request.form.get('participation_source') or 'daily_web'
     
     try:
         fingerprint = get_session_fingerprint()
@@ -1865,7 +1876,7 @@ def vote():
             user_id=current_user.id if current_user.is_authenticated else None,
         )
 
-        _track_context_engagement(question, response, source='daily_web')
+        _track_context_engagement(question, response, source=participation_source)
 
         try:
             import posthog
@@ -1890,10 +1901,20 @@ def vote():
                         'source_link_click_count': source_link_click_count,
                         'is_authenticated': current_user.is_authenticated,
                         'voted_via_email': False,
+                        'participation_source': participation_source,
                     }
                 )
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
+
+        if wants_json:
+            return jsonify({
+                'success': True,
+                'results_url': url_for(
+                    'daily.by_date',
+                    date_str=question.question_date.isoformat(),
+                ),
+            })
 
         return redirect(url_for('daily.today'))
 
