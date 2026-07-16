@@ -8,8 +8,6 @@ Prevents blocking upload requests.
 import logging
 from datetime import timedelta
 
-from sqlalchemy.exc import OperationalError, DisconnectionError
-
 from app.lib.time import utcnow_naive
 from app import db
 from app.models import InputSource
@@ -88,25 +86,40 @@ def process_extraction_queue():
 
             db.session.commit()
 
-        except (OperationalError, DisconnectionError):
-            # Bubble to with_db_retry — do not mark the source failed on a pooler blip.
-            raise
         except Exception as e:
-            logger.error(
-                f"Error processing extraction for InputSource {source.id}: {e}",
-                exc_info=True,
-            )
-            try:
-                source.status = 'failed'
-                source.extraction_error = str(e)[:500]  # Truncate long errors
-                db.session.commit()
-            except Exception as commit_exc:
-                discard_db_session(
-                    invalidate_connection=is_transient_db_connectivity_error(commit_exc),
-                )
+            # Classify by message (same source of truth as with_db_retry), not by
+            # exception type. A pooler blip must never mark the upload failed —
+            # bubble so the decorated tick retries on a fresh connection when the
+            # decorator recognises the type; otherwise leave status 'extracting'
+            # for the next scheduler tick.
+            if is_transient_db_connectivity_error(e):
+                raise
+            _record_extraction_failure(source, e)
 
 
-@with_db_retry()
+def _record_extraction_failure(source, error) -> None:
+    """Mark a source failed after a permanent error, surviving a poisoned session.
+
+    Rolls back first so a status-only write can commit even when the error aborted
+    the current transaction. If that write itself hits a connectivity drop, discard
+    the session (invalidating the socket on transient errors) and leave the source
+    'extracting' for the next tick to retry or time out — never a silent loss.
+    """
+    logger.error(
+        f"Error processing extraction for InputSource {source.id}: {error}",
+        exc_info=True,
+    )
+    try:
+        db.session.rollback()
+        source.status = 'failed'
+        source.extraction_error = str(error)[:500]  # Truncate long errors
+        db.session.commit()
+    except Exception as commit_exc:
+        discard_db_session(
+            invalidate_connection=is_transient_db_connectivity_error(commit_exc),
+        )
+
+
 def timeout_stuck_extractions():
     """
     Mark stuck extractions as failed.
@@ -118,7 +131,10 @@ def timeout_stuck_extractions():
     This prevents items from being stuck in 'extracting' forever if
     the extraction process crashes or hangs.
 
-    Retries on transient Neon/pooler disconnects (Sentry: SSL SYSCALL abort).
+    Retry is owned by the caller: this runs inside ``process_extraction_queue``
+    (itself ``@with_db_retry``), so a transient Neon/pooler disconnect here
+    bubbles up and retries the whole tick on a fresh connection. Decorating it
+    again would nest retry loops (attempts multiply, blocking ``time.sleep``).
     """
     timeout_threshold = utcnow_naive() - timedelta(minutes=EXTRACTION_TIMEOUT_MINUTES)
 
