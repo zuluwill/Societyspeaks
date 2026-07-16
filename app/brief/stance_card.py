@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any, Optional
 
-from flask import url_for
+from flask import has_request_context, url_for
 from flask_babel import gettext as _, lazy_gettext as _l
 
 from app.models import DailyQuestion
@@ -25,13 +25,40 @@ DOMINANT_FRAME_LABELS = {
 }
 
 
+def _published_question_for_brief(*, brief_date: Optional[date] = None) -> Optional[DailyQuestion]:
+    """Today's published daily question, or None when the brief is not today's."""
+    today = date.today()
+    if brief_date is not None and brief_date != today:
+        return None
+    return DailyQuestion.query.filter_by(
+        question_date=today,
+        status='published',
+    ).first()
+
+
 def _has_user_voted(question: DailyQuestion) -> bool:
+    """
+    Whether the current visitor has already voted on this question.
+
+    Safe outside a request context (scheduler / email render): returns False
+    rather than touching flask_login's current_user proxy, which is None when
+    there is no request.
+    """
+    if not has_request_context():
+        return False
+
     from flask_login import current_user
 
     from app.models import DailyQuestionResponse
     from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
 
-    if current_user.is_authenticated:
+    try:
+        authenticated = bool(current_user.is_authenticated)
+    except (AttributeError, RuntimeError):
+        # LocalProxy unbound / None outside a proper login request context.
+        return False
+
+    if authenticated:
         return DailyQuestionResponse.query.filter_by(
             daily_question_id=question.id,
             user_id=current_user.id,
@@ -52,14 +79,7 @@ def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[
 
     Returns None when there is no published question for today or the brief is not today.
     """
-    today = date.today()
-    if brief_date is not None and brief_date != today:
-        return None
-
-    question = DailyQuestion.query.filter_by(
-        question_date=today,
-        status='published',
-    ).first()
+    question = _published_question_for_brief(brief_date=brief_date)
     if not question:
         return None
 
@@ -114,13 +134,18 @@ def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[
 
 
 def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[dict[str, Any]]:
-    """Minimal context for the single tracked link in daily_brief.html."""
-    ctx = build_stance_card_context(brief_date=brief_date)
-    if not ctx:
+    """
+    Minimal context for the single tracked link in daily_brief.html.
+
+    Must not touch flask_login / request-bound vote state — email renders run
+    on the scheduler without a request context.
+    """
+    question = _published_question_for_brief(brief_date=brief_date)
+    if not question:
         return None
 
     date_str = brief_date.isoformat()
     return {
-        'question': ctx['question'],
+        'question': question,
         'stance_url': f"{base_url.rstrip('/')}/brief/{date_str}#stance",
     }

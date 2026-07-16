@@ -121,6 +121,58 @@ def test_stance_email_handoff_url(app):
         assert handoff['stance_url'] == f'https://societyspeaks.io/brief/{today.isoformat()}#stance'
 
 
+def test_stance_email_handoff_does_not_touch_vote_identity(app, monkeypatch):
+    """
+    Scheduler email renders must not call _has_user_voted / current_user.
+
+    Regression for production Sentry PYTHON-FLASK-H7 / H6: brief sends failed
+    with AttributeError: 'NoneType' object has no attribute 'is_authenticated'.
+    """
+    def _boom(*_args, **_kwargs):
+        raise AssertionError('_has_user_voted must not run during email handoff')
+
+    monkeypatch.setattr('app.brief.stance_card._has_user_voted', _boom)
+
+    with app.app_context():
+        db.create_all()
+        today = date.today()
+        db.session.add(DailyQuestion(
+            question_date=today,
+            question_number=5,
+            question_text='Scheduler-safe stance handoff?',
+            status='published',
+            source_type='discussion',
+        ))
+        db.session.commit()
+
+        handoff = build_stance_email_handoff(
+            brief_date=today,
+            base_url='https://societyspeaks.io',
+        )
+        assert handoff is not None
+        assert handoff['question'].question_number == 5
+        assert handoff['stance_url'].endswith('#stance')
+
+
+def test_has_user_voted_returns_false_without_request_context(app, monkeypatch):
+    from app.brief.stance_card import _has_user_voted
+
+    monkeypatch.setattr('app.brief.stance_card.has_request_context', lambda: False)
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=6,
+            question_text='Vote helper without request?',
+            status='published',
+            source_type='discussion',
+        )
+        db.session.add(q)
+        db.session.commit()
+        assert _has_user_voted(q) is False
+
+
 def test_stance_ajax_vote_stays_on_brief_json(client, db):
     from datetime import date
 
