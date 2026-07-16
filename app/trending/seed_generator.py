@@ -1123,7 +1123,7 @@ def _generate_with_openai(
             temperature=0.7,
         )
 
-        content = response.choices[0].message.content
+        content = response.choices[0].message.content or ""
         return _parse_and_validate_statements(
             content,
             count,
@@ -1142,6 +1142,15 @@ def _generate_with_openai(
         else:
             logger.error(f"Seed generation failed: {e}")
         return []
+
+
+def _anthropic_message_text(message) -> str:
+    """Extract text from an Anthropic Messages API response safely."""
+    for block in getattr(message, "content", None) or []:
+        text = getattr(block, "text", None)
+        if text:
+            return text
+    return ""
 
 
 def _generate_with_anthropic(
@@ -1184,7 +1193,7 @@ def _generate_with_anthropic(
             messages=[{"role": "user", "content": prompt}],
         )
 
-        content = message.content[0].text
+        content = _anthropic_message_text(message)
         return _parse_and_validate_statements(
             content,
             count,
