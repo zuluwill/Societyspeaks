@@ -187,7 +187,7 @@ class BriefGenerator:
             raise e
 
         # Generate brief-level content
-        brief.title = self._generate_brief_title(selected_topics)
+        brief.title = self._generate_brief_title(selected_topics, brief_date=brief.date)
         brief.intro_text = self._generate_intro_text(selected_topics)
 
         # Generate main items
@@ -264,14 +264,25 @@ class BriefGenerator:
 
         return brief
 
-    def _generate_brief_title(self, topics: List[TrendingTopic]) -> str:
+    def _generate_brief_title(self, topics: List[TrendingTopic], brief_date=None) -> str:
         """
-        Generate brief title from topic categories.
+        Generate brief title from the brief's date and topic categories.
+
+        The day/date come from the brief's own ``brief_date`` — NOT the host
+        wall-clock (``datetime.now()``) — so the label is correct regardless of
+        server timezone and reads honestly whenever the edition is opened. The
+        date is absolute (e.g. "Wednesday 15 Jul") rather than a bare weekday,
+        which would read as stale the next morning for readers outside the
+        publish window (Americas/Asia) even when it is the freshest edition.
 
         Examples:
-        - "Tuesday's Brief: Climate, Tech, Healthcare"
-        - "Today's Brief: UK Politics, Global Trade"
+        - "Wednesday 15 Jul Brief: Climate, Tech, Healthcare"
         """
+        from datetime import date as _date
+
+        if brief_date is None:
+            brief_date = _date.today()
+
         # Get topic categories
         categories = []
         for topic in topics:
@@ -282,15 +293,16 @@ class BriefGenerator:
         if not categories:
             categories = ['News', 'Politics', 'Economy'][:len(topics)]
 
-        # Get day name
-        day_name = datetime.now().strftime('%A')
+        # Absolute, timezone-safe date label from the brief's own date.
+        # (Avoid %-d / %-m — not portable across libc; build the day number plainly.)
+        day_label = f"{brief_date.strftime('%A')} {brief_date.day} {brief_date.strftime('%b')}"
 
         # Format title
         category_str = ', '.join(categories[:4])  # Max 4 categories
         if len(categories) > 4:
             category_str += ', More'
 
-        return f"{day_name}'s Brief: {category_str}"
+        return f"{day_label} Brief: {category_str}"
 
     def _generate_intro_text(self, topics: List[TrendingTopic]) -> str:
         """
@@ -1179,7 +1191,7 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
         for section_items in topics_by_section.values():
             all_topics.extend([t for t, _ in section_items])
 
-        brief.title = self._generate_brief_title(all_topics)
+        brief.title = self._generate_brief_title(all_topics, brief_date=brief.date)
         brief.intro_text = self._generate_intro_text(all_topics)
 
         # Generate items section by section

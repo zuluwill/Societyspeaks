@@ -935,18 +935,20 @@ class BriefEmailScheduler:
 
     def send_todays_brief_hourly(self) -> Optional[dict]:
         """
-        Send the latest daily brief to daily subscribers at current UTC hour.
+        Send the latest published daily brief to eligible subscribers this hour.
 
-        Called every hour by scheduler.
-        
-        Logic: The brief is generated at 5pm UTC and published at 6pm UTC.
-        - Before 6pm UTC: Send yesterday's brief (today's isn't ready yet)
-        - After 6pm UTC: Send today's brief
+        Called every hour by the scheduler. Each subscriber is matched to their
+        preferred local send hour (see get_subscribers_for_hour); the edition
+        delivered is always the newest *published* daily brief
+        (DailyBrief.get_latest_published), so which edition a reader gets depends
+        on *when* they are eligible, not on a fixed UTC publish-hour cutover.
+        Before today's edition is published, "latest published" is naturally the
+        prior edition — with graceful degradation if generation is late/failed.
 
         Returns:
             dict: Send results, or None if no brief published
         """
-        from datetime import date, timedelta
+        from datetime import date
 
         current_hour = utcnow_naive().hour
         today = date.today()
@@ -962,17 +964,15 @@ class BriefEmailScheduler:
             return {'sent': 0, 'failed': 0, 'errors': []}
 
         try:
-            from app.brief.constants import BRIEF_PUBLISH_UTC_HOUR
-
-            if current_hour < BRIEF_PUBLISH_UTC_HOUR:
-                brief_date = today - timedelta(days=1)
-                brief = DailyBrief.get_by_date(brief_date, brief_type='daily')
-                if not brief:
-                    brief = DailyBrief.get_today(brief_type='daily')
-                else:
-                    logger.info(f"Morning send: using yesterday's brief ({brief_date})")
-            else:
-                brief = DailyBrief.get_today(brief_type='daily')
+            # Always send the newest *published* daily brief (see
+            # DailyBrief.get_latest_published). This removes the fragile 18:00-UTC
+            # magic-hour cutover, degrades gracefully when generation is late or
+            # fails (subscribers get the prior edition, never nothing or an
+            # unpublished draft), and — with per-brief-id + local-day dedup in
+            # can_receive_brief — lets each timezone receive the freshest edition
+            # once, at their local hour. Which edition a given reader gets is
+            # therefore decided by *when* they are eligible, not by a UTC cutover.
+            brief = DailyBrief.get_latest_published(brief_type='daily')
 
             if not brief:
                 logger.info("No published daily brief available, skipping send")
@@ -1085,7 +1085,9 @@ def send_brief_to_subscriber(subscriber_email: str, brief_date: Optional[str] = 
         brief_date_obj = datetime.strptime(brief_date, '%Y-%m-%d').date()
         brief = DailyBrief.get_by_date(brief_date_obj)
     else:
-        brief = DailyBrief.get_today()
+        # No explicit date → the current edition = the latest published brief
+        # (get_today() is None for most of the UTC day, before generation).
+        brief = DailyBrief.get_latest_published()
 
     if not brief:
         logger.error(f"Brief not found for date: {brief_date or 'today'}")
