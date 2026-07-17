@@ -1,12 +1,14 @@
 """
 E1 stance card context for the daily brief (web + email handoff).
 
-Builds template data for today's published daily question at the end of the brief.
+Pairs a brief edition with the live published daily question that belongs with it.
+Brief D wires the question for D+1 (see ``wire_tomorrow_question_from_brief``);
+morning local-hour sends deliver brief D-1 on day D when that companion is live.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from flask import has_request_context, url_for
@@ -26,14 +28,50 @@ DOMINANT_FRAME_LABELS = {
 
 
 def _published_question_for_brief(*, brief_date: Optional[date] = None) -> Optional[DailyQuestion]:
-    """Today's published daily question, or None when the brief is not today's."""
+    """
+    Published daily question paired with this brief edition.
+
+    Always returns today's live question (or None) so the web vote form — which
+    posts to ``DailyQuestion.get_today()`` — cannot diverge from the card copy.
+
+    Resolution (send window only: brief date is today or yesterday):
+
+    1. Prefer the question wired *from* this brief when that question is today's
+       (``question_date == brief_date + 1 == today``). This is the morning-wave
+       path: London 08:10 on day D receives brief D-1 with day's D question.
+    2. Else, for today's brief edition, today's published question (evening wave
+       after 18:00 UTC publish, when tomorrow's wired question is still scheduled).
+    """
     today = date.today()
-    if brief_date is not None and brief_date != today:
+    if brief_date is None:
+        brief_date = today
+
+    # Archive / future editions: no CTA. Morning delivery of yesterday's edition
+    # and same-day evening delivery are the only live windows.
+    if brief_date not in (today, today - timedelta(days=1)):
         return None
-    return DailyQuestion.query.filter_by(
-        question_date=today,
-        status='published',
-    ).first()
+
+    companion_date = brief_date + timedelta(days=1)
+    if companion_date == today:
+        companion = DailyQuestion.query.filter_by(
+            question_date=today,
+            status='published',
+        ).first()
+        if companion is not None:
+            frame = companion.coverage_frame_json or {}
+            frame_brief = frame.get('brief_date')
+            # Accept discussion-sourced companions (no frame) and brief-sourced
+            # ones that point back at this edition. Reject mis-wired frames.
+            if not frame_brief or frame_brief == brief_date.isoformat():
+                return companion
+
+    if brief_date == today:
+        return DailyQuestion.query.filter_by(
+            question_date=today,
+            status='published',
+        ).first()
+
+    return None
 
 
 def _has_user_voted(question: DailyQuestion) -> bool:
@@ -75,9 +113,10 @@ def _has_user_voted(question: DailyQuestion) -> bool:
 
 def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[dict[str, Any]]:
     """
-    Context for components/stance_card.html on today's brief only.
+    Context for components/stance_card.html on a live brief edition.
 
-    Returns None when there is no published question for today or the brief is not today.
+    Returns None outside the today/yesterday send window or when there is no
+    published question for today.
     """
     question = _published_question_for_brief(brief_date=brief_date)
     if not question:
@@ -139,6 +178,9 @@ def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[d
 
     Must not touch flask_login / request-bound vote state — email renders run
     on the scheduler without a request context.
+
+    ``src=brief_stance`` is a query param (not only a hash) so Resend click
+    tracking can attribute the CTA; ``#stance`` still scrolls the web card.
     """
     question = _published_question_for_brief(brief_date=brief_date)
     if not question:
@@ -147,5 +189,8 @@ def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[d
     date_str = brief_date.isoformat()
     return {
         'question': question,
-        'stance_url': f"{base_url.rstrip('/')}/brief/{date_str}#stance",
+        'stance_url': (
+            f"{base_url.rstrip('/')}/brief/{date_str}"
+            f"?src=brief_stance#stance"
+        ),
     }

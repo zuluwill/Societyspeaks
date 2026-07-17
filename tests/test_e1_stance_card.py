@@ -1,6 +1,6 @@
 """Tests for E1 stance card context (brief end-cap)."""
 
-from datetime import date
+from datetime import date, timedelta
 
 from app import db
 from app.models import DailyQuestion
@@ -118,7 +118,86 @@ def test_stance_email_handoff_url(app):
             base_url='https://societyspeaks.io',
         )
         assert handoff is not None
-        assert handoff['stance_url'] == f'https://societyspeaks.io/brief/{today.isoformat()}#stance'
+        assert handoff['stance_url'] == (
+            f'https://societyspeaks.io/brief/{today.isoformat()}'
+            f'?src=brief_stance#stance'
+        )
+
+
+def test_morning_wave_brief_gets_todays_wired_question(app):
+    """
+    Morning local-hour sends deliver yesterday's brief edition.
+
+    Brief D wires the question for D+1; on day D+1 that companion is published
+    and must appear in email/web stance (regression: brief_date == today gate
+    hid E1 from morning cohorts entirely).
+    """
+    with app.app_context():
+        db.create_all()
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+        DailyQuestion.query.filter(
+            DailyQuestion.question_date.in_([today, yesterday])
+        ).delete(synchronize_session=False)
+        db.session.add(DailyQuestion(
+            question_date=today,
+            question_number=17,
+            question_text='Morning-wave companion stance?',
+            status='published',
+            source_type='brief',
+            source_brief_item_id=1500,
+            coverage_frame_json={
+                'brief_date': yesterday.isoformat(),
+                'dominant_frame': 'center',
+                'is_underreported': False,
+            },
+        ))
+        db.session.commit()
+
+        ctx = build_stance_card_context(brief_date=yesterday)
+        assert ctx is not None
+        assert ctx['question'].question_number == 17
+        assert ctx['is_brief_sourced'] is True
+
+        handoff = build_stance_email_handoff(
+            brief_date=yesterday,
+            base_url='https://societyspeaks.io',
+        )
+        assert handoff is not None
+        assert handoff['question'].question_number == 17
+        assert (
+            handoff['stance_url']
+            == f'https://societyspeaks.io/brief/{yesterday.isoformat()}?src=brief_stance#stance'
+        )
+
+
+def test_morning_wave_rejects_miswired_frame(app):
+    """Companion for yesterday's brief must point at that brief, not another."""
+    with app.app_context():
+        db.create_all()
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+        DailyQuestion.query.filter(
+            DailyQuestion.question_date.in_([today, yesterday])
+        ).delete(synchronize_session=False)
+        db.session.add(DailyQuestion(
+            question_date=today,
+            question_number=18,
+            question_text='Miswired frame should not attach?',
+            status='published',
+            source_type='brief',
+            source_brief_item_id=99,
+            coverage_frame_json={
+                'brief_date': (yesterday - timedelta(days=1)).isoformat(),
+            },
+        ))
+        db.session.commit()
+
+        assert build_stance_card_context(brief_date=yesterday) is None
+        assert build_stance_email_handoff(
+            brief_date=yesterday,
+            base_url='https://societyspeaks.io',
+        ) is None
 
 
 def test_stance_email_handoff_does_not_touch_vote_identity(app, monkeypatch):
