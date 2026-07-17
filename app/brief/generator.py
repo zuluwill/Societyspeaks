@@ -862,8 +862,9 @@ Return JSON:
                     # All attempts failed, fall through to fallback
                     break
 
-        # Fallback if all attempts failed
-        logger.error("All generation attempts failed - using fallback content")
+        # Fallback if all attempts failed (provider blip or bad JSON).
+        # Already classified upstream via log_llm_error — degrade quietly.
+        logger.warning("All generation attempts failed - using fallback content")
         return {
             'headline': topic.title[:100],  # Truncate if needed
             'bullets': [
