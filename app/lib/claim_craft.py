@@ -59,6 +59,38 @@ _NORMATIVE_CLAIM = re.compile(
     re.IGNORECASE,
 )
 
+# Soft modals turn a claim into speculation ("could reduce", "might undermine"),
+# which reads as a hypothesis, not a stance. When no normative marker is present,
+# their presence blocks the broadened declarative path below.
+_SOFT_HEDGE_MODAL = re.compile(
+    r"\b(could|might|may|possibly|potentially|perhaps|arguably)\b",
+    re.IGNORECASE,
+)
+
+# Strong indicative predicates that make a plain declarative contestable without a
+# deontic modal: causal/impact verbs, judgement adjectives, and comparatives.
+# "Rent controls reduce supply" / "The system is broken" are votable stances even
+# though they say neither "should" nor "must". Vague connectors ("lead to",
+# "contribute to") are deliberately excluded so speculation stays out.
+_ASSERTIVE_PREDICATE = re.compile(
+    r"\b("
+    # causal / impact verbs (present indicative)
+    r"harms?|hurts?|damages?|undermines?|threatens?|weakens?|strengthens?|erodes?|"
+    r"reduces?|cuts?|shrinks?|increases?|raises?|lowers?|worsens?|improves?|boosts?|"
+    r"drives?|fuels?|causes?|creates?|prevents?|protects?|enables?|forces?|costs?|"
+    r"benefits?|destroys?|endangers?|entrenches?|deepens?|widens?|"
+    r"discourages?|encourages?|punishes?|rewards?|distorts?|ignores?|silences?|traps?|"
+    r"makes?|leaves?|keeps?|"
+    # judgement adjectives (predicate)
+    r"broken|failing|unfair|unjust|counterproductive|ineffective|unsustainable|"
+    r"unworkable|discriminatory|indefensible|reckless|obsolete|inhumane|"
+    # comparatives / quantitative judgement
+    r"too\s+(?:many|much|high|low|far|slow|fast|weak|strong|expensive|lax|lenient|harsh|big)|"
+    r"not\s+enough|worse\s+than|better\s+than"
+    r")\b",
+    re.IGNORECASE,
+)
+
 # Conditional-claim tokens (shared with whether-opener consequent check).
 _CLAIM_TOKENS = (
     " should ",
@@ -103,8 +135,16 @@ def is_votable_claim(content: str) -> bool:
     True when text is a clear, declarative claim fit for Agree / Disagree / Unsure.
 
     Rejects open questions, whether-hedges, and throat-clearing meta that never
-    lands a normative consequent (the failure mode behind weak brief-sourced
-    daily questions).
+    lands a claim (the failure mode behind weak brief-sourced daily questions).
+
+    Accepts two shapes of declarative claim:
+
+    1. Normative — a deontic modal or evaluative consequent (``should``, ``must``,
+       ``is essential``). This is the dominant form the seed generator produces.
+    2. Strong declarative — a causal, judgement, or comparative assertion without a
+       modal (``Rent controls reduce supply``, ``The system is broken``,
+       ``Immigration is too high``). Speculation softened by ``could`` / ``might`` /
+       ``may`` is excluded — a hypothesis is not a stance.
     """
     text = " ".join((content or "").split()).strip()
     if not text or len(text) < 24:
@@ -113,4 +153,8 @@ def is_votable_claim(content: str) -> bool:
         return False
     if _META_HEDGE.search(text):
         return False
-    return bool(_NORMATIVE_CLAIM.search(text))
+    if _NORMATIVE_CLAIM.search(text):
+        return True
+    if _SOFT_HEDGE_MODAL.search(text):
+        return False
+    return bool(_ASSERTIVE_PREDICATE.search(text))

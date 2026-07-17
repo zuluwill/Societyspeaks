@@ -45,3 +45,28 @@ def test_is_question_form_parity(text, expected):
 ])
 def test_is_votable_claim_rejects_hedges_and_soft_fillers(text, expected):
     assert is_votable_claim(text) is expected
+
+
+@pytest.mark.parametrize("text", [
+    # Strong declarative claims with no deontic modal — still votable stances.
+    "Rent controls reduce the supply of affordable housing.",
+    "Social media harms teenagers' mental health.",
+    "Remote work makes distributed teams less productive.",
+    "Current immigration levels are too high for public services to absorb.",
+    "The asylum system is fundamentally broken.",
+    "Deterrence-only border policy is counterproductive.",
+    "Means-testing benefits traps families in poverty.",
+])
+def test_is_votable_claim_accepts_strong_declaratives_without_modals(text):
+    assert is_votable_claim(text) is True
+
+
+@pytest.mark.parametrize("text", [
+    # Speculation, not a stance: soft modal + no normative consequent.
+    "Support programs for veterans could lead to a drain on public resources.",
+    "Migration might increase pressure on frontline services.",
+    "New tariffs may reduce domestic manufacturing output over time.",
+    "Automation could possibly worsen regional inequality.",
+])
+def test_is_votable_claim_rejects_soft_modal_speculation(text):
+    assert is_votable_claim(text) is False
