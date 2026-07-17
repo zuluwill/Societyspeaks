@@ -11,6 +11,7 @@ import os
 import json
 import re
 from app.models import TrendingTopic, NewsPerspectiveCache, NewsArticle, db
+from app.lib.llm_transient_errors import log_llm_error
 import logging
 
 logger = logging.getLogger(__name__)
@@ -104,8 +105,10 @@ def generate_perspective_analysis(topic: TrendingTopic) -> Dict:
             'personal_impact': data['personal_impact']
         }
 
-    except Exception as e:
-        logger.error(f"Failed to generate perspective for topic {topic.id}: {e}", exc_info=True)
+    except Exception:
+        # Inner _call_* already classified/logged the provider error. Re-raise so
+        # the route can map transient → 503 and permanent → 500 without a
+        # duplicate log line.
         raise
 
 
@@ -281,7 +284,7 @@ def _call_openai(prompt: str, api_key: str) -> str:
         return content
 
     except Exception as e:
-        logger.error(f"OpenAI API error: {e}")
+        log_llm_error(logger, e, context="OpenAI API error")
         raise
 
 
@@ -309,7 +312,7 @@ def _call_anthropic(prompt: str, api_key: str) -> str:
         return content
 
     except Exception as e:
-        logger.error(f"Anthropic API error: {e}")
+        log_llm_error(logger, e, context="Anthropic API error")
         raise
 
 

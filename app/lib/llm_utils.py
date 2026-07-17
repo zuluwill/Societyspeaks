@@ -16,6 +16,8 @@ from typing import Optional, Dict, List, Tuple
 from cryptography.fernet import Fernet
 from flask import current_app
 
+from app.lib.llm_transient_errors import log_llm_error
+
 logger = logging.getLogger(__name__)
 
 
@@ -100,7 +102,7 @@ def validate_api_key(provider: str, api_key: str) -> Tuple[bool, str]:
     except ImportError:
         return False, f"Python client for {provider} not installed"
     except Exception as e:
-        logger.error(f"Error validating {provider} API key: {e}")
+        log_llm_error(logger, e, context=f"Error validating {provider} API key")
         return False, f"Validation error: {str(e)}"
 
 
@@ -163,7 +165,7 @@ Write in a neutral, informative tone. Focus on what participants agree on and wh
         return summary
     
     except Exception as e:
-        logger.error(f"Error generating summary: {e}")
+        log_llm_error(logger, e, context="Error generating summary")
         return None
 
 
@@ -261,7 +263,7 @@ def get_statement_embeddings(statements: List[str], user_id: int, db) -> Optiona
         return embeddings
     
     except Exception as e:
-        logger.error(f"Error getting embeddings: {e}")
+        log_llm_error(logger, e, context="Error getting embeddings")
         return None
 
 
@@ -422,7 +424,7 @@ Rules:
             labels[cid_int] = {'label': label, 'supporting_statement_ids': cited}
 
         except Exception as e:
-            logger.error(f"Error generating label for cluster {cluster_id}: {e}")
+            log_llm_error(logger, e, context=f"Error generating label for cluster {cluster_id}")
             labels[cid_int] = {'label': f"Group {cid_int + 1}", 'supporting_statement_ids': []}
 
     return labels

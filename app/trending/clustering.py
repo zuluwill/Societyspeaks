@@ -17,6 +17,7 @@ from sqlalchemy import func
 
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle
+from app.lib.llm_transient_errors import log_llm_error
 from app.lib.sklearn_compat import (
     SKLEARN_AVAILABLE,
     cosine_similarity,
@@ -112,7 +113,7 @@ def get_embeddings(texts: List[str], max_retries: int = 3) -> Optional[List[List
                 logger.warning(f"Embedding API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                 time.sleep(wait_time)
                 continue
-            logger.error(f"Embedding error after {attempt + 1} attempts: {e}")
+            log_llm_error(logger, e, context=f"Embedding error after {attempt + 1} attempts")
             return None
         
         except openai.APIConnectionError as e:
@@ -121,11 +122,11 @@ def get_embeddings(texts: List[str], max_retries: int = 3) -> Optional[List[List
                 logger.warning(f"Embedding connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                 time.sleep(wait_time)
                 continue
-            logger.error(f"Embedding connection error after {attempt + 1} attempts: {e}")
+            log_llm_error(logger, e, context=f"Embedding connection error after {attempt + 1} attempts")
             return None
         
         except Exception as e:
-            logger.error(f"Embedding error: {e}")
+            log_llm_error(logger, e, context="Embedding error")
             return None
     
     return None

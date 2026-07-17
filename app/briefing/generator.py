@@ -16,6 +16,7 @@ import logging
 import re
 from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
+from app.lib.llm_transient_errors import log_llm_error
 from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.exc import IntegrityError
 from flask import render_template
@@ -163,7 +164,7 @@ class BriefingGenerator:
                     logger.warning(f"OpenAI API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                     time.sleep(wait_time)
                     continue
-                logger.error(f"OpenAI API error after {attempt + 1} attempts: {e}")
+                log_llm_error(logger, e, context=f"OpenAI API error after {attempt + 1} attempts")
                 return None
 
             except openai.APIConnectionError as e:
@@ -172,11 +173,12 @@ class BriefingGenerator:
                     logger.warning(f"OpenAI connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                     time.sleep(wait_time)
                     continue
-                logger.error(f"OpenAI connection error after {attempt + 1} attempts: {e}")
+                # A connection error is a transient network blip, not a hard failure.
+                logger.warning(f"OpenAI connection error after {attempt + 1} attempts: {e}")
                 return None
 
             except Exception as e:
-                logger.error(f"OpenAI API error: {e}")
+                log_llm_error(logger, e, context="OpenAI API error")
                 return None
 
         return None
@@ -212,7 +214,7 @@ class BriefingGenerator:
                     logger.warning(f"Anthropic API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                     time.sleep(wait_time)
                     continue
-                logger.error(f"Anthropic API error after {attempt + 1} attempts: {e}")
+                log_llm_error(logger, e, context=f"Anthropic API error after {attempt + 1} attempts")
                 return None
 
             except anthropic.APIConnectionError as e:
@@ -221,11 +223,12 @@ class BriefingGenerator:
                     logger.warning(f"Anthropic connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                     time.sleep(wait_time)
                     continue
-                logger.error(f"Anthropic connection error after {attempt + 1} attempts: {e}")
+                # A connection error is a transient network blip, not a hard failure.
+                logger.warning(f"Anthropic connection error after {attempt + 1} attempts: {e}")
                 return None
 
             except Exception as e:
-                logger.error(f"Anthropic API error: {e}")
+                log_llm_error(logger, e, context="Anthropic API error")
                 return None
 
         return None

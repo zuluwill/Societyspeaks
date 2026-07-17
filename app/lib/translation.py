@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Single source of truth — imported by translation_worker.py as well.
 from app.lib.locale_utils import SUPPORTED_LANGUAGES  # noqa: E402
+from app.lib.llm_transient_errors import log_llm_error  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +102,7 @@ def _translate_batch(texts: list[str], target_lang: str, topic: str = '') -> lis
         )
         return _parse_numbered_response(response.content[0].text.strip(), len(texts))
     except Exception as exc:
-        logger.error('Translation batch failed (lang=%s): %s', target_lang, exc)
+        log_llm_error(logger, exc, context=f'Translation batch failed (lang={target_lang})')
         return [None] * len(texts)
 
 

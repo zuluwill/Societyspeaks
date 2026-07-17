@@ -21,6 +21,7 @@ from functools import partial
 from app.models import TrendingTopic
 from app.discussions.thresholds import CONSENSUS_RECOMMENDED_STATEMENT_COUNT
 from app.lib.claim_craft import is_question_form as _is_question_form
+from app.lib.llm_transient_errors import log_llm_error
 
 logger = logging.getLogger(__name__)
 
@@ -284,25 +285,6 @@ def _claim_quality_sort_key(content: str) -> tuple:
         _length_soft_penalty(text),
         len(text),
         text.lower(),
-    )
-
-
-def _is_rate_limit_error(error: Exception) -> bool:
-    text = str(error).lower()
-    return (
-        "rate limit" in text
-        or "too many requests" in text
-        or "429" in text
-        or "quota" in text
-    )
-
-
-def _is_timeout_error(error: Exception) -> bool:
-    text = str(error).lower()
-    return (
-        "timed out" in text
-        or "timeout" in text
-        or type(error).__name__ in ("APITimeoutError", "ReadTimeout", "ConnectTimeout")
     )
 
 
@@ -772,7 +754,10 @@ def generate_seed_statements(
                 )
             except Exception as e:
                 # Providers already swallow their own errors; keep publishing safe.
-                logger.error("%s seed provider raised unexpectedly: %s", name, e)
+                log_llm_error(
+                    logger, e,
+                    context=f"{name} seed provider raised unexpectedly",
+                )
 
         if _generation_shortfall(collected, count) is None:
             break
@@ -1037,7 +1022,8 @@ def _generate_with_openai(
         return []
 
     try:
-        client = openai.OpenAI(api_key=api_key, timeout=60.0)
+        # Match Anthropic: background seed jobs can wait out a 529/5xx burst.
+        client = openai.OpenAI(api_key=api_key, timeout=60.0, max_retries=4)
     except Exception as e:
         logger.error(f"Failed to create OpenAI client: {e}")
         return []
@@ -1075,12 +1061,7 @@ def _generate_with_openai(
         logger.error("OpenAI call was interrupted (SystemExit/KeyboardInterrupt)")
         return []
     except Exception as e:
-        if _is_rate_limit_error(e):
-            logger.warning(f"OpenAI seed generation rate-limited/quota-limited: {e}")
-        elif _is_timeout_error(e):
-            logger.warning(f"OpenAI seed generation timed out (transient): {e}")
-        else:
-            logger.error(f"Seed generation failed: {e}")
+        log_llm_error(logger, e, context="OpenAI seed generation failed")
         return []
 
 
@@ -1112,7 +1093,10 @@ def _generate_with_anthropic(
         return []
 
     try:
-        client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
+        # max_retries above the SDK default of 2: seed generation is a background
+        # job, so it can afford to wait out a transient 529/5xx overload burst
+        # (exponential backoff) before degrading to the next provider / fallback.
+        client = anthropic.Anthropic(api_key=api_key, timeout=60.0, max_retries=4)
     except Exception as e:
         logger.error(f"Failed to create Anthropic client: {e}")
         return []
@@ -1145,10 +1129,5 @@ def _generate_with_anthropic(
         logger.error("Anthropic call was interrupted (SystemExit/KeyboardInterrupt)")
         return []
     except Exception as e:
-        if _is_rate_limit_error(e):
-            logger.warning(f"Anthropic seed generation rate-limited/quota-limited: {e}")
-        elif _is_timeout_error(e):
-            logger.warning(f"Anthropic seed generation timed out (transient): {e}")
-        else:
-            logger.error(f"Seed generation failed: {e}")
+        log_llm_error(logger, e, context="Anthropic seed generation failed")
         return []

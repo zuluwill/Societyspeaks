@@ -22,6 +22,7 @@ import re
 from typing import Dict, List, Optional, Tuple, Any
 
 from app.models import NewsArticle, TrendingTopic
+from app.lib.llm_transient_errors import log_llm_error
 from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
@@ -297,7 +298,7 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
                 db.session.rollback()
                 
         except Exception as e:
-            logger.error(f"LLM scoring failed for batch: {e}")
+            log_llm_error(logger, e, context="LLM scoring failed for batch")
             db.session.rollback()
             for article in batch:
                 article.sensationalism_score = score_sensationalism(article.title)
@@ -695,7 +696,7 @@ Respond with ONLY valid JSON."""
             topic.topic_slug = '_'.join(topic.canonical_tags[:4])
         
     except Exception as e:
-        logger.error(f"Topic scoring failed: {e}")
+        log_llm_error(logger, e, context="Topic scoring failed")
         topic.civic_score = 0.5
         topic.quality_score = 0.5
         topic.audience_score = 0.5

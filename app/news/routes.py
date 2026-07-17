@@ -416,11 +416,19 @@ def load_perspectives(topic_id):
         })
 
     except Exception as e:
-        logger.error(f"Error loading perspectives for topic {topic_id}: {e}", exc_info=True)
+        from app.lib.llm_transient_errors import is_transient_llm_error
+        # Provider helpers already logged at WARNING for transient blips. Map those
+        # to 503 so clients retry; keep ERROR+traceback only for real failures.
+        transient = is_transient_llm_error(e)
+        if not transient:
+            logger.error(
+                f"Error loading perspectives for topic {topic_id}: {e}",
+                exc_info=True,
+            )
         return jsonify({
             'error': _('Generation failed'),
             'message': _('Failed to generate perspective analysis. Please try again.')
-        }), 500
+        }), (503 if transient else 500)
 
 
 def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
