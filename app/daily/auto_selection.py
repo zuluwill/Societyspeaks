@@ -20,6 +20,7 @@ Avoids repeating content within a configurable time window.
 
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
+from app.lib.claim_craft import is_votable_claim
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
@@ -112,6 +113,27 @@ def _extract_seed_content(seed_item):
     if isinstance(seed_item, dict):
         return (seed_item.get('content') or '').strip()
     return str(seed_item or '').strip()
+
+
+def _best_votable_seed(topic, *, limit: int = 8):
+    """
+    Highest-controversy seed that is a clear Agree/Disagree claim.
+
+    Skips open questions and throat-clearing hedges so brief-sourced daily
+    questions cannot quote unusable AI filler in the E1 stance CTA.
+    Returns ``(seed, text, controversy_score)`` or ``None``.
+    """
+    seeds = list(topic.seed_statements or [])[:limit]
+    scored = []
+    for seed in seeds:
+        text = _extract_seed_content(seed)
+        if not is_votable_claim(text):
+            continue
+        scored.append((seed, text, calculate_controversy_potential(text)))
+    if not scored:
+        return None
+    scored.sort(key=lambda row: row[2], reverse=True)
+    return scored[0]
 
 
 def _build_discussion_context(statement, discussion):
@@ -284,15 +306,14 @@ def select_from_brief_items(brief_date, question_date):
         return None
 
     scored = []
+    skipped_non_votable = 0
     for brief_item, topic in candidates:
+        best = _best_votable_seed(topic)
+        if not best:
+            skipped_non_votable += 1
+            continue
+        best_seed, seed_text, _controversy = best
         contestability = calculate_brief_item_contestability_score(brief_item)
-        seed_scores = [
-            (seed, calculate_controversy_potential(_extract_seed_content(seed)))
-            for seed in (topic.seed_statements or [])[:5]
-        ]
-        seed_scores.sort(key=lambda pair: pair[1], reverse=True)
-        best_seed = seed_scores[0][0] if seed_scores else topic.seed_statements[0]
-        seed_text = _extract_seed_content(best_seed)
         clarity = calculate_clarity_score(seed_text)
         total = contestability + (clarity * 0.15)
         scored.append({
@@ -304,6 +325,22 @@ def select_from_brief_items(brief_date, question_date):
             'contestability': contestability,
         })
 
+    if skipped_non_votable:
+        current_app.logger.info(
+            "Skipped %s brief item(s) with no votable seed for question_date=%s",
+            skipped_non_votable,
+            question_date,
+        )
+
+    if not scored:
+        current_app.logger.warning(
+            "No votable brief-sourced seed for question_date=%s from brief %s — "
+            "falling back to other sources",
+            question_date,
+            brief_date,
+        )
+        return None
+
     scored.sort(key=lambda row: row['score'], reverse=True)
     top = scored[:5]
     selected = weighted_random_choice(top, [row['score'] for row in top])
@@ -313,6 +350,15 @@ def select_from_brief_items(brief_date, question_date):
     brief_item = selected['brief_item']
     topic = selected['topic']
     coverage_frame = build_coverage_frame_snapshot(brief_item, brief_date)
+    # Never fall back to topic.title — brief topic titles are often open questions.
+    question_text = _ensure_question_text(selected['seed_text'], None)
+    if not question_text or not is_votable_claim(question_text):
+        current_app.logger.warning(
+            "Brief item %s seed failed final votable-claim check for %s",
+            brief_item.id,
+            question_date,
+        )
+        return None
 
     current_app.logger.info(
         "Selected brief-sourced daily question for %s from brief %s item %s "
@@ -331,10 +377,7 @@ def select_from_brief_items(brief_date, question_date):
         'brief_item': brief_item,
         'coverage_frame': coverage_frame,
         'statement': None,
-        'question_text': _ensure_question_text(
-            selected['seed_text'],
-            topic.title,
-        ),
+        'question_text': question_text,
         'context': _build_trending_context(topic),
         'why_this_question': _build_why_this_question(
             source_type=BRIEF_SOURCE_TYPE,
@@ -999,41 +1042,42 @@ def select_next_question_source(question_date=None):
             scored_topics.sort(key=lambda x: x['score'], reverse=True)
             top_topics = scored_topics[:8]
 
-            # Weighted random selection
+            # Weighted random first pick, then walk remaining top topics if that
+            # topic only has non-votable hedge seeds.
             scores = [t['score'] for t in top_topics]
             selected = weighted_random_choice(top_topics, scores)
-
+            ordered = []
             if selected:
-                topic = selected['topic']
-                # Also score the seed statements and pick best one
-                seed_scores = [
-                    (s, calculate_controversy_potential(_extract_seed_content(s)))
-                    for s in topic.seed_statements[:5]
-                ]
-                seed_scores.sort(key=lambda x: x[1], reverse=True)
-                best_statement = seed_scores[0][0] if seed_scores else topic.seed_statements[0]
-                best_statement_text = _extract_seed_content(best_statement)
+                ordered.append(selected)
+            ordered.extend(t for t in top_topics if t is not selected)
 
+            for candidate in ordered:
+                topic = candidate['topic']
+                best = _best_votable_seed(topic)
+                if not best:
+                    continue
+                _seed, best_statement_text, _controversy = best
+                question_text = _ensure_question_text(best_statement_text, None)
+                if not question_text or not is_votable_claim(question_text):
+                    continue
                 current_app.logger.info(
-                    f"Selected trending topic with engagement score {selected['score']:.2f}"
+                    "Selected trending topic with engagement score %.2f",
+                    candidate['score'],
                 )
                 return {
                     'source_type': 'trending',
                     'source': topic,
                     'statement': None,
-                    'question_text': _ensure_question_text(
-                        best_statement_text,
-                        f"Should we support this position on {topic.title}?"
-                    ),
+                    'question_text': question_text,
                     'context': _build_trending_context(topic),
                     'why_this_question': _build_why_this_question(
                         source_type='trending',
                         topic_category=topic.primary_topic,
-                        source=topic
+                        source=topic,
                     ),
                     'topic_category': topic.primary_topic,
                     'discussion_slug': None,
-                    'engagement_score': selected['score']
+                    'engagement_score': candidate['score'],
                 }
 
     # Fallback to standalone statements with scoring

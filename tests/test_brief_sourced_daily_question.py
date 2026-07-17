@@ -128,6 +128,66 @@ class TestBriefSourcedSelection:
             high_topic = TrendingTopic.query.filter_by(title='High imbalance story').first()
             assert high_topic.id in picks
 
+    def test_select_from_brief_items_skips_non_votable_hedge_seeds(self, app):
+        """E1 regression: hedge/question seeds must not become the daily stance."""
+        brief_date = date(2026, 7, 16)
+        question_date = date(2026, 7, 17)
+        _seed_brief_with_items(
+            app,
+            brief_date=brief_date,
+            items_spec=[
+                {
+                    'title': 'Hedge only story',
+                    'coverage_imbalance': 0.95,
+                    'is_underreported': True,
+                    'section': 'lead',
+                    'seed_statements': [{
+                        'content': (
+                            'While updated data can provide valuable insights, we must '
+                            'question what factors influence these statistics. Are they '
+                            'reflecting actual humanitarian needs?'
+                        ),
+                        'position': 'neutral',
+                    }],
+                },
+                {
+                    'title': 'Clear claim story',
+                    'coverage_imbalance': 0.4,
+                    'seed_statements': [{
+                        'content': (
+                            'European governments should expand legal asylum capacity '
+                            'rather than relying on deterrence alone.'
+                        ),
+                        'position': 'pro',
+                    }],
+                },
+            ],
+        )
+
+        with app.app_context():
+            source = select_from_brief_items(brief_date, question_date)
+            assert source is not None
+            assert 'should expand legal asylum' in source['question_text']
+            assert 'valuable insights' not in source['question_text']
+
+    def test_select_from_brief_items_returns_none_when_all_seeds_non_votable(self, app):
+        brief_date = date(2026, 7, 16)
+        question_date = date(2026, 7, 17)
+        _seed_brief_with_items(
+            app,
+            brief_date=brief_date,
+            items_spec=[{
+                'title': 'Only hedges',
+                'coverage_imbalance': 0.9,
+                'seed_statements': [{
+                    'content': 'How can updated data on migration help us make better policies?',
+                    'position': 'neutral',
+                }],
+            }],
+        )
+        with app.app_context():
+            assert select_from_brief_items(brief_date, question_date) is None
+
     def test_clock_constraint_uses_yesterdays_brief_not_todays(self, app):
         yesterday = date(2026, 7, 14)
         today = date(2026, 7, 15)
@@ -137,7 +197,10 @@ class TestBriefSourcedSelection:
             items_spec=[{
                 'title': 'Yesterday brief story',
                 'coverage_imbalance': 0.75,
-                'seed_statements': [{'content': 'Yesterday brief question claim.', 'position': 'pro'}],
+                'seed_statements': [{
+                    'content': 'Governments should act on yesterday brief story findings.',
+                    'position': 'pro',
+                }],
             }],
         )
         _seed_brief_with_items(
@@ -146,7 +209,10 @@ class TestBriefSourcedSelection:
             items_spec=[{
                 'title': 'Today brief story',
                 'coverage_imbalance': 0.9,
-                'seed_statements': [{'content': 'Today brief question claim.', 'position': 'pro'}],
+                'seed_statements': [{
+                    'content': 'Governments should act on today brief story findings.',
+                    'position': 'pro',
+                }],
             }],
         )
 
@@ -163,7 +229,9 @@ class TestBriefSourcedSelection:
 
             source = select_next_question_source(question_date=today)
             assert source['source_type'] == BRIEF_SOURCE_TYPE
-            assert source['question_text'] == 'Yesterday brief question claim.'
+            assert source['question_text'] == (
+                'Governments should act on yesterday brief story findings.'
+            )
 
     def test_schedule_question_from_brief_labels_provenance(self, app):
         brief_date = date(2026, 7, 14)
@@ -268,7 +336,10 @@ class TestBriefSourcedSelection:
             brief_date=brief_date,
             items_spec=[{
                 'coverage_imbalance': 0.65,
-                'seed_statements': [{'content': 'Brief wired replacement claim.', 'position': 'pro'}],
+                'seed_statements': [{
+                    'content': 'Brief wired replacement claim should be adopted.',
+                    'position': 'pro',
+                }],
             }],
         )
 
@@ -286,7 +357,9 @@ class TestBriefSourcedSelection:
             updated = schedule_question_from_brief(brief_date=brief_date, question_date=question_date)
             assert updated.id == existing.id
             assert updated.source_type == BRIEF_SOURCE_TYPE
-            assert updated.question_text == 'Brief wired replacement claim.'
+            assert updated.question_text == (
+                'Brief wired replacement claim should be adopted.'
+            )
 
     def test_wire_tomorrow_replaces_discussion_sourced_question(self, app):
         """Idempotent-skip scenario: existing brief + stale discussion question → brief."""
@@ -297,7 +370,10 @@ class TestBriefSourcedSelection:
             brief_date=brief_date,
             items_spec=[{
                 'coverage_imbalance': 0.72,
-                'seed_statements': [{'content': 'Brief side-door replacement claim.', 'position': 'pro'}],
+                'seed_statements': [{
+                    'content': 'Brief side-door replacement claim should be adopted.',
+                    'position': 'pro',
+                }],
             }],
         )
 
@@ -316,7 +392,9 @@ class TestBriefSourcedSelection:
             assert result['ok'] is True
             assert result['question'].id == existing.id
             assert result['question'].source_type == BRIEF_SOURCE_TYPE
-            assert result['question'].question_text == 'Brief side-door replacement claim.'
+            assert result['question'].question_text == (
+                'Brief side-door replacement claim should be adopted.'
+            )
 
     def test_brief_source_sets_discussion_id_when_topic_has_discussion(self, app):
         brief_date = date(2026, 7, 14)
@@ -348,7 +426,10 @@ class TestBriefSourcedSelection:
                 primary_topic='Politics',
                 civic_score=0.8,
                 discussion_id=discussion.id,
-                seed_statements=[{'content': 'Linked discussion claim for brief.', 'position': 'pro'}],
+                seed_statements=[{
+                    'content': 'Linked discussion claim for brief should be judged.',
+                    'position': 'pro',
+                }],
             )
             db.session.add(topic)
             db.session.flush()

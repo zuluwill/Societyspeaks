@@ -20,6 +20,7 @@ from functools import partial
 
 from app.models import TrendingTopic
 from app.discussions.thresholds import CONSENSUS_RECOMMENDED_STATEMENT_COUNT
+from app.lib.claim_craft import is_question_form as _is_question_form
 
 logger = logging.getLogger(__name__)
 
@@ -141,36 +142,6 @@ def _build_topic_context(topic: TrendingTopic) -> str:
     return "\n\n".join(lines)
 
 
-# Bare "if"/"whether" are NOT here: "If X, Y must Z" and "Whether or not X, Y must Z"
-# are valid conditional claims. Real "If…?" questions still end in "?", caught below.
-_INTERROGATIVE_OPENER = re.compile(
-    r"^(what|who|whom|whose|which|when|where|why|how|"
-    r"can|could|would|should|is|are|do|does|did|will|may|might)\b",
-    re.IGNORECASE,
-)
-
-# Explicit non-claim hedges only — not every sentence that happens to start with
-# "whether" (conditional claims are handled in _is_question_form).
-_NON_CLAIM_OPENER = re.compile(
-    r"^(the question of|the issue of|the matter of|"
-    r"it (?:is|remains) (?:an open )?question|"
-    r"raises (?:the|important) questions?)\b",
-    re.IGNORECASE,
-)
-
-_WHETHER_OPENER = re.compile(r"^whether\b", re.IGNORECASE)
-
-# Whole-sentence whether-hedges (no votable consequent). Kept separate from the
-# opener so "Whether or not X, Y must Z" conditionals still pass.
-_WHETHER_HEDGE = re.compile(
-    r"^whether\b.+\b("
-    r"is (?:a |an |the )?(?:matter|question|issue)(?:\s+for)?\b|"
-    r"remains (?:an open question|to be seen)\b|"
-    r"is (?:up to|for) (?:governments?|others|them|us)\b"
-    r")",
-    re.IGNORECASE,
-)
-
 _COMPOUND_MARKERS = (
     " and also ",
     "; and ",
@@ -206,37 +177,6 @@ _TOKEN_STOPWORDS = frozenset({
     "into", "onto", "about", "over", "under", "than", "then", "also", "only",
     "more", "most", "some", "any", "all", "each", "other", "such", "than",
 })
-
-
-def _is_question_form(content: str) -> bool:
-    """
-    True when text is an open question or non-claim hedge rather than a votable claim.
-
-    Agree / Disagree / Unsure only works on declarative statements.
-
-    Conditional claims are kept: ``If X, Y must Z`` / ``Whether or not X, Y should Z``.
-    Bare whether-hedges without a consequent claim (``Whether X is a matter for…``)
-    are rejected.
-    """
-    text = (content or "").strip()
-    if not text:
-        return False
-    if "?" in text:
-        return True
-    if _NON_CLAIM_OPENER.match(text):
-        return True
-    if re.search(r"\braises (?:the |important )?questions?\b", text, re.IGNORECASE):
-        return True
-    if _WHETHER_OPENER.match(text):
-        # Explicit non-claim hedges first (e.g. "Whether X is a matter for…").
-        if _WHETHER_HEDGE.match(text):
-            return True
-        lower = f" {text.lower()} "
-        # Conditional claim: antecedent + consequent with a clear claim verb.
-        if "," in text and any(token in lower for token in _CLAIM_TOKENS):
-            return False
-        return True
-    return bool(_INTERROGATIVE_OPENER.match(text))
 
 
 def _looks_compound_idea(content: str) -> bool:

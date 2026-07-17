@@ -195,4 +195,5 @@ def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[d
         'stance_url': f"{root}/brief/{date_str}?src=brief_stance#stance",
         'stance_url_top': f"{root}/brief/{date_str}?src=brief_stance_top#stance",
         'tradeoffs_url': f"{root}/play/daily?src=brief_tradeoffs",
+        'tradeoffs_url_top': f"{root}/play/daily?src=brief_tradeoffs_top",
     }

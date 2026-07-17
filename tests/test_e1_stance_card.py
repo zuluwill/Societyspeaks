@@ -129,6 +129,9 @@ def test_stance_email_handoff_url(app):
         assert handoff['tradeoffs_url'] == (
             'https://societyspeaks.io/play/daily?src=brief_tradeoffs'
         )
+        assert handoff['tradeoffs_url_top'] == (
+            'https://societyspeaks.io/play/daily?src=brief_tradeoffs_top'
+        )
 
 
 def test_morning_wave_brief_gets_todays_wired_question(app):
@@ -178,6 +181,7 @@ def test_morning_wave_brief_gets_todays_wired_question(app):
         )
         assert 'brief_stance_top' in handoff['stance_url_top']
         assert handoff['tradeoffs_url'].endswith('?src=brief_tradeoffs')
+        assert handoff['tradeoffs_url_top'].endswith('?src=brief_tradeoffs_top')
 
 
 def test_morning_wave_rejects_miswired_frame(app):
@@ -296,6 +300,7 @@ def test_daily_brief_email_teaser_above_fold(app):
                 f'?src=brief_stance_top#stance'
             ),
             'tradeoffs_url': 'https://societyspeaks.io/play/daily?src=brief_tradeoffs',
+            'tradeoffs_url_top': 'https://societyspeaks.io/play/daily?src=brief_tradeoffs_top',
         }
         html = render_template(
             'emails/daily_brief.html',
@@ -318,8 +323,13 @@ def test_daily_brief_email_teaser_above_fold(app):
         assert top_idx > 0
         assert top_src > 0
         assert bottom_idx > top_idx
-        assert 'brief_tradeoffs' in html
         assert "Take today's stance" in html
+        # Tradeoffs attribution is split by placement, like stance: the above-fold
+        # teaser is measurable separately from the footer payoff.
+        top_tradeoffs = html.find('brief_tradeoffs_top')
+        bottom_tradeoffs = html.find('src=brief_tradeoffs"')
+        assert 0 < top_tradeoffs < bottom_idx  # teaser tradeoffs is above the fold
+        assert bottom_tradeoffs > bottom_idx   # footer tradeoffs follows "Your turn"
 
 
 def test_stance_ajax_vote_stays_on_brief_json(client, db):
