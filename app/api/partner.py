@@ -1426,11 +1426,15 @@ def create_discussion():
                 count=DEFAULT_SEED_COUNT,
             )
         except Exception as e:
-            current_app.logger.error(f"Seed generation failed for partner {partner_slug}: {e}")
+            from app.lib.llm_transient_errors import log_llm_error
+            transient = log_llm_error(
+                current_app.logger, e,
+                context=f"Seed generation failed for partner {partner_slug}",
+            )
             return api_error(
                 'generation_failed',
                 'Failed to generate seed statements. Please try again or provide seed_statements.',
-                500
+                503 if transient else 500,
             )
 
         if len(statements_to_create) < DEFAULT_SEED_COUNT:
