@@ -426,7 +426,7 @@ Return ONLY the question, nothing else."""
         return response.choices[0].message.content.strip()
 
     except Exception as e:
-        logger.error(f"Question generation failed: {e}")
+        log_llm_error(logger, e, context="Question generation failed")
         return None
 
 
@@ -515,5 +515,5 @@ Return ONLY the question, nothing else."""
         return response.choices[0].message.content.strip()
     
     except Exception as e:
-        logger.error(f"Question generation failed: {e}")
+        log_llm_error(logger, e, context="Question generation failed")
         return None

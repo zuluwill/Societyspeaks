@@ -71,6 +71,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from app import db
 from app.models import TrendingTopic, NewsArticle, NewsSource
 from app.trending.scorer import extract_json, get_system_api_key
+from app.lib.llm_transient_errors import log_llm_error
 
 logger = logging.getLogger(__name__)
 
@@ -624,7 +625,7 @@ Return JSON:
                         analyses[perspective] = result
                 except Exception as e:
                     perspective = futures[future]
-                    logger.error(f"Critical error analyzing {perspective}: {e}")
+                    log_llm_error(logger, e, context=f"Critical error analyzing {perspective}")
                     analyses[perspective] = {'emphasis': None, 'language_patterns': None}
 
         return analyses
