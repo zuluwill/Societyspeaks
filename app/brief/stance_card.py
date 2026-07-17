@@ -186,11 +186,13 @@ def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[d
     if not question:
         return None
 
+    root = base_url.rstrip('/')
     date_str = brief_date.isoformat()
+    # Distinct src= values so Resend click stats separate above-the-fold
+    # (survives Gmail clip) from the end-of-brief payoff block.
     return {
         'question': question,
-        'stance_url': (
-            f"{base_url.rstrip('/')}/brief/{date_str}"
-            f"?src=brief_stance#stance"
-        ),
+        'stance_url': f"{root}/brief/{date_str}?src=brief_stance#stance",
+        'stance_url_top': f"{root}/brief/{date_str}?src=brief_stance_top#stance",
+        'tradeoffs_url': f"{root}/play/daily?src=brief_tradeoffs",
     }

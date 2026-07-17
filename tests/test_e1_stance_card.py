@@ -122,6 +122,13 @@ def test_stance_email_handoff_url(app):
             f'https://societyspeaks.io/brief/{today.isoformat()}'
             f'?src=brief_stance#stance'
         )
+        assert handoff['stance_url_top'] == (
+            f'https://societyspeaks.io/brief/{today.isoformat()}'
+            f'?src=brief_stance_top#stance'
+        )
+        assert handoff['tradeoffs_url'] == (
+            'https://societyspeaks.io/play/daily?src=brief_tradeoffs'
+        )
 
 
 def test_morning_wave_brief_gets_todays_wired_question(app):
@@ -169,6 +176,8 @@ def test_morning_wave_brief_gets_todays_wired_question(app):
             handoff['stance_url']
             == f'https://societyspeaks.io/brief/{yesterday.isoformat()}?src=brief_stance#stance'
         )
+        assert 'brief_stance_top' in handoff['stance_url_top']
+        assert handoff['tradeoffs_url'].endswith('?src=brief_tradeoffs')
 
 
 def test_morning_wave_rejects_miswired_frame(app):
@@ -250,6 +259,67 @@ def test_has_user_voted_returns_false_without_request_context(app, monkeypatch):
         db.session.add(q)
         db.session.commit()
         assert _has_user_voted(q) is False
+
+
+def test_daily_brief_email_teaser_above_fold(app):
+    """Gmail clips long briefs — stance/tradeoffs must be announced before stories."""
+    from types import SimpleNamespace
+
+    from flask import render_template
+
+    from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
+
+    with app.app_context():
+        yesterday = date.today() - timedelta(days=1)
+        # Empty story list: still must show the teaser (independent of TOC).
+        brief = SimpleNamespace(
+            title='Test Brief',
+            date=yesterday,
+            brief_type='daily',
+            reading_time=7,
+            intro_text='Intro',
+            items=[],
+            is_sectioned=False,
+            lead_item=None,
+        )
+        handoff = {
+            'question': SimpleNamespace(
+                question_text='Should the teaser appear above the fold?',
+                question_number=1,
+            ),
+            'stance_url': (
+                f'https://societyspeaks.io/brief/{yesterday.isoformat()}'
+                f'?src=brief_stance#stance'
+            ),
+            'stance_url_top': (
+                f'https://societyspeaks.io/brief/{yesterday.isoformat()}'
+                f'?src=brief_stance_top#stance'
+            ),
+            'tradeoffs_url': 'https://societyspeaks.io/play/daily?src=brief_tradeoffs',
+        }
+        html = render_template(
+            'emails/daily_brief.html',
+            brief=brief,
+            sorted_items=[],
+            subscriber=SimpleNamespace(email='t@example.com', id=1),
+            magic_link_url='https://societyspeaks.io/brief/m/x',
+            unsubscribe_url='https://societyspeaks.io/u',
+            preferences_url='https://societyspeaks.io/p',
+            base_url='https://societyspeaks.io',
+            personal_briefs_cta_url='https://societyspeaks.io/start',
+            SECTIONS=SECTIONS,
+            TOPIC_DISPLAY_LABELS=TOPIC_DISPLAY_LABELS,
+            TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS,
+            stance_handoff=handoff,
+        )
+        top_idx = html.find('Also today')
+        top_src = html.find('brief_stance_top')
+        bottom_idx = html.find('Your turn')
+        assert top_idx > 0
+        assert top_src > 0
+        assert bottom_idx > top_idx
+        assert 'brief_tradeoffs' in html
+        assert "Take today's stance" in html
 
 
 def test_stance_ajax_vote_stays_on_brief_json(client, db):

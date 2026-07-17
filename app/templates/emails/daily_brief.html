@@ -352,6 +352,60 @@
             </tr>
             {% endif %}
 
+            {# Above-the-fold E1 teaser: Gmail often clips before the end-of-brief
+               payoff. External links (not in-email #anchors) so clipped readers
+               can still reach stance / tradeoffs. Same single participation CTA
+               as the footer block — this is discovery, not a second ask.
+               Placed outside the headlines index so it still renders when the
+               TOC is skipped (fewer than 2 items). #}
+            {% if stance_handoff and stance_handoff.question %}
+            <tr>
+              <td
+                class="mobile-padding"
+                style="
+                  padding: 16px 32px;
+                  background-color: #fffbeb;
+                  border-bottom: 1px solid #fde68a;
+                "
+              >
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 1.55;
+                        color: #78350f;
+                      "
+                    >
+                      <span style="font-weight: 700; color: #92400e;">{{ _('Also today') }}</span>
+                      &mdash;
+                      {{ email_anchor_html(
+                        stance_handoff.stance_url_top,
+                        _("Take today's stance · ~10 sec →"),
+                        target='_blank',
+                        style='color: #1d4ed8; text-decoration: underline; font-weight: 600;',
+                      )|safe }}
+                      {% if config.get('GAME_ENABLED', true) %}
+                      <br />
+                      <span style="color: #a8a29e;">{{ _('or') }}</span>
+                      {{ email_anchor_html(
+                        stance_handoff.tradeoffs_url,
+                        _('play the trade-offs scenario'),
+                        target='_blank',
+                        style='color: #1d4ed8; text-decoration: underline;',
+                      )|safe }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            {% endif %}
+
             <!-- Stories -->
             {% set current_section = namespace(key='') %}
             {% for item in sorted_items %}
@@ -2619,7 +2673,7 @@
               <td align="center" style="padding: 0 24px 20px 24px; background-color: #fffbeb; border-bottom: 1px solid #fde68a;">
                 <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #78716c; margin: 0;">
                   {{ _('Prefer to explore the trade-offs?') }}
-                  {{ email_anchor_html(base_url ~ '/play/daily', _("Play today's scenario · ~2 min →"), target='_blank', style='color: #1d4ed8; text-decoration: underline;')|safe }}
+                  {{ email_anchor_html(stance_handoff.tradeoffs_url, _("Play today's scenario · ~2 min →"), target='_blank', style='color: #1d4ed8; text-decoration: underline;')|safe }}
                 </p>
               </td>
             </tr>
