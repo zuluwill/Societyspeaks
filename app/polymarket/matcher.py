@@ -2,25 +2,27 @@
 Market Matcher Service
 
 Automatically matches TrendingTopics to relevant Polymarket markets using:
-1. Category mapping (Society Speaks categories -> Polymarket categories)
+1. Tag/category affinity (Society Speaks topics -> Polymarket event tags)
 2. Embedding similarity (semantic matching)
-3. Keyword overlap (fallback)
+3. Keyword / title overlap (fallback)
 
 Design Principles:
 1. High precision over recall - only match when confident
 2. No false positives - better to miss a match than show irrelevant market
-3. Batch operations for efficiency
-4. Results cached in TopicMarketMatch table
+3. Soft category filters — never return zero candidates just because tags differ
+4. Batch operations for efficiency
+5. Results cached in TopicMarketMatch table
 """
 
 import logging
-from datetime import datetime, timedelta
-from app.lib.time import utcnow_naive
-from typing import Optional, List, Dict
+import re
+from datetime import timedelta
+from typing import Optional, List, Dict, Set
 
 import numpy as np
 
 from app import db
+from app.lib.time import utcnow_naive
 from app.models import TrendingTopic, PolymarketMarket, TopicMarketMatch
 
 logger = logging.getLogger(__name__)
@@ -36,28 +38,25 @@ class MarketMatcher:
         matcher.run_batch_matching()  # Process all recent topics
     """
 
-    # Category mapping: Society Speaks topic -> Polymarket categories
+    # Category mapping: Society Speaks topic -> Polymarket event tag slugs
     CATEGORY_MAP = {
-        'Politics': ['politics', 'elections', 'government'],
-        'Economy': ['economics', 'fed', 'inflation', 'markets', 'finance'],
+        'Politics': ['politics', 'elections', 'government', 'geopolitics'],
+        'Economy': ['economics', 'finance', 'fed', 'inflation', 'markets', 'business'],
         'Technology': ['tech', 'ai', 'crypto', 'science'],
-        'Geopolitics': ['geopolitics', 'international', 'war', 'diplomacy'],
+        'Geopolitics': ['geopolitics', 'international', 'war', 'diplomacy', 'politics'],
         'Healthcare': ['health', 'covid', 'fda', 'medicine'],
         'Environment': ['climate', 'energy', 'environment'],
-        'Business': ['business', 'companies', 'markets'],
-        'Society': ['social', 'culture', 'legal'],
+        'Business': ['business', 'companies', 'markets', 'finance'],
+        'Society': ['social', 'culture', 'legal', 'immigration'],
         'Infrastructure': ['infrastructure', 'transportation'],
         'Education': ['education'],
-        'Culture': ['entertainment', 'sports', 'media'],
+        'Culture': ['entertainment', 'sports', 'media', 'culture'],
     }
 
     # Similarity thresholds
-    # Lowered from 0.75 to 0.60 (Feb 2026) — the old threshold was too strict
-    # and resulted in almost no matches appearing in briefs. A 0.60 threshold
-    # still ensures topical relevance while allowing "related market" matches
-    # (e.g., topic about UK climate policy matching "Will UK pass net zero legislation?")
-    EMBEDDING_THRESHOLD = 0.60  # Minimum cosine similarity for embedding match
-    KEYWORD_MIN_OVERLAP = 2  # Minimum keyword overlap for fallback
+    # 0.60 still ensures topical relevance while allowing "related market" matches
+    EMBEDDING_THRESHOLD = 0.60
+    KEYWORD_MIN_OVERLAP = 2
 
     def __init__(self, embedding_service=None):
         """
@@ -73,17 +72,11 @@ class MarketMatcher:
         """
         Find relevant markets for a single topic.
 
-        Args:
-            topic: TrendingTopic to match
-            max_matches: Maximum number of matches to return
-            min_quality_tier: Minimum market quality ('high', 'medium', 'low')
-
         Returns:
             List of match dicts with 'market', 'similarity', 'method' keys
             Empty list if no matches found
         """
         try:
-            # Get candidate markets by category
             candidates = self._get_candidates(topic, min_quality_tier)
             if not candidates:
                 return []
@@ -97,15 +90,14 @@ class MarketMatcher:
                 )
                 matches.extend(embedding_matches)
 
-            # Method 2: Keyword overlap (fallback for markets without embeddings)
-            if len(matches) < max_matches and topic.canonical_tags:
+            # Method 2: Keyword / title overlap fallback
+            if len(matches) < max_matches:
                 keyword_matches = self._match_by_keywords(
-                    set(topic.canonical_tags), candidates,
+                    topic, candidates,
                     exclude_ids=[m['market'].id for m in matches]
                 )
                 matches.extend(keyword_matches)
 
-            # Sort by similarity and return top matches
             matches.sort(key=lambda x: x['similarity'], reverse=True)
             return matches[:max_matches]
 
@@ -118,13 +110,6 @@ class MarketMatcher:
         """
         Batch match all recent topics to markets.
         Called by scheduler every 30 minutes.
-
-        Args:
-            days_back: Process topics created within this many days
-            reprocess_existing: If True, reprocess topics that already have matches
-
-        Returns:
-            Stats dict: {'processed': N, 'matched': N, 'skipped': N, 'errors': N}
         """
         stats = {'processed': 0, 'matched': 0, 'skipped': 0, 'errors': 0}
 
@@ -136,9 +121,8 @@ class MarketMatcher:
         )
 
         if not reprocess_existing:
-            # Only process topics without existing matches
             query = query.outerjoin(TopicMarketMatch).filter(
-                TopicMarketMatch.id == None
+                TopicMarketMatch.id == None  # noqa: E711
             )
 
         topics = query.all()
@@ -152,21 +136,17 @@ class MarketMatcher:
                     stats['skipped'] += 1
                     continue
 
-                # Store matches
                 for match in matches:
-                    # Check if match already exists
                     existing = TopicMarketMatch.query.filter_by(
                         trending_topic_id=topic.id,
                         market_id=match['market'].id
                     ).first()
 
                     if existing:
-                        # Update similarity score
                         existing.similarity_score = match['similarity']
                         existing.match_method = match['method']
                         existing.updated_at = utcnow_naive()
                     else:
-                        # Create new match
                         db.session.add(TopicMarketMatch(
                             trending_topic_id=topic.id,
                             market_id=match['market'].id,
@@ -189,15 +169,11 @@ class MarketMatcher:
         """
         Get the best matching market for a topic.
         Returns None if no match exists or market is inactive.
-
-        Uses the matcher's EMBEDDING_THRESHOLD rather than the model's
-        SIMILARITY_THRESHOLD to ensure the matcher config is the single
-        source of truth for match quality.
         """
         match = TopicMarketMatch.query.filter_by(
             trending_topic_id=topic_id
         ).join(PolymarketMarket).filter(
-            PolymarketMarket.is_active == True
+            PolymarketMarket.is_active == True  # noqa: E712
         ).order_by(
             TopicMarketMatch.similarity_score.desc()
         ).first()
@@ -210,8 +186,6 @@ class MarketMatcher:
         """
         Get market signal data for a topic, ready for use in briefs.
         Returns None if no matching market (graceful degradation).
-
-        This is the main entry point for brief generators.
         """
         market = self.get_best_match_for_topic(topic_id)
         if not market:
@@ -232,14 +206,16 @@ class MarketMatcher:
 
     def _get_candidates(self, topic: TrendingTopic,
                         min_quality_tier: str) -> List[PolymarketMarket]:
-        """Get candidate markets based on category and quality."""
+        """Get candidate markets — soft tag preference, never hard-empty."""
 
-        # Map topic category to Polymarket categories
-        # Use primary_topic if available, otherwise try to infer from title
         primary_topic = getattr(topic, 'primary_topic', None)
-        pm_categories = self.CATEGORY_MAP.get(primary_topic, [])
+        # Normalize case: topics may store 'politics' or 'Politics'
+        pm_categories = []
+        if primary_topic:
+            pm_categories = self.CATEGORY_MAP.get(primary_topic) or \
+                self.CATEGORY_MAP.get(primary_topic.title()) or \
+                self.CATEGORY_MAP.get(primary_topic.capitalize()) or []
 
-        # Quality threshold
         if min_quality_tier == 'high':
             min_volume = PolymarketMarket.HIGH_QUALITY_VOLUME
         elif min_quality_tier == 'medium':
@@ -247,16 +223,41 @@ class MarketMatcher:
         else:
             min_volume = 0
 
+        now = utcnow_naive()
         query = PolymarketMarket.query.filter(
-            PolymarketMarket.is_active == True,
-            PolymarketMarket.volume_24h >= min_volume
-        )
+            PolymarketMarket.is_active == True,  # noqa: E712
+            PolymarketMarket.volume_24h >= min_volume,
+            (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
+        ).order_by(PolymarketMarket.volume_24h.desc())
 
-        # If we have category mapping, use it; otherwise search all
-        if pm_categories:
-            query = query.filter(PolymarketMarket.category.in_(pm_categories))
+        # Pull a broad pool, then prefer tag-aligned markets in Python.
+        # Hard SQL category filters are wrong when tags were historically null.
+        pool = query.limit(400).all()
+        if not pool:
+            return []
 
-        return query.limit(100).all()
+        if not pm_categories:
+            return pool[:150]
+
+        preferred = [
+            m for m in pool
+            if self._market_matches_categories(m, pm_categories)
+        ]
+        if len(preferred) >= 15:
+            return preferred[:200]
+
+        # Not enough tagged matches — keep preferred first, then fill
+        preferred_ids = {m.id for m in preferred}
+        filled = preferred + [m for m in pool if m.id not in preferred_ids]
+        return filled[:200]
+
+    def _market_matches_categories(self, market: PolymarketMarket,
+                                   pm_categories: List[str]) -> bool:
+        cats = {c.lower() for c in pm_categories}
+        if market.category and market.category.lower() in cats:
+            return True
+        tags = {str(t).lower() for t in (market.tags or []) if t}
+        return bool(tags & cats)
 
     def _match_by_embedding(self, topic_embedding: List[float],
                            candidates: List[PolymarketMarket]) -> List[Dict]:
@@ -280,33 +281,52 @@ class MarketMatcher:
 
         return matches
 
-    def _match_by_keywords(self, topic_tags: set,
+    def _match_by_keywords(self, topic: TrendingTopic,
                           candidates: List[PolymarketMarket],
                           exclude_ids: List[int] = None) -> List[Dict]:
-        """Match using keyword overlap (fallback)."""
+        """Match using tag overlap and significant title tokens."""
         matches = []
         exclude_ids = exclude_ids or []
 
-        # Normalize tags to lowercase for comparison
-        topic_tags_lower = {tag.lower() for tag in topic_tags}
+        topic_tags: Set[str] = set()
+        if topic.canonical_tags:
+            topic_tags = {str(tag).lower() for tag in topic.canonical_tags if tag}
+
+        title_tokens = self._significant_tokens(topic.title or '')
 
         for market in candidates:
             if market.id in exclude_ids:
                 continue
 
-            market_tags = set((tag.lower() for tag in (market.tags or [])))
-            overlap = len(topic_tags_lower & market_tags)
+            market_tags = {str(tag).lower() for tag in (market.tags or []) if tag}
+            if market.category:
+                market_tags.add(market.category.lower())
 
-            if overlap >= self.KEYWORD_MIN_OVERLAP:
-                # Convert overlap to similarity score (0.5-0.9 range)
-                similarity = min(0.5 + overlap * 0.1, 0.9)
-                matches.append({
-                    'market': market,
-                    'similarity': similarity,
-                    'method': 'keyword'
-                })
+            tag_overlap = len(topic_tags & market_tags)
+            title_overlap = len(title_tokens & self._significant_tokens(market.question or ''))
+
+            if tag_overlap >= self.KEYWORD_MIN_OVERLAP or title_overlap >= 2:
+                similarity = min(0.5 + tag_overlap * 0.1 + title_overlap * 0.08, 0.9)
+                # Only accept keyword matches that clear the same bar as embeddings
+                if similarity >= self.EMBEDDING_THRESHOLD:
+                    matches.append({
+                        'market': market,
+                        'similarity': similarity,
+                        'method': 'keyword'
+                    })
 
         return matches
+
+    @staticmethod
+    def _significant_tokens(text: str) -> Set[str]:
+        stop = {
+            'the', 'a', 'an', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with',
+            'as', 'at', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'this',
+            'that', 'its', 'it', 'new', 'after', 'over', 'into', 'about', 'will',
+            'has', 'have', 'had', 'not', 'but', 'they', 'their',
+        }
+        tokens = re.findall(r"[a-z0-9]{3,}", (text or '').lower())
+        return {t for t in tokens if t not in stop}
 
     def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
         """Calculate cosine similarity between two vectors."""
@@ -320,7 +340,7 @@ class MarketMatcher:
         if norm1 == 0 or norm2 == 0:
             return 0.0
 
-        return dot_product / (norm1 * norm2)
+        return float(dot_product / (norm1 * norm2))
 
 
 # Singleton instance

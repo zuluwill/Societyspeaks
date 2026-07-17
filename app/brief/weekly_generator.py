@@ -163,7 +163,10 @@ class WeeklyBriefGenerator:
             market_pulse_ids = set()
             if brief.market_pulse:
                 market_pulse_ids = {m['market_id'] for m in brief.market_pulse if 'market_id' in m}
-            world_events_data = gen._generate_world_events(seen_market_ids=market_pulse_ids)
+            world_events_data = gen._generate_world_events(
+                seen_market_ids=market_pulse_ids,
+                brief_date=getattr(brief, 'date', None),
+            )
             if world_events_data:
                 brief.world_events = world_events_data
                 logger.info(f"Generated World Events for weekly brief with {len(world_events_data)} markets")

@@ -2401,7 +2401,8 @@ def init_scheduler(app):
 
             logger.info("Pre-brief Polymarket matching (runs 30min before brief generation)")
             try:
-                stats = market_matcher.run_batch_matching(days_back=3, reprocess_existing=False)
+                # Reprocess so newly synced/tagged markets can replace stale matches
+                stats = market_matcher.run_batch_matching(days_back=3, reprocess_existing=True)
                 logger.info(f"Pre-brief matching complete: {stats}")
             except Exception as e:
                 logger.error(f"Pre-brief Polymarket matching failed: {e}", exc_info=True)

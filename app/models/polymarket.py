@@ -38,6 +38,7 @@ class PolymarketMarket(db.Model):
         db.Index('idx_pm_market_category', 'category'),
         db.Index('idx_pm_market_active', 'is_active'),
         db.Index('idx_pm_market_slug', 'slug'),
+        db.Index('idx_pm_market_event_slug', 'event_slug'),
         db.Index('idx_pm_market_quality', 'is_active', 'volume_24h', 'liquidity'),
     )
 
@@ -46,13 +47,14 @@ class PolymarketMarket(db.Model):
     # Polymarket Identifiers
     condition_id = db.Column(db.String(100), unique=True, nullable=False)
     slug = db.Column(db.String(200))
+    event_slug = db.Column(db.String(200))  # Parent event slug (for URLs + dedupe)
     clob_token_ids = db.Column(db.JSON)  # For CLOB API price fetching
 
     # Content
     question = db.Column(db.String(500), nullable=False)
     description = db.Column(db.Text)
-    category = db.Column(db.String(100))  # politics, economics, tech...
-    tags = db.Column(db.JSON)  # ['uk', 'election', 'labour'] - for keyword matching
+    category = db.Column(db.String(100))  # politics, economics, tech... (inferred from event tags)
+    tags = db.Column(db.JSON)  # ['politics', 'elections', ...] from parent event tags
 
     # Automated Matching
     question_embedding = db.Column(db.JSON)  # Vector for similarity search
@@ -66,6 +68,8 @@ class PolymarketMarket(db.Model):
     volume_24h = db.Column(db.Float, default=0)
     volume_total = db.Column(db.Float, default=0)
     liquidity = db.Column(db.Float, default=0)
+    # Gamma has no per-market trader count; we store parent-event openInterest
+    # here as a liquidity/interest proxy for ranking (name kept for compat).
     trader_count = db.Column(db.Integer, default=0)
 
     # Lifecycle
@@ -131,7 +135,9 @@ class PolymarketMarket(db.Model):
 
     @property
     def polymarket_url(self) -> str:
-        """Direct link to market on Polymarket."""
+        """Direct link to market on Polymarket (prefer parent event URL)."""
+        if self.event_slug:
+            return f"https://polymarket.com/event/{self.event_slug}"
         if self.slug:
             return f"https://polymarket.com/market/{self.slug}"
         return f"https://polymarket.com/markets/{self.condition_id}"
@@ -153,6 +159,8 @@ class PolymarketMarket(db.Model):
             'trader_count': self.trader_count,
             'quality_tier': self.quality_tier,
             'url': self.polymarket_url,
+            'event_slug': self.event_slug,
+            'category': self.category,
             'end_date': self.end_date.isoformat() if self.end_date else None,
             'fetched_at': self.last_price_update_at.isoformat() if self.last_price_update_at else None
         }
@@ -163,6 +171,7 @@ class PolymarketMarket(db.Model):
             'id': self.id,
             'condition_id': self.condition_id,
             'slug': self.slug,
+            'event_slug': self.event_slug,
             'question': self.question,
             'description': self.description,
             'category': self.category,
@@ -196,7 +205,7 @@ class TopicMarketMatch(db.Model):
     2. Embedding similarity (topic embedding vs market question embedding)
     3. Keyword overlap fallback (canonical_tags vs market tags)
 
-    Only high-confidence matches (similarity >= 0.75) are stored.
+    High-confidence matches are stored (see MarketMatcher.EMBEDDING_THRESHOLD).
     Matches are refreshed when topics are created/updated.
     """
     __tablename__ = 'topic_market_match'

@@ -16,7 +16,7 @@ import os
 import logging
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Set
 from functools import wraps
 import time
 
@@ -76,6 +76,11 @@ class PolymarketService:
     # Cache durations (in seconds)
     CACHE_METADATA_DURATION = 6 * 3600  # 6 hours for market metadata
     CACHE_PRICE_DURATION = 300  # 5 minutes for prices
+
+    # Absence from one sync isn't proof a market is gone — a page can fail, or
+    # rows can shift mid-pagination. Require it to be absent for several
+    # consecutive syncs — the job runs every 2h — before deactivating.
+    DEACTIVATE_AFTER_UNSEEN_HOURS = 6
 
     def __init__(self):
         self._last_gamma_request = 0
@@ -146,18 +151,40 @@ class PolymarketService:
         Returns:
             List of market dicts
         """
+        return self._fetch_markets_page(
+            limit=limit, offset=offset, closed=closed
+        ) or []
+
+    def _fetch_markets_page(self, limit: int = 500, offset: int = 0,
+                            closed: bool = False) -> Optional[List[Dict]]:
+        """
+        Fetch one page of markets, distinguishing failure from end-of-data.
+
+        Returns:
+            List of market dicts (empty when the page is past the end),
+            or None if the request failed. Callers that deactivate unseen
+            markets must treat None differently from [].
+        """
         params = {
             'limit': limit,
             'offset': offset,
-            'closed': closed
+            'closed': closed,
+            # Stable id order — volume ordering shifts markets between pages
+            # mid-sync and can make a complete-looking pass miss rows.
+            'order': 'id',
+            'ascending': 'true',
         }
         response = self._gamma_request('/markets', params=params)
-        if not response:
-            return []
+        if response is None:
+            return None
         # API returns a list directly, not a dict with 'markets' key
         if isinstance(response, list):
             return response
-        return response.get('markets', [])
+        markets = response.get('markets')
+        # Missing/invalid payload is a failure, not end-of-data
+        if markets is None:
+            return None
+        return markets if isinstance(markets, list) else None
 
     @safe_api_call(default_return=None)
     def get_current_price(self, token_id: str) -> Optional[float]:
@@ -280,6 +307,13 @@ class PolymarketService:
     # SYNC METHODS (for scheduled jobs)
     # =========================================================================
 
+    # Category priority when inferring from Polymarket event tag slugs
+    _CATEGORY_PRIORITY = (
+        'politics', 'elections', 'geopolitics', 'finance', 'economics',
+        'crypto', 'business', 'tech', 'ai', 'science', 'health', 'climate',
+        'energy', 'sports', 'entertainment',
+    )
+
     def sync_all_markets(self) -> Dict[str, int]:
         """
         Full sync of all active markets from Polymarket.
@@ -288,30 +322,56 @@ class PolymarketService:
         Returns:
             Stats dict: {'created': N, 'updated': N, 'deactivated': N, 'errors': N}
         """
-        stats = {'created': 0, 'updated': 0, 'deactivated': 0, 'errors': 0, 'embeddings_generated': 0}
+        stats = {
+            'created': 0,
+            'updated': 0,
+            'deactivated': 0,
+            'errors': 0,
+            'embeddings_generated': 0,
+            'events_indexed': 0,
+        }
         seen_condition_ids = set()
+
+        # Event tags live on /events, not /markets. Build a lookup once so
+        # category/tag matching works for brief curation.
+        event_meta = self._load_event_meta_map()
+        stats['events_indexed'] = len(event_meta)
 
         offset = 0
         limit = 500
 
-        # Collect markets that need embeddings
+        # Collect markets that need embeddings (new or missing)
         markets_needing_embeddings = []
+
+        # Only a sync that walked every page may conclude a market is gone.
+        pagination_complete = False
 
         while True:
             # Fetch unclosed (current) markets - closed=False ensures we get active markets
-            markets = self.get_all_markets(limit=limit, offset=offset, closed=False)
+            markets = self._fetch_markets_page(limit=limit, offset=offset, closed=False)
+            if markets is None:
+                logger.error(
+                    f"Polymarket sync: /markets page at offset {offset} failed; "
+                    f"syncing what we have and skipping deactivation"
+                )
+                stats['errors'] += 1
+                break
             if not markets:
+                pagination_complete = True
                 break
 
             for market_data in markets:
                 try:
-                    result, market_obj = self._upsert_market(market_data)
+                    result, market_obj = self._upsert_market(market_data, event_meta=event_meta)
                     stats[result] += 1
                     condition_id = market_data.get('conditionId') or market_data.get('condition_id')
                     seen_condition_ids.add(condition_id)
 
-                    # Track markets that need embeddings
-                    if result == 'created' and market_obj and market_obj.is_high_quality:
+                    if (
+                        market_obj
+                        and market_obj.is_high_quality
+                        and not market_obj.question_embedding
+                    ):
                         markets_needing_embeddings.append(market_obj)
 
                 except Exception as e:
@@ -319,15 +379,31 @@ class PolymarketService:
                     stats['errors'] += 1
 
             if len(markets) < limit:
+                pagination_complete = True
                 break
             offset += limit
 
-        # Deactivate markets no longer in API response
-        deactivated = PolymarketMarket.query.filter(
-            PolymarketMarket.is_active == True,
-            ~PolymarketMarket.condition_id.in_(seen_condition_ids)
-        ).update({'is_active': False}, synchronize_session=False)
-        stats['deactivated'] = deactivated
+        # Deactivate markets no longer in the API response. Absence from a
+        # single sync is not proof a market is gone: a page can fail, or a
+        # market can shift between pages while we walk them. Deactivate only
+        # after a complete pass, and only for markets we also haven't
+        # successfully synced in a while.
+        if pagination_complete and seen_condition_ids:
+            stale_cutoff = utcnow_naive() - timedelta(hours=self.DEACTIVATE_AFTER_UNSEEN_HOURS)
+            deactivated = PolymarketMarket.query.filter(
+                PolymarketMarket.is_active == True,
+                ~PolymarketMarket.condition_id.in_(seen_condition_ids),
+                or_(
+                    PolymarketMarket.last_synced_at < stale_cutoff,
+                    PolymarketMarket.last_synced_at.is_(None),
+                ),
+            ).update({'is_active': False}, synchronize_session=False)
+            stats['deactivated'] = deactivated
+        elif not pagination_complete:
+            logger.warning(
+                "Polymarket sync: incomplete pagination, skipping deactivation "
+                "(markets stay active rather than being wrongly retired)"
+            )
 
         # Also deactivate markets whose end_date has passed — these are resolved
         # markets that the API may still return but are no longer actionable.
@@ -344,14 +420,137 @@ class PolymarketService:
 
         db.session.commit()
 
-        # Generate embeddings for new high-quality markets (in batches)
-        if markets_needing_embeddings:
+        # Backfill embeddings for liquid markets missing vectors (cap per sync)
+        if not markets_needing_embeddings:
+            markets_needing_embeddings = PolymarketMarket.query.filter(
+                PolymarketMarket.is_active == True,
+                PolymarketMarket.question_embedding.is_(None),
+                PolymarketMarket.volume_24h >= PolymarketMarket.MIN_VOLUME_24H,
+            ).order_by(PolymarketMarket.volume_24h.desc()).limit(100).all()
+
+        # Deduplicate while preserving order
+        seen_ids = set()
+        unique_for_embeddings = []
+        for m in markets_needing_embeddings:
+            if m.id not in seen_ids:
+                seen_ids.add(m.id)
+                unique_for_embeddings.append(m)
+
+        if unique_for_embeddings:
             stats['embeddings_generated'] = self._generate_embeddings_for_markets(
-                markets_needing_embeddings
+                unique_for_embeddings[:150]
             )
 
         logger.info(f"Polymarket sync complete: {stats}")
         return stats
+
+    def _load_event_meta_map(self, page_size: int = 100, max_pages: int = 120) -> Dict[str, Dict]:
+        """
+        Load active Polymarket events → {slug, tags, category, open_interest}.
+
+        Market payloads omit tags; the events endpoint is the source of truth.
+        Keys are stringified event IDs.
+
+        Uses /events/keyset (cursor) pagination, not /events?offset=: the
+        offset endpoint hard-fails at offset 2001 ("use /events/keyset for
+        deeper pagination"), which silently capped the index at ~2.1k of the
+        10k active events. We index events at/above MIN_VOLUME_24H, ordered by
+        volume — an event's volume is the sum of its markets', so this can't
+        miss the parent of any quality market — highest-signal events first so
+        a truncated run still covers what briefs surface.
+
+        A partial/failed index is still useful — upsert preserves existing
+        tags/category when an event is missing from the map. Returns {} only
+        when nothing could be loaded (callers must not treat that as "clear tags").
+        """
+        meta: Dict[str, Dict] = {}
+        cursor: Optional[str] = None
+        seen_cursors: Set[str] = set()
+        incomplete = False
+
+        try:
+            for _ in range(max_pages):
+                params = {
+                    'limit': page_size,
+                    'closed': 'false',
+                    'volume_min': PolymarketMarket.MIN_VOLUME_24H,
+                    'order': 'volume24hr',
+                    'ascending': 'false',
+                }
+                if cursor:
+                    params['after_cursor'] = cursor
+
+                response = self._gamma_request('/events/keyset', params=params)
+                if not isinstance(response, dict):
+                    incomplete = True
+                    logger.warning(
+                        f"Polymarket /events/keyset failed or returned unexpected "
+                        f"payload; keeping partial index of {len(meta)} events"
+                    )
+                    break
+
+                events = response.get('events') or []
+                for event in events:
+                    event_id = event.get('id')
+                    if event_id is None:
+                        continue
+
+                    seen = set()
+                    unique_tags = []
+                    for tag in event.get('tags') or []:
+                        if isinstance(tag, dict):
+                            slug = tag.get('slug') or tag.get('label')
+                        elif isinstance(tag, str):
+                            slug = tag.strip()
+                        else:
+                            slug = None
+                        if slug:
+                            slug = str(slug).lower()
+                            if slug not in seen:
+                                seen.add(slug)
+                                unique_tags.append(slug)
+
+                    meta[str(event_id)] = {
+                        'slug': event.get('slug'),
+                        'tags': unique_tags,
+                        'category': self._infer_category_from_tags(unique_tags),
+                        'open_interest': event.get('openInterest') or event.get('open_interest'),
+                    }
+
+                cursor = response.get('next_cursor')
+                # Terminate on: end of data, or a cursor the API repeats (guards
+                # against an infinite loop if the cursor ever stops advancing).
+                if not events or not cursor or cursor in seen_cursors:
+                    break
+                seen_cursors.add(cursor)
+            else:
+                incomplete = True
+                logger.warning(
+                    f"Polymarket /events/keyset hit max_pages={max_pages} "
+                    f"({len(meta)} events indexed); remaining events skipped this sync"
+                )
+        except Exception as e:
+            logger.warning(f"Polymarket event index failed ({e}); using partial/empty map")
+            incomplete = True
+
+        if incomplete and not meta:
+            logger.warning(
+                "Polymarket event index empty after failure — "
+                "existing market tags/categories will be preserved on upsert"
+            )
+        else:
+            logger.info(
+                f"Indexed {len(meta)} Polymarket events for tag/category enrichment"
+                f"{' (incomplete)' if incomplete else ''}"
+            )
+        return meta
+
+    def _infer_category_from_tags(self, tags: List[str]) -> Optional[str]:
+        tag_set = {t.lower() for t in tags}
+        for candidate in self._CATEGORY_PRIORITY:
+            if candidate in tag_set:
+                return candidate
+        return tags[0].lower() if tags else None
 
     def _generate_embeddings_for_markets(self, markets: List[PolymarketMarket],
                                           batch_size: int = 50) -> int:
@@ -554,7 +753,7 @@ class PolymarketService:
 
         self._clob_request_count += 1
 
-    def _upsert_market(self, data: Dict) -> tuple:
+    def _upsert_market(self, data: Dict, event_meta: Optional[Dict[str, Dict]] = None) -> tuple:
         """
         Insert or update market from API data.
 
@@ -562,7 +761,9 @@ class PolymarketService:
             Tuple of ('created' or 'updated', market object)
         """
         import json
-        
+
+        event_meta = event_meta or {}
+
         # Map camelCase API fields to our expected format
         condition_id = data.get('conditionId') or data.get('condition_id')
         if not condition_id:
@@ -575,7 +776,7 @@ class PolymarketService:
                 outcomes = json.loads(outcomes)
             except (json.JSONDecodeError, TypeError):
                 outcomes = []
-        
+
         clob_token_ids = data.get('clobTokenIds') or data.get('clob_token_ids', [])
         if isinstance(clob_token_ids, str):
             try:
@@ -614,35 +815,101 @@ class PolymarketService:
             except (ValueError, TypeError):
                 pass
 
+        # Prefer Gamma's one-day change (true ~24h). Falling back to our own
+        # snapshot only when the API omits it.
         probability_24h_ago = None
         if probability is not None and one_day_change is not None:
-            prob_24h = probability - one_day_change
-            probability_24h_ago = max(0.0, min(1.0, prob_24h))
+            probability_24h_ago = max(0.0, min(1.0, probability - one_day_change))
+
+        # Parent event metadata (tags/category/slug) — markets themselves have none
+        event_slug = None
+        category = data.get('category')
+        tags = data.get('tags') or []
+        trader_count = data.get('trader_count') or 0
+
+        nested_events = data.get('events') or []
+        event_id = None
+        if nested_events and isinstance(nested_events, list):
+            first_event = nested_events[0] if nested_events else {}
+            if isinstance(first_event, dict):
+                event_id = first_event.get('id')
+                event_slug = first_event.get('slug') or event_slug
+                if first_event.get('openInterest') is not None and not trader_count:
+                    try:
+                        trader_count = int(float(first_event.get('openInterest')))
+                    except (TypeError, ValueError):
+                        pass
+
+        if event_id is not None and str(event_id) in event_meta:
+            em = event_meta[str(event_id)]
+            event_slug = em.get('slug') or event_slug
+            if em.get('tags'):
+                tags = em['tags']
+            if em.get('category'):
+                category = em['category']
+            if em.get('open_interest') is not None and not data.get('trader_count'):
+                try:
+                    trader_count = int(float(em['open_interest']))
+                except (TypeError, ValueError):
+                    pass
+
+        # Normalize tags to a list of lowercase strings
+        if isinstance(tags, str):
+            try:
+                tags = json.loads(tags)
+            except (json.JSONDecodeError, TypeError):
+                tags = [tags] if tags.strip() else []
+        if isinstance(tags, list):
+            normalized = []
+            for tag in tags:
+                if isinstance(tag, dict):
+                    slug = tag.get('slug') or tag.get('label')
+                    if slug:
+                        normalized.append(str(slug).lower())
+                elif isinstance(tag, str) and tag.strip():
+                    normalized.append(tag.strip().lower())
+            tags = normalized
+        else:
+            tags = []
+
+        if not category and tags:
+            category = self._infer_category_from_tags(tags)
 
         market = PolymarketMarket.query.filter_by(condition_id=condition_id).first()
 
         if market:
             market.slug = data.get('slug')
+            market.event_slug = event_slug or market.event_slug
             market.question = data.get('question', market.question)
             market.description = data.get('description')
-            market.category = data.get('category')
-            market.tags = data.get('tags', [])
+            # Tags/category come from /events. Keep the stored values when that
+            # lookup yields nothing, so an /events outage can't blank the corpus
+            # curation and matching depend on.
+            market.category = category or market.category
+            market.tags = tags or market.tags or []
             market.outcomes = outcomes
             market.clob_token_ids = clob_token_ids
             market.volume_24h = volume_24h
             market.volume_total = volume_total
             market.liquidity = liquidity
-            market.trader_count = data.get('trader_count', 0)
+            # openInterest lives on /events — don't zero it out when the
+            # event index misses this market for a sync.
+            if trader_count:
+                market.trader_count = trader_count
             market.end_date = self._parse_date(data.get('endDate') or data.get('end_date'))
             market.resolution = data.get('resolution')
             market.is_active = data.get('active', True)
             market.last_synced_at = utcnow_naive()
             market.sync_failures = 0
             if probability is not None:
-                if market.probability is not None:
-                    market.probability_24h_ago = market.probability
-                elif probability_24h_ago is not None:
+                if probability_24h_ago is not None:
                     market.probability_24h_ago = probability_24h_ago
+                elif market.probability is not None and market.last_price_update_at:
+                    hours_since = (utcnow_naive() - market.last_price_update_at).total_seconds() / 3600
+                    if hours_since >= 24 or market.probability_24h_ago is None:
+                        market.probability_24h_ago = market.probability
+                elif market.probability_24h_ago is None:
+                    market.probability_24h_ago = probability
                 market.probability = probability
                 market.last_price_update_at = utcnow_naive()
             return ('updated', market)
@@ -650,16 +917,17 @@ class PolymarketService:
             market = PolymarketMarket(
                 condition_id=condition_id,
                 slug=data.get('slug'),
+                event_slug=event_slug,
                 question=data.get('question', 'Unknown'),
                 description=data.get('description'),
-                category=data.get('category'),
-                tags=data.get('tags', []),
+                category=category,
+                tags=tags,
                 outcomes=outcomes,
                 clob_token_ids=clob_token_ids,
                 volume_24h=volume_24h,
                 volume_total=volume_total,
                 liquidity=liquidity,
-                trader_count=data.get('trader_count', 0),
+                trader_count=trader_count or 0,
                 end_date=self._parse_date(data.get('endDate') or data.get('end_date')),
                 is_active=data.get('active', True),
                 last_synced_at=utcnow_naive(),

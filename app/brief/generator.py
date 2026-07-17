@@ -14,7 +14,6 @@ The sectioned mode is the new default, invoked by generate_daily_brief().
 import os
 import logging
 import json
-import math
 from datetime import datetime, date, timedelta
 from typing import List, Dict, Optional, Tuple, Any
 from app.lib.time import utcnow_naive
@@ -106,15 +105,12 @@ class BriefGenerator:
 
     @staticmethod
     def _market_activity_score(market: Any, min_change: float = 0.005) -> Optional[float]:
-        """Composite score used to rank high-signal prediction markets."""
-        change = market.change_24h
-        if change is None or abs(change) < min_change:
-            return None
+        """Composite score used to rank high-signal prediction markets.
 
-        volume_score = math.log(max(market.volume_24h or 1, 1))
-        trader_score = math.log(max(market.trader_count or 1, 1))
-        movement_score = abs(change)
-        return (movement_score * 0.4) + (volume_score * 0.3) + (trader_score * 0.3)
+        Delegates to polymarket.curation so brief ranking stays consistent.
+        """
+        from app.polymarket.curation import brief_market_score
+        return brief_market_score(market, min_change=min_change)
 
     def generate_brief(
         self,
@@ -236,7 +232,9 @@ class BriefGenerator:
         # Generate "Market Pulse" — Polymarket prediction markets linked to brief topics
         market_pulse_market_ids = set()
         try:
-            market_pulse_data = self._generate_market_pulse(selected_topics)
+            market_pulse_data = self._generate_market_pulse(
+                selected_topics, brief_date=brief_date
+            )
             if market_pulse_data:
                 brief.market_pulse = market_pulse_data
                 market_pulse_market_ids = {m['market_id'] for m in market_pulse_data if 'market_id' in m}
@@ -246,7 +244,10 @@ class BriefGenerator:
 
         # Generate "What the World is Watching" — broader Polymarket world events
         try:
-            world_events_data = self._generate_world_events(seen_market_ids=market_pulse_market_ids)
+            world_events_data = self._generate_world_events(
+                seen_market_ids=market_pulse_market_ids,
+                brief_date=brief_date,
+            )
             if world_events_data:
                 brief.world_events = world_events_data
                 logger.info(f"Generated World Events with {len(world_events_data)} markets")
@@ -1259,7 +1260,9 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
         # Generate "Market Pulse" section
         market_pulse_market_ids = set()
         try:
-            market_pulse_data = self._generate_market_pulse(all_topics)
+            market_pulse_data = self._generate_market_pulse(
+                all_topics, brief_date=brief_date
+            )
             if market_pulse_data:
                 brief.market_pulse = market_pulse_data
                 market_pulse_market_ids = {m['market_id'] for m in market_pulse_data if 'market_id' in m}
@@ -1269,7 +1272,10 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
 
         # Generate "What the World is Watching" section
         try:
-            world_events_data = self._generate_world_events(seen_market_ids=market_pulse_market_ids)
+            world_events_data = self._generate_world_events(
+                seen_market_ids=market_pulse_market_ids,
+                brief_date=brief_date,
+            )
             if world_events_data:
                 brief.world_events = world_events_data
                 logger.info(f"Generated World Events with {len(world_events_data)} markets")
@@ -1569,115 +1575,21 @@ Guidelines:
     def _generate_market_pulse(
         self,
         topics: List[TrendingTopic],
-        max_markets: int = 3
+        max_markets: int = 3,
+        brief_date: Optional[date] = None,
     ) -> Optional[List[Dict]]:
         """
-        Generate "Market Pulse" section with prediction market data.
+        Generate "Market Pulse" — markets moving with today's brief topics.
 
-        Strategy:
-        1. Try to match markets to today's topics (lower threshold)
-        2. Fall back to trending/interesting markets if no matches
-
-        Returns:
-            List of market signal dicts, or None
+        Delegates to MarketCurator (topic match → finance movers → novelty).
         """
         try:
-            from app.polymarket.matcher import market_matcher
-            from app.models import PolymarketMarket
-
-            signals = []
-            seen_market_ids = set()
-
-            # Strategy 1: Match to today's topics (with lower threshold)
-            for topic in topics[:8]:
-                if len(signals) >= max_markets:
-                    break
-
-                market = market_matcher.get_best_match_for_topic(topic.id)
-                if market and market.id not in seen_market_ids:
-                    signal = market.to_signal_dict()
-                    signal['matched_topic'] = topic.title[:80]
-                    signals.append(signal)
-                    seen_market_ids.add(market.id)
-                    logger.info(f"Market Pulse: matched market '{market.question[:50]}' to topic '{topic.title[:40]}'")
-
-            # Strategy 2: Fall back to finance/economics markets (keyword-filtered)
-            if len(signals) < max_markets:
-                import re
-
-                FINANCE_KEYWORDS = [
-                    'interest rate', 'federal reserve', 'fed ', 'inflation', 'gdp',
-                    'recession', 'unemployment', 'stock market', 's&p', 'nasdaq', 'dow ',
-                    'bond', 'yield', 'treasury', 'dollar', 'currency', 'exchange rate',
-                    'crude oil', 'oil price', 'gold price', 'commodity',
-                    'bitcoin', 'ethereum', 'crypto', 'btc', 'eth ',
-                    'tariff', 'trade war', 'trade deal', 'sanctions',
-                    'earnings', 'ipo', 'merger', 'acquisition', 'bankruptcy',
-                    'central bank', 'ecb', 'boe', 'boj', 'imf', 'world bank',
-                    'monetary policy', 'fiscal', 'deficit', 'debt ceiling',
-                    'jobs report', 'payroll', 'cpi', 'ppi', 'pce',
-                    'rate cut', 'rate hike', 'quantitative',
-                    'market cap', 'ipo', 'valuation', 'hedge fund',
-                ]
-
-                SPORTS_EXCLUDE_KEYWORDS = [
-                    'nfl', 'nba', 'mlb', 'nhl', 'mls', 'ufc', 'wwe', 'fifa',
-                    'premier league', 'champions league', 'la liga', 'bundesliga',
-                    'serie a', 'ligue 1', 'eredivisie', 'championship',
-                    'super bowl', 'world series', 'stanley cup', 'nba finals',
-                    'win on 20', 'win the match', 'win on march', 'win on april',
-                    'win on january', 'win on february', 'win on may',
-                    'score in', 'score at', 'mvp', 'draft pick',
-                    'oscar', 'grammy', 'emmy', 'golden globe',
-                    'bachelor', 'reality tv', 'american idol',
-                ]
-
-                finance_pattern = re.compile(
-                    '|'.join(re.escape(kw) for kw in FINANCE_KEYWORDS),
-                    re.IGNORECASE
-                )
-                sports_exclude_pattern = re.compile(
-                    '|'.join(re.escape(kw) for kw in SPORTS_EXCLUDE_KEYWORDS),
-                    re.IGNORECASE
-                )
-
-                now = utcnow_naive()
-                candidate_markets = PolymarketMarket.query.filter(
-                    PolymarketMarket.is_active == True,
-                    PolymarketMarket.volume_24h >= 5000,
-                    PolymarketMarket.probability.isnot(None),
-                    (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
-                    PolymarketMarket.id.notin_(seen_market_ids) if seen_market_ids else True
-                ).order_by(PolymarketMarket.volume_24h.desc()).limit(1500).all()
-
-                scored = []
-                for market in candidate_markets:
-                    question_text = (market.question or '') + ' ' + (market.description or '')[:200]
-
-                    if sports_exclude_pattern.search(question_text):
-                        continue
-                    if not finance_pattern.search(question_text):
-                        continue
-                    composite = self._market_activity_score(market)
-                    if composite is None:
-                        continue
-                    scored.append((composite, market))
-
-                scored.sort(key=lambda x: x[0], reverse=True)
-
-                for _, market in scored[:max_markets - len(signals)]:
-                    signal = market.to_signal_dict()
-                    signal['matched_topic'] = None
-                    signals.append(signal)
-                    seen_market_ids.add(market.id)
-                    logger.info(f"Market Pulse (finance): '{market.question[:50]}' (vol=${market.volume_24h:,.0f})")
-
-            if not signals:
-                logger.info("No market signals found for Market Pulse section")
-                return None
-
-            return signals
-
+            from app.polymarket.curation import market_curator
+            return market_curator.generate_market_pulse(
+                topics,
+                max_markets=max_markets,
+                brief_date=brief_date,
+            )
         except Exception as e:
             logger.warning(f"Market Pulse generation failed: {e}")
             return None
@@ -1686,126 +1598,36 @@ Guidelines:
         self,
         seen_market_ids: Optional[set] = None,
         min_markets: int = 3,
-        max_markets: int = 5
+        max_markets: int = 5,
+        brief_date: Optional[date] = None,
     ) -> Optional[List[Dict]]:
         """
-        Generate "What the World is Watching" section with curated geopolitical
-        prediction markets from Polymarket.
+        Generate "What the World is Watching" — diversified geopolitical movers.
 
-        Selection uses question-text keyword matching (category/tags are not
-        populated by the Polymarket Gamma API).
-
-        Ranking uses a composite score:
-            abs(change_24h) * 0.4 + log(volume_24h) * 0.3 + log(trader_count) * 0.3
+        Prefers probability movement + event-level diversity over raw volume.
         """
-        import re
-
-        if seen_market_ids is None:
-            seen_market_ids = set()
-
         try:
-            from app.models import PolymarketMarket
-
-            WORLD_EVENT_KEYWORDS = [
-                'trump', 'biden', 'president', 'election',
-                'war', 'conflict', 'military', 'invasion',
-                'sanctions', 'tariff', 'nato', 'treaty',
-                'summit', 'diplomacy', 'nuclear', 'ceasefire',
-                'parliament', 'congress', 'senate', 'government',
-                'prime minister', 'chancellor',
-                'russia', 'ukraine', 'china', 'iran', 'israel',
-                'gaza', 'palestine', 'north korea', 'venezuela',
-                'european union', 'united nations',
-                'deport', 'immigration', 'refugee',
-                'interest rate', 'recession',
-                'climate', 'paris agreement',
-                'coup', 'regime', 'rebel',
-            ]
-
-            EXCLUDE_KEYWORDS = [
-                'nba', 'nfl', 'mlb', 'nhl', 'mls', 'ufc', 'wwe',
-                'mvp', 'super bowl', 'world series', 'stanley cup',
-                'champion', 'playoff', 'draft pick', 'touchdown',
-                'home run', 'slam dunk', 'grand slam',
-                'oscar', 'grammy', 'emmy', 'golden globe',
-                'bachelor', 'bachelorette', 'reality tv',
-            ]
-
-            exclude_pattern = re.compile(
-                '|'.join(re.escape(kw) for kw in EXCLUDE_KEYWORDS),
-                re.IGNORECASE
+            from app.polymarket.curation import market_curator
+            return market_curator.generate_world_events(
+                seen_market_ids=seen_market_ids,
+                min_markets=min_markets,
+                max_markets=max_markets,
+                brief_date=brief_date,
             )
-
-            keyword_pattern = re.compile(
-                '|'.join(re.escape(kw) for kw in WORLD_EVENT_KEYWORDS),
-                re.IGNORECASE
-            )
-
-            now = utcnow_naive()
-            high_volume = PolymarketMarket.query.filter(
-                PolymarketMarket.is_active == True,
-                PolymarketMarket.volume_24h >= 5000,
-                PolymarketMarket.probability.isnot(None),
-                (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
-            ).order_by(PolymarketMarket.volume_24h.desc()).limit(500).all()
-
-            scored_markets = []
-            for market in high_volume:
-                if market.id in seen_market_ids:
-                    continue
-
-                question_text = (market.question or '') + ' ' + (market.description or '')[:200]
-                if not keyword_pattern.search(question_text):
-                    continue
-                if exclude_pattern.search(question_text):
-                    continue
-
-                composite = self._market_activity_score(market)
-                if composite is None:
-                    continue
-
-                scored_markets.append((composite, market))
-
-            scored_markets.sort(key=lambda x: x[0], reverse=True)
-
-            top_markets = scored_markets[:max_markets]
-
-            if len(top_markets) < min_markets:
-                logger.info(
-                    f"World Events: only {len(top_markets)} qualifying markets "
-                    f"(minimum {min_markets}), skipping section"
-                )
-                return None
-
-            world_events = []
-            for _, market in top_markets:
-                signal = market.to_signal_dict()
-                signal['category'] = market.category or 'world'
-                signal['matched_topic'] = None
-
-                if market.slug:
-                    event_url = self._get_polymarket_event_url(market.slug)
-                    if event_url:
-                        signal['url'] = event_url
-                    else:
-                        signal['url'] = f"https://polymarket.com/market/{market.slug}"
-                # else: keep the url from to_signal_dict() (condition_id-based fallback)
-
-                world_events.append(signal)
-                logger.info(
-                    f"World Events: '{market.question[:60]}' "
-                    f"(change={market.change_24h_formatted}, "
-                    f"vol=${market.volume_24h:,.0f})"
-                )
-
-            return world_events
-
         except Exception as e:
             logger.warning(f"World Events generation failed: {e}")
             return None
 
     def _get_polymarket_event_url(self, market_slug: str) -> Optional[str]:
-        """Look up the parent event slug from Gamma API for a correct Polymarket URL."""
+        """Resolve a market slug to its parent event URL (DB first, API fallback)."""
+        try:
+            from app.models import PolymarketMarket
+            market = PolymarketMarket.query.filter_by(slug=market_slug).first()
+            if market and market.event_slug:
+                return f"https://polymarket.com/event/{market.event_slug}"
+        except Exception as e:
+            logger.debug(f"DB event slug lookup failed for {market_slug}: {e}")
+
         import requests
         try:
             resp = requests.get(

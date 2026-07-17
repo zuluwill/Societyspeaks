@@ -90,21 +90,26 @@ class PolymarketSourceAdapter:
         else:
             query = query.filter(PolymarketMarket.volume_24h >= min_volume)
 
-        # Category filter
-        if categories:
-            query = query.filter(PolymarketMarket.category.in_(categories))
-
         # Order by volume (most liquid first)
         query = query.order_by(PolymarketMarket.volume_24h.desc())
 
-        markets = query.limit(max_items * 2).all()  # Fetch extra for filtering
+        # Fetch a wider pool — category may live in tags rather than category column
+        markets = query.limit(max_items * 8).all()
+
+        if categories:
+            cats = {c.lower() for c in categories}
+            markets = [
+                m for m in markets
+                if (m.category and m.category.lower() in cats)
+                or bool(cats & {str(t).lower() for t in (m.tags or []) if t})
+            ]
 
         # Filter out excluded tags
         if exclude_tags:
             exclude_tags_lower = {tag.lower() for tag in exclude_tags}
             markets = [
                 m for m in markets
-                if not (set((tag.lower() for tag in (m.tags or []))) & exclude_tags_lower)
+                if not (set((str(tag).lower() for tag in (m.tags or []))) & exclude_tags_lower)
             ]
 
         return markets[:max_items]
