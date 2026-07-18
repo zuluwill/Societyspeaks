@@ -559,9 +559,32 @@ class DailyBriefSubscriber(db.Model):
     last_opened_at = db.Column(db.DateTime)
     last_clicked_at = db.Column(db.DateTime)
 
+    # Consecutive permanent (per-recipient) send failures — e.g. a repeated
+    # HTTP 400 from Resend's edge for this address. Reset to 0 on any successful
+    # send; a subscriber is auto-suppressed once it reaches the threshold below,
+    # so a dead-but-not-422 address isn't mailed every day forever.
+    send_failure_count = db.Column(db.Integer, nullable=False, default=0, server_default='0')
+
     # Relationships
     user = db.relationship('User', backref='brief_subscription')
     team = db.relationship('BriefTeam', backref='members')
+
+    # Suppress after this many consecutive permanent send failures.
+    SEND_FAILURE_SUPPRESS_THRESHOLD = 3
+
+    def register_permanent_send_failure(self) -> bool:
+        """Record one permanent (per-recipient) send failure.
+
+        Returns True when the subscriber has now reached the suppression
+        threshold and should be marked bounced by the caller.
+        """
+        self.send_failure_count = (self.send_failure_count or 0) + 1
+        return self.send_failure_count >= self.SEND_FAILURE_SUPPRESS_THRESHOLD
+
+    def clear_send_failures(self) -> None:
+        """Reset the permanent-failure counter after a successful send."""
+        if self.send_failure_count:
+            self.send_failure_count = 0
 
     def generate_magic_token(self, expires_hours=48):
         """Generate a new magic link token"""

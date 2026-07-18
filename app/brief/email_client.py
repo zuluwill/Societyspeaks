@@ -38,6 +38,44 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+# Failure classification ------------------------------------------------------
+# resend_post_with_retry returns errors like "API error: 400 - <body>" (client
+# already retried 429/5xx internally). We map those to a send-handling policy.
+_RESEND_STATUS_RE = re.compile(r'API error:\s*(\d{3})')
+
+# Resend's definitive "this address is invalid" signal — suppress immediately.
+_INVALID_RECIPIENT_CODES = frozenset({422})
+# Per-recipient permanent failures where retrying identical content won't help
+# but the cause is ambiguous (a 400 for one recipient while others succeed is
+# recipient-specific). Counted toward eventual suppression rather than instant.
+# Deliberately excludes 401/403 (account/global auth) so an API-key problem can
+# never suppress individual subscribers.
+_PERMANENT_RECIPIENT_CODES = frozenset({400})
+
+
+def classify_send_failure(error: Optional[str]) -> str:
+    """Classify a Resend send-error string into a handling policy.
+
+    Returns one of:
+        'invalid_recipient' — Resend rejected the address (422); suppress now.
+        'permanent'         — per-recipient permanent failure (e.g. 400); stop
+                              retrying this edition and count toward suppression.
+        'transient'         — rate-limit, 5xx, auth/global, network, or unknown;
+                              safe (and worth) retrying.
+    """
+    if not error:
+        return 'transient'
+    match = _RESEND_STATUS_RE.search(error)
+    if not match:
+        return 'transient'
+    code = int(match.group(1))
+    if code in _INVALID_RECIPIENT_CODES:
+        return 'invalid_recipient'
+    if code in _PERMANENT_RECIPIENT_CODES:
+        return 'permanent'
+    return 'transient'
+
+
 _SYSTEM_FONT = (
     "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,"
     "'Helvetica Neue',Arial,sans-serif"
@@ -261,6 +299,57 @@ class ResendClient:
             return f'Weekly Brief <{self._from_email_addr}>'
         return self.from_email
 
+    def _mark_bounced(self, subscriber: DailyBriefSubscriber, reason: str) -> None:
+        """Suppress a subscriber (status='bounced') so no further sends occur."""
+        try:
+            subscriber.status = 'bounced'
+            subscriber.unsubscribed_at = utcnow_naive()
+            db.session.commit()
+            logger.warning(
+                f"Suppressed DailyBriefSubscriber {subscriber.id} <{subscriber.email}> — {reason}"
+            )
+        except Exception as suppress_err:
+            db.session.rollback()
+            logger.error(f"Failed to suppress subscriber {subscriber.id}: {suppress_err}")
+
+    def _handle_send_failure(self, subscriber: DailyBriefSubscriber) -> None:
+        """Apply per-recipient failure policy after a failed send.
+
+        - invalid_recipient (422): suppress immediately.
+        - permanent (e.g. 400): count it; suppress once the threshold is hit so
+          a dead address isn't retried on every brief. Warn only — one bad
+          recipient must not page.
+        - transient: no subscriber-state change; the caller retries.
+        """
+        classification = classify_send_failure(self.last_send_error)
+        if classification == 'invalid_recipient':
+            self._mark_bounced(
+                subscriber, f"Resend rejected as invalid ({self.last_send_error})"
+            )
+        elif classification == 'permanent':
+            try:
+                reached_threshold = subscriber.register_permanent_send_failure()
+                db.session.commit()
+            except Exception as track_err:
+                db.session.rollback()
+                logger.error(
+                    f"Failed to record send failure for subscriber {subscriber.id}: {track_err}"
+                )
+                return
+            if reached_threshold:
+                self._mark_bounced(
+                    subscriber,
+                    f"{subscriber.send_failure_count} consecutive permanent send "
+                    f"failures (last: {self.last_send_error})",
+                )
+            else:
+                logger.warning(
+                    f"Permanent send failure {subscriber.send_failure_count}/"
+                    f"{DailyBriefSubscriber.SEND_FAILURE_SUPPRESS_THRESHOLD} for "
+                    f"subscriber {subscriber.id} <{subscriber.email}>: {self.last_send_error}"
+                )
+        # transient: leave subscriber state untouched; send_to_subscribers retries.
+
     def send_brief(
         self,
         subscriber: DailyBriefSubscriber,
@@ -360,6 +449,7 @@ class ResendClient:
                 subscriber.last_sent_at = utcnow_naive()
                 subscriber.last_brief_id_sent = brief.id
                 subscriber.total_briefs_received += 1
+                subscriber.clear_send_failures()
                 db.session.commit()
                 logger.info(f"Sent brief to {subscriber.email}")
                 
@@ -376,20 +466,7 @@ class ResendClient:
                 except Exception as analytics_error:
                     logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
             else:
-                # If Resend rejected with 422 (invalid address), permanently suppress future sends.
-                send_error = self.last_send_error or ''
-                if '422' in send_error:
-                    try:
-                        subscriber.status = 'bounced'
-                        subscriber.unsubscribed_at = utcnow_naive()
-                        db.session.commit()
-                        logger.warning(
-                            f"Marked DailyBriefSubscriber {subscriber.id} <{subscriber.email}> as bounced "
-                            f"— Resend rejected with 422 (invalid address)."
-                        )
-                    except Exception as suppress_err:
-                        db.session.rollback()
-                        logger.error(f"Failed to suppress invalid subscriber {subscriber.id}: {suppress_err}")
+                self._handle_send_failure(subscriber)
 
             return success
 
@@ -914,15 +991,25 @@ class BriefEmailScheduler:
                         f"Failed to send to {current_subscriber.email} [{resend_error}]"
                     )
                     results['errors'].append(error_entry)
-                    logger.error(
-                        error_entry,
-                        extra={
-                            'subscriber_id': current_subscriber.id,
-                            'brief_id': getattr(brief, 'id', None),
-                        },
-                    )
+                    log_extra = {
+                        'subscriber_id': current_subscriber.id,
+                        'brief_id': getattr(brief, 'id', None),
+                    }
                     db.session.rollback()
-                    self._release_claim(current_subscriber.id, brief.id, prev_brief_id, prev_sent_at)
+                    if classify_send_failure(resend_error) == 'transient':
+                        # Genuine transient/infra failure (retries already exhausted
+                        # in the client) — worth alerting, and safe to retry: release
+                        # the claim so a catch-up run picks this subscriber up again.
+                        logger.error(error_entry, extra=log_extra)
+                        self._release_claim(
+                            current_subscriber.id, brief.id, prev_brief_id, prev_sent_at
+                        )
+                    else:
+                        # Permanent per-recipient failure (already counted/suppressed
+                        # in send_brief). Keep the claim so this edition isn't retried
+                        # every catch-up run, and warn — not error — so one bad
+                        # recipient doesn't page. A new brief_id resets the attempt.
+                        logger.warning(error_entry, extra=log_extra)
 
             except Exception as e:
                 db.session.rollback()
