@@ -222,6 +222,44 @@ def request_is_scripted_client() -> bool:
         return False
 
 
+def request_is_prefetch() -> bool:
+    """True when the current request is a link prefetch / preview, not a human view.
+
+    Detects the standard, explicit signals email clients and browsers send when
+    they fetch a link *before* a human opens it — mail scanners, Apple Mail /
+    Safari link previews, Chrome/Firefox prefetch:
+
+    - ``Sec-Purpose: prefetch`` / ``prerender`` (Fetch Metadata standard)
+    - ``Purpose: prefetch``
+    - ``X-Purpose: prefetch`` / ``preview``
+    - ``X-Moz: prefetch``
+
+    High precision by design: a human clicking the link sends none of these, so
+    gating the GET-fired ``email_vote_confirm_viewed`` on this never drops a real
+    view. Unlike a User-Agent or cookie heuristic it won't skip a first-time
+    human, so the confirm-viewed step stays symmetric with the (ungated) POST
+    ``email_vote_confirmed`` and the funnel cannot go negative. Returns False
+    outside a request context.
+    """
+    try:
+        from flask import request
+
+        headers = request.headers
+        sec_purpose = (headers.get('Sec-Purpose') or '').lower()
+        if 'prefetch' in sec_purpose or 'prerender' in sec_purpose:
+            return True
+        if (headers.get('Purpose') or '').strip().lower() == 'prefetch':
+            return True
+        if (headers.get('X-Purpose') or '').strip().lower() in ('prefetch', 'preview'):
+            return True
+        if (headers.get('X-Moz') or '').strip().lower() == 'prefetch':
+            return True
+        return False
+    except Exception:
+        # Outside a request context (cron/scheduler) there is no prefetch signal.
+        return False
+
+
 def request_has_browser_evidence() -> bool:
     """True when the current request demonstrably comes from a JS-executing browser.
 

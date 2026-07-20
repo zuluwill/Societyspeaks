@@ -6,14 +6,18 @@ catch-up run, and auto-suppress a dead address after a threshold.
 """
 
 from datetime import date
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.brief.email_client import (
     BriefEmailScheduler,
     ResendClient,
+    build_send_failure_record,
     classify_send_failure,
+    format_send_failure_message,
+    log_brief_batch_results,
+    truncate_resend_error,
 )
 from app.models import DailyBrief, DailyBriefSubscriber, db
 
@@ -57,6 +61,76 @@ def brief_and_subscriber(app, db):
 ])
 def test_classify_send_failure_maps_codes(error, expected):
     assert classify_send_failure(error) == expected
+
+
+def test_truncate_resend_error_strips_html_and_caps_length():
+    raw = 'API error: 400 - <html><head><title>400 Bad Request</title></head><body>x</body></html>'
+    out = truncate_resend_error(raw, max_len=40)
+    assert '<' not in out
+    assert '400 Bad Request' in out
+    assert len(out) <= 40
+
+
+def test_build_send_failure_record_marks_pageable_transient_only():
+    permanent = build_send_failure_record(
+        subscriber_id=1,
+        email='a@example.com',
+        brief_id=9,
+        resend_error='API error: 400 - bad',
+        send_failure_count=1,
+    )
+    assert permanent['classification'] == 'permanent'
+    assert permanent['pageable'] is False
+
+    transient = build_send_failure_record(
+        subscriber_id=2,
+        email='b@example.com',
+        brief_id=9,
+        resend_error='API error: 503 - down',
+        send_failure_count=0,
+    )
+    assert transient['classification'] == 'transient'
+    assert transient['pageable'] is True
+
+
+def test_format_send_failure_message_includes_structured_fields():
+    record = build_send_failure_record(
+        subscriber_id=4581,
+        email='user@example.com',
+        brief_id=236,
+        resend_error='API error: 400 - <html>400 Bad Request</html>',
+        send_failure_count=1,
+    )
+    msg = format_send_failure_message(record)
+    assert 'subscriber_id=4581' in msg
+    assert 'brief_id=236' in msg
+    assert 'send_failures=1/3' in msg
+    assert '<html>' not in msg
+
+
+def test_log_brief_batch_results_emits_summary_only(app):
+    with app.app_context():
+        with patch('app.brief.email_client.logger') as mock_logger:
+            log_brief_batch_results(
+                {
+                    'sent': 71,
+                    'failed': 1,
+                    'failures': [
+                        build_send_failure_record(
+                            subscriber_id=1,
+                            email='a@example.com',
+                            brief_id=2,
+                            resend_error='API error: 400 - bad',
+                            send_failure_count=1,
+                        )
+                    ],
+                },
+                cadence='daily',
+            )
+            mock_logger.info.assert_called_once()
+            assert mock_logger.info.call_args[0][1:] == ('Daily', 71, 1)
+            mock_logger.warning.assert_called_once()
+            mock_logger.error.assert_not_called()
 
 
 def test_model_failure_counter_increment_and_reset(app, db, brief_and_subscriber):
@@ -136,9 +210,38 @@ def test_permanent_failure_keeps_claim(app, db, brief_and_subscriber):
 
         results = sched.send_to_subscribers([sub], brief)
         assert results['failed'] == 1
+        assert len(results['failures']) == 1
+        assert results['failures'][0]['classification'] == 'permanent'
+        assert results['failures'][0]['pageable'] is False
 
         db.session.expire_all()
         refreshed = db.session.get(DailyBriefSubscriber, sub_id)
         # Claim retained → can_receive_brief(brief.id) is now False, so no
         # within-day retry of this edition.
         assert refreshed.last_brief_id_sent == brief_id
+
+
+def test_send_to_subscribers_structured_failure_is_not_pageable(app, db, brief_and_subscriber):
+    brief_id, sub_id = brief_and_subscriber
+    with app.app_context():
+        brief = db.session.get(DailyBrief, brief_id)
+        sub = db.session.get(DailyBriefSubscriber, sub_id)
+        client = _bare_client()
+
+        def fake_send(subscriber, brief):
+            client.last_send_error = 'API error: 400 - <html>400 Bad Request</html>'
+            client._handle_send_failure(subscriber)
+            return False
+
+        client.send_brief = fake_send
+        sched = BriefEmailScheduler.__new__(BriefEmailScheduler)
+        sched.client = client
+
+        with patch('app.brief.email_client.log_send_failure') as mock_log:
+            results = sched.send_to_subscribers([sub], brief)
+            mock_log.assert_called_once()
+            record = mock_log.call_args[0][0]
+            assert record['pageable'] is False
+            assert record['send_failure_count'] == 1
+
+        assert results['failures'][0]['pageable'] is False

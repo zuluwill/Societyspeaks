@@ -22,6 +22,8 @@ use string references; no cross-submodule imports are required.
 from datetime import timedelta
 
 import pytz
+from flask import current_app
+from itsdangerous import URLSafeTimedSerializer as Serializer
 
 from app import db
 from app.lib.time import utcnow_naive
@@ -615,6 +617,86 @@ class DailyBriefSubscriber(db.Model):
             return None
 
         return subscriber
+
+    # Per-purpose salt namespaces brief vote tokens: a token signed for any other
+    # purpose (or the question list) can never verify here, and vice versa — even
+    # though they all share SECRET_KEY. Distinct from the ``type`` claim, which is
+    # a second, independent guard. (The question list is intentionally left
+    # unsalted for now: changing its salt would invalidate every vote link already
+    # in a subscriber's inbox until it expires; migrate that separately.)
+    VOTE_TOKEN_SALT = 'brief-vote-token'
+
+    def generate_vote_token(self, question_id, expires_hours=None):
+        """
+        Question-scoped vote token for in-email one-click voting from the brief.
+
+        Same signed-token model as DailyQuestionSubscriber.generate_vote_token,
+        but ``type`` is ``brief_vote`` so IDs cannot collide across tables.
+        """
+        from app.daily.constants import VOTE_TOKEN_EXPIRY_HOURS
+
+        if expires_hours is None:
+            expires_hours = VOTE_TOKEN_EXPIRY_HOURS
+
+        s = Serializer(current_app.config['SECRET_KEY'], salt=self.VOTE_TOKEN_SALT)
+        token = s.dumps({
+            'subscriber_id': self.id,
+            'question_id': question_id,
+            'type': 'brief_vote',
+        })
+
+        current_app.logger.debug(
+            f"Generated brief vote token for subscriber {self.id}, "
+            f"question {question_id} (expires in {expires_hours}h)"
+        )
+        return token
+
+    @staticmethod
+    def verify_vote_token(token, max_age=None):
+        """
+        Verify a brief-subscriber vote token.
+
+        Returns (DailyBriefSubscriber, question_id, error_code) — same contract
+        as DailyQuestionSubscriber.verify_vote_token.
+        """
+        from itsdangerous import BadSignature, SignatureExpired
+        from app.daily.constants import VOTE_TOKEN_EXPIRY_SECONDS
+
+        if max_age is None:
+            max_age = VOTE_TOKEN_EXPIRY_SECONDS
+
+        s = Serializer(current_app.config['SECRET_KEY'], salt=DailyBriefSubscriber.VOTE_TOKEN_SALT)
+
+        try:
+            data = s.loads(token, max_age=max_age)
+        except SignatureExpired:
+            current_app.logger.info('Brief vote token expired')
+            return None, None, 'expired'
+        except BadSignature:
+            current_app.logger.warning('Invalid brief vote token signature')
+            return None, None, 'invalid'
+        except Exception as e:
+            current_app.logger.error(f'Unexpected error verifying brief vote token: {e}')
+            return None, None, 'invalid'
+
+        if data.get('type') != 'brief_vote':
+            current_app.logger.warning(
+                f"Brief token type mismatch: expected 'brief_vote', got '{data.get('type')}'"
+            )
+            return None, None, 'invalid_type'
+
+        subscriber = DailyBriefSubscriber.query.filter_by(
+            id=data.get('subscriber_id'),
+            status='active',
+        ).first()
+
+        if not subscriber:
+            current_app.logger.info(
+                f"Brief subscriber {data.get('subscriber_id')} not found or inactive"
+            )
+            return None, None, 'subscriber_not_found'
+
+        return subscriber, data.get('question_id'), None
 
     def start_trial(self, days=30):
         """Start free trial with specified duration (default 30 days)"""

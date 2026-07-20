@@ -74,6 +74,29 @@ def _published_question_for_brief(*, brief_date: Optional[date] = None) -> Optio
     return None
 
 
+def _stance_subline(question: DailyQuestion) -> str:
+    """Framing line for web stance card and brief email handoff."""
+    frame = question.coverage_frame_json or {}
+    is_brief_sourced = (
+        question.source_type == 'brief'
+        and bool(question.source_brief_item_id)
+        and bool(frame)
+    )
+
+    subline = _('Where do you stand?')
+    if is_brief_sourced:
+        if frame.get('is_underreported'):
+            subline = _('Barely covered anywhere. Where do you stand?')
+        else:
+            dominant = frame.get('dominant_frame') or 'unknown'
+            frame_label = DOMINANT_FRAME_LABELS.get(dominant) or _('the press')
+            subline = _(
+                'The press leaned toward %(frame)s on this story. Where do you stand?',
+                frame=frame_label,
+            )
+    return subline
+
+
 def _has_user_voted(question: DailyQuestion) -> bool:
     """
     Whether the current visitor has already voted on this question.
@@ -129,17 +152,7 @@ def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[
         and bool(frame)
     )
 
-    subline = _('Where do you stand?')
-    if is_brief_sourced:
-        if frame.get('is_underreported'):
-            subline = _('Barely covered anywhere. Where do you stand?')
-        else:
-            dominant = frame.get('dominant_frame') or 'unknown'
-            frame_label = DOMINANT_FRAME_LABELS.get(dominant) or _('the press')
-            subline = _(
-                'The press leaned toward %(frame)s on this story. Where do you stand?',
-                frame=frame_label,
-            )
+    subline = _stance_subline(question)
 
     sourcing_brief_url = None
     brief_date_str = frame.get('brief_date')
@@ -172,15 +185,23 @@ def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[
     }
 
 
-def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[dict[str, Any]]:
+def build_stance_email_handoff(
+    *,
+    brief_date: date,
+    base_url: str,
+    subscriber: Any = None,
+) -> Optional[dict[str, Any]]:
     """
-    Minimal context for the single tracked link in daily_brief.html.
+    Context for the stance card in daily_brief.html.
 
     Must not touch flask_login / request-bound vote state — email renders run
     on the scheduler without a request context.
 
+    When ``subscriber`` is provided, includes one-click vote URLs (same
+    GET-confirm / POST-record flow as the standalone daily question email).
+
     ``src=brief_stance`` is a query param (not only a hash) so Resend click
-    tracking can attribute the CTA; ``#stance`` still scrolls the web card.
+    tracking can attribute the web fallback CTA; ``#stance`` scrolls the card.
     """
     question = _published_question_for_brief(brief_date=brief_date)
     if not question:
@@ -188,12 +209,27 @@ def build_stance_email_handoff(*, brief_date: date, base_url: str) -> Optional[d
 
     root = base_url.rstrip('/')
     date_str = brief_date.isoformat()
-    # Distinct src= values so Resend click stats separate above-the-fold
-    # (survives Gmail clip) from the end-of-brief payoff block.
-    return {
+    show_early_signal = not question.is_cold_start
+    vote_pcts = question.vote_percentages if show_early_signal else None
+
+    handoff: dict[str, Any] = {
         'question': question,
+        'subline': _stance_subline(question),
+        'show_early_signal': show_early_signal,
+        'vote_pcts': vote_pcts,
+        # Web fallback when the reader wants context or to add a reason.
         'stance_url': f"{root}/brief/{date_str}?src=brief_stance#stance",
-        'stance_url_top': f"{root}/brief/{date_str}?src=brief_stance_top#stance",
         'tradeoffs_url': f"{root}/play/daily?src=brief_tradeoffs",
-        'tradeoffs_url_top': f"{root}/play/daily?src=brief_tradeoffs_top",
+        'show_first_timer_hint': (
+            subscriber is not None and (subscriber.total_briefs_received or 0) == 0
+        ),
     }
+
+    if subscriber is not None:
+        vote_token = subscriber.generate_vote_token(question.id)
+        vote_qs = '?source=brief_email'
+        handoff['vote_agree_url'] = f"{root}/daily/v/{vote_token}/agree{vote_qs}"
+        handoff['vote_disagree_url'] = f"{root}/daily/v/{vote_token}/disagree{vote_qs}"
+        handoff['vote_unsure_url'] = f"{root}/daily/v/{vote_token}/unsure{vote_qs}"
+
+    return handoff

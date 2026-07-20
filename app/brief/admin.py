@@ -96,6 +96,21 @@ def dashboard():
         DailyBriefSubscriber.trial_ends_at <= utcnow_naive() + timedelta(days=7)
     ).order_by(DailyBriefSubscriber.trial_ends_at.asc()).all()
 
+    delivery_at_risk = DailyBriefSubscriber.query.filter(
+        DailyBriefSubscriber.status == 'active',
+        DailyBriefSubscriber.send_failure_count > 0,
+    ).order_by(
+        DailyBriefSubscriber.send_failure_count.desc(),
+        DailyBriefSubscriber.last_sent_at.asc().nullsfirst(),
+    ).limit(10).all()
+
+    delivery_at_risk_count = DailyBriefSubscriber.query.filter(
+        DailyBriefSubscriber.status == 'active',
+        DailyBriefSubscriber.send_failure_count > 0,
+    ).count()
+
+    bounced_subscribers = DailyBriefSubscriber.query.filter_by(status='bounced').count()
+
     return render_template(
         'admin/brief_dashboard.html',
         today_brief=today_brief,
@@ -108,7 +123,11 @@ def dashboard():
         daily_subscribers=daily_subscribers,
         weekly_subscribers=weekly_subscribers,
         latest_weekly=latest_weekly,
-        expiring_soon=expiring_soon
+        expiring_soon=expiring_soon,
+        delivery_at_risk=delivery_at_risk,
+        delivery_at_risk_count=delivery_at_risk_count,
+        bounced_subscribers=bounced_subscribers,
+        send_failure_threshold=DailyBriefSubscriber.SEND_FAILURE_SUPPRESS_THRESHOLD,
     )
 
 
@@ -487,6 +506,7 @@ def subscribers():
     status_filter = request.args.get('status', '')
     cadence_filter = request.args.get('cadence', '')
     tier_filter = request.args.get('tier', '')
+    delivery_filter = request.args.get('delivery', '')
 
     from app.models import DailyBriefSubscriber
 
@@ -503,6 +523,14 @@ def subscribers():
     # Filter by status
     if status_filter:
         query = query.filter(DailyBriefSubscriber.status == status_filter)
+
+    if delivery_filter == 'at_risk':
+        query = query.filter(
+            DailyBriefSubscriber.status == 'active',
+            DailyBriefSubscriber.send_failure_count > 0,
+        )
+    elif delivery_filter == 'bounced':
+        query = query.filter(DailyBriefSubscriber.status == 'bounced')
 
     # Filter by cadence
     if cadence_filter == 'daily':
@@ -523,6 +551,8 @@ def subscribers():
 
     if status_filter == 'unsubscribed':
         order_col = DailyBriefSubscriber.unsubscribed_at.desc().nullslast()
+    elif delivery_filter == 'at_risk':
+        order_col = DailyBriefSubscriber.send_failure_count.desc()
     else:
         order_col = DailyBriefSubscriber.created_at.desc()
 
@@ -542,7 +572,12 @@ def subscribers():
         'free': DailyBriefSubscriber.query.filter_by(tier='free', status='active').count(),
         'individual': DailyBriefSubscriber.query.filter_by(tier='individual', status='active').count(),
         'team': DailyBriefSubscriber.query.filter_by(tier='team', status='active').count(),
-        'unsubscribed': DailyBriefSubscriber.query.filter_by(status='unsubscribed').count()
+        'unsubscribed': DailyBriefSubscriber.query.filter_by(status='unsubscribed').count(),
+        'bounced': DailyBriefSubscriber.query.filter_by(status='bounced').count(),
+        'at_risk': DailyBriefSubscriber.query.filter(
+            DailyBriefSubscriber.status == 'active',
+            DailyBriefSubscriber.send_failure_count > 0,
+        ).count(),
     }
     stats['paid'] = stats['individual'] + stats['team']
 
@@ -554,7 +589,9 @@ def subscribers():
         search_query=search_query,
         status_filter=status_filter,
         cadence_filter=cadence_filter,
-        tier_filter=tier_filter
+        tier_filter=tier_filter,
+        delivery_filter=delivery_filter,
+        send_failure_threshold=DailyBriefSubscriber.SEND_FAILURE_SUPPRESS_THRESHOLD,
     )
 
 
@@ -777,8 +814,9 @@ def toggle_subscriber(subscriber_id):
     if subscriber.status == 'active':
         subscriber.status = 'paused'
         flash(f'{subscriber.email} has been paused.', 'success')
-    elif subscriber.status in ('paused', 'unsubscribed'):
+    elif subscriber.status in ('paused', 'unsubscribed', 'bounced'):
         subscriber.status = 'active'
+        subscriber.clear_send_failures()
         flash(f'{subscriber.email} has been reactivated.', 'success')
     else:
         flash(f'Cannot toggle status for {subscriber.email} (status: {subscriber.status})', 'warning')
@@ -831,6 +869,30 @@ def bulk_remove_subscribers():
     logger.info(f"{deleted} subscribers deleted by {current_user.email}")
     flash(f'Removed {deleted} subscribers.', 'success')
     return redirect(url_for('brief_admin.subscribers'))
+
+
+@brief_admin_bp.route('/subscribers/<int:subscriber_id>/clear-send-failures', methods=['POST'])
+@admin_required
+def clear_subscriber_send_failures(subscriber_id):
+    """Reset permanent-failure counter after ops fixes a subscriber's address."""
+    from app.models import DailyBriefSubscriber
+
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
+    previous = subscriber.send_failure_count or 0
+    subscriber.clear_send_failures()
+    db.session.commit()
+
+    logger.info(
+        "Cleared send_failure_count for subscriber %s (%s) — was %d",
+        subscriber.id,
+        subscriber.email,
+        previous,
+    )
+    flash(
+        f'Cleared delivery failure count for {subscriber.email} (was {previous}).',
+        'success',
+    )
+    return redirect(url_for('brief_admin.subscribers', delivery='at_risk'))
 
 
 @brief_admin_bp.route('/subscribers/<int:subscriber_id>/resend', methods=['POST'])

@@ -315,6 +315,10 @@ def create_app():
                 # generates no user-visible impact; suppress the noise from Sentry.
                 if drop_if(msg, "was sent SIGTERM", "Worker was sent SIGTERM"):
                     return None
+                # Per-recipient Resend rejects — canonical structured log in
+                # email_client uses warning for permanent/invalid; drop stray ERROR dupes.
+                if drop_if(msg, "Brief send failed [permanent]", "Brief send failed [invalid_recipient]"):
+                    return None
                 # PostHog flush uses threading.Queue APIs that gevent's Queue
                 # does not implement; harmless at request time / worker recycle.
                 if drop_if(msg, "all_tasks_done"):

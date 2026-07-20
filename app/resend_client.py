@@ -104,6 +104,7 @@ def _resend_http_post(
     timeout: int = 30,
     log_prefix: str = "Resend",
     idempotency_key: Optional[str] = None,
+    warn_statuses: frozenset = frozenset(),
 ) -> Tuple[Optional[requests.Response], Optional[str]]:
     """
     POST to the Resend API with exponential-backoff retry on transient errors.
@@ -168,7 +169,12 @@ def _resend_http_post(
                 return None, err
             else:
                 err = f"API error: {response.status_code} - {response.text}"
-                logger.error(f"{log_prefix}: {err}")
+                sev = (
+                    logger.warning
+                    if response.status_code in warn_statuses
+                    else logger.error
+                )
+                sev(f"{log_prefix}: {err}")
                 return None, err
         except _RETRYABLE_ERRORS as e:
             if attempt < max_retries - 1:
@@ -212,6 +218,7 @@ def resend_post_with_retry(
     retry_delay: float = 2.0,
     timeout: int = 30,
     idempotency_key: Optional[str] = None,
+    warn_statuses: frozenset = frozenset(),
 ) -> Tuple[bool, Optional[str]]:
     """
     POST a single email to the Resend API with exponential-backoff retry.
@@ -230,6 +237,7 @@ def resend_post_with_retry(
     response, err = _resend_http_post(
         api_key, payload, url, max_retries, retry_delay, timeout,
         idempotency_key=idempotency_key,
+        warn_statuses=warn_statuses,
     )
     if response is None:
         return False, err

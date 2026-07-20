@@ -13,7 +13,7 @@ import pytz
 from datetime import datetime
 from app.lib.time import utcnow_naive
 from email.utils import parseaddr
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
@@ -51,6 +51,98 @@ _INVALID_RECIPIENT_CODES = frozenset({422})
 # Deliberately excludes 401/403 (account/global auth) so an API-key problem can
 # never suppress individual subscribers.
 _PERMANENT_RECIPIENT_CODES = frozenset({400})
+# Brief sends pass these to resend_post_with_retry so per-recipient 400/422
+# log at WARNING in the HTTP client; transactional flows keep ERROR.
+_BRIEF_RESEND_WARN_STATUSES = frozenset({400, 422})
+_RESEND_ERROR_LOG_MAX_LEN = 240
+_RE_HTML_TAGS = re.compile(r'<[^>]+>')
+
+
+def truncate_resend_error(error: Optional[str], max_len: int = _RESEND_ERROR_LOG_MAX_LEN) -> str:
+    """Normalize a Resend error string for structured logs (strip HTML, cap length)."""
+    if not error:
+        return ''
+    text = _RE_HTML_TAGS.sub(' ', str(error))
+    text = ' '.join(text.split())
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 3] + '...'
+
+
+def build_send_failure_record(
+    *,
+    subscriber_id: int,
+    email: str,
+    brief_id: Optional[int],
+    resend_error: Optional[str],
+    send_failure_count: int = 0,
+    classification: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Structured failure payload for logs, batch results, and admin triage."""
+    resolved_classification = classification or classify_send_failure(resend_error)
+    truncated = truncate_resend_error(resend_error)
+    threshold = DailyBriefSubscriber.SEND_FAILURE_SUPPRESS_THRESHOLD
+    return {
+        'subscriber_id': subscriber_id,
+        'email': email,
+        'brief_id': brief_id,
+        'classification': resolved_classification,
+        'resend_error': truncated,
+        'send_failure_count': send_failure_count,
+        'suppress_threshold': threshold,
+        'pageable': resolved_classification == 'transient',
+    }
+
+
+def format_send_failure_message(record: Dict[str, Any]) -> str:
+    """Single canonical log line for a per-recipient brief send failure."""
+    return (
+        f"Brief send failed [{record['classification']}]: "
+        f"subscriber_id={record['subscriber_id']} "
+        f"email={record['email']} "
+        f"send_failures={record['send_failure_count']}/{record['suppress_threshold']} "
+        f"brief_id={record['brief_id']} "
+        f"resend={record['resend_error']!r}"
+    )
+
+
+def log_send_failure(record: Dict[str, Any]) -> None:
+    """Emit one structured log for a send failure at the correct severity."""
+    msg = format_send_failure_message(record)
+    extra = dict(record)
+    if record.get('pageable'):
+        logger.error(msg, extra=extra)
+    else:
+        logger.warning(msg, extra=extra)
+
+
+def log_brief_batch_results(results: Optional[dict], *, cadence: str = 'daily') -> None:
+    """Log batch send summary for scheduler jobs.
+
+    Per-recipient failures are logged once inside ``send_to_subscribers``; this
+    helper only emits the batch summary so scheduler jobs do not duplicate them.
+    """
+    if not results:
+        return
+    label = 'Daily' if cadence == 'daily' else 'Weekly'
+    sent = int(results.get('sent') or 0)
+    failed = int(results.get('failed') or 0)
+    logger.info('%s brief batch complete: %d sent, %d failed', label, sent, failed)
+    if failed:
+        pageable = sum(1 for f in (results.get('failures') or []) if f.get('pageable'))
+        permanent = failed - pageable
+        if pageable:
+            logger.error(
+                '%s brief batch had %d pageable failure(s) (infra/transient — claim released for retry)',
+                label,
+                pageable,
+            )
+        if permanent:
+            logger.warning(
+                '%s brief batch had %d per-recipient failure(s) (logged individually above)',
+                label,
+                permanent,
+            )
 
 
 def classify_send_failure(error: Optional[str]) -> str:
@@ -340,15 +432,11 @@ class ResendClient:
                 self._mark_bounced(
                     subscriber,
                     f"{subscriber.send_failure_count} consecutive permanent send "
-                    f"failures (last: {self.last_send_error})",
-                )
-            else:
-                logger.warning(
-                    f"Permanent send failure {subscriber.send_failure_count}/"
-                    f"{DailyBriefSubscriber.SEND_FAILURE_SUPPRESS_THRESHOLD} for "
-                    f"subscriber {subscriber.id} <{subscriber.email}>: {self.last_send_error}"
+                    f"failures (last: {truncate_resend_error(self.last_send_error)})",
                 )
         # transient: leave subscriber state untouched; send_to_subscribers retries.
+        # Permanent/invalid paths: canonical structured log is emitted by
+        # send_to_subscribers after send_brief returns (avoids duplicate lines).
 
     def send_brief(
         self,
@@ -517,6 +605,7 @@ class ResendClient:
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
             idempotency_key=resolved_key,
+            warn_statuses=_BRIEF_RESEND_WARN_STATUSES,
         )
         self.last_send_error = result if not success else None
         return success
@@ -575,6 +664,7 @@ class ResendClient:
             stance_handoff = build_stance_email_handoff(
                 brief_date=brief.date,
                 base_url=base_url,
+                subscriber=subscriber,
             )
         try:
             html = _render_email_for_user(
@@ -894,7 +984,8 @@ class BriefEmailScheduler:
         results = {
             'sent': 0,
             'failed': 0,
-            'errors': []
+            'errors': [],
+            'failures': [],
         }
 
         for subscriber in subscribers:
@@ -987,29 +1078,29 @@ class BriefEmailScheduler:
                 else:
                     results['failed'] += 1
                     resend_error = getattr(self.client, 'last_send_error', None) or 'unknown error'
-                    error_entry = (
-                        f"Failed to send to {current_subscriber.email} [{resend_error}]"
-                    )
-                    results['errors'].append(error_entry)
-                    log_extra = {
-                        'subscriber_id': current_subscriber.id,
-                        'brief_id': getattr(brief, 'id', None),
-                    }
                     db.session.rollback()
-                    if classify_send_failure(resend_error) == 'transient':
+                    # Re-fetch after send_brief may have committed failure counters /
+                    # suppression so logs and batch results reflect persisted state.
+                    refreshed = db.session.get(DailyBriefSubscriber, current_subscriber.id)
+                    failure_record = build_send_failure_record(
+                        subscriber_id=current_subscriber.id,
+                        email=current_subscriber.email,
+                        brief_id=getattr(brief, 'id', None),
+                        resend_error=resend_error,
+                        send_failure_count=(
+                            refreshed.send_failure_count if refreshed else 0
+                        ),
+                    )
+                    results['failures'].append(failure_record)
+                    results['errors'].append(format_send_failure_message(failure_record))
+                    log_send_failure(failure_record)
+                    if failure_record['pageable']:
                         # Genuine transient/infra failure (retries already exhausted
-                        # in the client) — worth alerting, and safe to retry: release
-                        # the claim so a catch-up run picks this subscriber up again.
-                        logger.error(error_entry, extra=log_extra)
+                        # in the client) — release the claim so a catch-up run picks
+                        # this subscriber up again.
                         self._release_claim(
                             current_subscriber.id, brief.id, prev_brief_id, prev_sent_at
                         )
-                    else:
-                        # Permanent per-recipient failure (already counted/suppressed
-                        # in send_brief). Keep the claim so this edition isn't retried
-                        # every catch-up run, and warn — not error — so one bad
-                        # recipient doesn't page. A new brief_id resets the attempt.
-                        logger.warning(error_entry, extra=log_extra)
 
             except Exception as e:
                 db.session.rollback()
@@ -1025,7 +1116,11 @@ class BriefEmailScheduler:
                 if claim_committed:
                     self._release_claim(subscriber_id, brief.id, prev_brief_id, prev_sent_at)
 
-        logger.info(f"Batch send complete: {results['sent']} sent, {results['failed']} failed")
+        logger.info(
+            'Batch send complete: %d sent, %d failed',
+            results['sent'],
+            results['failed'],
+        )
         return results
 
     def send_todays_brief_hourly(self) -> Optional[dict]:

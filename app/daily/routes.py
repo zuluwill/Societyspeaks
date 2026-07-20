@@ -1524,8 +1524,10 @@ def one_click_vote(token, vote_choice):
         return redirect(url_for('daily.today'))
 
     # Verify subscriber token and extract question_id (returns differentiated errors)
-    subscriber, email_question_id, error = DailyQuestionSubscriber.verify_vote_token(token)
-    
+    from app.daily.vote_tokens import resolve_one_click_vote_token
+
+    subscriber, email_question_id, error, voter_channel = resolve_one_click_vote_token(token)
+
     if error:
         # Provide user-friendly error messages based on error type
         error_messages = {
@@ -1535,15 +1537,11 @@ def one_click_vote(token, vote_choice):
             'subscriber_not_found': 'Your subscription was not found. Please subscribe again.'
         }
         flash(error_messages.get(error, 'This vote link is invalid.'), 'warning')
-        return redirect(url_for('daily.subscribe') if error == 'subscriber_not_found' else url_for('daily.today'))
+        if error == 'subscriber_not_found':
+            return redirect(url_for('daily.subscribe'))
+        return redirect(url_for('daily.today'))
 
-    # Set up session
-    session['daily_subscriber_id'] = subscriber.id
-    session.modified = True
-
-    # Durable subscriber↔visitor bridge: session expires in 48h, the signed
-    # cookie lasts 180 days, so later anonymous participation still joins back
-    # to this subscriber. after_this_request covers every exit path below.
+    # Set up session + durable subscriber↔visitor bridge
     from flask import after_this_request
 
     from app.lib.posthog_utils import posthog_js_distinct_id
@@ -1552,21 +1550,41 @@ def one_click_vote(token, vote_choice):
         set_subscriber_ref_cookie,
     )
 
-    _sub_id_for_cookie = subscriber.id
+    session.modified = True
     _sub_user_id = subscriber.user_id
 
-    @after_this_request
-    def _set_subscriber_ref(response):
-        return set_subscriber_ref_cookie(
-            response, question_subscriber_id=_sub_id_for_cookie
-        )
+    if voter_channel == 'brief':
+        session['brief_subscriber_id'] = subscriber.id
+        _sub_id_for_cookie = subscriber.id
 
-    record_identity_link(
-        source='email_vote',
-        question_subscriber_id=_sub_id_for_cookie,
-        user_id=_sub_user_id,
-        posthog_distinct_id=posthog_js_distinct_id(),
-    )
+        @after_this_request
+        def _set_subscriber_ref(response):
+            return set_subscriber_ref_cookie(
+                response, brief_subscriber_id=_sub_id_for_cookie
+            )
+
+        record_identity_link(
+            source='brief_email_vote',
+            brief_subscriber_id=_sub_id_for_cookie,
+            user_id=_sub_user_id,
+            posthog_distinct_id=posthog_js_distinct_id(),
+        )
+    else:
+        session['daily_subscriber_id'] = subscriber.id
+        _sub_id_for_cookie = subscriber.id
+
+        @after_this_request
+        def _set_subscriber_ref(response):
+            return set_subscriber_ref_cookie(
+                response, question_subscriber_id=_sub_id_for_cookie
+            )
+
+        record_identity_link(
+            source='email_vote',
+            question_subscriber_id=_sub_id_for_cookie,
+            user_id=_sub_user_id,
+            posthog_distinct_id=posthog_js_distinct_id(),
+        )
 
     # Log in if user has account
     if subscriber.user:
@@ -1611,6 +1629,15 @@ def one_click_vote(token, vote_choice):
     if request.method == 'GET':
         source = request.args.get('source', '')
         from app.daily.utils import get_brief_context_for_question
+        from app.daily.vote_analytics import track_email_vote_confirm_viewed
+
+        track_email_vote_confirm_viewed(
+            subscriber=subscriber,
+            question=question,
+            vote_choice=vote_choice,
+            voter_channel=voter_channel,
+            source=source,
+        )
         return render_template('daily/confirm_vote.html',
                              question=question,
                              vote_choice=vote_choice,
@@ -1674,8 +1701,9 @@ def one_click_vote(token, vote_choice):
                     session_fingerprint=fingerprint if not current_user.is_authenticated else None
                 )
 
-        # Update subscriber streak (now tracks if reason was provided)
-        subscriber.update_participation_streak(has_reason=bool(reason))
+        # Update subscriber streak (daily-question list only)
+        if voter_channel == 'question':
+            subscriber.update_participation_streak(has_reason=bool(reason))
 
         db.session.commit()
 
@@ -1683,34 +1711,21 @@ def one_click_vote(token, vote_choice):
 
         _track_context_engagement(question, response, source='email_one_click')
 
-        try:
-            import posthog
-            if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = resolve_request_distinct_id(
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    anon_fallback=email_subscriber_distinct_id(subscriber.email),
-                )
-                safe_posthog_capture(
-                    posthog_client=posthog,
-                    distinct_id=distinct_id,
-                    event='daily_question_participated',
-                    properties={
-                        'question_id': question.id,
-                        'question_number': question.question_number,
-                        'question_text': question.question_text,
-                        'vote': vote_choice,
-                        'has_reason': bool(reason),
-                        'reason_tag': reason_tag,
-                        'confidence_level': confidence_level,
-                        'context_expanded': context_expanded,
-                        'source_link_click_count': source_link_click_count,
-                        'is_authenticated': bool(current_user.is_authenticated),
-                        'voted_via_email': True,
-                        'source': request.args.get('source', 'email'),
-                    }
-                )
-        except Exception as e:
-            current_app.logger.warning(f"PostHog tracking error: {e}")
+        source = request.args.get('source', '')
+        from app.daily.vote_analytics import track_email_vote_confirmed
+
+        track_email_vote_confirmed(
+            subscriber=subscriber,
+            question=question,
+            vote_choice=vote_choice,
+            voter_channel=voter_channel,
+            source=source,
+            has_reason=bool(reason),
+            reason_tag=reason_tag,
+            confidence_level=confidence_level,
+            context_expanded=context_expanded,
+            source_link_click_count=source_link_click_count,
+        )
 
         current_app.logger.info(
             f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
@@ -1721,11 +1736,16 @@ def one_click_vote(token, vote_choice):
         flash(_('Vote recorded! Thanks for participating.'), 'success')
 
         # Check if user came from weekly digest - redirect to batch page to continue voting
-        source = request.args.get('source', '')
-        if source == 'weekly_digest':
+        if source == 'weekly_digest' and voter_channel == 'question':
             # Store the subscriber's token in session for batch page access
             session['daily_subscriber_token'] = subscriber.magic_token
             return redirect(url_for('daily.weekly_batch', token=subscriber.magic_token))
+
+        if source == 'brief_email':
+            return redirect(url_for(
+                'daily.by_date',
+                date_str=question.question_date.isoformat(),
+            ))
 
         return redirect(url_for('daily.today'))
         

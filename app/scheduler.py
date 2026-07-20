@@ -4037,7 +4037,7 @@ def init_scheduler(app):
             return
             
         with app.app_context():
-            from app.brief.email_client import BriefEmailScheduler
+            from app.brief.email_client import BriefEmailScheduler, log_brief_batch_results
 
             current_hour = utcnow_naive().hour
             logger.info(f"Starting brief email send for hour {current_hour} UTC")
@@ -4047,18 +4047,13 @@ def init_scheduler(app):
 
                 # Send daily briefs to daily subscribers
                 daily_results = scheduler_obj.send_todays_brief_hourly()
-                if daily_results:
-                    logger.info(f"Daily brief emails: {daily_results['sent']} sent, {daily_results['failed']} failed")
-                    if daily_results['errors']:
-                        for error in daily_results['errors'][:5]:
-                            logger.error(error)
-                else:
+                log_brief_batch_results(daily_results, cadence='daily')
+                if daily_results is None:
                     logger.info("No daily brief to send or no daily subscribers at this hour")
 
                 # Send weekly briefs to weekly subscribers (checks preferred day internally)
                 weekly_results = scheduler_obj.send_weekly_brief_hourly()
-                if weekly_results and weekly_results['sent'] > 0:
-                    logger.info(f"Weekly brief emails: {weekly_results['sent']} sent, {weekly_results['failed']} failed")
+                log_brief_batch_results(weekly_results, cadence='weekly')
 
             except Exception as e:
                 logger.error(f"Brief email sending failed: {e}", exc_info=True)

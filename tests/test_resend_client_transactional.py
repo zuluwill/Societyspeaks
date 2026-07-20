@@ -147,3 +147,42 @@ def test_send_subscription_cancelled_email_reuses_client_for_fallback_url(monkey
     assert context['resubscribe_url'] == f'{client.base_url}/briefings/landing#pricing'
     assert context['briefing_count'] == 2
     assert helper_client is client
+
+
+def test_resend_http_post_400_logs_error_for_transactional(monkeypatch):
+    """Default path: systemic 400s must stay at ERROR (auth, password reset, etc.)."""
+    response = SimpleNamespace(status_code=400, text='bad request')
+
+    monkeypatch.setattr(resend_client.requests, 'post', lambda *a, **k: response)
+    warnings = []
+    errors = []
+    monkeypatch.setattr(resend_client.logger, 'warning', lambda msg: warnings.append(msg))
+    monkeypatch.setattr(resend_client.logger, 'error', lambda msg: errors.append(msg))
+
+    _, err = resend_client._resend_http_post('key', {}, resend_client._RESEND_API_URL)
+
+    assert err is not None
+    assert errors
+    assert not warnings
+
+
+def test_resend_http_post_400_logs_warning_when_brief_scoped(monkeypatch):
+    """Brief batch path opts in to WARNING for per-recipient 400/422 rejects."""
+    response = SimpleNamespace(status_code=400, text='bad request')
+
+    monkeypatch.setattr(resend_client.requests, 'post', lambda *a, **k: response)
+    warnings = []
+    errors = []
+    monkeypatch.setattr(resend_client.logger, 'warning', lambda msg: warnings.append(msg))
+    monkeypatch.setattr(resend_client.logger, 'error', lambda msg: errors.append(msg))
+
+    _, err = resend_client._resend_http_post(
+        'key',
+        {},
+        resend_client._RESEND_API_URL,
+        warn_statuses=frozenset({400, 422}),
+    )
+
+    assert err is not None
+    assert warnings
+    assert not errors
