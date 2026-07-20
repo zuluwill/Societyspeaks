@@ -2801,12 +2801,143 @@
             {% endif %}
 
             {% if stance_handoff and stance_handoff.question and config.get('GAME_ENABLED', true) %}
+            {# Secondary: Tradeoffs daily scenario game — distinct from stance, but explained. #}
             <tr>
-              <td align="center" style="padding: 12px 24px 4px 24px; background-color: #f8fafc;">
-                <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #94a3b8; margin: 0;">
-                  {{ _('Prefer to explore the trade-offs?') }}
-                  {{ email_anchor_html(stance_handoff.tradeoffs_url, _("Play today's scenario · ~2 min →"), target='_blank', style='color: #64748b; text-decoration: underline;')|safe }}
-                </p>
+              <td
+                class="mobile-padding"
+                style="
+                  padding: 24px 32px;
+                  background-color: #faf5ff;
+                  border-top: 1px solid #e9d5ff;
+                  border-bottom: 1px solid #e9d5ff;
+                "
+              >
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 11px;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                        color: #7c3aed;
+                        text-transform: uppercase;
+                        padding-bottom: 8px;
+                      "
+                    >
+                      {{ _('Tradeoffs') }} &middot; {{ _('daily scenario game') }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        font-family: Georgia, 'Times New Roman', serif;
+                        font-size: 17px;
+                        font-weight: 700;
+                        color: #4c1d95;
+                        line-height: 1.35;
+                        padding-bottom: 8px;
+                      "
+                    >
+                      {{ _('Want to govern, not just opine?')|escape_i18n }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 14px;
+                        line-height: 1.55;
+                        color: #5b21b6;
+                        padding: 0 8px 14px 8px;
+                      "
+                    >
+                      {{ _('A fictional crisis lands on your desk — %(turns)s quick choices, about two minutes. Every option helps one thing and costs another. Not a politics quiz; see what kind of leader you become.', turns=stance_handoff.tradeoffs.total_turns if stance_handoff.tradeoffs else 5)|escape_i18n }}
+                    </td>
+                  </tr>
+                  {% if stance_handoff.tradeoffs and stance_handoff.tradeoffs.title %}
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 12px;
+                        font-weight: 700;
+                        letter-spacing: 0.4px;
+                        color: #7c3aed;
+                        text-transform: uppercase;
+                        padding-bottom: 4px;
+                      "
+                    >
+                      {{ _('Today\'s scenario')|escape_i18n }}{% if stance_handoff.tradeoffs.category %} &middot; {{ stance_handoff.tradeoffs.category|e }}{% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        font-family: Georgia, 'Times New Roman', serif;
+                        font-size: 16px;
+                        font-weight: 700;
+                        color: #1e293b;
+                        line-height: 1.4;
+                        padding-bottom: 6px;
+                      "
+                    >
+                      {{ stance_handoff.tradeoffs.title|e }}
+                    </td>
+                  </tr>
+                  {% if stance_handoff.tradeoffs.teaser %}
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 1.5;
+                        color: #6b7280;
+                        font-style: italic;
+                        padding: 0 8px 16px 8px;
+                      "
+                    >
+                      {{ stance_handoff.tradeoffs.teaser|e }}
+                    </td>
+                  </tr>
+                  {% endif %}
+                  {% endif %}
+                  <tr>
+                    <td align="center" style="padding-top: 4px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                        <tr>
+                          <td style="background-color: #6d28d9; border-radius: 8px;">
+                            <a
+                              href="{{ stance_handoff.tradeoffs_url }}"
+                              target="_blank"
+                              style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; text-decoration: none; padding: 14px 28px;"
+                            >
+                              {{ _("Play today's scenario") }} &middot; ~2 {{ _('min') }} &rarr;
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             {% endif %}

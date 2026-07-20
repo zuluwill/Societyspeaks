@@ -232,4 +232,26 @@ def build_stance_email_handoff(
         handoff['vote_disagree_url'] = f"{root}/daily/v/{vote_token}/disagree{vote_qs}"
         handoff['vote_unsure_url'] = f"{root}/daily/v/{vote_token}/unsure{vote_qs}"
 
+    handoff['tradeoffs'] = _tradeoffs_email_context()
+
     return handoff
+
+
+def _tradeoffs_email_context() -> Optional[dict[str, Any]]:
+    """Today's Tradeoffs scenario for the brief email secondary card."""
+    from flask import current_app
+
+    if not current_app.config.get('GAME_ENABLED', True):
+        return None
+    try:
+        from app.game.services.daily_service import daily_meta
+
+        meta = daily_meta()
+        return {
+            'title': meta.get('title') or '',
+            'category': meta.get('category') or '',
+            'teaser': meta.get('teaser') or '',
+            'total_turns': meta.get('total_turns') or 5,
+        }
+    except Exception:
+        return None

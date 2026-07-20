@@ -127,6 +127,8 @@ def test_stance_email_handoff_url(app):
         )
         assert handoff['subline'] == 'Where do you stand?'
         assert 'vote_agree_url' not in handoff
+        assert handoff.get('tradeoffs') is not None
+        assert handoff['tradeoffs'].get('title')
 
 
 def test_morning_wave_brief_gets_todays_wired_question(app):
@@ -366,6 +368,12 @@ def test_daily_brief_email_teaser_above_fold(app):
                 f'?src=brief_stance#stance'
             ),
             'tradeoffs_url': 'https://societyspeaks.io/play/daily?src=brief_tradeoffs',
+            'tradeoffs': SimpleNamespace(
+                title='Debt Inherited',
+                category='Fiscal crisis',
+                teaser='Borrowing, taxes, and the bills that come due.',
+                total_turns=5,
+            ),
             'vote_agree_url': 'https://societyspeaks.io/daily/v/tok/agree?source=brief_email',
             'vote_disagree_url': 'https://societyspeaks.io/daily/v/tok/disagree?source=brief_email',
             'vote_unsure_url': 'https://societyspeaks.io/daily/v/tok/unsure?source=brief_email',
@@ -397,6 +405,10 @@ def test_daily_brief_email_teaser_above_fold(app):
         assert 'Your turn' not in html
         assert 'Also today' not in html
         assert bottom_tradeoffs > top_idx
+        assert 'Tradeoffs' in html
+        assert 'daily scenario game' in html
+        assert 'Play today' in html
+        assert 'Debt Inherited' in html
 
 
 def test_stance_ajax_vote_stays_on_brief_json(client, db):
