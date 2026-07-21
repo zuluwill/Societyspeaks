@@ -1528,8 +1528,8 @@ def init_scheduler(app):
         """
         Process scheduled Bluesky posts.
         Runs every 15 minutes to check for posts due to be sent.
-        Posts are scheduled at: 2pm, 4pm, 6pm, 8pm, 10pm UTC
-        (= 9am, 11am, 1pm, 3pm, 5pm EST for US audience)
+        Discussion posts are scheduled at 09:00, 17:00, 21:00 UTC
+        (BLUESKY_POST_HOURS_UTC in social_poster.py).
         """
         with app.app_context():
             from app.trending.social_poster import process_scheduled_bluesky_posts
@@ -2185,7 +2185,8 @@ def init_scheduler(app):
                         topic=question.topic_category or 'Society',
                         discussion_url=bluesky_url,
                         discussion=None,  # Daily question, not discussion
-                        custom_text=bluesky_post_text
+                        custom_text=bluesky_post_text,
+                        og_image_url=f"{bluesky_url}/og.png",  # direct card, no HTML scrape
                     )
                     
                     if bluesky_uri:

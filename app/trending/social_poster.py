@@ -533,7 +533,8 @@ def post_to_bluesky(
     discussion_url: str,
     retry_count: int = 0,
     discussion=None,
-    custom_text: Optional[str] = None
+    custom_text: Optional[str] = None,
+    og_image_url: Optional[str] = None
 ) -> Optional[str]:
     """
     Post to Bluesky with proper link card embed and facets.
@@ -573,7 +574,9 @@ def post_to_bluesky(
             metadata.setdefault('title', title)
             metadata.setdefault('description', '')
 
-            direct_og = _discussion_og_image_url(discussion)
+            # Prefer an explicit per-content card (daily question etc.), else the
+            # discussion's own og.png; both skip relying on the HTML image scrape.
+            direct_og = og_image_url or _discussion_og_image_url(discussion)
             if direct_og:
                 metadata['image_url'] = direct_og
 
@@ -700,7 +703,7 @@ def post_to_bluesky(
             wait_seconds = BLUESKY_RETRY_BASE_DELAY * (2 ** retry_count)
             logger.info(f"Bluesky transient error. Waiting {wait_seconds}s before retry {retry_count + 1}/{BLUESKY_RETRY_ATTEMPTS}")
             time.sleep(wait_seconds)
-            return post_to_bluesky(title, topic, discussion_url, retry_count + 1, discussion, custom_text)
+            return post_to_bluesky(title, topic, discussion_url, retry_count + 1, discussion, custom_text, og_image_url)
         
         # Check for authentication errors (don't retry these)
         if 'auth' in error_str or 'invalid' in error_str or 'password' in error_str:
