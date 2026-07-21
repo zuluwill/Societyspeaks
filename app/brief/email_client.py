@@ -175,16 +175,273 @@ _SYSTEM_FONT = (
 _SERIF_FONT = "Georgia,'Times New Roman',serif"
 
 _RE_WHITESPACE_BETWEEN_TAGS = re.compile(r'>\s{2,}<')
-_RE_HTML_COMMENT = re.compile(r'<!--(?!\[if )(?!<!\[endif\]).*?-->', re.DOTALL)
+_RE_HTML_COMMENT = re.compile(
+    r'<!--(?!\[if )(?!<!\[endif\])(?!/?email-trim:)(?! Footer -->).*?-->',
+    re.DOTALL,
+)
 _RE_BLANK_LINES = re.compile(r'\n\s*\n')
 _RE_STYLE_ATTR = re.compile(r'(style=")(.*?)(")', re.DOTALL)
 _RE_TAG_LINE_INDENT = re.compile(r'^[ \t]+(</?\w)', re.MULTILINE)
 
+# Gmail clips HTML around 102 KB. The fitter targets a lower figure because
+# click-tracking (wrap_links) rewrites every href AFTER the email is rendered,
+# expanding the HTML by a few KB that must still land under the hard limit.
+GMAIL_CLIP_LIMIT_BYTES = 102 * 1024
+GMAIL_CLIP_TARGET_BYTES = 96 * 1024
+
+# Overflow strategy, in order. The headline index is deliberately NOT here: it is
+# the brief's table of contents (every story, cheap in bytes) and is never trimmed,
+# so a reader always sees the full menu even when story bodies are collapsed to the
+# web. We shed low-value chrome first, then the editorial lens-check, and only then
+# collapse the lowest-priority story bodies from the bottom up (those stories remain
+# in the protected index with a "read the full brief on the web" pointer).
+_EMAIL_TRIM_ORDER = (
+    'thank-you',
+    'personal-briefs-cta',
+    'tradeoffs',
+    'lens-check',
+)
+
+# Every text element also gets the sans-serif stack from an element-level rule in
+# the email's <head> <style> (which Outlook and Gmail both honour), so these
+# redundant inline copies can be stripped to save ~20 KB per brief. Georgia
+# headline cells keep their inline font (higher specificity), so only the
+# sans-serif stack is targeted here.
+_RE_INLINE_SANS_FONT = re.compile(
+    r"font-family:\s*"
+    + re.escape(_SYSTEM_FONT)
+    + r"\s*;?\s*",
+    re.IGNORECASE,
+)
+_RE_INLINE_SANS_FONT_LONG = re.compile(
+    r"font-family:\s*-apple-system[^;\"]{10,320};?\s*",
+    re.IGNORECASE,
+)
+
+
+# Page background colour of the email's <body> (see daily_brief.html). Used only
+# to recognise the <body> style attribute so its font-family is kept as a fallback.
+# If it ever drifts from the template the <head> <style> rule still covers <body>.
+_BODY_BG_SIGNATURE = '#f1f5f9'
+
 
 def _compact_style(match: re.Match) -> str:
-    prefix, body, suffix = match.group(1), match.group(2), match.group(3)
-    body = ' '.join(body.split())
-    return prefix + body + suffix
+    prefix, decls, suffix = match.group(1), match.group(2), match.group(3)
+    decls = ' '.join(decls.split())
+    # Strip redundant inline sans-serif copies from THIS style attribute only.
+    # Scoping the strip to style="..." attributes (rather than the whole document)
+    # leaves the <head> <style> font rule intact, so every client still resolves
+    # the correct font. Georgia headline cells are untouched (their stack does not
+    # match the sans pattern). The <body> declaration is kept verbatim as a
+    # belt-and-suspenders fallback for clients that ignore <style> but do inherit
+    # font-family from <body> (identified by the page background colour).
+    if _BODY_BG_SIGNATURE not in decls:
+        decls = _RE_INLINE_SANS_FONT.sub('', decls)
+        decls = _RE_INLINE_SANS_FONT_LONG.sub('', decls)
+        decls = decls.strip().rstrip(';').strip()
+    return prefix + decls + suffix
+
+
+def _email_html_byte_size(html: str) -> int:
+    return len(html.encode('utf-8'))
+
+
+_RE_STORY_PERSPECTIVES = re.compile(
+    r'<!--email-trim:story-perspectives-->.*?<!--/email-trim:story-perspectives-->',
+    re.DOTALL,
+)
+
+
+def _remove_last_story_perspectives(html: str) -> tuple[str, bool]:
+    """Drop the perspectives block from the lowest-priority (last) story first.
+
+    Only targets blocks that actually contain a perspectives row. Quick-depth
+    stories still emit the marker pair with nothing between them; skipping those
+    keeps the removed-count honest and avoids pointless passes over the document.
+    """
+    last = None
+    for match in _RE_STORY_PERSPECTIVES.finditer(html):
+        if '<tr' in match.group(0):
+            last = match
+    if last is None:
+        return html, False
+    return html[:last.start()] + html[last.end():], True
+
+
+def _strip_perspectives_from_tail_stories(html: str, limit: int) -> tuple[str, int]:
+    """Shed left/centre/right framing from tail stories before collapsing whole cards."""
+    removed = 0
+    while _email_html_byte_size(html) > limit:
+        next_html, changed = _remove_last_story_perspectives(html)
+        if not changed:
+            break
+        html = next_html
+        removed += 1
+    return html, removed
+
+
+def _remove_email_trim_section(html: str, section_id: str) -> str:
+    pattern = re.compile(
+        rf'<!--email-trim:{re.escape(section_id)}-->.*?<!--/email-trim:{re.escape(section_id)}-->',
+        re.DOTALL,
+    )
+    return pattern.sub('', html, count=1)
+
+
+_STORY_ROW_START = re.compile(r'<tr id="item-\d+">')
+
+
+def _split_story_rows(html: str) -> tuple[str, list[str], str]:
+    matches = list(_STORY_ROW_START.finditer(html))
+    if not matches:
+        return html, [], ''
+    prefix = html[:matches[0].start()]
+    suffix_start = len(html)
+    for sentinel in (
+        '<!--email-trim:lens-check-->',
+        '<!--email-trim:tradeoffs-->',
+        '<!--email-trim:thank-you-->',
+        '<!-- Footer -->',
+    ):
+        idx = html.find(sentinel, matches[-1].start())
+        if idx > matches[-1].start():
+            suffix_start = min(suffix_start, idx)
+    rows = []
+    for i, match in enumerate(matches):
+        start = match.start()
+        if i + 1 < len(matches):
+            end = matches[i + 1].start()
+        elif suffix_start > start:
+            end = suffix_start
+        else:
+            end = len(html)
+        rows.append(html[start:end])
+    suffix = html[suffix_start:]
+    return prefix, rows, suffix
+
+
+def _extract_magic_link_url(html: str) -> str | None:
+    match = re.search(r'href="([^"]+/brief/m/[^"]+)"', html)
+    return match.group(1) if match else None
+
+
+def _append_read_more_notice(html: str, removed_count: int) -> str:
+    if removed_count <= 0:
+        return html
+    magic_url = _extract_magic_link_url(html) or '#'
+    story_word = 'story' if removed_count == 1 else 'stories'
+    notice = (
+        '<tr><td align="center" style="padding:24px 28px;background:#eff6ff;'
+        'border-top:1px solid #dbeafe;">'
+        '<p style="font-size:15px;color:#1e40af;margin:0 0 6px;font-weight:600;">'
+        f'{removed_count} more {story_word} in today&apos;s brief &mdash; listed above.'
+        '</p>'
+        '<p style="font-size:13px;color:#3b5bdb;margin:0 0 14px;">'
+        'Open the full brief on the web for every story, all sources and the '
+        'left / centre / right breakdown.'
+        '</p>'
+        '<a href="' + magic_url + '" target="_blank" '
+        'style="display:inline-block;font-size:14px;font-weight:600;color:#ffffff;'
+        'background:#1e40af;padding:12px 20px;border-radius:8px;text-decoration:none;">'
+        'Read the full brief &rarr;</a></td></tr>'
+    )
+    for anchor in ('<!--email-trim:lens-check-->', '<!--email-trim:tradeoffs-->', '<!-- Footer -->'):
+        idx = html.find(anchor)
+        if idx > 0:
+            return html[:idx] + notice + html[idx:]
+    return html + notice
+
+
+def _repoint_index_links_to_web(html: str, item_ids, magic_url: str) -> str:
+    """Point the headline-index links of collapsed stories at the web brief.
+
+    Their in-page ``#item-N`` anchors were removed with the story bodies, so an
+    unrewritten index link would jump nowhere. Rewrite just those to open the
+    full brief on the web (still anchored to the story).
+    """
+    if not magic_url or magic_url == '#':
+        return html
+    for item_id in item_ids:
+        html = html.replace(
+            f'href="#item-{item_id}"',
+            f'href="{magic_url}#item-{item_id}"',
+        )
+    return html
+
+
+def _trim_story_rows_from_end(html: str, limit: int, *, min_rows: int = 3) -> str:
+    prefix, rows, suffix = _split_story_rows(html)
+    if not rows:
+        return html
+    original_count = len(rows)
+    removed_ids = []
+
+    def _over_budget() -> bool:
+        return _email_html_byte_size(prefix + ''.join(rows) + suffix) > limit
+
+    # Prefer keeping at least min_rows full story cards; if still over budget,
+    # continue collapsing tail stories down to one so Gmail never clips.
+    while len(rows) > min_rows and _over_budget():
+        dropped = rows.pop()
+        m = re.search(r'id="item-(\d+)"', dropped)
+        if m:
+            removed_ids.append(m.group(1))
+    while len(rows) > 1 and _over_budget():
+        dropped = rows.pop()
+        m = re.search(r'id="item-(\d+)"', dropped)
+        if m:
+            removed_ids.append(m.group(1))
+    if len(rows) == original_count:
+        return html
+    trimmed = prefix + ''.join(rows)
+    magic_url = _extract_magic_link_url(html) or '#'
+    trimmed = _repoint_index_links_to_web(trimmed, removed_ids, magic_url)
+    return _append_read_more_notice(trimmed, original_count - len(rows)) + suffix
+
+
+def _strip_email_trim_markers(html: str) -> str:
+    return re.sub(r'<!--/?email-trim:[^>]+-->\s*', '', html)
+
+
+def _fit_email_html_to_gmail(html: str, limit: int = GMAIL_CLIP_TARGET_BYTES) -> str:
+    """Drop optional sections until HTML fits under Gmail's clip threshold."""
+    if _email_html_byte_size(html) <= limit:
+        return html
+    original_size = _email_html_byte_size(html)
+    trimmed_sections = []
+    for section_id in _EMAIL_TRIM_ORDER:
+        if _email_html_byte_size(html) <= limit:
+            break
+        next_html = _remove_email_trim_section(html, section_id)
+        if next_html != html:
+            trimmed_sections.append(section_id)
+            html = next_html
+    if _email_html_byte_size(html) > limit:
+        html, perspectives_removed = _strip_perspectives_from_tail_stories(html, limit)
+        if perspectives_removed:
+            trimmed_sections.append(f'story-perspectives×{perspectives_removed}')
+    if _email_html_byte_size(html) > limit:
+        next_html = _trim_story_rows_from_end(html, limit)
+        if next_html != html:
+            trimmed_sections.append('story-rows')
+            html = next_html
+    final_size = _email_html_byte_size(html)
+    if final_size <= limit:
+        logger.info(
+            "Daily brief email trimmed %s to fit Gmail limit (%d → %d bytes)",
+            ', '.join(trimmed_sections) or 'none',
+            original_size,
+            final_size,
+        )
+        return html
+    logger.warning(
+        "Daily brief email still %d bytes after trimming %s (Gmail clips ~%d); "
+        "recipients may see truncated content",
+        final_size,
+        ', '.join(trimmed_sections) or 'none',
+        GMAIL_CLIP_LIMIT_BYTES,
+    )
+    return html
 
 
 def _minify_email_html(html: str) -> str:
@@ -203,6 +460,8 @@ def _minify_email_html(html: str) -> str:
         _SERIF_FONT,
         html,
     )
+    # _compact_style also strips redundant inline sans-serif copies from each
+    # style="..." attribute (scoped there so the <head> <style> font rule survives).
     html = _RE_STYLE_ATTR.sub(_compact_style, html)
     html = _RE_TAG_LINE_INDENT.sub(r'\1', html)
     return html.strip()
@@ -491,6 +750,14 @@ class ResendClient:
                 secret=secret,
                 track_path='/brief/track/click',
             )
+            post_wrap_size = _email_html_byte_size(html_content)
+            if post_wrap_size > GMAIL_CLIP_LIMIT_BYTES:
+                logger.warning(
+                    "Daily brief email is %d bytes after click-tracking wrap "
+                    "(Gmail clips ~%d); consider lowering GMAIL_CLIP_TARGET_BYTES",
+                    post_wrap_size,
+                    GMAIL_CLIP_LIMIT_BYTES,
+                )
 
             # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {
@@ -683,7 +950,14 @@ class ResendClient:
                 TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS,
                 stance_handoff=stance_handoff,
             )
+            # Minify first so the size budget is measured against the true wire
+            # size. Minify preserves the <!--email-trim:*--> markers and the
+            # <tr id="item-N"> row boundaries the fitter relies on; fitting the
+            # un-minified HTML (~2.3x larger from indentation) would trim far
+            # more content than the sent email actually needs.
             html = _minify_email_html(html)
+            html = _fit_email_html_to_gmail(html)
+            html = _strip_email_trim_markers(html)
             return html
         except Exception as e:
             logger.error(f"Template rendering failed: {e}")

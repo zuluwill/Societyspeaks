@@ -27,9 +27,18 @@
       td,
       p,
       a,
-      li {
+      li,
+      span,
+      div {
         -webkit-text-size-adjust: 100%;
         -ms-text-size-adjust: 100%;
+        /* Base sans-serif for every text element. Outlook's Word engine does not
+           inherit font-family from <body> into table cells, so this element-level
+           rule (which Outlook and Gmail both honour) keeps text correct even after
+           redundant inline font-family copies are stripped to save bytes. Inline
+           Georgia on headline cells still wins via specificity. */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
       }
       table,
       td {
@@ -90,19 +99,6 @@
         }
         .mobile-text-sm {
           font-size: 13px !important;
-        }
-        .vote-buttons-row {
-          display: none !important;
-        }
-        .vote-buttons-stack {
-          display: table !important;
-          width: 100% !important;
-        }
-        .vote-btn-mobile {
-          display: block !important;
-          width: 100% !important;
-          text-align: center !important;
-          box-sizing: border-box !important;
         }
       }
     </style>
@@ -280,93 +276,10 @@
               </td>
             </tr>
 
-            <!-- Headline Index -->
             {% set sorted_items = sorted_items if sorted_items is defined else brief.items|sort(attribute='position') %}
-            {% if sorted_items|length > 1 %}
-            <tr>
-              <td
-                class="mobile-padding"
-                style="
-                  padding: 24px 32px 20px;
-                  border-bottom: 1px solid #e2e8f0;
-                "
-              >
-                <table
-                  role="presentation"
-                  cellpadding="0"
-                  cellspacing="0"
-                  border="0"
-                  width="100%"
-                >
-                  <tr>
-                    <td
-                      style="
-                        font-family:
-                          -apple-system, BlinkMacSystemFont,
-                          &quot;Segoe UI&quot;, Roboto,
-                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
-                        font-size: 11px;
-                        font-weight: 700;
-                        letter-spacing: 0.5px;
-                        color: #64748b;
-                        text-transform: uppercase;
-                        padding-bottom: 12px;
-                      "
-                    >
-                      {% if brief.brief_type == 'weekly' %}{{ _("This Week's Headlines") }}{% else %}{{ _("Today's Headlines") }}{% endif %}
-                    </td>
-                  </tr>
-                  {% for item in sorted_items %}
-                  <tr>
-                    <td
-                      style="
-                        font-family:
-                          -apple-system, BlinkMacSystemFont,
-                          &quot;Segoe UI&quot;, Roboto,
-                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
-                        padding-bottom: 8px;
-                      "
-                    >
-                      <a
-                        href="#item-{{ item.id }}"
-                        style="
-                          color: #1e40af;
-                          text-decoration: none;
-                          font-size: 14px;
-                          line-height: 1.5;
-                        "
-                      >
-                        <span style="color: #94a3b8; font-weight: 600; font-size: 13px;">{{ loop.index }}.</span>
-                        {{ item.headline }}
-                        {% if item.is_underreported %}<span style="color: #d97706; font-size: 11px; font-weight: 600;"> {{ _('UNDER THE RADAR') }}</span>{% endif %}
-                      </a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                  {% if brief.reading_time %}
-                  <tr>
-                    <td
-                      style="
-                        font-family:
-                          -apple-system, BlinkMacSystemFont,
-                          &quot;Segoe UI&quot;, Roboto,
-                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
-                        font-size: 12px;
-                        color: #94a3b8;
-                        padding-top: 8px;
-                      "
-                    >
-                      {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}
-                    </td>
-                  </tr>
-                  {% endif %}
-                </table>
-              </td>
-            </tr>
-            {% endif %}
 
             {# E1: question-first stance card — one tap in email, above the fold
-               so Gmail clip does not hide the ask. Placed before stories. #}
+               so Gmail clip does not hide the ask. Placed before headline index + stories. #}
             {% if stance_handoff and stance_handoff.question %}
             <tr>
               <td
@@ -471,52 +384,43 @@
                   </tr>
                   {% if stance_handoff.vote_agree_url %}
                   <tr>
-                    <td style="padding-bottom: 12px;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                        <tr class="vote-buttons-row">
-                          <td align="center">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                              <tr>
-                                <td style="padding: 0 6px;">
-                                  <a href="{{ stance_handoff.vote_agree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #2563eb; border-radius: 8px; white-space: nowrap;">
-                                    &#10003; {{ _('Agree') }}
-                                  </a>
-                                </td>
-                                <td style="padding: 0 6px;">
-                                  <a href="{{ stance_handoff.vote_disagree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #dc2626; border-radius: 8px; white-space: nowrap;">
-                                    &#10007; {{ _('Disagree') }}
-                                  </a>
-                                </td>
-                                <td style="padding: 0 6px;">
-                                  <a href="{{ stance_handoff.vote_unsure_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #6b7280; border-radius: 8px; white-space: nowrap;">
-                                    ? {{ _('Unsure') }}
-                                  </a>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                        <!--[if !mso]><!-->
+                    <td align="center" style="padding-bottom: 12px;">
+                      {# Bulletproof stacked buttons: bgcolor + radius on the button
+                         cell; the white gap between buttons lives on an outer cell
+                         with no background so rounded corners stay clean. #}
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 320px; margin: 0 auto;">
                         <tr>
-                          <td align="center">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="vote-buttons-stack" style="display: none; max-width: 280px; margin: 0 auto;">
+                          <td style="padding-bottom: 10px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                               <tr>
-                                <td style="padding-bottom: 10px;">
-                                  <a href="{{ stance_handoff.vote_agree_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #2563eb; border-radius: 8px; text-align: center; white-space: nowrap;">
+                                <td align="center" bgcolor="#2563eb" style="border-radius: 8px;">
+                                  <a href="{{ stance_handoff.vote_agree_url }}" target="_blank" style="display: block; font-size: 17px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 20px; line-height: 1.2;">
                                     &#10003; {{ _('Agree') }}
                                   </a>
                                 </td>
                               </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding-bottom: 10px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                               <tr>
-                                <td style="padding-bottom: 10px;">
-                                  <a href="{{ stance_handoff.vote_disagree_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #dc2626; border-radius: 8px; text-align: center; white-space: nowrap;">
+                                <td align="center" bgcolor="#dc2626" style="border-radius: 8px;">
+                                  <a href="{{ stance_handoff.vote_disagree_url }}" target="_blank" style="display: block; font-size: 17px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 20px; line-height: 1.2;">
                                     &#10007; {{ _('Disagree') }}
                                   </a>
                                 </td>
                               </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                               <tr>
-                                <td>
-                                  <a href="{{ stance_handoff.vote_unsure_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #6b7280; border-radius: 8px; text-align: center; white-space: nowrap;">
+                                <td align="center" bgcolor="#6b7280" style="border-radius: 8px;">
+                                  <a href="{{ stance_handoff.vote_unsure_url }}" target="_blank" style="display: block; font-size: 17px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 20px; line-height: 1.2;">
                                     ? {{ _('Unsure') }}
                                   </a>
                                 </td>
@@ -524,7 +428,6 @@
                             </table>
                           </td>
                         </tr>
-                        <!--<![endif]-->
                       </table>
                     </td>
                   </tr>
@@ -550,6 +453,90 @@
                       )|safe }}
                     </td>
                   </tr>
+                </table>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- Headline Index — always included (table of contents; never trimmed) -->
+            {% if sorted_items|length > 1 %}
+            <tr>
+              <td
+                class="mobile-padding"
+                style="
+                  padding: 24px 32px 20px;
+                  border-bottom: 1px solid #e2e8f0;
+                "
+              >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                >
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 11px;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                        color: #64748b;
+                        text-transform: uppercase;
+                        padding-bottom: 12px;
+                      "
+                    >
+                      {% if brief.brief_type == 'weekly' %}{{ _("This Week's Headlines") }}{% else %}{{ _("Today's Headlines") }}{% endif %}
+                    </td>
+                  </tr>
+                  {% for item in sorted_items %}
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        padding-bottom: 8px;
+                      "
+                    >
+                      <a
+                        href="#item-{{ item.id }}"
+                        style="
+                          color: #1e40af;
+                          text-decoration: none;
+                          font-size: 14px;
+                          line-height: 1.5;
+                        "
+                      >
+                        <span style="color: #94a3b8; font-weight: 600; font-size: 13px;">{{ loop.index }}.</span>
+                        {{ item.headline }}
+                        {% if item.is_underreported %}<span style="color: #d97706; font-size: 11px; font-weight: 600;"> {{ _('UNDER THE RADAR') }}</span>{% endif %}
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if brief.reading_time %}
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 12px;
+                        color: #94a3b8;
+                        padding-top: 8px;
+                      "
+                    >
+                      {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}
+                    </td>
+                  </tr>
+                  {% endif %}
                 </table>
               </td>
             </tr>
@@ -1067,6 +1054,7 @@
                   </tr>
                   {% endif %}
 
+                  <!--email-trim:story-perspectives-->
                   <!-- Perspectives (full depth only) -->
                   {% if depth == 'full' and item.perspectives and (item.perspectives.get('left') or item.perspectives.get('center') or item.perspectives.get('right')) %}
                   <tr>
@@ -1179,6 +1167,7 @@
                     </td>
                   </tr>
                   {% endif %}
+                  <!--/email-trim:story-perspectives-->
 
                   <!-- Market Signal Section (full depth only) -->
                   {% if depth == 'full' and item.market_signal %}
@@ -2024,6 +2013,7 @@
             {% endif %}
 
             <!-- Same Story, Different Lens Section -->
+            <!--email-trim:lens-check-->
             {% if brief.lens_check %}
             <tr>
               <td
@@ -2799,8 +2789,10 @@
               </td>
             </tr>
             {% endif %}
+            <!--/email-trim:lens-check-->
 
             {% if stance_handoff and stance_handoff.question and config.get('GAME_ENABLED', true) %}
+            <!--email-trim:tradeoffs-->
             {# Secondary: Tradeoffs daily scenario game — distinct from stance, but explained. #}
             <tr>
               <td
@@ -2941,7 +2933,9 @@
               </td>
             </tr>
             {% endif %}
+            <!--/email-trim:tradeoffs-->
 
+            <!--email-trim:thank-you-->
             <!-- Thank You Message -->
             <tr>
               <td
@@ -3007,7 +3001,9 @@
                 </table>
               </td>
             </tr>
+            <!--/email-trim:thank-you-->
 
+            <!--email-trim:personal-briefs-cta-->
             <!-- Personal Briefs CTA -->
             <tr>
               <td
@@ -3101,6 +3097,7 @@
                 </table>
               </td>
             </tr>
+            <!--/email-trim:personal-briefs-cta-->
 
             <!-- Footer -->
             <tr>

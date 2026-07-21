@@ -1,11 +1,21 @@
 """Regression tests for daily-brief email batch isolation and fallback paths."""
 
 from datetime import date
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.brief.email_client import BriefEmailScheduler, ResendClient
+from app.brief.email_client import (
+    BriefEmailScheduler,
+    GMAIL_CLIP_LIMIT_BYTES,
+    GMAIL_CLIP_TARGET_BYTES,
+    ResendClient,
+    _email_html_byte_size,
+    _fit_email_html_to_gmail,
+    _minify_email_html,
+    _strip_email_trim_markers,
+)
 from app.models import DailyBrief, DailyBriefSubscriber, db
 
 
@@ -169,3 +179,235 @@ def test_failed_send_releases_claim_for_retry(app, db, brief_and_subscriber):
         mock_client.send_brief.return_value = True
         retry = sched.send_to_subscribers([refreshed], brief)
         assert retry['sent'] == 1
+
+
+def test_minify_email_html_strips_redundant_inline_sans_font():
+    """Redundant inline sans-serif font-family copies are stripped to save bytes.
+    Safe because the <head> <style> element rule supplies the same font to every
+    client (incl. Outlook). Georgia headline cells keep their own inline font.
+    """
+    html = (
+        '<td style="font-family: -apple-system, BlinkMacSystemFont, '
+        "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; "
+        'color: #111;">Hello</td>'
+        '<td style="font-family: Georgia, \'Times New Roman\', serif; '
+        'font-size: 22px;">Headline</td>'
+    )
+    out = _minify_email_html(html)
+    assert 'sans-serif' not in out            # sans stack stripped
+    assert 'Georgia' in out                    # serif headline font preserved
+    assert 'Hello' in out and 'Headline' in out
+
+
+def test_email_head_declares_font_family_for_outlook(app, db, brief_and_subscriber):
+    """The rendered email must carry an element-level font-family rule in <style>
+    so Outlook (which ignores <body> inheritance) still shows the sans font once
+    inline copies are stripped.
+    """
+    brief_id, sub_id, _ = brief_and_subscriber
+    with app.app_context():
+        brief = db.session.get(DailyBrief, brief_id)
+        sub = db.session.get(DailyBriefSubscriber, sub_id)
+        client = _bare_client()
+        items = _moderate_items(3)
+        with patch.object(client, '_get_sorted_brief_items', return_value=items):
+            html = client._render_email(sub, brief, sorted_items=items)
+        head = html[:html.find('</style>') + 8]
+        assert 'font-family' in head and 'sans-serif' in head
+
+
+def test_fit_email_html_to_gmail_removes_trim_sections_in_order():
+    core = '<p>Core content with stance buttons</p>'
+    thankyou = (
+        '<!--email-trim:thank-you-->'
+        '<p>Thank you message</p>'
+        '<!--/email-trim:thank-you-->'
+    )
+    lens = (
+        '<!--email-trim:lens-check-->'
+        '<p>Lens check analysis</p>'
+        '<!--/email-trim:lens-check-->'
+    )
+    # Over the limit by just enough that dropping thank-you (first in order) is
+    # sufficient; lens-check (last in order) must survive.
+    filler = 'x' * (GMAIL_CLIP_TARGET_BYTES - _email_html_byte_size(core + lens))
+    html = core + thankyou + lens + filler
+    assert _email_html_byte_size(html) > GMAIL_CLIP_TARGET_BYTES
+
+    fitted = _fit_email_html_to_gmail(html, limit=GMAIL_CLIP_TARGET_BYTES)
+    assert 'Thank you message' not in fitted
+    assert 'Lens check analysis' in fitted
+    assert _email_html_byte_size(fitted) <= GMAIL_CLIP_TARGET_BYTES
+
+
+def test_fit_never_trims_headline_index(app, db, brief_and_subscriber):
+    """The headline index is the brief's table of contents and must survive even
+    when the email is far over the Gmail limit and story bodies get collapsed.
+    """
+    brief_id, sub_id, _ = brief_and_subscriber
+    with app.app_context():
+        brief = db.session.get(DailyBrief, brief_id)
+        sub = db.session.get(DailyBriefSubscriber, sub_id)
+        client = _bare_client()
+        # Deliberately huge: 14 heavy stories, guaranteed to force story collapse.
+        items = _moderate_items(14)
+        for it in items:
+            it.summary_bullets = [f'Bullet {b} ' + ('text ' * 90) for b in range(6)]
+
+        with patch.object(client, '_get_sorted_brief_items', return_value=items):
+            html = client._render_email(sub, brief, sorted_items=items)
+
+        # Index survives: every story's headline anchor link is still present.
+        assert 'Headlines' in html, 'headline index heading was trimmed'
+        for it in items:
+            assert f'#item-{it.id}' in html, f'story {it.id} missing from index'
+        # And the email still fits.
+        assert _email_html_byte_size(html) <= GMAIL_CLIP_TARGET_BYTES
+        # Some story bodies were collapsed, so the read-more notice appears.
+        assert 'more' in html and 'full brief' in html.lower()
+
+
+def test_fit_strips_tail_perspectives_before_collapsing_stories():
+    """On oversized briefs, shed perspectives from tail stories before dropping
+    whole story cards — keeps more inline depth for readers."""
+    from app.brief.email_client import GMAIL_CLIP_LIMIT_BYTES, _fit_email_html_to_gmail
+
+    perspectives = (
+        '<!--email-trim:story-perspectives-->'
+        '<tr><td>Left centre right framing block</td></tr>'
+        '<!--/email-trim:story-perspectives-->'
+    )
+    stories = ''.join(
+        f'<tr id="item-{i}"><td>Story {i} body with bullets and sources</td></tr>'
+        for i in range(1, 9)
+    )
+    filler = 'x' * (GMAIL_CLIP_TARGET_BYTES - 500)
+    html = stories + perspectives * 8 + filler
+    assert _email_html_byte_size(html) > GMAIL_CLIP_TARGET_BYTES
+
+    fitted = _fit_email_html_to_gmail(html, limit=GMAIL_CLIP_TARGET_BYTES)
+    assert _email_html_byte_size(fitted) <= GMAIL_CLIP_TARGET_BYTES
+    # Perspectives should be stripped from at least one tail story.
+    assert fitted.count('Left centre right framing block') < 8
+
+
+def test_strip_email_trim_markers_removes_marker_comments():
+    html = (
+        '<!--email-trim:thank-you-->'
+        '<p>Keep me</p>'
+        '<!--/email-trim:thank-you-->'
+    )
+    out = _strip_email_trim_markers(html)
+    assert 'email-trim' not in out
+    assert 'Keep me' in out
+
+
+def test_render_email_applies_gmail_fit(app, db, brief_and_subscriber):
+    brief_id, sub_id, _ = brief_and_subscriber
+    with app.app_context():
+        brief = db.session.get(DailyBrief, brief_id)
+        sub = db.session.get(DailyBriefSubscriber, sub_id)
+        client = _bare_client()
+
+        heavy_items = []
+        for idx in range(12):
+            heavy_items.append(
+                SimpleNamespace(
+                    id=idx + 1,
+                    position=idx + 1,
+                    headline=f'Heavy headline {idx + 1} ' + ('detail ' * 40),
+                    summary_bullets=[f'Bullet {b} ' + ('text ' * 80) for b in range(6)],
+                    so_what='Why it matters ' * 60,
+                    perspectives={
+                        'left': 'Left view ' * 40,
+                        'center': 'Centre view ' * 40,
+                        'right': 'Right view ' * 40,
+                    },
+                    source_count=12,
+                    coverage_distribution={'left': 0.2, 'center': 0.5, 'right': 0.3},
+                    is_underreported=False,
+                    section='world_events',
+                    depth='full',
+                    effective_depth='full',
+                    quick_summary=None,
+                    trending_topic=None,
+                    verification_links=[],
+                    blindspot_explanation=None,
+                )
+            )
+
+        with patch.object(client, '_get_sorted_brief_items', return_value=heavy_items):
+            html = client._render_email(sub, brief, sorted_items=heavy_items)
+
+        assert _email_html_byte_size(html) <= GMAIL_CLIP_LIMIT_BYTES
+        assert 'Unsubscribe' in html or 'unsubscribe' in html.lower()
+
+
+def _moderate_items(n):
+    """Realistic (not pathological) brief items — a normal daily brief."""
+    items = []
+    for idx in range(n):
+        items.append(
+            SimpleNamespace(
+                id=idx + 1,
+                position=idx + 1,
+                headline=f'Story {idx + 1}: a realistic news headline of about ten words',
+                summary_bullets=[
+                    f'Bullet {b}: a realistic sentence of roughly twenty words '
+                    f'summarising a key development for readers to scan quickly now.'
+                    for b in range(3)
+                ],
+                so_what='Why it matters: about forty words of context explaining the '
+                        'significance and stakes of this development for the reader here.',
+                perspectives={
+                    'left': 'Left outlets framed this ' + ('as justice. ' * 6),
+                    'center': 'Centre outlets reported ' + ('the facts. ' * 6),
+                    'right': 'Right outlets emphasised ' + ('cost. ' * 6),
+                },
+                source_count=8,
+                coverage_distribution={'left': 0.3, 'center': 0.4, 'right': 0.3},
+                is_underreported=False,
+                section='world_events',
+                depth='full',
+                effective_depth='full',
+                quick_summary=None,
+                trending_topic=None,
+                verification_links=[],
+                blindspot_explanation=None,
+            )
+        )
+    return items
+
+
+def test_fit_does_not_over_trim_when_minified_email_fits(app, db, brief_and_subscriber):
+    """A normal brief that fits under the limit once minified must keep ALL its
+    stories. Guards the fit-before-minify regression where the fitter sized the
+    ~2.3x-larger un-minified HTML and stripped most stories from every email.
+    """
+    brief_id, sub_id, _ = brief_and_subscriber
+    with app.app_context():
+        brief = db.session.get(DailyBrief, brief_id)
+        sub = db.session.get(DailyBriefSubscriber, sub_id)
+        client = _bare_client()
+        items = _moderate_items(6)
+
+        # True minified size with the fitter disabled — the real wire size.
+        with patch.object(client, '_get_sorted_brief_items', return_value=items), \
+             patch('app.brief.email_client._fit_email_html_to_gmail', side_effect=lambda h, *a, **k: h):
+            full = client._render_email(sub, brief, sorted_items=items)
+        full_size = _email_html_byte_size(full)
+        full_stories = full.count('id="item-')
+
+        # Precondition: this brief genuinely fits once minified.
+        assert full_size <= GMAIL_CLIP_TARGET_BYTES, (
+            f'test brief too large ({full_size} bytes); lower story count'
+        )
+        assert full_stories == 6
+
+        # Rendered for real: no trimming should occur.
+        with patch.object(client, '_get_sorted_brief_items', return_value=items):
+            html = client._render_email(sub, brief, sorted_items=items)
+
+        assert html.count('id="item-') == 6, 'fitter trimmed a brief that already fit'
+        assert 'more stories in today' not in html
+        assert _email_html_byte_size(html) <= GMAIL_CLIP_TARGET_BYTES

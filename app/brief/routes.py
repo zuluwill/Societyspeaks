@@ -156,7 +156,7 @@ def view_date(date_str):
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
         return render_template('brief/no_brief.html', requested_date=brief_date)
 
-    from app.brief.stance_card import build_stance_card_context
+    from app.brief.stance_card import build_stance_card_context, build_tradeoffs_card_context
 
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
@@ -165,6 +165,7 @@ def view_date(date_str):
     ).order_by(DailyBrief.date.desc()).first()
 
     stance_card = build_stance_card_context(brief_date=brief_date)
+    tradeoffs_card = build_tradeoffs_card_context() if brief.brief_type == 'daily' else None
 
     return render_template(
         'brief/view.html',
@@ -178,6 +179,7 @@ def view_date(date_str):
         tts_available=False,
         latest_weekly=latest_weekly,
         stance_card=stance_card,
+        tradeoffs_card=tradeoffs_card,
     )
 
 
