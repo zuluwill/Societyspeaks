@@ -20,6 +20,7 @@ from app.daily.auto_selection import (
     select_next_question_source,
     schedule_question_from_brief,
     verify_brief_sourced_question_wiring,
+    resolve_brief_primary_statement_id,
     wire_tomorrow_question_from_brief,
 )
 
@@ -446,3 +447,65 @@ class TestBriefSourcedSelection:
             question = schedule_question_from_brief(brief_date=brief_date, question_date=question_date)
             assert question.source_discussion_id == discussion.id
             assert question.source_trending_topic_id == topic.id
+
+    def test_brief_source_sets_statement_id_when_seed_exists(self, app):
+        brief_date = date(2026, 7, 14)
+        question_date = date(2026, 7, 15)
+        claim = 'Linked discussion claim for brief should be judged.'
+        with app.app_context():
+            db.create_all()
+            discussion = Discussion(
+                title='Linked civic discussion',
+                slug='linked-civic-discussion-brief-statement',
+                topic='Politics',
+                geographic_scope='global',
+                partner_env='live',
+            )
+            db.session.add(discussion)
+            db.session.flush()
+
+            from app.models import Statement
+
+            seed = Statement(
+                discussion_id=discussion.id,
+                content=claim,
+                is_seed=True,
+            )
+            db.session.add(seed)
+            db.session.flush()
+
+            brief = DailyBrief(
+                date=brief_date,
+                brief_type='daily',
+                status='published',
+                title='Brief with linked topic',
+            )
+            db.session.add(brief)
+            db.session.flush()
+
+            topic = TrendingTopic(
+                title='Linked topic',
+                status='published',
+                primary_topic='Politics',
+                civic_score=0.8,
+                discussion_id=discussion.id,
+                seed_statements=[{'content': claim, 'position': 'pro'}],
+            )
+            db.session.add(topic)
+            db.session.flush()
+
+            db.session.add(BriefItem(
+                brief_id=brief.id,
+                position=1,
+                trending_topic_id=topic.id,
+                coverage_imbalance=0.7,
+                coverage_distribution={'left': 0.2, 'center': 0.2, 'right': 0.6},
+            ))
+            db.session.commit()
+
+            question = schedule_question_from_brief(
+                brief_date=brief_date, question_date=question_date
+            )
+            assert question.source_discussion_id == discussion.id
+            assert question.source_statement_id == seed.id
+            assert resolve_brief_primary_statement_id(claim, discussion.id) == seed.id

@@ -187,3 +187,6 @@ tmp_paid_brief_*.html
 *.dump
 *.sql
 still-fire_*.dump
+
+# Local Claude Code / agent tooling config
+.claude/

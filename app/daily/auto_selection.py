@@ -173,6 +173,42 @@ def _build_trending_context(topic):
     return None
 
 
+def _normalize_statement_text(text):
+    """Collapse whitespace for matching daily question text to seed statements."""
+    return " ".join(str(text or "").split()).lower()
+
+
+def resolve_brief_primary_statement_id(question_text, discussion_id):
+    """
+    Match a brief-sourced daily question to its primary seed statement in the
+    linked discussion so daily votes sync into statement_vote.
+
+    Returns statement.id or None when no discussion / no matching seed exists.
+    """
+    from app.models import Statement
+
+    if not question_text or not discussion_id:
+        return None
+
+    target = _normalize_statement_text(question_text)
+    if not target:
+        return None
+
+    seeds = (
+        Statement.query.filter_by(
+            discussion_id=discussion_id,
+            is_seed=True,
+            is_deleted=False,
+        )
+        .order_by(Statement.id.asc())
+        .all()
+    )
+    for stmt in seeds:
+        if _normalize_statement_text(stmt.content) == target:
+            return stmt.id
+    return None
+
+
 def _build_why_this_question(source_type, topic_category=None, source=None):
     """Build a short relevance explanation for why a question was selected."""
     topic = (topic_category or '').strip()
@@ -371,12 +407,22 @@ def select_from_brief_items(brief_date, question_date):
         selected['contestability'],
     )
 
+    source_discussion_id = topic.discussion_id
+    source_statement_id = resolve_brief_primary_statement_id(
+        question_text, source_discussion_id
+    )
+    primary_statement = None
+    if source_statement_id:
+        from app.models import Statement
+
+        primary_statement = db.session.get(Statement, source_statement_id)
+
     return {
         'source_type': BRIEF_SOURCE_TYPE,
         'source': topic,
         'brief_item': brief_item,
         'coverage_frame': coverage_frame,
-        'statement': None,
+        'statement': primary_statement,
         'question_text': question_text,
         'context': _build_trending_context(topic),
         'why_this_question': _build_why_this_question(
@@ -393,7 +439,8 @@ def select_from_brief_items(brief_date, question_date):
         'engagement_score': selected['score'],
         'source_trending_topic_id': topic.id,
         'source_brief_item_id': brief_item.id,
-        'source_discussion_id': topic.discussion_id,
+        'source_discussion_id': source_discussion_id,
+        'source_statement_id': source_statement_id,
     }
 
 
@@ -1157,6 +1204,11 @@ def _apply_source_info_to_question(question, source_info):
             question.source_discussion_id = source_info['source_discussion_id']
         elif getattr(source, 'discussion_id', None):
             question.source_discussion_id = source.discussion_id
+        question.source_statement_id = source_info.get('source_statement_id')
+        if not question.source_statement_id and question.source_discussion_id:
+            question.source_statement_id = resolve_brief_primary_statement_id(
+                question.question_text, question.source_discussion_id
+            )
     elif source_type == 'trending':
         question.source_trending_topic_id = source.id
     elif source_type == 'statement':
@@ -1222,6 +1274,11 @@ def _update_selection_from_source_info(selection, source_info, question_date):
             selection.source_discussion_id = source_info['source_discussion_id']
         elif getattr(source, 'discussion_id', None):
             selection.source_discussion_id = source.discussion_id
+        selection.source_statement_id = source_info.get('source_statement_id')
+        if not selection.source_statement_id and selection.source_discussion_id:
+            selection.source_statement_id = resolve_brief_primary_statement_id(
+                source_info.get('question_text'), selection.source_discussion_id
+            )
     elif source_type == 'trending':
         selection.source_trending_topic_id = source.id
     elif source_type == 'statement':
@@ -1260,6 +1317,11 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
             source_discussion_id = source_info['source_discussion_id']
         elif getattr(source, 'discussion_id', None):
             source_discussion_id = source.discussion_id
+        source_statement_id = source_info.get('source_statement_id')
+        if not source_statement_id and source_discussion_id:
+            source_statement_id = resolve_brief_primary_statement_id(
+                source_info.get('question_text'), source_discussion_id
+            )
     elif source_type == 'trending':
         source_trending_topic_id = source.id
     elif source_type == 'statement':

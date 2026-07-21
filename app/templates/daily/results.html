@@ -571,7 +571,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">{{ _('Your Vote Counts') }}</h3>
-                    {% set _disc_title_html = '<strong>' ~ source_discussion.title[:40] ~ ('...' if source_discussion.title|length > 40 else '') ~ '</strong>' %}
+                    {% set _disc_title_html %}<strong>{{ source_discussion.title[:40] }}{% if source_discussion.title|length > 40 %}...{% endif %}</strong>{% endset %}
                     <p class="text-sm text-gray-600">
                         {% if participation.participant_count > 1 %}
                         {{ _('Your vote is now part of the %(title)s discussion alongside %(count)d other participants.', title=_disc_title_html, count=participation.participant_count - 1)|safe }}
