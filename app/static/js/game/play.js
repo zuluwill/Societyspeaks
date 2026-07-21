@@ -6,6 +6,7 @@
 
   var runUuid = app.dataset.runUuid;
   var csrf = app.dataset.csrf;
+  var isAuthenticated = app.dataset.isAuthenticated === 'true';
 
   var overlay = document.getElementById('consequence-overlay');
   var headlineEl = document.getElementById('consequence-headline');
@@ -276,7 +277,11 @@
     setButtonsDisabled(true);
 
     if (window.gameAnalytics) {
-      window.gameAnalytics.capture('game_turn_started', { run_uuid: runUuid, choice_id: choiceId });
+      window.gameAnalytics.capture('game_turn_started', {
+        run_uuid: runUuid,
+        choice_id: choiceId,
+        is_authenticated: isAuthenticated,
+      });
     }
 
     fetch('/play/api/run/' + runUuid + '/choose', {
@@ -319,6 +324,7 @@
                 window.gameAnalytics.capture('game_run_completed', {
                   run_uuid: runUuid,
                   turn_index: data.turn_index,
+                  is_authenticated: isAuthenticated,
                 });
               }
               document.body.classList.add('is-leaving');

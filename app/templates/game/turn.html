@@ -23,6 +23,7 @@
 <div id="game-app"
      data-run-uuid="{{ run.uuid }}"
      data-csrf="{{ csrf_token() }}"
+     data-is-authenticated="{{ 'true' if current_user.is_authenticated else 'false' }}"
      data-beat-labels='{{ beat_labels|tojson }}'
      data-pressure-labels='{{ pressure_labels|tojson }}'
      data-progress-template="{{ _('Turn {n} of {total}') }}">
@@ -122,5 +123,5 @@
 
 {% block game_scripts %}
 <script src="{{ url_for('static', filename='js/game/analytics.js') }}?v=1" defer></script>
-<script src="{{ url_for('static', filename='js/game/play.js') }}?v=6" defer></script>
+<script src="{{ url_for('static', filename='js/game/play.js') }}?v=7" defer></script>
 {% endblock %}
