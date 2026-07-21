@@ -89,5 +89,6 @@ def render_daily_question_png(
         headline=question_text,
         footer_left=footer_left,
         headline_max_lines=3,
+        body_height=112,
         body_draw=draw_stats,
     )

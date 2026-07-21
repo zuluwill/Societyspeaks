@@ -16,31 +16,40 @@ except ImportError:  # pragma: no cover
     PIL_AVAILABLE = False
 
 CARD_SIZE: Tuple[int, int] = (1200, 630)
-PADDING = 56
-BG_TOP = (239, 246, 255)
-BG_BOTTOM = (191, 219, 254)
-TEXT = (31, 41, 55)
-MUTED = (107, 114, 128)
-ACCENT = (37, 99, 235)
-BAR_TRACK = (229, 231, 235)
+PADDING = 72
+
+# Palette — light, crisp, on-brand.
+BG_TOP = (255, 255, 255)
+BG_BOTTOM = (233, 241, 254)
+INK = (15, 23, 42)          # headline / primary text
+MUTED = (100, 116, 139)     # footer / secondary
+ACCENT = (37, 99, 235)      # brand blue
+DIVIDER = (219, 229, 245)
+BADGE_TEXT = (255, 255, 255)
+
+# Vote-bar colours (daily card).
+TEXT = INK
+BAR_TRACK = (223, 231, 244)
 AGREE = ACCENT
 DISAGREE = (220, 38, 38)
-UNSURE = (107, 114, 128)
+UNSURE = (100, 116, 139)
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _FONTS_ROOT = _REPO_ROOT / 'app' / 'static' / 'fonts'
+_LOGO_PATH = _REPO_ROOT / 'app' / 'static' / 'logos' / 'society_speaks_logo_blue_fixed.png'
 
+# Bundled variable fonts first (Fraunces / Inter, OFL); OS/PIL fallbacks after.
 DISPLAY_FONT_CANDIDATES = [
-    _FONTS_ROOT / 'Fraunces-Bold.ttf',
     _FONTS_ROOT / 'Fraunces.ttf',
+    _FONTS_ROOT / 'Fraunces-Bold.ttf',
     Path('/Library/Fonts/Georgia.ttf'),
     Path('/System/Library/Fonts/Supplemental/Georgia.ttf'),
     Path('/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf'),
 ]
 
 BODY_FONT_CANDIDATES = [
-    _FONTS_ROOT / 'Inter-Medium.ttf',
     _FONTS_ROOT / 'Inter.ttf',
+    _FONTS_ROOT / 'Inter-Medium.ttf',
     Path('/System/Library/Fonts/HelveticaNeue.ttc'),
     Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
 ]
@@ -50,17 +59,27 @@ def is_available() -> bool:
     return PIL_AVAILABLE
 
 
-def load_font(candidates: List[Path], size: int):
+def load_font(candidates: List[Path], size: int, variation: Optional[str] = None):
+    """Load the first available font; for variable fonts, apply a named weight."""
     for path in candidates:
         try:
             if path.is_file():
-                return ImageFont.truetype(str(path), size=size)
+                font = ImageFont.truetype(str(path), size=size)
+                if variation:
+                    try:
+                        font.set_variation_by_name(variation)
+                    except Exception:  # noqa: BLE001 — static fallback fonts have no named instances
+                        pass
+                return font
         except (OSError, ValueError):
             continue
-    return ImageFont.load_default()
+    try:
+        return ImageFont.load_default(size=size)
+    except TypeError:  # pragma: no cover — very old Pillow
+        return ImageFont.load_default()
 
 
-def paint_gradient(img: Image.Image) -> None:
+def paint_gradient(img: "Image.Image") -> None:
     draw = ImageDraw.Draw(img)
     width, height = img.size
     for y in range(height):
@@ -100,6 +119,20 @@ def wrap_lines(draw, text: str, font, max_width: int, max_lines: int) -> List[st
     return lines
 
 
+def _fit_headline(draw, text: str, candidates, max_width: int, max_lines: int, sizes):
+    """Pick the largest headline size whose wrapped lines all fit the width."""
+    for size in sizes:
+        font = load_font(candidates, size, variation='Bold')
+        lines = wrap_lines(draw, text, font, max_width, max_lines)
+        if len(lines) <= max_lines and all(
+            draw.textlength(ln, font=font) <= max_width for ln in lines
+        ):
+            return font, lines, int(size * 1.18)
+    smallest = sizes[-1]
+    font = load_font(candidates, smallest, variation='Bold')
+    return font, wrap_lines(draw, text, font, max_width, max_lines), int(smallest * 1.18)
+
+
 def draw_bar(
     draw,
     *,
@@ -131,6 +164,20 @@ def draw_bar(
     draw.text((x_value, y), f'{pct}%', fill=TEXT, font=value_font)
 
 
+def _paste_logo(img, right_x: int, top_y: int, target_h: int = 40) -> None:
+    """Paste the brand logo, scaled to target_h, with its right edge at right_x."""
+    try:
+        if not _LOGO_PATH.is_file():
+            return
+        logo = Image.open(_LOGO_PATH).convert('RGBA')
+        scale = target_h / logo.height
+        w = int(logo.width * scale)
+        logo = logo.resize((w, target_h), Image.LANCZOS)
+        img.paste(logo, (right_x - w, top_y), logo)
+    except Exception:  # noqa: BLE001 — logo is decorative; never fail the card
+        logger.debug('OG logo paste failed', exc_info=True)
+
+
 def render_branded_card(
     *,
     badge_text: str,
@@ -138,7 +185,8 @@ def render_branded_card(
     footer_left: str,
     footer_right: str = 'societyspeaks.io',
     headline_max_lines: int = 4,
-    body_draw: Optional[Callable[[ImageDraw.ImageDraw, int, int], None]] = None,
+    body_height: int = 0,
+    body_draw: Optional[Callable[["ImageDraw.ImageDraw", int, int], None]] = None,
 ) -> Optional[bytes]:
     """Render a standard Society Speaks OG card. Returns PNG bytes or None."""
     if not PIL_AVAILABLE:
@@ -148,33 +196,60 @@ def render_branded_card(
     paint_gradient(img)
     draw = ImageDraw.Draw(img, 'RGBA')
 
-    badge_font = load_font(BODY_FONT_CANDIDATES, 22)
-    headline_font = load_font(DISPLAY_FONT_CANDIDATES, 42)
-    footer_font = load_font(BODY_FONT_CANDIDATES, 22)
-
-    content_width = CARD_SIZE[0] - (PADDING * 2)
+    width, height = CARD_SIZE
+    content_width = width - (PADDING * 2)
     x = PADDING
 
-    badge_w = draw.textlength(badge_text, font=badge_font) + 32
+    # --- Top row: badge pill (left) + logo (right) ---
+    badge_font = load_font(BODY_FONT_CANDIDATES, 24, variation='SemiBold')
+    badge_h = 48
+    badge_top = PADDING - 6
+    pad_x = 20
+    badge_w = draw.textlength(badge_text, font=badge_font) + pad_x * 2
     draw.rounded_rectangle(
-        (x, PADDING, x + badge_w, PADDING + 40),
-        radius=20,
+        (x, badge_top, x + badge_w, badge_top + badge_h),
+        radius=badge_h // 2,
         fill=ACCENT,
     )
-    draw.text((x + 16, PADDING + 8), badge_text, fill=(255, 255, 255), font=badge_font)
+    _, t, _, b = draw.textbbox((0, 0), badge_text, font=badge_font)
+    draw.text((x + pad_x, badge_top + (badge_h - (b - t)) // 2 - t), badge_text,
+              fill=BADGE_TEXT, font=badge_font)
+    _paste_logo(img, right_x=width - PADDING, top_y=badge_top + 6, target_h=38)
 
-    question_y = PADDING + 64
-    lines = wrap_lines(draw, (headline or '').strip(), headline_font, content_width, headline_max_lines)
+    # --- Middle zone: headline (+ optional body), vertically centred as a group ---
+    # A card with body content (e.g. vote bars) uses a smaller headline so the
+    # group still fits; a headline-only card can go large and dramatic.
+    headline_sizes = (50, 46, 42, 38) if body_draw else (66, 60, 54, 48, 42)
+    headline_font, lines, line_h = _fit_headline(
+        draw, (headline or '').strip(), DISPLAY_FONT_CANDIDATES,
+        content_width, headline_max_lines, headline_sizes,
+    )
+    headline_block_h = len(lines) * line_h
+
+    footer_text_y = height - PADDING - 20
+    divider_y = footer_text_y - 30
+    middle_top = badge_top + badge_h + 44
+    middle_bottom = divider_y - 30
+    middle_h = middle_bottom - middle_top
+
+    group_h = headline_block_h + ((28 + body_height) if body_draw else 0)
+    start_y = middle_top + max(0, (middle_h - group_h) // 2)
+
+    y = start_y
     for line in lines:
-        draw.text((x, question_y), line, fill=TEXT, font=headline_font)
-        question_y += 52
+        draw.text((x, y), line, fill=INK, font=headline_font)
+        y += line_h
 
     if body_draw is not None:
-        body_draw(draw, x, question_y + 16)
+        body_draw(draw, x, start_y + headline_block_h + 28)
 
-    footer_y = CARD_SIZE[1] - PADDING - 24
-    draw.text((x, footer_y), footer_left, fill=MUTED, font=footer_font)
-    draw.text((x + content_width - 180, footer_y), footer_right, fill=ACCENT, font=footer_font)
+    # --- Footer: hairline divider + meta row ---
+    draw.line([(x, divider_y), (x + content_width, divider_y)], fill=DIVIDER, width=2)
+    footer_font = load_font(BODY_FONT_CANDIDATES, 24, variation='Medium')
+    url_font = load_font(BODY_FONT_CANDIDATES, 24, variation='SemiBold')
+    draw.text((x, footer_text_y), footer_left, fill=MUTED, font=footer_font)
+    url_w = draw.textlength(footer_right, font=url_font)
+    draw.text((x + content_width - url_w, footer_text_y), footer_right, fill=ACCENT, font=url_font)
 
     buf = io.BytesIO()
     img.save(buf, format='PNG', optimize=True)

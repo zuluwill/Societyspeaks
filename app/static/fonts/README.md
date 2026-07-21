@@ -1,31 +1,30 @@
-# Society Play — fonts for the OG share card
+# Fonts for the OG share cards
 
-The PNG OG card (`/play/outcome/<uuid>/og.png`) is rendered with Pillow. It
-looks for these fonts in order, falling back to the next candidate when one is
-missing — so the route always works, but the typography degrades when the
-preferred faces aren't present.
+Social share cards (`/discussions/<id>/og.png`, `/daily/<date>/og.png`,
+`/brief/<date>/og.png`, `/profile/.../og.png`, and the Tradeoffs game card) are
+rendered with Pillow by `app/lib/og_card_render.py`.
 
-## Drop these files here for full brand fidelity
+## Bundled fonts (committed here, OFL-licensed)
 
-| Filename | Used for | Source |
-|----------|----------|--------|
-| `Fraunces-Bold.ttf` | Outcome headline, `Tradeoffs` wordmark | https://fonts.google.com/specimen/Fraunces — OFL, free for redistribution |
-| `Inter-Medium.ttf` | Governance label, society name, footer URL | https://fonts.google.com/specimen/Inter — OFL, free for redistribution |
+| File | Used for | Source |
+|------|----------|--------|
+| `Fraunces.ttf` | Headlines / wordmark (loaded as **Bold**) | https://fonts.google.com/specimen/Fraunces — OFL |
+| `Inter.ttf` | Badge, footer, vote-bar labels (Medium / SemiBold) | https://fonts.google.com/specimen/Inter — OFL |
 
-Both are downloadable as static `.ttf` files from Google Fonts. The OFL
-license permits shipping them in the repo.
+Both are **variable** fonts; the renderer selects the weight at load time via
+`ImageFont.set_variation_by_name(...)`. The OFL permits shipping them in the repo.
 
-## Fallback chain (used automatically when the preferred fonts are missing)
+## Fallback chain (used automatically if the bundled files are missing)
 
-Display (Fraunces) → Georgia (macOS) → DejaVuSerif-Bold (Linux/Replit) → PIL default
-Body (Inter) → Helvetica Neue / Helvetica (macOS) → DejaVu Sans (Linux) → PIL default
+Display (Fraunces) → Georgia (macOS) → DejaVuSerif-Bold (Linux) → PIL default
+Body (Inter) → Helvetica Neue (macOS) → DejaVu Sans (Linux) → PIL default
 
-PIL's default font is bitmap-only and looks crude — fine for dev, replace
-before launch.
+PIL's default is a crude bitmap font — the fallbacks exist only so the route
+never 500s. Keep the bundled `.ttf` files in place for brand-correct output.
 
-## Verification
+## Notes
 
-After adding the files, the next render will pick them up automatically (no
-restart needed — Pillow re-reads on each render). The OG card is cached for
-7 days in Redis keyed by `run_uuid`; bump the cache prefix or call
-`redis-cli FLUSHDB` if you need to invalidate after a font swap during testing.
+- OG PNGs are cached (Redis + HTTP). After a font/design change, bump the cache
+  or `redis-cli FLUSHDB` to invalidate stale renders during testing.
+- Local rendering needs a working Pillow. If your local Pillow wheel is the wrong
+  architecture, the render tests skip visibly rather than fail.
