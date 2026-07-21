@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ discussion_translation.title if discussion_translation else discussion.title }} — {{ _('Society Speaks') }}</title>
+  <title>{{ discussion_display_title(discussion, discussion_translation) }} — {{ _('Society Speaks') }}</title>
   <meta name="robots" content="noindex">
   {# Integrators: listen for postMessage type "societyspeaks:embed:resize" (height px) for dynamic iframe sizing. Same origin as snapshot/vote fetches — avoid third-party cookie reliance for anonymous users. #}
 
@@ -902,7 +902,7 @@
 
     <!-- Header -->
     <header class="embed-header">
-      <h1 class="embed-title">{{ discussion_translation.title if discussion_translation else discussion.title }}</h1>
+      <h1 class="embed-title">{{ discussion_display_title(discussion, discussion_translation) }}</h1>
       <p class="embed-meta">
         {% set _stmt_total = total_statement_count|default(statements|length) %}
         {{ ngettext('%(num)d statement to vote on', '%(num)d statements to vote on', _stmt_total) }}

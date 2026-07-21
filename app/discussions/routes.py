@@ -846,13 +846,27 @@ def og_png(discussion_id: int):
 
     from app.discussions import og_image_service
     from app.lib.og_cache import OG_CACHE_VERSION, og_cache_get, og_cache_set
+    from app.lib.translation import (
+        discussion_display_title,
+        get_cached_discussion_translation,
+        resolve_language,
+    )
     from flask_babel import _, ngettext
 
     if not og_image_service.is_available():
         return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
 
+    view_lang = resolve_language(request)
+    discussion_translation = (
+        get_cached_discussion_translation(discussion, view_lang)
+        if view_lang != 'en'
+        else None
+    )
+    display_title = discussion_display_title(discussion, discussion_translation)
     participant_count = int(get_discussion_participant_count(discussion) or 0)
-    cache_key = f'discussion:og:png:{OG_CACHE_VERSION}:{discussion_id}:{participant_count}'
+    cache_key = (
+        f'discussion:og:png:{OG_CACHE_VERSION}:{discussion_id}:{view_lang}:{participant_count}'
+    )
     png_bytes = og_cache_get(cache_key)
     if png_bytes is None:
         participants_label = None
@@ -864,7 +878,7 @@ def og_png(discussion_id: int):
                 count=participant_count,
             )
         png_bytes = og_image_service.render_discussion_png(
-            title=discussion.title,
+            title=display_title,
             topic=discussion.topic,
             participant_count=participant_count,
             badge_label=_('Public Discussion'),
@@ -1023,6 +1037,7 @@ def view_discussion(discussion_id, slug):
         get_cached_statement_translations,
         get_cached_discussion_translation,
         get_cached_discussion_info_translation,
+        discussion_display_title,
     )
     view_lang = resolve_language(request)
     view_translation_map = get_cached_statement_translations(statements, view_lang) if statements and view_lang != 'en' else {}
@@ -1043,11 +1058,7 @@ def view_discussion(discussion_id, slug):
 
     from app.lib.share_text import build_discussion_share_text
 
-    display_title = (
-        view_discussion_translation.title
-        if view_discussion_translation
-        else discussion.title
-    )
+    display_title = discussion_display_title(discussion, view_discussion_translation)
     share_page_url = url_for(
         'discussions.view_discussion',
         discussion_id=discussion.id,
@@ -1058,7 +1069,10 @@ def view_discussion(discussion_id, slug):
         display_title,
         participant_count=discussion_participant_count,
     )
-    og_png_url = url_for('discussions.og_png', discussion_id=discussion.id, _external=True)
+    og_png_kwargs = {'discussion_id': discussion.id, '_external': True}
+    if view_lang != 'en':
+        og_png_kwargs['lang'] = view_lang
+    og_png_url = url_for('discussions.og_png', **og_png_kwargs)
 
     view_response = make_response(render_template('discussions/view_discussion.html',
                          discussion=discussion,

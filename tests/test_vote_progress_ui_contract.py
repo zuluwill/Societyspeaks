@@ -33,6 +33,8 @@ def test_view_discussion_provides_computed_participant_count():
     assert "discussion_participant_count" in source
     assert "build_consensus_ui_state(" in source
     assert "if discussion.has_native_statements:" in source
+    assert "discussion_display_title(" in source
+    assert "discussion_display_title(discussion, view_discussion_translation)" in source
 
 
 def test_consensus_helper_exposes_shared_ui_payload():

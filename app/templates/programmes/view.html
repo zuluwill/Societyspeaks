@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% from 'components/_translation_pending.html' import translation_pending_notice %}
-{% set display_name = programme_translation.name if programme_translation else programme.name %}
-{% set display_desc = programme_translation.description if programme_translation else programme.description %}
+{% set display_name = programme_display_name(programme, programme_translation) %}
+{% set display_desc = programme_display_description(programme, programme_translation) %}
 {% block title %}{{ display_name }} — Society Speaks{% endblock %}
 {% block canonical %}{{ url_for('programmes.view_programme', slug=programme.slug, _external=True) }}{% endblock %}
 {% block meta_description %}{% if display_desc %}{{ display_desc[:160] }}{% else %}{{ _('Join structured public deliberation on %(name)s — open discussions and civic participation on Society Speaks.', name=display_name) }}{% endif %}{% endblock %}

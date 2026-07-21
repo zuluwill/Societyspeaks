@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% from 'components/_translation_pending.html' import translation_pending_notice %}
 
-{% set disc_title = discussion_translation.title if discussion_translation else discussion.title %}
+{% set disc_title = discussion_display_title(discussion, discussion_translation) %}
 
 {% block title %}{{ _('Consensus Analysis') }} — {{ disc_title }}{% endblock %}
 {% block meta_description %}{{ _('Consensus, bridge, and divisive statements from structured participation on %(title)s.', title=disc_title) }}{% endblock %}

@@ -14,13 +14,23 @@ so Flask-Babel and content translation share the same priority chain.
 """
 import logging
 import re
-from typing import Optional
+from typing import Optional, TypedDict
 
 logger = logging.getLogger(__name__)
 
 # Single source of truth — imported by translation_worker.py as well.
 from app.lib.locale_utils import SUPPORTED_LANGUAGES  # noqa: E402
 from app.lib.llm_transient_errors import log_llm_error  # noqa: E402
+
+
+class DiscussionTranslationCache(TypedDict):
+    title: str
+    description: str
+
+
+class ProgrammeTranslationCache(TypedDict):
+    name: str
+    description: str
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +153,7 @@ def get_cached_statement_translations(
     return {r.statement_id: r.content for r in rows}
 
 
-def get_cached_discussion_translation(discussion, language_code: str) -> Optional[dict[str, str]]:
+def get_cached_discussion_translation(discussion, language_code: str) -> Optional[DiscussionTranslationCache]:
     """
     Return {'title': ..., 'description': ...} from DB cache, or None on a miss.
     None means the translation is not yet available; callers fall back to English originals.
@@ -189,7 +199,7 @@ def get_cached_discussion_info_translation(discussion, language_code: str) -> di
     return fallback
 
 
-def get_cached_programme_translation(programme, language_code: str) -> Optional[dict[str, str]]:
+def get_cached_programme_translation(programme, language_code: str) -> Optional[ProgrammeTranslationCache]:
     """
     Return {'name': ..., 'description': ...} from DB cache, or None on a miss.
     None means the translation is not yet available; callers fall back to English originals.
@@ -208,7 +218,7 @@ def get_cached_programme_translation(programme, language_code: str) -> Optional[
     return None
 
 
-def get_cached_discussion_translations_map(discussions: list, language_code: str) -> dict[int, Optional[dict[str, str]]]:
+def get_cached_discussion_translations_map(discussions: list, language_code: str) -> dict[int, Optional[DiscussionTranslationCache]]:
     """
     Return {discussion_id: {'title': str, 'description': str}} from DB cache.
     Used for listing pages. Missing rows return None — callers fall back to English originals.
@@ -226,7 +236,7 @@ def get_cached_discussion_translations_map(discussions: list, language_code: str
     return {r.discussion_id: {'title': r.title, 'description': r.description or ''} for r in rows}
 
 
-def get_cached_programme_translations_map(programmes: list, language_code: str) -> dict[int, dict[str, str]]:
+def get_cached_programme_translations_map(programmes: list, language_code: str) -> dict[int, ProgrammeTranslationCache]:
     """
     Return {programme_id: {'name': str, 'description': str}} from DB cache.
     Used for list pages. Missing rows fall back to the English Programme row.
@@ -254,3 +264,41 @@ def get_cached_programme_translations_map(programmes: list, language_code: str) 
         })
         for p in programmes
     }
+
+
+def discussion_display_title(discussion, translation: Optional[DiscussionTranslationCache]) -> str:
+    """
+    Resolved discussion title for Python-built copy and Jinja templates.
+
+    ``get_cached_discussion_translation`` returns a plain dict; use this helper in
+    Python (attribute access on dicts raises AttributeError). Registered as a
+    Jinja global so templates use the same contract.
+    """
+    if translation is not None:
+        return translation['title']
+    return discussion.title or ''
+
+
+def discussion_display_description(discussion, translation: Optional[DiscussionTranslationCache]) -> str:
+    """Resolved description with English fallback when the cache row is empty."""
+    if translation is not None:
+        translated = translation['description']
+        if translated:
+            return translated
+    return discussion.description or ''
+
+
+def programme_display_name(programme, translation: Optional[ProgrammeTranslationCache]) -> str:
+    """Resolved programme name — same dict-vs-attribute contract as discussions."""
+    if translation is not None:
+        return translation['name']
+    return programme.name or ''
+
+
+def programme_display_description(programme, translation: Optional[ProgrammeTranslationCache]) -> str:
+    """Resolved programme description with English fallback when the cache row is empty."""
+    if translation is not None:
+        translated = translation['description']
+        if translated:
+            return translated
+    return getattr(programme, 'description', None) or ''

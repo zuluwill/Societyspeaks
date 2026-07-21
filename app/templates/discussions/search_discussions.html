@@ -129,7 +129,11 @@
         {% for discussion in discussions.items %}
         {% set _tr = discussion_translation_map.get(discussion.id) if discussion_translation_map is defined else none %}
         <div>
-            {{ discussion_card(discussion, disc_title=_tr.title if _tr else none, disc_desc=_tr.description if _tr else none) }}
+            {{ discussion_card(
+                discussion,
+                disc_title=discussion_display_title(discussion, _tr),
+                disc_desc=discussion_display_description(discussion, _tr),
+            ) }}
         </div>
         {% endfor %}
     </div>

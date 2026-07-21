@@ -118,8 +118,8 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for programme in other_progs %}
     {% set _op = _ptm.get(programme.id) %}
-    {% set _oname = _op.name if _op else programme.name %}
-    {% set _odesc = _op.description if _op else programme.description %}
+    {% set _oname = programme_display_name(programme, _op) %}
+    {% set _odesc = programme_display_description(programme, _op) %}
     <div class="group relative flex flex-col bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all overflow-hidden">
       {% if programme.logo_url %}
       <div class="h-28 bg-gray-50 border-b border-gray-100 flex items-center justify-center p-4">

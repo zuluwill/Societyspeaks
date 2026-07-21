@@ -736,6 +736,17 @@ def create_app():
     from app.lib.jinja_i18n import escape_i18n
     app.jinja_env.filters['escape_i18n'] = escape_i18n
 
+    from app.lib.translation import (
+        discussion_display_description,
+        discussion_display_title,
+        programme_display_description,
+        programme_display_name,
+    )
+    app.jinja_env.globals['discussion_display_title'] = discussion_display_title
+    app.jinja_env.globals['discussion_display_description'] = discussion_display_description
+    app.jinja_env.globals['programme_display_name'] = programme_display_name
+    app.jinja_env.globals['programme_display_description'] = programme_display_description
+
     from app.lib.share_utils import share_urlencode
     app.jinja_env.filters['share_urlencode'] = share_urlencode
 

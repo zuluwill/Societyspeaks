@@ -4,8 +4,8 @@
 
 {# Canonical discussion URL + translated SEO fields (machine-translated when non-English) #}
 {% set _disc_canonical = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
-{% set seo_title = discussion_translation.title if discussion_translation else discussion.title %}
-{% set seo_desc = (discussion_translation.description if discussion_translation else '') or (discussion.description or '') %}
+{% set seo_title = discussion_display_title(discussion, discussion_translation) %}
+{% set seo_desc = discussion_display_description(discussion, discussion_translation) %}
 {% set author_ld_name = discussion.creator.username if discussion.creator else _('Society Speaks') %}
 {% if discussion.creator and discussion.creator.individual_profile %}
   {% set author_ld_url = url_for('profiles.view_individual_profile', username=discussion.creator.individual_profile.slug, _external=True) %}
@@ -295,7 +295,7 @@
   <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-wrap items-start justify-between gap-4">
-        <h1 class="text-3xl font-bold text-gray-900">{{ discussion_translation.title if discussion_translation else discussion.title }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900">{{ discussion_display_title(discussion, discussion_translation) }}</h1>
 
         <!-- Share -->
         {{ share_button(
