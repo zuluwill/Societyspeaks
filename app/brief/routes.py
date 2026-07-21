@@ -218,14 +218,14 @@ def og_png(date_str):
         abort(404)
 
     from app.brief import og_image_service
-    from app.lib.og_cache import og_cache_get, og_cache_set
+    from app.lib.og_cache import OG_CACHE_VERSION, og_cache_get, og_cache_set
     from flask_babel import _, ngettext
 
     if not og_image_service.is_available():
         return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
 
     story_count = BriefItem.query.filter_by(brief_id=brief.id).count()
-    cache_key = f'brief:og:png:{brief.id}:{story_count}'
+    cache_key = f'brief:og:png:{OG_CACHE_VERSION}:{brief.id}:{story_count}'
     png_bytes = og_cache_get(cache_key)
     if png_bytes is None:
         stories_label = None

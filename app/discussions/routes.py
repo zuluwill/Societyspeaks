@@ -845,14 +845,14 @@ def og_png(discussion_id: int):
         abort(404)
 
     from app.discussions import og_image_service
-    from app.lib.og_cache import og_cache_get, og_cache_set
+    from app.lib.og_cache import OG_CACHE_VERSION, og_cache_get, og_cache_set
     from flask_babel import _, ngettext
 
     if not og_image_service.is_available():
         return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
 
     participant_count = int(get_discussion_participant_count(discussion) or 0)
-    cache_key = f'discussion:og:png:{discussion_id}:{participant_count}'
+    cache_key = f'discussion:og:png:{OG_CACHE_VERSION}:{discussion_id}:{participant_count}'
     png_bytes = og_cache_get(cache_key)
     if png_bytes is None:
         participants_label = None

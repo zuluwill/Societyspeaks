@@ -426,7 +426,7 @@ def individual_og_png(username):
     return _profile_og_response(
         name=profile.full_name,
         is_company=False,
-        cache_key=f'profile:og:individual:{profile.id}',
+        cache_suffix=f'individual:{profile.id}',
     )
 
 @profiles_bp.route('/profile/company/<company_name>')
@@ -465,18 +465,19 @@ def company_og_png(company_name):
     return _profile_og_response(
         name=profile.company_name,
         is_company=True,
-        cache_key=f'profile:og:company:{profile.id}',
+        cache_suffix=f'company:{profile.id}',
     )
 
 
-def _profile_og_response(*, name: str, is_company: bool, cache_key: str):
+def _profile_og_response(*, name: str, is_company: bool, cache_suffix: str):
     from app.profiles import og_image_service
-    from app.lib.og_cache import og_cache_get, og_cache_set
+    from app.lib.og_cache import OG_CACHE_VERSION, og_cache_get, og_cache_set
     from flask_babel import _
 
     if not og_image_service.is_available():
         return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
 
+    cache_key = f'profile:og:{OG_CACHE_VERSION}:{cache_suffix}'
     png_bytes = og_cache_get(cache_key)
     if png_bytes is None:
         png_bytes = og_image_service.render_profile_png(

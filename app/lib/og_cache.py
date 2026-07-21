@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from flask import current_app
 
+# Bump this one constant whenever the card design changes, so every OG surface
+# (discussions, brief, profiles) invalidates its cached PNGs together. Keeping it
+# central prevents the drift where one surface is re-versioned and another isn't.
+OG_CACHE_VERSION = 'v2'
+
 
 def og_cache_get(key: str) -> bytes | None:
     try:
