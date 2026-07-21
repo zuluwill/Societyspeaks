@@ -7,6 +7,9 @@ from flask import current_app
 # Bump this one constant whenever the card design changes, so every OG surface
 # (discussions, brief, profiles) invalidates its cached PNGs together. Keeping it
 # central prevents the drift where one surface is re-versioned and another isn't.
+# After bumping, edge caches self-heal on their TTL (5–60 min); for an immediate
+# refresh run: python3 scripts/purge_og_cloudflare.py --everything
+
 OG_CACHE_VERSION = 'v2'
 
 

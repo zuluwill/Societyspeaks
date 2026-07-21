@@ -179,6 +179,31 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache
   --data '{"files":["https://societyspeaks.io/sitemap.xml"]}'
 ```
 
+**Purge after OG card / share-image deploys** — the cards self-heal on their
+edge TTL (`max-age=300` on discussions/brief/daily, `3600` on profiles), so a
+purge is only for an *immediate* refresh after a redesign or an `OG_CACHE_VERSION`
+bump. Prefix/tag purge is Enterprise-only, so use the all-plan methods:
+
+```bash
+export CF_API_TOKEN='…'   # Cloudflare API token with Cache Purge
+export CF_ZONE_ID='…'
+
+# After a font/layout change that affects every card:
+python3 scripts/purge_og_cloudflare.py --everything
+
+# Refresh just one or two cards:
+python3 scripts/purge_og_cloudflare.py --files \
+  "https://societyspeaks.io/discussions/9639/og.png"
+
+python3 scripts/purge_og_cloudflare.py --everything --dry-run   # inspect payload
+```
+
+Verify a fresh card (redesigned cards are ~50–60 KB; the old broken one was ~10 KB):
+
+```bash
+curl -sI "https://societyspeaks.io/discussions/9639/og.png" | grep -i content-length
+```
+
 **Cache health check** (expect `cf-cache-status: HIT` on a second request):
 
 ```bash
