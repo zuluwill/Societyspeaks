@@ -11,7 +11,6 @@ from io import BytesIO
 from app import cache, csrf, db, limiter
 from app.lib.auth_utils import normalize_email
 from app.lib.posthog_utils import (
-    request_has_browser_evidence,
     resolve_request_distinct_id,
     safe_posthog_capture,
 )
@@ -479,33 +478,10 @@ def view_programme(slug):
             if candidate and candidate.programme_id == programme.id:
                 journey_reminder_subscription = candidate
 
-        # PostHog: fire journey_started once per user per journey per 24 h.
-        # Cache-based dedup (not session): the old Redis session gate persisted
-        # indefinitely and permanently blocked the event for returning users.
-        # Browser-evidence gate: this fires on a bare GET, so crawlers with
-        # ordinary browser UAs flooded it (99.9% of distinct_ids, 2026-07).
-        if _posthog and getattr(_posthog, 'project_api_key', None) and request_has_browser_evidence():
-            try:
-                _ph_id = _journey_distinct_id()
-                _start_cache_key = f'ph_journey_started:{programme.id}:{_ph_id[:32]}'
-                if _ph_id and not cache.get(_start_cache_key):
-                    _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
-                    safe_posthog_capture(
-                        posthog_client=_posthog,
-                        distinct_id=_ph_id,
-                        event='journey_started',
-                        properties={
-                            'journey_id': programme.id,
-                            'journey_type': _journey_type,
-                            'journey_slug': programme.slug,
-                            'journey_name': programme.name,
-                            'total_steps': len(ordered),
-                            'is_authenticated': current_user.is_authenticated,
-                        },
-                    )
-                    cache.set(_start_cache_key, True, timeout=86400)  # 24-hour dedup
-            except Exception as _e:
-                current_app.logger.warning(f"PostHog journey_started error: {_e}")
+        # journey_started fires client-side after PostHog JS init (see view.html).
+        # Server-side capture on this GET was removed Jul 2026: the PostHog cookie
+        # is not present until after JS runs, so a server-side gate on that cookie
+        # dropped every first-page load (including direct email/deep links).
 
     view_lang = resolve_language(request)
     programme_translation = (
@@ -573,7 +549,7 @@ def programme_journey_recap(slug):
     # indefinitely and permanently blocked the event for returning users.
     # Browser-evidence gate: fires on a bare GET of the recap page, so it was
     # crawler-dominated (667 of 669 distinct_ids had no client-side event).
-    if _posthog and getattr(_posthog, 'project_api_key', None) and request_has_browser_evidence():
+    if _posthog and getattr(_posthog, 'project_api_key', None):
         try:
             _ph_id = _journey_distinct_id()
             _complete_cache_key = f'ph_journey_completed:{programme.id}:{_ph_id[:32]}'

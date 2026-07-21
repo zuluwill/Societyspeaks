@@ -614,6 +614,49 @@
 {% if journey_mode and journey_progress %}
 <script nonce="{{ csp_nonce() }}">
 (function () {
+  var JOURNEY_STARTED_KEY = {{ ('ss_ph_journey_started_' ~ programme.id) | tojson }};
+  var JOURNEY_STARTED_TTL_MS = 86400000;
+  var props = {
+    journey_id: {{ programme.id | int }},
+    journey_type: {{ ('global' if programme.geographic_scope == 'global' else 'country') | tojson }},
+    journey_slug: {{ programme.slug | tojson }},
+    journey_name: {{ programme.name | tojson }},
+    total_steps: {{ journey_progress.total_themes | int }},
+    is_authenticated: {{ current_user.is_authenticated | tojson }},
+  };
+
+  function recentlyCaptured() {
+    try {
+      var raw = localStorage.getItem(JOURNEY_STARTED_KEY);
+      if (!raw) return false;
+      return (Date.now() - parseInt(raw, 10)) < JOURNEY_STARTED_TTL_MS;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function captureJourneyStarted() {
+    if (recentlyCaptured()) return true;
+    try {
+      if (!window.posthog || typeof window.posthog.capture !== 'function') return false;
+      window.posthog.capture('journey_started', props);
+      try { localStorage.setItem(JOURNEY_STARTED_KEY, String(Date.now())); } catch (e) {}
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  if (captureJourneyStarted()) return;
+  var attempts = 0;
+  var timer = setInterval(function () {
+    attempts += 1;
+    if (captureJourneyStarted() || attempts >= 30) clearInterval(timer);
+  }, 200);
+})();
+</script>
+<script nonce="{{ csp_nonce() }}">
+(function () {
   function phCapture(ev, props) {
     try {
       if (window.posthog && typeof window.posthog.capture === 'function') {

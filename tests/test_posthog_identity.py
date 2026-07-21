@@ -165,8 +165,8 @@ def test_url_redacts_secret_path_tokens_and_query(app):
     assert props['$utm_source'] == 'email'       # campaign preserved
 
 
-def test_safe_capture_skips_when_distinct_id_missing(app):
-    """A None/empty distinct_id must not create a 'None' person."""
+def test_safe_capture_skips_when_distinct_id_missing(app, caplog):
+    """A None/empty distinct_id must not create a 'None' person and should log."""
     captured = []
 
     class _Client:
@@ -178,9 +178,11 @@ def test_safe_capture_skips_when_distinct_id_missing(app):
     from app.lib.posthog_utils import safe_posthog_capture
 
     with app.test_request_context('/'):
-        safe_posthog_capture(posthog_client=_Client(), distinct_id=None, event='x')
-        safe_posthog_capture(posthog_client=_Client(), distinct_id='', event='x')
+        with caplog.at_level('WARNING'):
+            safe_posthog_capture(posthog_client=_Client(), distinct_id=None, event='x')
+            safe_posthog_capture(posthog_client=_Client(), distinct_id='', event='x')
     assert captured == []
+    assert any('no distinct_id' in r.message for r in caplog.records)
 
 
 def test_email_subscriber_id_is_pseudonymous_and_stable():
@@ -272,9 +274,12 @@ def test_safe_capture_drops_scripted_client_requests(app):
     assert len(captured) == 1
 
 
-def test_game_run_started_requires_browser_evidence(app):
-    """game_run_started fires on a bare GET (runs are created on page load), so
-    it must be gated on browser evidence; POST-driven turn events must not be."""
+def test_game_run_started_fires_without_posthog_cookie(app):
+    """game_run_started must not require the PostHog JS cookie on the GET request.
+
+    The cookie is set after JS runs, so a server-side gate on it dropped every
+    first-page load (regression from Jul 2026 browser-evidence gate).
+    """
     from unittest.mock import patch
 
     from app.game.analytics import track_game_event
@@ -284,19 +289,11 @@ def test_game_run_started_requires_browser_evidence(app):
         uuid='test-uuid', scenario_slug='s', mode='quick',
         session_fingerprint='fp-1', turn_index=0, total_turns=10,
     )
-    app.config['POSTHOG_API_KEY'] = PH_KEY
     browser_ua = {'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
-    cookie = _ph_cookie_header('019e8792-visitor')
 
     with patch('app.game.analytics.safe_posthog_capture') as capture:
-        # No cookie (crawler page load): run-started suppressed…
         with app.test_request_context('/run/s', headers=browser_ua):
             track_game_event(run, 'game_run_started')
-            assert capture.call_count == 0
-            # …but action-gated events still fire.
-            track_game_event(run, 'game_turn_completed')
             assert capture.call_count == 1
-        # Real browser (cookie present): run-started fires.
-        with app.test_request_context('/run/s', headers=browser_ua, environ_base=cookie):
-            track_game_event(run, 'game_run_started')
-            assert capture.call_count == 2
+            props = capture.call_args.kwargs['properties']
+            assert 'is_authenticated' in props

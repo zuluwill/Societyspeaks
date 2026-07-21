@@ -159,25 +159,32 @@ def process_subscription(
                         safe_posthog_capture,
                     )
                     ref = request.referrer or ''
-                    safe_posthog_capture(
-                        posthog_client=posthog,
-                        distinct_id=resolve_request_distinct_id(
-                            user_id=user.id if user else None,
-                            anon_fallback=email_subscriber_distinct_id(email),
-                        ),
-                        event='daily_brief_subscribed',
-                        properties={
-                            'subscription_tier': 'free',
-                            'plan_name': 'Daily Brief',
-                            'email': email,
-                            'source': 'social' if (
-                                'utm_source' in ref or
-                                any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])
-                            ) else 'direct',
-                            'referrer': request.referrer,
-                            'subscription_type': 'daily_brief',
-                        },
+                    distinct_id = resolve_request_distinct_id(
+                        user_id=user.id if user else None,
+                        anon_fallback=email_subscriber_distinct_id(email),
                     )
+                    if not distinct_id:
+                        logger.warning(
+                            'Skipping daily_brief_subscribed — no distinct_id for %s',
+                            email,
+                        )
+                    else:
+                        safe_posthog_capture(
+                            posthog_client=posthog,
+                            distinct_id=distinct_id,
+                            event='daily_brief_subscribed',
+                            properties={
+                                'subscription_tier': 'free',
+                                'plan_name': 'Daily Brief',
+                                'email': email,
+                                'source': 'social' if (
+                                    'utm_source' in ref or
+                                    any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])
+                                ) else 'direct',
+                                'referrer': request.referrer,
+                                'subscription_type': 'daily_brief',
+                            },
+                        )
             except Exception as e:
                 logger.warning(f"PostHog tracking error: {e}")
 

@@ -169,12 +169,21 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
             safe_posthog_capture,
         )
 
+        distinct_id = resolve_request_distinct_id(
+            user_id=user.id if user else None,
+            anon_fallback=email_subscriber_distinct_id(email),
+        )
+        if not distinct_id:
+            from flask import current_app
+            current_app.logger.warning(
+                'Skipping daily_question_subscribed — no distinct_id for %s',
+                email,
+            )
+            return
+
         safe_posthog_capture(
             posthog_client=posthog,
-            distinct_id=resolve_request_distinct_id(
-                user_id=user.id if user else None,
-                anon_fallback=email_subscriber_distinct_id(email),
-            ),
+            distinct_id=distinct_id,
             event='daily_question_subscribed',
             properties=props,
         )

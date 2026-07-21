@@ -499,6 +499,7 @@ def safe_posthog_capture(
         return
     # Never invent a 'None'/empty person when identity could not be resolved.
     if not distinct_id:
+        _log.warning("Skipping PostHog event %s — no distinct_id", event)
         return
     # Scripted clients (python-requests, curl, declared bots) are never worth
     # capturing; UA-based filtering downstream cannot recover once they are in.
