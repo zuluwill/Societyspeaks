@@ -167,6 +167,15 @@ def view_date(date_str):
     stance_card = build_stance_card_context(brief_date=brief_date)
     tradeoffs_card = build_tradeoffs_card_context() if brief.brief_type == 'daily' else None
 
+    from app.lib.share_text import build_brief_share_text
+
+    share_page_url = url_for('brief.view_date', date_str=brief_date.strftime('%Y-%m-%d'), _external=True)
+    share_description = build_brief_share_text(
+        brief.title,
+        story_count=len(items),
+        brief_type=brief.brief_type,
+    )
+
     return render_template(
         'brief/view.html',
         brief=brief,
@@ -180,6 +189,8 @@ def view_date(date_str):
         latest_weekly=latest_weekly,
         stance_card=stance_card,
         tradeoffs_card=tradeoffs_card,
+        share_page_url=share_page_url,
+        share_description=share_description,
     )
 
 
@@ -282,6 +293,15 @@ def weekly_by_date(date_str):
 
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
+    from app.lib.share_text import build_brief_share_text
+
+    share_page_url = url_for('brief.weekly_by_date', date_str=brief_date.strftime('%Y-%m-%d'), _external=True)
+    share_description = build_brief_share_text(
+        brief.title,
+        story_count=len(items),
+        brief_type='weekly',
+    )
+
     return render_template(
         'brief/view.html',
         brief=brief,
@@ -291,7 +311,9 @@ def weekly_by_date(date_str):
         is_subscriber=is_subscriber,
         is_today=False,
         show_email_capture=(not is_subscriber),
-        tts_available=False
+        tts_available=False,
+        share_page_url=share_page_url,
+        share_description=share_description,
     )
 
 

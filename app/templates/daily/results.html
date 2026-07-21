@@ -7,13 +7,15 @@
 
 {% set results_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
 {% block canonical %}{{ results_url }}{% endblock %}
-{% set base_share_text = '"' ~ question.question_text[:150] ~ '"' %}
 
 {% block og_title %}{{ _('%(pct)s%% Agree: %(text)s... - Daily Question Results', pct=stats.agree, text=question.question_text[:50]) }}{% endblock %}
 {% block og_description %}{{ _('See how people voted: %(agree)s%% Agree, %(disagree)s%% Disagree, %(unsure)s%% Unsure. Join the conversation at societyspeaks.io', agree=stats.agree, disagree=stats.disagree, unsure=stats.unsure) }}{% endblock %}
+{% block og_image %}{{ og_png_url }}{% endblock %}
+{% block og_image_alt %}{{ question.question_text[:120] }}{% endblock %}
 
 {% block twitter_title %}{{ _('%(pct)s%% Agree: %(text)s... - Results', pct=stats.agree, text=question.question_text[:50]) }}{% endblock %}
 {% block twitter_description %}{{ _('%(total)d responses: %(agree)s%% Agree | %(disagree)s%% Disagree | %(unsure)s%% Unsure - powered by societyspeaks.io', total=stats.total, agree=stats.agree, disagree=stats.disagree, unsure=stats.unsure) }}{% endblock %}
+{% block twitter_image %}{{ og_png_url }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -457,13 +459,11 @@
             <div class="border-t pt-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ _('Invite Others to Participate') }}</h3>
 
-                {% set results_share_text = _('%(base)s - What do you think? %(total)d people have weighed in. Add your voice at societyspeaks.io', base=base_share_text, total=stats.total) %}
-
                 <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
                     {{ share_button(
                         title=_('Daily Civic Question - Society Speaks'),
                         url=results_url,
-                        description=results_share_text,
+                        description=share_description,
                         button_style="secondary"
                     ) }}
 

@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app, make_response
+from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app, make_response, abort
 from flask_login import current_user, login_user
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
@@ -382,13 +382,25 @@ def by_date(date_str):
         public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
         reasons_stats = get_public_reasons_stats(question)
         streak_data = get_user_streak_data()
+        stats = question.vote_percentages
+        from app.daily.share_text import build_daily_results_share_text
+        share_description = build_daily_results_share_text(
+            question.question_text,
+            total=stats['total'],
+            agree=stats['agree'],
+            disagree=stats['disagree'],
+            unsure=stats['unsure'],
+        )
+        og_png_url = url_for('daily.og_png', date_str=date_str, results=1, _external=True)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
-                             stats=question.vote_percentages,
+                             stats=stats,
                              is_cold_start=question.is_cold_start,
                              early_signal=question.early_signal_message,
                              share_snippet=generate_share_snippet(question, user_response) if user_response else None,
+                             share_description=share_description,
+                             og_png_url=og_png_url,
                              is_past=not is_today,
                              source_discussion=question.source_discussion,
                              source_articles=get_source_articles(question),
@@ -399,11 +411,58 @@ def by_date(date_str):
                              streak_data=streak_data)
     else:
         from app.daily.utils import get_brief_context_for_question
+        from app.daily.share_text import build_daily_question_share_text
         source_articles = get_source_articles(question, limit=3)
         return render_template('daily/question.html',
                              question=question,
                              source_articles=source_articles,
-                             brief_context=get_brief_context_for_question(question))
+                             brief_context=get_brief_context_for_question(question),
+                             share_description=build_daily_question_share_text(question.question_text),
+                             og_png_url=url_for('daily.og_png', date_str=date_str, _external=True))
+
+
+@daily_bp.route('/daily/<date_str>/og.png')
+@limiter.limit('240 per minute')
+def og_png(date_str):
+    """OG share image for daily question permalinks (Twitter, iMessage, Slack, LinkedIn)."""
+    try:
+        question_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        abort(404)
+
+    question = DailyQuestion.get_by_date(question_date)
+    if not question:
+        abort(404)
+
+    from app.daily import og_image_service
+    from flask_babel import _
+
+    if not og_image_service.is_available():
+        return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+
+    stats = question.vote_percentages
+    include_results = request.args.get('results') == '1' and stats['total'] > 0
+    responses_label = None
+    if include_results:
+        responses_label = _('%(count)d responses', count=stats['total'])
+
+    png_bytes = og_image_service.render_daily_question_png(
+        question_number=question.question_number,
+        question_text=question.question_text,
+        stats=stats if include_results else None,
+        badge_label=_('Daily Civic Question'),
+        agree_label=_('Agree'),
+        disagree_label=_('Disagree'),
+        unsure_label=_('Unsure'),
+        responses_label=responses_label,
+    )
+    if not png_bytes:
+        return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+
+    response = make_response(png_bytes)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Cache-Control'] = 'public, max-age=300'
+    return response
 
 
 @daily_bp.route('/daily/<date_str>/comments')

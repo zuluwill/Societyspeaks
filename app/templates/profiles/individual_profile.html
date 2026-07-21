@@ -80,9 +80,9 @@
                             {% endif %}
                             {% from "components/share_button.html" import share_button %}
                             {{ share_button(
-                                title=_('%(name)s is shaping the future of public discourse on SocietySpeaks', name=profile.full_name),
-                                url=url_for('profiles.view_individual_profile', username=profile.slug, _external=True),
-                                description=_("Join %(name)s in tackling society's biggest challenges through nuanced debate and real policy solutions on SocietySpeaks.io. Your voice matters!", name=profile.full_name),
+                                title=_('%(name)s on Society Speaks', name=profile.full_name),
+                                url=share_page_url,
+                                description=share_description,
                                 button_style="primary"
                             ) }}
                         </div>

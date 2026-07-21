@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from 'components/_translation_pending.html' import translation_pending_notice %}
+{% from "components/share_button.html" import share_button %}
 
 {# Canonical discussion URL + translated SEO fields (machine-translated when non-English) #}
 {% set _disc_canonical = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
@@ -46,8 +47,11 @@
 {% block og_url %}{{ _disc_canonical }}{% endblock %}
 {% block og_title %}{{ seo_title }} — Society Speaks{% endblock %}
 {% block og_description %}{% if seo_desc %}{{ seo_desc }}{% else %}{{ _('Join the discussion on SocietySpeaks.') }}{% endif %}{% endblock %}
+{% block og_image %}{{ og_png_url }}{% endblock %}
+{% block og_image_alt %}{{ seo_title }}{% endblock %}
 {% block twitter_title %}{{ seo_title }} — Society Speaks{% endblock %}
 {% block twitter_description %}{% if seo_desc %}{{ seo_desc }}{% else %}{{ _('Join the discussion on SocietySpeaks.') }}{% endif %}{% endblock %}
+{% block twitter_image %}{{ og_png_url }}{% endblock %}
 
 {% block content %}
 <div class="{% if guided_journey_context %}max-w-4xl{% else %}max-w-7xl{% endif %} mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -293,170 +297,14 @@
       <div class="flex flex-wrap items-start justify-between gap-4">
         <h1 class="text-3xl font-bold text-gray-900">{{ discussion_translation.title if discussion_translation else discussion.title }}</h1>
 
-        <!-- Share Button with Dropdown -->
-        <div class="relative">
-          <button
-            type="button"
-            id="shareButton"
-            aria-haspopup="true"
-            aria-expanded="false"
-            aria-label="{{ _('Share Discussion') }}"
-            class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-          >
-            <svg
-              class="h-5 w-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-              />
-            </svg>
-            {{ _('Share Discussion') }}
-          </button>
-          <!-- Share Dropdown Menu -->
-          <div
-            id="shareButtons"
-            class="hidden absolute top-full mt-2 right-0 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50"
-          >
-            <div class="py-1">
-              {% set share_title = discussion.title|urlencode %} {% set
-              share_url = url_for('discussions.view_discussion',
-              discussion_id=discussion.id, slug=discussion.slug, _external=True)
-              %} {% set share_text = _('Join this important discussion on SocietySpeaks: %(title)s', title=discussion.title) %}
-
-              <!-- LinkedIn -->
-              <a
-                href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}"
-                target="_blank"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <img
-                  src="{{ url_for('static', filename='icons/Linkedin_icon.svg') }}"
-                  alt="LinkedIn"
-                  class="h-5 w-5 mr-3"
-                />
-                LinkedIn
-              </a>
-              <!-- Meta (Facebook) -->
-              <a
-                href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text|urlencode }}"
-                target="_blank"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <img
-                  src="{{ url_for('static', filename='icons/facebook.svg') }}"
-                  alt="Facebook"
-                  class="h-5 w-5 mr-3"
-                />
-                Meta (Facebook)
-              </a>
-
-              <!-- X (Twitter) -->
-              <a
-                href="https://twitter.com/intent/tweet?text={{ share_text|urlencode }}&url={{ share_url }}"
-                target="_blank"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <img
-                  src="{{ url_for('static', filename='icons/X_icon.svg') }}"
-                  alt="X (Twitter)"
-                  class="h-5 w-5 mr-3"
-                />
-                X (Twitter)
-              </a>
-
-              <!-- BlueSky -->
-              <a
-                href="https://bsky.app/intent/compose?text={{ share_text|urlencode }} {{ share_url }}"
-                target="_blank"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <img
-                  src="{{ url_for('static', filename='icons/bluesky.svg') }}"
-                  alt="Bluesky"
-                  class="h-5 w-5 mr-3"
-                />
-                BlueSky
-              </a>
-
-              <!-- WhatsApp -->
-              <a
-                href="https://wa.me/?text={{ share_text|urlencode }}%20{{ share_url }}"
-                target="_blank"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <img
-                  src="{{ url_for('static', filename='icons/whatsapp.svg') }}"
-                  alt="WhatsApp"
-                  class="h-5 w-5 mr-3"
-                />
-                WhatsApp
-              </a>
-
-              <!-- Telegram -->
-              <a
-                href="https://t.me/share/url?url={{ share_url }}&text={{ share_text|urlencode }}"
-                target="_blank"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <img
-                  src="{{ url_for('static', filename='icons/telegram.svg') }}"
-                  alt="Telegram"
-                  class="h-5 w-5 mr-3"
-                />
-                Telegram
-              </a>
-
-              <!-- Email -->
-              <a
-                href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks%20Discussion&body={{ share_text|urlencode }}%0A%0A{{ share_url }}"
-                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <svg
-                  class="h-5 w-5 mr-3 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                {{ _('Email') }}
-              </a>
-
-              <!-- Copy Link -->
-              <button
-                id="copyLinkBtn"
-                data-copy-url="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
-                class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <svg
-                  class="h-5 w-5 mr-3 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                  />
-                </svg>
-                <span class="copy-text">{{ _('Copy Link') }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <!-- Share -->
+        {{ share_button(
+            title=display_title,
+            url=share_page_url,
+            description=share_description,
+            button_label=_('Share Discussion'),
+            button_style="primary"
+        ) }}
 
         <!-- Discussion Details -->
 
@@ -737,36 +585,6 @@
 
   <script nonce="{{ csp_nonce() }}">
     document.addEventListener("DOMContentLoaded", function () {
-      // Share Button Logic - improved to prevent double-toggle on touch devices
-      const shareButton = document.getElementById("shareButton");
-      const shareButtons = document.querySelector("#shareButtons");
-      let shareButtonTouchHandled = false;
-
-      if (shareButton && shareButtons) {
-        function toggleShare(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          shareButtons.classList.toggle("hidden");
-          
-          // Update aria-expanded
-          const isExpanded = !shareButtons.classList.contains("hidden");
-          shareButton.setAttribute("aria-expanded", isExpanded);
-        }
-        
-        shareButton.addEventListener("touchend", function(e) {
-          e.preventDefault();
-          shareButtonTouchHandled = true;
-          toggleShare(e);
-          setTimeout(function() { shareButtonTouchHandled = false; }, 300);
-        }, { passive: false });
-        
-        shareButton.addEventListener("click", function(e) {
-          if (!shareButtonTouchHandled) {
-            toggleShare(e);
-          }
-        });
-      }
-
       // Research Tools Dropdown Logic - improved to prevent double-toggle on touch devices
       const researchToolsBtn = document.getElementById("researchToolsBtn");
       const researchToolsDropdown = document.getElementById("researchToolsDropdown");
@@ -797,16 +615,8 @@
         });
       }
 
-      // Global click handler for both dropdowns
+      // Global click handler for research tools dropdown
       document.addEventListener("click", function (e) {
-        // Handle share buttons dropdown
-        if (shareButtons && shareButton) {
-          if (!shareButtons.contains(e.target) && !shareButton.contains(e.target)) {
-            shareButtons.classList.add("hidden");
-            shareButton.setAttribute("aria-expanded", "false");
-          }
-        }
-
         // Handle research tools dropdown
         if (researchToolsDropdown && researchToolsBtn) {
           if (!researchToolsDropdown.contains(e.target) && !researchToolsBtn.contains(e.target)) {
@@ -816,52 +626,6 @@
         }
       });
     });
-
-    // Copy to Clipboard function
-    function copyToClipboard(text) {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          const toast = document.createElement("div");
-          toast.textContent = "{{ _('Link copied to clipboard!') }}";
-          toast.className =
-            "fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg";
-          document.body.appendChild(toast);
-          setTimeout(() => {
-            toast.remove();
-          }, 3000);
-        })
-        .catch((err) => {
-          console.error("Failed to copy text: ", err);
-        });
-    }
-
-    // Copy Link function
-    async function copyLink(url) {
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch (err) {
-        console.error("Failed to copy text: ", err);
-      }
-    }
-
-    const copyLinkBtn = document.getElementById("copyLinkBtn");
-    if (copyLinkBtn) {
-      copyLinkBtn.addEventListener("click", async function() {
-        const url = this.getAttribute("data-copy-url");
-        try {
-          await navigator.clipboard.writeText(url);
-          const textSpan = this.querySelector(".copy-text");
-          if (textSpan) {
-            const originalText = textSpan.textContent;
-            textSpan.textContent = "{{ _('Copied!') }}";
-            setTimeout(() => (textSpan.textContent = originalText), 2000);
-          }
-        } catch (err) {
-          console.error("Failed to copy text: ", err);
-        }
-      });
-    }
   </script>
   {% endblock %}
 </div>

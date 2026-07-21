@@ -149,10 +149,16 @@
   btn.addEventListener('click', function () {
     setStatus('');
 
+    var nativeText = shareText;
+    if (shareUrl && nativeText.indexOf(shareUrl) !== -1) {
+      nativeText = nativeText.replace(shareUrl, '').trim();
+    }
+
     if (navigator.share) {
       navigator.share({
         title: shareTitle,
-        text: shareText,
+        text: nativeText,
+        url: shareUrl || undefined,
       }).then(function () {
         trackShare('native');
         setStatus(defaultLabel);

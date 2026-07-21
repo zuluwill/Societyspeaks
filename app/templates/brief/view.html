@@ -4,6 +4,7 @@
 {% from "components/dive_deeper_links.html" import dive_deeper_links %}
 {% from "components/email_capture.html" import email_capture_inline, email_capture_compact, paid_brief_crosssell %}
 {% from "components/listen_with.html" import listen_with %}
+{% from "components/share_button.html" import share_button %}
 
 {% block title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
 {% block canonical %}{{ url_for('brief.weekly_by_date' if brief.brief_type == 'weekly' else 'brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}{% endblock %}
@@ -954,13 +955,15 @@
                         </svg>
                         {{ _('Get Your Own Brief') }}
                     </a>
-                    <button id="brief-share-btn"
-                            class="inline-flex items-center justify-center px-6 py-3 bg-primary-700 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                        </svg>
-                        {{ _('Share This Brief') }}
-                    </button>
+                    {% if share_page_url is defined and share_description is defined %}
+                    {{ share_button(
+                        title=_('%(title)s - Society Speaks', title=brief.title),
+                        url=share_page_url,
+                        description=share_description,
+                        button_label=_('Share This Brief'),
+                        button_style="secondary"
+                    ) }}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -1014,15 +1017,4 @@
     }
 }
 </style>
-
-{# JavaScript is now in shared files: toast.js and brief-audio.js #}
-<script nonce="{{ csp_nonce() }}">
-  document.getElementById('brief-share-btn')?.addEventListener('click', function() {
-    if (navigator.share) {
-      navigator.share({title: '{{ brief.title|e }}', url: window.location.href});
-    } else {
-      navigator.clipboard.writeText(window.location.href).then(function() { alert({{ _('Link copied!')|tojson }}); });
-    }
-  });
-</script>
 {% endblock %}

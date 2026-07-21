@@ -948,7 +948,7 @@ def generate_x_share_url(
     
     encoded_text = quote(text, safe='')
     
-    share_url = f"https://twitter.com/intent/tweet?text={encoded_text}"
+    share_url = f"https://x.com/intent/tweet?text={encoded_text}"
     
     return share_url
 

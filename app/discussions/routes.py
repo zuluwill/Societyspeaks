@@ -836,6 +836,51 @@ def embed_discussion(discussion_id):
     return response
 
 
+@discussions_bp.route('/<int:discussion_id>/og.png')
+@limiter.limit('240 per minute')
+def og_png(discussion_id: int):
+    """OG share image for discussion permalinks — fixes Bluesky/link-card previews."""
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion or discussion.partner_env == 'test':
+        abort(404)
+
+    from app.discussions import og_image_service
+    from app.lib.og_cache import og_cache_get, og_cache_set
+    from flask_babel import _, ngettext
+
+    if not og_image_service.is_available():
+        return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+
+    participant_count = int(get_discussion_participant_count(discussion) or 0)
+    cache_key = f'discussion:og:png:{discussion_id}:{participant_count}'
+    png_bytes = og_cache_get(cache_key)
+    if png_bytes is None:
+        participants_label = None
+        if participant_count > 0:
+            participants_label = ngettext(
+                '%(count)d participant · Join the conversation',
+                '%(count)d participants · Join the conversation',
+                participant_count,
+                count=participant_count,
+            )
+        png_bytes = og_image_service.render_discussion_png(
+            title=discussion.title,
+            topic=discussion.topic,
+            participant_count=participant_count,
+            badge_label=_('Public Discussion'),
+            participants_label=participants_label,
+            cta_label=_('Join the conversation'),
+        )
+        if not png_bytes:
+            return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+        og_cache_set(cache_key, png_bytes, ttl_seconds=3600)
+
+    response = make_response(png_bytes)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Cache-Control'] = 'public, max-age=300'
+    return response
+
+
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
 @track_discussion_view
 @retry_on_db_disconnect()
@@ -996,6 +1041,25 @@ def view_discussion(discussion_id, slug):
             safe_information_html = render_safe_markdown(body_for_render)
         safe_info_links = safe_information_links(discussion.information_links)
 
+    from app.lib.share_text import build_discussion_share_text
+
+    display_title = (
+        view_discussion_translation.title
+        if view_discussion_translation
+        else discussion.title
+    )
+    share_page_url = url_for(
+        'discussions.view_discussion',
+        discussion_id=discussion.id,
+        slug=discussion.slug,
+        _external=True,
+    )
+    share_description = build_discussion_share_text(
+        display_title,
+        participant_count=discussion_participant_count,
+    )
+    og_png_url = url_for('discussions.og_png', discussion_id=discussion.id, _external=True)
+
     view_response = make_response(render_template('discussions/view_discussion.html',
                          discussion=discussion,
                          statements=statements,
@@ -1020,7 +1084,11 @@ def view_discussion(discussion_id, slug):
                          guided_journey_context=guided_journey_context,
                          current_lang=view_lang,
                          translation_map=view_translation_map,
-                         discussion_translation=view_discussion_translation))
+                         discussion_translation=view_discussion_translation,
+                         share_page_url=share_page_url,
+                         share_description=share_description,
+                         display_title=display_title,
+                         og_png_url=og_png_url))
     if view_lang != 'en':
         view_response.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
     return view_response

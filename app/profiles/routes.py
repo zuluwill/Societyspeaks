@@ -405,11 +405,16 @@ def view_individual_profile(username):
     discussions = Discussion.query.filter_by(creator_id=profile.user_id).order_by(
         Discussion.created_at.desc()
     ).paginate(page=page, per_page=10, error_out=False)
+    from app.lib.share_text import build_profile_share_text
+    share_page_url = url_for('profiles.view_individual_profile', username=profile.slug, _external=True)
+    share_description = build_profile_share_text(profile.full_name, is_company=False)
     return render_template(
         'profiles/individual_profile.html',
         profile=profile,
         discussions=discussions,
         seo_noindex=page > 1,
+        share_page_url=share_page_url,
+        share_description=share_description,
     )
 
 @profiles_bp.route('/profile/company/<company_name>')
@@ -425,12 +430,17 @@ def view_company_profile(company_name):
         visibility='public',
         status='active'
     ).order_by(Programme.created_at.desc()).all()
+    from app.lib.share_text import build_profile_share_text
+    share_page_url = url_for('profiles.view_company_profile', company_name=profile.slug, _external=True)
+    share_description = build_profile_share_text(profile.company_name, is_company=True)
     return render_template(
         'profiles/company_profile.html',
         profile=profile,
         discussions=discussions,
         programmes=programmes,
         seo_noindex=page > 1,
+        share_page_url=share_page_url,
+        share_description=share_description,
     )
 
 

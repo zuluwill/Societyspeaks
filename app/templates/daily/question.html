@@ -7,17 +7,15 @@
 
 {% set share_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
 {% block canonical %}{{ share_url }}{% endblock %}
-{% if question.question_text|length <= 200 %}
-  {% set share_text = _('"%(text)s" - Powered by https://societyspeaks.io', text=question.question_text) %}
-{% else %}
-  {% set share_text = _('"%(text)s..." - societyspeaks.io', text=question.question_text[:200]) %}
-{% endif %}
 
 {% block og_title %}{{ _('%(text)s... - Daily Civic Question', text=question.question_text[:70]) }}{% endblock %}
 {% block og_description %}{{ _("Take 2 minutes to share your view on today's civic question. Powered by Society Speaks - building consensus through meaningful dialogue.") }}{% endblock %}
+{% block og_image %}{{ og_png_url }}{% endblock %}
+{% block og_image_alt %}{{ question.question_text[:120] }}{% endblock %}
 
 {% block twitter_title %}{{ _('%(text)s... - Daily Question', text=question.question_text[:70]) }}{% endblock %}
 {% block twitter_description %}{{ _('%(text)s... | Share your perspective in under 2 minutes. Powered by societyspeaks.io', text=question.question_text[:200]) }}{% endblock %}
+{% block twitter_image %}{{ og_png_url }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -192,7 +190,7 @@
                 {{ share_button(
                     title=_('Daily Civic Question #%(num)d', num=question.question_number),
                     url=share_url,
-                    description=share_text,
+                    description=share_description,
                     button_style="primary"
                 ) }}
             </div>

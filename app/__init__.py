@@ -736,6 +736,9 @@ def create_app():
     from app.lib.jinja_i18n import escape_i18n
     app.jinja_env.filters['escape_i18n'] = escape_i18n
 
+    from app.lib.share_utils import share_urlencode
+    app.jinja_env.filters['share_urlencode'] = share_urlencode
+
     def drop_nulls(value):
         """Recursively remove keys whose values are None (used for JSON-LD so we don't emit `null` fields)."""
         if isinstance(value, dict):
