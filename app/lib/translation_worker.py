@@ -443,7 +443,9 @@ def run_translation_worker() -> dict[str, Any]:
                     lang_code, stmts, discs, progs,
                 )
         except Exception as exc:
-            logger.error('Translation worker failed for language %s: %s', lang_code, exc)
+            from app.lib.llm_transient_errors import log_llm_error
+
+            log_llm_error(logger, exc, context=f'Translation worker failed for language {lang_code}')
             totals['errors'].append(lang_code)
 
         # Brief pause between languages to avoid burst rate limiting.

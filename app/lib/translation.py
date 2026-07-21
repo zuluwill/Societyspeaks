@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 # Single source of truth — imported by translation_worker.py as well.
 from app.lib.locale_utils import SUPPORTED_LANGUAGES  # noqa: E402
 from app.lib.llm_transient_errors import log_llm_error  # noqa: E402
+from app.lib.llm_transient_errors import is_transient_llm_error  # noqa: E402
 
 
 class DiscussionTranslationCache(TypedDict):
@@ -69,8 +70,8 @@ def _anthropic_client():
         return None
     try:
         import anthropic
-        # max_retries=3 gives automatic exponential backoff on 429s.
-        return anthropic.Anthropic(api_key=api_key, max_retries=3)
+        # max_retries=4: SDK backoff on 429/5xx before our caller-level retry loop.
+        return anthropic.Anthropic(api_key=api_key, max_retries=4)
     except ImportError:
         logger.warning('anthropic package not installed; translation disabled')
         return None
@@ -83,6 +84,8 @@ def _translate_batch(texts: list[str], target_lang: str, topic: str = '') -> lis
     that item. Called exclusively by translation_worker.py — never on the
     request path.
     """
+    import time
+
     if target_lang == 'en' or not texts:
         return list(texts)
 
@@ -104,16 +107,32 @@ def _translate_batch(texts: list[str], target_lang: str, topic: str = '') -> lis
         f'{numbered}'
     )
 
-    try:
-        response = client.messages.create(
-            model='claude-haiku-4-5-20251001',
-            max_tokens=4096,
-            messages=[{'role': 'user', 'content': prompt}],
-        )
-        return _parse_numbered_response(response.content[0].text.strip(), len(texts))
-    except Exception as exc:
-        log_llm_error(logger, exc, context=f'Translation batch failed (lang={target_lang})')
-        return [None] * len(texts)
+    max_attempts = 3
+    for attempt in range(max_attempts):
+        try:
+            response = client.messages.create(
+                model='claude-haiku-4-5-20251001',
+                max_tokens=4096,
+                messages=[{'role': 'user', 'content': prompt}],
+            )
+            return _parse_numbered_response(response.content[0].text.strip(), len(texts))
+        except Exception as exc:
+            if attempt < max_attempts - 1 and is_transient_llm_error(exc):
+                wait_time = 2 ** attempt
+                logger.warning(
+                    'Translation batch retry %d/%d (lang=%s) in %ss: %s',
+                    attempt + 1,
+                    max_attempts,
+                    target_lang,
+                    wait_time,
+                    exc,
+                )
+                time.sleep(wait_time)
+                continue
+            log_llm_error(logger, exc, context=f'Translation batch failed (lang={target_lang})')
+            return [None] * len(texts)
+
+    return [None] * len(texts)
 
 
 def _parse_numbered_response(raw: str, expected: int) -> list[Optional[str]]:

@@ -11,7 +11,7 @@ import os
 import json
 import re
 from app.models import TrendingTopic, NewsPerspectiveCache, NewsArticle, db
-from app.lib.llm_transient_errors import log_llm_error
+from app.lib.llm_transient_errors import log_llm_error, is_transient_llm_error
 import logging
 
 logger = logging.getLogger(__name__)
@@ -284,7 +284,8 @@ def _call_openai(prompt: str, api_key: str) -> str:
         return content
 
     except Exception as e:
-        log_llm_error(logger, e, context="OpenAI API error")
+        if log_llm_error(logger, e, context="OpenAI API error"):
+            raise ValueError("OpenAI API temporarily unavailable")
         raise
 
 
@@ -312,7 +313,8 @@ def _call_anthropic(prompt: str, api_key: str) -> str:
         return content
 
     except Exception as e:
-        log_llm_error(logger, e, context="Anthropic API error")
+        if log_llm_error(logger, e, context="Anthropic API error"):
+            raise ValueError("Anthropic API temporarily unavailable")
         raise
 
 

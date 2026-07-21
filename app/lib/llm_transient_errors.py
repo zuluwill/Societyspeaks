@@ -13,12 +13,25 @@ stay at ERROR.
 
 Matching is by exception **type name** and case-insensitive message substring so
 it works across OpenAI and Anthropic SDK versions without importing either.
-Seen in production as Anthropic ``OverloadedError`` (``Error code: 529``).
+Seen in production as Anthropic ``OverloadedError`` (``Error code: 529``) and
+``InternalServerError`` (``Error code: 500``).
 """
 
 from __future__ import annotations
 
 import logging
+
+# SDK exception class names that are always treated as transient for Sentry filtering.
+TRANSIENT_LLM_EXCEPTION_TYPE_NAMES = frozenset({
+    "InternalServerError",
+    "OverloadedError",
+    "RateLimitError",
+    "APIConnectionError",
+    "APITimeoutError",
+    "ConnectError",
+    "ReadTimeout",
+    "Timeout",
+})
 
 
 def is_rate_limit_error(error: BaseException) -> bool:
@@ -126,4 +139,32 @@ def log_llm_error(
         )
         return True
     logger.error("%s: %s", context, error, exc_info=exc_info)
+    return False
+
+
+def sentry_should_drop_transient_llm(event, hint) -> bool:
+    """Return True when a Sentry event is a retryable provider blip (already logged).
+
+    Safety net for call sites that still re-raise after :func:`log_llm_error`, and
+    for SDK exceptions captured before our handlers run.
+    """
+    exc_info = hint.get("exc_info")
+    if exc_info and len(exc_info) >= 2 and exc_info[1] is not None:
+        if is_transient_llm_error(exc_info[1]):
+            return True
+
+    for exc in (event.get("exception") or {}).get("values") or []:
+        typ = exc.get("type") or ""
+        val = exc.get("value") or ""
+        if typ in TRANSIENT_LLM_EXCEPTION_TYPE_NAMES:
+            return True
+        if is_transient_llm_error(Exception(val)):
+            return True
+
+    if "log_record" in hint:
+        record = hint["log_record"]
+        msg = (record.getMessage() or "") if hasattr(record, "getMessage") else str(record.msg or "")
+        if record.levelno >= logging.ERROR and is_transient_llm_error(Exception(msg)):
+            return True
+
     return False

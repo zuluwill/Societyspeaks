@@ -17,6 +17,7 @@ from app.lib.llm_transient_errors import (
     is_timeout_error,
     is_transient_llm_error,
     log_llm_error,
+    sentry_should_drop_transient_llm,
 )
 
 
@@ -114,3 +115,44 @@ def test_log_llm_error_errors_on_permanent(caplog):
         )
     assert is_transient is False
     assert caplog.records and caplog.records[-1].levelno == logging.ERROR
+
+
+ANTHROPIC_500 = (
+    "Error code: 500 - {'type': 'error', 'error': "
+    "{'type': 'api_error', 'message': 'Internal server error'}, "
+    "'request_id': 'req_test'}"
+)
+
+
+def test_sentry_should_drop_anthropic_internal_server_error():
+    event = {
+        "exception": {
+            "values": [
+                {
+                    "type": "InternalServerError",
+                    "value": ANTHROPIC_500,
+                }
+            ]
+        }
+    }
+    assert sentry_should_drop_transient_llm(event, {}) is True
+
+
+def test_sentry_should_drop_exc_info_transient():
+    exc = _named("InternalServerError", ANTHROPIC_500)
+    event = {}
+    assert sentry_should_drop_transient_llm(event, {"exc_info": (type(exc), exc, None)}) is True
+
+
+def test_sentry_keeps_permanent_errors():
+    event = {
+        "exception": {
+            "values": [
+                {
+                    "type": "ValueError",
+                    "value": "invalid JSON from LLM",
+                }
+            ]
+        }
+    }
+    assert sentry_should_drop_transient_llm(event, {}) is False

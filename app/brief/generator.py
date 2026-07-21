@@ -19,7 +19,7 @@ from typing import List, Dict, Optional, Tuple, Any
 from app.lib.time import utcnow_naive
 from app.models import DailyBrief, BriefItem, TrendingTopic, NewsArticle, UpcomingEvent, db
 from app.brief.coverage_analyzer import CoverageAnalyzer
-from app.lib.llm_transient_errors import log_llm_error
+from app.lib.llm_transient_errors import log_llm_error, is_transient_llm_error
 from app.brief.sections import (
     SECTIONS, DEPTH_FULL, DEPTH_STANDARD, DEPTH_QUICK, DEPTH_CONFIG,
     get_section_for_category, get_topic_display_label,
@@ -1718,6 +1718,8 @@ Guidelines:
                     time.sleep(wait_time)
                     continue
                 log_llm_error(logger, e, context=f"OpenAI API error after {attempt + 1} attempts")
+                if is_transient_llm_error(e):
+                    return ""
                 raise
 
             except openai.APIConnectionError as e:
@@ -1726,12 +1728,12 @@ Guidelines:
                     logger.warning(f"OpenAI connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                     time.sleep(wait_time)
                     continue
-                # A connection error is a transient network blip, not a hard failure.
-                logger.warning(f"OpenAI connection error after {attempt + 1} attempts: {e}")
-                raise
+                log_llm_error(logger, e, context=f"OpenAI connection error after {attempt + 1} attempts")
+                return ""
 
             except Exception as e:
-                log_llm_error(logger, e, context="OpenAI API error")
+                if log_llm_error(logger, e, context="OpenAI API error"):
+                    return ""
                 raise
 
     def _call_anthropic(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3, system_prompt: Optional[str] = None, max_tokens: Optional[int] = None) -> str:
@@ -1773,6 +1775,8 @@ Guidelines:
                     time.sleep(wait_time)
                     continue
                 log_llm_error(logger, e, context=f"Anthropic API error after {attempt + 1} attempts")
+                if is_transient_llm_error(e):
+                    return ""
                 raise
 
             except anthropic.APIConnectionError as e:
@@ -1781,12 +1785,12 @@ Guidelines:
                     logger.warning(f"Anthropic connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
                     time.sleep(wait_time)
                     continue
-                # A connection error is a transient network blip, not a hard failure.
-                logger.warning(f"Anthropic connection error after {attempt + 1} attempts: {e}")
-                raise
+                log_llm_error(logger, e, context=f"Anthropic connection error after {attempt + 1} attempts")
+                return ""
 
             except Exception as e:
-                log_llm_error(logger, e, context="Anthropic API error")
+                if log_llm_error(logger, e, context="Anthropic API error"):
+                    return ""
                 raise
 
 

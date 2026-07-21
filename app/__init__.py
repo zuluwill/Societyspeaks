@@ -282,12 +282,19 @@ def create_app():
               cleanup; may hide bugs elsewhere — revisit if frequency rises.
             - OSError errno 5 (EIO): client disconnect during response write;
               gunicorn handles worker lifecycle; no user impact.
+            - Transient LLM provider 5xx/429/timeout: Anthropic/OpenAI blips;
+              callers degrade gracefully; do not page the team.
             - Transient database outages are logged at ERROR in the Flask
               handler (with stack traces for non-transient OperationalError).
               If Sentry logging integration duplicates noise for the same
               incident, extend the filters below — do not document filters that
               are not implemented.
             """
+            from app.lib.llm_transient_errors import sentry_should_drop_transient_llm
+
+            if sentry_should_drop_transient_llm(event, hint):
+                return None
+
             def drop_if(msg, *phrases):
                 if not msg:
                     return False
