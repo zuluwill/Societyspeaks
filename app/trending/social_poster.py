@@ -413,6 +413,18 @@ def generate_post_text(
     return post[:max_length]
 
 
+BLUESKY_DIRECT_POST_TTL_SECONDS = 48 * 3600  # calendar-day slots; covers TZ edge cases
+
+
+def og_png_url_for_page(page_url: str) -> str:
+    """Direct OG PNG URL for a canonical page (daily, brief, etc.).
+
+    Appends ``/og.png`` to the page URL so Bluesky link cards fetch the rendered
+    card without an HTML scrape round-trip.
+    """
+    return page_url.rstrip('/') + '/og.png'
+
+
 def _discussion_og_image_url(discussion) -> Optional[str]:
     """Direct OG PNG URL for a discussion — avoids HTML scrape round-trip for Bluesky cards.
 
@@ -424,9 +436,43 @@ def _discussion_og_image_url(discussion) -> Optional[str]:
     if not discussion_id:
         return None
     try:
-        return f"{get_base_url().rstrip('/')}/discussions/{discussion_id}/og.png"
+        page = f"{get_base_url().rstrip('/')}/discussions/{discussion_id}"
+        return og_png_url_for_page(page)
     except Exception:
         return None
+
+
+def _bluesky_direct_post_redis_key(kind: str, slot: str) -> str:
+    return f'bluesky:direct:{kind}:{slot}'
+
+
+def bluesky_direct_post_already_sent(kind: str, slot: str) -> bool:
+    """True when a direct (non-queued) Bluesky post for this slot was already sent."""
+    try:
+        from app.lib.redis_client import get_client
+        client = get_client(decode_responses=True)
+        if client is None:
+            return False
+        return client.get(_bluesky_direct_post_redis_key(kind, slot)) is not None
+    except Exception:  # noqa: BLE001
+        logger.warning('bluesky direct-post idempotency read failed', exc_info=True)
+        return False
+
+
+def mark_bluesky_direct_post_sent(kind: str, slot: str, post_uri: str) -> None:
+    """Record a successful direct Bluesky post so scheduler re-runs cannot duplicate it."""
+    try:
+        from app.lib.redis_client import get_client
+        client = get_client(decode_responses=True)
+        if client is None:
+            return
+        client.setex(
+            _bluesky_direct_post_redis_key(kind, slot),
+            BLUESKY_DIRECT_POST_TTL_SECONDS,
+            post_uri,
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning('bluesky direct-post idempotency write failed', exc_info=True)
 
 
 def _fetch_link_card_metadata(url: str) -> Optional[Dict]:

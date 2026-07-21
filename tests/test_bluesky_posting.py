@@ -55,20 +55,34 @@ def _install_fake_atproto(monkeypatch):
     return sent, uploaded
 
 
+def _patch_post_side_effects(monkeypatch):
+    monkeypatch.setattr('app.trending.engagement_tracker.record_post', lambda **k: None)
+    monkeypatch.setattr('app.lib.posthog_utils.safe_system_capture', lambda *a, **k: None)
+
+
+def test_og_png_url_for_page():
+    from app.trending.social_poster import og_png_url_for_page
+
+    assert og_png_url_for_page('https://societyspeaks.io/daily/2026-07-21') == (
+        'https://societyspeaks.io/daily/2026-07-21/og.png'
+    )
+    assert og_png_url_for_page('https://societyspeaks.io/brief/2026-07-21/') == (
+        'https://societyspeaks.io/brief/2026-07-21/og.png'
+    )
+
+
 def test_post_to_bluesky_uses_direct_og_image_in_embed(monkeypatch):
     from app.trending import social_poster
 
     monkeypatch.setenv('BLUESKY_APP_PASSWORD', 'test-pw')
     sent, uploaded = _install_fake_atproto(monkeypatch)
+    _patch_post_side_effects(monkeypatch)
 
     # The HTML scrape returns no image; the direct og_image_url must supply it.
     monkeypatch.setattr(
         social_poster, '_fetch_link_card_metadata',
         lambda url: {'uri': url, 'title': 'Daily Question', 'description': 'd', 'image_url': None},
     )
-    # Silence downstream side effects (DB / analytics).
-    monkeypatch.setattr('app.trending.engagement_tracker.record_post', lambda **k: None)
-    monkeypatch.setattr('app.lib.posthog_utils.safe_system_capture', lambda *a, **k: None)
 
     requested = []
 
@@ -79,7 +93,7 @@ def test_post_to_bluesky_uses_direct_og_image_in_embed(monkeypatch):
     monkeypatch.setattr('requests.get', fake_get)
 
     page = 'https://societyspeaks.io/daily/2026-07-21'
-    og = f'{page}/og.png'
+    og = social_poster.og_png_url_for_page(page)
     uri = social_poster.post_to_bluesky(
         title='Should the strikes continue?',
         topic='Geopolitics',
@@ -90,15 +104,49 @@ def test_post_to_bluesky_uses_direct_og_image_in_embed(monkeypatch):
     )
 
     assert uri == 'at://did:plc:test/app.bsky.feed.post/abc'
-    # The direct card URL — not a scraped image — was downloaded and uploaded as the thumb.
     assert og in requested
     assert len(uploaded) == 1
-    # Posted with an embed carrying the thumbnail; URL is in the embed, not the text body.
     assert len(sent) == 1
     embed = sent[0]['embed']
     assert embed is not None and embed.external.thumb == 'BLOB_REF'
     assert embed.external.uri == page
     assert page not in (sent[0]['text'] or '')
+
+
+def test_post_to_bluesky_uses_discussion_og_when_object_passed(monkeypatch, app):
+    from app.trending import social_poster
+
+    monkeypatch.setenv('BLUESKY_APP_PASSWORD', 'test-pw')
+    sent, uploaded = _install_fake_atproto(monkeypatch)
+    _patch_post_side_effects(monkeypatch)
+    monkeypatch.setattr(
+        social_poster, '_fetch_link_card_metadata',
+        lambda url: {'uri': url, 'title': 'Debate', 'description': '', 'image_url': None},
+    )
+    monkeypatch.setattr(
+        social_poster, 'get_base_url', lambda: 'https://societyspeaks.io',
+    )
+
+    requested = []
+
+    def fake_get(url, **kwargs):
+        requested.append(url)
+        return types.SimpleNamespace(status_code=200, content=b'\x89PNG\r\n\x1a\ndisc')
+
+    monkeypatch.setattr('requests.get', fake_get)
+
+    discussion = types.SimpleNamespace(id=4242, title='Test debate', topic='Politics')
+    page = 'https://societyspeaks.io/discussions/4242/slug'
+    uri = social_poster.post_to_bluesky(
+        title=discussion.title,
+        topic=discussion.topic,
+        discussion_url=page,
+        discussion=discussion,
+    )
+
+    assert uri is not None
+    assert 'https://societyspeaks.io/discussions/4242/og.png' in requested
+    assert sent[0]['embed'].external.thumb == 'BLOB_REF'
 
 
 def test_post_to_bluesky_skips_without_password(monkeypatch):
@@ -108,3 +156,29 @@ def test_post_to_bluesky_skips_without_password(monkeypatch):
     assert social_poster.post_to_bluesky(
         title='x', topic='y', discussion_url='https://societyspeaks.io/daily/2026-07-21',
     ) is None
+
+
+def test_bluesky_direct_post_idempotency(monkeypatch):
+    from app.trending import social_poster
+
+    store = {}
+
+    class FakeRedis:
+        def get(self, key):
+            return store.get(key)
+
+        def setex(self, key, ttl, value):
+            store[key] = value
+
+    monkeypatch.setattr(
+        'app.lib.redis_client.get_client',
+        lambda decode_responses=True: FakeRedis(),
+    )
+
+    assert social_poster.bluesky_direct_post_already_sent('daily-brief', '2026-07-21') is False
+    social_poster.mark_bluesky_direct_post_sent(
+        'daily-brief', '2026-07-21', 'at://did:plc:test/app.bsky.feed.post/xyz',
+    )
+    assert social_poster.bluesky_direct_post_already_sent('daily-brief', '2026-07-21') is True
+    assert store['bluesky:direct:daily-brief:2026-07-21'] == 'at://did:plc:test/app.bsky.feed.post/xyz'
+

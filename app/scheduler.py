@@ -2129,8 +2129,16 @@ def init_scheduler(app):
             
         with app.app_context():
             from app.models import DailyQuestion
+            from app.storage_utils import get_base_url
             from app.trending.social_insights import generate_daily_question_post
-            from app.trending.social_poster import post_to_x, post_to_bluesky, DuplicatePostError
+            from app.trending.social_poster import (
+                bluesky_direct_post_already_sent,
+                mark_bluesky_direct_post_sent,
+                og_png_url_for_page,
+                post_to_x,
+                post_to_bluesky,
+                DuplicatePostError,
+            )
             from datetime import date
             import posthog
             
@@ -2144,18 +2152,21 @@ def init_scheduler(app):
                     logger.debug("No published daily question today, skipping social post")
                     return
                 
+                base = get_base_url().rstrip('/')
+                date_str = question.question_date.strftime('%Y-%m-%d')
+                page_url = f"{base}/daily/{date_str}"
+                
                 # Generate posts
                 x_post = generate_daily_question_post(question, platform='x')
                 bluesky_post = generate_daily_question_post(question, platform='bluesky')
                 
                 # Post to X
                 try:
-                    x_url = f"https://societyspeaks.io/daily/{question.question_date.strftime('%Y-%m-%d')}"
                     x_post_text = generate_daily_question_post(question, platform='x')
                     tweet_id = post_to_x(
                         title=question.question_text,
                         topic=question.topic_category or 'Society',
-                        discussion_url=x_url,
+                        discussion_url=page_url,
                         discussion=None,  # Daily question, not discussion
                         custom_text=x_post_text
                     )
@@ -2178,28 +2189,34 @@ def init_scheduler(app):
                 
                 # Post to Bluesky
                 try:
-                    bluesky_url = f"https://societyspeaks.io/daily/{question.question_date.strftime('%Y-%m-%d')}"
-                    bluesky_post_text = generate_daily_question_post(question, platform='bluesky')
-                    bluesky_uri = post_to_bluesky(
-                        title=question.question_text,
-                        topic=question.topic_category or 'Society',
-                        discussion_url=bluesky_url,
-                        discussion=None,  # Daily question, not discussion
-                        custom_text=bluesky_post_text,
-                        og_image_url=f"{bluesky_url}/og.png",  # direct card, no HTML scrape
-                    )
-                    
-                    if bluesky_uri:
-                        logger.info(f"Posted daily question #{question.question_number} to Bluesky: {bluesky_uri}")
+                    if bluesky_direct_post_already_sent('daily-question', date_str):
+                        logger.info(
+                            f"Daily question #{question.question_number} already posted to Bluesky "
+                            f"(idempotency key daily-question:{date_str})"
+                        )
+                    else:
+                        bluesky_post_text = generate_daily_question_post(question, platform='bluesky')
+                        bluesky_uri = post_to_bluesky(
+                            title=question.question_text,
+                            topic=question.topic_category or 'Society',
+                            discussion_url=page_url,
+                            discussion=None,  # Daily question, not discussion
+                            custom_text=bluesky_post_text,
+                            og_image_url=og_png_url_for_page(page_url),
+                        )
                         
-                        # Track with PostHog
-                        from app.lib.posthog_utils import safe_system_capture
-                        safe_system_capture('daily_question_posted_to_bluesky', properties={
-                            'question_id': question.id,
-                            'question_number': question.question_number,
-                            'bluesky_uri': bluesky_uri,
-                            'response_count': question.response_count,
-                        })
+                        if bluesky_uri:
+                            mark_bluesky_direct_post_sent('daily-question', date_str, bluesky_uri)
+                            logger.info(f"Posted daily question #{question.question_number} to Bluesky: {bluesky_uri}")
+                            
+                            # Track with PostHog
+                            from app.lib.posthog_utils import safe_system_capture
+                            safe_system_capture('daily_question_posted_to_bluesky', properties={
+                                'question_id': question.id,
+                                'question_number': question.question_number,
+                                'bluesky_uri': bluesky_uri,
+                                'response_count': question.response_count,
+                            })
                 except Exception as e:
                     logger.error(f"Error posting daily question to Bluesky: {e}")
                     
@@ -2308,8 +2325,16 @@ def init_scheduler(app):
             
         with app.app_context():
             from app.models import DailyBrief
+            from app.storage_utils import get_base_url
             from app.trending.social_insights import generate_daily_brief_post
-            from app.trending.social_poster import post_to_x, post_to_bluesky, DuplicatePostError
+            from app.trending.social_poster import (
+                bluesky_direct_post_already_sent,
+                mark_bluesky_direct_post_sent,
+                og_png_url_for_page,
+                post_to_x,
+                post_to_bluesky,
+                DuplicatePostError,
+            )
             from datetime import date
             import posthog
             
@@ -2323,18 +2348,21 @@ def init_scheduler(app):
                     logger.debug("No published daily brief today, skipping social post")
                     return
                 
+                base = get_base_url().rstrip('/')
+                date_str = brief.date.strftime('%Y-%m-%d')
+                page_url = f"{base}/brief/{date_str}"
+                
                 # Generate posts
                 x_post = generate_daily_brief_post(brief, platform='x')
                 bluesky_post = generate_daily_brief_post(brief, platform='bluesky')
                 
                 # Post to X
                 try:
-                    x_url = f"https://societyspeaks.io/brief/{brief.date.strftime('%Y-%m-%d')}"
                     x_post_text = generate_daily_brief_post(brief, platform='x')
                     tweet_id = post_to_x(
                         title=brief.title,
                         topic='News',
-                        discussion_url=x_url,
+                        discussion_url=page_url,
                         discussion=None,  # Daily brief, not discussion
                         custom_text=x_post_text
                     )
@@ -2358,28 +2386,35 @@ def init_scheduler(app):
                 
                 # Post to Bluesky
                 try:
-                    bluesky_url = f"https://societyspeaks.io/brief/{brief.date.strftime('%Y-%m-%d')}"
-                    bluesky_post_text = generate_daily_brief_post(brief, platform='bluesky')
-                    bluesky_uri = post_to_bluesky(
-                        title=brief.title,
-                        topic='News',
-                        discussion_url=bluesky_url,
-                        discussion=None,  # Daily brief, not discussion
-                        custom_text=bluesky_post_text
-                    )
-                    
-                    if bluesky_uri:
-                        logger.info(f"Posted daily brief to Bluesky: {bluesky_uri}")
+                    if bluesky_direct_post_already_sent('daily-brief', date_str):
+                        logger.info(
+                            f"Daily brief already posted to Bluesky "
+                            f"(idempotency key daily-brief:{date_str})"
+                        )
+                    else:
+                        bluesky_post_text = generate_daily_brief_post(brief, platform='bluesky')
+                        bluesky_uri = post_to_bluesky(
+                            title=brief.title,
+                            topic='News',
+                            discussion_url=page_url,
+                            discussion=None,  # Daily brief, not discussion
+                            custom_text=bluesky_post_text,
+                            og_image_url=og_png_url_for_page(page_url),
+                        )
                         
-                        # Track with PostHog
-                        from app.lib.posthog_utils import safe_system_capture
-                        safe_system_capture('daily_brief_posted_to_bluesky', properties={
-                            'brief_id': brief.id,
-                            'brief_title': brief.title,
-                            'brief_date': brief.date.isoformat(),
-                            'bluesky_uri': bluesky_uri,
-                            'item_count': brief.item_count,
-                        })
+                        if bluesky_uri:
+                            mark_bluesky_direct_post_sent('daily-brief', date_str, bluesky_uri)
+                            logger.info(f"Posted daily brief to Bluesky: {bluesky_uri}")
+                            
+                            # Track with PostHog
+                            from app.lib.posthog_utils import safe_system_capture
+                            safe_system_capture('daily_brief_posted_to_bluesky', properties={
+                                'brief_id': brief.id,
+                                'brief_title': brief.title,
+                                'brief_date': brief.date.isoformat(),
+                                'bluesky_uri': bluesky_uri,
+                                'item_count': brief.item_count,
+                            })
                 except Exception as e:
                     logger.error(f"Error posting daily brief to Bluesky: {e}")
                     
