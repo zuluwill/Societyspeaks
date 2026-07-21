@@ -413,6 +413,22 @@ def generate_post_text(
     return post[:max_length]
 
 
+def _discussion_og_image_url(discussion) -> Optional[str]:
+    """Direct OG PNG URL for a discussion — avoids HTML scrape round-trip for Bluesky cards.
+
+    Built from get_base_url() rather than url_for(_external=True): this runs inside
+    scheduler jobs that have no request context and no SERVER_NAME, where a bare
+    url_for(_external=True) raises (see the same pattern used for discussion_url above).
+    """
+    discussion_id = getattr(discussion, 'id', None)
+    if not discussion_id:
+        return None
+    try:
+        return f"{get_base_url().rstrip('/')}/discussions/{discussion_id}/og.png"
+    except Exception:
+        return None
+
+
 def _fetch_link_card_metadata(url: str) -> Optional[Dict]:
     """
     Fetch OpenGraph metadata for link card preview.
@@ -552,7 +568,15 @@ def post_to_bluesky(
         embed = None
         embed_success = False
         try:
-            metadata = _fetch_link_card_metadata(discussion_url)
+            metadata = _fetch_link_card_metadata(discussion_url) or {}
+            metadata.setdefault('uri', discussion_url)
+            metadata.setdefault('title', title)
+            metadata.setdefault('description', '')
+
+            direct_og = _discussion_og_image_url(discussion)
+            if direct_og:
+                metadata['image_url'] = direct_og
+
             if metadata:
                 thumb_blob = None
                 

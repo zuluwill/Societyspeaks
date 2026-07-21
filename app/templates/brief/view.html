@@ -11,8 +11,11 @@
 {% block meta_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
 {% block og_title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
 {% block og_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
+{% block og_image %}{{ og_png_url }}{% endblock %}
+{% block og_image_alt %}{{ brief.title }}{% endblock %}
 {% block twitter_title %}{{ _('%(title)s - Society Speaks', title=brief.title) }}{% endblock %}
 {% block twitter_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
+{% block twitter_image %}{{ og_png_url }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-100 to-white">

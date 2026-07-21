@@ -7,8 +7,11 @@
 {% block meta_description %}{{ _('Explore the profile of %(name)s, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.', name=profile.company_name) }}{% endblock %}
 {% block og_title %}{{ _('%(name)s - Profile on SocietySpeaks', name=profile.company_name) }}{% endblock %}
 {% block og_description %}{{ _('Explore the profile of %(name)s, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.', name=profile.company_name) }}{% endblock %}
+{% block og_image %}{{ og_png_url }}{% endblock %}
+{% block og_image_alt %}{{ profile.company_name }}{% endblock %}
 {% block twitter_title %}{{ _('%(name)s - Profile on SocietySpeaks', name=profile.company_name) }}{% endblock %}
 {% block twitter_description %}{{ _('Explore the profile of %(name)s, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.', name=profile.company_name) }}{% endblock %}
+{% block twitter_image %}{{ og_png_url }}{% endblock %}
 {% block meta_keywords %}{{ _('organisation profile, company profile, %(name)s, SocietySpeaks', name=profile.company_name) }}{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}{% endblock %}
 {% block canonical %}{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}{% endblock %}
 {% block meta_robots %}{% if seo_noindex|default(false) %}noindex, follow{% else %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endif %}{% endblock %}

@@ -1,7 +1,7 @@
 # app/profiles/routes.py
-from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app
+from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app, make_response, abort
 from flask_login import login_required, current_user
-from app import db
+from app import db, limiter
 from app.lib.posthog_utils import safe_posthog_capture
 from app.models import IndividualProfile, CompanyProfile, Discussion, Programme, generate_unique_slug
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
@@ -407,6 +407,7 @@ def view_individual_profile(username):
     ).paginate(page=page, per_page=10, error_out=False)
     from app.lib.share_text import build_profile_share_text
     share_page_url = url_for('profiles.view_individual_profile', username=profile.slug, _external=True)
+    og_png_url = url_for('profiles.individual_og_png', username=profile.slug, _external=True)
     share_description = build_profile_share_text(profile.full_name, is_company=False)
     return render_template(
         'profiles/individual_profile.html',
@@ -415,6 +416,17 @@ def view_individual_profile(username):
         seo_noindex=page > 1,
         share_page_url=share_page_url,
         share_description=share_description,
+        og_png_url=og_png_url,
+    )
+
+@profiles_bp.route('/profile/individual/<username>/og.png')
+@limiter.limit('240 per minute')
+def individual_og_png(username):
+    profile = IndividualProfile.query.filter_by(slug=username).first_or_404()
+    return _profile_og_response(
+        name=profile.full_name,
+        is_company=False,
+        cache_key=f'profile:og:individual:{profile.id}',
     )
 
 @profiles_bp.route('/profile/company/<company_name>')
@@ -432,6 +444,7 @@ def view_company_profile(company_name):
     ).order_by(Programme.created_at.desc()).all()
     from app.lib.share_text import build_profile_share_text
     share_page_url = url_for('profiles.view_company_profile', company_name=profile.slug, _external=True)
+    og_png_url = url_for('profiles.company_og_png', company_name=profile.slug, _external=True)
     share_description = build_profile_share_text(profile.company_name, is_company=True)
     return render_template(
         'profiles/company_profile.html',
@@ -441,7 +454,45 @@ def view_company_profile(company_name):
         seo_noindex=page > 1,
         share_page_url=share_page_url,
         share_description=share_description,
+        og_png_url=og_png_url,
     )
+
+
+@profiles_bp.route('/profile/company/<company_name>/og.png')
+@limiter.limit('240 per minute')
+def company_og_png(company_name):
+    profile = CompanyProfile.query.filter_by(slug=company_name).first_or_404()
+    return _profile_og_response(
+        name=profile.company_name,
+        is_company=True,
+        cache_key=f'profile:og:company:{profile.id}',
+    )
+
+
+def _profile_og_response(*, name: str, is_company: bool, cache_key: str):
+    from app.profiles import og_image_service
+    from app.lib.og_cache import og_cache_get, og_cache_set
+    from flask_babel import _
+
+    if not og_image_service.is_available():
+        return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+
+    png_bytes = og_cache_get(cache_key)
+    if png_bytes is None:
+        png_bytes = og_image_service.render_profile_png(
+            name=name,
+            is_company=is_company,
+            badge_label=_('Organization') if is_company else _('Community voice'),
+            cta_label=_('Join the conversation on Society Speaks'),
+        )
+        if not png_bytes:
+            return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+        og_cache_set(cache_key, png_bytes, ttl_seconds=86400)
+
+    response = make_response(png_bytes)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    return response
 
 
 #Unified view_profile Route (This is the new route that acts as the primary link):

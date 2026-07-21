@@ -12,7 +12,7 @@ import os
 import re
 
 import pytz
-from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
+from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app, make_response, abort
 from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
@@ -170,6 +170,11 @@ def view_date(date_str):
     from app.lib.share_text import build_brief_share_text
 
     share_page_url = url_for('brief.view_date', date_str=brief_date.strftime('%Y-%m-%d'), _external=True)
+    og_png_url = url_for(
+        'brief.og_png',
+        date_str=brief_date.strftime('%Y-%m-%d'),
+        _external=True,
+    )
     share_description = build_brief_share_text(
         brief.title,
         story_count=len(items),
@@ -191,7 +196,62 @@ def view_date(date_str):
         tradeoffs_card=tradeoffs_card,
         share_page_url=share_page_url,
         share_description=share_description,
+        og_png_url=og_png_url,
     )
+
+
+@brief_bp.route('/brief/<date_str>/og.png')
+@limiter.limit('240 per minute')
+def og_png(date_str):
+    """OG share image for Daily / Weekly Brief permalinks."""
+    try:
+        brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        abort(404)
+
+    brief_type = request.args.get('type', 'daily')
+    if brief_type not in ('daily', 'weekly'):
+        brief_type = 'daily'
+
+    brief = DailyBrief.get_by_date(brief_date, brief_type=brief_type, published_only=True)
+    if not brief:
+        abort(404)
+
+    from app.brief import og_image_service
+    from app.lib.og_cache import og_cache_get, og_cache_set
+    from flask_babel import _, ngettext
+
+    if not og_image_service.is_available():
+        return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+
+    story_count = BriefItem.query.filter_by(brief_id=brief.id).count()
+    cache_key = f'brief:og:png:{brief.id}:{story_count}'
+    png_bytes = og_cache_get(cache_key)
+    if png_bytes is None:
+        stories_label = None
+        if story_count > 0:
+            stories_label = ngettext(
+                '%(count)d story · Free civic intelligence',
+                '%(count)d stories · Free civic intelligence',
+                story_count,
+                count=story_count,
+            )
+        png_bytes = og_image_service.render_brief_png(
+            title=brief.title,
+            story_count=story_count,
+            brief_type=brief.brief_type,
+            badge_label=_('Daily Brief') if brief.brief_type == 'daily' else _('Weekly Brief'),
+            stories_label=stories_label,
+            cta_label=_('Free civic intelligence from 140+ sources'),
+        )
+        if not png_bytes:
+            return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+        og_cache_set(cache_key, png_bytes, ttl_seconds=86400)
+
+    response = make_response(png_bytes)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    return response
 
 
 @brief_bp.route('/brief/<date_str>/reader')
@@ -296,6 +356,12 @@ def weekly_by_date(date_str):
     from app.lib.share_text import build_brief_share_text
 
     share_page_url = url_for('brief.weekly_by_date', date_str=brief_date.strftime('%Y-%m-%d'), _external=True)
+    og_png_url = url_for(
+        'brief.og_png',
+        date_str=brief_date.strftime('%Y-%m-%d'),
+        type='weekly',
+        _external=True,
+    )
     share_description = build_brief_share_text(
         brief.title,
         story_count=len(items),
@@ -314,6 +380,7 @@ def weekly_by_date(date_str):
         tts_available=False,
         share_page_url=share_page_url,
         share_description=share_description,
+        og_png_url=og_png_url,
     )
 
 
