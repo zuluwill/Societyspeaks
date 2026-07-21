@@ -17,7 +17,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
-from app.lib.posthog_utils import email_subscriber_distinct_id, resolve_request_distinct_id, safe_posthog_capture
+from app.lib.posthog_utils import email_subscriber_distinct_id, resolve_request_distinct_id, safe_posthog_capture, stitch_posthog_on_user_login
 
 from sqlalchemy.orm import joinedload
 
@@ -744,13 +744,11 @@ def magic_link(token):
                     from flask_login import login_user
                     login_user(expired_sub.user)
                     sync_partner_portal_session_for_email(expired_sub.user.email)
-                    try:
-                        import posthog as _ph
-                        if _ph and getattr(_ph, 'project_api_key', None):
-                            safe_posthog_capture(posthog_client=_ph, distinct_id=str(expired_sub.user.id), event='user_logged_in',
-                                        properties={'method': 'magic_link', 'source': 'brief_subscription'})
-                    except Exception:
-                        pass
+                    stitch_posthog_on_user_login(
+                        expired_sub.user,
+                        subscriber_email=expired_sub.email,
+                        properties={'method': 'magic_link', 'source': 'brief_subscription'},
+                    )
                 flash(_('Welcome back! Signed in as %(email)s', email=expired_sub.email), 'success')
                 return redirect(url_for('brief.today'))
 
@@ -765,13 +763,11 @@ def magic_link(token):
         from flask_login import login_user
         login_user(subscriber.user)
         sync_partner_portal_session_for_email(subscriber.user.email)
-        try:
-            import posthog as _ph
-            if _ph and getattr(_ph, 'project_api_key', None):
-                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
-                            properties={'method': 'magic_link', 'source': 'brief_subscription'})
-        except Exception:
-            pass
+        stitch_posthog_on_user_login(
+            subscriber.user,
+            subscriber_email=subscriber.email,
+            properties={'method': 'magic_link', 'source': 'brief_subscription'},
+        )
 
     flash(_('Welcome back! Signed in as %(email)s', email=subscriber.email), 'success')
     return redirect(url_for('brief.today'))

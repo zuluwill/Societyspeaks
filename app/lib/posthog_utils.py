@@ -414,6 +414,68 @@ def request_context_properties() -> dict:
         return {}
 
 
+def stitch_posthog_on_user_login(
+    user: Any,
+    *,
+    subscriber_email: Optional[str] = None,
+    event: str = "user_logged_in",
+    properties: Optional[dict] = None,
+    identify_properties: Optional[dict] = None,
+) -> None:
+    """Merge anonymous/subscriber PostHog persons into an authenticated user.
+
+    Call immediately after ``login_user`` on magic-link paths so email-acquired
+    anonymous events (``subscriber:<hash>``, JS cookie UUID) stitch to
+    ``str(user.id)`` — matching the frontend ``identify('<id>')`` in
+    ``layout.html``.
+    """
+    if user is None or not getattr(user, "id", None):
+        return
+    try:
+        import posthog as ph
+
+        if not (getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)):
+            return
+
+        canonical = str(user.id)
+        prior: list[str] = []
+        js_id = posthog_js_distinct_id()
+        if js_id and js_id != canonical:
+            prior.append(js_id)
+        sub_hash = email_subscriber_distinct_id(subscriber_email)
+        if sub_hash and sub_hash != canonical and sub_hash not in prior:
+            prior.append(sub_hash)
+
+        for previous_id in prior:
+            try:
+                ph.alias(previous_id=previous_id, distinct_id=canonical)
+            except Exception as exc:
+                _log.warning(
+                    "PostHog alias %s -> %s failed: %s",
+                    previous_id,
+                    canonical,
+                    exc,
+                )
+
+        id_props = identify_properties or {
+            "email": getattr(user, "email", None),
+            "username": getattr(user, "username", None),
+        }
+        safe_posthog_capture(
+            posthog_client=ph,
+            distinct_id=canonical,
+            event=event,
+            properties=properties or {},
+            identify_properties={k: v for k, v in id_props.items() if v},
+        )
+    except Exception as exc:
+        _log.warning(
+            "PostHog login stitch failed for user %s: %s",
+            getattr(user, "id", None),
+            exc,
+        )
+
+
 def safe_posthog_capture(
     *,
     posthog_client: Any,
@@ -464,8 +526,9 @@ def safe_posthog_capture(
                 distinct_id=str(distinct_id),
                 properties=identify_properties,
             )
-    except Exception:
-        # Analytics must never break product flows.
+    except Exception as exc:
+        # Analytics must never break product flows, but failures must be visible.
+        _log.warning("PostHog capture failed for event %s: %s", event, exc)
         return
 
 
@@ -487,5 +550,5 @@ def safe_system_capture(event: str, properties: Optional[dict] = None) -> None:
             event=event,
             properties=dict(properties or {}),
         )
-    except Exception:
-        pass
+    except Exception as exc:
+        _log.warning("PostHog system capture failed for event %s: %s", event, exc)

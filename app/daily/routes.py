@@ -73,9 +73,13 @@ def _track_context_engagement(question, response, source='web'):
         if not posthog or not getattr(posthog, 'project_api_key', None):
             return
 
-        distinct_id = resolve_request_distinct_id(
-            user_id=current_user.id if current_user.is_authenticated else None,
-            anon_fallback=get_session_fingerprint(),
+        from app.daily.vote_analytics import (
+            resolve_daily_participation_distinct_id,
+            subscriber_for_analytics,
+        )
+
+        distinct_id = resolve_daily_participation_distinct_id(
+            subscriber=subscriber_for_analytics(),
         )
         safe_posthog_capture(
             posthog_client=posthog,
@@ -1211,13 +1215,13 @@ def weekly_batch():
     if subscriber.user:
         login_user(subscriber.user)
         sync_partner_portal_session_for_email(subscriber.user.email)
-        try:
-            import posthog as _ph
-            if _ph and getattr(_ph, 'project_api_key', None):
-                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
-                            properties={'method': 'magic_link', 'source': 'weekly_digest'})
-        except Exception:
-            pass
+        from app.daily.vote_analytics import track_subscriber_login
+
+        track_subscriber_login(
+            subscriber.user,
+            subscriber_email=subscriber.email,
+            source='weekly_digest',
+        )
 
     # Get specific question IDs if provided (from email link)
     question_ids_param = request.args.get('questions')
@@ -1393,13 +1397,13 @@ def weekly_batch_vote():
     if subscriber.user:
         login_user(subscriber.user)
         sync_partner_portal_session_for_email(subscriber.user.email)
-        try:
-            import posthog as _ph
-            if _ph and getattr(_ph, 'project_api_key', None):
-                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
-                            properties={'method': 'magic_link', 'source': 'daily_question_api'})
-        except Exception:
-            pass
+        from app.daily.vote_analytics import track_subscriber_login
+
+        track_subscriber_login(
+            subscriber.user,
+            subscriber_email=subscriber.email,
+            source='daily_question_api',
+        )
 
     # Parse request (expects JSON from AJAX)
     if not request.is_json:
@@ -1461,6 +1465,21 @@ def weekly_batch_vote():
         _invalidate_programme_summary_if_daily_question_synced(question)
 
         _track_context_engagement(question, response, source='weekly_batch')
+
+        from app.daily.vote_analytics import track_daily_question_participated
+
+        track_daily_question_participated(
+            question=question,
+            vote=vote_choice,
+            participation_source='weekly_batch',
+            subscriber=subscriber,
+            voted_via_email=True,
+            has_reason=bool(reason),
+            reason_tag=reason_tag,
+            confidence_level=confidence_level,
+            context_expanded=context_expanded,
+            source_link_click_count=source_link_click_count,
+        )
 
         current_app.logger.info(
             f"Weekly batch vote recorded: {vote_choice} for question #{question.id} "
@@ -1552,13 +1571,13 @@ def magic_link(token):
     if subscriber.user:
         login_user(subscriber.user)
         sync_partner_portal_session_for_email(subscriber.user.email)
-        try:
-            import posthog as _ph
-            if _ph and getattr(_ph, 'project_api_key', None):
-                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
-                            properties={'method': 'magic_link', 'source': 'daily_link'})
-        except Exception:
-            pass
+        from app.daily.vote_analytics import track_subscriber_login
+
+        track_subscriber_login(
+            subscriber.user,
+            subscriber_email=subscriber.email,
+            source='daily_link',
+        )
     
     return redirect(url_for('daily.today'))
 
@@ -1649,13 +1668,13 @@ def one_click_vote(token, vote_choice):
     if subscriber.user:
         login_user(subscriber.user)
         sync_partner_portal_session_for_email(subscriber.user.email)
-        try:
-            import posthog as _ph
-            if _ph and getattr(_ph, 'project_api_key', None):
-                safe_posthog_capture(posthog_client=_ph, distinct_id=str(subscriber.user.id), event='user_logged_in',
-                            properties={'method': 'magic_link', 'source': 'one_click_vote'})
-        except Exception:
-            pass
+        from app.daily.vote_analytics import track_subscriber_login
+
+        track_subscriber_login(
+            subscriber.user,
+            subscriber_email=subscriber.email,
+            source='one_click_vote',
+        )
 
     # Get the specific question this email was about
     question = db.session.get(DailyQuestion,email_question_id)
@@ -1957,34 +1976,23 @@ def vote():
 
         _track_context_engagement(question, response, source=participation_source)
 
-        try:
-            import posthog
-            if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = resolve_request_distinct_id(
-                    user_id=current_user.id if current_user.is_authenticated else None,
-                    anon_fallback=get_session_fingerprint(),
-                )
-                safe_posthog_capture(
-                    posthog_client=posthog,
-                    distinct_id=distinct_id,
-                    event='daily_question_participated',
-                    properties={
-                        'question_id': question.id,
-                        'question_number': question.question_number,
-                        'question_text': question.question_text,
-                        'vote': vote_value,
-                        'has_reason': bool(reason),
-                        'reason_tag': reason_tag,
-                        'confidence_level': confidence_level,
-                        'context_expanded': context_expanded,
-                        'source_link_click_count': source_link_click_count,
-                        'is_authenticated': current_user.is_authenticated,
-                        'voted_via_email': False,
-                        'participation_source': participation_source,
-                    }
-                )
-        except Exception as e:
-            current_app.logger.warning(f"PostHog tracking error: {e}")
+        from app.daily.vote_analytics import (
+            subscriber_for_analytics,
+            track_daily_question_participated,
+        )
+
+        track_daily_question_participated(
+            question=question,
+            vote=vote_value,
+            participation_source=participation_source,
+            subscriber=subscriber_for_analytics(),
+            voted_via_email=False,
+            has_reason=bool(reason),
+            reason_tag=reason_tag,
+            confidence_level=confidence_level,
+            context_expanded=context_expanded,
+            source_link_click_count=source_link_click_count,
+        )
 
         if wants_json:
             return jsonify({

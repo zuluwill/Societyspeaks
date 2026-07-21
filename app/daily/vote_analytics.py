@@ -1,7 +1,8 @@
-"""PostHog instrumentation for the email one-click vote funnel."""
+"""PostHog instrumentation for daily-question participation and email vote funnels."""
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Literal, Optional, Union
 
 from flask_login import current_user
@@ -12,13 +13,17 @@ from app.lib.posthog_utils import (
     request_is_scripted_client,
     resolve_request_distinct_id,
     safe_posthog_capture,
+    stitch_posthog_on_user_login,
 )
+from app.lib.vote_identity import get_voter_fingerprint
 from app.models import DailyBriefSubscriber, DailyQuestion, DailyQuestionSubscriber
 
 try:
     import posthog as _posthog
 except ImportError:
     _posthog = None
+
+_log = logging.getLogger(__name__)
 
 VoterChannel = Literal['question', 'brief']
 SubscriberT = Union[DailyQuestionSubscriber, DailyBriefSubscriber]
@@ -33,10 +38,140 @@ def participation_source_for_email_vote(source: str, voter_channel: VoterChannel
     return 'daily_question_email'
 
 
-def _distinct_id_for_subscriber(subscriber: SubscriberT) -> Optional[str]:
+def subscriber_for_analytics(
+    subscriber: Optional[SubscriberT] = None,
+) -> Optional[SubscriberT]:
+    """Resolve the email subscriber tied to this request, if any.
+
+    Checks explicit argument, Flask session keys, then the signed ``ss_subref``
+    cookie (survives session expiry — see ``subscriber_identity``).
+    """
+    if subscriber is not None and getattr(subscriber, 'email', None):
+        return subscriber
+    try:
+        from flask import session
+
+        from app import db
+        from app.lib.subscriber_identity import read_subscriber_ref
+
+        for key, model in (
+            ('brief_subscriber_id', DailyBriefSubscriber),
+            ('daily_subscriber_id', DailyQuestionSubscriber),
+        ):
+            sub_id = session.get(key)
+            if not sub_id:
+                continue
+            sub = db.session.get(model, sub_id)
+            if sub and sub.email:
+                return sub
+
+        ref = read_subscriber_ref()
+        if ref:
+            if ref.get('b'):
+                sub = db.session.get(DailyBriefSubscriber, ref['b'])
+                if sub and sub.email:
+                    return sub
+            if ref.get('q'):
+                sub = db.session.get(DailyQuestionSubscriber, ref['q'])
+                if sub and sub.email:
+                    return sub
+    except Exception as exc:
+        _log.warning("Failed to resolve subscriber for analytics: %s", exc)
+    return None
+
+
+def resolve_daily_participation_distinct_id(
+    subscriber: Optional[SubscriberT] = None,
+) -> Optional[str]:
+    """Stable PostHog ``distinct_id`` for daily-question participation events.
+
+    Prefer authenticated ``user_id``, then the browser PostHog cookie (via
+    :func:`resolve_request_distinct_id`), then a durable anonymous fallback:
+    email-subscriber hash when the visitor arrived via email, else the unified
+    voter fingerprint.
+    """
+    if current_user.is_authenticated:
+        return resolve_request_distinct_id(user_id=current_user.id)
+
+    resolved = subscriber_for_analytics(subscriber)
+    email_fallback = (
+        email_subscriber_distinct_id(resolved.email)
+        if resolved and resolved.email
+        else None
+    )
+
+    fingerprint: Optional[str] = None
+    try:
+        fingerprint = get_voter_fingerprint()
+    except Exception:
+        pass
+
     return resolve_request_distinct_id(
-        user_id=current_user.id if current_user.is_authenticated else None,
-        anon_fallback=email_subscriber_distinct_id(subscriber.email),
+        anon_fallback=email_fallback or fingerprint,
+    )
+
+
+def _distinct_id_for_subscriber(subscriber: SubscriberT) -> Optional[str]:
+    return resolve_daily_participation_distinct_id(subscriber=subscriber)
+
+
+def track_subscriber_login(
+    user,
+    *,
+    subscriber_email: Optional[str],
+    source: str,
+) -> None:
+    """Post-login PostHog stitch for subscriber magic-link paths."""
+    stitch_posthog_on_user_login(
+        user,
+        subscriber_email=subscriber_email,
+        properties={'method': 'magic_link', 'source': source},
+    )
+
+
+def track_daily_question_participated(
+    *,
+    question: DailyQuestion,
+    vote: str,
+    participation_source: str,
+    subscriber: Optional[SubscriberT] = None,
+    voted_via_email: bool = False,
+    has_reason: bool = False,
+    **extra: Any,
+) -> None:
+    """Record ``daily_question_participated`` for web, batch, and other vote paths."""
+    if not _posthog or not getattr(_posthog, 'project_api_key', None):
+        return
+
+    resolved_subscriber = subscriber_for_analytics(subscriber)
+    distinct_id = resolve_daily_participation_distinct_id(subscriber=resolved_subscriber)
+    if not distinct_id:
+        _log.warning(
+            "Skipping daily_question_participated — no distinct_id "
+            "(question_id=%s, participation_source=%s)",
+            question.id,
+            participation_source,
+        )
+        return
+
+    props = {
+        'question_id': question.id,
+        'question_number': question.question_number,
+        'question_text': question.question_text,
+        'vote': vote,
+        'vote_choice': vote,
+        'participation_source': participation_source,
+        'has_reason': has_reason,
+        'voted_via_email': voted_via_email,
+        'is_authenticated': bool(current_user.is_authenticated),
+    }
+    props.update(extra)
+
+    safe_posthog_capture(
+        posthog_client=_posthog,
+        distinct_id=distinct_id,
+        event='daily_question_participated',
+        properties=props,
     )
 
 
@@ -65,6 +200,15 @@ def track_email_vote_confirm_viewed(
         return
 
     distinct_id = _distinct_id_for_subscriber(subscriber)
+    if not distinct_id:
+        _log.warning(
+            "Skipping email_vote_confirm_viewed — no distinct_id "
+            "(question_id=%s, subscriber=%s)",
+            question.id,
+            getattr(subscriber, 'id', None),
+        )
+        return
+
     participation_source = participation_source_for_email_vote(source, voter_channel)
 
     safe_posthog_capture(
@@ -115,6 +259,15 @@ def track_email_vote_confirmed(
     }
     base_props.update(extra)
 
+    if not distinct_id:
+        _log.warning(
+            "Skipping email_vote_confirmed — no distinct_id "
+            "(question_id=%s, subscriber=%s)",
+            question.id,
+            getattr(subscriber, 'id', None),
+        )
+        return
+
     safe_posthog_capture(
         posthog_client=_posthog,
         distinct_id=distinct_id,
@@ -123,9 +276,15 @@ def track_email_vote_confirmed(
     )
 
     # Keep legacy event for existing dashboards; enriched props carry the funnel labels.
-    safe_posthog_capture(
-        posthog_client=_posthog,
-        distinct_id=distinct_id,
-        event='daily_question_participated',
-        properties=base_props,
+    track_daily_question_participated(
+        question=question,
+        vote=vote_choice,
+        participation_source=participation_source,
+        subscriber=subscriber,
+        voted_via_email=True,
+        has_reason=has_reason,
+        voter_channel=voter_channel,
+        source=source or 'email',
+        confirmation_step='confirmed',
+        **extra,
     )

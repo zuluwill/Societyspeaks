@@ -8,8 +8,10 @@ import pytest
 from app import db
 from app.daily.vote_analytics import (
     participation_source_for_email_vote,
+    resolve_daily_participation_distinct_id,
     track_email_vote_confirm_viewed,
     track_email_vote_confirmed,
+    track_daily_question_participated,
 )
 from app.lib.posthog_utils import request_is_prefetch
 from app.models import DailyBriefSubscriber, DailyQuestion
@@ -27,6 +29,97 @@ def _seed_question_and_brief_subscriber(number, email):
     db.session.add_all([q, sub])
     db.session.commit()
     return q, sub
+
+
+def test_resolve_daily_participation_prefers_subscriber_email(app, db):
+    from app.lib.posthog_utils import email_subscriber_distinct_id
+
+    with app.app_context():
+        db.create_all()
+        sub = DailyBriefSubscriber(email='batch-track@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+        expected = email_subscriber_distinct_id(sub.email)
+
+        with app.test_request_context('/'):
+            from flask import session
+
+            session['brief_subscriber_id'] = sub.id
+            assert resolve_daily_participation_distinct_id() == expected
+            assert resolve_daily_participation_distinct_id(subscriber=sub) == expected
+
+
+def test_track_daily_question_participated_fires(app, db):
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=76,
+            question_text='Track web vote?',
+            status='published',
+            source_type='discussion',
+        )
+        db.session.add(q)
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0 (iPhone)'}):
+                track_daily_question_participated(
+                    question=q,
+                    vote='agree',
+                    participation_source='daily_web',
+                )
+
+        mock_ph.capture.assert_called_once()
+        assert mock_ph.capture.call_args.kwargs['event'] == 'daily_question_participated'
+        props = mock_ph.capture.call_args.kwargs['properties']
+        assert props['participation_source'] == 'daily_web'
+        assert props['is_authenticated'] is False
+
+
+def test_weekly_batch_vote_emits_participation_event(client, db, app):
+    from datetime import date
+    from unittest.mock import MagicMock, patch
+
+    from app.models import DailyQuestion, DailyQuestionSubscriber
+
+    today = date.today()
+    q = DailyQuestion(
+        question_date=today,
+        question_number=77,
+        question_text='Weekly batch tracked?',
+        status='published',
+        source_type='discussion',
+    )
+    sub = DailyQuestionSubscriber(email='weekly-batch@example.com', is_active=True)
+    db.session.add_all([q, sub])
+    db.session.commit()
+
+    mock_ph = MagicMock()
+    mock_ph.project_api_key = 'phk_test'
+
+    with client.session_transaction() as sess:
+        sess['daily_subscriber_id'] = sub.id
+
+    with patch('app.daily.vote_analytics._posthog', mock_ph):
+        response = client.post(
+            '/daily/weekly/vote',
+            json={'question_id': q.id, 'vote': 'agree'},
+            headers={'Content-Type': 'application/json'},
+        )
+
+    assert response.status_code == 200
+    events = [c.kwargs['event'] for c in mock_ph.capture.call_args_list]
+    assert 'daily_question_participated' in events
+    participated = [
+        c.kwargs for c in mock_ph.capture.call_args_list
+        if c.kwargs.get('event') == 'daily_question_participated'
+    ][0]
+    assert participated['properties']['participation_source'] == 'weekly_batch'
+    assert participated['properties']['voted_via_email'] is True
 
 
 def test_participation_source_mapping():
