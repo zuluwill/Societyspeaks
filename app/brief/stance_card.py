@@ -232,13 +232,13 @@ def build_stance_email_handoff(
         handoff['vote_disagree_url'] = f"{root}/daily/v/{vote_token}/disagree{vote_qs}"
         handoff['vote_unsure_url'] = f"{root}/daily/v/{vote_token}/unsure{vote_qs}"
 
-    handoff['tradeoffs'] = _tradeoffs_email_context()
+    handoff['tradeoffs'] = _tradeoffs_daily_context()
 
     return handoff
 
 
-def _tradeoffs_email_context() -> Optional[dict[str, Any]]:
-    """Today's Tradeoffs scenario for the brief email secondary card."""
+def _tradeoffs_daily_context() -> Optional[dict[str, Any]]:
+    """Today's Tradeoffs scenario metadata (shared by the brief email + web card)."""
     from flask import current_app
 
     if not current_app.config.get('GAME_ENABLED', True):
@@ -255,3 +255,33 @@ def _tradeoffs_email_context() -> Optional[dict[str, Any]]:
         }
     except Exception:
         return None
+
+
+def build_tradeoffs_card_context() -> Optional[dict[str, Any]]:
+    """Context for the web brief's Tradeoffs promo card (components/stance_tradeoffs_card.html).
+
+    Returns None when the game is disabled or today's scenario can't be loaded, so
+    the brief page silently falls back to no card rather than erroring. Includes the
+    live scenario (title / category / teaser), turn count, a source-tagged play URL,
+    and cached participation stats for social proof when they're worth showing.
+    """
+    meta = _tradeoffs_daily_context()
+    if meta is None:
+        return None
+
+    try:
+        play_url = url_for('game.daily', src='brief_tradeoffs')
+    except Exception:
+        play_url = '/play/daily?src=brief_tradeoffs'
+
+    participation = None
+    try:
+        from app.game.services.stats_service import participation_stats
+
+        stats = participation_stats()
+        if stats.get('show'):
+            participation = stats
+    except Exception:
+        participation = None
+
+    return {**meta, 'play_url': play_url, 'participation': participation}

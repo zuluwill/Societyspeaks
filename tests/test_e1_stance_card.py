@@ -2,9 +2,95 @@
 
 from datetime import date, timedelta
 
+from unittest.mock import patch
+
+from flask import render_template_string
+
 from app import db
 from app.models import DailyQuestion
-from app.brief.stance_card import build_stance_card_context, build_stance_email_handoff
+from app.brief.stance_card import (
+    build_stance_card_context,
+    build_stance_email_handoff,
+    build_tradeoffs_card_context,
+)
+
+_TRADEOFFS_CARD_TMPL = "{% include 'components/stance_tradeoffs_card.html' %}"
+
+
+def _render_tradeoffs_card(app, ctx):
+    with app.test_request_context('/brief/2026-07-20'):
+        return render_template_string(_TRADEOFFS_CARD_TMPL, tradeoffs_card=ctx, config=app.config)
+
+
+def test_tradeoffs_card_context_none_when_game_disabled(app):
+    with app.app_context():
+        with patch.dict(app.config, {'GAME_ENABLED': False}):
+            assert build_tradeoffs_card_context() is None
+
+
+def test_tradeoffs_card_context_none_when_scenario_unavailable(app):
+    # daily_meta() raising (no scheduled scenario in the test DB) must degrade to
+    # None, not 500 the brief page.
+    with app.app_context():
+        with patch('app.game.services.daily_service.daily_meta', side_effect=RuntimeError('boom')):
+            assert build_tradeoffs_card_context() is None
+
+
+def test_tradeoffs_card_renders_scenario_and_cta(app):
+    ctx = {
+        'title': 'AI Takes the Jobs',
+        'category': 'Technology & labour',
+        'teaser': 'Automation, retraining, and who pays.',
+        'total_turns': 5,
+        'play_url': '/play/daily?src=brief_tradeoffs',
+        'participation': {'total': 12345, 'today': 7, 'show': True},
+    }
+    html = _render_tradeoffs_card(app, ctx)
+    assert 'Play today' in html                       # CTA present
+    assert 'AI Takes the Jobs' in html                # live scenario title
+    assert 'Technology &amp; labour' in html or 'Technology & labour' in html
+    assert 'src=brief_tradeoffs' in html              # source-tagged link
+    assert 'govern, not just opine' in html           # value-prop hook
+    assert 'societies governed' in html               # social proof shown
+
+
+def test_brief_page_renders_tradeoffs_card_end_to_end(app, db):
+    """Full-page integration: GET the brief route and confirm the new card include
+    integrates into view.html without breaking the page (200) and renders its CTA.
+    """
+    from app.models import DailyBrief
+
+    d = date.today()
+    brief = DailyBrief(date=d, brief_type='daily', status='published', title=f'Brief {d}',
+                       intro_text='Intro')
+    db.session.add(brief)
+    db.session.commit()
+
+    fake_card = {
+        'title': 'AI Takes the Jobs', 'category': 'Technology & labour',
+        'teaser': 'Automation and who pays.', 'total_turns': 5,
+        'play_url': '/play/daily?src=brief_tradeoffs', 'participation': None,
+    }
+    client = app.test_client()
+    with patch('app.brief.stance_card.build_tradeoffs_card_context', return_value=fake_card):
+        resp = client.get(f'/brief/{d.isoformat()}')
+
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    assert "Play today's scenario" in body
+    assert 'AI Takes the Jobs' in body
+    assert 'src=brief_tradeoffs' in body
+
+
+def test_tradeoffs_card_omitted_without_context(app):
+    html = _render_tradeoffs_card(app, None)
+    assert html.strip() == ''
+    # And no social-proof line when participation is absent.
+    ctx = {'title': 'X', 'category': '', 'teaser': '', 'total_turns': 5,
+           'play_url': '/play/daily', 'participation': None}
+    html2 = _render_tradeoffs_card(app, ctx)
+    assert 'societies governed' not in html2
+    assert 'Play today' in html2
 
 
 def test_stance_context_none_without_published_question(db):
@@ -395,12 +481,16 @@ def test_daily_brief_email_teaser_above_fold(app):
         )
         top_idx = html.find("Today's question")
         agree_idx = html.find('source=brief_email')
-        stories_idx = html.find('Stories') if 'Stories' in html else html.find('mobile-headline')
+        headlines_idx = html.find("Today's Headlines")
         bottom_tradeoffs = html.find('brief_tradeoffs')
         assert top_idx > 0
         assert agree_idx > 0
+        assert agree_idx < headlines_idx or headlines_idx < 0
         assert 'Agree' in html
         assert 'Disagree' in html
+        assert 'vote-buttons-row' not in html
+        assert 'vote-buttons-stack' not in html
+        assert 'bgcolor="#2563eb"' in html
         assert 'one quick question' in html
         assert 'Your turn' not in html
         assert 'Also today' not in html

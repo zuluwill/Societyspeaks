@@ -1,0 +1,75 @@
+{# E1 secondary (web): world-class Tradeoffs promo card. Expects build_tradeoffs_card_context()
+   as `tradeoffs_card`. Never topic-matched — a permanent invitation to play. Silently
+   omitted when the game is disabled or today's scenario can't load. #}
+{% if config.get('GAME_ENABLED', true) and tradeoffs_card %}
+<section class="mt-6 mb-4" aria-labelledby="tradeoffs-card-heading">
+  <div class="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white shadow-sm dark:border-violet-800/60 dark:from-violet-950/50 dark:to-slate-900">
+
+    <!-- Eyebrow -->
+    <div class="px-5 py-3 border-b border-violet-200/70 bg-violet-100/70 dark:border-violet-800/50 dark:bg-violet-900/30">
+      <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-800 dark:text-violet-200">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M5 8l7-4 7 4M5 8l-2 5a4 4 0 008 0l-2-5M19 8l-2 5a4 4 0 008 0l-2-5"/>
+        </svg>
+        {{ _('Tradeoffs') }} · {{ _('daily scenario game') }}
+      </p>
+    </div>
+
+    <div class="p-5 sm:p-6">
+      <!-- Hook -->
+      <h2 id="tradeoffs-card-heading" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2" style="font-family: Georgia, 'Times New Roman', Times, serif;">
+        {{ _('Want to govern, not just opine?') }}
+      </h2>
+      <p class="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+        {{ _('A fictional crisis lands on your desk. Every choice helps one thing and costs another — there are no free wins. It takes about two minutes, and by the end you see what kind of leader you become.') }}
+      </p>
+
+      <!-- How it works -->
+      <div class="flex flex-wrap gap-2 mb-5">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-slate-800/70 border border-violet-200/70 dark:border-violet-800/50 px-3 py-1 text-xs font-medium text-violet-900 dark:text-violet-200">
+          <span class="font-bold text-violet-700 dark:text-violet-300">{{ tradeoffs_card.total_turns }}</span> {{ _('turns') }}
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-slate-800/70 border border-violet-200/70 dark:border-violet-800/50 px-3 py-1 text-xs font-medium text-violet-900 dark:text-violet-200">
+          {{ _('3 choices each') }}
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-slate-800/70 border border-violet-200/70 dark:border-violet-800/50 px-3 py-1 text-xs font-medium text-violet-900 dark:text-violet-200">
+          {{ _('~2 min · no account needed') }}
+        </span>
+      </div>
+
+      <!-- Today's scenario -->
+      {% if tradeoffs_card.title %}
+      <div class="rounded-xl bg-white/70 dark:bg-slate-800/50 border border-violet-200/60 dark:border-violet-800/40 p-4 mb-5">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300 mb-1">
+          {{ _("Today's scenario") }}{% if tradeoffs_card.category %} · {{ tradeoffs_card.category }}{% endif %}
+        </p>
+        <p class="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug" style="font-family: Georgia, 'Times New Roman', Times, serif;">
+          {{ tradeoffs_card.title }}
+        </p>
+        {% if tradeoffs_card.teaser %}
+        <p class="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed mt-1.5">
+          {{ tradeoffs_card.teaser }}
+        </p>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- CTA -->
+      <a href="{{ tradeoffs_card.play_url }}"
+         class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-violet-700 hover:bg-violet-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600 px-6 py-3.5 text-base font-bold text-white shadow-sm transition-colors">
+        {{ _("Play today's scenario") }}
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </a>
+
+      <!-- Social proof -->
+      {% if tradeoffs_card.participation %}
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-3">
+        {{ _('%(total)s societies governed', total=tradeoffs_card.participation.total|decimalformat) }}{% if tradeoffs_card.participation.today %} · {{ ngettext('%(n)d today', '%(n)d today', tradeoffs_card.participation.today, n=tradeoffs_card.participation.today) }}{% endif %}
+      </p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
