@@ -19,6 +19,70 @@ logger = logging.getLogger(__name__)
 DEFAULT_SEND_HOUR = 18
 
 
+def _capture_daily_brief_subscribed_posthog(
+    email: str,
+    subscriber,
+    user,
+    *,
+    track_posthog: bool,
+    subscription_status: str,
+    signup_channel: str = None,
+) -> None:
+    """Emit ``daily_brief_subscribed`` for new and reactivated subscriptions."""
+    if not track_posthog:
+        return
+    try:
+        import posthog
+
+        if not posthog or not getattr(posthog, 'project_api_key', None):
+            return
+        from app.lib.posthog_utils import (
+            email_subscriber_distinct_id,
+            resolve_request_distinct_id,
+            safe_posthog_capture,
+        )
+
+        ref = request.referrer or ''
+        distinct_id = resolve_request_distinct_id(
+            user_id=user.id if user else None,
+            anon_fallback=email_subscriber_distinct_id(email),
+        )
+        if not distinct_id:
+            logger.warning(
+                'Skipping daily_brief_subscribed — no distinct_id for %s',
+                email,
+            )
+            return
+        props = {
+            'subscription_tier': 'free',
+            'plan_name': 'Daily Brief',
+            'email': email,
+            'source': (
+                'social'
+                if (
+                    'utm_source' in ref
+                    or any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])
+                )
+                else 'direct'
+            ),
+            'referrer': request.referrer,
+            'subscription_type': 'daily_brief',
+            'subscription_status': subscription_status,
+            'reactivation': subscription_status == 'reactivated',
+            'cadence': subscriber.cadence,
+        }
+        if signup_channel:
+            props['signup_channel'] = signup_channel
+        safe_posthog_capture(
+            posthog_client=posthog,
+            distinct_id=distinct_id,
+            event='daily_brief_subscribed',
+            properties=props,
+        )
+    except Exception as e:
+        logger.warning(f"PostHog tracking error: {e}")
+
+
 def process_subscription(
     email: str,
     timezone: str = 'UTC',
@@ -114,6 +178,15 @@ def process_subscription(
             session['brief_subscriber_id'] = existing.id
             session.modified = True
 
+        _capture_daily_brief_subscribed_posthog(
+            email,
+            existing,
+            user,
+            track_posthog=track_posthog,
+            subscription_status='reactivated',
+            signup_channel=source,
+        )
+
         return {
             'status': 'reactivated',
             'subscriber': existing,
@@ -149,44 +222,14 @@ def process_subscription(
             session['brief_subscriber_id'] = subscriber.id
             session.modified = True
 
-        if track_posthog:
-            try:
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    from app.lib.posthog_utils import (
-                        email_subscriber_distinct_id,
-                        resolve_request_distinct_id,
-                        safe_posthog_capture,
-                    )
-                    ref = request.referrer or ''
-                    distinct_id = resolve_request_distinct_id(
-                        user_id=user.id if user else None,
-                        anon_fallback=email_subscriber_distinct_id(email),
-                    )
-                    if not distinct_id:
-                        logger.warning(
-                            'Skipping daily_brief_subscribed — no distinct_id for %s',
-                            email,
-                        )
-                    else:
-                        safe_posthog_capture(
-                            posthog_client=posthog,
-                            distinct_id=distinct_id,
-                            event='daily_brief_subscribed',
-                            properties={
-                                'subscription_tier': 'free',
-                                'plan_name': 'Daily Brief',
-                                'email': email,
-                                'source': 'social' if (
-                                    'utm_source' in ref or
-                                    any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])
-                                ) else 'direct',
-                                'referrer': request.referrer,
-                                'subscription_type': 'daily_brief',
-                            },
-                        )
-            except Exception as e:
-                logger.warning(f"PostHog tracking error: {e}")
+        _capture_daily_brief_subscribed_posthog(
+            email,
+            subscriber,
+            user,
+            track_posthog=track_posthog,
+            subscription_status='created',
+            signup_channel=source,
+        )
 
         return {
             'status': 'created',

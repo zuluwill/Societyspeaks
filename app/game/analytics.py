@@ -15,7 +15,45 @@ from app.lib.posthog_utils import (
     posthog_js_distinct_id,
     safe_posthog_capture,
 )
+from app.lib.subscriber_identity import read_subscriber_ref
 from app.models.game import GameRun
+
+_GAME_TRAFFIC_SOURCES = frozenset({
+    'brief_email',
+    'daily_question_email',
+    'direct',
+    'organic',
+    'social',
+})
+
+
+def resolve_game_traffic_source() -> Optional[str]:
+    """Best-effort attribution for Society Play entry (email ref, UTM, ?source=)."""
+    try:
+        from flask import has_request_context, request
+
+        if not has_request_context():
+            return None
+
+        explicit = (request.args.get('source') or '').strip().lower()
+        if explicit in _GAME_TRAFFIC_SOURCES:
+            return explicit
+
+        utm_source = (request.args.get('utm_source') or '').strip().lower()
+        if utm_source in ('brief_email', 'daily_brief', 'daily-brief'):
+            return 'brief_email'
+        if utm_source in ('daily_question', 'daily-question', 'daily_question_email'):
+            return 'daily_question_email'
+
+        ref = read_subscriber_ref()
+        if ref:
+            if ref.get('b'):
+                return 'brief_email'
+            if ref.get('q'):
+                return 'daily_question_email'
+    except Exception:
+        return None
+    return None
 
 def resolve_distinct_id_for_run(run: GameRun) -> str:
     """Resolve the PostHog identity for ``run`` at creation time.
@@ -65,6 +103,10 @@ def track_game_event(
     }
     if properties:
         props.update(properties)
+    if 'source' not in props:
+        traffic_source = resolve_game_traffic_source()
+        if traffic_source:
+            props['source'] = traffic_source
     safe_posthog_capture(
         posthog_client=posthog,
         distinct_id=_distinct_id_for_run(run),

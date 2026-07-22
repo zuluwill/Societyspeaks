@@ -116,6 +116,54 @@ def log_send_failure(record: Dict[str, Any]) -> None:
         logger.warning(msg, extra=extra)
 
 
+def _attach_brief_send_metadata(results: dict, brief, *, cadence: str) -> dict:
+    """Stamp scheduler batch results with brief edition metadata for analytics."""
+    if not results or not brief:
+        return results
+    meta = {
+        'brief_id': brief.id,
+        'brief_date': brief.date.isoformat() if brief.date else None,
+        'brief_type': getattr(brief, 'brief_type', None) or cadence,
+        'cadence': cadence,
+    }
+    try:
+        from app.models import DailyQuestion
+
+        dq = DailyQuestion.query.filter_by(question_date=brief.date).first()
+        if dq:
+            meta['daily_question_id'] = dq.id
+    except Exception:
+        pass
+    results['_send_meta'] = meta
+    return results
+
+
+def _capture_daily_brief_sent_batch(results: dict, *, cadence: str) -> None:
+    """Emit one PostHog system event per scheduler batch with actual send activity."""
+    sent = int(results.get('sent') or 0)
+    failed = int(results.get('failed') or 0)
+    if sent + failed <= 0:
+        return
+    meta = results.get('_send_meta') or {}
+    try:
+        from app.lib.posthog_utils import safe_system_capture
+
+        safe_system_capture(
+            'daily_brief_sent',
+            properties={
+                'cadence': cadence,
+                'sent': sent,
+                'failed': failed,
+                'brief_id': meta.get('brief_id'),
+                'brief_date': meta.get('brief_date'),
+                'brief_type': meta.get('brief_type'),
+                'daily_question_id': meta.get('daily_question_id'),
+            },
+        )
+    except Exception as exc:
+        logger.warning('PostHog daily_brief_sent capture failed: %s', exc)
+
+
 def log_brief_batch_results(results: Optional[dict], *, cadence: str = 'daily') -> None:
     """Log batch send summary for scheduler jobs.
 
@@ -143,6 +191,7 @@ def log_brief_batch_results(results: Optional[dict], *, cadence: str = 'daily') 
                 label,
                 permanent,
             )
+    _capture_daily_brief_sent_batch(results, cadence=cadence)
 
 
 def classify_send_failure(error: Optional[str]) -> str:
@@ -1449,7 +1498,7 @@ class BriefEmailScheduler:
                 return {'sent': 0, 'failed': 0, 'errors': []}
 
             results = self.send_to_subscribers(subscribers, brief)
-            return results
+            return _attach_brief_send_metadata(results, brief, cadence='daily')
         finally:
             release_daily_send_lock(lock_client, lock_key, lock_token)
 
@@ -1519,7 +1568,7 @@ class BriefEmailScheduler:
 
         logger.info(f"Sending weekly brief ({brief.date}) to {len(subscribers)} subscribers")
         results = self.send_to_subscribers(subscribers, brief)
-        return results
+        return _attach_brief_send_metadata(results, brief, cadence='weekly')
 
 
 def send_brief_to_subscriber(subscriber_email: str, brief_date: Optional[str] = None) -> bool:

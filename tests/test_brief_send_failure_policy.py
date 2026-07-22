@@ -133,6 +133,44 @@ def test_log_brief_batch_results_emits_summary_only(app):
             mock_logger.error.assert_not_called()
 
 
+def test_log_brief_batch_results_captures_daily_brief_sent(app):
+    with app.app_context():
+        with patch('app.lib.posthog_utils.safe_system_capture') as capture:
+            log_brief_batch_results(
+                {
+                    'sent': 71,
+                    'failed': 1,
+                    '_send_meta': {
+                        'brief_id': 236,
+                        'brief_date': '2026-07-22',
+                        'brief_type': 'daily',
+                        'cadence': 'daily',
+                        'daily_question_id': 80,
+                    },
+                },
+                cadence='daily',
+            )
+            capture.assert_called_once_with(
+                'daily_brief_sent',
+                properties={
+                    'cadence': 'daily',
+                    'sent': 71,
+                    'failed': 1,
+                    'brief_id': 236,
+                    'brief_date': '2026-07-22',
+                    'brief_type': 'daily',
+                    'daily_question_id': 80,
+                },
+            )
+
+
+def test_log_brief_batch_results_skips_posthog_when_no_sends(app):
+    with app.app_context():
+        with patch('app.lib.posthog_utils.safe_system_capture') as capture:
+            log_brief_batch_results({'sent': 0, 'failed': 0}, cadence='weekly')
+            capture.assert_not_called()
+
+
 def test_model_failure_counter_increment_and_reset(app, db, brief_and_subscriber):
     _brief_id, sub_id = brief_and_subscriber
     with app.app_context():

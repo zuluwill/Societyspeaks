@@ -233,7 +233,7 @@ def _finalize_login(user, *, method, next_url=None):
     _track_posthog(
         'user_logged_in',
         user.id,
-        {'email': user.email, 'method': method},
+        {'email': user.email, 'method': method, 'is_authenticated': True},
         identify_properties={'email': user.email, 'username': user.username},
     )
 

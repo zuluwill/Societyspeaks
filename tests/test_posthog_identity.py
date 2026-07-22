@@ -367,3 +367,90 @@ def test_game_run_started_fires_without_posthog_cookie(app):
             assert capture.call_count == 1
             props = capture.call_args.kwargs['properties']
             assert 'is_authenticated' in props
+
+
+def test_user_logged_in_includes_is_authenticated(app):
+    from app.auth.routes import _finalize_login
+    from app.models import User
+
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+
+    with app.app_context():
+        with patch('app.auth.routes._track_posthog') as track:
+            with patch('app.auth.routes.login_user'):
+                with patch('app.auth.routes.record_event'):
+                    with patch('app.auth.routes.merge_anonymous_statement_votes_into_user'):
+                        user = User(email='login@example.com', username='loginuser')
+                        user.id = 99
+                        with app.test_request_context('/login'):
+                            _finalize_login(user, method='password')
+                        track.assert_called_once()
+                        props = track.call_args[0][2]
+                        assert props['is_authenticated'] is True
+
+
+def test_brief_reactivate_fires_daily_brief_subscribed(app, db):
+    from app.brief.subscription import process_subscription
+    from app.models import DailyBriefSubscriber
+
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+
+    with app.app_context():
+        db.create_all()
+        sub = DailyBriefSubscriber(
+            email='returning@example.com',
+            status='unsubscribed',
+            timezone='UTC',
+            preferred_send_hour=18,
+        )
+        db.session.add(sub)
+        db.session.commit()
+
+        with patch('app.brief.subscription.ResendClient') as resend_cls:
+            resend_cls.return_value.send_welcome.return_value = True
+            with patch('app.lib.posthog_utils.safe_posthog_capture') as capture:
+                with app.test_request_context('/brief/subscribe'):
+                    result = process_subscription(
+                        'returning@example.com',
+                        track_posthog=True,
+                        source='dashboard',
+                    )
+        assert result['status'] == 'reactivated'
+        capture.assert_called_once()
+        assert capture.call_args.kwargs['event'] == 'daily_brief_subscribed'
+        props = capture.call_args.kwargs['properties']
+        assert props['subscription_status'] == 'reactivated'
+        assert props['reactivation'] is True
+        assert props['signup_channel'] == 'dashboard'
+
+
+def test_game_run_started_includes_brief_email_source(app):
+    from app.game.analytics import track_game_event
+    from app.lib.subscriber_identity import SUBSCRIBER_REF_COOKIE, set_subscriber_ref_cookie
+    from app.models.game import GameRun
+    from flask import Response
+
+    run = GameRun(
+        uuid='brief-src-uuid',
+        scenario_slug='debt-inherited',
+        mode='quick',
+        session_fingerprint='fp-brief',
+        turn_index=0,
+        total_turns=10,
+    )
+    browser_ua = {'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+
+    with app.test_request_context('/game/quick/debt-inherited', headers=browser_ua):
+        resp = Response()
+        set_subscriber_ref_cookie(resp, brief_subscriber_id=7)
+        cookie_header = resp.headers.get('Set-Cookie', '')
+        cookie_value = cookie_header.split(f'{SUBSCRIBER_REF_COOKIE}=', 1)[1].split(';', 1)[0]
+
+    with patch('app.game.analytics.safe_posthog_capture') as capture:
+        with app.test_request_context(
+            '/game/quick/debt-inherited',
+            headers={**browser_ua, 'Cookie': f'{SUBSCRIBER_REF_COOKIE}={cookie_value}'},
+        ):
+            track_game_event(run, 'game_run_started')
+        props = capture.call_args.kwargs['properties']
+        assert props['source'] == 'brief_email'
