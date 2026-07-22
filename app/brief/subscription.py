@@ -56,7 +56,6 @@ def _capture_daily_brief_subscribed_posthog(
         props = {
             'subscription_tier': 'free',
             'plan_name': 'Daily Brief',
-            'email': email,
             'source': (
                 'social'
                 if (
@@ -70,6 +69,7 @@ def _capture_daily_brief_subscribed_posthog(
             'subscription_status': subscription_status,
             'reactivation': subscription_status == 'reactivated',
             'cadence': subscriber.cadence,
+            'brief_subscriber_id': subscriber.id,
         }
         if signup_channel:
             props['signup_channel'] = signup_channel

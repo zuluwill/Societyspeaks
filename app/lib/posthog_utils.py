@@ -509,6 +509,20 @@ def stitch_posthog_on_user_login(
         )
 
 
+def _drain_posthog_client(posthog_client: Any, *, timeout: float = 0.25) -> None:
+    """Best-effort bounded drain after revenue-critical captures."""
+    try:
+        client = getattr(posthog_client, 'default_client', None)
+        if client is None:
+            import posthog as ph
+
+            client = getattr(ph, 'default_client', None)
+        if client is not None:
+            _drain_client_queue(client, timeout=timeout)
+    except Exception as exc:
+        _log.warning('PostHog queue drain failed: %s', exc)
+
+
 def safe_posthog_capture(
     *,
     posthog_client: Any,
@@ -516,7 +530,9 @@ def safe_posthog_capture(
     event: str,
     properties: Optional[dict] = None,
     identify_properties: Optional[dict] = None,
-) -> None:
+    insert_id: Optional[str] = None,
+    durable: bool = False,
+) -> bool:
     """Capture (and optionally identify) in PostHog, never raising into callers.
 
     Automatically attaches ``$raw_user_agent`` to every server-side event so
@@ -527,22 +543,29 @@ def safe_posthog_capture(
     ``$referrer``/``$referring_domain``, ``$utm_*``) so server-side events are
     attributable to discovery channels. Explicit ``properties`` always win over
     the auto-derived values. Outside a request context these are simply omitted.
+
+    ``insert_id`` maps to PostHog ``$insert_id`` for idempotent backfills.
+    ``durable=True`` performs a bounded queue drain after capture — use only for
+    revenue-critical events (E1 confirmed) where batch loss on fast POST handlers
+    would otherwise under-count.
     """
     if not posthog_client or not getattr(posthog_client, "project_api_key", None):
-        return
+        return False
     # Never invent a 'None'/empty person when identity could not be resolved.
     if not distinct_id:
         _log.warning("Skipping PostHog event %s — no distinct_id", event)
-        return
+        return False
     # Scripted clients (python-requests, curl, declared bots) are never worth
     # capturing; UA-based filtering downstream cannot recover once they are in.
     # Browser-UA crawlers are NOT caught here — page-load-triggered call sites
     # must additionally gate on request_has_browser_evidence().
     if request_is_scripted_client():
-        return
+        return False
 
     try:
         props = dict(properties or {})
+        if insert_id:
+            props['$insert_id'] = insert_id
         if "$raw_user_agent" not in props:
             ua = _get_request_user_agent()
             if ua:
@@ -560,10 +583,13 @@ def safe_posthog_capture(
                 distinct_id=str(distinct_id),
                 properties=identify_properties,
             )
+        if durable:
+            _drain_posthog_client(posthog_client)
+        return True
     except Exception as exc:
         # Analytics must never break product flows, but failures must be visible.
         _log.warning("PostHog capture failed for event %s: %s", event, exc)
-        return
+        return False
 
 
 def safe_system_capture(event: str, properties: Optional[dict] = None) -> None:

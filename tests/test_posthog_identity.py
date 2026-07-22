@@ -422,6 +422,8 @@ def test_brief_reactivate_fires_daily_brief_subscribed(app, db):
         assert props['subscription_status'] == 'reactivated'
         assert props['reactivation'] is True
         assert props['signup_channel'] == 'dashboard'
+        assert 'email' not in props
+        assert props['brief_subscriber_id'] is not None
 
 
 def test_game_run_started_includes_brief_email_source(app):

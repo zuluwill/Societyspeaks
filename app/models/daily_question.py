@@ -289,6 +289,7 @@ class DailyQuestionResponse(db.Model):
 
     # Stable PostHog person at vote time (mirrors statement_vote.posthog_distinct_id)
     posthog_distinct_id = db.Column(db.String(255), nullable=True)
+    posthog_confirmed_mirrored_at = db.Column(db.DateTime, nullable=True)
 
     # Moderation flags
     is_hidden = db.Column(db.Boolean, default=False)  # Hidden by admin or auto-flagged

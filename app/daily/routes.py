@@ -1815,6 +1815,7 @@ def one_click_vote(token, vote_choice):
             source=source,
             has_reason=bool(reason),
             distinct_id_override=participation_distinct_id,
+            response_id=response.id,
             reason_tag=reason_tag,
             confidence_level=confidence_level,
             context_expanded=context_expanded,

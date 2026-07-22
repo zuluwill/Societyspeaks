@@ -561,6 +561,30 @@ def init_scheduler(app):
                 logger.info(f"Refreshed analytics daily aggregates ({rows} grouped rows)")
 
 
+    @scheduler.scheduled_job('interval', minutes=15, id='reconcile_stance_posthog_mirror', max_instances=1, coalesce=True)
+    def reconcile_stance_posthog_mirror_job():
+        """Mirror unstamped email-confirmed stances from Neon into PostHog.
+
+        Live vote POSTs enqueue best-effort; this job is the sole writer of
+        ``posthog_confirmed_mirrored_at`` and converges PostHog toward Neon
+        without blocking user-facing confirm latency.
+        """
+        with app.app_context():
+            from app.daily.vote_analytics import reconcile_unmirrored_email_votes_to_posthog
+
+            try:
+                stats = reconcile_unmirrored_email_votes_to_posthog(days=30, limit=500)
+                if stats['mirrored'] or stats['skipped_no_identity']:
+                    logger.info(
+                        'Stance PostHog mirror reconcile: candidates=%(candidates)d '
+                        'mirrored=%(mirrored)d skipped_no_identity=%(skipped_no_identity)d '
+                        'failed=%(failed)d',
+                        stats,
+                    )
+            except Exception:
+                logger.exception('Stance PostHog mirror reconcile failed')
+
+
     @scheduler.scheduled_job('interval', minutes=10, id='statement_counter_reconciliation', max_instances=1, coalesce=True)
     def statement_counter_reconciliation():
         """

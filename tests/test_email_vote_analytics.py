@@ -382,6 +382,7 @@ def test_track_confirmed_fires_both_events(app, db):
         assert confirmed['distinct_id'] == expected_id
         assert confirmed['properties']['confirmation_step'] == 'confirmed'
         assert confirmed['properties']['participation_source'] == 'brief_stance_email'
+        assert confirmed['properties']['question_text'] == 'Track confirmed vote?'
         mock_ph.identify.assert_called()
         assert mock_ph.identify.call_args.kwargs['properties']['brief_subscriber_id'] == sub.id
         participated = mock_ph.capture.call_args_list[1].kwargs
@@ -504,3 +505,154 @@ def test_prefetch_get_renders_confirm_but_records_no_event(client, db, app):
         )
         assert human.status_code == 200
         assert len(_confirm_viewed_events(mock_ph)) == 1
+
+
+def test_question_analytics_properties_includes_text_and_metadata(app, db):
+    from app.daily.vote_analytics import question_analytics_properties
+    from app.models import DailyQuestion
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=99,
+            question_text='Should cities ban cars from centres?',
+            status='published',
+            source_type='discussion',
+            topic_category='transport',
+            contestability_score=0.72,
+            editorial_contest_rating=4,
+        )
+        db.session.add(q)
+        db.session.commit()
+        props = question_analytics_properties(q)
+        assert props['question_text'] == q.question_text
+        assert props['topic_category'] == 'transport'
+        assert props['contestability_score'] == 0.72
+        assert props['editorial_contest_rating'] == 4
+
+
+def test_track_email_vote_confirmed_uses_insert_id_without_stamping_mirror(app, db):
+    """Live POST enqueues best-effort; reconciler owns mirrored_at."""
+    from app.models import DailyQuestionResponse
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=100,
+            question_text='Mirror stamp?',
+            status='published',
+            source_type='discussion',
+        )
+        sub = DailyBriefSubscriber(email='mirror-stamp@example.com', status='active')
+        db.session.add_all([q, sub])
+        db.session.commit()
+
+        response = DailyQuestionResponse(
+            daily_question_id=q.id,
+            session_fingerprint='fp-mirror',
+            vote=1,
+            voted_via_email=True,
+            posthog_distinct_id=resolve_email_vote_distinct_id(sub),
+        )
+        db.session.add(response)
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with patch('app.lib.posthog_utils._drain_posthog_client') as drain:
+                track_email_vote_confirmed(
+                    subscriber=sub,
+                    question=q,
+                    vote_choice='agree',
+                    voter_channel='brief',
+                    source='brief_email',
+                    response_id=response.id,
+                )
+                drain.assert_not_called()
+
+        confirmed = mock_ph.capture.call_args_list[0].kwargs
+        assert confirmed['properties']['$insert_id'] == f'dqr:{response.id}:email_vote_confirmed'
+        db.session.refresh(response)
+        assert response.posthog_confirmed_mirrored_at is None
+
+
+def test_reconcile_unmirrored_email_votes_stamps_mirror(app, db):
+    from app.daily.vote_analytics import reconcile_unmirrored_email_votes_to_posthog
+    from app.models import DailyQuestionResponse
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=102,
+            question_text='Reconcile me?',
+            status='published',
+            source_type='discussion',
+        )
+        sub = DailyBriefSubscriber(email='reconcile@example.com', status='active')
+        db.session.add_all([q, sub])
+        db.session.commit()
+
+        response = DailyQuestionResponse(
+            daily_question_id=q.id,
+            session_fingerprint='fp-reconcile',
+            vote=1,
+            voted_via_email=True,
+            posthog_distinct_id=resolve_email_vote_distinct_id(sub),
+        )
+        db.session.add(response)
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with patch('app.lib.posthog_utils._drain_posthog_client'):
+                with patch('app.lib.posthog_utils.shutdown_server_posthog'):
+                    stats = reconcile_unmirrored_email_votes_to_posthog(limit=10)
+
+        assert stats['mirrored'] == 1
+        db.session.refresh(response)
+        assert response.posthog_confirmed_mirrored_at is not None
+
+
+def test_mirror_email_vote_confirmed_to_posthog_is_idempotent(app, db):
+    from app.daily.vote_analytics import mirror_email_vote_confirmed_to_posthog
+    from app.models import DailyQuestionResponse
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=101,
+            question_text='Backfill once?',
+            status='published',
+            source_type='discussion',
+        )
+        sub = DailyBriefSubscriber(email='backfill@example.com', status='active')
+        db.session.add_all([q, sub])
+        db.session.commit()
+
+        response = DailyQuestionResponse(
+            daily_question_id=q.id,
+            session_fingerprint='fp-backfill',
+            vote=-1,
+            voted_via_email=True,
+            posthog_distinct_id=resolve_email_vote_distinct_id(sub),
+        )
+        db.session.add(response)
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with patch('app.lib.posthog_utils._drain_posthog_client'):
+                assert mirror_email_vote_confirmed_to_posthog(response, subscriber=sub) is True
+                assert mirror_email_vote_confirmed_to_posthog(response, subscriber=sub) is False
+
+        assert mock_ph.capture.call_count == 1
