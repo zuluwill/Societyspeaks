@@ -9,11 +9,12 @@ from app import db
 from app.daily.vote_analytics import (
     participation_source_for_email_vote,
     resolve_daily_participation_distinct_id,
+    resolve_email_vote_distinct_id,
     track_email_vote_confirm_viewed,
     track_email_vote_confirmed,
     track_daily_question_participated,
 )
-from app.lib.posthog_utils import request_is_prefetch
+from app.lib.posthog_utils import email_subscriber_distinct_id, request_is_prefetch
 from app.models import DailyBriefSubscriber, DailyQuestion
 
 
@@ -122,6 +123,189 @@ def test_weekly_batch_vote_emits_participation_event(client, db, app):
     assert participated['properties']['voted_via_email'] is True
 
 
+def test_weekly_batch_vote_persists_audit_distinct_id(client, db, app):
+    """The stored audit id must equal the distinct_id the event fired under."""
+    from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber
+
+    today = date.today()
+    q = DailyQuestion(
+        question_date=today,
+        question_number=78,
+        question_text='Audit id persisted on batch vote?',
+        status='published',
+        source_type='discussion',
+    )
+    sub = DailyQuestionSubscriber(email='batch-audit@example.com', is_active=True)
+    db.session.add_all([q, sub])
+    db.session.commit()
+
+    mock_ph = MagicMock()
+    mock_ph.project_api_key = 'phk_test'
+
+    with client.session_transaction() as sess:
+        sess['daily_subscriber_id'] = sub.id
+
+    with patch('app.daily.vote_analytics._posthog', mock_ph):
+        response = client.post(
+            '/daily/weekly/vote',
+            json={'question_id': q.id, 'vote': 'agree'},
+            headers={'Content-Type': 'application/json'},
+        )
+
+    assert response.status_code == 200
+    row = DailyQuestionResponse.query.filter_by(daily_question_id=q.id).one()
+    assert row.posthog_distinct_id  # populated, not NULL
+    event_distinct_id = [
+        c.kwargs['distinct_id'] for c in mock_ph.capture.call_args_list
+        if c.kwargs.get('event') == 'daily_question_participated'
+    ][0]
+    assert row.posthog_distinct_id == event_distinct_id  # no drift
+
+
+def test_web_vote_persists_audit_distinct_id(client, db, app):
+    """Anonymous web vote also mirrors its analytics id onto the response row."""
+    from app.models import DailyQuestion, DailyQuestionResponse
+
+    q = DailyQuestion(
+        question_date=date.today(),
+        question_number=79,
+        question_text='Audit id persisted on web vote?',
+        status='published',
+        source_type='discussion',
+    )
+    db.session.add(q)
+    db.session.commit()
+
+    mock_ph = MagicMock()
+    mock_ph.project_api_key = 'phk_test'
+
+    with patch('app.daily.vote_analytics._posthog', mock_ph):
+        response = client.post(
+            '/daily/vote',
+            data={'vote': 'agree', 'ajax': '1'},
+        )
+
+    assert response.status_code == 200
+    row = DailyQuestionResponse.query.filter_by(daily_question_id=q.id).one()
+    event_calls = [
+        c.kwargs['distinct_id'] for c in mock_ph.capture.call_args_list
+        if c.kwargs.get('event') == 'daily_question_participated'
+    ]
+    assert event_calls, 'expected a participation event to fire'
+    assert row.posthog_distinct_id  # populated, not NULL
+    assert row.posthog_distinct_id == event_calls[0]  # no drift
+
+
+def test_track_confirmed_does_not_re_alias(app, db):
+    """Alias fires once on confirm-viewed GET; confirmed POST must not repeat it."""
+    import posthog
+    from datetime import date
+
+    from app.models import DailyBriefSubscriber, DailyQuestion
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=81,
+            question_text='No re-alias on confirmed?',
+            status='published',
+            source_type='discussion',
+        )
+        sub = DailyBriefSubscriber(email='no-realias@example.com', status='active')
+        db.session.add_all([q, sub])
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with patch(
+                'app.daily.vote_analytics.stitch_email_subscriber_posthog_identity',
+            ) as stitch_mock:
+                with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0 (iPhone)'}):
+                    track_email_vote_confirmed(
+                        subscriber=sub,
+                        question=q,
+                        vote_choice='agree',
+                        voter_channel='brief',
+                        source='brief_email',
+                    )
+
+        stitch_mock.assert_not_called()
+
+
+def test_email_vote_audit_id_matches_event(client, db, app):
+    """Email vote stores the same distinct_id the confirmed event fires under."""
+    from app.lib.posthog_utils import email_subscriber_distinct_id
+    from app.models import DailyBriefSubscriber, DailyQuestion, DailyQuestionResponse
+
+    today = date.today()
+    q = DailyQuestion(
+        question_date=today,
+        question_number=82,
+        question_text='Audit id on email vote?',
+        status='published',
+        source_type='discussion',
+    )
+    sub = DailyBriefSubscriber(email='email-audit@example.com', status='active')
+    db.session.add_all([q, sub])
+    db.session.commit()
+    token = sub.generate_vote_token(q.id)
+    expected_id = email_subscriber_distinct_id(sub.email)
+
+    mock_ph = MagicMock()
+    mock_ph.project_api_key = 'phk_test'
+
+    with patch('app.daily.vote_analytics._posthog', mock_ph):
+        client.get(f'/daily/v/{token}/agree?source=brief_email')
+        client.post(
+            f'/daily/v/{token}/agree?source=brief_email',
+            data={'confidence_level': 'high', 'reason': 'Because it matters.'},
+        )
+
+    row = DailyQuestionResponse.query.filter_by(daily_question_id=q.id).one()
+    assert row.posthog_distinct_id == expected_id
+    assert row.confidence_level == 'high'
+    confirmed = [
+        c.kwargs['distinct_id'] for c in mock_ph.capture.call_args_list
+        if c.kwargs.get('event') == 'email_vote_confirmed'
+    ]
+    assert confirmed
+    assert row.posthog_distinct_id == confirmed[0]
+
+
+def test_confirm_vote_template_single_confidence_source():
+    """Structural guard: chips are the sole confidence source; reason form mirrors."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    confirm = (root / 'app/templates/daily/confirm_vote.html').read_text()
+    chips = (root / 'app/templates/daily/_confidence_chips.html').read_text()
+
+    assert 'data-confidence-mirror' in confirm
+    assert confirm.count('name="confidence_level"') == 1  # mirror only in reason form
+    assert 'data-confidence-input' in chips
+    assert 'data-confidence-mirror' in chips
+    assert 'reasonSelect' not in chips
+
+
+def test_subscriber_distinct_id_matches_scoreboard_hash():
+    """§10c SQL hash must match app/lib/posthog_utils.email_subscriber_distinct_id."""
+    import hashlib
+
+    samples = [
+        'Person@Example.com',
+        '  person@example.com ',
+        'tab@example.com\t',
+        'newline@example.com\n',
+    ]
+    for email in samples:
+        normalized = str(email).strip().lower()
+        expected = 'subscriber:' + hashlib.sha256(normalized.encode()).hexdigest()[:32]
+        assert email_subscriber_distinct_id(email) == expected
+
+
 def test_participation_source_mapping():
     assert participation_source_for_email_vote('brief_email', 'brief') == 'brief_stance_email'
     assert participation_source_for_email_vote('', 'brief') == 'brief_stance_email'
@@ -163,6 +347,8 @@ def test_track_confirm_viewed_fires_event(app, db):
 
 
 def test_track_confirmed_fires_both_events(app, db):
+    from app.lib.posthog_utils import email_subscriber_distinct_id
+
     with app.app_context():
         db.create_all()
         q = DailyQuestion(
@@ -175,6 +361,7 @@ def test_track_confirmed_fires_both_events(app, db):
         sub = DailyBriefSubscriber(email='confirmed-brief@example.com', status='active')
         db.session.add_all([q, sub])
         db.session.commit()
+        expected_id = email_subscriber_distinct_id(sub.email)
 
         mock_ph = MagicMock()
         mock_ph.project_api_key = 'phk_test'
@@ -191,9 +378,14 @@ def test_track_confirmed_fires_both_events(app, db):
         events = [c.kwargs['event'] for c in mock_ph.capture.call_args_list]
         assert 'email_vote_confirmed' in events
         assert 'daily_question_participated' in events
-        confirmed = mock_ph.capture.call_args_list[0].kwargs['properties']
-        assert confirmed['confirmation_step'] == 'confirmed'
-        assert confirmed['participation_source'] == 'brief_stance_email'
+        confirmed = mock_ph.capture.call_args_list[0].kwargs
+        assert confirmed['distinct_id'] == expected_id
+        assert confirmed['properties']['confirmation_step'] == 'confirmed'
+        assert confirmed['properties']['participation_source'] == 'brief_stance_email'
+        mock_ph.identify.assert_called()
+        assert mock_ph.identify.call_args.kwargs['properties']['brief_subscriber_id'] == sub.id
+        participated = mock_ph.capture.call_args_list[1].kwargs
+        assert participated['distinct_id'] == expected_id
 
 
 @pytest.mark.parametrize('headers', [

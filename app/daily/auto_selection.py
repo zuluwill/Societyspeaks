@@ -437,6 +437,7 @@ def select_from_brief_items(brief_date, question_date):
             else None
         ),
         'engagement_score': selected['score'],
+        'contestability_score': selected['contestability'],
         'source_trending_topic_id': topic.id,
         'source_brief_item_id': brief_item.id,
         'source_discussion_id': source_discussion_id,
@@ -1190,6 +1191,7 @@ def _apply_source_info_to_question(question, source_info):
     question.source_trending_topic_id = None
     question.source_brief_item_id = None
     question.coverage_frame_json = source_info.get('coverage_frame')
+    question.contestability_score = source_info.get('contestability_score')
 
     if source_type == 'discussion':
         question.source_discussion_id = source.id
@@ -1303,6 +1305,7 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
     source_trending_topic_id = None
     source_brief_item_id = None
     coverage_frame_json = source_info.get('coverage_frame')
+    contestability_score = source_info.get('contestability_score')
     
     if source_type == 'discussion':
         source_discussion_id = source.id
@@ -1346,6 +1349,7 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
                 source_trending_topic_id=source_trending_topic_id,
                 source_brief_item_id=source_brief_item_id,
                 coverage_frame_json=coverage_frame_json,
+                contestability_score=contestability_score,
                 source_statement_id=source_statement_id,
                 status='scheduled',
                 created_by_id=created_by_id

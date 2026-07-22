@@ -63,6 +63,8 @@ class DailyQuestion(db.Model):
 
     # Snapshot of brief coverage metadata at question selection (press-vs-public axis)
     coverage_frame_json = db.Column(db.JSON)
+    contestability_score = db.Column(db.Float, nullable=True)
+    editorial_contest_rating = db.Column(db.SmallInteger, nullable=True)
 
     topic_category = db.Column(db.String(100))
 
@@ -82,6 +84,15 @@ class DailyQuestion(db.Model):
     source_trending_topic = db.relationship('TrendingTopic', backref='daily_questions')
     source_brief_item = db.relationship('BriefItem', backref='daily_questions')
     created_by = db.relationship('User', backref='created_daily_questions')
+
+    @validates('editorial_contest_rating')
+    def validate_editorial_contest_rating(self, key, rating):
+        if rating is None or rating == '':
+            return None
+        rating_int = int(rating)
+        if rating_int < 1 or rating_int > 5:
+            raise ValueError('editorial_contest_rating must be between 1 and 5')
+        return rating_int
 
     @property
     def response_count(self):
@@ -275,6 +286,9 @@ class DailyQuestionResponse(db.Model):
     # Track which question the email was about (for analytics on vote mismatch patterns)
     # If user clicks old email link, this will differ from daily_question_id
     email_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
+
+    # Stable PostHog person at vote time (mirrors statement_vote.posthog_distinct_id)
+    posthog_distinct_id = db.Column(db.String(255), nullable=True)
 
     # Moderation flags
     is_hidden = db.Column(db.Boolean, default=False)  # Hidden by admin or auto-flagged

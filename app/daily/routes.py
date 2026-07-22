@@ -1435,14 +1435,26 @@ def weekly_batch_vote():
         return jsonify({'error': _('Already voted'), 'already_voted': True}), 400
 
     try:
+        from app.daily.vote_analytics import (
+            resolve_daily_participation_distinct_id,
+            track_daily_question_participated,
+        )
+
         fingerprint = get_session_fingerprint()
         new_vote = VOTE_MAP[vote_choice]
+
+        # Resolve the analytics identity once so the stored audit id and the
+        # PostHog event below are guaranteed identical (no drift).
+        participation_distinct_id = resolve_daily_participation_distinct_id(
+            subscriber=subscriber
+        )
 
         # Create the daily question response
         response = DailyQuestionResponse(
             daily_question_id=question.id,
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            posthog_distinct_id=participation_distinct_id,
             vote=new_vote,
             reason=reason[:500] if reason else None,
             reason_tag=reason_tag,
@@ -1466,8 +1478,6 @@ def weekly_batch_vote():
 
         _track_context_engagement(question, response, source='weekly_batch')
 
-        from app.daily.vote_analytics import track_daily_question_participated
-
         track_daily_question_participated(
             question=question,
             vote=vote_choice,
@@ -1479,6 +1489,7 @@ def weekly_batch_vote():
             confidence_level=confidence_level,
             context_expanded=context_expanded,
             source_link_click_count=source_link_click_count,
+            distinct_id_override=participation_distinct_id,
         )
 
         current_app.logger.info(
@@ -1728,6 +1739,8 @@ def one_click_vote(token, vote_choice):
     
     # POST request: Record the vote
     try:
+        from app.daily.vote_analytics import resolve_email_vote_distinct_id, track_email_vote_confirmed
+
         fingerprint = get_session_fingerprint()
         new_vote = VOTE_MAP[vote_choice]
 
@@ -1747,12 +1760,15 @@ def one_click_vote(token, vote_choice):
         if reason and len(reason) > 500:
             reason = reason[:500]
 
+        participation_distinct_id = resolve_email_vote_distinct_id(subscriber)
+
         # Create the daily question response (now includes reason if provided)
         response = DailyQuestionResponse(
             daily_question_id=question.id,
             email_question_id=email_question_id,  # Track which question the email was about
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            posthog_distinct_id=participation_distinct_id,
             vote=new_vote,
             reason=reason if reason else None,
             reason_tag=reason_tag,
@@ -1790,7 +1806,6 @@ def one_click_vote(token, vote_choice):
         _track_context_engagement(question, response, source='email_one_click')
 
         source = request.args.get('source', '')
-        from app.daily.vote_analytics import track_email_vote_confirmed
 
         track_email_vote_confirmed(
             subscriber=subscriber,
@@ -1799,6 +1814,7 @@ def one_click_vote(token, vote_choice):
             voter_channel=voter_channel,
             source=source,
             has_reason=bool(reason),
+            distinct_id_override=participation_distinct_id,
             reason_tag=reason_tag,
             confidence_level=confidence_level,
             context_expanded=context_expanded,
@@ -1901,14 +1917,28 @@ def vote():
     participation_source = request.form.get('participation_source') or 'daily_web'
     
     try:
+        from app.daily.vote_analytics import (
+            resolve_daily_participation_distinct_id,
+            subscriber_for_analytics,
+            track_daily_question_participated,
+        )
+
         fingerprint = get_session_fingerprint()
         new_vote = VOTE_MAP[vote_value]
-        
+
+        # Resolve the analytics identity once so the stored audit id and the
+        # PostHog event below are guaranteed identical (no drift).
+        analytics_subscriber = subscriber_for_analytics()
+        participation_distinct_id = resolve_daily_participation_distinct_id(
+            subscriber=analytics_subscriber
+        )
+
         # Create the daily question response
         response = DailyQuestionResponse(
             daily_question_id=question.id,
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            posthog_distinct_id=participation_distinct_id,
             vote=new_vote,
             reason=reason if reason else None,
             reason_tag=reason_tag,
@@ -1976,22 +2006,18 @@ def vote():
 
         _track_context_engagement(question, response, source=participation_source)
 
-        from app.daily.vote_analytics import (
-            subscriber_for_analytics,
-            track_daily_question_participated,
-        )
-
         track_daily_question_participated(
             question=question,
             vote=vote_value,
             participation_source=participation_source,
-            subscriber=subscriber_for_analytics(),
+            subscriber=analytics_subscriber,
             voted_via_email=False,
             has_reason=bool(reason),
             reason_tag=reason_tag,
             confidence_level=confidence_level,
             context_expanded=context_expanded,
             source_link_click_count=source_link_click_count,
+            distinct_id_override=participation_distinct_id,
         )
 
         if wants_json:

@@ -1582,6 +1582,9 @@ def edit_daily_question(question_id):
             question.why_this_question = request.form.get('why_this_question') or None
             question.topic_category = request.form.get('topic_category') or None
             question.cold_start_threshold = int(request.form.get('cold_start_threshold') or 50)
+
+            rating_raw = (request.form.get('editorial_contest_rating') or '').strip()
+            question.editorial_contest_rating = int(rating_raw) if rating_raw else None
             
             new_status = request.form.get('status')
             if new_status != question.status:

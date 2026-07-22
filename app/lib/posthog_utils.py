@@ -414,6 +414,39 @@ def request_context_properties() -> dict:
         return {}
 
 
+def stitch_email_subscriber_posthog_identity(
+    subscriber_email: Optional[str],
+) -> Optional[str]:
+    """Merge a browser PostHog person into the email-subscriber canonical id.
+
+    Email vote funnels must attribute to ``subscriber:<hash>`` so confirm-viewed
+    and confirmed events stitch across sessions and devices. When the visitor
+    already has a JS cookie distinct_id, alias it into the subscriber hash before
+    capture so server events join the same person as prior pageviews.
+    """
+    canonical = email_subscriber_distinct_id(subscriber_email)
+    if not canonical:
+        return None
+    js_id = posthog_js_distinct_id()
+    if js_id and js_id != canonical:
+        try:
+            import posthog as ph
+
+            # Match safe_posthog_capture's readiness check so alias and capture
+            # agree on whether PostHog is configured.
+            if not getattr(ph, "project_api_key", None):
+                return canonical
+            ph.alias(previous_id=js_id, distinct_id=canonical)
+        except Exception as exc:
+            _log.warning(
+                "PostHog alias %s -> %s failed: %s",
+                js_id,
+                canonical,
+                exc,
+            )
+    return canonical
+
+
 def stitch_posthog_on_user_login(
     user: Any,
     *,

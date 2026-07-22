@@ -70,6 +70,30 @@
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                 </div>
                 <div>
+                    <label for="editorial_contest_rating" class="block text-sm font-medium text-gray-700 mb-1">
+                        Editorial contest rating (1–5)
+                    </label>
+                    <select id="editorial_contest_rating" name="editorial_contest_rating"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Not rated</option>
+                        {% for n in range(1, 6) %}
+                        <option value="{{ n }}" {% if question.editorial_contest_rating == n %}selected{% endif %}>{{ n }} — {% if n == 1 %}consensus{% elif n == 5 %}highly contested{% else %}mixed{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Pre-send gut check: would ~30% plausibly take each side?</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Auto contestability score</label>
+                    <p class="text-sm text-gray-900 py-2">
+                        {% if question.contestability_score is not none %}
+                        {{ '%.3f'|format(question.contestability_score) }}
+                        {% else %}
+                        <span class="text-gray-400">—</span>
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500">Press-posture score at selection (brief-sourced questions).</p>
+                </div>
+                <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select id="status" name="status"
                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">

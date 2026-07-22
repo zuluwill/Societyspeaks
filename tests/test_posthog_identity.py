@@ -8,6 +8,7 @@ These lock in the fixes that let server events stitch to the JS SDK's person:
 """
 
 import json
+from unittest.mock import MagicMock, patch
 from urllib.parse import quote
 
 from app.lib.posthog_utils import (
@@ -16,7 +17,12 @@ from app.lib.posthog_utils import (
     request_context_properties,
     resolve_request_distinct_id,
 )
-from app.daily.vote_analytics import resolve_daily_participation_distinct_id, subscriber_for_analytics
+from app.daily.vote_analytics import (
+    resolve_daily_participation_distinct_id,
+    resolve_email_vote_distinct_id,
+    subscriber_for_analytics,
+    track_email_vote_confirm_viewed,
+)
 
 PH_KEY = 'phc_test_key'
 
@@ -88,7 +94,26 @@ def test_stitch_posthog_on_user_login_aliases_and_identifies(app):
     assert capture.call_args.kwargs['event'] == 'user_logged_in'
 
 
-def test_daily_participation_resolver_prefers_cookie_then_subscriber(app, db):
+def test_email_vote_distinct_id_prefers_subscriber_over_cookie(app, db):
+    from app.models import DailyBriefSubscriber
+
+    app.config['POSTHOG_API_KEY'] = 'phc_test_key'
+    cookie = {'HTTP_COOKIE': 'ph_phc_test_key_posthog=%7B%22distinct_id%22%3A%22019e8792-js-uuid%22%7D'}
+
+    with app.app_context():
+        db.create_all()
+        sub = DailyBriefSubscriber(email='email-vote@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+        expected = email_subscriber_distinct_id(sub.email)
+
+        with app.test_request_context('/', environ_base=cookie):
+            assert resolve_email_vote_distinct_id(sub) == expected
+            assert resolve_email_vote_distinct_id(sub) != '019e8792-js-uuid'
+
+
+def test_daily_participation_web_path_still_prefers_cookie(app, db):
+    """Web/batch participation keeps cookie-first stitching; email funnel is separate."""
     from app.models import DailyBriefSubscriber
 
     app.config['POSTHOG_API_KEY'] = PH_KEY
@@ -109,6 +134,51 @@ def test_daily_participation_resolver_prefers_cookie_then_subscriber(app, db):
             session['brief_subscriber_id'] = sub.id
             expected = email_subscriber_distinct_id(sub.email)
             assert resolve_daily_participation_distinct_id() == expected
+
+
+def test_email_vote_confirm_aliases_cookie_to_subscriber(app, db):
+    import posthog
+    from datetime import date
+
+    from app.models import DailyBriefSubscriber, DailyQuestion
+
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+
+    with app.app_context():
+        db.create_all()
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=80,
+            question_text='Alias stitch?',
+            status='published',
+            source_type='discussion',
+        )
+        sub = DailyBriefSubscriber(email='alias-stitch@example.com', status='active')
+        db.session.add_all([q, sub])
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with patch('app.lib.posthog_utils.posthog_js_distinct_id', return_value='019e8792-js-uuid'):
+                with patch.object(posthog, 'alias') as alias_mock:
+                    with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0 (iPhone)'}):
+                        track_email_vote_confirm_viewed(
+                            subscriber=sub,
+                            question=q,
+                            vote_choice='agree',
+                            voter_channel='brief',
+                            source='brief_email',
+                        )
+
+        alias_mock.assert_called_once_with(
+            previous_id='019e8792-js-uuid',
+            distinct_id=email_subscriber_distinct_id(sub.email),
+        )
+        capture = mock_ph.capture.call_args.kwargs
+        assert capture['distinct_id'] == email_subscriber_distinct_id(sub.email)
+        assert mock_ph.identify.call_args.kwargs['properties']['brief_subscriber_id'] == sub.id
 
 
 def test_logged_in_resolves_to_plain_user_id(app):

@@ -255,6 +255,8 @@ class TestBriefSourcedSelection:
             assert question.source_brief_item_id == expected_item_id
             assert question.coverage_frame_json['brief_item_id'] == expected_item_id
             assert question.coverage_frame_json['brief_date'] == brief_date.isoformat()
+            assert question.contestability_score is not None
+            assert question.contestability_score > 0
 
             verify_brief_sourced_question_wiring(
                 brief_date=brief_date,

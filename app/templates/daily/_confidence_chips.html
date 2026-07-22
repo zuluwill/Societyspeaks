@@ -1,0 +1,93 @@
+{#
+  One-tap confidence chips for email confirm and web vote flows.
+
+  Parameters:
+    - form_id: str — id of the form containing the hidden confidence input
+    - input_name: str — name attribute (default: confidence_level)
+    - compact: bool — tighter spacing for confirm page (default: false)
+#}
+{% set field_name = input_name | default('confidence_level') %}
+{% set compact_mode = compact | default(false) %}
+
+<div class="{% if compact_mode %}mb-4{% else %}mb-6{% endif %}" data-confidence-chips data-form-id="{{ form_id }}">
+    <p class="text-sm font-medium text-gray-700 text-center mb-2">
+        {{ _('How sure are you?') }}
+        <span class="font-normal text-gray-500">{{ _('(optional — one tap)') }}</span>
+    </p>
+    <div class="flex flex-wrap justify-center gap-2" role="group" aria-label="{{ _('Confidence level') }}">
+        <button type="button"
+                class="confidence-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-primary-400 hover:bg-blue-50 transition-colors"
+                data-confidence-value="low"
+                aria-pressed="false">
+            {{ _('Exploring') }}
+        </button>
+        <button type="button"
+                class="confidence-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-primary-400 hover:bg-blue-50 transition-colors"
+                data-confidence-value="medium"
+                aria-pressed="false">
+            {{ _('Tentative') }}
+        </button>
+        <button type="button"
+                class="confidence-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-primary-400 hover:bg-blue-50 transition-colors"
+                data-confidence-value="high"
+                aria-pressed="false">
+            {{ _('Strong view') }}
+        </button>
+    </div>
+    <input type="hidden" name="{{ field_name }}" value="" data-confidence-input>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-confidence-chips]').forEach(function(container) {
+        const formId = container.getAttribute('data-form-id');
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const hiddenInput = container.querySelector('[data-confidence-input]');
+        const chips = container.querySelectorAll('.confidence-chip');
+        // Mirror inputs elsewhere on the page (e.g. the expandable reason form,
+        // which is a *separate* <form>) carry the same value so a tapped chip is
+        // never lost regardless of which form the visitor ultimately submits.
+        const mirrors = document.querySelectorAll('[data-confidence-mirror][name="{{ field_name }}"]');
+        const selectedClasses = ['border-primary-600', 'bg-primary-50', 'text-primary-800', 'ring-2', 'ring-primary-200'];
+        const baseClasses = ['border-gray-200', 'bg-white', 'text-gray-700'];
+
+        function setValue(value) {
+            if (hiddenInput) hiddenInput.value = value;
+            mirrors.forEach(function(mirror) { mirror.value = value; });
+        }
+
+        function clearSelection() {
+            chips.forEach(function(chip) {
+                chip.classList.remove(...selectedClasses);
+                baseClasses.forEach(function(cls) { chip.classList.add(cls); });
+                chip.setAttribute('aria-pressed', 'false');
+            });
+            setValue('');
+        }
+
+        function applySelection(value) {
+            clearSelection();
+            chips.forEach(function(chip) {
+                if (chip.getAttribute('data-confidence-value') !== value) return;
+                chip.classList.remove(...baseClasses);
+                chip.classList.add(...selectedClasses);
+                chip.setAttribute('aria-pressed', 'true');
+            });
+            setValue(value);
+        }
+
+        chips.forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                const value = chip.getAttribute('data-confidence-value');
+                if (hiddenInput && hiddenInput.value === value) {
+                    clearSelection();
+                    return;
+                }
+                applySelection(value);
+            });
+        });
+    });
+});
+</script>

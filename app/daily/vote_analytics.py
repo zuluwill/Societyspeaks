@@ -13,6 +13,7 @@ from app.lib.posthog_utils import (
     request_is_scripted_client,
     resolve_request_distinct_id,
     safe_posthog_capture,
+    stitch_email_subscriber_posthog_identity,
     stitch_posthog_on_user_login,
 )
 from app.lib.vote_identity import get_voter_fingerprint
@@ -89,6 +90,9 @@ def resolve_daily_participation_distinct_id(
     :func:`resolve_request_distinct_id`), then a durable anonymous fallback:
     email-subscriber hash when the visitor arrived via email, else the unified
     voter fingerprint.
+
+    For the email confirm funnel, use :func:`resolve_email_vote_distinct_id`
+    instead — it always prefers the subscriber hash for anonymous visitors.
     """
     if current_user.is_authenticated:
         return resolve_request_distinct_id(user_id=current_user.id)
@@ -111,8 +115,38 @@ def resolve_daily_participation_distinct_id(
     )
 
 
-def _distinct_id_for_subscriber(subscriber: SubscriberT) -> Optional[str]:
-    return resolve_daily_participation_distinct_id(subscriber=subscriber)
+def resolve_email_vote_distinct_id(subscriber: SubscriberT) -> Optional[str]:
+    """Canonical PostHog ``distinct_id`` for email vote funnel events.
+
+    Anonymous email voters must always resolve to ``subscriber:<hash>`` so
+    confirm-viewed and confirmed events stitch to the same person across
+    devices and sessions. Logged-in voters still use ``str(user_id)``.
+    """
+    if current_user.is_authenticated:
+        return resolve_request_distinct_id(user_id=current_user.id)
+    return email_subscriber_distinct_id(getattr(subscriber, 'email', None))
+
+
+def email_vote_identify_properties(
+    subscriber: SubscriberT,
+    voter_channel: VoterChannel,
+) -> dict[str, Any]:
+    """Non-PII person properties for email vote funnel identify calls."""
+    props: dict[str, Any] = {}
+    if voter_channel == 'brief':
+        props['brief_subscriber_id'] = subscriber.id
+    else:
+        props['daily_subscriber_id'] = subscriber.id
+    cohort = getattr(subscriber, 'source', None)
+    if cohort:
+        props['subscriber_cohort'] = cohort
+    cadence = getattr(subscriber, 'cadence', None)
+    if cadence:
+        props['subscriber_cadence'] = cadence
+    tier = getattr(subscriber, 'tier', None)
+    if tier:
+        props['subscriber_tier'] = tier
+    return props
 
 
 def track_subscriber_login(
@@ -137,6 +171,8 @@ def track_daily_question_participated(
     subscriber: Optional[SubscriberT] = None,
     voted_via_email: bool = False,
     has_reason: bool = False,
+    distinct_id_override: Optional[str] = None,
+    identify_properties: Optional[dict[str, Any]] = None,
     **extra: Any,
 ) -> None:
     """Record ``daily_question_participated`` for web, batch, and other vote paths."""
@@ -144,7 +180,9 @@ def track_daily_question_participated(
         return
 
     resolved_subscriber = subscriber_for_analytics(subscriber)
-    distinct_id = resolve_daily_participation_distinct_id(subscriber=resolved_subscriber)
+    distinct_id = distinct_id_override or resolve_daily_participation_distinct_id(
+        subscriber=resolved_subscriber
+    )
     if not distinct_id:
         _log.warning(
             "Skipping daily_question_participated — no distinct_id "
@@ -172,6 +210,7 @@ def track_daily_question_participated(
         distinct_id=distinct_id,
         event='daily_question_participated',
         properties=props,
+        identify_properties=identify_properties,
     )
 
 
@@ -199,7 +238,7 @@ def track_email_vote_confirm_viewed(
     if request_is_prefetch() or request_is_scripted_client():
         return
 
-    distinct_id = _distinct_id_for_subscriber(subscriber)
+    distinct_id = resolve_email_vote_distinct_id(subscriber)
     if not distinct_id:
         _log.warning(
             "Skipping email_vote_confirm_viewed — no distinct_id "
@@ -209,6 +248,8 @@ def track_email_vote_confirm_viewed(
         )
         return
 
+    stitch_email_subscriber_posthog_identity(getattr(subscriber, 'email', None))
+    identify_props = email_vote_identify_properties(subscriber, voter_channel)
     participation_source = participation_source_for_email_vote(source, voter_channel)
 
     safe_posthog_capture(
@@ -223,6 +264,7 @@ def track_email_vote_confirm_viewed(
             'source': source or 'email',
             'participation_source': participation_source,
         },
+        identify_properties=identify_props,
     )
 
 
@@ -234,13 +276,15 @@ def track_email_vote_confirmed(
     voter_channel: VoterChannel,
     source: str,
     has_reason: bool = False,
+    distinct_id_override: Optional[str] = None,
     **extra: Any,
 ) -> None:
     """POST recorded vote — the E1 ≥2% confirmed/delivered numerator."""
     if not _posthog or not getattr(_posthog, 'project_api_key', None):
         return
 
-    distinct_id = _distinct_id_for_subscriber(subscriber)
+    distinct_id = distinct_id_override or resolve_email_vote_distinct_id(subscriber)
+    identify_props = email_vote_identify_properties(subscriber, voter_channel)
     participation_source = participation_source_for_email_vote(source, voter_channel)
 
     base_props = {
@@ -268,11 +312,17 @@ def track_email_vote_confirmed(
         )
         return
 
+    # The cookie→subscriber-hash alias already fired on the confirm-viewed GET
+    # that always precedes this POST; PostHog aliasing is one-shot per pair, so
+    # we do not repeat it here. This event attributes to subscriber:<hash>
+    # directly via ``distinct_id`` regardless, and ``identify_properties`` keep
+    # the person profile current.
     safe_posthog_capture(
         posthog_client=_posthog,
         distinct_id=distinct_id,
         event='email_vote_confirmed',
         properties=base_props,
+        identify_properties=identify_props,
     )
 
     # Keep legacy event for existing dashboards; enriched props carry the funnel labels.
@@ -283,6 +333,8 @@ def track_email_vote_confirmed(
         subscriber=subscriber,
         voted_via_email=True,
         has_reason=has_reason,
+        distinct_id_override=distinct_id,
+        identify_properties=identify_props,
         voter_channel=voter_channel,
         source=source or 'email',
         confirmation_step='confirmed',
