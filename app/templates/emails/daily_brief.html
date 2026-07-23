@@ -32,11 +32,6 @@
       div {
         -webkit-text-size-adjust: 100%;
         -ms-text-size-adjust: 100%;
-        /* Base sans-serif for every text element. Outlook's Word engine does not
-           inherit font-family from <body> into table cells, so this element-level
-           rule (which Outlook and Gmail both honour) keeps text correct even after
-           redundant inline font-family copies are stripped to save bytes. Inline
-           Georgia on headline cells still wins via specificity. */
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
           'Helvetica Neue', Arial, sans-serif;
       }

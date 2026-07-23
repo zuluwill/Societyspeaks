@@ -199,6 +199,24 @@ def test_minify_email_html_strips_redundant_inline_sans_font():
     assert 'Hello' in out and 'Headline' in out
 
 
+def test_minify_email_html_strips_css_comments():
+    """Apple Mail's inbox-snippet generator surfaces prose from CSS /* ... */
+    comments in <style> as preview text, ignoring the hidden preheader. The
+    minifier must strip CSS comments so they never leak into the inbox snippet.
+    """
+    html = (
+        '<style>body{/* Outlook does not inherit font-family into table '
+        'cells, so this element-level rule keeps text correct */'
+        'font-family: Arial, sans-serif;}</style>'
+        '<td style="color:#111;/* inline note */">Body</td>'
+    )
+    out = _minify_email_html(html)
+    assert 'table cells' not in out            # CSS comment prose gone
+    assert 'inline note' not in out            # inline-style comment gone too
+    assert 'font-family' in out                # the actual rule survives
+    assert 'Body' in out                       # real content untouched
+
+
 def test_email_head_declares_font_family_for_outlook(app, db, brief_and_subscriber):
     """The rendered email must carry an element-level font-family rule in <style>
     so Outlook (which ignores <body> inheritance) still shows the sans font once

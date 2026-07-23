@@ -228,6 +228,10 @@ _RE_HTML_COMMENT = re.compile(
     r'<!--(?!\[if )(?!<!\[endif\])(?!/?email-trim:)(?! Footer -->).*?-->',
     re.DOTALL,
 )
+# Apple Mail's inbox-snippet generator pulls text out of <style> blocks,
+# including prose inside /* ... */ comments, ignoring the hidden preheader.
+# Strip CSS comments so they can never leak into the preview.
+_RE_CSS_COMMENT = re.compile(r'/\*.*?\*/', re.DOTALL)
 _RE_BLANK_LINES = re.compile(r'\n\s*\n')
 _RE_STYLE_ATTR = re.compile(r'(style=")(.*?)(")', re.DOTALL)
 _RE_TAG_LINE_INDENT = re.compile(r'^[ \t]+(</?\w)', re.MULTILINE)
@@ -495,6 +499,7 @@ def _fit_email_html_to_gmail(html: str, limit: int = GMAIL_CLIP_TARGET_BYTES) ->
 
 def _minify_email_html(html: str) -> str:
     html = _RE_HTML_COMMENT.sub('', html)
+    html = _RE_CSS_COMMENT.sub('', html)
     html = _RE_BLANK_LINES.sub('\n', html)
     html = _RE_WHITESPACE_BETWEEN_TAGS.sub('><', html)
     html = re.sub(
