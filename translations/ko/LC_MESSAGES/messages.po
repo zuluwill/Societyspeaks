@@ -33743,3 +33743,11 @@ msgstr "정부 기관용"
 #: app/templates/consultations.html:61
 msgid "For governments, public bodies and organisations"
 msgstr "정부, 공공 기관 및 단체용"
+
+#: app/templates/daily/confirm_vote.html:41
+msgid "Almost done — tap below to record your vote."
+msgstr ""
+
+#: app/templates/daily/confirm_vote.html:149
+msgid "More on this question"
+msgstr ""

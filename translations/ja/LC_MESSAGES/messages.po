@@ -33471,3 +33471,11 @@ msgstr "行政機関向け"
 #: app/templates/consultations.html:61
 msgid "For governments, public bodies and organisations"
 msgstr "政府・公共機関・団体向け"
+
+#: app/templates/daily/confirm_vote.html:41
+msgid "Almost done — tap below to record your vote."
+msgstr ""
+
+#: app/templates/daily/confirm_vote.html:149
+msgid "More on this question"
+msgstr ""

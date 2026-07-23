@@ -35086,3 +35086,11 @@ msgstr "للجهات الحكومية"
 #: app/templates/consultations.html:61
 msgid "For governments, public bodies and organisations"
 msgstr "للحكومات والهيئات العامة والمنظمات"
+
+#: app/templates/daily/confirm_vote.html:41
+msgid "Almost done — tap below to record your vote."
+msgstr ""
+
+#: app/templates/daily/confirm_vote.html:149
+msgid "More on this question"
+msgstr ""
