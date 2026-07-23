@@ -36067,8 +36067,8 @@ msgstr "सरकारों, सार्वजनिक निकायों
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "लगभग हो गया — अपना वोट दर्ज करने के लिए नीचे टैप करें।"
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "इस प्रश्न के बारे में और"

@@ -36421,8 +36421,8 @@ msgstr "Para governos, organismos públicos e organizações"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "Quase pronto — toque abaixo para registrar o seu voto."
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "Mais sobre esta pergunta"

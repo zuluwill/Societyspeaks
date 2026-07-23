@@ -33474,8 +33474,8 @@ msgstr "政府・公共機関・団体向け"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "あと少し — 下をタップして投票を記録してください。"
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "この質問について詳しく"

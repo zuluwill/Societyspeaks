@@ -33003,8 +33003,8 @@ msgstr "面向政府、公共机构与组织"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "快完成了 — 点击下方记录您的投票。"
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "关于此问题的更多信息"

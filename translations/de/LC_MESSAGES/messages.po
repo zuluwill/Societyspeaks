@@ -36718,8 +36718,8 @@ msgstr "Für Regierungen, öffentliche Einrichtungen und Organisationen"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "Fast fertig — tippen Sie unten, um Ihre Stimme zu erfassen."
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "Mehr zu dieser Frage"

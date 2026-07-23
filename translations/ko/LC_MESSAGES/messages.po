@@ -33746,8 +33746,8 @@ msgstr "정부, 공공 기관 및 단체용"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "거의 완료 — 아래를 탭해 투표를 기록하세요."
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "이 질문에 대해 더 알아보기"

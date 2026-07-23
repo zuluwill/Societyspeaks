@@ -36450,8 +36450,8 @@ msgstr "Voor overheden, publieke instellingen en organisaties"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "Bijna klaar — tik hieronder om uw stem te registreren."
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "Meer over deze vraag"

@@ -35089,8 +35089,8 @@ msgstr "للحكومات والهيئات العامة والمنظمات"
 
 #: app/templates/daily/confirm_vote.html:41
 msgid "Almost done — tap below to record your vote."
-msgstr ""
+msgstr "أوشكت على الانتهاء — اضغط أدناه لتسجيل تصويتك."
 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
-msgstr ""
+msgstr "المزيد حول هذا السؤال"
