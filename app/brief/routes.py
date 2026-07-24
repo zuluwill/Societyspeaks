@@ -45,6 +45,21 @@ from flask_babel import gettext as _
 logger = logging.getLogger(__name__)
 
 
+def _flash_brief_magic_link_welcome(subscriber: DailyBriefSubscriber) -> None:
+    """Welcome flash once per real navigation — skip prefetch/scanner duplicate GETs."""
+    from app.lib.posthog_utils import request_is_prefetch, request_is_scripted_client
+
+    if request_is_prefetch() or request_is_scripted_client():
+        return
+    if (
+        current_user.is_authenticated
+        and subscriber.user_id
+        and current_user.id == subscriber.user_id
+    ):
+        return
+    flash(_('Welcome back! Signed in as %(email)s', email=subscriber.email), 'success')
+
+
 # =============================================================================
 # Constants
 # =============================================================================
@@ -778,7 +793,7 @@ def magic_link(token):
                         subscriber_email=expired_sub.email,
                         properties={'method': 'magic_link', 'source': 'brief_subscription'},
                     )
-                flash(_('Welcome back! Signed in as %(email)s', email=expired_sub.email), 'success')
+                _flash_brief_magic_link_welcome(expired_sub)
                 return redirect(url_for('brief.today'))
 
         flash(_('This link has expired or is invalid. Please subscribe again.'), 'warning')
@@ -798,7 +813,7 @@ def magic_link(token):
             properties={'method': 'magic_link', 'source': 'brief_subscription'},
         )
 
-    flash(_('Welcome back! Signed in as %(email)s', email=subscriber.email), 'success')
+    _flash_brief_magic_link_welcome(subscriber)
     return redirect(url_for('brief.today'))
 
 
