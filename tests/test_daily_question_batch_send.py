@@ -186,6 +186,7 @@ def test_weekly_and_monthly_digests_carry_stable_idempotency_key(app, monkeypatc
         email='sub7@example.com',
         magic_token='tok',
         unsubscribe_token='untok',
+        ensure_unsubscribe_token=lambda: None,  # real model no-ops when token exists
         preferred_send_hour=9,
         get_send_day_name=lambda: 'Monday',
         last_email_sent=None,

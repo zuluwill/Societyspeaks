@@ -19,6 +19,7 @@ from flask import render_template, current_app, url_for
 from flask_babel import force_locale, gettext
 import requests
 from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
+from app.briefing.link_tracker import wrap_links as _wrap_links
 from app.lib.unsubscribe_tokens import build_question_unsubscribe_url
 from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
 from app.programmes.journey import GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME
