@@ -187,9 +187,26 @@ class TestBriefUnsubscribe:
         assert resp.status_code == 200
         assert resp.data == b''
 
-    def test_get_unknown_token_redirects(self, app, db, client):
+    def test_get_unknown_token_shows_recovery_page(self, app, db, client):
         resp = client.get('/brief/unsubscribe/does-not-exist', follow_redirects=False)
-        assert resp.status_code == 302
+        assert resp.status_code == 200
+        assert b'This unsubscribe link is not valid' in resp.data
+
+    def test_recover_post_sends_fresh_link_for_active_subscriber(self, app, db, client):
+        from unittest.mock import patch
+
+        with app.app_context():
+            _make_brief_subscriber(db, email='recover@example.com')
+
+        with patch('app.brief.email_client.ResendClient') as mock_client:
+            mock_client.return_value.send_unsubscribe_recovery.return_value = True
+            resp = client.post(
+                '/brief/unsubscribe/recover',
+                data={'email': 'recover@example.com'},
+                follow_redirects=True,
+            )
+        assert resp.status_code == 200
+        mock_client.return_value.send_unsubscribe_recovery.assert_called_once()
 
     def test_already_unsubscribed_is_idempotent(self, app, db, client):
         with app.app_context():

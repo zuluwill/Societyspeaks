@@ -28,6 +28,7 @@ from app.lib.email_idempotency import (
     send_attempt_entity_ref,
 )
 from app.briefing.link_tracker import wrap_links as _wrap_links, sign_url as _sign_url
+from app.lib.unsubscribe_tokens import build_brief_unsubscribe_url
 from app.storage_utils import get_base_url
 
 try:
@@ -788,7 +789,7 @@ class ResendClient:
             # Build URLs
             base_url = get_base_url()
             magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
-            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+            unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
 
             # Render email HTML (sorted_items passed to avoid a second DB query)
@@ -954,7 +955,7 @@ class ResendClient:
 
         # Build URLs
         magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
-        unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
         if sorted_items is None:
             sorted_items = self._get_sorted_brief_items(brief)
@@ -1124,7 +1125,7 @@ class ResendClient:
 
             magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
-            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+            unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
 
             from app.resend_client import _render_for_user as _render_email_for_user, _subject_for_user as _subject_email_for_user
             html_content = _render_email_for_user(
@@ -1184,6 +1185,41 @@ class ResendClient:
 
         except Exception as e:
             logger.error(f"Error sending welcome email to {subscriber.email}: {e}")
+            return False
+
+    def send_unsubscribe_recovery(self, subscriber: DailyBriefSubscriber) -> bool:
+        """Email a fresh stable unsubscribe link after an invalid/expired email link."""
+        try:
+            base_url = get_base_url()
+            unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
+            cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief'
+            subject = f'Unsubscribe from Society Speaks {cadence_label}'
+            text = (
+                f"You asked to unsubscribe from the Society Speaks {cadence_label}.\n\n"
+                f"Use this link to confirm:\n{unsubscribe_url}\n\n"
+                "If you did not request this, you can ignore this message."
+            )
+            email_data = {
+                'from': self.from_email,
+                'to': [subscriber.email],
+                'subject': subject,
+                'text': text,
+                'headers': {
+                    'List-Unsubscribe': f'<{unsubscribe_url}>',
+                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                },
+                'tags': [{'name': 'campaign', 'value': 'brief_unsubscribe_recovery'}],
+            }
+            self.rate_limiter.acquire()
+            recovery_key = send_attempt_entity_ref('brief-unsub-recover', subscriber.id)
+            success = self._send_with_retry(email_data, idempotency_key=recovery_key)
+            if success:
+                logger.info('Sent brief unsubscribe recovery to %s', subscriber.email)
+            else:
+                logger.error('Failed to send brief unsubscribe recovery to %s', subscriber.email)
+            return success
+        except Exception as exc:
+            logger.error('Error sending brief unsubscribe recovery to %s: %s', subscriber.email, exc)
             return False
 
 

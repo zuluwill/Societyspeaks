@@ -933,17 +933,22 @@ def unsubscribe(token):
              List-Unsubscribe=One-Click).  The two cases are distinguished by
              the presence of the 'List-Unsubscribe' form field.
     """
-    # Try stable unsubscribe_token first; fall back to magic_token for links
-    # sent before the unsubscribe_token column was added.
-    subscriber = DailyQuestionSubscriber.query.filter_by(unsubscribe_token=token).first()
-    if not subscriber:
-        subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
+    from app.lib.unsubscribe_tokens import lookup_question_subscriber_by_unsubscribe_token
+
+    subscriber = lookup_question_subscriber_by_unsubscribe_token(token)
 
     if not subscriber:
         if request.method == 'POST':
             return '', 200  # RFC 8058: silently accept, never error to mail client
-        flash(_('Invalid unsubscribe link.'), 'error')
-        return redirect(url_for('daily.today'))
+        normalized = token.strip() if token else ''
+        current_app.logger.warning(
+            'Invalid daily unsubscribe token (len=%s, prefix=%s..., ua=%r, ip=%s)',
+            len(normalized),
+            normalized[:8] if len(normalized) >= 8 else normalized,
+            (request.headers.get('User-Agent') or '')[:160],
+            request.remote_addr,
+        )
+        return render_template('daily/unsubscribe_invalid.html')
 
     # RFC 8058 one-click POST — mail client body contains List-Unsubscribe=One-Click
     is_one_click = (

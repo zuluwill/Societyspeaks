@@ -19,7 +19,7 @@ from flask import render_template, current_app, url_for
 from flask_babel import force_locale, gettext
 import requests
 from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
-from app.briefing.link_tracker import wrap_links as _wrap_links
+from app.lib.unsubscribe_tokens import build_question_unsubscribe_url
 from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
 from app.programmes.journey import GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME
 from app.lib.email_idempotency import (
@@ -680,7 +680,7 @@ class ResendEmailClient:
         """
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         daily_question_url = f"{self.base_url}/daily"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
         
         try:
             # Build preferences URL for managing frequency
@@ -755,7 +755,7 @@ class ResendEmailClient:
         """
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
 
         # Generate question-specific vote URLs using helper
@@ -863,7 +863,7 @@ class ResendEmailClient:
         question_ids = ','.join(str(q.id) for q in questions)
         batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
 
         # Build question data with vote URLs, discussion stats, and source articles
         from app.daily.utils import build_question_email_data
@@ -968,7 +968,7 @@ class ResendEmailClient:
         question_ids = ','.join(str(q.id) for q in questions)
         batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
 
         # Build question data with vote URLs, discussion stats, and source articles
         from app.daily.utils import build_question_email_data
@@ -1063,7 +1063,7 @@ class ResendEmailClient:
         """
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
-        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.unsubscribe_token or subscriber.magic_token}"
+        unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
 
         # Generate question-specific vote URLs using helper (DRY)

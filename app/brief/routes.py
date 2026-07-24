@@ -580,6 +580,32 @@ def subscribe_inline():
         return redirect(request.referrer or url_for('brief.today'))
 
 
+@brief_bp.route('/brief/unsubscribe/recover', methods=['POST'])
+@limiter.limit('5 per minute')
+def unsubscribe_recover():
+    """Send a fresh stable unsubscribe link when an old email link no longer works."""
+    from app.email_utils import extract_clean_email
+    from app.brief.email_client import ResendClient
+
+    email = extract_clean_email(request.form.get('email', ''))
+    if email:
+        subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
+        if subscriber and subscriber.status == 'active':
+            try:
+                ResendClient().send_unsubscribe_recovery(subscriber)
+            except Exception as exc:
+                logger.warning('Failed to send brief unsubscribe recovery to %s: %s', email, exc)
+
+    flash(
+        _(
+            'If that address is subscribed, check your inbox for a fresh unsubscribe link '
+            '(also check spam). Otherwise use the Unsubscribe link in your latest Daily Brief.'
+        ),
+        'info',
+    )
+    return render_template('brief/unsubscribe_invalid.html')
+
+
 @brief_bp.route('/brief/unsubscribe/<token>', methods=['GET', 'POST'])
 @csrf.exempt  # RFC 8058 one-click POSTs originate from mail clients without a token.
 def unsubscribe(token):
@@ -591,17 +617,22 @@ def unsubscribe(token):
     - POST performs the unsubscribe — either the confirmation form or an
       RFC 8058 one-click request from Gmail/Yahoo (required for bulk senders).
     """
-    # Try stable unsubscribe_token first; fall back to magic_token for links
-    # sent before the unsubscribe_token column was added.
-    subscriber = DailyBriefSubscriber.query.filter_by(unsubscribe_token=token).first()
-    if not subscriber:
-        subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+    from app.lib.unsubscribe_tokens import lookup_brief_subscriber_by_unsubscribe_token
+
+    subscriber = lookup_brief_subscriber_by_unsubscribe_token(token)
 
     if not subscriber:
         if request.method == 'POST':
             return '', 200  # RFC 8058: silently accept, never error to mail client
-        flash(_('Invalid unsubscribe link.'), 'error')
-        return redirect(url_for('brief.today'))
+        normalized = token.strip() if token else ''
+        logger.warning(
+            'Invalid brief unsubscribe token (len=%s, prefix=%s..., ua=%r, ip=%s)',
+            len(normalized),
+            normalized[:8] if len(normalized) >= 8 else normalized,
+            (request.headers.get('User-Agent') or '')[:160],
+            request.remote_addr,
+        )
+        return render_template('brief/unsubscribe_invalid.html')
 
     # Track whether they were on daily (to offer weekly as alternative)
     was_daily = (not subscriber.cadence or subscriber.cadence == 'daily')
@@ -674,11 +705,9 @@ def unsubscribe(token):
 @limiter.limit("5 per minute")
 def switch_to_weekly(token):
     """Switch an unsubscribed daily subscriber to weekly cadence instead"""
-    # Unsubscribe page passes the unsubscribe_token; fall back to magic_token for
-    # legacy links that pre-date the stable unsubscribe_token column.
-    subscriber = DailyBriefSubscriber.query.filter_by(unsubscribe_token=token).first()
-    if not subscriber:
-        subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+    from app.lib.unsubscribe_tokens import lookup_brief_subscriber_by_unsubscribe_token
+
+    subscriber = lookup_brief_subscriber_by_unsubscribe_token(token)
 
     if not subscriber:
         flash(_('Invalid link.'), 'error')
