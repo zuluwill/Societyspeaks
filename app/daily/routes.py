@@ -1824,12 +1824,19 @@ def one_click_vote(token, vote_choice):
 
         db.session.commit()
 
-        _invalidate_programme_summary_if_daily_question_synced(question)
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error processing one-click vote: {e}", exc_info=True)
+        flash(_('There was an error recording your vote. Please try again.'), 'error')
+        return redirect(url_for('daily.today'))
 
-        _track_context_engagement(question, response, source='email_one_click')
+    _invalidate_programme_summary_if_daily_question_synced(question)
 
-        source = request.args.get('source', '')
+    _track_context_engagement(question, response, source='email_one_click')
 
+    source = request.args.get('source', '')
+
+    try:
         track_email_vote_confirmed(
             subscriber=subscriber,
             question=question,
@@ -1844,34 +1851,30 @@ def one_click_vote(token, vote_choice):
             context_expanded=context_expanded,
             source_link_click_count=source_link_click_count,
         )
-
-        current_app.logger.info(
-            f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
-            f"(email_q#{email_question_id}) by subscriber {subscriber.id}"
-            f"{' with reason' if reason else ''}"
-        )
-
-        flash(_('Vote recorded! Thanks for participating.'), 'success')
-
-        # Check if user came from weekly digest - redirect to batch page to continue voting
-        if source == 'weekly_digest' and voter_channel == 'question':
-            # Store the subscriber's token in session for batch page access
-            session['daily_subscriber_token'] = subscriber.magic_token
-            return redirect(url_for('daily.weekly_batch', token=subscriber.magic_token))
-
-        if source == 'brief_email':
-            return redirect(url_for(
-                'daily.by_date',
-                date_str=question.question_date.isoformat(),
-            ))
-
-        return redirect(url_for('daily.today'))
-        
     except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error processing one-click vote: {e}", exc_info=True)
-        flash(_('There was an error recording your vote. Please try again.'), 'error')
-        return redirect(url_for('daily.today'))
+        current_app.logger.warning(f"PostHog tracking error: {e}")
+
+    current_app.logger.info(
+        f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
+        f"(email_q#{email_question_id}) by subscriber {subscriber.id}"
+        f"{' with reason' if reason else ''}"
+    )
+
+    flash(_('Vote recorded! Thanks for participating.'), 'success')
+
+    # Check if user came from weekly digest - redirect to batch page to continue voting
+    if source == 'weekly_digest' and voter_channel == 'question':
+        # Store the subscriber's token in session for batch page access
+        session['daily_subscriber_token'] = subscriber.magic_token
+        return redirect(url_for('daily.weekly_batch', token=subscriber.magic_token))
+
+    if source == 'brief_email':
+        return redirect(url_for(
+            'daily.by_date',
+            date_str=question.question_date.isoformat(),
+        ))
+
+    return redirect(url_for('daily.today'))
 
 
 @daily_bp.route('/daily/vote', methods=['POST'])

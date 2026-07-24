@@ -641,6 +641,46 @@ def test_brief_subscriber_one_click_vote(client, db, app):
     assert response.voted_via_email is True
 
 
+def test_email_vote_post_succeeds_when_post_commit_analytics_fail(client, db, app):
+    """Telemetry failures after commit must not show a vote-recording error."""
+    from unittest.mock import patch
+
+    from app.models import DailyBriefSubscriber, DailyQuestionResponse
+
+    today = date.today()
+    q = DailyQuestion(
+        question_date=today,
+        question_number=53,
+        question_text='Should analytics failures block success UX?',
+        status='published',
+        source_type='discussion',
+    )
+    sub = DailyBriefSubscriber(email='analytics-fail@example.com', status='active')
+    db.session.add_all([q, sub])
+    db.session.commit()
+
+    token = sub.generate_vote_token(q.id)
+    client.get(f'/daily/v/{token}/agree?source=brief_email')
+
+    with patch(
+        'app.daily.vote_analytics.track_email_vote_confirmed',
+        side_effect=RuntimeError('PostHog unavailable'),
+    ):
+        vote = client.post(
+            f'/daily/v/{token}/agree?source=brief_email',
+            data={},
+            follow_redirects=True,
+        )
+
+    assert vote.status_code == 200
+    assert b'There was an error recording your vote' not in vote.data
+    assert b'Vote recorded! Thanks for participating.' in vote.data
+
+    response = DailyQuestionResponse.query.filter_by(daily_question_id=q.id).one()
+    assert response.vote == 1
+    assert response.voted_via_email is True
+
+
 def test_scripted_client_post_does_not_record_email_vote(client, db, app):
     """Mail scanners parse the confirm form and POST with python-requests."""
     from app.models import DailyBriefSubscriber, DailyQuestionResponse
