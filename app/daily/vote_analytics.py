@@ -16,6 +16,7 @@ from app.lib.posthog_utils import (
     stitch_email_subscriber_posthog_identity,
     stitch_posthog_on_user_login,
 )
+from app.lib.device_class import DeviceClass, device_class_from_request
 from app.lib.time import utcnow_naive
 from app.lib.vote_identity import get_voter_fingerprint
 from app.models import DailyBriefSubscriber, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber
@@ -281,6 +282,56 @@ def track_daily_question_participated(
     )
 
 
+FunnelStep = Literal['confirm_view', 'vote_confirmed']
+
+
+def record_email_vote_funnel_event(
+    *,
+    step: FunnelStep,
+    subscriber: SubscriberT,
+    question: DailyQuestion,
+    vote_choice: str,
+    voter_channel: VoterChannel,
+    source: str,
+    response_id: Optional[int] = None,
+    device_class: Optional[DeviceClass] = None,
+) -> None:
+    """Persist a confirm-view or vote-confirmed row with coarse device_class (Neon ground truth)."""
+    from app import db
+    from app.models import EmailVoteFunnelEvent
+
+    bucket = device_class or device_class_from_request()
+    if bucket == 'bot':
+        return
+
+    participation_source = participation_source_for_email_vote(source, voter_channel)
+    distinct_id = resolve_email_vote_distinct_id(subscriber)
+
+    row = EmailVoteFunnelEvent(
+        step=step,
+        device_class=bucket,
+        daily_question_id=question.id,
+        brief_subscriber_id=subscriber.id if voter_channel == 'brief' else None,
+        question_subscriber_id=subscriber.id if voter_channel == 'question' else None,
+        response_id=response_id,
+        vote_choice=vote_choice_label(vote_choice),
+        voter_channel=voter_channel,
+        participation_source=participation_source,
+        posthog_distinct_id=distinct_id,
+    )
+    try:
+        db.session.add(row)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        _log.warning(
+            'Failed to record email_vote_funnel_event (%s, question_id=%s): %s',
+            step,
+            question.id,
+            exc,
+        )
+
+
 def track_email_vote_confirm_viewed(
     *,
     subscriber: SubscriberT,
@@ -304,6 +355,17 @@ def track_email_vote_confirm_viewed(
 
     if request_is_prefetch() or request_is_scripted_client():
         return
+
+    device_class = device_class_from_request()
+    record_email_vote_funnel_event(
+        step='confirm_view',
+        subscriber=subscriber,
+        question=question,
+        vote_choice=vote_choice,
+        voter_channel=voter_channel,
+        source=source,
+        device_class=device_class,
+    )
 
     distinct_id = resolve_email_vote_distinct_id(subscriber)
     if not distinct_id:
@@ -329,6 +391,7 @@ def track_email_vote_confirm_viewed(
             'voter_channel': voter_channel,
             'source': source or 'email',
             'participation_source': participation_source,
+            'device_class': device_class,
         },
         identify_properties=identify_props,
     )
@@ -347,6 +410,18 @@ def track_email_vote_confirmed(
     **extra: Any,
 ) -> None:
     """POST recorded vote — the E1 ≥2% confirmed/delivered numerator."""
+    device_class = device_class_from_request()
+    record_email_vote_funnel_event(
+        step='vote_confirmed',
+        subscriber=subscriber,
+        question=question,
+        vote_choice=vote_choice,
+        voter_channel=voter_channel,
+        source=source,
+        response_id=response_id,
+        device_class=device_class,
+    )
+
     if not _posthog or not getattr(_posthog, 'project_api_key', None):
         return
 
@@ -366,6 +441,7 @@ def track_email_vote_confirmed(
         'has_reason': has_reason,
         'voted_via_email': True,
         'is_authenticated': bool(current_user.is_authenticated),
+        'device_class': device_class,
     }
     if response_id is not None:
         base_props['response_id'] = response_id

@@ -337,6 +337,60 @@ class EmailEvent(db.Model):
 BriefEmailEvent = EmailEvent
 
 
+class EmailVoteFunnelEvent(db.Model):
+    """Server-side email vote funnel steps with coarse device class (E1 measurement).
+
+    One row per confirm-page view or confirmed vote. Persists device buckets from
+    the browser User-Agent at request time so Neon is ground truth for click→confirm
+    funnels without relying on PostHog pageviews. Bot/scanner traffic is not stored.
+    """
+    __tablename__ = 'email_vote_funnel_event'
+    __table_args__ = (
+        db.Index('idx_evfe_question_step_created', 'daily_question_id', 'step', 'created_at'),
+        db.Index('idx_evfe_brief_subscriber', 'brief_subscriber_id', 'created_at'),
+        db.Index('idx_evfe_question_subscriber', 'question_subscriber_id', 'created_at'),
+        db.Index('idx_evfe_response', 'response_id'),
+    )
+
+    STEP_CONFIRM_VIEW = 'confirm_view'
+    STEP_VOTE_CONFIRMED = 'vote_confirmed'
+
+    id = db.Column(db.Integer, primary_key=True)
+    step = db.Column(db.String(20), nullable=False)
+    device_class = db.Column(db.String(20), nullable=False)
+
+    daily_question_id = db.Column(
+        db.Integer, db.ForeignKey('daily_question.id', ondelete='CASCADE'), nullable=False
+    )
+    brief_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_brief_subscriber.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    question_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_question_subscriber.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    response_id = db.Column(
+        db.Integer,
+        db.ForeignKey('daily_question_response.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+
+    vote_choice = db.Column(db.String(20), nullable=True)
+    voter_channel = db.Column(db.String(20), nullable=False)
+    participation_source = db.Column(db.String(40), nullable=False)
+    posthog_distinct_id = db.Column(db.String(255), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+
+    daily_question = db.relationship('DailyQuestion', backref='email_vote_funnel_events')
+    brief_subscriber = db.relationship('DailyBriefSubscriber', backref='email_vote_funnel_events')
+    question_subscriber = db.relationship('DailyQuestionSubscriber', backref='email_vote_funnel_events')
+    response = db.relationship('DailyQuestionResponse', backref='email_vote_funnel_events')
+
+
 class SubscriberIdentityLink(db.Model):
     """Bridge between an email subscriber and an anonymous site visitor.
 

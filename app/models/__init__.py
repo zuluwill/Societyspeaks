@@ -23,7 +23,12 @@ from app.models._base import generate_slug, generate_unique_slug  # noqa: F401
 
 from app.models.polymarket import PolymarketMarket, TopicMarketMatch  # noqa: F401
 from app.models.billing import PricingPlan, Subscription, Donation  # noqa: F401
-from app.models.email import EmailEvent, BriefEmailEvent, SubscriberIdentityLink  # noqa: F401
+from app.models.email import (  # noqa: F401
+    EmailEvent,
+    BriefEmailEvent,
+    EmailVoteFunnelEvent,
+    SubscriberIdentityLink,
+)
 from app.models.analytics import AnalyticsEvent, AnalyticsDailyAggregate  # noqa: F401
 from app.models.translations import (  # noqa: F401
     StatementTranslation,

@@ -1714,10 +1714,24 @@ def one_click_vote(token, vote_choice):
             return redirect(url_for('daily.weekly_batch', token=subscriber.magic_token))
         return redirect(url_for('daily.today'))
 
+    def _render_confirm_vote_page(source: str = ''):
+        from app.daily.utils import get_brief_context_for_question
+
+        return render_template(
+            'daily/confirm_vote.html',
+            question=question,
+            vote_choice=vote_choice,
+            vote_label=VOTE_LABELS.get(VOTE_MAP.get(vote_choice), vote_choice.title()),
+            vote_emoji=VOTE_EMOJIS.get(vote_choice, ''),
+            token=token,
+            source=source,
+            source_articles=get_source_articles(question, limit=3),
+            brief_context=get_brief_context_for_question(question),
+        )
+
     # GET request: Show confirmation page (prevents mail scanner prefetch from voting)
     if request.method == 'GET':
         source = request.args.get('source', '')
-        from app.daily.utils import get_brief_context_for_question
         from app.daily.vote_analytics import track_email_vote_confirm_viewed
 
         track_email_vote_confirm_viewed(
@@ -1727,17 +1741,21 @@ def one_click_vote(token, vote_choice):
             voter_channel=voter_channel,
             source=source,
         )
-        return render_template('daily/confirm_vote.html',
-                             question=question,
-                             vote_choice=vote_choice,
-                             vote_label=VOTE_LABELS.get(VOTE_MAP.get(vote_choice), vote_choice.title()),
-                             vote_emoji=VOTE_EMOJIS.get(vote_choice, ''),
-                             token=token,
-                             source=source,
-                             source_articles=get_source_articles(question, limit=3),
-                             brief_context=get_brief_context_for_question(question))
-    
+        return _render_confirm_vote_page(source)
+
     # POST request: Record the vote
+    from app.lib.posthog_utils import request_is_scripted_client
+
+    if request_is_scripted_client():
+        # Mail scanners GET each stance link, parse the confirm form, and POST it
+        # (python-requests / Go-http-client). Re-render confirm without writing a vote.
+        current_app.logger.info(
+            'Blocked scripted-client email vote POST (subscriber=%s, question=%s)',
+            subscriber.id,
+            question.id,
+        )
+        return _render_confirm_vote_page(request.args.get('source', ''))
+
     try:
         from app.daily.vote_analytics import resolve_email_vote_distinct_id, track_email_vote_confirmed
 

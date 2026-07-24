@@ -639,3 +639,30 @@ def test_brief_subscriber_one_click_vote(client, db, app):
     response = DailyQuestionResponse.query.filter_by(daily_question_id=q.id).one()
     assert response.vote == 1
     assert response.voted_via_email is True
+
+
+def test_scripted_client_post_does_not_record_email_vote(client, db, app):
+    """Mail scanners parse the confirm form and POST with python-requests."""
+    from app.models import DailyBriefSubscriber, DailyQuestionResponse
+
+    today = date.today()
+    q = DailyQuestion(
+        question_date=today,
+        question_number=52,
+        question_text='Should scanners be blocked on POST?',
+        status='published',
+        source_type='discussion',
+    )
+    sub = DailyBriefSubscriber(email='scripted-post@example.com', status='active')
+    db.session.add_all([q, sub])
+    db.session.commit()
+
+    token = sub.generate_vote_token(q.id)
+    scripted = client.post(
+        f'/daily/v/{token}/agree?source=brief_email',
+        data={'csrf_token': 'test'},
+        headers={'User-Agent': 'python-requests/2.32.4'},
+    )
+    assert scripted.status_code == 200
+    assert b'Confirm Your Vote' in scripted.data
+    assert DailyQuestionResponse.query.filter_by(daily_question_id=q.id).count() == 0
