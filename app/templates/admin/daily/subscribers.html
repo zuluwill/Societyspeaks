@@ -220,6 +220,14 @@
                             </div>
                             {% if sub.email_frequency == 'weekly' and sub.preferred_send_day is not none %}
                             <span class="text-xs text-gray-500 ml-1">{{ sub.get_send_day_name() }} {{ sub.preferred_send_hour }}:00</span>
+                            {# A send window is meaningless without its zone. NULL is shown as
+                               "UTC · not set" rather than plain "UTC" so an imported subscriber
+                               who was never asked stays distinguishable from one who chose UTC. #}
+                            {% if sub.timezone %}
+                            <span class="text-xs text-gray-400 ml-1">{{ sub.timezone }}</span>
+                            {% else %}
+                            <span class="text-xs text-amber-600 ml-1" title="No timezone on record — sends use UTC by default">UTC &middot; not set</span>
+                            {% endif %}
                             {% endif %}
                         </td>
                         {% if status_filter != 'unsubscribed' %}

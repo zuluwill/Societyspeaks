@@ -148,6 +148,7 @@ services:
     dockerfilePath: ./Dockerfile
     plan: standard
     region: frankfurt
+    preDeployCommand: flask db upgrade
     dockerCommand: python3 scripts/run_scheduler.py
     envVars:
       - fromGroup: societyspeaks-config

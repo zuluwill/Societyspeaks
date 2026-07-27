@@ -721,6 +721,42 @@ class DailyQuestionSubscriber(db.Model):
         return (local_now.weekday() == self.preferred_send_day and
                 local_now.hour == self.preferred_send_hour)
 
+    def hours_until_next_weekly_digest(self, utc_now=None):
+        """Whole hours until this subscriber's next weekly send window.
+
+        Purely for operator-facing logging: the hourly job fires 168 times a
+        week but each subscriber matches exactly one of those hours, so a bare
+        "sent to 0 subscribers" reads as a failure. Reporting when the next
+        window opens makes a quiet run self-evidently quiet-by-design.
+
+        Returns 0 when the window is open now, or None for non-weekly
+        subscribers. DST transitions can shift the true figure by an hour;
+        that is immaterial for a log line.
+        """
+        import pytz
+
+        if self.email_frequency != 'weekly':
+            return None
+
+        if utc_now is None:
+            utc_now = utcnow_naive()
+
+        try:
+            tz = pytz.timezone(self.timezone) if self.timezone else pytz.UTC
+        except pytz.exceptions.UnknownTimeZoneError:
+            tz = pytz.UTC
+
+        try:
+            local_now = utc_now.replace(tzinfo=pytz.UTC).astimezone(tz)
+        except Exception:
+            local_now = utc_now.replace(tzinfo=pytz.UTC)
+
+        days_ahead = (self.preferred_send_day - local_now.weekday()) % 7
+        if days_ahead == 0 and local_now.hour > self.preferred_send_hour:
+            days_ahead = 7  # today's window has already passed
+
+        return days_ahead * 24 + (self.preferred_send_hour - local_now.hour)
+
     def has_received_weekly_digest_this_week(self):
         """Check if weekly digest was already sent this week (within last 6 days)"""
         if not self.last_weekly_email_sent:

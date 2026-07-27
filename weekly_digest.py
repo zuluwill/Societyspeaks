@@ -1,12 +1,30 @@
 #!/usr/bin/env python3
 """
-Weekly Discussion Digest Script
-===============================
+Weekly Discussion Digest Script — MANUAL ONLY, NOT SCHEDULED
+=============================================================
+
+⚠️  Nothing invokes this script. It is not in app/scheduler.py, not in
+    render.yaml, and not in any cron. It has therefore never sent a digest in
+    production, despite ``User.weekly_digest_enabled`` defaulting to True on
+    every account — so the opt-in flag implies a product that does not run.
+
+    Do not mistake this for the weekly products that DO run:
+      - Weekly Brief (news edition)  → app/brief/weekly_generator.py,
+        emailed by BriefEmailScheduler.send_weekly_brief_hourly to
+        DailyBriefSubscriber rows with cadence='weekly'.
+      - Weekly questions digest      → app/scheduler.py
+        (_run_weekly_digest_in_thread), emailed to DailyQuestionSubscriber
+        rows with email_frequency='weekly'.
+    This script is a third, dormant thing: a per-user summary of activity on
+    discussions they participated in.
+
+    Before shipping it, decide: does it earn a place alongside the two weekly
+    emails above, or does it compete with them for the same attention? If it is
+    not going to ship, delete it and drop ``weekly_digest_enabled``.
 
 This script sends weekly digest emails to users who have opted in to receive them.
-It should be run once per week, typically on Monday mornings.
 
-Usage:
+Usage (manual):
     python weekly_digest.py
 
 The script will:
@@ -14,8 +32,6 @@ The script will:
 2. Generate digest content for each user's discussion activity
 3. Send digest emails using Resend
 4. Log the results
-
-This can be scheduled as a cron job or run manually as needed.
 """
 
 import sys

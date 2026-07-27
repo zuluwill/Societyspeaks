@@ -10,7 +10,9 @@
 git push origin main
 ```
 
-Render rebuilds web + scheduler + consensus worker. Web runs `flask db upgrade` pre-deploy.
+Render rebuilds web + scheduler + consensus worker. Web and scheduler both run `flask db upgrade` pre-deploy.
+
+**Deploy order when migrations add columns:** web and scheduler preDeploy both run `flask db upgrade`. Concurrent upgrades are serialised by a Postgres advisory transaction lock in `migrations/env.py` (`acquire_migration_lock` in `app/lib/db_migration_guard.py`) — without it, two services upgrading at once can race on the same DDL and one deploy fails with "column already exists". The scheduler process also refuses to start if the DB revision lags Alembic head (`assert_db_at_head`). If a worker logs `refusing to start: database revision … is not at Alembic head`, run `flask db upgrade` on web (or a one-off shell) before redeploying workers.
 
 **Auto-deploy on `main` is intentional** for a solo production app. Prefer `autoDeployTrigger: checksPass` later if CI is green and you want fewer bad deploys — not `off` unless you want manual releases.
 
@@ -21,6 +23,38 @@ After env-only changes: Render → service → **Manual Deploy**.
 **Scheduler “Application exited early” emails:** expected on deploys (SIGTERM). Recurring every ~30 minutes meant the old Replit timed self-exit was still on — Render uses `SCHEDULER_MAX_RUNTIME_SECONDS=0` so the process stays up. Watch Metrics RSS; only re-enable a timed recycle if memory grows without bound.
 
 **Worker restart emails** (scheduler / consensus) on every push are normal — those services restart with the new image. Keep Render notifications on **failure-only**. After `/health` is the web check path, web “connection refused” during deploy should largely stop; if it continues after the new instance is live, investigate.
+
+## Weekly brief (`wk001` and regeneration)
+
+**Three different "weekly" products** — do not conflate them in ops or analytics:
+
+| Product | Table / cadence | Send window |
+|---|---|---|
+| Weekly Brief (reading) | `daily_brief_subscriber.cadence='weekly'` | Subscriber's `preferred_weekly_day` / hour |
+| Weekly questions digest (participation) | `daily_question_subscriber.email_frequency='weekly'` | Each sub's `preferred_send_day` + hour (109 on Tue 09:00 UTC when `timezone` is NULL) |
+| Dormant discussion digest | `user.weekly_digest_enabled` | Not scheduled |
+
+**Regenerate a live edition safely:**
+
+```bash
+flask generate-weekly-brief --date 2026-07-26 --force
+```
+
+`--force` rebuilds items in place. If the edition was already **`published`**, status and `published_at` are preserved so `/brief/weekly` never goes dark — the auto-publish job only promotes briefs dated **today**, so demoting an older edition to `ready` would black it out permanently. Test send: `flask test-brief-email you@example.com --type weekly`.
+
+**`wk001` (`brief_item.weekly_development`):** deploy web + scheduler together; both preDeploy migrations must reach head before workers load code that maps the new column. SQLAlchemy selects every mapped column on `BriefItem` — a schema lag breaks daily sends too, not just weekly.
+
+**Weekly digest timezone hygiene:** `DailyQuestionSubscriber.timezone=NULL` is treated as UTC at send time (Tuesday 09:00 UTC for the bulk of weekly digest subs). This is correct behaviour and is now visible: the admin subscriber list renders `UTC · not set` for those rows, and `/daily/preferences` already shows UTC.
+
+Size the cohort with:
+
+```bash
+flask backfill-dq-subscriber-timezones --dry-run
+```
+
+**Do not run the write step as routine hygiene.** It changes no send behaviour and improves no display — it only overwrites NULL with `UTC`, which permanently erases the difference between *"imported, never asked"* and *"chose UTC"*. That NULL is the query that finds the ~109 people receiving a 09:00 UTC digest at an arbitrary local hour — the exact audience for a "when would you like this?" email. Collect real timezones first; only then make stragglers explicit.
+
+The fix for the underlying UX gap is asking subscribers for a delivery time, not asserting one on their behalf.
 
 ## Neon pooler — never session READ ONLY
 

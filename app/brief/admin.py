@@ -628,10 +628,19 @@ def test_send():
             db.session.add(subscriber)
             db.session.commit()
 
-        success = send_brief_to_subscriber(test_email, brief.date.isoformat())
+        # Send *this* brief: a weekly edition shares its date with that day's
+        # daily brief, so the type must be explicit or the admin gets the wrong
+        # email. allow_unpublished lets a 'ready' draft be checked before publish.
+        brief_type = brief.brief_type or 'daily'
+        success = send_brief_to_subscriber(
+            test_email,
+            brief.date.isoformat(),
+            brief_type,
+            allow_unpublished=True,
+        )
 
         if success:
-            flash(f'Test email sent to {test_email}', 'success')
+            flash(f'Test {brief_type} email sent to {test_email}', 'success')
         else:
             flash('Failed to send test email. Check logs.', 'error')
 
@@ -639,7 +648,11 @@ def test_send():
         logger.error(f"Test send failed: {e}")
         flash(f'Error: {str(e)}', 'error')
 
-    return redirect(url_for('brief_admin.preview', date_str=brief.date.isoformat()))
+    return redirect(url_for(
+        'brief_admin.preview',
+        date_str=brief.date.isoformat(),
+        type=brief.brief_type or 'daily',
+    ))
 
 
 @brief_admin_bp.route('/send-to-subscriber', methods=['POST'])
@@ -675,8 +688,12 @@ def send_to_subscriber():
         if not brief:
             flash(f'No published brief found for {brief_date_str}', 'error')
             return redirect(url_for('brief_admin.dashboard'))
-        
-        success = send_brief_to_subscriber(email, brief_date_str)
+
+        # Pass the type we actually resolved: the fallback above can land on a
+        # weekly edition, and the send must not re-resolve back to 'daily'.
+        success = send_brief_to_subscriber(
+            email, brief_date_str, brief.brief_type or 'daily'
+        )
         
         if success:
             flash(f'Brief sent to {email}', 'success')

@@ -237,6 +237,102 @@ def build_stance_email_handoff(
     return handoff
 
 
+def build_weekly_stance_card_context(
+    *,
+    week_start: date,
+    week_end: date,
+) -> Optional[dict[str, Any]]:
+    """
+    Context for components/stance_card.html on a published weekly brief edition.
+
+    Picks the week's highest-scored published question (same ranker as the
+    Tuesday weekly question digest, scoped to the edition's calendar week).
+    """
+    from app.daily.question_digest_selection import select_best_question_for_week
+
+    question = select_best_question_for_week(week_start, week_end)
+    if not question:
+        return None
+
+    frame = question.coverage_frame_json or {}
+    is_brief_sourced = (
+        question.source_type == 'brief'
+        and bool(question.source_brief_item_id)
+        and bool(frame)
+    )
+
+    subline = _("This week's most debated question — where do you stand?")
+    if is_brief_sourced:
+        subline = _stance_subline(question)
+
+    show_early_signal = not question.is_cold_start
+    vote_pcts = question.vote_percentages if show_early_signal else None
+
+    return {
+        'question': question,
+        'is_brief_sourced': is_brief_sourced,
+        'frame': frame,
+        'subline': subline,
+        'sourcing_brief_url': None,
+        'show_early_signal': show_early_signal,
+        'vote_pcts': vote_pcts,
+        'has_voted': _has_user_voted(question),
+        'stance_anchor': 'stance',
+        'results_url': url_for(
+            'daily.by_date',
+            date_str=question.question_date.isoformat(),
+        ),
+    }
+
+
+def build_weekly_stance_email_handoff(
+    *,
+    week_start: date,
+    week_end: date,
+    week_end_date: date,
+    base_url: str,
+    subscriber: Any = None,
+) -> Optional[dict[str, Any]]:
+    """
+    Context for the stance card block in weekly brief emails.
+
+    Uses the same week-scoped question ranker as the web weekly edition.
+    """
+    from app.daily.question_digest_selection import select_best_question_for_week
+
+    question = select_best_question_for_week(week_start, week_end)
+    if not question:
+        return None
+
+    root = base_url.rstrip('/')
+    date_str = week_end_date.isoformat()
+    show_early_signal = not question.is_cold_start
+    vote_pcts = question.vote_percentages if show_early_signal else None
+
+    handoff: dict[str, Any] = {
+        'question': question,
+        'subline': _("This week's most debated question — where do you stand?"),
+        'show_early_signal': show_early_signal,
+        'vote_pcts': vote_pcts,
+        'stance_url': f"{root}/brief/weekly/{date_str}?src=weekly_brief_stance#stance",
+        'tradeoffs_url': f"{root}/play/daily?src=weekly_brief_tradeoffs",
+        'show_first_timer_hint': (
+            subscriber is not None and (subscriber.total_briefs_received or 0) == 0
+        ),
+    }
+
+    if subscriber is not None:
+        vote_token = subscriber.generate_vote_token(question.id)
+        vote_qs = '?source=weekly_brief_email'
+        handoff['vote_agree_url'] = f"{root}/daily/v/{vote_token}/agree{vote_qs}"
+        handoff['vote_disagree_url'] = f"{root}/daily/v/{vote_token}/disagree{vote_qs}"
+        handoff['vote_unsure_url'] = f"{root}/daily/v/{vote_token}/unsure{vote_qs}"
+
+    handoff['tradeoffs'] = _tradeoffs_daily_context()
+
+    return handoff
+
+
 def _tradeoffs_daily_context() -> Optional[dict[str, Any]]:
     """Today's Tradeoffs scenario metadata (shared by the brief email + web card)."""
     from flask import current_app

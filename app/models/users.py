@@ -42,7 +42,12 @@ class User(UserMixin, db.Model):
     discussion_participant_notifications = db.Column(db.Boolean, default=True)  # New participants
     discussion_response_notifications = db.Column(db.Boolean, default=True)  # Activity: statements, replies, votes
     discussion_update_notifications = db.Column(db.Boolean, default=True)  # Organiser/steward "what happened next" updates
-    weekly_digest_enabled = db.Column(db.Boolean, default=True)  # Weekly digest emails
+    # Opt-in for the per-user discussion activity digest. NOTE: nothing sends
+    # this — weekly_digest.py is manual-only and unscheduled, so this flag has
+    # never gated a real send. Unrelated to the Weekly Brief (DailyBriefSubscriber
+    # .cadence) and the weekly questions digest (DailyQuestionSubscriber
+    # .email_frequency), both of which do send.
+    weekly_digest_enabled = db.Column(db.Boolean, default=True)
 
     # Language preference — BCP 47 code from SUPPORTED_LANGUAGES (e.g. 'nl', 'fr').
     # NULL means "use browser default / cookie / Accept-Language".

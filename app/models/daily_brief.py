@@ -300,6 +300,13 @@ class BriefItem(db.Model):
     # Deeper context for "Want more detail?" feature
     deeper_context = db.Column(db.Text)  # Extended analysis and background
 
+    # Weekly briefs only: how the story moved across the week.
+    # This is the one field a weekly item does NOT inherit from its source daily
+    # item — it is the difference between a weekly edition and a rerun of the
+    # daily. Only populated for stories that appeared on 2+ days; a single
+    # appearance has no development to describe. See app/brief/weekly_generator.py.
+    weekly_development = db.Column(db.Text, nullable=True)
+
     # Audio/TTS integration (XTTS v2 - open source)
     audio_url = db.Column(db.String(500))  # URL to generated audio file
     audio_voice_id = db.Column(db.String(100))  # XTTS voice ID used

@@ -56,6 +56,10 @@ from app import create_app  # noqa: E402
 
 app = create_app()
 
+from app.lib.db_migration_guard import assert_db_at_head
+
+assert_db_at_head(app, role='scheduler')
+
 # Import running-job tracker AFTER create_app() so init_scheduler() has run
 from app.scheduler import (  # noqa: E402
     _running_jobs,

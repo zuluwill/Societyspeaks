@@ -1883,7 +1883,7 @@ def init_scheduler(app):
                 from app.daily.auto_selection import select_questions_for_weekly_digest
                 import pytz
 
-                logger.info("Background thread: Starting weekly digest processing")
+                logger.debug("Background thread: Starting weekly digest processing")
 
                 # Get current UTC time
                 utc_now = utcnow_naive()
@@ -1894,33 +1894,62 @@ def init_scheduler(app):
                     email_frequency='weekly'
                 ).all()
 
-                logger.info(f"Found {len(weekly_subscribers)} weekly subscribers to check")
+                # Work out who is actually due *before* selecting questions. This
+                # job runs hourly but each subscriber matches one hour a week, so
+                # on ~167 of 168 runs the answer is nobody — no reason to do the
+                # question-selection work, and no reason to log as though a send
+                # was attempted and produced nothing.
+                due = []
+                wrong_window = 0
+                already_sent = 0
+
+                for subscriber in weekly_subscribers:
+                    if not subscriber.should_receive_weekly_digest_now(utc_now):
+                        wrong_window += 1
+                    elif subscriber.has_received_weekly_digest_this_week():
+                        already_sent += 1
+                    else:
+                        due.append(subscriber)
+
+                if not due:
+                    next_hours = [
+                        h for h in (
+                            s.hours_until_next_weekly_digest(utc_now)
+                            for s in weekly_subscribers
+                        ) if h is not None
+                    ]
+                    soonest = f"{min(next_hours)}h" if next_hours else "n/a"
+                    logger.info(
+                        "Weekly question digest: 0 due this hour "
+                        "(%d of %d outside their send window, %d already sent this week); "
+                        "next window in ~%s",
+                        wrong_window, len(weekly_subscribers), already_sent, soonest,
+                    )
+                    return
 
                 # Select questions for the digest (once, reuse for all subscribers)
                 questions = select_questions_for_weekly_digest(days_back=7, count=5)
 
                 if not questions:
-                    logger.warning("No questions available for weekly digest")
+                    logger.warning(
+                        "Weekly question digest: %d subscribers due but no questions "
+                        "available — they will be retried next hour",
+                        len(due),
+                    )
                     return
 
-                logger.info(f"Selected {len(questions)} questions for weekly digest")
+                logger.info(
+                    "Weekly question digest: %d due, sending %d questions",
+                    len(due), len(questions),
+                )
 
                 # Initialize Resend client
                 client = ResendEmailClient()
                 sent_count = 0
-                skipped_count = 0
+                failed_count = 0
 
-                for subscriber in weekly_subscribers:
+                for subscriber in due:
                     try:
-                        # Check if it's the right time for this subscriber
-                        if not subscriber.should_receive_weekly_digest_now(utc_now):
-                            continue
-
-                        # Check if already sent this week
-                        if subscriber.has_received_weekly_digest_this_week():
-                            skipped_count += 1
-                            continue
-
                         # Ensure subscriber has a magic token
                         if not subscriber.magic_token:
                             subscriber.generate_magic_token()
@@ -1957,19 +1986,26 @@ def init_scheduler(app):
                                 },
                             )
                         else:
+                            failed_count += 1
                             logger.warning(f"Failed to send weekly digest to {subscriber.email}")
 
                     except Exception as e:
+                        failed_count += 1
                         logger.error(f"Error sending weekly digest to {subscriber.email}: {e}")
                         db.session.rollback()
 
-                logger.info(f"Weekly digest: sent to {sent_count} subscribers, skipped {skipped_count} (already sent)")
+                log = logger.warning if failed_count else logger.info
+                log(
+                    "Weekly question digest: sent %d of %d due, %d failed "
+                    "(%d already sent this week, %d outside their window)",
+                    sent_count, len(due), failed_count, already_sent, wrong_window,
+                )
 
         except Exception as e:
             logger.error(f"Background thread: Weekly digest error: {e}", exc_info=True)
         finally:
             _weekly_digest_in_progress.clear()
-            logger.info("Background thread: Weekly digest processing complete")
+            logger.debug("Background thread: Weekly digest processing complete")
 
     def _run_monthly_digest_in_thread(app_instance):
         """Run monthly digest send in background thread with its own app context"""

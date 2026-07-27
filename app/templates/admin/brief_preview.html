@@ -224,7 +224,14 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Send Test Email</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Send Test Email</h3>
+            <p class="text-sm text-gray-500 mb-4">
+                Sends the <strong>{{ brief.brief_type or 'daily' }}</strong> edition for
+                {{ brief.date.strftime('%d %b %Y') }}, exactly as subscribers receive it.
+                {% if brief.status != 'published' %}
+                This edition is <strong>{{ brief.status }}</strong> — the test send works before publishing.
+                {% endif %}
+            </p>
             <form action="{{ url_for('brief_admin.test_send') }}" method="POST" class="flex gap-3">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="brief_id" value="{{ brief.id }}">

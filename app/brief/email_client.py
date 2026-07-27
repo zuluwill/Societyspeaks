@@ -10,7 +10,7 @@ import secrets
 import threading
 import logging
 import pytz
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
 from email.utils import parseaddr
 from typing import Any, Dict, List, Optional
@@ -529,12 +529,33 @@ def _daily_send_lock_key(target_date=None) -> str:
     return f"brief_send_lock:daily:{target_date.isoformat()}"
 
 
-def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
-    """
-    Acquire Redis lock for daily brief sending.
+def _weekly_send_lock_key(target_date=None, hour=None) -> str:
+    """Shared lock key for weekly brief sends in a given UTC hour.
 
-    Weekly brief sends use the same policy: no REDIS_URL or Redis errors
-    mean no send (see BriefEmailScheduler.send_weekly_brief_hourly).
+    Scoped per hour rather than per day: weekly subscribers are spread across
+    timezones, so each hourly run serves a different cohort and must not be
+    blocked by the previous hour's lock.
+    """
+    now = utcnow_naive()
+    if target_date is None:
+        target_date = now.date()
+    if hour is None:
+        hour = now.hour
+    return f"brief_send_lock:weekly:{target_date.isoformat()}:{hour}"
+
+
+def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500, lock_key: str = None):
+    """
+    Acquire Redis lock for brief sending.
+
+    Weekly brief sends use the same policy and the same helper — no REDIS_URL or
+    Redis errors mean no send — passing the weekly key via ``lock_key``.
+
+    Args:
+        target_date: Date to scope the default (daily) key to.
+        ttl_seconds: Lock expiry. A backstop only; the caller must still release
+            in a ``finally`` so a fast send does not hold the slot for an hour.
+        lock_key: Explicit key, overriding the daily default.
 
     Returns:
         (acquired, redis_client, lock_key, lock_token, reason)
@@ -543,7 +564,7 @@ def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
     if not redis_url:
         return False, None, None, None, "redis_unavailable"
 
-    lock_key = _daily_send_lock_key(target_date)
+    lock_key = lock_key or _daily_send_lock_key(target_date)
     lock_token = secrets.token_urlsafe(18)
 
     try:
@@ -561,7 +582,12 @@ def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
 
 
 def release_daily_send_lock(redis_client, lock_key: str, lock_token: str) -> None:
-    """Release lock only if token still matches (safe unlock)."""
+    """Release lock only if token still matches (safe unlock).
+
+    The token check matters: a PID or hostname is not unique across Render
+    instances, so an unconditional DEL could release a lock another worker
+    currently holds.
+    """
     if not redis_client or not lock_key or not lock_token:
         return
     try:
@@ -980,11 +1006,21 @@ class ResendClient:
             utm_campaign='personal_briefs_cta',
             template_slug=DEFAULT_TRIAL_TEMPLATE_SLUG,
         )
-        from app.brief.stance_card import build_stance_email_handoff
+        from app.brief.stance_card import build_stance_email_handoff, build_weekly_stance_email_handoff
         stance_handoff = None
         if brief.brief_type == 'daily':
             stance_handoff = build_stance_email_handoff(
                 brief_date=brief.date,
+                base_url=base_url,
+                subscriber=subscriber,
+            )
+        elif brief.brief_type == 'weekly':
+            week_start = brief.week_start_date or (brief.date - timedelta(days=6))
+            week_end = brief.week_end_date or brief.date
+            stance_handoff = build_weekly_stance_email_handoff(
+                week_start=week_start,
+                week_end=week_end,
+                week_end_date=brief.date,
                 base_url=base_url,
                 subscriber=subscriber,
             )
@@ -1563,67 +1599,84 @@ class BriefEmailScheduler:
         current_hour = utcnow_naive().hour
         today = date.today()
 
-        lock_key = f"brief_send_lock:weekly:{today.isoformat()}:{current_hour}"
-        redis_url = os.environ.get('REDIS_URL')
-        if not redis_url:
-            logger.error(
-                "REDIS_URL not configured; skipping weekly brief send "
-                "(distributed lock required — same policy as daily brief sends)"
-            )
+        # Same acquire/release helpers as the daily send: a random token (not a
+        # PID, which is not unique across Render instances) and an explicit
+        # release, so a completed send frees the slot instead of holding it for
+        # the full TTL and blocking any retry within the hour.
+        lock_acquired, lock_client, lock_key, lock_token, lock_reason = acquire_daily_send_lock(
+            ttl_seconds=3500,
+            lock_key=_weekly_send_lock_key(today, current_hour),
+        )
+        if not lock_acquired:
+            if lock_reason == "lock_held":
+                logger.info(
+                    f"Weekly brief send already in progress for hour {current_hour} "
+                    f"(lock held), skipping"
+                )
+            else:
+                logger.error(
+                    "Weekly brief send lock unavailable "
+                    "(distributed lock required — same policy as daily brief sends); "
+                    "skipping send to prevent duplicates"
+                )
             return {'sent': 0, 'failed': 0, 'errors': []}
 
         try:
-            from app.lib.redis_client import get_client
-            r = get_client(decode_responses=False)
-            if not r or not r.set(lock_key, os.getpid(), nx=True, ex=3500):
-                logger.info(
-                    f"Weekly brief send already in progress for hour {current_hour} (lock held), skipping"
-                )
-                return {'sent': 0, 'failed': 0, 'errors': []}
-        except Exception as e:
-            logger.error(
-                f"Could not acquire Redis send lock for weekly brief: {e}; "
-                f"skipping send to prevent duplicates"
+            # Find the most recent weekly brief
+            brief = DailyBrief.query.filter(
+                DailyBrief.brief_type == 'weekly',
+                DailyBrief.status.in_(['ready', 'published'])
+            ).order_by(DailyBrief.date.desc()).first()
+
+            if not brief:
+                logger.debug("No published weekly brief available")
+                return None
+
+            # Prevent re-sending old weekly briefs: only send if created within last 7 days
+            if brief.date <= date.today() - timedelta(days=7):
+                logger.debug(f"Weekly brief ({brief.date}) is older than 7 days, skipping")
+                return None
+
+            subscribers = self.get_subscribers_for_hour(
+                current_hour, cadence='weekly', brief_id=brief.id
             )
-            return {'sent': 0, 'failed': 0, 'errors': []}
 
-        # Find the most recent weekly brief
-        brief = DailyBrief.query.filter(
-            DailyBrief.brief_type == 'weekly',
-            DailyBrief.status.in_(['ready', 'published'])
-        ).order_by(DailyBrief.date.desc()).first()
+            if not subscribers:
+                return {'sent': 0, 'failed': 0, 'errors': []}
 
-        if not brief:
-            logger.debug("No published weekly brief available")
-            return None
-
-        # Prevent re-sending old weekly briefs: only send if created within last 7 days
-        if brief.date <= date.today() - timedelta(days=7):
-            logger.debug(f"Weekly brief ({brief.date}) is older than 7 days, skipping")
-            return None
-
-        subscribers = self.get_subscribers_for_hour(current_hour, cadence='weekly', brief_id=brief.id)
-
-        if not subscribers:
-            return {'sent': 0, 'failed': 0, 'errors': []}
-
-        logger.info(f"Sending weekly brief ({brief.date}) to {len(subscribers)} subscribers")
-        results = self.send_to_subscribers(subscribers, brief)
-        return _attach_brief_send_metadata(results, brief, cadence='weekly')
+            logger.info(f"Sending weekly brief ({brief.date}) to {len(subscribers)} subscribers")
+            results = self.send_to_subscribers(subscribers, brief)
+            return _attach_brief_send_metadata(results, brief, cadence='weekly')
+        finally:
+            release_daily_send_lock(lock_client, lock_key, lock_token)
 
 
-def send_brief_to_subscriber(subscriber_email: str, brief_date: Optional[str] = None) -> bool:
+def send_brief_to_subscriber(
+    subscriber_email: str,
+    brief_date: Optional[str] = None,
+    brief_type: str = 'daily',
+    *,
+    allow_unpublished: bool = False,
+) -> bool:
     """
     Convenience function to send brief to a single subscriber.
 
     Args:
         subscriber_email: Email address
-        brief_date: Date string (YYYY-MM-DD), or None for today
+        brief_date: Date string (YYYY-MM-DD), or None for the latest edition
+        brief_type: 'daily' or 'weekly'. Must be passed explicitly for weekly —
+            a weekly brief shares its date with that day's daily edition, so
+            defaulting to 'daily' would silently deliver the wrong one.
+        allow_unpublished: Admin test paths set this to send a 'ready' edition
+            that has not been published yet — the point of a test send is to
+            see the email *before* it goes to the list.
 
     Returns:
         bool: Success status
     """
-    from datetime import date
+    if brief_type not in ('daily', 'weekly'):
+        logger.error(f"Invalid brief_type: {brief_type!r}")
+        return False
 
     subscriber = DailyBriefSubscriber.query.filter_by(email=subscriber_email).first()
     if not subscriber:
@@ -1637,14 +1690,27 @@ def send_brief_to_subscriber(subscriber_email: str, brief_date: Optional[str] = 
 
     if brief_date:
         brief_date_obj = datetime.strptime(brief_date, '%Y-%m-%d').date()
-        brief = DailyBrief.get_by_date(brief_date_obj, published_only=True)
+        brief = DailyBrief.get_by_date(
+            brief_date_obj,
+            brief_type=brief_type,
+            published_only=not allow_unpublished,
+        )
     else:
         # No explicit date → the current edition = the latest published brief
         # (get_today() is None for most of the UTC day, before generation).
-        brief = DailyBrief.get_latest_published()
+        brief = DailyBrief.get_latest_published(brief_type=brief_type)
+        if not brief and allow_unpublished:
+            brief = (
+                DailyBrief.query
+                .filter_by(brief_type=brief_type, status='ready')
+                .order_by(DailyBrief.date.desc())
+                .first()
+            )
 
     if not brief:
-        logger.error(f"Brief not found for date: {brief_date or 'today'}")
+        logger.error(
+            f"No {brief_type} brief found for date: {brief_date or 'latest'}"
+        )
         return False
 
     client = ResendClient()

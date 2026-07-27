@@ -211,6 +211,57 @@ def _weekly_digest_ref(prefix: str, recipient_id, *content_parts) -> str:
     return scoped_entity_ref(prefix, *parts)
 
 
+def _compact_digest_html(html: str, label: str) -> str:
+    """Minify a question-digest email and warn if it will be clipped.
+
+    The daily brief runs its rendered HTML through the same minifier before
+    send; the question digests did not, and shipped ~61KB (weekly, 5 questions)
+    and more for the 10-question monthly — close to, or past, the ~102KB point
+    where Gmail truncates the message and hides the unsubscribe footer behind a
+    "View entire message" link.
+
+    Unlike the brief there is nothing safe to auto-trim here: every question is
+    the payload. So this compacts what it can and logs loudly when the result
+    is still too big, rather than silently dropping content.
+
+    Imported locally: ``app.brief.email_client`` imports ``_render_for_user``
+    from this module, so a module-level import would close the cycle.
+    """
+    from app.brief.email_client import (
+        GMAIL_CLIP_LIMIT_BYTES,
+        _email_html_byte_size,
+        _minify_email_html,
+    )
+
+    before = _email_html_byte_size(html)
+    try:
+        html = _minify_email_html(html)
+    except Exception as e:  # never block a send on cosmetics
+        logger.warning(f"Minify failed for {label}, sending unminified: {e}")
+        return html
+
+    after = _email_html_byte_size(html)
+    logger.info(
+        "%s minified: %d → %d bytes (Gmail clips ~%d)",
+        label, before, after, GMAIL_CLIP_LIMIT_BYTES,
+    )
+    return html
+
+
+def _warn_if_clipped(html: str, label: str) -> None:
+    """Log when a digest will be clipped by Gmail after link wrapping."""
+    from app.brief.email_client import GMAIL_CLIP_LIMIT_BYTES, _email_html_byte_size
+
+    size = _email_html_byte_size(html)
+    if size > GMAIL_CLIP_LIMIT_BYTES:
+        logger.warning(
+            "%s is %d bytes after click-tracking wrap (Gmail clips ~%d); "
+            "recipients will see a truncated message with the unsubscribe "
+            "footer hidden — reduce questions per digest or trim per-question copy",
+            label, size, GMAIL_CLIP_LIMIT_BYTES,
+        )
+
+
 def resend_post_with_retry(
     api_key: str,
     payload: dict,
@@ -895,6 +946,8 @@ class ResendEmailClient:
             logger.error(f"Template rendering failed for weekly_questions_digest: {e}")
             return False
 
+        html = _compact_digest_html(html, 'Weekly questions digest')
+
         secret = current_app.config.get('SECRET_KEY', '')
         html = _wrap_links(
             html=html,
@@ -904,6 +957,7 @@ class ResendEmailClient:
             secret=secret,
             track_path='/daily/track/click',
         )
+        _warn_if_clipped(html, 'Weekly questions digest')
 
         # Build subject line
         first_question = questions[0].question_text[:50]
@@ -998,6 +1052,8 @@ class ResendEmailClient:
             logger.error(f"Template rendering failed for monthly_questions_digest: {e}")
             return False
 
+        html = _compact_digest_html(html, 'Monthly questions digest')
+
         secret = current_app.config.get('SECRET_KEY', '')
         html = _wrap_links(
             html=html,
@@ -1007,6 +1063,7 @@ class ResendEmailClient:
             secret=secret,
             track_path='/daily/track/click',
         )
+        _warn_if_clipped(html, 'Monthly questions digest')
 
         # Build subject line
         first_question = questions[0].question_text[:50]

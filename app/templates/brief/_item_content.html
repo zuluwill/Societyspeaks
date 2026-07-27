@@ -135,6 +135,14 @@
 </div>
 {% endif %}
 
+{# How this developed — weekly editions only, never set on daily items #}
+{% if item.weekly_development %}
+<div class="bg-violet-50 border-l-4 border-violet-500 rounded-r-lg p-5 mb-6">
+    <p class="text-xs font-bold text-violet-700 uppercase tracking-wide mb-2">{{ _('How This Developed') }}</p>
+    <p class="text-violet-900 leading-relaxed">{{ item.weekly_development }}</p>
+</div>
+{% endif %}
+
 {# So What analysis (full and standard depth) #}
 {% if item.so_what and item.depth != 'quick' %}
 <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">

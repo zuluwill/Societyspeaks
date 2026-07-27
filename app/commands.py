@@ -149,13 +149,70 @@ def init_commands(app):
         except Exception as e:
             click.echo(f"Error generating brief: {str(e)}", err=True)
 
+    @app.cli.command('generate-weekly-brief')
+    @click.option(
+        '--date',
+        default=None,
+        help='Week-ending date (Sunday) in YYYY-MM-DD format (default: most recent Sunday)',
+    )
+    @click.option('--force', is_flag=True, help='Force regenerate even if a ready/published edition exists')
+    def generate_weekly_brief_cmd(date, force):
+        """Generate weekly brief for the week ending on the given Sunday."""
+        from datetime import date as date_type
+        from app.brief.weekly_generator import generate_weekly_brief
+        from app.models import DailyBrief
+        from app.brief.sections import BRIEF_TYPE_WEEKLY
+
+        try:
+            if date:
+                week_end = datetime.strptime(date, '%Y-%m-%d').date()
+            else:
+                today = date_type.today()
+                days_since_sunday = (today.weekday() + 1) % 7
+                week_end = today - timedelta(days=days_since_sunday)
+
+            existing = DailyBrief.query.filter_by(
+                date=week_end,
+                brief_type=BRIEF_TYPE_WEEKLY,
+            ).first()
+            if existing and existing.status in ('ready', 'published') and not force:
+                click.echo(
+                    f"Weekly brief already exists for week ending {week_end} "
+                    f"(status: {existing.status})"
+                )
+                click.echo("Use --force to regenerate")
+                return
+
+            click.echo(f"Generating weekly brief for week ending {week_end}...")
+            brief = generate_weekly_brief(
+                week_end_date=week_end,
+                auto_publish=True,
+                force=force,
+            )
+
+            if brief is None:
+                click.echo("Weekly brief generation failed — see logs", err=True)
+                return
+
+            click.echo(f"✓ Weekly brief generated: {brief.title}")
+            click.echo(f"  Items: {brief.item_count}")
+            click.echo(f"  Status: {brief.status}")
+
+        except Exception as e:
+            click.echo(f"Error generating weekly brief: {str(e)}", err=True)
+
     @app.cli.command('test-brief-email')
     @click.argument('email')
-    @click.option('--date', default=None, help='Date in YYYY-MM-DD format (default: today)')
-    def test_brief_email_cmd(email, date):
+    @click.option('--date', default=None, help='Date in YYYY-MM-DD format (default: latest)')
+    @click.option('--type', 'brief_type', default='daily',
+                  type=click.Choice(['daily', 'weekly']),
+                  help='Which edition to send (default: daily)')
+    @click.option('--allow-unpublished', is_flag=True,
+                  help="Also consider 'ready' editions that are not published yet")
+    def test_brief_email_cmd(email, date, brief_type, allow_unpublished):
         """Send test brief email to an address"""
         try:
-            click.echo(f"Sending test email to {email}...")
+            click.echo(f"Sending test {brief_type} email to {email}...")
 
             # Ensure subscriber exists
             subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
@@ -172,7 +229,9 @@ def init_commands(app):
                 db.session.add(subscriber)
                 db.session.commit()
 
-            success = send_brief_to_subscriber(email, date)
+            success = send_brief_to_subscriber(
+                email, date, brief_type, allow_unpublished=allow_unpublished
+            )
 
             if success:
                 click.echo(f"✓ Email sent to {email}")
@@ -589,6 +648,69 @@ def init_commands(app):
             click.echo(f"Error seeding brief templates: {str(e)}", err=True)
             import traceback
             traceback.print_exc()
+
+    @app.cli.command('backfill-dq-subscriber-timezones')
+    @click.option('--dry-run', is_flag=True, help='Report counts without updating rows')
+    @click.option('--yes', is_flag=True, help='Skip the confirmation prompt')
+    def backfill_dq_subscriber_timezones_cmd(dry_run, yes):
+        """Set explicit UTC on daily-question subscribers with NULL timezone.
+
+        ⚠️  NOT RECOMMENDED — prefer --dry-run to size the cohort, then leave it.
+
+        This changes no send behaviour: ``should_receive_weekly_digest_now`` and
+        ``hours_until_next_weekly_digest`` already resolve NULL to UTC. It does
+        not improve any display either — ``daily/preferences.html`` renders NULL
+        correctly as "UTC" already, and the admin list shows "UTC · not set".
+
+        What it DOES do is destroy a signal. Today ``timezone IS NULL`` means
+        "imported, never asked". After this runs those rows are identical to a
+        subscriber who deliberately chose UTC, permanently and with no way back.
+        That cohort — people receiving a 09:00 UTC digest at whatever local hour
+        that lands on — is exactly the audience for a "when would you like this?"
+        email, and this is the query that finds them.
+
+        Kept for the case where you have already collected real timezones and
+        want the stragglers made explicit.
+        """
+        from app.models import DailyQuestionSubscriber
+
+        try:
+            query = DailyQuestionSubscriber.query.filter(
+                DailyQuestionSubscriber.is_active.is_(True),
+                DailyQuestionSubscriber.timezone.is_(None),
+            )
+            total = query.count()
+            if total == 0:
+                click.echo('✓ No active daily-question subscribers with NULL timezone')
+                return
+
+            weekly = query.filter(
+                DailyQuestionSubscriber.email_frequency == 'weekly',
+            ).count()
+
+            click.echo(
+                f"Found {total} active subscriber(s) with NULL timezone "
+                f"({weekly} on weekly digest cadence)"
+            )
+            if dry_run:
+                click.echo('Dry run — no rows updated')
+                return
+
+            click.echo(
+                'This overwrites NULL with UTC and permanently loses the '
+                '"never asked" signal for these subscribers. Send times do not change.'
+            )
+            if not yes and not click.confirm('Continue?', default=False):
+                click.echo('Aborted — no rows updated')
+                return
+
+            updated = query.update({'timezone': 'UTC'}, synchronize_session=False)
+            db.session.commit()
+            click.echo(f'✓ Set timezone=UTC on {updated} subscriber(s)')
+
+        except Exception as e:
+            db.session.rollback()
+            click.echo(f'Error backfilling timezones: {str(e)}', err=True)
 
     @app.cli.command('backfill-normalized-urls')
     @click.option('--batch-size', default=500, help='Number of articles to process per batch')

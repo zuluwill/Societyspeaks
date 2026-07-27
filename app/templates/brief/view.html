@@ -395,6 +395,13 @@
                     </div>
                     {% endif %}
 
+                    {% if item.weekly_development %}
+                    <div class="bg-violet-50 border-l-4 border-violet-500 rounded-r-lg p-5 mb-6">
+                        <p class="text-xs font-bold text-violet-700 uppercase tracking-wide mb-2">{{ _('How This Developed') }}</p>
+                        <p class="text-violet-900 leading-relaxed">{{ item.weekly_development }}</p>
+                    </div>
+                    {% endif %}
+
                     {% if item.so_what %}
                     <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">
                         <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">{{ _('Why It Matters') }}</p>
@@ -933,6 +940,8 @@
         {% if brief.brief_type == 'daily' %}
         {% include 'components/stance_card.html' %}
         {% include 'components/stance_tradeoffs_card.html' %}
+        {% elif stance_card and stance_card.question %}
+        {% include 'components/stance_card.html' %}
         {% endif %}
 
         {% if show_email_capture %}

@@ -383,6 +383,15 @@ def weekly_by_date(date_str):
         brief_type='weekly',
     )
 
+    from app.brief.stance_card import build_weekly_stance_card_context
+
+    week_start = brief.week_start_date or (brief_date - timedelta(days=6))
+    week_end = brief.week_end_date or brief_date
+    stance_card = build_weekly_stance_card_context(
+        week_start=week_start,
+        week_end=week_end,
+    )
+
     return render_template(
         'brief/view.html',
         brief=brief,
@@ -396,6 +405,7 @@ def weekly_by_date(date_str):
         share_page_url=share_page_url,
         share_description=share_description,
         og_png_url=og_png_url,
+        stance_card=stance_card,
     )
 
 

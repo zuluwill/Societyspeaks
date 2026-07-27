@@ -110,14 +110,17 @@
                 <div>
                     <p class="text-xs text-gray-500 uppercase tracking-wide">Latest Weekly Brief</p>
                     {% if latest_weekly %}
-                    <p class="text-sm font-medium text-gray-900">{{ latest_weekly.date.strftime('%d %b %Y') }}
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium 
+                    <p class="text-sm font-medium text-gray-900">
+                        <a href="{{ url_for('brief_admin.preview', date_str=latest_weekly.date.isoformat(), type='weekly') }}"
+                           class="hover:underline">{{ latest_weekly.date.strftime('%d %b %Y') }}</a>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
                             {% if latest_weekly.status == 'published' %}bg-green-100 text-green-800
                             {% elif latest_weekly.status == 'ready' %}bg-blue-100 text-primary-800
                             {% else %}bg-yellow-100 text-yellow-800{% endif %}">
                             {{ latest_weekly.status }}
                         </span>
                     </p>
+                    <p class="text-xs text-gray-500 mt-0.5">Preview &amp; test-send the weekly email</p>
                     {% else %}
                     <p class="text-sm text-gray-400">None yet</p>
                     {% endif %}

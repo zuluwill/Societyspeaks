@@ -5,6 +5,11 @@ from flask import current_app
 
 from alembic import context
 
+# Serialises concurrent `flask db upgrade` runs. Implementation lives in
+# app/lib/db_migration_guard.py so it is importable and testable — env.py
+# executes alembic context calls at module scope and cannot be imported.
+from app.lib.db_migration_guard import acquire_migration_lock  # noqa: E402
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -106,6 +111,10 @@ def run_migrations_online():
         )
 
         with context.begin_transaction():
+            # Inside the transaction and before run_migrations(), so the
+            # alembic_version read is serialised too — the waiting process
+            # sees the upgraded revision and correctly does nothing.
+            acquire_migration_lock(connection)
             context.run_migrations()
 
 
