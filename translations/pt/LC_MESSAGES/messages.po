@@ -36426,3 +36426,17 @@ msgstr "Quase pronto — toque abaixo para registrar o seu voto."
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
 msgstr "Mais sobre esta pergunta"
+
+#: app/brief/stance_card.py:264 app/brief/stance_card.py:317
+msgid "This week's most debated question — where do you stand?"
+msgstr "A pergunta mais debatida da semana — qual é a sua posição?"
+
+#: app/brief/stance_card.py:283 app/brief/stance_card.py:320
+msgid "This week's question"
+msgstr "A pergunta da semana"
+
+#: app/templates/brief/_item_content.html:141
+#: app/templates/brief/reader.html:316 app/templates/brief/view.html:400
+#: app/templates/emails/daily_brief.html:1025
+msgid "How This Developed"
+msgstr "Como isto se desenvolveu"

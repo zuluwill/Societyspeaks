@@ -36072,3 +36072,17 @@ msgstr "लगभग हो गया — अपना वोट दर्ज �
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
 msgstr "इस प्रश्न के बारे में और"
+
+#: app/brief/stance_card.py:264 app/brief/stance_card.py:317
+msgid "This week's most debated question — where do you stand?"
+msgstr "इस सप्ताह का सबसे चर्चित प्रश्न — आप कहाँ खड़े हैं?"
+
+#: app/brief/stance_card.py:283 app/brief/stance_card.py:320
+msgid "This week's question"
+msgstr "इस सप्ताह का प्रश्न"
+
+#: app/templates/brief/_item_content.html:141
+#: app/templates/brief/reader.html:316 app/templates/brief/view.html:400
+#: app/templates/emails/daily_brief.html:1025
+msgid "How This Developed"
+msgstr "यह कैसे विकसित हुआ"

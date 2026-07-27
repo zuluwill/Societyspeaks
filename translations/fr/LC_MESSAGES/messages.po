@@ -36830,3 +36830,17 @@ msgstr "Presque terminé — appuyez ci-dessous pour enregistrer votre vote."
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
 msgstr "En savoir plus sur cette question"
+
+#: app/brief/stance_card.py:264 app/brief/stance_card.py:317
+msgid "This week's most debated question — where do you stand?"
+msgstr "La question la plus débattue de la semaine — où vous situez-vous ?"
+
+#: app/brief/stance_card.py:283 app/brief/stance_card.py:320
+msgid "This week's question"
+msgstr "La question de la semaine"
+
+#: app/templates/brief/_item_content.html:141
+#: app/templates/brief/reader.html:316 app/templates/brief/view.html:400
+#: app/templates/emails/daily_brief.html:1025
+msgid "How This Developed"
+msgstr "Comment cela a évolué"

@@ -33008,3 +33008,17 @@ msgstr "快完成了 — 点击下方记录您的投票。"
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
 msgstr "关于此问题的更多信息"
+
+#: app/brief/stance_card.py:264 app/brief/stance_card.py:317
+msgid "This week's most debated question — where do you stand?"
+msgstr "本周最受争议的问题——你的立场是什么？"
+
+#: app/brief/stance_card.py:283 app/brief/stance_card.py:320
+msgid "This week's question"
+msgstr "本周问题"
+
+#: app/templates/brief/_item_content.html:141
+#: app/templates/brief/reader.html:316 app/templates/brief/view.html:400
+#: app/templates/emails/daily_brief.html:1025
+msgid "How This Developed"
+msgstr "本周发展"

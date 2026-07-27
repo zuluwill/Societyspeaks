@@ -33751,3 +33751,17 @@ msgstr "거의 완료 — 아래를 탭해 투표를 기록하세요."
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
 msgstr "이 질문에 대해 더 알아보기"
+
+#: app/brief/stance_card.py:264 app/brief/stance_card.py:317
+msgid "This week's most debated question — where do you stand?"
+msgstr "이번 주 가장 논쟁된 질문 — 당신의 입장은?"
+
+#: app/brief/stance_card.py:283 app/brief/stance_card.py:320
+msgid "This week's question"
+msgstr "이번 주 질문"
+
+#: app/templates/brief/_item_content.html:141
+#: app/templates/brief/reader.html:316 app/templates/brief/view.html:400
+#: app/templates/emails/daily_brief.html:1025
+msgid "How This Developed"
+msgstr "이번 주 경과"

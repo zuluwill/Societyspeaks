@@ -35094,3 +35094,17 @@ msgstr "أوشكت على الانتهاء — اضغط أدناه لتسجيل 
 #: app/templates/daily/confirm_vote.html:149
 msgid "More on this question"
 msgstr "المزيد حول هذا السؤال"
+
+#: app/brief/stance_card.py:264 app/brief/stance_card.py:317
+msgid "This week's most debated question — where do you stand?"
+msgstr "السؤال الأكثر جدلاً هذا الأسبوع — ما موقفك؟"
+
+#: app/brief/stance_card.py:283 app/brief/stance_card.py:320
+msgid "This week's question"
+msgstr "سؤال هذا الأسبوع"
+
+#: app/templates/brief/_item_content.html:141
+#: app/templates/brief/reader.html:316 app/templates/brief/view.html:400
+#: app/templates/emails/daily_brief.html:1025
+msgid "How This Developed"
+msgstr "كيف تطور الأمر"
