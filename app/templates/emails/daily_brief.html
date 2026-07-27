@@ -302,7 +302,7 @@
                         padding-bottom: 8px;
                       "
                     >
-                      {{ _("Today's question") }} &middot; ~10 {{ _('sec') }} &middot; {{ _('no account needed') }}
+                      {% if stance_handoff.kicker %}{{ stance_handoff.kicker }}{% else %}{{ _("Today's question") }}{% endif %} &middot; ~10 {{ _('sec') }} &middot; {{ _('no account needed') }}
                     </td>
                   </tr>
                   {% if stance_handoff.show_first_timer_hint %}

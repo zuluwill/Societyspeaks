@@ -4,7 +4,7 @@
     <div class="rounded-2xl border border-amber-200 bg-amber-50 shadow-sm overflow-hidden dark:border-amber-800/60 dark:bg-amber-950/40">
         <div class="px-5 py-3 border-b border-amber-200/80 bg-amber-100/80 dark:border-amber-800/50 dark:bg-amber-900/30">
             <p class="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-200">
-                {{ _('Daily Question #%(num)d', num=stance_card.question.question_number) }} · {{ _('~10 seconds') }}
+                {% if stance_card.kicker %}{{ stance_card.kicker }}{% else %}{{ _('Daily Question #%(num)d', num=stance_card.question.question_number) }}{% endif %} · {{ _('~10 seconds') }}
             </p>
         </div>
 

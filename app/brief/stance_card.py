@@ -278,6 +278,9 @@ def build_weekly_stance_card_context(
         'vote_pcts': vote_pcts,
         'has_voted': _has_user_voted(question),
         'stance_anchor': 'stance',
+        # The shared card defaults to "Daily Question #N", which is wrong on a
+        # page headed "The Weekly Brief" covering a whole week.
+        'kicker': _("This week's question"),
         'results_url': url_for(
             'daily.by_date',
             date_str=question.question_date.isoformat(),
@@ -312,6 +315,9 @@ def build_weekly_stance_email_handoff(
     handoff: dict[str, Any] = {
         'question': question,
         'subline': _("This week's most debated question — where do you stand?"),
+        # Overrides the daily email's "Today's question" kicker, which misreads
+        # on an edition covering the whole week.
+        'kicker': _("This week's question"),
         'show_early_signal': show_early_signal,
         'vote_pcts': vote_pcts,
         'stance_url': f"{root}/brief/weekly/{date_str}?src=weekly_brief_stance#stance",
