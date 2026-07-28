@@ -21,6 +21,12 @@ Avoids repeating content within a configurable time window.
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
 from app.lib.claim_craft import is_votable_claim
+from app.lib.contestation import (
+    contestation_score,
+    coverage_engagement,
+    is_national_scope,
+    perspective_divergence,
+)
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
@@ -46,6 +52,18 @@ MAX_QUESTION_LENGTH = 500
 MAX_CONTEXT_LENGTH = 400
 MAX_WHY_LENGTH = 300
 BRIEF_SOURCE_TYPE = 'brief'
+
+# Source count at which a story counts as broadly covered ("people have heard
+# of this"). Chosen from the July 2026 corpus: the 100+ vote question drew 7
+# sources; every zero-vote question drew 1–3.
+BROAD_COVERAGE_SOURCE_COUNT = 8
+
+# Contestation floor for a brief-sourced stance question. Candidates below this
+# are civic pleasantries or national-policy propositions. If *every* candidate
+# is below it we still publish the best of them and log loudly, because a weak
+# question beats a missing one — but the warning is the signal that the brief
+# had no arguable story that day.
+MIN_BRIEF_CONTESTATION = 0.40
 
 # Engagement scoring weights
 WEIGHT_CIVIC = 0.25        # Civic importance
@@ -115,13 +133,15 @@ def _extract_seed_content(seed_item):
     return str(seed_item or '').strip()
 
 
-def _best_votable_seed(topic, *, limit: int = 8):
+def _best_votable_seed(topic, *, limit: int = 8, perspectives=None):
     """
-    Highest-controversy seed that is a clear Agree/Disagree claim.
+    Most contested seed that is also a clear Agree/Disagree claim.
 
     Skips open questions and throat-clearing hedges so brief-sourced daily
-    questions cannot quote unusable AI filler in the E1 stance CTA.
-    Returns ``(seed, text, controversy_score)`` or ``None``.
+    questions cannot quote unusable AI filler in the E1 stance CTA, then ranks
+    the survivors on whether anyone would actually take the other side.
+
+    Returns ``(seed, text, contestation_score)`` or ``None``.
     """
     seeds = list(topic.seed_statements or [])[:limit]
     scored = []
@@ -129,7 +149,9 @@ def _best_votable_seed(topic, *, limit: int = 8):
         text = _extract_seed_content(seed)
         if not is_votable_claim(text):
             continue
-        scored.append((seed, text, calculate_controversy_potential(text)))
+        scored.append(
+            (seed, text, calculate_contestation_potential(text, perspectives=perspectives))
+        )
     if not scored:
         return None
     scored.sort(key=lambda row: row[2], reverse=True)
@@ -275,17 +297,45 @@ def build_coverage_frame_snapshot(brief_item, brief_date):
 
 def calculate_brief_item_contestability_score(brief_item):
     """
-    Rank brief items for daily-question selection using press-posture signals.
-    Higher = more likely to produce a contested press-vs-public payoff.
+    Rank brief items by how likely the story is to produce a genuine split.
+
+    Higher = left, centre and right are all engaging with the story, and enough
+    outlets covered it that readers have heard of it.
+
+    Sign note (July 2026 correction): ``coverage_imbalance`` is documented as
+    ``0=balanced, 1=single perspective``. The original implementation rewarded
+    *high* imbalance, so it systematically picked stories only one bloc had
+    bothered to cover — i.e. stories nobody was arguing about. Every zero-vote
+    question in the 20–28 Jul corpus came from an item at imbalance 1.0 with
+    1–3 sources; the two 100+ vote questions sat at 0.57/7 sources and (its
+    nearest non-spike rival) 0.25/4 sources.
+
+    ``is_underreported`` is deliberately absent. Surfacing neglected stories is
+    a Daily Brief virtue and stays in the Brief; as a *question* signal it is
+    poison, and it is already collinear with low source counts and high
+    imbalance, so excluding it avoids double-counting the same evidence.
     """
-    score = float(brief_item.coverage_imbalance or 0) * 0.55
-    if brief_item.is_underreported:
-        score += 0.25
+    imbalance = float(brief_item.coverage_imbalance or 0)
+    balance = max(0.0, 1.0 - imbalance)
+
+    score = balance * 0.45
+
+    # All three leanings materially engaged is the shape of a live argument.
+    engaged = coverage_engagement(brief_item.coverage_distribution)
+    score += (engaged / 3.0) * 0.20
+
+    # Breadth of coverage proxies "readers have already heard about this".
+    source_count = int(brief_item.source_count or 0)
+    score += min(source_count / BROAD_COVERAGE_SOURCE_COUNT, 1.0) * 0.20
+
     if (brief_item.section or '') == 'lead':
         score += 0.12
-    if (brief_item.source_count or 0) <= 3:
-        score += 0.08
-    return score
+
+    divergence = perspective_divergence(brief_item.perspectives)
+    if divergence is not None:
+        score += divergence * 0.15
+
+    return round(score, 4)
 
 
 def _brief_topic_recently_used(topic_id, days_to_avoid=AVOID_REPEAT_DAYS):
@@ -344,14 +394,14 @@ def select_from_brief_items(brief_date, question_date):
     scored = []
     skipped_non_votable = 0
     for brief_item, topic in candidates:
-        best = _best_votable_seed(topic)
+        best = _best_votable_seed(topic, perspectives=brief_item.perspectives)
         if not best:
             skipped_non_votable += 1
             continue
-        best_seed, seed_text, _controversy = best
+        best_seed, seed_text, contestation = best
         contestability = calculate_brief_item_contestability_score(brief_item)
         clarity = calculate_clarity_score(seed_text)
-        total = contestability + (clarity * 0.15)
+        total = contestability + (contestation * 0.60) + (clarity * 0.15)
         scored.append({
             'brief_item': brief_item,
             'topic': topic,
@@ -359,6 +409,7 @@ def select_from_brief_items(brief_date, question_date):
             'seed_text': seed_text,
             'score': total,
             'contestability': contestability,
+            'contestation': contestation,
         })
 
     if skipped_non_votable:
@@ -376,6 +427,23 @@ def select_from_brief_items(brief_date, question_date):
             brief_date,
         )
         return None
+
+    # Prefer candidates that clear the contestation floor. If none do, the brief
+    # carried no arguable story today: still publish the best available (a weak
+    # question beats a missing one) but make the editorial gap visible in logs.
+    arguable = [row for row in scored if row['contestation'] >= MIN_BRIEF_CONTESTATION]
+    if arguable:
+        scored = arguable
+    else:
+        current_app.logger.warning(
+            "No brief item cleared the contestation floor (%.2f) for question_date=%s "
+            "from brief %s — best candidate scored %.2f. Publishing it anyway; the "
+            "brief had no story with an identifiable opposing side.",
+            MIN_BRIEF_CONTESTATION,
+            question_date,
+            brief_date,
+            max(row['contestation'] for row in scored),
+        )
 
     scored.sort(key=lambda row: row['score'], reverse=True)
     top = scored[:5]
@@ -398,13 +466,17 @@ def select_from_brief_items(brief_date, question_date):
 
     current_app.logger.info(
         "Selected brief-sourced daily question for %s from brief %s item %s "
-        "(imbalance=%.2f, underreported=%s, contestability=%.2f)",
+        "(imbalance=%.2f, leanings_engaged=%s, sources=%s, contestability=%.2f, "
+        "contestation=%.2f, national_scope=%s)",
         question_date,
         brief_date,
         brief_item.id,
         float(brief_item.coverage_imbalance or 0),
-        bool(brief_item.is_underreported),
+        coverage_engagement(brief_item.coverage_distribution),
+        int(brief_item.source_count or 0),
         selected['contestability'],
+        selected['contestation'],
+        is_national_scope(question_text),
     )
 
     source_discussion_id = topic.discussion_id
@@ -631,40 +703,22 @@ def calculate_clarity_score(text):
         return max(0.3, 0.7 - ((length - 150) / 200) * 0.4)
 
 
-def calculate_controversy_potential(statement_text):
+def calculate_contestation_potential(statement_text, perspectives=None):
     """
-    Estimate controversy potential from statement text.
-    Controversial (divisive) topics drive more engagement.
+    Estimate whether a claim has a real opposing camp. 0.0–1.0.
 
-    Looks for indicators of debatable claims.
+    Replaces the previous modal-verb heuristic, which counted ``should`` /
+    ``must`` / ``require`` / ``mandatory`` as evidence of controversy. Because
+    civic pleasantries are phrased prescriptively ("Emergency response plans
+    **must** be transparent and involve community input"), that scorer ranked
+    the least arguable claims highest — the text-level twin of the coverage
+    sign error in :func:`calculate_brief_item_contestability_score`.
+
+    See :mod:`app.lib.contestation` for the signals: trade-off connectives,
+    policy verbs with an identifiable loser, consensus-vocabulary density,
+    jurisdiction scope, and left/right framing divergence.
     """
-    if not statement_text:
-        return 0.5
-
-    text_lower = statement_text.lower()
-
-    # Words that indicate debatable positions (higher controversy)
-    divisive_indicators = [
-        'should', 'must', 'need to', 'have to', 'ought to',
-        'best', 'worst', 'better', 'worse',
-        'always', 'never', 'every', 'none',
-        'right', 'wrong', 'fair', 'unfair',
-        'too much', 'too little', 'enough', 'not enough',
-        'ban', 'allow', 'require', 'mandatory', 'optional'
-    ]
-
-    # Words that indicate neutral/factual statements (lower controversy)
-    neutral_indicators = [
-        'may', 'might', 'could', 'perhaps', 'possibly',
-        'some', 'sometimes', 'often', 'occasionally'
-    ]
-
-    divisive_count = sum(1 for indicator in divisive_indicators if indicator in text_lower)
-    neutral_count = sum(1 for indicator in neutral_indicators if indicator in text_lower)
-
-    # Base score of 0.5, adjusted by indicators
-    score = 0.5 + (divisive_count * 0.1) - (neutral_count * 0.05)
-    return max(0.2, min(1.0, score))
+    return contestation_score(statement_text, perspectives=perspectives)
 
 
 def get_historical_performance(topic_category=None, days_lookback=30):
@@ -735,8 +789,8 @@ def calculate_statement_engagement_score(statement, discussion=None):
     text = statement.content if hasattr(statement, 'content') else str(statement)
     scores['clarity'] = calculate_clarity_score(text)
 
-    # 4. Controversy potential
-    scores['controversy'] = calculate_controversy_potential(text)
+    # 4. Contestation potential — does anyone take the other side?
+    scores['controversy'] = calculate_contestation_potential(text)
 
     # 5. Historical performance
     topic = discussion.topic if discussion and hasattr(discussion, 'topic') else None
@@ -774,10 +828,10 @@ def calculate_topic_engagement_score(topic):
     # 3. Quality score as proxy for clarity
     scores['clarity'] = topic.quality_score or 0.5
 
-    # 4. Controversy potential from seed statements
+    # 4. Contestation potential from seed statements
     if topic.seed_statements:
         controversy_scores = [
-            calculate_controversy_potential(_extract_seed_content(s))
+            calculate_contestation_potential(_extract_seed_content(s))
             for s in topic.seed_statements[:3]
         ]
         scores['controversy'] = sum(controversy_scores) / len(controversy_scores)

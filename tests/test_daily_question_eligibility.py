@@ -208,37 +208,58 @@ class TestCalculateClarityScore:
         assert self._score('x' * 1000) > 0.0
 
 
-class TestCalculateControversyPotential:
-    """Strong position words raise the score; hedging words lower it."""
+class TestCalculateContestationPotential:
+    """
+    Claims with an identifiable losing side score high; civic pleasantries and
+    national-policy propositions score low.
+
+    Replaces TestCalculateControversyPotential, which asserted that the presence
+    of ``should`` / ``must`` raised the score. That is precisely the defect:
+    "Emergency response plans must be transparent" is maximally prescriptive and
+    drew zero votes across a 5.5K-subscriber send.
+    """
 
     def _score(self, text):
-        from app.daily.auto_selection import calculate_controversy_potential
-        return calculate_controversy_potential(text)
+        from app.daily.auto_selection import calculate_contestation_potential
+        return calculate_contestation_potential(text)
 
-    def test_none_returns_default(self):
-        assert self._score(None) == 0.5
+    def test_none_returns_zero(self):
+        assert self._score(None) == 0.0
 
-    def test_empty_returns_default(self):
-        assert self._score('') == 0.5
+    def test_empty_returns_zero(self):
+        assert self._score('') == 0.0
 
-    def test_should_raises_score(self):
-        assert self._score('Governments should ban all fossil fuels') > 0.5
+    def test_prohibition_claim_beats_bare_prescription(self):
+        """'should' alone is not evidence of controversy; banning something is."""
+        assert self._score('Governments should ban all fossil fuels') > (
+            self._score('Governments should consider the evidence carefully')
+        )
 
-    def test_must_raises_score(self):
-        assert self._score('We must act now on climate change') > 0.5
+    def test_tradeoff_framing_scores_highest(self):
+        tradeoff = self._score(
+            'Investments in diplomatic solutions should be prioritized over military interventions.'
+        )
+        plain = self._score('Investments in diplomatic solutions should be increased.')
+        assert tradeoff > plain
 
-    def test_hedging_lowers_score(self):
-        assert self._score('Some experts may sometimes possibly consider this') < 0.5
+    def test_pleasantry_scores_below_prohibition(self):
+        pleasantry = self._score(
+            'Emergency response plans must be transparent and involve community input.'
+        )
+        contested = self._score('Fossil fuel extraction should be banned outright.')
+        assert pleasantry < contested
 
-    def test_strong_claim_beats_hedged_claim(self):
-        strong = self._score('We must ban fossil fuels immediately')
-        hedged = self._score('Some countries might possibly consider reducing emissions')
-        assert strong > hedged
+    def test_national_policy_is_penalised(self):
+        national = self._score(
+            "Japan's minimum wage should be raised to ¥1,500 per hour nationally."
+        )
+        global_claim = self._score('Minimum wages should be raised rather than subsidies cut.')
+        assert national < global_claim
 
-    def test_score_clamped_between_0_2_and_1(self):
+    def test_score_stays_in_unit_interval(self):
         for text in ('', 'should must ban require mandatory', 'may might could possibly sometimes'):
             s = self._score(text)
-            assert 0.2 <= s <= 1.0, f"Score out of range: {s}"
+            assert 0.0 <= s <= 1.0, f"Score out of range: {s}"
 
 
 # ---------------------------------------------------------------------------

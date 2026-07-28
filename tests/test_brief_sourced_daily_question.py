@@ -76,10 +76,48 @@ def _seed_brief_with_items(app, *, brief_date, items_spec):
 
 
 class TestBriefItemContestability:
-    def test_underreported_and_imbalance_rank_higher(self):
-        low = BriefItem(coverage_imbalance=0.1, is_underreported=False, section='politics')
-        high = BriefItem(coverage_imbalance=0.8, is_underreported=True, section='lead')
-        assert calculate_brief_item_contestability_score(high) > calculate_brief_item_contestability_score(low)
+    def test_balanced_broad_coverage_ranks_above_single_perspective(self):
+        """
+        Sign regression (July 2026): the original scorer rewarded *high*
+        coverage_imbalance, i.e. stories only one bloc covered. Every zero-vote
+        question in the 20-28 Jul corpus came from such an item.
+        """
+        contested = BriefItem(
+            coverage_imbalance=0.25,
+            coverage_distribution={'left': 0.25, 'center': 0.25, 'right': 0.5},
+            source_count=7,
+            is_underreported=False,
+            section='lead',
+        )
+        ignored = BriefItem(
+            coverage_imbalance=1.0,
+            coverage_distribution={'left': 0.0, 'center': 1.0, 'right': 0.0},
+            source_count=1,
+            is_underreported=True,
+            section='politics',
+        )
+        assert calculate_brief_item_contestability_score(contested) > (
+            calculate_brief_item_contestability_score(ignored)
+        )
+
+    def test_underreported_flag_carries_no_selection_bonus(self):
+        """Under-reported is a Brief virtue, not a question signal."""
+        base = dict(
+            coverage_imbalance=0.4,
+            coverage_distribution={'left': 0.3, 'center': 0.4, 'right': 0.3},
+            source_count=6,
+            section='politics',
+        )
+        flagged = BriefItem(is_underreported=True, **base)
+        plain = BriefItem(is_underreported=False, **base)
+        assert calculate_brief_item_contestability_score(flagged) == (
+            calculate_brief_item_contestability_score(plain)
+        )
+
+    def test_missing_coverage_metadata_does_not_raise(self):
+        """Older items carry no distribution/perspectives; degrade, don't crash."""
+        bare = BriefItem(section='politics')
+        assert 0.0 <= calculate_brief_item_contestability_score(bare) <= 2.0
 
     def test_coverage_frame_snapshot_includes_dominant_frame(self, app):
         item = BriefItem(
@@ -98,7 +136,11 @@ class TestBriefItemContestability:
 
 
 class TestBriefSourcedSelection:
-    def test_select_from_brief_items_prefers_high_imbalance(self, app):
+    def test_select_from_brief_items_prefers_contested_over_ignored(self, app):
+        """
+        The story left, centre and right all covered — carrying a trade-off
+        claim — must beat the single-outlet story carrying a civic pleasantry.
+        """
         brief_date = date(2026, 7, 14)
         question_date = date(2026, 7, 15)
         _seed_brief_with_items(
@@ -106,28 +148,39 @@ class TestBriefSourcedSelection:
             brief_date=brief_date,
             items_spec=[
                 {
-                    'title': 'Low imbalance story',
-                    'coverage_imbalance': 0.15,
-                    'seed_statements': [{'content': 'Low imbalance claim should rarely win.', 'position': 'neutral'}],
+                    'title': 'Single perspective story',
+                    'coverage_imbalance': 0.95,
+                    'coverage_distribution': {'left': 0.0, 'center': 1.0, 'right': 0.0},
+                    'source_count': 1,
+                    'is_underreported': True,
+                    'seed_statements': [{
+                        'content': 'Emergency response plans must be transparent and involve community input.',
+                        'position': 'neutral',
+                    }],
                 },
                 {
-                    'title': 'High imbalance story',
-                    'coverage_imbalance': 0.85,
-                    'is_underreported': True,
+                    'title': 'Broadly contested story',
+                    'coverage_imbalance': 0.2,
+                    'coverage_distribution': {'left': 0.3, 'center': 0.4, 'right': 0.3},
+                    'source_count': 9,
                     'section': 'lead',
-                    'seed_statements': [{'content': 'Governments must act on this underreported crisis now.', 'position': 'pro'}],
+                    'seed_statements': [{
+                        'content': 'Investments in diplomatic solutions should be prioritized over military interventions.',
+                        'position': 'pro',
+                    }],
                 },
             ],
         )
 
         with app.app_context():
-            # Deterministic: top score should be high imbalance; run several times
             picks = {
                 select_from_brief_items(brief_date, question_date)['source_trending_topic_id']
-                for _ in range(8)
+                for _ in range(12)
             }
-            high_topic = TrendingTopic.query.filter_by(title='High imbalance story').first()
-            assert high_topic.id in picks
+            contested = TrendingTopic.query.filter_by(title='Broadly contested story').first()
+            ignored = TrendingTopic.query.filter_by(title='Single perspective story').first()
+            assert contested.id in picks
+            assert ignored.id not in picks
 
     def test_select_from_brief_items_skips_non_votable_hedge_seeds(self, app):
         """E1 regression: hedge/question seeds must not become the daily stance."""

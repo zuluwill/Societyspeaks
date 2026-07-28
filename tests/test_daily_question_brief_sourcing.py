@@ -192,28 +192,33 @@ def test_selection_captures_coverage_frame(db):
 # 4. Ranking — higher imbalance is preferred (weighted, not deterministic)
 # ---------------------------------------------------------------------------
 
-def test_higher_imbalance_topic_wins_majority(db):
+def test_balanced_coverage_topic_wins_majority(db):
+    """
+    Sign regression: this asserted the opposite until July 2026. Rewarding high
+    coverage_imbalance means preferring stories only one political bloc covered
+    — which is what a story nobody argues about looks like in the data.
+    """
     import random
     from app.daily.auto_selection import select_next_question_source
 
     _seed_eligible_discussion_pool(db)
     today = date.today()
-    high = _make_published_topic(db, 'High imbalance story')
-    low = _make_published_topic(db, 'Low imbalance story')
-    _make_brief_item_for_topic(db, high, coverage_imbalance=0.95, position=1, brief_date=today)
-    _make_brief_item_for_topic(db, low, coverage_imbalance=0.15, position=2, brief_date=today)
+    balanced = _make_published_topic(db, 'Broadly covered story')
+    single = _make_published_topic(db, 'Single perspective story')
+    _make_brief_item_for_topic(db, balanced, coverage_imbalance=0.15, position=1, brief_date=today)
+    _make_brief_item_for_topic(db, single, coverage_imbalance=0.95, position=2, brief_date=today)
     db.session.commit()
 
     random.seed(1234)
     runs = 25
-    high_wins = 0
+    balanced_wins = 0
     for _ in range(runs):
         info = select_next_question_source(question_date=today + timedelta(days=1))
-        if info and info.get('source_trending_topic_id') == high.id:
-            high_wins += 1
+        if info and info.get('source_trending_topic_id') == balanced.id:
+            balanced_wins += 1
 
-    assert high_wins > runs * 0.6, (
-        f"high-imbalance topic won only {high_wins}/{runs}; expected a clear majority"
+    assert balanced_wins > runs * 0.6, (
+        f"balanced-coverage topic won only {balanced_wins}/{runs}; expected a clear majority"
     )
 
 
