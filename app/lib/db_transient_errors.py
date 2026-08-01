@@ -27,6 +27,11 @@ HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC = 10
 TRANSIENT_DB_ERROR_PHRASES: tuple[str, ...] = (
     "ssl connection has been closed",
     "ssl syscall",
+    # Neon/PgBouncer + psycopg2: TLS record corruption / abrupt SSL teardown.
+    # Seen in production 2026-08-01 as a ~3s burst of 500s when these were
+    # misclassified as non-transient OperationalErrors.
+    "bad record mac",
+    "decryption failed",
     "eof detected",
     "connection reset",
     "connection refused",
@@ -34,6 +39,9 @@ TRANSIENT_DB_ERROR_PHRASES: tuple[str, ...] = (
     "server closed the connection",
     "connection was closed",
     "connection closed by server",
+    # psycopg2.InterfaceError after the peer already tore down the socket
+    # (often the follow-on to an SSL MAC / EOF failure on a pooled connection).
+    "connection already closed",
     "lost connection",
     "could not connect",
     "could not receive data from server",
@@ -67,3 +75,14 @@ def is_readonly_sql_transaction_error(exc: BaseException) -> bool:
         "read-only transaction" in msg
         or "readonlysqltransaction" in msg
     )
+
+
+def should_invalidate_db_connection(exc: BaseException) -> bool:
+    """True when the pooled socket must not be reused after *exc*.
+
+    All classified transient connectivity failures leave the DBAPI connection
+    in an unknown/unusable state (SSL tear-down, peer close, read-only
+    contamination). Invalidate so the next checkout cannot reuse it; do not
+    call ``engine.dispose()``.
+    """
+    return is_transient_db_connectivity_error(exc)

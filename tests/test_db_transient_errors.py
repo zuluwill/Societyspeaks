@@ -39,11 +39,28 @@ def _op_with_message(msg: str) -> OperationalError:
         ),
         # Production Sentry 2026-07-16: Redis Cloud blip on briefing retry queue
         "Connection closed by server.",
+        # Production Sentry 2026-08-01: Neon/PgBouncer SSL MAC burst (~3s)
+        "(psycopg2.OperationalError) SSL error: decryption failed or bad record mac",
+        "SSL error: decryption failed or bad record mac",
+        "(psycopg2.InterfaceError) connection already closed",
+        "connection already closed",
     ),
 )
 def test_transient_classification_positive(message):
     assert is_transient_db_connectivity_error(_op_with_message(message))
     assert is_transient_db_connectivity_error(Exception(message))
+
+
+def test_should_invalidate_on_ssl_mac_and_closed_socket():
+    from app.lib.db_transient_errors import should_invalidate_db_connection
+
+    assert should_invalidate_db_connection(
+        _op_with_message("SSL error: decryption failed or bad record mac")
+    )
+    assert should_invalidate_db_connection(Exception("connection already closed"))
+    assert not should_invalidate_db_connection(
+        _op_with_message('password authentication failed for user "x"')
+    )
 
 
 def test_readonly_sql_transaction_helper():
@@ -171,6 +188,30 @@ def test_app_level_transient_db_error_returns_json_for_api_path(app, client):
     assert resp.is_json
     payload = resp.get_json()
     assert payload["error"] == "service_unavailable"
+    assert resp.headers.get("Retry-After") == str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+
+
+def test_app_level_ssl_mac_error_returns_503(app, client):
+    """Production 2026-08-01: bad record mac must be 503, not a hard 500."""
+
+    @app.route("/__db_ssl_mac_test__")
+    def _boom():
+        raise _op_with_message("SSL error: decryption failed or bad record mac")
+
+    resp = client.get("/__db_ssl_mac_test__")
+    assert resp.status_code == 503
+    assert resp.headers.get("Retry-After") == str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+
+
+def test_app_level_interface_error_connection_closed_returns_503(app, client):
+    from sqlalchemy.exc import InterfaceError
+
+    @app.route("/__db_iface_closed_test__")
+    def _boom():
+        raise InterfaceError("SELECT 1", {}, Exception("connection already closed"))
+
+    resp = client.get("/__db_iface_closed_test__")
+    assert resp.status_code == 503
     assert resp.headers.get("Retry-After") == str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
 
 

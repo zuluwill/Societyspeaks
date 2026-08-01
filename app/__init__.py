@@ -1113,12 +1113,22 @@ def create_app():
             OperationalError as _SAOperationalError,
             DisconnectionError as _SADisconnectionError,
             InternalError as _SAInternalError,
+            InterfaceError as _SAInterfaceError,
         )
         # Let HTTP exceptions (like 404, 403, etc.) be handled by their specific handlers
         if isinstance(e, HTTPException):
             return e
         # InternalError covers psycopg2.ReadOnlySqlTransaction (not an OperationalError).
-        if isinstance(e, (_SAOperationalError, _SADisconnectionError, _SAInternalError)):
+        # InterfaceError covers "connection already closed" after an SSL tear-down.
+        if isinstance(
+            e,
+            (
+                _SAOperationalError,
+                _SADisconnectionError,
+                _SAInternalError,
+                _SAInterfaceError,
+            ),
+        ):
             ra = str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
             if is_transient_db_connectivity_error(e):
                 app.logger.error("Database connectivity error (503): %s", e, exc_info=True)

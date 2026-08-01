@@ -7,7 +7,7 @@ All API errors return: {"error": "code", "message": "human readable message"}
 from flask import jsonify, current_app
 from flask_babel import gettext as _
 from werkzeug.exceptions import HTTPException
-from sqlalchemy.exc import DisconnectionError, OperationalError
+from sqlalchemy.exc import DisconnectionError, InterfaceError, OperationalError
 
 from app.lib.db_transient_errors import (
     HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC,
@@ -184,6 +184,7 @@ def register_error_handlers(blueprint):
 
     blueprint.register_error_handler(OperationalError, _database_connectivity_api_error)
     blueprint.register_error_handler(DisconnectionError, _database_connectivity_api_error)
+    blueprint.register_error_handler(InterfaceError, _database_connectivity_api_error)
 
     @blueprint.errorhandler(HTTPException)
     def handle_http_exception(e):

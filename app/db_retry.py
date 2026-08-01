@@ -35,8 +35,8 @@ from sqlalchemy.exc import OperationalError, DBAPIError, DisconnectionError
 from werkzeug.exceptions import HTTPException
 
 from app.lib.db_transient_errors import (
-    is_readonly_sql_transaction_error,
     is_transient_db_connectivity_error,
+    should_invalidate_db_connection,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,9 +47,10 @@ T = TypeVar('T')
 def discard_db_session(*, invalidate_connection: bool = False) -> None:
     """Rollback and remove the current session; optionally invalidate the socket.
 
-    When ``invalidate_connection`` is True (e.g. ReadOnlySqlTransaction from a
-    contaminated Neon/PgBouncer backend), the underlying DBAPI connection is
-    dropped from the pool so the next checkout cannot reuse the same socket.
+    When ``invalidate_connection`` is True (SSL tear-down, peer close, or
+    ReadOnlySqlTransaction from a contaminated Neon/PgBouncer backend), the
+    underlying DBAPI connection is dropped from the pool so the next checkout
+    cannot reuse the same socket.
     """
     from app import db
 
@@ -127,7 +128,7 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
                             func.__name__, attempt, attempts, e,
                         )
                         discard_db_session(
-                            invalidate_connection=is_readonly_sql_transaction_error(e),
+                            invalidate_connection=should_invalidate_db_connection(e),
                         )
                         raise
 
@@ -135,10 +136,10 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
                         "Transient DB error in %s (attempt %d/%d): %s — retrying in %.1fs",
                         func.__name__, attempt, attempts, e, base_delay * attempt,
                     )
-                    # Always invalidate on read-only contamination so the next
-                    # attempt does not reuse the same poisoned pooler backend.
+                    # Drop poisoned sockets (SSL tear-down, peer close, read-only
+                    # pooler contamination) so the retry cannot reuse them.
                     discard_db_session(
-                        invalidate_connection=is_readonly_sql_transaction_error(e),
+                        invalidate_connection=should_invalidate_db_connection(e),
                     )
                     # NOTE: db.engine.dispose() is intentionally NOT called here.
                     # Disposing the engine drops every connection in the shared pool

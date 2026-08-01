@@ -26,11 +26,16 @@ Canonical transient phrases live in :mod:`app.lib.db_transient_errors`.
 import time
 import logging
 import functools
-from sqlalchemy.exc import OperationalError, DisconnectionError, InternalError
+from sqlalchemy.exc import (
+    DisconnectionError,
+    InterfaceError,
+    InternalError,
+    OperationalError,
+)
 
 from app.lib.db_transient_errors import (
-    is_readonly_sql_transaction_error,
     is_transient_db_connectivity_error,
+    should_invalidate_db_connection,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,7 +74,12 @@ def retry_on_db_disconnect(max_attempts: int = 2, backoff_s: float = 0.2):
             for attempt in range(1, max_attempts + 1):
                 try:
                     return fn(*args, **kwargs)
-                except (OperationalError, DisconnectionError, InternalError) as exc:
+                except (
+                    OperationalError,
+                    DisconnectionError,
+                    InternalError,
+                    InterfaceError,
+                ) as exc:
                     if not _is_transient_db_error(exc):
                         raise
                     last_exc = exc
@@ -78,7 +88,7 @@ def retry_on_db_disconnect(max_attempts: int = 2, backoff_s: float = 0.2):
                         attempt, max_attempts, fn.__qualname__, exc,
                     )
                     discard_db_session(
-                        invalidate_connection=is_readonly_sql_transaction_error(exc),
+                        invalidate_connection=should_invalidate_db_connection(exc),
                     )
                     if attempt < max_attempts:
                         time.sleep(backoff_s * attempt)
