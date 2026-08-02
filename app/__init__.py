@@ -284,11 +284,9 @@ def create_app():
               gunicorn handles worker lifecycle; no user impact.
             - Transient LLM provider 5xx/429/timeout: Anthropic/OpenAI blips;
               callers degrade gracefully; do not page the team.
-            - Transient database outages are logged at ERROR in the Flask
-              handler (with stack traces for non-transient OperationalError).
-              If Sentry logging integration duplicates noise for the same
-              incident, extend the filters below — do not document filters that
-              are not implemented.
+            - Transient database connectivity (503 path): expected Neon/PgBouncer
+              SSL blips; users get Retry-After. Logged at WARNING in the Flask
+              handler — drop from Sentry so they do not page.
             """
             from app.lib.llm_transient_errors import sentry_should_drop_transient_llm
 
@@ -330,7 +328,27 @@ def create_app():
                 # does not implement; harmless at request time / worker recycle.
                 if drop_if(msg, "all_tasks_done"):
                     return None
+                # Handled Neon/PgBouncer blips — HTTP 503 + Retry-After for users.
+                if drop_if(msg, "Database connectivity error (503)"):
+                    return None
+                if drop_if(
+                    msg,
+                    "Transient DB disconnect on attempt",
+                    "PendingRollbackError on attempt",
+                    "PendingRollbackError in ",
+                    "Transient DB error in ",
+                ):
+                    return None
             exc_info = hint.get("exc_info")
+            _TRANSIENT_DB_SENTRY_PHRASES = (
+                "bad record mac",
+                "decryption failed",
+                "connection already closed",
+                "ssl syscall",
+                "ssl connection has been closed",
+                "can't reconnect until invalid transaction",
+            )
+
             if exc_info:
                 exc_msg = str(exc_info[1] or "")
                 exc_type = exc_info[0]
@@ -349,6 +367,8 @@ def create_app():
                 # worker lifecycle — but generate high-volume Sentry noise.
                 if exc_type is OSError and getattr(exc_info[1], "errno", None) == 5:
                     return None
+                if drop_if(exc_msg.lower(), *_TRANSIENT_DB_SENTRY_PHRASES):
+                    return None
             # Event may have exception in payload (e.g. from logging integration)
             for exc in (event.get("exception") or {}).get("values") or []:
                 val = exc.get("value") or ""
@@ -364,6 +384,8 @@ def create_app():
                 # Same OSError errno 5 check for events that arrive via the
                 # Sentry logging integration rather than exc_info.
                 if typ == "OSError" and "[Errno 5]" in val:
+                    return None
+                if drop_if(val.lower(), *_TRANSIENT_DB_SENTRY_PHRASES):
                     return None
             return event
 
@@ -1131,7 +1153,10 @@ def create_app():
         ):
             ra = str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
             if is_transient_db_connectivity_error(e):
-                app.logger.error("Database connectivity error (503): %s", e, exc_info=True)
+                # Warning without exc_info: expected Neon/PgBouncer blip; full
+                # stacks flood Sentry via the logging integration and hide real
+                # regressions. Render logs still get the message + request id.
+                app.logger.warning("Database connectivity error (503): %s", e)
                 if request_wants_json_errors(request):
                     resp = jsonify({
                         'error': 'service_unavailable',

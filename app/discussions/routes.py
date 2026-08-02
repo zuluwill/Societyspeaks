@@ -143,6 +143,7 @@ def _safe_next_url(fallback_endpoint, **fallback_values):
 
 
 @discussions_bp.route('/news')
+@retry_on_db_disconnect()
 def news_feed():
     """Display discussions generated from trending news topics."""
     from app.models import NewsSource

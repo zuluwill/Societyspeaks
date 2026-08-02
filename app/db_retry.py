@@ -31,7 +31,12 @@ import functools
 from typing import TypeVar, Callable
 
 from flask import current_app
-from sqlalchemy.exc import OperationalError, DBAPIError, DisconnectionError
+from sqlalchemy.exc import (
+    DBAPIError,
+    DisconnectionError,
+    OperationalError,
+    PendingRollbackError,
+)
 from werkzeug.exceptions import HTTPException
 
 from app.lib.db_transient_errors import (
@@ -51,19 +56,41 @@ def discard_db_session(*, invalidate_connection: bool = False) -> None:
     ReadOnlySqlTransaction from a contaminated Neon/PgBouncer backend), the
     underlying DBAPI connection is dropped from the pool so the next checkout
     cannot reuse the same socket.
+
+    Order matters: always ``rollback()`` before ``connection().invalidate()``.
+    Calling ``connection()`` while the session is in ``PendingRollbackError``
+    fails silently, leaves the dead socket in the pool, and the next attempt
+    raises ``Can't reconnect until invalid transaction is rolled back``
+    (production 2026-08-02, view_discussion retries → HTTP 500).
     """
     from app import db
 
-    if invalidate_connection:
-        try:
-            conn = db.session.connection()
-            conn.invalidate()
-        except Exception:
-            pass
     try:
         db.session.rollback()
     except Exception:
         pass
+
+    if invalidate_connection:
+        # Never invalidate SQLite: StaticPool / :memory: shares one connection;
+        # invalidating it drops the schema mid-test (and would wipe a file DB
+        # unnecessarily). Neon/Postgres is the production target for dispose.
+        dialect_name = ""
+        try:
+            bind = db.session.get_bind()
+            dialect_name = getattr(getattr(bind, "dialect", None), "name", "") or ""
+        except Exception:
+            dialect_name = ""
+        if dialect_name != "sqlite":
+            try:
+                conn = db.session.connection()
+                conn.invalidate()
+            except Exception:
+                pass
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
     try:
         db.session.remove()
     except Exception:
@@ -118,6 +145,22 @@ def with_db_retry(max_attempts: int = None, delay: float = None):
             for attempt in range(1, attempts + 1):
                 try:
                     return func(*args, **kwargs)
+
+                except PendingRollbackError as e:
+                    last_exception = e
+                    if attempt == attempts:
+                        logger.error(
+                            "PendingRollbackError in %s (attempt %d/%d): %s",
+                            func.__name__, attempt, attempts, e,
+                        )
+                        discard_db_session(invalidate_connection=True)
+                        raise
+                    logger.warning(
+                        "PendingRollbackError in %s (attempt %d/%d): %s — retrying in %.1fs",
+                        func.__name__, attempt, attempts, e, base_delay * attempt,
+                    )
+                    discard_db_session(invalidate_connection=True)
+                    time.sleep(base_delay * attempt)
 
                 except (OperationalError, DBAPIError, DisconnectionError) as e:
                     last_exception = e

@@ -134,15 +134,77 @@ def test_force_read_write_clears_session_flag():
     assert executed == ["SET default_transaction_read_only TO off"]
 
 
-def test_force_read_write_swallows_cursor_errors():
+def test_force_read_write_swallows_soft_cursor_errors():
     from app.lib.db_engine_guards import _force_read_write
 
     class _BoomConn:
         def cursor(self):
             raise RuntimeError("backend gone")
 
-    # Must never raise — checkout hygiene is best-effort.
+    # Soft failures must not raise — checkout hygiene is best-effort.
     _force_read_write(_BoomConn(), None)
+
+
+def test_force_read_write_discards_dead_connection():
+    from sqlalchemy.exc import DisconnectionError
+
+    from app.lib.db_engine_guards import _force_read_write
+
+    class _ClosedConn:
+        def cursor(self):
+            raise Exception("connection already closed")
+
+    class _Record:
+        def __init__(self):
+            self.invalidated = None
+
+        def invalidate(self, exc=None):
+            self.invalidated = exc
+
+    record = _Record()
+    with pytest.raises(DisconnectionError):
+        _force_read_write(_ClosedConn(), record)
+    assert record.invalidated is not None
+
+
+def test_discard_db_session_rollbacks_before_invalidate(app):
+    """Regression: invalidate-before-rollback left PendingRollbackError on retry."""
+    from app.db_retry import discard_db_session
+    from app import db
+
+    with app.app_context():
+        # Drive the session into a failed transaction state if possible.
+        try:
+            db.session.execute(db.text("SELECT 1"))
+        except Exception:
+            pass
+        discard_db_session(invalidate_connection=True)
+        # Session must be usable again without PendingRollbackError.
+        result = db.session.execute(db.text("SELECT 1")).scalar()
+        assert result == 1
+
+
+def test_retry_on_db_disconnect_recovers_from_pending_rollback(app):
+    from sqlalchemy.exc import PendingRollbackError
+
+    from app.lib.db_utils import retry_on_db_disconnect
+
+    calls = {"n": 0}
+
+    with app.app_context():
+        @retry_on_db_disconnect(max_attempts=2, backoff_s=0)
+        def flaky():
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise PendingRollbackError(
+                    "Can't reconnect until invalid transaction is rolled back.",
+                    {},
+                    None,
+                )
+            return "ok"
+
+        assert flaky() == "ok"
+    assert calls["n"] == 2
 
 
 @pytest.mark.parametrize(

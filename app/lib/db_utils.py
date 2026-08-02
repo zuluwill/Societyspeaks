@@ -31,6 +31,7 @@ from sqlalchemy.exc import (
     InterfaceError,
     InternalError,
     OperationalError,
+    PendingRollbackError,
 )
 
 from app.lib.db_transient_errors import (
@@ -74,6 +75,17 @@ def retry_on_db_disconnect(max_attempts: int = 2, backoff_s: float = 0.2):
             for attempt in range(1, max_attempts + 1):
                 try:
                     return fn(*args, **kwargs)
+                except PendingRollbackError as exc:
+                    # Incomplete cleanup after a prior disconnect leaves the
+                    # session unusable; discard hard and retry once more.
+                    last_exc = exc
+                    logger.warning(
+                        "PendingRollbackError on attempt %d/%d for %s: %s — resetting session",
+                        attempt, max_attempts, fn.__qualname__, exc,
+                    )
+                    discard_db_session(invalidate_connection=True)
+                    if attempt < max_attempts:
+                        time.sleep(backoff_s * attempt)
                 except (
                     OperationalError,
                     DisconnectionError,

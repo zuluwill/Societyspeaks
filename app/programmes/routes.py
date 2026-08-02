@@ -37,6 +37,7 @@ from app.programmes.export_jobs import (
     read_export_artifact_bytes,
 )
 from app.programmes.forms import InviteProgrammeAccessForm, InviteStewardForm, ProgrammeForm
+from app.lib.db_utils import retry_on_db_disconnect
 from app.programmes.permissions import can_edit_programme, can_steward_programme, can_view_programme
 from app.programmes.utils import (
     get_programme_cohort_slugs,
@@ -426,6 +427,7 @@ def create_programme():
 
 
 @programmes_bp.route('/<slug>')
+@retry_on_db_disconnect()
 def view_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_view_programme(programme, current_user):

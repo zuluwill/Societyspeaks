@@ -37,27 +37,49 @@ from __future__ import annotations
 import logging
 
 from sqlalchemy import event
+from sqlalchemy.exc import DisconnectionError
+
+from app.lib.db_transient_errors import is_transient_db_connectivity_error
 
 logger = logging.getLogger(__name__)
 
 _GUARD_FLAG = "_societyspeaks_rw_checkout_guard"
 
 
-def _force_read_write(dbapi_conn, _connection_record, _connection_proxy=None):
-    """Clear session-level READ ONLY left on a pooled Postgres backend."""
+def _force_read_write(dbapi_conn, connection_record, _connection_proxy=None):
+    """Clear session-level READ ONLY left on a pooled Postgres backend.
+
+    If the socket is already dead (SSL tear-down / closed), invalidate it and
+    raise ``DisconnectionError`` so the pool retries checkout with a fresh
+    connection instead of handing the corpse to the request.
+    """
     try:
         cursor = dbapi_conn.cursor()
         try:
             cursor.execute("SET default_transaction_read_only TO off")
         finally:
             cursor.close()
-    except Exception:
-        # Never block checkout on a best-effort hygiene statement; the
-        # transient-error retry path still recovers if a write fails.
-        logger.warning(
-            "Failed to clear default_transaction_read_only on checkout",
-            exc_info=True,
+    except Exception as exc:
+        # Never block checkout on a best-effort hygiene statement for soft
+        # failures; but dead sockets must leave the pool immediately.
+        dead = is_transient_db_connectivity_error(exc) or (
+            "already closed" in str(exc).lower()
         )
+        logger.warning(
+            "Failed to clear default_transaction_read_only on checkout%s",
+            " — discarding dead connection" if dead else "",
+            exc_info=not dead,
+        )
+        if dead:
+            try:
+                connection_record.invalidate(exc)
+            except Exception:
+                pass
+            raise DisconnectionError(
+                "Checkout hygiene failed on a dead connection",
+                {},
+                exc,
+            ) from exc
 
 
 def register_engine_read_write_guard(engine) -> bool:

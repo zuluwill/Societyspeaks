@@ -1323,12 +1323,17 @@ def brief_track_click(brief_id):
         logger.warning(f"Invalid click-tracking signature for brief {brief_id}: {target_url[:100]}")
         return redirect('/')
 
-    verified_subscriber = None
+    # Capture scalar IDs inside the try so post-commit identity linking cannot
+    # lazy-load expired ORM attrs on a dead connection and turn a successful
+    # click redirect into HTTP 503 (Sentry PYTHON-FLASK-HX, 2026-08-01).
+    verified_subscriber_id = None
+    verified_user_id = None
     try:
         subscriber_id = int(subscriber_id_str)
         subscriber = db.session.get(DailyBriefSubscriber, subscriber_id)
         if subscriber:
-            verified_subscriber = subscriber
+            verified_subscriber_id = subscriber.id
+            verified_user_id = subscriber.user_id
             # Verify the brief still exists — old emails may be clicked long after
             # the brief row is deleted, which would violate the FK constraint.
             brief_exists = db.session.get(DailyBrief, brief_id) is not None
@@ -1349,22 +1354,33 @@ def brief_track_click(brief_id):
         logger.warning(f"Error recording brief click for brief {brief_id}: {e}")
 
     response = redirect(target_url)
-    if verified_subscriber:
+    if verified_subscriber_id is not None:
         # Durable subscriber↔visitor bridge: the signed cookie lets later
         # anonymous participation (votes, games) join back to this subscriber.
-        from app.lib.posthog_utils import posthog_js_distinct_id
-        from app.lib.subscriber_identity import (
-            record_identity_link,
-            set_subscriber_ref_cookie,
-        )
+        try:
+            from app.lib.posthog_utils import posthog_js_distinct_id
+            from app.lib.subscriber_identity import (
+                record_identity_link,
+                set_subscriber_ref_cookie,
+            )
 
-        set_subscriber_ref_cookie(response, brief_subscriber_id=verified_subscriber.id)
-        record_identity_link(
-            source='email_click',
-            brief_subscriber_id=verified_subscriber.id,
-            user_id=verified_subscriber.user_id,
-            posthog_distinct_id=posthog_js_distinct_id(),
-        )
+            set_subscriber_ref_cookie(response, brief_subscriber_id=verified_subscriber_id)
+            record_identity_link(
+                source='email_click',
+                brief_subscriber_id=verified_subscriber_id,
+                user_id=verified_user_id,
+                posthog_distinct_id=posthog_js_distinct_id(),
+            )
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            logger.warning(
+                "Error linking identity after brief click for brief %s: %s",
+                brief_id,
+                e,
+            )
     return response
 
 
