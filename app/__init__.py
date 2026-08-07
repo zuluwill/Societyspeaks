@@ -339,7 +339,12 @@ def create_app():
                 # PostHog consumer/flush uses threading.Queue private APIs
                 # (mutex / all_tasks_done) that gevent's Queue lacks. Compat
                 # shim in posthog_utils; suppress residual noise.
-                if drop_if(msg, "all_tasks_done", "has no attribute 'mutex'"):
+                if drop_if(
+                    msg,
+                    "all_tasks_done",
+                    "has no attribute 'mutex'",
+                    "has no attribute 'not_empty'",
+                ):
                     return None
                 # Handled Neon/PgBouncer blips — HTTP 503 + Retry-After for users.
                 if drop_if(msg, "Database connectivity error (503)"):
@@ -363,7 +368,12 @@ def create_app():
                     return None
                 if drop_if(exc_msg, "multiple head revisions"):
                     return None
-                if drop_if(exc_msg, "all_tasks_done", "has no attribute 'mutex'"):
+                if drop_if(
+                    exc_msg,
+                    "all_tasks_done",
+                    "has no attribute 'mutex'",
+                    "has no attribute 'not_empty'",
+                ):
                     return None
                 if "PendingRollbackError" in (getattr(exc_type, "__name__", "") or ""):
                     return None
@@ -384,7 +394,12 @@ def create_app():
                     return None
                 if drop_if(val, "multiple head revisions"):
                     return None
-                if drop_if(val, "all_tasks_done", "has no attribute 'mutex'"):
+                if drop_if(
+                    val,
+                    "all_tasks_done",
+                    "has no attribute 'mutex'",
+                    "has no attribute 'not_empty'",
+                ):
                     return None
                 if "PendingRollbackError" in typ:
                     return None

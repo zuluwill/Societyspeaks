@@ -39,6 +39,15 @@ _gevent_compat_applied = False
 _log = logging.getLogger(__name__)
 
 
+def _queue_supports_posthog_drain(queue_cls: Any) -> bool:
+    """True when *queue_cls* exposes threading.Queue APIs PostHog drain needs."""
+    try:
+        sample = queue_cls()
+        return hasattr(sample, "mutex") and hasattr(sample, "not_empty")
+    except Exception:
+        return False
+
+
 def apply_posthog_gevent_compat() -> bool:
     """Make PostHog's async consumer safe under ``gevent.monkey.patch_all()``.
 
@@ -51,12 +60,11 @@ def apply_posthog_gevent_compat() -> bool:
     so the uploader runs on a real OS thread (correct under gevent — do not use
     greenlets for blocking HTTP upload).
 
-    Idempotent and a no-op when gevent is absent or has not patched ``queue``.
-    Returns True when rebinding ran.
+    Re-checks even after a prior success so a stale flag cannot leave PostHog
+    on a gevent Queue. No-op when gevent is absent or has not patched ``queue``.
+    Returns True when PostHog's Queue supports drain APIs afterwards.
     """
     global _gevent_compat_applied
-    if _gevent_compat_applied:
-        return True
     try:
         from gevent import monkey
     except ImportError:
@@ -74,16 +82,34 @@ def apply_posthog_gevent_compat() -> bool:
         import posthog.client as ph_client
         import posthog.consumer as ph_consumer
 
+        if _queue_supports_posthog_drain(getattr(ph_client, "Queue", None)):
+            _gevent_compat_applied = True
+            return True
+
         ph_client.Queue = real_queue
         # Consumer was defined as ``class Consumer(Thread)`` after monkey-patch,
         # so its base is the greenlet Thread. Swap to the real OS Thread.
-        if ph_consumer.Consumer.__bases__ != (real_thread,):
-            ph_consumer.Consumer.__bases__ = (real_thread,)
-        _gevent_compat_applied = True
-        _log.info(
-            "PostHog gevent compat applied (stdlib Queue + OS Thread for consumers)"
-        )
-        return True
+        # Queue rebind is the critical part; base swap is best-effort.
+        try:
+            if ph_consumer.Consumer.__bases__ != (real_thread,):
+                ph_consumer.Consumer.__bases__ = (real_thread,)
+        except Exception as bases_exc:
+            _log.warning(
+                "PostHog gevent compat: Queue rebound but Thread base swap failed: %s",
+                bases_exc,
+            )
+
+        ok = _queue_supports_posthog_drain(ph_client.Queue)
+        _gevent_compat_applied = ok
+        if ok:
+            _log.info(
+                "PostHog gevent compat applied (stdlib Queue + OS Thread for consumers)"
+            )
+        else:
+            _log.error(
+                "PostHog gevent compat: Queue still lacks mutex/not_empty after rebind"
+            )
+        return ok
     except Exception as exc:
         _log.warning("PostHog gevent compat failed: %s", exc)
         return False
@@ -100,17 +126,31 @@ def configure_posthog_credentials(
     Does not force a client to start; the first capture (or an explicit
     :func:`reinitialize_posthog_after_fork`) creates the default client.
     Applies gevent Queue/Thread rebinding first when needed so ``setup()``
-    never builds a consumer on a gevent Queue.
+    never builds a consumer on a gevent Queue. If rebinding fails under
+    gevent, fall back to ``sync_mode=True`` (no background consumer).
     """
     import posthog as ph
 
-    apply_posthog_gevent_compat()
+    compat_ok = apply_posthog_gevent_compat()
 
     # api_key drives setup(); project_api_key is what our call-site guards check.
     ph.api_key = api_key
     ph.project_api_key = api_key
     ph.host = host
     ph.debug = debug
+
+    # Last resort: never start a DrainSignal consumer on a gevent Queue.
+    try:
+        from gevent import monkey
+
+        if monkey.is_module_patched("queue") and not compat_ok:
+            ph.sync_mode = True
+            _log.warning(
+                "PostHog sync_mode=True under gevent (compat failed; avoids "
+                "consumer AttributeError on mutex/not_empty)"
+            )
+    except ImportError:
+        pass
 
 
 def reinitialize_posthog_after_fork() -> None:

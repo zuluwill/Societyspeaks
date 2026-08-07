@@ -69,7 +69,11 @@ cachelib>=0.9.0,<0.10
 Unidecode>=1.3.0,<2
 
 # Analytics
-posthog>=7.4.2,<8
+# <7.37.6: 7.37.6+ _DrainSignal uses Queue.mutex/not_empty (gevent-incompatible
+# under gunicorn). app.lib.posthog_utils.apply_posthog_gevent_compat rebinds
+# stdlib Queue/Thread for when we raise this ceiling again; keep the pin until
+# upstream uses public Queue APIs (PostHog/posthog-python#832 fallout).
+posthog>=7.4.2,<7.37.6
 
 # Image rendering (Society Play OG share cards)
 Pillow>=10.4.0,<13

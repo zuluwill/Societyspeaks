@@ -44,7 +44,7 @@ def test_apply_posthog_gevent_compat_noop_without_gevent_patch(monkeypatch):
 
 
 def test_apply_posthog_gevent_compat_rebinds_queue_and_thread(monkeypatch):
-    """PostHog >=7.37.6 _DrainSignal needs threading.Queue.mutex (Sentry 2026-08-07)."""
+    """PostHog >=7.37.6 _DrainSignal needs threading.Queue.mutex/not_empty."""
     import queue
     import threading
 
@@ -54,7 +54,13 @@ def test_apply_posthog_gevent_compat_rebinds_queue_and_thread(monkeypatch):
 
     real_queue = queue.Queue
     real_thread = threading.Thread
-    monkeypatch.setattr(ph_client, "Queue", type("GeventQueue", (), {}), raising=False)
+
+    class _GeventQueue:
+        """Minimal stand-in: constructible but lacks threading.Queue privates."""
+
+        pass
+
+    monkeypatch.setattr(ph_client, "Queue", _GeventQueue, raising=False)
 
     class _FakeMonkey:
         @staticmethod
@@ -74,8 +80,28 @@ def test_apply_posthog_gevent_compat_rebinds_queue_and_thread(monkeypatch):
     assert apply_posthog_gevent_compat() is True
     assert ph_client.Queue is real_queue
     assert hasattr(ph_client.Queue(), "mutex")
+    assert hasattr(ph_client.Queue(), "not_empty")
     assert ph_consumer.Consumer.__bases__ == (real_thread,)
     assert apply_posthog_gevent_compat() is True
+
+
+def test_configure_posthog_falls_back_to_sync_mode_when_compat_fails(monkeypatch):
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    class _FakeMonkey:
+        @staticmethod
+        def is_module_patched(name):
+            return name == "queue"
+
+    fake_gevent = types.ModuleType("gevent")
+    fake_gevent.monkey = _FakeMonkey()
+    monkeypatch.setitem(sys.modules, "gevent", fake_gevent)
+    monkeypatch.setattr(utils, "apply_posthog_gevent_compat", lambda: False)
+    monkeypatch.setattr(ph, "sync_mode", False, raising=False)
+
+    configure_posthog_credentials("phc_test", "https://eu.i.posthog.com")
+    assert ph.sync_mode is True
 
 
 def test_reinitialize_posthog_after_fork_noop_without_key(monkeypatch):
