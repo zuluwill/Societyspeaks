@@ -42,10 +42,12 @@ APScheduler==3.11.3
 
 # Encryption for API keys (Phase 4)
 # <47 forced by atproto metadata (MarshalX/atproto#688; Bluesky posting is
-# active in prod). GHSA-537c-gmf6-5ccf (bundled OpenSSL) is fixed only in
-# >=48.0.1 — keep this pin so `pip install -r` resolves, then force-reinstall
-# the patched wheel via scripts/install_python_deps.sh only (Dockerfile + CI).
-# Drop the force-reinstall the moment atproto allows cryptography>=48.
+# active in prod). Patched cryptography (>=50.0.0 for current GHSAs) cannot
+# resolve alongside that cap — keep this pin so `pip install -r` resolves,
+# then force-reinstall the patched wheel via scripts/install_python_deps.sh
+# only (Dockerfile + CI). Dependabot alerts on this line are expected until
+# atproto relaxes; runtime/CI assert the override. Drop the force-reinstall
+# the moment atproto allows cryptography>=50.
 cryptography>=46.0.4,<47
 pandas>=2.0.0,<4
 dnspython>=2.6.1,<3

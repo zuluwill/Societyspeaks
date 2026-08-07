@@ -2,10 +2,11 @@
 # Install runtime Python deps the same way production / CI do.
 #
 # atproto still declares cryptography<47 (MarshalX/atproto#688), so a plain
-# `pip install -r requirements.txt` cannot resolve the patched OpenSSL wheel
-# for GHSA-537c-gmf6-5ccf (fixed only in cryptography>=48.0.1). After the
-# normal resolve we force-reinstall that wheel (--no-deps: cffi etc. already
-# present). Drop the force-reinstall the moment atproto relaxes its upper bound.
+# `pip install -r requirements.txt` cannot resolve patched cryptography wheels
+# (GHSA-537c-gmf6-5ccf needs >=48.0.1; GHSA-g6cj-pr64-35w5 / related need
+# >=50.0.0). After the normal resolve we force-reinstall that wheel
+# (--no-deps: cffi etc. already present). Drop the force-reinstall the moment
+# atproto relaxes its upper bound.
 #
 # Used by: Dockerfile, Tests / Security audit / i18n / journey-links CI,
 # scripts/build.sh, scripts/post-merge.sh. Keep this the single source of
@@ -17,8 +18,10 @@ cd "$ROOT"
 
 PYTHON_BIN="${PYTHON:-python3}"
 
-# Patched OpenSSL wheel for GHSA-537c-gmf6-5ccf. Single pin for Docker + CI.
-CRYPTOGRAPHY_OVERRIDE='cryptography>=48.0.1,<50'
+# Patched cryptography wheel (OpenSSL + PKCS#7 / name-constraints GHSAs).
+# Single pin for Docker + CI. Dependabot still flags the <47 resolve pin in
+# requirements.txt — that is expected until atproto relaxes; runtime uses this.
+CRYPTOGRAPHY_OVERRIDE='cryptography>=50.0.0,<51'
 
 # --timeout/--retries: this script also runs from post-merge.sh on Render,
 # where the network to PyPI is occasionally flaky; keep the resilience the

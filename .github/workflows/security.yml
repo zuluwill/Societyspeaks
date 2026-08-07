@@ -33,8 +33,8 @@ jobs:
           from importlib.metadata import version
           raw = version("cryptography")
           parts = tuple(int(p) for p in raw.split(".")[:3])
-          assert parts >= (48, 0, 1), f"expected cryptography>=48.0.1 after override, got {raw}"
-          print(f"cryptography {raw} OK (GHSA-537c override)")
+          assert parts >= (50, 0, 0), f"expected cryptography>=50.0.0 after override, got {raw}"
+          print(f"cryptography {raw} OK (GHSA-537c / GHSA-g6cj override)")
           PY
       - name: Audit installed environment
         run: |

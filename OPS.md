@@ -474,14 +474,16 @@ expects alongside `pip-audit` in `.github/workflows/security.yml`.
 
 Special case — `cryptography` / `atproto`: atproto still declares
 `cryptography<47` (upstream [MarshalX/atproto#688](https://github.com/MarshalX/atproto/issues/688)),
-while GHSA-537c-gmf6-5ccf is fixed only in `cryptography>=48.0.1`. Keep the
+while current advisories need `cryptography>=50.0.0` (PKCS#7 oracle
+GHSA-g6cj-pr64-35w5; earlier OpenSSL fix was `>=48.0.1`). Keep the
 `<47` pin in `requirements.txt` so a plain resolve succeeds, then
 force-reinstall the patched wheel via **`scripts/install_python_deps.sh` only**
 (Dockerfile, Tests, Security audit, and local/setup scripts all call it — do
 not duplicate the override pin). Security CI also asserts
-`cryptography>=48.0.1` before `pip-audit`. Do not “fix” the audit by
-ignoring the GHSA; drop the force-reinstall once atproto relaxes its upper
-bound.
+`cryptography>=50.0.0` before `pip-audit`. Dependabot will keep flagging the
+manifest pin until atproto relaxes — that is noise against the resolve line,
+not against the installed runtime. Do not “fix” the audit by ignoring the
+GHSA; drop the force-reinstall once atproto allows `cryptography>=50`.
 
 ## Billing webhook Sentry alert
 
