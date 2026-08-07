@@ -17,6 +17,7 @@ from app.lib.posthog_utils import (
     stitch_posthog_on_user_login,
 )
 from app.lib.device_class import DeviceClass, device_class_from_request
+from app.lib.request_user import current_user_is_authenticated
 from app.lib.time import utcnow_naive
 from app.lib.vote_identity import get_voter_fingerprint
 from app.models import DailyBriefSubscriber, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber
@@ -164,7 +165,7 @@ def resolve_daily_participation_distinct_id(
     For the email confirm funnel, use :func:`resolve_email_vote_distinct_id`
     instead — it always prefers the subscriber hash for anonymous visitors.
     """
-    if current_user.is_authenticated:
+    if current_user_is_authenticated():
         return resolve_request_distinct_id(user_id=current_user.id)
 
     resolved = subscriber_for_analytics(subscriber)
@@ -192,7 +193,7 @@ def resolve_email_vote_distinct_id(subscriber: SubscriberT) -> Optional[str]:
     confirm-viewed and confirmed events stitch to the same person across
     devices and sessions. Logged-in voters still use ``str(user_id)``.
     """
-    if current_user.is_authenticated:
+    if current_user_is_authenticated():
         return resolve_request_distinct_id(user_id=current_user.id)
     return email_subscriber_distinct_id(getattr(subscriber, 'email', None))
 
@@ -269,7 +270,7 @@ def track_daily_question_participated(
         'participation_source': participation_source,
         'has_reason': has_reason,
         'voted_via_email': voted_via_email,
-        'is_authenticated': bool(current_user.is_authenticated),
+        'is_authenticated': current_user_is_authenticated(),
     }
     props.update(extra)
 
@@ -440,7 +441,7 @@ def track_email_vote_confirmed(
         'confirmation_step': 'confirmed',
         'has_reason': has_reason,
         'voted_via_email': True,
-        'is_authenticated': bool(current_user.is_authenticated),
+        'is_authenticated': current_user_is_authenticated(),
         'device_class': device_class,
     }
     if response_id is not None:

@@ -78,7 +78,9 @@ def test_share_urlencode_unescapes_html_entities():
 def test_share_button_macro_encodes_quotes_for_x(app):
     """Regression: Jinja autoescape must not leak &#34; into tweet intent URLs."""
     stats = {'agree': 34, 'disagree': 33, 'unsure': 33, 'total': 102}
-    with app.app_context():
+    # Request context so static url_for in the macro works without relying on
+    # pytest-flask's autouse push (CI used to miss that package).
+    with app.test_request_context('/'):
         share_description = build_daily_results_share_text(
             QUESTION,
             total=stats['total'],

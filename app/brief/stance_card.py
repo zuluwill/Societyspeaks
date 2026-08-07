@@ -27,6 +27,18 @@ DOMINANT_FRAME_LABELS = {
 }
 
 
+def _safe_daily_results_url(question_date: date) -> str:
+    """Relative daily permalink; falls back when url_for cannot run."""
+    date_str = question_date.isoformat()
+    try:
+        # _external=False: with SERVER_NAME set (tests) and no request, the
+        # default url_for builds an absolute URL which breaks template/assert
+        # expectations that want a path.
+        return url_for('daily.by_date', date_str=date_str, _external=False)
+    except Exception:
+        return f'/daily/{date_str}'
+
+
 def _published_question_for_brief(*, brief_date: Optional[date] = None) -> Optional[DailyQuestion]:
     """
     Published daily question paired with this brief edition.
@@ -158,7 +170,9 @@ def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[
     brief_date_str = frame.get('brief_date')
     if is_brief_sourced and brief_date_str:
         try:
-            sourcing_brief_url = url_for('brief.view_date', date_str=brief_date_str)
+            sourcing_brief_url = url_for(
+                'brief.view_date', date_str=brief_date_str, _external=False,
+            )
         except Exception:
             # Any url_for failure (BuildError if the endpoint is ever renamed,
             # RuntimeError outside app context) falls back to the stable path
@@ -178,10 +192,9 @@ def build_stance_card_context(*, brief_date: Optional[date] = None) -> Optional[
         'vote_pcts': vote_pcts,
         'has_voted': _has_user_voted(question),
         'stance_anchor': 'stance',
-        'results_url': url_for(
-            'daily.by_date',
-            date_str=question.question_date.isoformat(),
-        ),
+        # Match sourcing_brief_url: never 500 the brief when url_for cannot
+        # run (no request context / SERVER_NAME — e.g. some unit tests).
+        'results_url': _safe_daily_results_url(question.question_date),
     }
 
 
@@ -281,10 +294,7 @@ def build_weekly_stance_card_context(
         # The shared card defaults to "Daily Question #N", which is wrong on a
         # page headed "The Weekly Brief" covering a whole week.
         'kicker': _("This week's question"),
-        'results_url': url_for(
-            'daily.by_date',
-            date_str=question.question_date.isoformat(),
-        ),
+        'results_url': _safe_daily_results_url(question.question_date),
     }
 
 
@@ -372,7 +382,7 @@ def build_tradeoffs_card_context() -> Optional[dict[str, Any]]:
         return None
 
     try:
-        play_url = url_for('game.daily', src='brief_tradeoffs')
+        play_url = url_for('game.daily', src='brief_tradeoffs', _external=False)
     except Exception:
         play_url = '/play/daily?src=brief_tradeoffs'
 

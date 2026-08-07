@@ -80,17 +80,22 @@ def test_view_discussion_includes_og_image_meta(app, client, monkeypatch):
         has_native_statements=False,
     )
 
-    monkeypatch.setattr(
-        Discussion,
-        'query',
-        SimpleNamespace(
-            filter_by=lambda **kw: SimpleNamespace(first_or_404=lambda: fake_discussion),
-            options=lambda *a, **k: SimpleNamespace(filter_by=lambda **kw: SimpleNamespace(first_or_404=lambda: fake_discussion)),
-        ),
-    )
-
-    # Minimal patch — if full render is too heavy, test og_png_url in template via unit test
-    # Here we verify the OG route URL pattern is stable for embed scrapers.
+    # Discussion.query is a Flask-SQLAlchemy descriptor — needs an app context
+    # before setattr can resolve it (pytest-flask usually supplies one).
     with app.app_context():
+        monkeypatch.setattr(
+            Discussion,
+            'query',
+            SimpleNamespace(
+                filter_by=lambda **kw: SimpleNamespace(first_or_404=lambda: fake_discussion),
+                options=lambda *a, **k: SimpleNamespace(
+                    filter_by=lambda **kw: SimpleNamespace(first_or_404=lambda: fake_discussion)
+                ),
+            ),
+        )
+
+        # Minimal check: OG route URL pattern is stable for embed scrapers.
         from flask import url_for
-        assert url_for('discussions.og_png', discussion_id=99, _external=True).endswith('/discussions/99/og.png')
+        assert url_for('discussions.og_png', discussion_id=99, _external=True).endswith(
+            '/discussions/99/og.png'
+        )

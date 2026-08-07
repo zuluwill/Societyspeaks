@@ -84,6 +84,10 @@ def app():
         app = create_app()
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
+        # Do not set SERVER_NAME here. It makes the test client send Host:
+        # localhost.localdomain, which breaks cookie/fingerprint matching for
+        # game ownership checks (403). CI gets a request context from
+        # pytest-flask's autouse fixture instead (see requirements.txt).
         # Flask-Caching's SimpleCache is a module-level singleton whose internal
         # storage is NOT reset when init_app() is called with a new app instance.
         # Explicitly clear it so cached snapshots/lookups from a prior test do not

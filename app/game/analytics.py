@@ -9,12 +9,11 @@ try:
 except ImportError:
     posthog = None
 
-from flask_login import current_user
-
 from app.lib.posthog_utils import (
     posthog_js_distinct_id,
     safe_posthog_capture,
 )
+from app.lib.request_user import current_user_is_authenticated
 from app.lib.subscriber_identity import read_subscriber_ref
 from app.models.game import GameRun
 
@@ -93,23 +92,27 @@ def track_game_event(
     properties: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Fire a game analytics event; never raises into callers."""
-    props = {
-        'run_uuid': run.uuid,
-        'scenario_slug': run.scenario_slug,
-        'mode': run.mode,
-        'turn_index': run.turn_index,
-        'total_turns': run.total_turns,
-        'is_authenticated': bool(current_user.is_authenticated),
-    }
-    if properties:
-        props.update(properties)
-    if 'source' not in props:
-        traffic_source = resolve_game_traffic_source()
-        if traffic_source:
-            props['source'] = traffic_source
-    safe_posthog_capture(
-        posthog_client=posthog,
-        distinct_id=_distinct_id_for_run(run),
-        event=event,
-        properties=props,
-    )
+    try:
+        props = {
+            'run_uuid': run.uuid,
+            'scenario_slug': run.scenario_slug,
+            'mode': run.mode,
+            'turn_index': run.turn_index,
+            'total_turns': run.total_turns,
+            'is_authenticated': current_user_is_authenticated(),
+        }
+        if properties:
+            props.update(properties)
+        if 'source' not in props:
+            traffic_source = resolve_game_traffic_source()
+            if traffic_source:
+                props['source'] = traffic_source
+        safe_posthog_capture(
+            posthog_client=posthog,
+            distinct_id=_distinct_id_for_run(run),
+            event=event,
+            properties=props,
+        )
+    except Exception:
+        # Analytics must never break run creation / choice application.
+        return

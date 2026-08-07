@@ -54,8 +54,11 @@ def _responses(db, question, count):
 # --------------------------------------------------------------------------
 
 def test_weekly_digest_returns_at_most_count(db):
-    """Seven questions in the window → only five ship in the digest."""
-    start = date(2026, 7, 20)
+    """Seven questions in the rolling window → only five ship in the digest."""
+    # Window is date.today()-relative; freeze dates to "now" so the test
+    # does not rot when the calendar moves past a hard-coded July range.
+    end = date.today()
+    start = end - timedelta(days=6)
     for i in range(7):
         _question(db, start + timedelta(days=i), number=100 + i, text=f'Q{i}')
     db.session.commit()

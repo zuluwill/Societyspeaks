@@ -112,3 +112,7 @@ certifi>=2024.7.4,<2027
 # Testing
 pytest>=9.0.3,<10
 pytest-cov>=4.1.0,<8
+# Autouse request context so url_for / flask_login work in CI the same way as
+# a typical local install (without this, Tests fails on share/stance helpers
+# and any path that touches current_user outside an explicit request).
+pytest-flask>=1.3.0,<2
