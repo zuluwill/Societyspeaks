@@ -298,6 +298,18 @@ def create_app():
                     return False
                 return any(p in msg for p in phrases)
 
+            # Neon/PgBouncer SSL tear-downs — drop whether they arrive as
+            # exception payloads or as ERROR/WARNING log lines (e.g. best-effort
+            # view tracking that inlines the OperationalError into the message).
+            _TRANSIENT_DB_SENTRY_PHRASES = (
+                "bad record mac",
+                "decryption failed",
+                "connection already closed",
+                "ssl syscall",
+                "ssl connection has been closed",
+                "can't reconnect until invalid transaction",
+            )
+
             msg = ""
             if "log_record" in hint:
                 record = hint["log_record"]
@@ -339,15 +351,9 @@ def create_app():
                     "Transient DB error in ",
                 ):
                     return None
+                if drop_if(msg.lower(), *_TRANSIENT_DB_SENTRY_PHRASES):
+                    return None
             exc_info = hint.get("exc_info")
-            _TRANSIENT_DB_SENTRY_PHRASES = (
-                "bad record mac",
-                "decryption failed",
-                "connection already closed",
-                "ssl syscall",
-                "ssl connection has been closed",
-                "can't reconnect until invalid transaction",
-            )
 
             if exc_info:
                 exc_msg = str(exc_info[1] or "")
