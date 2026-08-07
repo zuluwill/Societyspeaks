@@ -1,8 +1,11 @@
 """PostHog lifecycle helpers (fork-safe under gunicorn preload_app)."""
 
+import sys
+import types
 from unittest.mock import MagicMock, patch
 
 from app.lib.posthog_utils import (
+    apply_posthog_gevent_compat,
     configure_posthog_credentials,
     reinitialize_posthog_after_fork,
     shutdown_server_posthog,
@@ -22,6 +25,57 @@ def test_configure_posthog_credentials_sets_module_fields(monkeypatch):
     assert ph.project_api_key == "phc_test"
     assert ph.host == "https://eu.i.posthog.com"
     assert ph.debug is True
+
+
+def test_apply_posthog_gevent_compat_noop_without_gevent_patch(monkeypatch):
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_gevent_compat_applied", False)
+
+    class _FakeMonkey:
+        @staticmethod
+        def is_module_patched(_name):
+            return False
+
+    fake_gevent = types.ModuleType("gevent")
+    fake_gevent.monkey = _FakeMonkey()
+    monkeypatch.setitem(sys.modules, "gevent", fake_gevent)
+    assert apply_posthog_gevent_compat() is False
+
+
+def test_apply_posthog_gevent_compat_rebinds_queue_and_thread(monkeypatch):
+    """PostHog >=7.37.6 _DrainSignal needs threading.Queue.mutex (Sentry 2026-08-07)."""
+    import queue
+    import threading
+
+    import app.lib.posthog_utils as utils
+    import posthog.client as ph_client
+    import posthog.consumer as ph_consumer
+
+    real_queue = queue.Queue
+    real_thread = threading.Thread
+    monkeypatch.setattr(ph_client, "Queue", type("GeventQueue", (), {}), raising=False)
+
+    class _FakeMonkey:
+        @staticmethod
+        def is_module_patched(name):
+            return name == "queue"
+
+        @staticmethod
+        def get_original(module, name):
+            assert module in ("queue", "threading")
+            return real_queue if name == "Queue" else real_thread
+
+    fake_gevent = types.ModuleType("gevent")
+    fake_gevent.monkey = _FakeMonkey()
+    monkeypatch.setitem(sys.modules, "gevent", fake_gevent)
+    monkeypatch.setattr(utils, "_gevent_compat_applied", False)
+
+    assert apply_posthog_gevent_compat() is True
+    assert ph_client.Queue is real_queue
+    assert hasattr(ph_client.Queue(), "mutex")
+    assert ph_consumer.Consumer.__bases__ == (real_thread,)
+    assert apply_posthog_gevent_compat() is True
 
 
 def test_reinitialize_posthog_after_fork_noop_without_key(monkeypatch):

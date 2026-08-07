@@ -336,9 +336,10 @@ def create_app():
                 # email_client uses warning for permanent/invalid; drop stray ERROR dupes.
                 if drop_if(msg, "Brief send failed [permanent]", "Brief send failed [invalid_recipient]"):
                     return None
-                # PostHog flush uses threading.Queue APIs that gevent's Queue
-                # does not implement; harmless at request time / worker recycle.
-                if drop_if(msg, "all_tasks_done"):
+                # PostHog consumer/flush uses threading.Queue private APIs
+                # (mutex / all_tasks_done) that gevent's Queue lacks. Compat
+                # shim in posthog_utils; suppress residual noise.
+                if drop_if(msg, "all_tasks_done", "has no attribute 'mutex'"):
                     return None
                 # Handled Neon/PgBouncer blips — HTTP 503 + Retry-After for users.
                 if drop_if(msg, "Database connectivity error (503)"):
@@ -362,7 +363,7 @@ def create_app():
                     return None
                 if drop_if(exc_msg, "multiple head revisions"):
                     return None
-                if drop_if(exc_msg, "all_tasks_done"):
+                if drop_if(exc_msg, "all_tasks_done", "has no attribute 'mutex'"):
                     return None
                 if "PendingRollbackError" in (getattr(exc_type, "__name__", "") or ""):
                     return None
@@ -383,7 +384,7 @@ def create_app():
                     return None
                 if drop_if(val, "multiple head revisions"):
                     return None
-                if drop_if(val, "all_tasks_done"):
+                if drop_if(val, "all_tasks_done", "has no attribute 'mutex'"):
                     return None
                 if "PendingRollbackError" in typ:
                     return None

@@ -11,9 +11,13 @@ Architecture (intentional):
   :func:`reinitialize_posthog_after_fork` is retained (tested, unwired) in case
   a preload configuration ever returns (PostHog/posthog-python#290).
 
-- **Gevent**: monkey-patched ``queue.Queue`` lacks ``all_tasks_done``, so
-  ``flush()``/``shutdown()`` can raise ``AttributeError``. Drain is best-effort;
-  do not let that fail worker exit.
+- **Gevent**: monkey-patched ``queue.Queue`` lacks ``threading.Queue`` private
+  APIs (``mutex``, ``not_empty``, ``all_tasks_done``). PostHog >=7.37.6's
+  ``_DrainSignal`` uses those and crashes the consumer under gunicorn+gevent
+  (Sentry 2026-08-07). :func:`apply_posthog_gevent_compat` rebinds PostHog to
+  the unpatched stdlib ``Queue`` and ``Thread`` so consumers run on real OS
+  threads and do not block the hub. ``flush()``/``shutdown()`` can still raise
+  if compat was skipped; drain is best-effort and must not fail worker exit.
 
 - **Drain on shutdown**: ``register_posthog_atexit()`` (from ``create_app``) and
   ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()``.
@@ -31,7 +35,58 @@ import logging
 from typing import Any, Optional
 
 _shutdown_done = False
+_gevent_compat_applied = False
 _log = logging.getLogger(__name__)
+
+
+def apply_posthog_gevent_compat() -> bool:
+    """Make PostHog's async consumer safe under ``gevent.monkey.patch_all()``.
+
+    PostHog 7.37.6+ (``_DrainSignal``) reaches into ``queue.Queue.mutex`` /
+    ``not_empty``. Gevent's patched Queue has neither, so the consumer thread
+    dies with ``AttributeError`` and events stop uploading.
+
+    When gevent has patched ``queue``, rebind PostHog to the *original* stdlib
+    ``Queue`` and make ``Consumer`` subclass the original ``threading.Thread``
+    so the uploader runs on a real OS thread (correct under gevent — do not use
+    greenlets for blocking HTTP upload).
+
+    Idempotent and a no-op when gevent is absent or has not patched ``queue``.
+    Returns True when rebinding ran.
+    """
+    global _gevent_compat_applied
+    if _gevent_compat_applied:
+        return True
+    try:
+        from gevent import monkey
+    except ImportError:
+        return False
+    try:
+        if not monkey.is_module_patched("queue"):
+            return False
+        real_queue = monkey.get_original("queue", "Queue")
+        real_thread = monkey.get_original("threading", "Thread")
+    except Exception as exc:
+        _log.warning("PostHog gevent compat: could not resolve originals: %s", exc)
+        return False
+
+    try:
+        import posthog.client as ph_client
+        import posthog.consumer as ph_consumer
+
+        ph_client.Queue = real_queue
+        # Consumer was defined as ``class Consumer(Thread)`` after monkey-patch,
+        # so its base is the greenlet Thread. Swap to the real OS Thread.
+        if ph_consumer.Consumer.__bases__ != (real_thread,):
+            ph_consumer.Consumer.__bases__ = (real_thread,)
+        _gevent_compat_applied = True
+        _log.info(
+            "PostHog gevent compat applied (stdlib Queue + OS Thread for consumers)"
+        )
+        return True
+    except Exception as exc:
+        _log.warning("PostHog gevent compat failed: %s", exc)
+        return False
 
 
 def configure_posthog_credentials(
@@ -44,8 +99,12 @@ def configure_posthog_credentials(
 
     Does not force a client to start; the first capture (or an explicit
     :func:`reinitialize_posthog_after_fork`) creates the default client.
+    Applies gevent Queue/Thread rebinding first when needed so ``setup()``
+    never builds a consumer on a gevent Queue.
     """
     import posthog as ph
+
+    apply_posthog_gevent_compat()
 
     # api_key drives setup(); project_api_key is what our call-site guards check.
     ph.api_key = api_key
@@ -68,6 +127,8 @@ def reinitialize_posthog_after_fork() -> None:
         api_key = getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)
         if not api_key:
             return
+
+        apply_posthog_gevent_compat()
 
         # Drop inherited client/consumers from the master process.
         old = getattr(ph, "default_client", None)
