@@ -25,6 +25,14 @@ envVarGroups:
       # Single Sentry environment label for all services (avoid "prod" vs "production").
       - key: SENTRY_ENVIRONMENT
         value: production
+      # Transaction traces stay at 10%. Profiling is off: the continuous
+      # profiler sleeper thread showed up on every gunicorn abort dump
+      # (2026-08) and fights the gevent hub. Opt in only to debug a
+      # specific sync endpoint, never on web workers.
+      - key: SENTRY_PROFILES_SAMPLE_RATE
+        value: "0"
+      - key: SENTRY_CONTINUOUS_PROFILING
+        value: "false"
       - key: APP_BASE_URL
         value: https://societyspeaks.io
       - key: SITE_URL

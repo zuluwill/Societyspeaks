@@ -22,7 +22,20 @@ After env-only changes: Render → service → **Manual Deploy**.
 
 **Scheduler “Application exited early” emails:** expected on deploys (SIGTERM). Recurring every ~30 minutes meant the old Replit timed self-exit was still on — Render uses `SCHEDULER_MAX_RUNTIME_SECONDS=0` so the process stays up. Watch Metrics RSS; only re-enable a timed recycle if memory grows without bound.
 
-**Worker restart emails** (scheduler / consensus) on every push are normal — those services restart with the new image. Keep Render notifications on **failure-only**. After `/health` is the web check path, web “connection refused” during deploy should largely stop; if it continues after the new instance is live, investigate.
+**Worker restart emails** (scheduler / consensus) on every push are normal — those services restart with the new image. Keep Render notifications on **failure-only**.
+
+**Web “connection refused” on `/health` while the instance is already live:** this is gunicorn killing workers, not a slow 200. Root cause (Aug 2026): `worker_exit` called PostHog `flush()`/`shutdown()`, which `Thread.join()`s OS consumers from the gevent hub after the Queue/Thread rebind. The hub wedges until gunicorn’s 120s timeout, then SIGKILL; overlapping kills of `WEB_CONCURRENCY=3` leave nothing listening on :5000. Recycle (`max_requests=1000`) is the memory bound — do not disable it. Confirm with log grep:
+
+```text
+WORKER TIMEOUT
+was sent SIGKILL
+shutdown_server_posthog
+Thread.join
+```
+
+A stack that bottoms out in `ph.shutdown()` / `client.join` is the old hang (fixed: drain by `qsize`, pause consumers, never join from the hub). Recurring `WORKER TIMEOUT` / `worker_abort` *after* that deploy is a real 120s stall and should still page in Sentry — do not add those phrases to the lifecycle drop list. SIGTERM / SIGKILL / “Perhaps out of memory?” (gunicorn’s generic abort text, not proven OOM) stay dropped.
+
+Confirm dashboard `SENTRY_PROFILES_SAMPLE_RATE=0` and `SENTRY_CONTINUOUS_PROFILING` unset/false on web workers. Profiling threads showed up on every abort dump and fight the hub.
 
 ## Weekly brief (`wk001` and regeneration)
 

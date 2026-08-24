@@ -117,17 +117,21 @@ def test_reinitialize_posthog_after_fork_noop_without_key(monkeypatch):
 def test_reinitialize_posthog_after_fork_replaces_default_client(monkeypatch):
     import posthog as ph
 
+    consumer = MagicMock()
     old = MagicMock()
+    old.consumers = [consumer]
     monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
     monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
     monkeypatch.setattr(ph, "default_client", old, raising=False)
     with patch.object(ph, "setup", create=True) as setup:
         reinitialize_posthog_after_fork()
-        old.shutdown.assert_called_once()
+        old.shutdown.assert_not_called()
+        consumer.pause.assert_called_once()
         setup.assert_called_once()
 
 
-def test_shutdown_server_posthog_swallows_gevent_queue_attribute_error(monkeypatch):
+def test_shutdown_server_posthog_does_not_call_sdk_flush_or_shutdown(monkeypatch):
+    """flush()/shutdown() join OS threads; under gevent that wedges the hub."""
     import posthog as ph
     import app.lib.posthog_utils as utils
 
@@ -135,43 +139,125 @@ def test_shutdown_server_posthog_swallows_gevent_queue_attribute_error(monkeypat
     monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
     monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
 
+    class FakeClient:
+        queue = MagicMock(qsize=MagicMock(return_value=0))
+        consumers = []
+
+    monkeypatch.setattr(ph, "default_client", FakeClient(), raising=False)
+
     def boom():
-        raise AttributeError("'gevent._gevent_cqueue.Queue' object has no attribute 'all_tasks_done'")
+        raise AssertionError("flush/shutdown must not be called from worker_exit")
 
     monkeypatch.setattr(ph, "flush", boom, raising=False)
     monkeypatch.setattr(ph, "shutdown", boom, raising=False)
-    shutdown_server_posthog()  # must not raise
+    shutdown_server_posthog()
     assert utils._shutdown_done is True
 
 
-def test_shutdown_drains_queue_before_flush(monkeypatch):
-    """Under gevent, flush() raises — the poll-based drain must have emptied
-    the queue first so the swallowed error no longer loses the tail batch."""
+def test_shutdown_drains_queue_then_pauses_consumers(monkeypatch):
     import posthog as ph
     import app.lib.posthog_utils as utils
 
     monkeypatch.setattr(utils, "_shutdown_done", False)
     monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
     monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
 
     class FakeQueue:
         def __init__(self):
             self.polls = 0
 
         def qsize(self):
-            # Simulate the consumer thread emptying the queue after a few polls.
             self.polls += 1
             return 0 if self.polls >= 3 else 5
 
-    class FakeClient:
-        queue = FakeQueue()
+    consumer = MagicMock()
 
-    def boom():
-        raise AttributeError("no all_tasks_done")
+    class FakeClient:
+        def __init__(self):
+            self.queue = FakeQueue()
+            self.consumers = [consumer]
+
+    client = FakeClient()
+    monkeypatch.setattr(ph, "default_client", client, raising=False)
+    monkeypatch.setattr(ph, "flush", MagicMock(side_effect=AssertionError("no flush")))
+    monkeypatch.setattr(ph, "shutdown", MagicMock(side_effect=AssertionError("no shutdown")))
+
+    shutdown_server_posthog()
+    assert client.queue.polls >= 3
+    consumer.pause.assert_called_once()
+    consumer.join.assert_not_called()
+
+
+def test_shutdown_under_gevent_does_not_wait_on_native_join(monkeypatch):
+    """Native Thread.join from the hub is the production hang; must return fast."""
+    import time
+
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_shutdown_done", False)
+    monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
+    monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
+
+    consumer = MagicMock()
+    consumer.join.side_effect = lambda *a, **k: time.sleep(30)
+
+    class FakeClient:
+        queue = MagicMock(qsize=MagicMock(return_value=0))
+        consumers = [consumer]
 
     monkeypatch.setattr(ph, "default_client", FakeClient(), raising=False)
-    monkeypatch.setattr(ph, "flush", boom, raising=False)
-    monkeypatch.setattr(ph, "shutdown", boom, raising=False)
 
-    shutdown_server_posthog()  # must not raise
-    assert FakeClient.queue.polls >= 3  # drained before flush was attempted
+    started = time.monotonic()
+    shutdown_server_posthog()
+    elapsed = time.monotonic() - started
+    assert elapsed < 2.0
+    consumer.join.assert_not_called()
+
+
+def test_shutdown_without_gevent_joins_consumers_with_timeout(monkeypatch):
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_shutdown_done", False)
+    monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
+    monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: False)
+
+    consumer = MagicMock()
+
+    class FakeClient:
+        queue = MagicMock(qsize=MagicMock(return_value=0))
+        consumers = [consumer]
+
+    monkeypatch.setattr(ph, "default_client", FakeClient(), raising=False)
+    shutdown_server_posthog()
+    consumer.pause.assert_called_once()
+    consumer.join.assert_called()
+    timeout = (
+        consumer.join.call_args.kwargs.get("timeout")
+        if consumer.join.call_args.kwargs
+        else None
+    )
+    if timeout is None and consumer.join.call_args.args:
+        timeout = consumer.join.call_args.args[0]
+    assert timeout is not None
+    assert 0 < float(timeout) <= 1.0
+
+
+def test_shutdown_server_posthog_source_never_calls_sdk_join_apis():
+    """Regression: ph.flush/ph.shutdown from the hub caused Render /health emails."""
+    import inspect
+
+    from app.lib import posthog_utils
+
+    src = inspect.getsource(posthog_utils.shutdown_server_posthog)
+    body = src.split('"""', 2)[-1]
+    assert "ph.flush(" not in body
+    assert "ph.shutdown(" not in body
+    assert "posthog.flush(" not in body
+    assert "posthog.shutdown(" not in body
+    assert "_gevent_is_patching_threads" in body
+

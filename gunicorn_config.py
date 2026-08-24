@@ -16,9 +16,12 @@ worker_connections = 1000
 # per-request memory accumulation (greenlet overhead, lazy imports, SQLAlchemy
 # session fragments) that never gets freed in a long-running worker.
 # Gunicorn forks a replacement before killing the old worker, so there is no
-# gap in request handling.
+# gap in request handling — *provided* worker_exit returns quickly. Do not
+# lower this to "fix" health-check emails; hung PostHog shutdown was the
+# cause (see shutdown_server_posthog). Jitter keeps the three workers from
+# recycling in lockstep after a simultaneous start.
 max_requests = 1000
-max_requests_jitter = 100
+max_requests_jitter = 300
 
 # DO NOT preload. With preload_app=True, run.py's monkey.patch_all() executes
 # in the gunicorn MASTER, replacing os.fork/os.waitpid/SIGCHLD handling with
@@ -190,12 +193,16 @@ def post_worker_init(worker):
         )
 
 
-def worker_exit(server, worker):
-    """Drain PostHog SDK queue when this worker process exits (graceful).
+_WORKER_EXIT_BUDGET_SECONDS = 2.0
 
-    Complements :func:`app.lib.posthog_utils.register_posthog_atexit` — gunicorn
-    worker recycle (``max_requests``) and SIGTERM shutdown both benefit from an
-    explicit flush before the interpreter tears down.
+
+def worker_exit(server, worker):
+    """Drain PostHog without blocking the gevent hub.
+
+    Complements :func:`app.lib.posthog_utils.register_posthog_atexit`. Recycle
+    (``max_requests``) and SIGTERM both run this hook; it must return well
+    inside gunicorn's 120s timeout or the arbiter SIGKILLs the worker and
+    Render's /health check sees connection refused.
     """
     try:
         import faulthandler
@@ -206,7 +213,15 @@ def worker_exit(server, worker):
     try:
         from app.lib.posthog_utils import shutdown_server_posthog
 
-        shutdown_server_posthog()
+        try:
+            from gevent import Timeout as GeventTimeout
+        except ImportError:
+            GeventTimeout = None
+        if GeventTimeout is not None:
+            with GeventTimeout(_WORKER_EXIT_BUDGET_SECONDS, False):
+                shutdown_server_posthog()
+        else:
+            shutdown_server_posthog()
     except Exception as exc:
         logging.getLogger("gunicorn.error").warning(
             "worker_exit [%s]: PostHog shutdown failed: %s", worker.pid, exc

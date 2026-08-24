@@ -147,15 +147,30 @@ def sentry_should_drop_transient_llm(event, hint) -> bool:
 
     Safety net for call sites that still re-raise after :func:`log_llm_error`, and
     for SDK exceptions captured before our handlers run.
+
+    Gunicorn ``WORKER TIMEOUT`` logs contain the substring ``timeout``; they are
+    process stalls, not LLM blips, and must not be dropped here.
     """
+    from app.lib.sentry_config import (
+        is_expected_process_lifecycle_log,
+        is_gunicorn_worker_stall_log,
+    )
+
+    event = event or {}
+    hint = hint or {}
+
     exc_info = hint.get("exc_info")
     if exc_info and len(exc_info) >= 2 and exc_info[1] is not None:
+        if is_gunicorn_worker_stall_log(str(exc_info[1])):
+            return False
         if is_transient_llm_error(exc_info[1]):
             return True
 
     for exc in (event.get("exception") or {}).get("values") or []:
         typ = exc.get("type") or ""
         val = exc.get("value") or ""
+        if is_gunicorn_worker_stall_log(val):
+            return False
         if typ in TRANSIENT_LLM_EXCEPTION_TYPE_NAMES:
             return True
         if is_transient_llm_error(Exception(val)):
@@ -164,6 +179,12 @@ def sentry_should_drop_transient_llm(event, hint) -> bool:
     if "log_record" in hint:
         record = hint["log_record"]
         msg = (record.getMessage() or "") if hasattr(record, "getMessage") else str(record.msg or "")
+        logger_name = str(getattr(record, "name", "") or "")
+        # gunicorn ERROR logs are process lifecycle, not LLM provider blips.
+        if logger_name.startswith("gunicorn"):
+            return False
+        if is_gunicorn_worker_stall_log(msg) or is_expected_process_lifecycle_log(msg):
+            return False
         if record.levelno >= logging.ERROR and is_transient_llm_error(Exception(msg)):
             return True
 

@@ -16,8 +16,15 @@ Architecture (intentional):
   ``_DrainSignal`` uses those and crashes the consumer under gunicorn+gevent
   (Sentry 2026-08-07). :func:`apply_posthog_gevent_compat` rebinds PostHog to
   the unpatched stdlib ``Queue`` and ``Thread`` so consumers run on real OS
-  threads and do not block the hub. ``flush()``/``shutdown()`` can still raise
-  if compat was skipped; drain is best-effort and must not fail worker exit.
+  threads and do not block the hub.
+
+- **Never join from the hub**: after the Queue/Thread rebind, ``flush()`` and
+  ``shutdown()`` wait on real ``threading`` primitives. Calling them from a
+  gunicorn gevent worker (``worker_exit`` / ``atexit``) freezes the hub until
+  gunicorn's 120s timeout SIGKILLs the process (Render ``/health`` connection
+  refused, Aug 2026). :func:`shutdown_server_posthog` drains by ``qsize()``
+  with cooperative sleep, pauses consumers, and only ``Thread.join``s when
+  gevent is not patching threads.
 
 - **Drain on shutdown**: ``register_posthog_atexit()`` (from ``create_app``) and
   ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()``.
@@ -173,8 +180,10 @@ def reinitialize_posthog_after_fork() -> None:
         # Drop inherited client/consumers from the master process.
         old = getattr(ph, "default_client", None)
         if old is not None:
+            # Do not old.shutdown() — that Thread.join()s and will hang the
+            # child hub if preload_app is ever re-enabled under gevent.
             try:
-                old.shutdown()
+                _pause_posthog_consumers(old)
             except Exception:
                 pass
             ph.default_client = None
@@ -188,14 +197,46 @@ def reinitialize_posthog_after_fork() -> None:
         _log.warning("PostHog post-fork reinitialize failed: %s", exc)
 
 
-def _drain_client_queue(client: Any, timeout: float = 3.0) -> None:
+def _gevent_is_patching_threads() -> bool:
+    """True when gevent has replaced threading primitives in this process."""
+    try:
+        from gevent import monkey
+
+        return bool(
+            monkey.is_module_patched("threading")
+            or monkey.is_module_patched("thread")
+            or monkey.is_module_patched("queue")
+        )
+    except ImportError:
+        return False
+
+
+def _cooperative_sleep(seconds: float) -> None:
+    """Sleep without pinning the gevent hub when monkey-patched."""
+    if seconds <= 0:
+        return
+    try:
+        from gevent import monkey
+
+        if monkey.is_module_patched("time"):
+            import gevent
+
+            gevent.sleep(seconds)
+            return
+    except ImportError:
+        pass
+    import time
+
+    time.sleep(seconds)
+
+
+def _drain_client_queue(client: Any, timeout: float = 1.0) -> None:
     """Wait for the client's consumer threads to empty the capture queue.
 
-    ``flush()`` relies on ``Queue.all_tasks_done``, which gevent's patched
-    Queue lacks — so under gunicorn+gevent it raises AttributeError and the
-    tail batch of events was lost on every worker exit. Polling ``qsize()``
-    needs nothing gevent lacks: the consumer keeps uploading batches while we
-    (cooperatively) sleep, achieving a real drain instead of a tolerated loss.
+    Never use ``flush()`` here. After :func:`apply_posthog_gevent_compat`
+    rebinds PostHog to stdlib ``Queue``, ``flush()`` waits on
+    ``all_tasks_done`` — a real ``threading.Condition`` — from the gunicorn
+    greenlet, which wedges the hub.
     """
     import time
 
@@ -209,23 +250,69 @@ def _drain_client_queue(client: Any, timeout: float = 3.0) -> None:
                 return
         except Exception:
             return
-        time.sleep(0.05)
+        _cooperative_sleep(0.05)
+    try:
+        leftover = queue.qsize()
+    except Exception:
+        leftover = "?"
     _log.warning(
         "PostHog queue not fully drained at shutdown (%s events left)",
-        queue.qsize(),
+        leftover,
     )
 
 
+def _pause_posthog_consumers(client: Any) -> None:
+    """Ask upload threads to stop without waiting for them.
+
+    ``Consumer.pause()`` is the SDK's cooperative stop. The worker/process is
+    about to exit; leftover daemon threads die with it. Do not ``join()``.
+    """
+    for consumer in getattr(client, "consumers", None) or ():
+        for method_name in ("pause", "stop"):
+            method = getattr(consumer, method_name, None)
+            if callable(method):
+                try:
+                    method()
+                except Exception:
+                    pass
+                break
+
+
+def _join_posthog_consumers(client: Any, timeout: float = 1.0) -> None:
+    """Bounded ``Thread.join`` — only safe when gevent is not patching threads."""
+    import time
+
+    consumers = list(getattr(client, "consumers", None) or ())
+    if not consumers:
+        return
+    deadline = time.monotonic() + timeout
+    per = max(0.05, timeout / max(len(consumers), 1))
+    for consumer in consumers:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        join = getattr(consumer, "join", None)
+        if not callable(join):
+            continue
+        try:
+            join(min(per, remaining))
+        except Exception:
+            pass
+
+
 def shutdown_server_posthog() -> None:
-    """Drain and shut down the PostHog client for this OS process.
+    """Drain captured events and stop consumers without blocking the caller.
 
     Safe to call multiple times (e.g. gunicorn ``worker_exit`` + interpreter
     ``atexit``). No-ops when the SDK was not configured.
+
+    Must never call ``posthog.flush()`` or ``posthog.shutdown()``: both join
+    OS threads / condition variables. Under gunicorn+gevent that join is
+    issued from the hub and becomes a 120s WORKER TIMEOUT (production 2026-08).
     """
     global _shutdown_done
     if _shutdown_done:
         return
-    _shutdown_done = True
     try:
         import posthog as ph
 
@@ -233,22 +320,16 @@ def shutdown_server_posthog() -> None:
             getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)
         ):
             return
+        _shutdown_done = True
         client = getattr(ph, "default_client", None)
-        if client is not None:
-            _drain_client_queue(client)
-        # flush()/shutdown() still raise AttributeError on gevent's Queue
-        # (no all_tasks_done); after the drain above they have nothing left
-        # to save, so swallowing the error no longer loses events.
-        try:
-            ph.flush()
-        except AttributeError:
-            pass
-        try:
-            ph.shutdown()
-        except AttributeError:
-            pass
+        if client is None:
+            return
+        _drain_client_queue(client)
+        _pause_posthog_consumers(client)
+        if not _gevent_is_patching_threads():
+            _join_posthog_consumers(client)
     except Exception:
-        pass
+        _shutdown_done = True
 
 
 def register_posthog_atexit(registrar=None) -> None:

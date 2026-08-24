@@ -277,7 +277,10 @@ def create_app():
             - Alembic multiple-head: ops/deploy noise, not a runtime error.
             - Audio generation failures: degraded feature, not a crash.
             - PHP/filemanager scanner 404s: bot noise.
-            - Gunicorn worker SIGTERM / exit-128: expected lifecycle events.
+            - Gunicorn worker SIGTERM / SIGKILL / exit-128: expected lifecycle
+              events. Do not drop WORKER TIMEOUT / worker_abort — after PostHog
+              shutdown stopped joining OS threads from the hub, those mean a
+              real 120s stall and should still page.
             - PendingRollbackError: suppressed after fixing scheduler session
               cleanup; may hide bugs elsewhere — revisit if frequency rises.
             - OSError errno 5 (EIO): client disconnect during response write;
@@ -289,8 +292,17 @@ def create_app():
               handler — drop from Sentry so they do not page.
             """
             from app.lib.llm_transient_errors import sentry_should_drop_transient_llm
+            from app.lib.sentry_config import (
+                sentry_should_drop_lifecycle_event,
+                sentry_should_keep_worker_stall_event,
+            )
 
+            # Keep gunicorn 120s stalls before any "timeout" substring filter.
+            if sentry_should_keep_worker_stall_event(event, hint):
+                return event
             if sentry_should_drop_transient_llm(event, hint):
+                return None
+            if sentry_should_drop_lifecycle_event(event, hint):
                 return None
 
             def drop_if(msg, *phrases):
@@ -328,9 +340,15 @@ def create_app():
                 if drop_if(msg, "exited with code 128"):
                     return None
                 # Gunicorn worker recycling (max_requests) and graceful shutdown both
-                # send SIGTERM to the outgoing worker.  This is expected behavior and
-                # generates no user-visible impact; suppress the noise from Sentry.
-                if drop_if(msg, "was sent SIGTERM", "Worker was sent SIGTERM"):
+                # send SIGTERM to the outgoing worker.  SIGKILL + "Perhaps out of
+                # memory?" is gunicorn's follow-up after abort — not evidence of OOM.
+                if drop_if(
+                    msg,
+                    "was sent SIGTERM",
+                    "Worker was sent SIGTERM",
+                    "was sent SIGKILL",
+                    "Perhaps out of memory?",
+                ):
                     return None
                 # Per-recipient Resend rejects — canonical structured log in
                 # email_client uses warning for permanent/invalid; drop stray ERROR dupes.
@@ -413,22 +431,27 @@ def create_app():
 
         from app.lib.sentry_config import (
             resolve_sentry_app_role,
+            resolve_sentry_continuous_profiling,
             resolve_sentry_environment,
+            resolve_sentry_profiles_sample_rate,
             resolve_sentry_release,
+            resolve_sentry_traces_sample_rate,
         )
 
-        sentry_sdk.init(
-            dsn=os.getenv("SENTRY_DSN"),
-            environment=resolve_sentry_environment(),
-            release=resolve_sentry_release(),
-            integrations=[FlaskIntegration()],
-            traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
-            profiles_sample_rate=float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1")),
-            before_send=_sentry_before_send,
-            _experiments={
+        sentry_init_kwargs = {
+            "dsn": os.getenv("SENTRY_DSN"),
+            "environment": resolve_sentry_environment(),
+            "release": resolve_sentry_release(),
+            "integrations": [FlaskIntegration()],
+            "traces_sample_rate": resolve_sentry_traces_sample_rate(),
+            "profiles_sample_rate": resolve_sentry_profiles_sample_rate(),
+            "before_send": _sentry_before_send,
+        }
+        if resolve_sentry_continuous_profiling():
+            sentry_init_kwargs["_experiments"] = {
                 "continuous_profiling_auto_start": True,
-            },
-        )
+            }
+        sentry_sdk.init(**sentry_init_kwargs)
         sentry_sdk.set_tag("app_role", resolve_sentry_app_role())
 
     app = Flask(__name__, 
