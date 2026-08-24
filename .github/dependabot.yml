@@ -31,6 +31,11 @@ updates:
       # Tailwind 4 is a deliberate CSS rewrite, not a Dependabot drive-by.
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]
+      # nanoid 4/5/6 are ESM majors. postcss 8 / Tailwind 3 need the 3.x
+      # line (GHSA-2v37-7h3g-55p8 is patched in 3.3.18; package.json overrides
+      # pin that). A major bump here would break the CSS build.
+      - dependency-name: "nanoid"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"

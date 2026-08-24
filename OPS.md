@@ -502,6 +502,22 @@ manifest pin until atproto relaxes — that is noise against the resolve line,
 not against the installed runtime. Do not “fix” the audit by ignoring the
 GHSA; drop the force-reinstall once atproto allows `cryptography>=50`.
 
+Special case — `setuptools` / PYSEC-2026-3447: the `python:3.11-slim` image
+ships setuptools 79.x. GHSA-h35f-9h28-mq5c (MANIFEST.in NFC/NFD exclusion
+bypass on macOS APFS when building sdists) is fixed in **83.0.0**. Pin
+`setuptools>=83.0.0,<84` in `requirements.txt` and upgrade that same
+specifier in `scripts/install_python_deps.sh` *before* `pip install -r` so
+sdist builds during the resolve use the patched FileList. Stay on 83.x —
+setuptools 84 is a distutils/compiler major, not a drive-by. Do not
+`--ignore-vuln PYSEC-2026-3447`. Security CI asserts the installed version
+and `pip-audit`s the env.
+
+Special case — `nanoid` / GHSA-2v37-7h3g-55p8: Tailwind 3 / postcss 8 depend
+on nanoid **3.x**. The infinite-loop fix for `customAlphabet(size=0)` is
+**3.3.18** on that line (5.1.6 / 6.x are ESM majors and would break the CSS
+build). Pin it with an npm `overrides` entry, keep Dependabot from opening
+nanoid major PRs, and let Security CI `npm audit --audit-level=high`.
+
 ## Billing webhook Sentry alert
 
 Stripe webhooks hit `POST /billing/webhook`. A silent 5xx here means missed

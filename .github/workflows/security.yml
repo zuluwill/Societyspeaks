@@ -1,6 +1,8 @@
 # Weekly + on-demand vulnerability audit of the dependencies as actually
 # resolved (scripts/install_python_deps.sh — same path the production image
-# and Tests CI use, including the cryptography override past atproto's <47).
+# and Tests CI use, including the cryptography override past atproto's <47
+# and the setuptools floor past PYSEC-2026-3447). npm audit covers the
+# Tailwind/postcss tree the Docker image installs.
 name: Security audit
 
 on:
@@ -12,6 +14,8 @@ on:
       - requirements.txt
       - Dockerfile
       - scripts/install_python_deps.sh
+      - package.json
+      - package-lock.json
       - .github/workflows/security.yml
 
 jobs:
@@ -24,19 +28,52 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies as production would
         run: bash scripts/install_python_deps.sh
-      - name: Assert cryptography override landed
-        # Guard against a future edit that drops the force-reinstall while
-        # atproto still caps <47 — pip-audit would then fail, but only after
-        # a full resolve; this fails fast with a clear message.
+      - name: Assert security floors landed
+        # Guard against a future edit that drops the cryptography
+        # force-reinstall while atproto still caps <47, or drops the
+        # setuptools upgrade while the slim image still ships 79.x.
+        # pip-audit would then fail, but only after a full resolve; this
+        # fails fast with a clear message. Do not mute these advisories.
         run: |
           python3 - <<'PY'
           from importlib.metadata import version
-          raw = version("cryptography")
-          parts = tuple(int(p) for p in raw.split(".")[:3])
-          assert parts >= (50, 0, 0), f"expected cryptography>=50.0.0 after override, got {raw}"
-          print(f"cryptography {raw} OK (GHSA-537c / GHSA-g6cj override)")
+
+          def _parts(name):
+              raw = version(name)
+              return raw, tuple(int(p) for p in raw.split(".")[:3])
+
+          crypto_raw, crypto = _parts("cryptography")
+          assert crypto >= (50, 0, 0), (
+              f"expected cryptography>=50.0.0 after override, got {crypto_raw}"
+          )
+          print(f"cryptography {crypto_raw} OK (GHSA-537c / GHSA-g6cj override)")
+
+          tools_raw, tools = _parts("setuptools")
+          assert tools >= (83, 0, 0), (
+              f"expected setuptools>=83.0.0 (PYSEC-2026-3447), got {tools_raw}"
+          )
+          assert tools[0] == 83, (
+              f"expected setuptools 83.x (84 is a deliberate major), got {tools_raw}"
+          )
+          print(f"setuptools {tools_raw} OK (PYSEC-2026-3447 / GHSA-h35f)")
           PY
       - name: Audit installed environment
         run: |
           python3 -m pip install pip-audit
           pip-audit --skip-editable
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install the lockfile tree Docker builds CSS from
+        run: npm ci
+      - name: Audit npm tree (high and above)
+        # nanoid GHSA-2v37-7h3g-55p8 is patched on the 3.x line (3.3.18).
+        # Fail the job on high/critical; do not --audit-level=moderate so a
+        # noisy low does not page, and do not ignore GHSA IDs.
+        run: npm audit --audit-level=high

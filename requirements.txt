@@ -109,6 +109,14 @@ certifi>=2024.7.4,<2027
 
 # AWS S3 — audio storage (AudioStorage._save_s3) and object-storage migration
 
+# Install toolchain. python:3.11-slim ships setuptools 79.x; PYSEC-2026-3447
+# / GHSA-h35f-9h28-mq5c (MANIFEST.in NFC/NFD exclusion bypass on macOS APFS)
+# is fixed in 83.0.0. Floor here so `pip install -r` cannot leave the image
+# default in place. scripts/install_python_deps.sh upgrades the same
+# specifier *before* this resolve so sdist builds use the patched FileList.
+# Stay on 83.x (84 is a distutils/compiler major); bump that bound separately.
+setuptools>=83.0.0,<84
+
 # Testing
 pytest>=9.0.3,<10
 pytest-cov>=4.1.0,<8

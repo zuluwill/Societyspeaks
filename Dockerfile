@@ -30,7 +30,8 @@ WORKDIR /app
 
 # Python dependencies — this layer is re-used by Docker cache until
 # requirements.txt or the install script changes. The script is the single
-# source of truth for the cryptography override (GHSA-537c / atproto <47).
+# source of truth for the cryptography override (GHSA-537c / atproto <47)
+# and upgrades setuptools past PYSEC-2026-3447 before the resolve.
 COPY requirements.txt .
 COPY scripts/install_python_deps.sh scripts/install_python_deps.sh
 RUN PIP_NO_CACHE_DIR=1 bash scripts/install_python_deps.sh
