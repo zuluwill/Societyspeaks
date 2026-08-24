@@ -41,6 +41,29 @@ updates:
         update-types:
           - "version-update:semver-minor"
           - "version-update:semver-major"
+      # 84 is a distutils/compiler major. increase-if-necessary opens a
+      # ceiling-raise the moment 84 exists; stay on 83.x (requirements.txt).
+      - dependency-name: "setuptools"
+        update-types: ["version-update:semver-major"]
+      # 7.37.6+ _DrainSignal uses Queue.mutex (gevent-incompatible under
+      # gunicorn). Version updates that only raise <7.37.6 must not occupy
+      # the weekly slot. Security advisories still open PRs (update-types
+      # ignore, not versions:) so a GHSA past the ceiling is still visible.
+      - dependency-name: "posthog"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+      # Code is reviewed against the 1.x/2.x client. 3.x is the next major.
+      - dependency-name: "openai"
+        update-types: ["version-update:semver-major"]
+      # 1.x is the 0.x → 1.0 major. Stay below 0.117 until reviewed; 0.117
+      # ceiling-raises still open as individual PRs.
+      - dependency-name: "anthropic"
+        update-types: ["version-update:semver-major"]
+      # gevent's C-API coupling. 4.x is a deliberate bump, not a drive-by.
+      - dependency-name: "greenlet"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: "/"

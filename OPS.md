@@ -483,12 +483,15 @@ noise PRs that only raise the floor. Exact `==` pins are bumped in the
 are ignored — those are deliberate platform/CSS migrations, not drive-bys.
 Stripe / redis-py / Flask-Limiter majors are ignored for the same reason
 (documented breakages or exact pins); cachelib 0.10+ is ignored as a 0.x
-minor because 0.16 changes `FileSystemCache` hashing. Security advisories
-still open PRs. Leaving those majors open starved the weekly 5-PR slot
-limit and blocked real patch PRs.
+minor because 0.16 changes `FileSystemCache` hashing. `increase-if-necessary`
+also opens a PR the moment a version exists **outside** a safety ceiling
+(setuptools 84, posthog ≥7.37.6, openai 3, anthropic 1, greenlet 4) — those
+are ignored as version updates so they cannot starve the weekly 5-PR slot.
+Security advisories still open PRs (`update-types` ignore, not `versions:`).
 
 When an in-major bump pulls a **new unbounded transitive** (flask-limiter
-3.12 → `limits>=3.13`; redis-py 5.3 → `PyJWT>=2.9`), add an explicit
+3.12 → `limits>=3.13`; redis-py 5.3 → `PyJWT>=2.9`; flask-session →
+`msgspec>=0.18.6`; gevent → `greenlet>=3.2.2`), add an explicit
 upper-bounded pin in the same change so the next image rebuild cannot
 jump a major the suite never reviewed.
 

@@ -21,6 +21,10 @@ flask-seasurf==2.0.0
 flask-talisman==1.1.0
 flask-mail==0.10.0
 flask-session==0.8.0
+# flask-session 0.8 declares msgspec>=0.18.6 with no ceiling (default
+# serializer is 0.x). Cap at the next minor past what pip-audit resolved
+# (0.21.1) so a 0.22 serializer rewrite cannot land unreviewed.
+msgspec>=0.18.6,<0.22
 sentry-sdk==2.68.0
 Flask-Caching==2.4.1
 Flask-Compress>=1.14,<2
@@ -31,6 +35,8 @@ redis==5.3.1
 PyJWT>=2.9.0,<3
 gunicorn>=22.0.0,<27
 gevent>=23.9.1,<27
+# gevent declares greenlet>=3.2.2 with no ceiling; 4.x is a C-API major.
+greenlet>=3.2.2,<4
 psycogreen>=1.0.1,<2
 boto3>=1.35.0,<2
 

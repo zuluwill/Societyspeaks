@@ -107,7 +107,17 @@ def test_dependabot_does_not_open_cryptography_resolve_ceiling_prs():
 def test_dependabot_does_not_let_known_majors_starve_the_weekly_slot_limit():
     """Version majors we will not merge as drive-bys must not occupy open-pull-requests-limit."""
     pip_block = _read(".github/dependabot.yml").split("package-ecosystem: npm", 1)[0]
-    for name in ("stripe", "redis", "flask-limiter", "cachelib"):
+    for name in (
+        "stripe",
+        "redis",
+        "flask-limiter",
+        "cachelib",
+        "setuptools",
+        "posthog",
+        "openai",
+        "anthropic",
+        "greenlet",
+    ):
         assert f'dependency-name: "{name}"' in pip_block, (
             f"Dependabot must ignore {name} majors/bound-widens so patch PRs can land"
         )
@@ -137,6 +147,12 @@ def test_unbounded_transitives_of_limiter_and_redis_are_capped():
     assert "flask-limiter==3.12" in pins
     assert "redis==5.3.1" in pins
     assert "sentry-sdk==2.68.0" in pins
+    assert "msgspec>=0.18.6,<0.22" in pins
+    assert "greenlet>=3.2.2,<4" in pins
+    assert any(p.startswith("posthog>=") and "<7.37.6" in p for p in pins), pins
+    assert any(p.startswith("openai>=") and p.endswith(",<3") for p in pins), pins
+    assert any(p.startswith("anthropic>=") and "<0.117" in p for p in pins), pins
+    assert SETUPTOOLS_PIN in pins
 
 
 def test_security_audit_runs_on_main_when_the_install_path_changes():
