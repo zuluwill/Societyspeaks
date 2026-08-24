@@ -123,7 +123,7 @@ certifi>=2024.7.4,<2027
 # default in place. scripts/install_python_deps.sh upgrades the same
 # specifier *before* this resolve so sdist builds use the patched FileList.
 # Stay on 83.x (84 is a distutils/compiler major); bump that bound separately.
-setuptools>=83.0.0,<84
+setuptools>=83.0.0,<85
 
 # Testing
 pytest>=9.0.3,<10
