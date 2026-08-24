@@ -93,30 +93,41 @@ def init_commands(app):
     app.cli.add_command(clean_spam)
     @app.cli.command('seed-db')
     def seed_database():
-        """Seeds the database with initial data."""
+        """Seeds the database with a sample native discussion (dev only)."""
         try:
-            # Clear existing discussions (optional)
-            # Discussion.query.delete()
+            existing = Discussion.query.filter_by(
+                slug='how-should-we-improve-the-nhs'
+            ).first()
+            if existing:
+                click.echo(f'Sample discussion already exists (id={existing.id}).')
+                return
 
-            # Create the NHS discussion
             nhs_discussion = Discussion(
-                polis_id='65bnczamhf',
                 title='How should we improve the NHS?',
-                description='Give specific details of what could be done and how? Give examples of what is not working with proposed solutions. How could we leverage technology whilst also ensuring privacy?',
+                description=(
+                    'Give specific details of what could be done and how? '
+                    'Give examples of what is not working with proposed solutions. '
+                    'How could we leverage technology whilst also ensuring privacy?'
+                ),
+                geographic_scope='country',
                 country='United Kingdom',
                 topic='Healthcare',
                 is_featured=True,
-                participant_count=1
+                has_native_statements=True,
+                participant_count=0,
+                information_links=[],
             )
-
             db.session.add(nhs_discussion)
             db.session.commit()
-            click.echo('Database seeded successfully!')
+            click.echo(
+                f'Database seeded successfully! Discussion id={nhs_discussion.id} '
+                f'slug={nhs_discussion.slug}'
+            )
 
         except Exception as e:
             db.session.rollback()
             click.echo(f'Error seeding database: {str(e)}')
-
+            raise
     # ==================================================================================
     # DAILY BRIEF COMMANDS
     # ==================================================================================

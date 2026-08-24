@@ -120,6 +120,20 @@ class DiscussionUpdate(db.Model):
 
 
 class DiscussionParticipant(db.Model):
+    __table_args__ = (
+        # Partial unique: one participant row per authenticated user per discussion.
+        # Required by upsert/ON CONFLICT paths and by v1w2x3y4z5a6. Declared here so
+        # db.create_all() (tests / from-scratch local) matches migrated production.
+        db.Index(
+            'uq_discussion_participant_user',
+            'discussion_id',
+            'user_id',
+            unique=True,
+            postgresql_where=db.text('user_id IS NOT NULL'),
+            sqlite_where=db.text('user_id IS NOT NULL'),
+        ),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Can be null for anonymous
@@ -727,6 +741,24 @@ class StatementVote(db.Model):
         db.Index('idx_vote_session_fingerprint', 'session_fingerprint'),
         db.Index('idx_vote_partner_ref', 'partner_ref'),
         db.Index('idx_vote_discussion_cohort', 'discussion_id', 'cohort_slug'),
+        # Partial uniques required by INSERT … ON CONFLICT in statements.py.
+        # Restored in migration v1w2x3y4z5a6; declare here so create_all matches.
+        db.Index(
+            'uq_statement_user_vote',
+            'statement_id',
+            'user_id',
+            unique=True,
+            postgresql_where=db.text('user_id IS NOT NULL'),
+            sqlite_where=db.text('user_id IS NOT NULL'),
+        ),
+        db.Index(
+            'uq_statement_session_vote',
+            'statement_id',
+            'session_fingerprint',
+            unique=True,
+            postgresql_where=db.text('session_fingerprint IS NOT NULL'),
+            sqlite_where=db.text('session_fingerprint IS NOT NULL'),
+        ),
     )
     
     id = db.Column(db.Integer, primary_key=True)
