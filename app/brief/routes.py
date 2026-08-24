@@ -16,6 +16,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
+from urllib.parse import urlparse
 from app.lib.time import utcnow_naive
 from app.lib.posthog_utils import email_subscriber_distinct_id, resolve_request_distinct_id, safe_posthog_capture, stitch_posthog_on_user_login
 
@@ -33,7 +34,11 @@ from app.models import (
     TrendingTopicArticle,
     NewsArticle,
 )
-from app.brief.email_client import send_brief_to_subscriber, ResendClient
+from app.brief.email_client import (
+    send_brief_to_subscriber,
+    ResendClient,
+    pin_magic_link_to_edition,
+)
 from app.trending.conversion_tracking import track_social_click
 from app.decorators import admin_required
 from app.brief.subscription import process_subscription
@@ -95,6 +100,64 @@ def get_subscriber_status():
         is_subscriber = True
 
     return subscriber, is_subscriber
+
+
+def _brief_magic_link_permalink() -> str | None:
+    """Dated permalink from ``?d=YYYY-MM-DD`` (and optional ``type=weekly``).
+
+    Brief editions are public; this must stay a same-origin date path so a
+    stale magic token can still open the emailed day instead of today's brief
+    or the subscribe wall.
+    """
+    date_str = (request.args.get('d') or request.args.get('date') or '').strip()
+    brief_type = (request.args.get('type') or '').strip().lower()
+    if not date_str:
+        return None
+    try:
+        datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        return None
+    if brief_type == 'weekly':
+        return url_for('brief.weekly_by_date', date_str=date_str)
+    return url_for('brief.view_date', date_str=date_str)
+
+
+def _brief_magic_link_destination() -> str:
+    """Path to open after a subscriber magic-link hit — pinned edition or today."""
+    return _brief_magic_link_permalink() or url_for('brief.today')
+
+
+def _no_store_redirect(location: str, code: int = 302):
+    """Auth/email redirects must not be cached as 'today' by clients or CDNs."""
+    response = redirect(location, code=code)
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
+
+def _edition_permalink(brief) -> str | None:
+    if not brief or brief.status != 'published' or not getattr(brief, 'date', None):
+        return None
+    date_str = brief.date.strftime('%Y-%m-%d')
+    if brief.brief_type == 'weekly':
+        return url_for('brief.weekly_by_date', date_str=date_str)
+    return url_for('brief.view_date', date_str=date_str)
+
+
+def _activate_brief_subscriber_session(subscriber, *, token: str, flash_welcome: bool) -> None:
+    session['brief_subscriber_id'] = subscriber.id
+    session['brief_subscriber_token'] = token
+    session.modified = True
+    if subscriber.user:
+        from flask_login import login_user
+        login_user(subscriber.user)
+        sync_partner_portal_session_for_email(subscriber.user.email)
+        stitch_posthog_on_user_login(
+            subscriber.user,
+            subscriber_email=subscriber.email,
+            properties={'method': 'magic_link', 'source': 'brief_subscription'},
+        )
+    if flash_welcome:
+        _flash_brief_magic_link_welcome(subscriber)
 
 
 def _items_with_topic_articles(brief):
@@ -213,6 +276,21 @@ def view_date(date_str):
         share_description=share_description,
         og_png_url=og_png_url,
     )
+
+
+@brief_bp.route('/brief/view/<int:brief_id>')
+@limiter.limit("60/minute")
+def view_by_id(brief_id):
+    """Redirect email ``/brief/view/<id>`` links (listen-to-story) to the dated permalink."""
+    brief = db.session.get(DailyBrief, brief_id)
+    if not brief or not brief.date:
+        return redirect(url_for('brief.today'))
+    if brief.status != 'published':
+        return render_template('brief/no_brief.html', requested_date=brief.date)
+    date_str = brief.date.strftime('%Y-%m-%d')
+    if brief.brief_type == 'weekly':
+        return redirect(url_for('brief.weekly_by_date', date_str=date_str), code=301)
+    return redirect(url_for('brief.view_date', date_str=date_str), code=301)
 
 
 @brief_bp.route('/brief/<date_str>/og.png')
@@ -352,7 +430,7 @@ def weekly_by_date(date_str):
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
         flash(_('Invalid date format. Use YYYY-MM-DD.'), 'error')
-        return redirect(url_for('brief.weekly_latest'))
+        return redirect(url_for('brief.archive'))
 
     subscriber, is_subscriber = get_subscriber_status()
 
@@ -364,7 +442,7 @@ def weekly_by_date(date_str):
 
     if not brief:
         flash(f'No weekly brief available for the week of {brief_date.strftime("%B %d, %Y")}', 'info')
-        return redirect(url_for('brief.weekly_latest'))
+        return render_template('brief/no_brief.html', requested_date=brief_date)
 
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
@@ -787,7 +865,12 @@ def switch_to_weekly(token):
 
 @brief_bp.route('/brief/m/<token>')
 def magic_link(token):
-    """Magic link access for subscribers"""
+    """Magic link access for subscribers.
+
+    Auth is best-effort. The emailed edition is public, so a pinned ``?d=``
+    still opens that day when the token has been rotated after a later send.
+    """
+    destination = _brief_magic_link_destination()
     subscriber = DailyBriefSubscriber.verify_magic_token(token)
 
     if not subscriber:
@@ -801,40 +884,23 @@ def magic_link(token):
             if allow_renew:
                 expired_sub.generate_magic_token(expires_hours=168)
                 db.session.commit()
-                session['brief_subscriber_id'] = expired_sub.id
-                session['brief_subscriber_token'] = expired_sub.magic_token
-                session.modified = True
-                if expired_sub.user:
-                    from flask_login import login_user
-                    login_user(expired_sub.user)
-                    sync_partner_portal_session_for_email(expired_sub.user.email)
-                    stitch_posthog_on_user_login(
-                        expired_sub.user,
-                        subscriber_email=expired_sub.email,
-                        properties={'method': 'magic_link', 'source': 'brief_subscription'},
-                    )
-                _flash_brief_magic_link_welcome(expired_sub)
-                return redirect(url_for('brief.today'))
+                _activate_brief_subscriber_session(
+                    expired_sub,
+                    token=expired_sub.magic_token,
+                    flash_welcome=True,
+                )
+                return _no_store_redirect(destination)
+
+        if _brief_magic_link_permalink():
+            return _no_store_redirect(destination)
 
         flash(_('This link has expired or is invalid. Please subscribe again.'), 'warning')
         return redirect(url_for('brief.subscribe'))
 
-    session['brief_subscriber_id'] = subscriber.id
-    session['brief_subscriber_token'] = token
-    session.modified = True
-
-    if subscriber.user:
-        from flask_login import login_user
-        login_user(subscriber.user)
-        sync_partner_portal_session_for_email(subscriber.user.email)
-        stitch_posthog_on_user_login(
-            subscriber.user,
-            subscriber_email=subscriber.email,
-            properties={'method': 'magic_link', 'source': 'brief_subscription'},
-        )
-
-    _flash_brief_magic_link_welcome(subscriber)
-    return redirect(url_for('brief.today'))
+    _activate_brief_subscriber_session(
+        subscriber, token=token, flash_welcome=True,
+    )
+    return _no_store_redirect(destination)
 
 
 @brief_bp.route('/brief/preferences/<token>', methods=['GET', 'POST'])
@@ -1359,7 +1425,33 @@ def brief_track_click(brief_id):
         db.session.rollback()
         logger.warning(f"Error recording brief click for brief {brief_id}: {e}")
 
-    response = redirect(target_url)
+    # HTML emails wrap /brief/m/<token>. Send the reader to this edition's
+    # public permalink in one hop so a stale token cannot show today.
+    redirect_to = target_url
+    try:
+        edition = db.session.get(DailyBrief, brief_id)
+        parsed = urlparse(target_url)
+        permalink = _edition_permalink(edition)
+        if permalink and '/brief/m/' in (parsed.path or ''):
+            token = (parsed.path or '').rstrip('/').rsplit('/', 1)[-1]
+            subscriber = DailyBriefSubscriber.verify_magic_token(token)
+            if subscriber:
+                _activate_brief_subscriber_session(
+                    subscriber, token=token, flash_welcome=False,
+                )
+            if parsed.fragment:
+                permalink = f'{permalink}#{parsed.fragment}'
+            redirect_to = permalink
+        else:
+            redirect_to = pin_magic_link_to_edition(target_url, edition)
+    except Exception as e:
+        logger.warning(
+            "Error resolving brief click destination for brief %s: %s",
+            brief_id,
+            e,
+        )
+
+    response = _no_store_redirect(redirect_to)
     if verified_subscriber_id is not None:
         # Durable subscriber↔visitor bridge: the signed cookie lets later
         # anonymous participation (votes, games) join back to this subscriber.

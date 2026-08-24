@@ -96,7 +96,7 @@ def test_fallback_html_survives_brief_attribute_expiry(app, db, brief_and_subscr
             unsubscribe_url='https://example.com/brief/unsubscribe/x',
         )
         assert 'SOCIETY SPEAKS DAILY BRIEF' in html
-        assert 'https://example.com/brief/m/x' in html
+        assert f'/brief/{brief.date.isoformat()}' in html
 
 
 def test_batch_send_continues_after_flush_failure(app, db, brief_and_subscriber):
@@ -429,3 +429,20 @@ def test_fit_does_not_over_trim_when_minified_email_fits(app, db, brief_and_subs
         assert html.count('id="item-') == 6, 'fitter trimmed a brief that already fit'
         assert 'more stories in today' not in html
         assert _email_html_byte_size(html) <= GMAIL_CLIP_TARGET_BYTES
+
+
+def test_render_email_pins_view_in_browser_to_edition_date(app, db, brief_and_subscriber):
+    """View-in-browser must open this edition, not /brief/today."""
+    brief_id, sub_id, _ = brief_and_subscriber
+    with app.app_context():
+        brief = db.session.get(DailyBrief, brief_id)
+        sub = db.session.get(DailyBriefSubscriber, sub_id)
+        client = _bare_client()
+        html = client._render_email(sub, brief, sorted_items=[])
+        date_str = brief.date.isoformat()
+        assert f'/brief/m/{sub.magic_token}?d={date_str}' in html
+        assert f'/brief/{date_str}' in html
+        assert 'This edition' in html
+        assert '/brief/today' not in html
+        assert '/brief/view/' not in html
+

@@ -209,7 +209,7 @@ def test_stance_email_handoff_url(app):
             f'?src=brief_stance#stance'
         )
         assert handoff['tradeoffs_url'] == (
-            'https://societyspeaks.io/play/daily?src=brief_tradeoffs'
+            f'https://societyspeaks.io/play/daily/{today.isoformat()}?src=brief_tradeoffs'
         )
         assert handoff['subline'] == 'Where do you stand?'
         assert 'vote_agree_url' not in handoff
@@ -262,7 +262,9 @@ def test_morning_wave_brief_gets_todays_wired_question(app):
             handoff['stance_url']
             == f'https://societyspeaks.io/brief/{yesterday.isoformat()}?src=brief_stance#stance'
         )
-        assert handoff['tradeoffs_url'].endswith('?src=brief_tradeoffs')
+        assert handoff['tradeoffs_url'].endswith(
+            f'/play/daily/{yesterday.isoformat()}?src=brief_tradeoffs'
+        )
         assert 'press leaned' in handoff['subline'].lower()
 
 

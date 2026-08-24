@@ -14,6 +14,7 @@ from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
 from email.utils import parseaddr
 from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
@@ -37,6 +38,98 @@ except ImportError:
     _sentry_sdk = None
 
 logger = logging.getLogger(__name__)
+
+
+def build_brief_magic_link_url(
+    base_url: str,
+    token: str,
+    brief: Optional[DailyBrief] = None,
+) -> str:
+    """Subscriber magic link that opens *this* edition, not whatever is latest.
+
+    Welcome emails omit *brief* so they still land on the current edition.
+    """
+    url = f"{(base_url or '').rstrip('/')}/brief/m/{token}"
+    if not brief or not getattr(brief, 'date', None):
+        return url
+    url = f"{url}?d={brief.date.isoformat()}"
+    if getattr(brief, 'brief_type', 'daily') == 'weekly':
+        url = f"{url}&type=weekly"
+    return url
+
+
+def public_brief_url(base_url: str, brief: Optional[DailyBrief] = None) -> str:
+    """Canonical public permalink for an edition — no magic token, no 'today' alias."""
+    root = (base_url or '').rstrip('/')
+    if not brief or not getattr(brief, 'date', None):
+        return f'{root}/brief'
+    date_str = brief.date.isoformat()
+    if getattr(brief, 'brief_type', 'daily') == 'weekly':
+        return f'{root}/brief/weekly/{date_str}'
+    return f'{root}/brief/{date_str}'
+
+
+def permalink_from_magic_link_url(url: str) -> Optional[str]:
+    """Derive the public dated permalink from a pinned ``/brief/m/…?d=`` URL."""
+    if not url or url == '#':
+        return None
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return None
+    if '/brief/m/' not in (parsed.path or ''):
+        return None
+    qs = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    date_str = (qs.get('d') or qs.get('date') or '').strip()
+    if not date_str:
+        return None
+    try:
+        datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        return None
+    origin = (
+        f'{parsed.scheme}://{parsed.netloc}'
+        if parsed.scheme and parsed.netloc
+        else ''
+    )
+    path = (
+        f'/brief/weekly/{date_str}'
+        if qs.get('type') == 'weekly'
+        else f'/brief/{date_str}'
+    )
+    return f'{origin}{path}'
+
+
+def pin_magic_link_to_edition(target_url: str, brief: Optional[DailyBrief]) -> str:
+    """Attach this edition's date to an unpinned ``/brief/m/`` URL.
+
+    Already-sent emails wrap ``/brief/m/<token>`` through click tracking with
+    no date. Pinning here is what makes those old inbox links open the
+    edition they were sent for, instead of today's brief.
+    """
+    if not target_url or not brief or not getattr(brief, 'date', None):
+        return target_url
+    try:
+        parsed = urlparse(target_url)
+    except Exception:
+        return target_url
+    if '/brief/m/' not in (parsed.path or ''):
+        return target_url
+    pairs = parse_qsl(parsed.query, keep_blank_values=True)
+    keys = {key for key, _value in pairs}
+    if 'd' in keys or 'date' in keys:
+        return target_url
+    pairs.append(('d', brief.date.isoformat()))
+    if getattr(brief, 'brief_type', 'daily') == 'weekly':
+        pairs.append(('type', 'weekly'))
+    return urlunparse((
+        parsed.scheme,
+        parsed.netloc,
+        parsed.path,
+        parsed.params,
+        urlencode(pairs),
+        parsed.fragment,
+    ))
 
 
 # Failure classification ------------------------------------------------------
@@ -380,22 +473,28 @@ def _extract_magic_link_url(html: str) -> str | None:
     return match.group(1) if match else None
 
 
+def _web_url_for_trimmed_stories(html: str) -> str:
+    """Public dated permalink when the magic link is pinned; else the magic URL."""
+    magic_url = _extract_magic_link_url(html) or ''
+    return permalink_from_magic_link_url(magic_url) or magic_url or '#'
+
+
 def _append_read_more_notice(html: str, removed_count: int) -> str:
     if removed_count <= 0:
         return html
-    magic_url = _extract_magic_link_url(html) or '#'
+    web_url = _web_url_for_trimmed_stories(html)
     story_word = 'story' if removed_count == 1 else 'stories'
     notice = (
         '<tr><td align="center" style="padding:24px 28px;background:#eff6ff;'
         'border-top:1px solid #dbeafe;">'
         '<p style="font-size:15px;color:#1e40af;margin:0 0 6px;font-weight:600;">'
-        f'{removed_count} more {story_word} in today&apos;s brief &mdash; listed above.'
+        f'{removed_count} more {story_word} in this brief &mdash; listed above.'
         '</p>'
         '<p style="font-size:13px;color:#3b5bdb;margin:0 0 14px;">'
         'Open the full brief on the web for every story, all sources and the '
         'left / centre / right breakdown.'
         '</p>'
-        '<a href="' + magic_url + '" target="_blank" '
+        '<a href="' + web_url + '" target="_blank" '
         'style="display:inline-block;font-size:14px;font-weight:600;color:#ffffff;'
         'background:#1e40af;padding:12px 20px;border-radius:8px;text-decoration:none;">'
         'Read the full brief &rarr;</a></td></tr>'
@@ -449,8 +548,8 @@ def _trim_story_rows_from_end(html: str, limit: int, *, min_rows: int = 3) -> st
     if len(rows) == original_count:
         return html
     trimmed = prefix + ''.join(rows)
-    magic_url = _extract_magic_link_url(html) or '#'
-    trimmed = _repoint_index_links_to_web(trimmed, removed_ids, magic_url)
+    web_url = _web_url_for_trimmed_stories(html)
+    trimmed = _repoint_index_links_to_web(trimmed, removed_ids, web_url)
     return _append_read_more_notice(trimmed, original_count - len(rows)) + suffix
 
 
@@ -657,6 +756,7 @@ class ResendClient:
         unsubscribe_url: str,
         preferences_url: str,
         sorted_items: Optional[List[BriefItem]] = None,
+        web_brief_url: Optional[str] = None,
     ) -> str:
         """Render a plain-text alternative to improve inbox deliverability."""
         if sorted_items is None:
@@ -693,7 +793,7 @@ class ResendClient:
             lines.append("")
 
         lines.extend([
-            f"View on web: {magic_link_url}",
+            f"View on web: {web_brief_url or magic_link_url}",
             f"Manage preferences: {preferences_url}",
             f"Unsubscribe: {unsubscribe_url}",
         ])
@@ -815,7 +915,10 @@ class ResendClient:
 
             # Build URLs
             base_url = get_base_url()
-            magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
+            magic_link_url = build_brief_magic_link_url(
+                base_url, subscriber.magic_token, brief,
+            )
+            web_brief_url = public_brief_url(base_url, brief)
             unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
 
@@ -852,7 +955,8 @@ class ResendClient:
                     magic_link_url=magic_link_url,
                     unsubscribe_url=unsubscribe_url,
                     preferences_url=preferences_url,
-                    sorted_items=sorted_items
+                    sorted_items=sorted_items,
+                    web_brief_url=web_brief_url,
                 ),
                 'reply_to': self.reply_to,
                 'tags': [
@@ -980,8 +1084,12 @@ class ResendClient:
         # Get base URL from config or env
         base_url = get_base_url()
 
-        # Build URLs
-        magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
+        # Build URLs — pin the magic link to this edition so "view in browser"
+        # (and Gmail-trim "read the full brief") open the emailed day, not today.
+        magic_link_url = build_brief_magic_link_url(
+            base_url, subscriber.magic_token, brief,
+        )
+        web_brief_url = public_brief_url(base_url, brief)
         unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
         if sorted_items is None:
@@ -1033,6 +1141,7 @@ class ResendClient:
                 sorted_items=sorted_items,
                 subscriber=subscriber,
                 magic_link_url=magic_link_url,
+                web_brief_url=web_brief_url,
                 unsubscribe_url=unsubscribe_url,
                 preferences_url=preferences_url,
                 base_url=base_url,
@@ -1121,7 +1230,7 @@ class ResendClient:
             </div>
 
             <div style="text-align: center; margin-bottom: 25px;">
-                <a href="{magic_link_url}" style="display: inline-block; background-color: #d97706; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">View on Website</a>
+                <a href="{public_brief_url(get_base_url(), brief)}" style="display: inline-block; background-color: #d97706; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">View on Website</a>
             </div>
 
             <div style="margin-bottom: 30px; padding: 15px; background: #fffbf0; border-left: 4px solid #f0ad4e;">
@@ -1133,7 +1242,7 @@ class ResendClient:
             {items_html}
 
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
-                <p><a href="{magic_link_url}" style="color: #d97706; font-weight: 600;">View on Website</a> | <a href="{unsubscribe_url}" style="color: #666;">Unsubscribe</a> | <a href="https://societyspeaks.io/brief/archive" style="color: #666;">View Archive</a></p>
+                <p><a href="{public_brief_url(get_base_url(), brief)}" style="color: #d97706; font-weight: 600;">View on Website</a> | <a href="{unsubscribe_url}" style="color: #666;">Unsubscribe</a> | <a href="https://societyspeaks.io/brief/archive" style="color: #666;">View Archive</a></p>
                 <p style="margin-top: 10px;">Society Speaks – Sense-making, not sensationalism</p>
             </div>
         </body>

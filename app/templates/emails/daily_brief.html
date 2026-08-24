@@ -212,7 +212,9 @@
                         padding-bottom: 8px;
                       "
                     >
+                      <a href="{{ web_brief_url or magic_link_url }}" target="_blank" style="color: #ffffff; text-decoration: none;">
                       {% if brief.brief_type == 'weekly' %}{{ _('The Weekly Brief') }}{% else %}{{ _('The Daily Brief') }}{% endif %}
+                      </a>
                     </td>
                   </tr>
                   <tr>
@@ -227,7 +229,9 @@
                         color: #bfdbfe;
                       "
                     >
+                      <a href="{{ web_brief_url or magic_link_url }}" target="_blank" style="color: #bfdbfe; text-decoration: none;">
                       {{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}{% endif %}
+                      </a>
                     </td>
                   </tr>
                 </table>
@@ -1705,7 +1709,7 @@
                             "
                           >
                             <a
-                              href="{{ base_url }}/brief/view/{{ brief.id }}#item-{{ item.id }}"
+                              href="{% if brief.brief_type == 'weekly' %}{{ base_url }}/brief/weekly/{{ brief.date.strftime('%Y-%m-%d') }}#item-{{ item.id }}{% else %}{{ base_url }}/brief/{{ brief.date.strftime('%Y-%m-%d') }}#item-{{ item.id }}{% endif %}"
                               target="_blank"
                               style="
                                 display: inline-block;
@@ -3219,6 +3223,22 @@
                         border="0"
                       >
                         <tr>
+                          <td style="padding: 0 12px">
+                            <a
+                              href="{{ web_brief_url or magic_link_url }}"
+                              target="_blank"
+                              style="
+                                font-family:
+                                  -apple-system, BlinkMacSystemFont,
+                                  &quot;Segoe UI&quot;, Roboto,
+                                  &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                                font-size: 13px;
+                                color: #94a3b8;
+                                text-decoration: none;
+                              "
+                              >{{ _('This edition') }}</a
+                            >
+                          </td>
                           <td style="padding: 0 12px">
                             <a
                               href="{{ base_url }}/brief/archive"

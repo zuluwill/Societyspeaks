@@ -232,7 +232,7 @@ def build_stance_email_handoff(
         'vote_pcts': vote_pcts,
         # Web fallback when the reader wants context or to add a reason.
         'stance_url': f"{root}/brief/{date_str}?src=brief_stance#stance",
-        'tradeoffs_url': f"{root}/play/daily?src=brief_tradeoffs",
+        'tradeoffs_url': f"{root}/play/daily/{date_str}?src=brief_tradeoffs",
         'show_first_timer_hint': (
             subscriber is not None and (subscriber.total_briefs_received or 0) == 0
         ),
@@ -331,7 +331,7 @@ def build_weekly_stance_email_handoff(
         'show_early_signal': show_early_signal,
         'vote_pcts': vote_pcts,
         'stance_url': f"{root}/brief/weekly/{date_str}?src=weekly_brief_stance#stance",
-        'tradeoffs_url': f"{root}/play/daily?src=weekly_brief_tradeoffs",
+        'tradeoffs_url': f"{root}/play/daily/{date_str}?src=weekly_brief_tradeoffs",
         'show_first_timer_hint': (
             subscriber is not None and (subscriber.total_briefs_received or 0) == 0
         ),
