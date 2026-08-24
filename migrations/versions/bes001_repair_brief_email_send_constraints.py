@@ -24,19 +24,22 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        """
-        DELETE FROM brief_email_send a
-        USING brief_email_send b
-        WHERE a.brief_run_id = b.brief_run_id
-          AND a.recipient_id = b.recipient_id
-          AND a.ctid > b.ctid
-        """
-    )
+    # Table is created on the paid-briefings branch; this repair can run on
+    # from-empty before that branch merges. No-op until the table exists.
     op.execute(
         """
         DO $$
         BEGIN
+            IF to_regclass('public.brief_email_send') IS NULL THEN
+                RETURN;
+            END IF;
+
+            DELETE FROM brief_email_send a
+            USING brief_email_send b
+            WHERE a.brief_run_id = b.brief_run_id
+              AND a.recipient_id = b.recipient_id
+              AND a.ctid > b.ctid;
+
             IF NOT EXISTS (
                 SELECT 1 FROM pg_constraint
                 WHERE conrelid = 'brief_email_send'::regclass AND contype = 'p'
@@ -44,16 +47,18 @@ def upgrade():
                 ALTER TABLE brief_email_send
                     ADD CONSTRAINT brief_email_send_pkey PRIMARY KEY (id);
             END IF;
-        END $$
+
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_brief_run_recipient_send
+                ON brief_email_send (brief_run_id, recipient_id);
+
+            IF to_regclass('public.brief_email_send_id_seq') IS NOT NULL THEN
+                PERFORM setval(
+                    'brief_email_send_id_seq',
+                    (SELECT coalesce(max(id), 1) FROM brief_email_send)
+                );
+            END IF;
+        END $$;
         """
-    )
-    op.execute(
-        'CREATE UNIQUE INDEX IF NOT EXISTS uq_brief_run_recipient_send '
-        'ON brief_email_send (brief_run_id, recipient_id)'
-    )
-    op.execute(
-        "SELECT setval('brief_email_send_id_seq', "
-        "(SELECT coalesce(max(id), 1) FROM brief_email_send))"
     )
 
 

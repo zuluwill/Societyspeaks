@@ -66,15 +66,13 @@ def upgrade():
         batch_op.create_index('idx_dqr_question', ['daily_question_id'], unique=False)
         batch_op.create_index('idx_dqr_user', ['user_id'], unique=False)
 
-    with op.batch_alter_table('news_article', schema=None) as batch_op:
-        batch_op.drop_index('idx_news_article_fetched')
-        batch_op.drop_index('idx_news_article_source_fetched')
-
-    with op.batch_alter_table('trending_topic', schema=None) as batch_op:
-        batch_op.drop_index('idx_trending_topic_created')
-        batch_op.drop_index('idx_trending_topic_status_hold')
-
-    # ### end Alembic commands ###
+    # These index drops were auto-generated against a production schema that had
+    # them; from-empty installs (and some sibling branches) never created them.
+    # IF EXISTS keeps both paths safe. Production already stamped this revision.
+    op.execute("DROP INDEX IF EXISTS idx_news_article_fetched")
+    op.execute("DROP INDEX IF EXISTS idx_news_article_source_fetched")
+    op.execute("DROP INDEX IF EXISTS idx_trending_topic_created")
+    op.execute("DROP INDEX IF EXISTS idx_trending_topic_status_hold")
 
 
 def downgrade():

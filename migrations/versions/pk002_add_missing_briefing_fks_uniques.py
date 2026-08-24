@@ -58,6 +58,9 @@ def _guarded(table, name, ddl):
         f"""
         DO $$
         BEGIN
+            IF to_regclass('public.{table}') IS NULL THEN
+                RETURN;
+            END IF;
             IF NOT EXISTS (
                 SELECT 1 FROM pg_constraint
                 WHERE conrelid = '{table}'::regclass AND conname = '{name}'
@@ -73,10 +76,20 @@ def upgrade():
     for table, name, clause in FKS:
         _guarded(table, name, f'ALTER TABLE {table} ADD CONSTRAINT {name} {clause}')
 
-    op.execute('CREATE UNIQUE INDEX IF NOT EXISTS uq_brief_recipient_magic_token '
-               'ON brief_recipient (magic_token)')
-    op.execute('CREATE UNIQUE INDEX IF NOT EXISTS uq_brief_recipient_unsubscribe_token '
-               'ON brief_recipient (unsubscribe_token)')
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF to_regclass('public.brief_recipient') IS NULL THEN
+                RETURN;
+            END IF;
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_brief_recipient_magic_token
+                ON brief_recipient (magic_token);
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_brief_recipient_unsubscribe_token
+                ON brief_recipient (unsubscribe_token);
+        END $$;
+        """
+    )
 
     # Promote unique indexes created by bes001/pk001 into named table
     # constraints; create outright where neither exists (fresh databases).
@@ -85,6 +98,9 @@ def upgrade():
             f"""
             DO $$
             BEGIN
+                IF to_regclass('public.{table}') IS NULL THEN
+                    RETURN;
+                END IF;
                 IF EXISTS (SELECT 1 FROM pg_constraint
                            WHERE conrelid = '{table}'::regclass AND conname = '{name}') THEN
                     NULL;  -- already a constraint
@@ -106,6 +122,9 @@ def upgrade():
             f"""
             DO $$
             BEGIN
+                IF to_regclass('public.notification') IS NULL THEN
+                    RETURN;
+                END IF;
                 IF EXISTS (SELECT 1 FROM pg_constraint
                            WHERE conname = 'notification_{col}_fkey'
                              AND confdeltype <> 'c') THEN
@@ -122,17 +141,27 @@ def upgrade():
 
     # Deterministic full-history aggregate rebuild (mirrors
     # rollup_analytics_daily, which only covers the last 14 days).
-    op.execute('DELETE FROM analytics_daily_aggregate')
     op.execute(
-        f"""
-        INSERT INTO analytics_daily_aggregate
-            (event_date, event_name, programme_id, discussion_id, cohort_slug,
-             country, event_count, unique_users, updated_at)
-        SELECT date(created_at), event_name, programme_id, discussion_id,
-               cohort_slug, country, count(id), count(DISTINCT user_id), now()
-        FROM analytics_event
-        WHERE event_name IN ({CANONICAL_EVENTS})
-        GROUP BY 1, 2, 3, 4, 5, 6
+        """
+        DO $$
+        BEGIN
+            IF to_regclass('public.analytics_daily_aggregate') IS NULL
+               OR to_regclass('public.analytics_event') IS NULL THEN
+                RETURN;
+            END IF;
+            DELETE FROM analytics_daily_aggregate;
+            INSERT INTO analytics_daily_aggregate
+                (event_date, event_name, programme_id, discussion_id, cohort_slug,
+                 country, event_count, unique_users, updated_at)
+            SELECT date(created_at), event_name, programme_id, discussion_id,
+                   cohort_slug, country, count(id), count(DISTINCT user_id), now()
+            FROM analytics_event
+            WHERE event_name IN (
+                'account_created','user_logged_in','discussion_viewed',
+                'statement_voted','response_created','cohort_assigned','analysis_generated'
+            )
+            GROUP BY 1, 2, 3, 4, 5, 6;
+        END $$;
         """
     )
 

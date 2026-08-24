@@ -21,6 +21,8 @@ def column_exists(table_name, column_name):
     """Check if a column exists in a table."""
     bind = op.get_bind()
     inspector = inspect(bind)
+    if table_name not in inspector.get_table_names():
+        return False
     columns = [col['name'] for col in inspector.get_columns(table_name)]
     return column_name in columns
 
@@ -29,11 +31,19 @@ def index_exists(table_name, index_name):
     """Check if an index exists on a table."""
     bind = op.get_bind()
     inspector = inspect(bind)
+    if table_name not in inspector.get_table_names():
+        return False
     indexes = [idx['name'] for idx in inspector.get_indexes(table_name)]
     return index_name in indexes
 
 
 def upgrade():
+    # brief_email_send is created on a sibling paid-briefings branch; this
+    # revision can run first on from-empty installs. No-op until the table
+    # exists (later merges / bes001 repair cover production).
+    if 'brief_email_send' not in inspect(op.get_bind()).get_table_names():
+        return
+
     # Add attempt_count - tracks how many times we've tried to send to this recipient
     if not column_exists('brief_email_send', 'attempt_count'):
         op.add_column('brief_email_send', sa.Column('attempt_count', sa.Integer(), server_default='1', nullable=False))

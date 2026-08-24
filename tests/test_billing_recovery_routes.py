@@ -122,7 +122,9 @@ class TestHandlePaymentFailed:
         captured = []
         monkeypatch.setattr(
             'app.billing.routes._track_posthog',
-            lambda event, user_id, props=None: captured.append((event, user_id, props)),
+            lambda event, user_id, props=None, *, insert_id=None, durable=True: captured.append(
+                (event, user_id, props)
+            ),
         )
 
         def fake_call(fn, sub_id, **kwargs):
