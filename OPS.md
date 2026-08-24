@@ -487,7 +487,12 @@ minor because 0.16 changes `FileSystemCache` hashing. `increase-if-necessary`
 also opens a PR the moment a version exists **outside** a safety ceiling
 (setuptools 84, posthog ≥7.37.6, openai 3, anthropic 1, greenlet 4) — those
 are ignored as version updates so they cannot starve the weekly 5-PR slot.
-Security advisories still open PRs (`update-types` ignore, not `versions:`).
+PostHog also has `versions: [">=7.37.6"]` and is excluded from the
+python-minor-patch group: `update-types` alone still opened a patch widen
+to `<7.37.7` (PR #39), which admits the gevent-incompatible `_DrainSignal`.
+A GHSA that only exists past 7.37.6 will not get a Dependabot PR — pip-audit
+is the backstop; raise that ceiling only with a gevent review. Other ignored
+packages still get security PRs (`update-types` only).
 
 When an in-major bump pulls a **new unbounded transitive** (flask-limiter
 3.12 → `limits>=3.13`; redis-py 5.3 → `PyJWT>=2.9`; flask-session →

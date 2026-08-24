@@ -16,6 +16,11 @@ updates:
     groups:
       python-minor-patch:
         update-types: ["minor", "patch"]
+        # Safety-ceiling packages: constraint widens are not "patches".
+        # Leaving them in the group let Dependabot open <7.37.7 after we
+        # ignored update-types (PR #39). Security advisories still open.
+        exclude-patterns:
+          - "posthog"
     # Majors arrive as individual PRs so breaking changes are reviewed alone.
     ignore:
       # atproto still declares cryptography<47. The patched wheel (>=50) is
@@ -46,9 +51,12 @@ updates:
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-major"]
       # 7.37.6+ _DrainSignal uses Queue.mutex (gevent-incompatible under
-      # gunicorn). Version updates that only raise <7.37.6 must not occupy
-      # the weekly slot. Security advisories still open PRs (update-types
-      # ignore, not versions:) so a GHSA past the ceiling is still visible.
+      # gunicorn). update-types ignore alone did not stop a patch widen
+      # to <7.37.7 (PR #39). Ignore the version range too. A GHSA that
+      # only exists past 7.37.6 will also be ignored — pip-audit is the
+      # backstop; raise the ceiling only with a gevent review.
+      - dependency-name: "posthog"
+        versions: [">=7.37.6"]
       - dependency-name: "posthog"
         update-types:
           - "version-update:semver-major"

@@ -121,6 +121,9 @@ def test_dependabot_does_not_let_known_majors_starve_the_weekly_slot_limit():
         assert f'dependency-name: "{name}"' in pip_block, (
             f"Dependabot must ignore {name} majors/bound-widens so patch PRs can land"
         )
+    assert 'versions: [">=7.37.6"]' in pip_block
+    assert 'exclude-patterns:' in pip_block
+    assert '"posthog"' in pip_block.split("exclude-patterns:", 1)[1][:200]
 
 
 def test_github_actions_use_current_setup_majors_and_bust_pip_cache_on_install_script():
@@ -151,7 +154,13 @@ def test_unbounded_transitives_of_limiter_and_redis_are_capped():
     assert "greenlet>=3.2.2,<4" in pins
     assert any(p.startswith("posthog>=") and "<7.37.6" in p for p in pins), pins
     assert any(p.startswith("openai>=") and p.endswith(",<3") for p in pins), pins
-    assert any(p.startswith("anthropic>=") and "<0.117" in p for p in pins), pins
+    anthropic_pins = [p for p in pins if p.lower().startswith("anthropic>=")]
+    assert len(anthropic_pins) == 1, anthropic_pins
+    assert "<0." in anthropic_pins[0], anthropic_pins[0]
+    ceiling = anthropic_pins[0].split(",")[-1]
+    assert not ceiling.startswith("<1"), (
+        f"anthropic ceiling must stay on 0.x until a dedicated 1.x review; got {ceiling}"
+    )
     assert SETUPTOOLS_PIN in pins
 
 
