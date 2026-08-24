@@ -30,7 +30,8 @@ updates:
       # dedicated upgrade; patches on 5.x still group as python-minor-patch.
       - dependency-name: "redis"
         update-types: ["version-update:semver-major"]
-      # Flask-Limiter 4 is a config/API major. Exact 3.8.x pin until we migrate.
+      # Flask-Limiter 4 is a config/API major. Stay on the 3.x exact pin
+      # (currently 3.12); 3.x patches still group as python-minor-patch.
       - dependency-name: "flask-limiter"
         update-types: ["version-update:semver-major"]
       # 0.10+ is the next 0.x minor. 0.16 changes FileSystemCache hashing

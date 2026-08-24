@@ -13,6 +13,10 @@ wtforms==3.2.2
 email_validator==2.3.0
 python-dotenv>=1.2.2,<2
 flask-limiter==3.12
+# flask-limiter 3.12 declares limits>=3.13 with no ceiling; a naive resolve
+# installs current PyPI (5.x). Cap the major PR 33 / pip-audit just proved.
+# 5.0 dropped fixed-window-elastic-expiry; we use the default fixed-window.
+limits>=5.8.0,<6
 flask-seasurf==2.0.0
 flask-talisman==1.1.0
 flask-mail==0.10.0
@@ -21,6 +25,10 @@ sentry-sdk==2.68.0
 Flask-Caching==2.4.1
 Flask-Compress>=1.14,<2
 redis==5.3.1
+# redis-py 5.3.x declares PyJWT>=2.9.0 with no ceiling (token-auth support).
+# We do not use credential providers; pin so a future PyJWT 3 cannot land
+# unreviewed on the next image rebuild.
+PyJWT>=2.9.0,<3
 gunicorn>=22.0.0,<27
 gevent>=23.9.1,<27
 psycogreen>=1.0.1,<2

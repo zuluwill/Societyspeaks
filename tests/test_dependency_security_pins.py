@@ -129,6 +129,16 @@ def test_github_actions_use_current_setup_majors_and_bust_pip_cache_on_install_s
             assert "actions/setup-node@v7" in src, path
 
 
+def test_unbounded_transitives_of_limiter_and_redis_are_capped():
+    """flask-limiter declares limits>=3.13; redis 5.3 declares PyJWT>=2.9 — both unbounded."""
+    pins = _requirement_pins(_read("requirements.txt"))
+    assert "limits>=5.8.0,<6" in pins
+    assert "PyJWT>=2.9.0,<3" in pins
+    assert "flask-limiter==3.12" in pins
+    assert "redis==5.3.1" in pins
+    assert "sentry-sdk==2.68.0" in pins
+
+
 def test_security_audit_runs_on_main_when_the_install_path_changes():
     source = _read(".github/workflows/security.yml")
     assert "branches: [main]" in source

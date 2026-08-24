@@ -487,6 +487,11 @@ minor because 0.16 changes `FileSystemCache` hashing. Security advisories
 still open PRs. Leaving those majors open starved the weekly 5-PR slot
 limit and blocked real patch PRs.
 
+When an in-major bump pulls a **new unbounded transitive** (flask-limiter
+3.12 → `limits>=3.13`; redis-py 5.3 → `PyJWT>=2.9`), add an explicit
+upper-bounded pin in the same change so the next image rebuild cannot
+jump a major the suite never reviewed.
+
 Source of truth for Python deps is `requirements.txt` only (no Poetry lock).
 
 Exception: when a GHSA shows the current floor still admits a vulnerable
