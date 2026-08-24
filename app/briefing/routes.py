@@ -17,6 +17,7 @@ from app.briefing.validators import (
     validate_visibility, validate_mode, validate_send_hour, validate_send_minute
 )
 from app import db, limiter, csrf
+from app.lib.db_utils import retry_on_db_disconnect
 from app.models import (
     Briefing, BriefRun, BriefRunItem, BriefTemplate, InputSource, IngestedItem,
     BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile, NewsSource,
@@ -744,6 +745,7 @@ def _derive_unique_username(email: str) -> str:
 @briefing_bp.route('/start', methods=['GET', 'POST'])
 @limiter.limit("60/minute", methods=['GET'])
 @limiter.limit("10/hour", methods=['POST'])
+@retry_on_db_disconnect()
 def start_trial():
     """Magic-link self-serve trial entry point.
 
@@ -1088,6 +1090,7 @@ def sample_brief():
 @briefing_bp.route('/start/complete')
 @login_required
 @limiter.limit("30/minute")
+@retry_on_db_disconnect()
 def start_trial_complete():
     """Magic-link landing destination. Creates the trial + first briefing.
 
@@ -3974,8 +3977,8 @@ def track_click(run_id):
     abuse without needing a hardcoded domain allow-list (which would block
     internal links such as reader pages, discussion threads, etc.).
     """
-    from urllib.parse import urlparse
     from app.briefing.link_tracker import verify_url as _verify_url
+    from app.lib.url_utils import is_safe_external_http_url
 
     target_url = request.args.get("url", "")
     signature = request.args.get("sig", "")
@@ -3985,14 +3988,8 @@ def track_click(run_id):
     if not target_url:
         return redirect("/")
 
-    # Basic URL format check
-    try:
-        parsed = urlparse(target_url)
-        if parsed.scheme not in ('http', 'https'):
-            logger.warning(f"Invalid URL scheme in click tracking: {target_url[:100]}")
-            return redirect("/")
-    except Exception:
-        logger.warning(f"Malformed URL in click tracking: {target_url[:100]}")
+    if not is_safe_external_http_url(target_url):
+        logger.warning(f"Invalid URL in click tracking: {target_url[:100]}")
         return redirect("/")
 
     # HMAC verification — reject any URL that wasn't signed by us at send time

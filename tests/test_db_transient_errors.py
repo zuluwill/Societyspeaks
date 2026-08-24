@@ -44,6 +44,9 @@ def _op_with_message(msg: str) -> OperationalError:
         "SSL error: decryption failed or bad record mac",
         "(psycopg2.InterfaceError) connection already closed",
         "connection already closed",
+        # Production Sentry PYTHON-FLASK-FF (2026-08): connect-time handshake blip
+        "(psycopg2.OperationalError) SSL error: unexpected message",
+        "SSL error: unexpected message",
     ),
 )
 def test_transient_classification_positive(message):
@@ -263,6 +266,37 @@ def test_app_level_ssl_mac_error_returns_503(app, client):
     resp = client.get("/__db_ssl_mac_test__")
     assert resp.status_code == 503
     assert resp.headers.get("Retry-After") == str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+
+
+def test_app_level_ssl_unexpected_message_returns_503(app, client):
+    """Production Sentry PYTHON-FLASK-FF: handshake blip must be 503, not 500."""
+
+    @app.route("/__db_ssl_unexpected_test__")
+    def _boom():
+        raise _op_with_message("SSL error: unexpected message")
+
+    resp = client.get("/__db_ssl_unexpected_test__")
+    assert resp.status_code == 503
+    assert resp.headers.get("Retry-After") == str(HTTP_RETRY_AFTER_DB_UNAVAILABLE_SEC)
+
+
+def test_engine_creator_retries_ssl_unexpected_message(monkeypatch):
+    import psycopg2
+
+    from config import _make_retry_creator
+
+    calls = {"n": 0}
+
+    def _connect(uri, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise psycopg2.OperationalError("SSL error: unexpected message\n")
+        return object()
+
+    monkeypatch.setattr("psycopg2.connect", _connect)
+    creator = _make_retry_creator("postgresql://u:p@localhost/db", {}, max_attempts=3, base_backoff_s=0)
+    assert creator() is not None
+    assert calls["n"] == 2
 
 
 def test_app_level_interface_error_connection_closed_returns_503(app, client):

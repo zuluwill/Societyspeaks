@@ -32,6 +32,9 @@ TRANSIENT_DB_ERROR_PHRASES: tuple[str, ...] = (
     # misclassified as non-transient OperationalErrors.
     "bad record mac",
     "decryption failed",
+    # Production Sentry PYTHON-FLASK-FF (2026-08): handshake blip at connect
+    # time ("SSL error: unexpected message"). Not a cert-config failure.
+    "ssl error: unexpected message",
     "eof detected",
     "connection reset",
     "connection refused",

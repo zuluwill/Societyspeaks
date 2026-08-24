@@ -42,7 +42,7 @@ def get_image(filename):
                 download_name=filename,
             )
 
-        current_app.logger.error(f"Image not found: {filename}")
+        current_app.logger.warning(f"Image not found: {filename}")
         return send_file('static/images/default-avatar.png', mimetype='image/png')
 
     except Exception as e:

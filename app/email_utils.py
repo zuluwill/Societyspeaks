@@ -63,6 +63,50 @@ def extract_clean_email(raw: Optional[str]) -> Optional[str]:
     return addr
 
 
+# RFC 2606 / RFC 6761 documentation domains. Resend's test-mode API rejects
+# these with 422 ("use our testing email address") — never page that as a
+# delivery outage (Sentry PYTHON-FLASK-HA).
+_RESERVED_EMAIL_DOMAINS = frozenset({
+    "example.com",
+    "example.net",
+    "example.org",
+    "example.edu",
+    "invalid",
+    "localhost",
+    "test",
+})
+
+
+def is_reserved_documentation_email(raw: Optional[str]) -> bool:
+    """True for example.com / .invalid / localhost-style addresses that must not hit Resend."""
+    addr = extract_clean_email(raw)
+    if not addr:
+        return False
+    domain = addr.rsplit("@", 1)[-1].lower().rstrip(".")
+    if domain in _RESERVED_EMAIL_DOMAINS:
+        return True
+    return any(
+        domain.endswith("." + reserved)
+        for reserved in ("example.com", "example.net", "example.org", "example.edu")
+    )
+
+
+def partition_email_recipients(raw_to) -> tuple[list, list]:
+    """Split ``to`` addresses into (deliverable, reserved_documentation).
+
+    Invalid / unparseable values stay in *deliverable* so existing validation
+    (Resend 422, ``_extract_clean_email`` at the client) still sees them.
+    """
+    deliverable: list = []
+    reserved: list = []
+    for addr in raw_to or []:
+        if is_reserved_documentation_email(addr):
+            reserved.append(addr)
+        else:
+            deliverable.append(addr)
+    return deliverable, reserved
+
+
 class RateLimiter:
     """Thread-safe rate limiter for API calls.
     

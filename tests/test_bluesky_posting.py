@@ -182,3 +182,38 @@ def test_bluesky_direct_post_idempotency(monkeypatch):
     assert social_poster.bluesky_direct_post_already_sent('daily-brief', '2026-07-21') is True
     assert store['bluesky:direct:daily-brief:2026-07-21'] == 'at://did:plc:test/app.bsky.feed.post/xyz'
 
+
+def test_post_to_bluesky_retries_empty_exception_then_gives_up(monkeypatch):
+    import types
+
+    from app.trending import social_poster
+
+    monkeypatch.setenv('BLUESKY_APP_PASSWORD', 'test-pw')
+    monkeypatch.setattr(social_poster.time, 'sleep', lambda s: None)
+    _patch_post_side_effects(monkeypatch)
+
+    class EmptyError(Exception):
+        def __str__(self):
+            return ''
+
+    attempts = {'n': 0}
+
+    class BoomClient:
+        def login(self, handle, password):
+            attempts['n'] += 1
+            raise EmptyError()
+
+    atproto = types.ModuleType('atproto')
+    atproto.Client = BoomClient
+    atproto.models = None
+    atproto.client_utils = None
+    monkeypatch.setitem(__import__('sys').modules, 'atproto', atproto)
+
+    uri = social_poster.post_to_bluesky(
+        title='x',
+        topic='y',
+        discussion_url='https://societyspeaks.io/daily/2026-07-21',
+    )
+    assert uri is None
+    assert attempts['n'] == social_poster.BLUESKY_RETRY_ATTEMPTS + 1
+

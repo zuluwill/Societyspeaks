@@ -291,6 +291,7 @@ def create_app():
               SSL blips; users get Retry-After. Logged at WARNING in the Flask
               handler — drop from Sentry so they do not page.
             """
+            from app.lib.db_transient_errors import TRANSIENT_DB_ERROR_PHRASES
             from app.lib.llm_transient_errors import sentry_should_drop_transient_llm
             from app.lib.sentry_config import (
                 sentry_should_drop_lifecycle_event,
@@ -313,12 +314,10 @@ def create_app():
             # Neon/PgBouncer SSL tear-downs — drop whether they arrive as
             # exception payloads or as ERROR/WARNING log lines (e.g. best-effort
             # view tracking that inlines the OperationalError into the message).
-            _TRANSIENT_DB_SENTRY_PHRASES = (
-                "bad record mac",
-                "decryption failed",
-                "connection already closed",
-                "ssl syscall",
-                "ssl connection has been closed",
+            # Keep in lockstep with TRANSIENT_DB_ERROR_PHRASES so a newly
+            # classified connect-time blip (e.g. unexpected message) is not
+            # still paged as "non-transient operational".
+            _TRANSIENT_DB_SENTRY_PHRASES = TRANSIENT_DB_ERROR_PHRASES + (
                 "can't reconnect until invalid transaction",
             )
 

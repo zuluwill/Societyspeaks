@@ -739,17 +739,30 @@ def post_to_bluesky(
         
     except Exception as e:
         error_str = str(e).lower()
-        logger.error(f"Failed to post to Bluesky (attempt {retry_count + 1}): {e}")
-        
-        # Check for rate limit or transient errors that warrant retry
+        exc_label = f"{type(e).__name__}: {e!r}"
         is_rate_limit = 'rate' in error_str or '429' in error_str or 'too many' in error_str
-        is_transient = 'timeout' in error_str or '500' in error_str or '502' in error_str or '503' in error_str
-        
-        if (is_rate_limit or is_transient) and retry_count < BLUESKY_RETRY_ATTEMPTS:
+        is_transient = (
+            'timeout' in error_str
+            or '500' in error_str
+            or '502' in error_str
+            or '503' in error_str
+            or isinstance(e, (TimeoutError, ConnectionError, OSError))
+            or not str(e).strip()
+        )
+        can_retry = (is_rate_limit or is_transient) and retry_count < BLUESKY_RETRY_ATTEMPTS
+
+        if can_retry:
             wait_seconds = BLUESKY_RETRY_BASE_DELAY * (2 ** retry_count)
-            logger.info(f"Bluesky transient error. Waiting {wait_seconds}s before retry {retry_count + 1}/{BLUESKY_RETRY_ATTEMPTS}")
+            logger.warning(
+                "Failed to post to Bluesky (attempt %s, retrying in %ss): %s",
+                retry_count + 1,
+                wait_seconds,
+                exc_label,
+            )
             time.sleep(wait_seconds)
             return post_to_bluesky(title, topic, discussion_url, retry_count + 1, discussion, custom_text, og_image_url)
+
+        logger.error("Failed to post to Bluesky (attempt %s): %s", retry_count + 1, exc_label)
         
         # Check for authentication errors (don't retry these)
         if 'auth' in error_str or 'invalid' in error_str or 'password' in error_str:

@@ -116,6 +116,24 @@ def test_lifecycle_filter_drops_sigkill_and_generic_oom_text():
     assert is_expected_process_lifecycle_log(rec.getMessage()) is True
 
 
+def test_lifecycle_filter_drops_greenlet_exit():
+    class GreenletExit(BaseException):
+        pass
+
+    assert sentry_should_drop_lifecycle_event(
+        {},
+        {"exc_info": (GreenletExit, GreenletExit(), None)},
+    ) is True
+    assert sentry_should_drop_lifecycle_event(
+        {"exception": {"values": [{"type": "GreenletExit", "value": ""}]}},
+        {},
+    ) is True
+    stall = "worker_abort [2928]: WORKER TIMEOUT — dumping thread + greenlet stacks"
+    rec = _error_record("gunicorn.error", stall)
+    assert sentry_should_keep_worker_stall_event({}, {"log_record": rec}) is True
+    assert sentry_should_drop_lifecycle_event({}, {"log_record": rec}) is False
+
+
 def test_lifecycle_filter_does_not_drop_worker_timeout_or_generic_timeouts():
     stall = "worker_abort [2928]: WORKER TIMEOUT — dumping thread + greenlet stacks"
     assert is_gunicorn_worker_stall_log(stall) is True
@@ -164,4 +182,8 @@ def test_before_send_keeps_worker_stall_before_llm_timeout_filter():
     assert "continuous_profiling_auto_start" in src
     assert "resolve_sentry_continuous_profiling()" in src
     assert "resolve_sentry_profiles_sample_rate()" in src
+    assert "TRANSIENT_DB_ERROR_PHRASES" in src
+    assert "ssl error: unexpected message" in Path("app/lib/db_transient_errors.py").read_text(
+        encoding="utf-8"
+    )
 

@@ -186,3 +186,60 @@ def test_resend_http_post_400_logs_warning_when_brief_scoped(monkeypatch):
     assert err is not None
     assert warnings
     assert not errors
+
+
+def test_send_with_retry_skips_reserved_example_com_without_calling_resend(monkeypatch):
+    client = resend_client.ResendEmailClient.__new__(resend_client.ResendEmailClient)
+    client._disabled = False
+    client.api_key = 'test-key'
+    client.last_message_id = 'stale'
+    client.last_send_error = 'stale'
+
+    called = []
+    monkeypatch.setattr(
+        resend_client,
+        'resend_post_with_retry',
+        lambda *a, **k: called.append((a, k)) or (True, 'should-not-send'),
+    )
+
+    ok = client._send_with_retry(
+        {'to': ['qa@example.com'], 'subject': 'Hi', 'html': '<p>x</p>'},
+        use_rate_limit=False,
+    )
+    assert ok is True
+    assert called == []
+    assert client.last_message_id is None
+    assert client.last_send_error is None
+
+
+def test_resend_post_with_retry_skips_reserved_without_http(monkeypatch):
+    posts = []
+    monkeypatch.setattr(
+        resend_client.requests,
+        'post',
+        lambda *a, **k: posts.append((a, k)) or SimpleNamespace(status_code=200, json=lambda: {'id': 'x'}),
+    )
+    ok, msg_id = resend_client.resend_post_with_retry(
+        'key',
+        {'from': 'a@x.io', 'to': ['qa@example.com'], 'subject': 'Hi'},
+    )
+    assert ok is True
+    assert msg_id is None
+    assert posts == []
+
+
+def test_resend_post_with_retry_sends_after_stripping_reserved(monkeypatch):
+    posts = []
+
+    def _fake_post(url, json=None, headers=None, timeout=None):
+        posts.append(json)
+        return SimpleNamespace(status_code=200, json=lambda: {'id': 're_1'})
+
+    monkeypatch.setattr(resend_client.requests, 'post', _fake_post)
+    ok, msg_id = resend_client.resend_post_with_retry(
+        'key',
+        {'from': 'a@x.io', 'to': ['will@societyspeaks.io', 'qa@example.com'], 'subject': 'Hi'},
+    )
+    assert ok is True
+    assert msg_id == 're_1'
+    assert posts[0]['to'] == ['will@societyspeaks.io']

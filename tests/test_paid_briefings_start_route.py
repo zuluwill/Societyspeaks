@@ -406,3 +406,22 @@ def test_get_complete_authed_creates_trial_and_redirects_to_briefing(trial_app, 
         briefing = Briefing.query.filter_by(owner_type='user', owner_id=user_id).first()
         assert briefing is not None
         assert briefing.status == 'active'
+
+
+def test_start_trial_views_retry_mid_request_disconnect():
+    """PYTHON-FLASK-FF: connect/mid-request Neon blips must retry the view."""
+    import inspect
+
+    import app.briefing.routes as briefing_routes
+
+    src = inspect.getsource(briefing_routes)
+    for def_name in ('start_trial', 'start_trial_complete'):
+        idx = src.index(f'def {def_name}(')
+        header = src[max(0, idx - 350):idx]
+        assert '@retry_on_db_disconnect()' in header, def_name
+        retry_at = header.rfind('@retry_on_db_disconnect()')
+        limiter_at = header.rfind('@limiter.limit')
+        assert retry_at > limiter_at, (
+            f'{def_name}: retry must wrap the view inside limiter so a '
+            'reconnect does not consume a second rate-limit token'
+        )

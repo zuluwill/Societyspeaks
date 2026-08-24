@@ -105,3 +105,16 @@ class TestApplyOpenaiScores:
         articles = [_make_scorer_article('A'), _make_scorer_article('B')]
         _apply_openai_scores(articles, [{'s': 0.1, 'r': 0.2, 'p': 0.3, 'geo': 'local', 'countries': 'United Kingdom'}])
         assert articles[1].sensationalism_score is not None
+
+    def test_llm_essay_in_countries_falls_back_instead_of_overflowing_varchar(self):
+        from app.trending.scorer import _normalize_geographic_countries
+
+        dump = (
+            'United States}]}  ```  The ratings reflect the sensationalism, '
+            'relevance to civic debate\n' + ('x' * 600)
+        )
+        assert _normalize_geographic_countries(dump, 'United Kingdom') == 'United Kingdom'
+        long_list = ', '.join([f'Country{i:03d}' for i in range(80)])
+        out = _normalize_geographic_countries(long_list, 'UK')
+        assert len(out) <= 500
+        assert '\n' not in out

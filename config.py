@@ -35,9 +35,12 @@ def _make_retry_creator(uri: str, connect_args: dict, max_attempts: int = 3, bas
     - ``could not connect to server`` — generic TCP-level refusal / timeout
       that may self-heal on retry.
     - ``connection timed out`` — network-level timeout on a healthy host.
+    - Neon SSL handshake blips (``unexpected message``, ``bad record mac``)
+      at *connect* time — these are pooler/TLS flakes, not a bad DSN.
 
-    Non-retryable errors (auth failures, SSL errors, bad DSN) are re-raised
-    immediately on the first attempt.
+    Non-retryable errors (auth failures, certificate-verify failures, bad DSN)
+    are re-raised immediately on the first attempt. Do not add a generic
+    ``ssl error`` phrase — that would retry misconfigured certs.
     """
     import psycopg2 as _psycopg2
     import time as _time
@@ -50,6 +53,10 @@ def _make_retry_creator(uri: str, connect_args: dict, max_attempts: int = 3, bas
         # Typically self-heals within 1-3 s; always safe to retry.
         "couldn't connect to compute node",
         'compute node',
+        # Connect-time TLS flakes (Sentry PYTHON-FLASK-FF / JC).
+        'ssl error: unexpected message',
+        'bad record mac',
+        'decryption failed',
     )
 
     def _creator():

@@ -350,7 +350,7 @@ class PolymarketService:
             # Fetch unclosed (current) markets - closed=False ensures we get active markets
             markets = self._fetch_markets_page(limit=limit, offset=offset, closed=False)
             if markets is None:
-                logger.error(
+                logger.warning(
                     f"Polymarket sync: /markets page at offset {offset} failed; "
                     f"syncing what we have and skipping deactivation"
                 )
@@ -682,17 +682,26 @@ class PolymarketService:
     # =========================================================================
 
     def _gamma_request(self, endpoint: str, params: Dict = None) -> Optional[Dict]:
-        """Make request to Gamma API with rate limiting."""
-        self._rate_limit_gamma()
+        """Make request to Gamma API with rate limiting and a short retry.
 
-        url = f"{self.GAMMA_BASE_URL}{endpoint}"
-        try:
-            response = requests.get(url, params=params, timeout=self.REQUEST_TIMEOUT)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            logger.warning(f"Gamma API request failed: {endpoint} - {e}")
-            return None
+        A single timeout on offset 0 used to abort the whole sync and page
+        Sentry (PYTHON-FLASK-J9) even though we already skip deactivation.
+        """
+        last_error = None
+        for attempt in range(3):
+            self._rate_limit_gamma()
+            url = f"{self.GAMMA_BASE_URL}{endpoint}"
+            try:
+                response = requests.get(url, params=params, timeout=self.REQUEST_TIMEOUT)
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                last_error = e
+                if attempt < 2:
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+        logger.warning(f"Gamma API request failed: {endpoint} - {last_error}")
+        return None
 
     def _clob_request(self, endpoint: str, params: Dict = None) -> Optional[Dict]:
         """Make a GET request to the CLOB API with rate limiting."""

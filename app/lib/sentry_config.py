@@ -163,6 +163,16 @@ def sentry_should_keep_worker_stall_event(
     return False
 
 
+def _is_greenlet_exit(exc_type: Any, exc_value: Any = None) -> bool:
+    """True for gevent killing a greenlet (worker recycle / SIGKILL), not a product bug."""
+    name = getattr(exc_type, "__name__", None) or ""
+    if name == "GreenletExit":
+        return True
+    if exc_value is not None and type(exc_value).__name__ == "GreenletExit":
+        return True
+    return False
+
+
 def sentry_should_drop_lifecycle_event(
     event: Optional[Mapping[str, Any]],
     hint: Optional[Mapping[str, Any]] = None,
@@ -175,9 +185,13 @@ def sentry_should_drop_lifecycle_event(
         return True
     exc_info = hint.get("exc_info") if hint else None
     if exc_info and len(exc_info) > 1:
+        if _is_greenlet_exit(exc_info[0], exc_info[1] if len(exc_info) > 1 else None):
+            return True
         if is_expected_process_lifecycle_log(str(exc_info[1] or "")):
             return True
     for exc in ((event or {}).get("exception") or {}).get("values") or []:
+        if str(exc.get("type") or "") == "GreenletExit":
+            return True
         if is_expected_process_lifecycle_log(str(exc.get("value") or "")):
             return True
     return False

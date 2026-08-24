@@ -2182,12 +2182,8 @@ def daily_track_click(question_id):
     if not target_url:
         return redirect('/')
 
-    try:
-        from urllib.parse import urlparse
-        parsed = urlparse(target_url)
-        if parsed.scheme not in ('http', 'https'):
-            return redirect('/')
-    except Exception:
+    from app.lib.url_utils import is_safe_external_http_url
+    if not is_safe_external_http_url(target_url):
         return redirect('/')
 
     secret = current_app.config.get('SECRET_KEY', '')

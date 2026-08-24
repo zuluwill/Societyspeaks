@@ -376,6 +376,35 @@ Headlines:
 Rate each headline in order."""
 
 
+_GEOGRAPHIC_COUNTRIES_MAX_LEN = 500  # news_article.geographic_countries VARCHAR(500)
+
+
+def _source_country_fallback(article: NewsArticle) -> str:
+    return article.source.country if article.source and article.source.country else ''
+
+
+def _normalize_geographic_countries(raw, fallback: str = '') -> str:
+    """Keep LLM country lists inside the VARCHAR(500) column.
+
+    A truncated JSON decode can dump the rest of the model essay into
+    ``countries`` (Sentry PYTHON-FLASK-J8). Reject prose; truncate long
+    comma-separated lists at a country boundary.
+    """
+    value = (raw or '').strip() if isinstance(raw, str) else ''
+    fallback = fallback or ''
+    if not value:
+        return fallback
+    lowered = value.lower()
+    if '\n' in value or '```' in value or 'sensationalism' in lowered:
+        return fallback
+    if len(value) <= _GEOGRAPHIC_COUNTRIES_MAX_LEN:
+        return value
+    truncated = value[:_GEOGRAPHIC_COUNTRIES_MAX_LEN]
+    if ',' in truncated:
+        truncated = truncated.rsplit(',', 1)[0].rstrip()
+    return truncated or fallback
+
+
 def _apply_openai_scores(articles: List[NewsArticle], scores: list) -> None:
     """Write scores from an OpenAI response onto article objects."""
     for i, article in enumerate(articles):
@@ -384,16 +413,22 @@ def _apply_openai_scores(articles: List[NewsArticle], scores: list) -> None:
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
             article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
-            detected_countries = scores[i].get('countries', '').strip()
+            detected_countries = scores[i].get('countries', '')
+            if not isinstance(detected_countries, str):
+                detected_countries = ''
+            detected_countries = detected_countries.strip()
+            fallback = _source_country_fallback(article)
             if detected_countries and _validate_geographic_countries(article, detected_countries):
-                article.geographic_countries = detected_countries
+                article.geographic_countries = _normalize_geographic_countries(
+                    detected_countries, fallback
+                )
             else:
-                article.geographic_countries = article.source.country if article.source and article.source.country else ''
+                article.geographic_countries = fallback
         else:
             article.sensationalism_score = score_sensationalism(article.title)
             article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
-            article.geographic_countries = article.source.country if article.source and article.source.country else ''
+            article.geographic_countries = _source_country_fallback(article)
 
 
 def _score_batch_with_openai(articles: List[NewsArticle], client, *, max_tokens: int = 4000, _depth: int = 0) -> None:
@@ -538,16 +573,22 @@ def _apply_anthropic_scores(articles: List[NewsArticle], scores: list) -> None:
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
             article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
-            detected_countries = scores[i].get('countries', '').strip()
+            detected_countries = scores[i].get('countries', '')
+            if not isinstance(detected_countries, str):
+                detected_countries = ''
+            detected_countries = detected_countries.strip()
+            fallback = _source_country_fallback(article)
             if detected_countries and _validate_geographic_countries(article, detected_countries):
-                article.geographic_countries = detected_countries
+                article.geographic_countries = _normalize_geographic_countries(
+                    detected_countries, fallback
+                )
             else:
-                article.geographic_countries = article.source.country if article.source and article.source.country else ''
+                article.geographic_countries = fallback
         else:
             article.sensationalism_score = score_sensationalism(article.title)
             article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
-            article.geographic_countries = article.source.country if article.source and article.source.country else ''
+            article.geographic_countries = _source_country_fallback(article)
 
 
 def _score_batch_with_anthropic(articles: List[NewsArticle], client, *, max_tokens: int = 2000, _depth: int = 0) -> None:

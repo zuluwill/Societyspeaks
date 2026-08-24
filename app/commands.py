@@ -454,6 +454,70 @@ def init_commands(app):
         except Exception as e:
             click.echo(f"Error listing subscribers: {str(e)}", err=True)
 
+    @app.cli.command('list-reserved-emails')
+    def list_reserved_emails_cmd():
+        """List rows using RFC 2606 documentation addresses (example.com, …).
+
+        Resend rejects these with 422. Send paths already skip them; this
+        command is the data-hygiene pass so leftovers can be unsubscribed.
+        """
+        from sqlalchemy import or_
+
+        from app.email_utils import is_reserved_documentation_email
+        from app.models import BriefRecipient, DailyQuestionSubscriber, User
+
+        like_clauses = (
+            '%@example.com', '%@%.example.com',
+            '%@example.net', '%@%.example.net',
+            '%@example.org', '%@%.example.org',
+            '%@example.edu', '%@%.example.edu',
+        )
+
+        try:
+            brief_subs = [
+                s for s in DailyBriefSubscriber.query.filter(
+                    or_(*[DailyBriefSubscriber.email.ilike(p) for p in like_clauses])
+                ).all()
+                if is_reserved_documentation_email(s.email)
+            ]
+            dq_subs = [
+                s for s in DailyQuestionSubscriber.query.filter(
+                    or_(*[DailyQuestionSubscriber.email.ilike(p) for p in like_clauses])
+                ).all()
+                if is_reserved_documentation_email(s.email)
+            ]
+            users = [
+                u for u in User.query.filter(
+                    or_(*[User.email.ilike(p) for p in like_clauses])
+                ).all()
+                if is_reserved_documentation_email(u.email)
+            ]
+            recips = [
+                r for r in BriefRecipient.query.filter(
+                    or_(*[BriefRecipient.email.ilike(p) for p in like_clauses])
+                ).all()
+                if is_reserved_documentation_email(r.email)
+            ]
+        except Exception as e:
+            click.echo(f"Error scanning reserved emails: {str(e)}", err=True)
+            return
+
+        click.echo(f"DailyBriefSubscriber: {len(brief_subs)}")
+        for s in brief_subs[:50]:
+            click.echo(f"  {s.email} status={s.status}")
+        click.echo(f"DailyQuestionSubscriber: {len(dq_subs)}")
+        for s in dq_subs[:50]:
+            click.echo(f"  {s.email} active={getattr(s, 'is_active', None)}")
+        click.echo(f"User: {len(users)}")
+        for u in users[:50]:
+            click.echo(f"  {u.email} id={u.id}")
+        click.echo(f"BriefRecipient: {len(recips)}")
+        for r in recips[:50]:
+            click.echo(f"  {r.email} status={getattr(r, 'status', None)}")
+        total = len(brief_subs) + len(dq_subs) + len(users) + len(recips)
+        click.echo(f"\nTotal reserved-domain rows: {total}")
+        click.echo("Send paths skip these; unsubscribe leftovers in admin/DB.")
+
     @app.cli.command('create-brief-subscriber')
     @click.argument('email')
     @click.option('--timezone', default='UTC', help='Timezone (e.g., America/New_York)')

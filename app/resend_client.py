@@ -18,7 +18,12 @@ from typing import List, Dict, Optional, Any, Tuple
 from flask import render_template, current_app, url_for
 from flask_babel import force_locale, gettext
 import requests
-from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
+from app.email_utils import (  # shared utilities
+    RateLimiter,
+    extract_clean_email as _extract_clean_email,
+    is_reserved_documentation_email,
+    partition_email_recipients,
+)
 from app.briefing.link_tracker import wrap_links as _wrap_links
 from app.lib.unsubscribe_tokens import build_question_unsubscribe_url
 from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
@@ -285,7 +290,20 @@ def resend_post_with_retry(
 
     Returns:
         (success, message_id)  — message_id is None on failure or if Resend omits it.
+        Reserved documentation domains (example.com, …) are stripped before
+        the HTTP call; if none remain, this is a successful no-op.
     """
+    deliverable, reserved = partition_email_recipients(payload.get("to") or [])
+    if reserved:
+        logger.warning(
+            "Skipping reserved documentation address(es) before Resend: %s",
+            reserved,
+        )
+    if not deliverable:
+        return True, None
+    if reserved:
+        payload = {**payload, "to": deliverable}
+
     response, err = _resend_http_post(
         api_key, payload, url, max_retries, retry_delay, timeout,
         idempotency_key=idempotency_key,
@@ -323,8 +341,22 @@ def resend_batch_with_retry(
     without an index — callers must not assume every failure is attributed.
     """
     all_failed = list(range(len(payloads or [])))
+    filtered = []
+    for payload in payloads or []:
+        deliverable, reserved = partition_email_recipients(payload.get("to") or [])
+        if reserved:
+            logger.warning(
+                "Batch: skipping reserved documentation address(es): %s",
+                reserved,
+            )
+        if not deliverable:
+            continue
+        filtered.append({**payload, "to": deliverable} if reserved else payload)
+    if not filtered:
+        return True, 0, 0, [], []
+
     response, error = _resend_http_post(
-        api_key, payloads, url, max_retries, retry_delay, timeout,
+        api_key, filtered, url, max_retries, retry_delay, timeout,
         log_prefix="Resend batch", idempotency_key=idempotency_key,
     )
     if response is None:
@@ -463,6 +495,7 @@ class ResendEmailClient:
         # a 422 validation_error; catching them here prevents avoidable API round-trips.
         raw_to = email_data.get('to') or []
         cleaned_to = []
+        skipped_reserved = []
         for raw_addr in raw_to:
             clean = _extract_clean_email(raw_addr)
             if clean is None:
@@ -471,7 +504,19 @@ class ResendEmailClient:
                 )
                 self.last_message_id = None
                 return False
+            if is_reserved_documentation_email(clean):
+                skipped_reserved.append(clean)
+                continue
             cleaned_to.append(clean)
+        if skipped_reserved:
+            logger.warning(
+                "Skipping reserved documentation address(es): %s",
+                skipped_reserved,
+            )
+        if not cleaned_to:
+            self.last_message_id = None
+            self.last_send_error = None
+            return True
         email_data = {**email_data, 'to': cleaned_to}
         email_data, resolved_key = ensure_email_idempotency(
             email_data, idempotency_key=idempotency_key
@@ -533,6 +578,7 @@ class ResendEmailClient:
             raw_to = payload.get('to') or []
             cleaned_to = []
             all_valid = True
+            skipped_reserved = []
             for raw_addr in raw_to:
                 clean = _extract_clean_email(raw_addr)
                 if clean is None:
@@ -542,8 +588,16 @@ class ResendEmailClient:
                     results['failed_indices'].append(original_index)
                     all_valid = False
                     break
+                if is_reserved_documentation_email(clean):
+                    skipped_reserved.append(clean)
+                    continue
                 cleaned_to.append(clean)
-            if all_valid:
+            if skipped_reserved:
+                logger.warning(
+                    "Batch: skipping reserved documentation address(es): %s",
+                    skipped_reserved,
+                )
+            if all_valid and cleaned_to:
                 valid_emails.append({**payload, 'to': cleaned_to})
                 valid_indices.append(original_index)
 

@@ -37,6 +37,10 @@ A stack that bottoms out in `ph.shutdown()` / `client.join` is the old hang (fix
 
 Confirm dashboard `SENTRY_PROFILES_SAMPLE_RATE=0` and `SENTRY_CONTINUOUS_PROFILING` unset/false on web workers. Profiling threads showed up on every abort dump and fight the hub.
 
+**Neon SSL `unexpected message` (Sentry PYTHON-FLASK-FF):** handshake blip at connect time, not a bad DSN. Classified with the other transient phrases in `app/lib/db_transient_errors.py`; `config._make_retry_creator` retries it; HTTP is 503. `/briefings/start` also has `@retry_on_db_disconnect` for mid-request drops. Recurring storms after deploy → check Neon/Redis, do not reclassify as a hard 500.
+
+**Reserved `example.com` Resend 422:** send paths skip RFC 2606 documentation domains. After deploy, `flask list-reserved-emails` lists leftover subscriber/user rows to unsubscribe.
+
 ## Weekly brief (`wk001` and regeneration)
 
 **Three different "weekly" products** — do not conflate them in ops or analytics:
