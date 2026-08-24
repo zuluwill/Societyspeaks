@@ -93,11 +93,20 @@ def test_record_discussion_view_logs_error_for_non_transient_failure(app, db, ca
 
 
 def test_sentry_before_send_filters_transient_db_phrases_on_log_records():
-    """Production 2026-08-06: inlined SSL phrase in ERROR logs bypassed exception filters."""
-    src = _INIT_SRC.read_text(encoding="utf-8")
-    log_block_start = src.index('if "log_record" in hint:')
-    exc_block_start = src.index('exc_info = hint.get("exc_info")', log_block_start)
-    log_block = src[log_block_start:exc_block_start]
+    """Production 2026-08-06: inlined SSL phrase in ERROR logs bypassed exception filters.
+
+    Phrases live in ``TRANSIENT_DB_ERROR_PHRASES`` (single source of truth).
+    ``before_send`` must keep using that tuple for log-record drops — do not
+    re-inline the strings in ``app/__init__.py``.
+    """
+    init_src = _INIT_SRC.read_text(encoding="utf-8")
+    phrases_src = (
+        Path(__file__).resolve().parents[1] / "app" / "lib" / "db_transient_errors.py"
+    ).read_text(encoding="utf-8")
+    log_block_start = init_src.index('if "log_record" in hint:')
+    exc_block_start = init_src.index('exc_info = hint.get("exc_info")', log_block_start)
+    log_block = init_src[log_block_start:exc_block_start]
     assert "drop_if(msg.lower(), *_TRANSIENT_DB_SENTRY_PHRASES)" in log_block
-    assert "bad record mac" in src
-    assert "decryption failed" in src
+    assert "TRANSIENT_DB_ERROR_PHRASES" in init_src
+    assert '"bad record mac"' in phrases_src
+    assert '"decryption failed"' in phrases_src

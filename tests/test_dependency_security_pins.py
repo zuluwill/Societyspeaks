@@ -96,3 +96,9 @@ def test_nanoid_override_stays_on_patched_3x_not_esm_majors():
     dependabot = _read(".github/dependabot.yml")
     assert 'dependency-name: "nanoid"' in dependabot
     assert "version-update:semver-major" in dependabot.split('dependency-name: "nanoid"', 1)[1][:400]
+
+
+def test_dependabot_does_not_open_cryptography_resolve_ceiling_prs():
+    """atproto caps <47; patched wheel is the install-script override only."""
+    pip_block = _read(".github/dependabot.yml").split("package-ecosystem: npm", 1)[0]
+    assert 'dependency-name: "cryptography"' in pip_block

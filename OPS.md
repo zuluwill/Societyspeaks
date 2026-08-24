@@ -501,6 +501,9 @@ not duplicate the override pin). Security CI also asserts
 manifest pin until atproto relaxes — that is noise against the resolve line,
 not against the installed runtime. Do not “fix” the audit by ignoring the
 GHSA; drop the force-reinstall once atproto allows `cryptography>=50`.
+Dependabot is configured to ignore the `requirements.txt` cryptography pin
+so it does not reopen weekly “raise the ceiling to <51” PRs that cannot
+resolve alongside atproto.
 
 Special case — `setuptools` / PYSEC-2026-3447: the `python:3.11-slim` image
 ships setuptools 79.x. GHSA-h35f-9h28-mq5c (MANIFEST.in NFC/NFD exclusion

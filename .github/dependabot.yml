@@ -17,6 +17,11 @@ updates:
       python-minor-patch:
         update-types: ["minor", "patch"]
     # Majors arrive as individual PRs so breaking changes are reviewed alone.
+    ignore:
+      # atproto still declares cryptography<47. The patched wheel (>=50) is
+      # force-reinstalled in scripts/install_python_deps.sh. Raising this
+      # resolve ceiling makes `pip install -r` fail until atproto relaxes.
+      - dependency-name: "cryptography"
 
   - package-ecosystem: npm
     directory: "/"
