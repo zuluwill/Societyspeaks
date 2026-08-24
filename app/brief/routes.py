@@ -598,6 +598,12 @@ def subscribe_inline():
         flash(_("You're subscribed! Check your inbox for the welcome email."), 'success')
         return redirect(request.referrer or url_for('brief.today'))
 
+    elif result['status'] == 'undeliverable':
+        if is_ajax:
+            return jsonify({'success': False, 'error': result['message']}), 400
+        flash(result['message'], 'error')
+        return redirect(request.referrer or url_for('brief.today'))
+
     else:  # error
         if is_ajax:
             return jsonify({'success': False, 'error': _('Something went wrong. Please try again.')}), 500

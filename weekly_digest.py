@@ -176,8 +176,17 @@ def send_weekly_digests():
         error_count = 0
         skipped_count = 0
         
+        from app.lib.email_analytics import address_cannot_receive_mail
+
         for user in eligible_users:
             try:
+                if address_cannot_receive_mail(user.email):
+                    skipped_count += 1
+                    logger.info(
+                        "Skipping weekly digest for %s — address is undeliverable",
+                        user.email,
+                    )
+                    continue
                 # Get user's discussion activity
                 digest_data = get_user_discussion_activity(user)
                 

@@ -200,6 +200,9 @@ def user_accepts_discussion_notification_email(user, notification_type: str) -> 
     """Master email toggle plus per-type preferences (DRY gate for outbound mail)."""
     if not user or not getattr(user, 'email_notifications', True):
         return False
+    from app.lib.email_analytics import address_cannot_receive_mail
+    if address_cannot_receive_mail(getattr(user, 'email', None)):
+        return False
     nt = (notification_type or '').strip().lower().replace('-', '_')
     if nt == 'new_participant':
         return bool(getattr(user, 'discussion_participant_notifications', True))

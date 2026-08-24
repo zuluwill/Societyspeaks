@@ -157,3 +157,183 @@ def test_suppressed_event_removes_subscriber_from_active_pool(app, db):
             email='suppressed@example.com'
         ).first()
         assert refreshed.status == 'suppressed'
+
+
+def test_classify_bounce_type_accepts_resend_and_legacy_labels():
+    assert EmailAnalytics.classify_bounce_type('Permanent') == 'hard'
+    assert EmailAnalytics.classify_bounce_type('hard') == 'hard'
+    assert EmailAnalytics.classify_bounce_type('Transient') == 'soft'
+    assert EmailAnalytics.classify_bounce_type('Temporary') == 'soft'
+    assert EmailAnalytics.classify_bounce_type('Undetermined') == 'soft'
+    assert EmailAnalytics.classify_bounce_type('soft') == 'soft'
+    assert EmailAnalytics.classify_bounce_type(None) == 'soft'
+
+
+def test_permanent_bounce_removes_subscriber_from_active_pool(app, db):
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='hard@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+
+        result = EmailAnalytics.record_from_webhook(
+            _payload(
+                'email.bounced',
+                email='hard@example.com',
+                bounce={'type': 'Permanent'},
+            )
+        )
+        assert result is not None and result.event_type == 'bounced'
+
+        db.session.expire_all()
+        refreshed = DailyBriefSubscriber.query.filter_by(email='hard@example.com').first()
+        assert refreshed.status == 'bounced'
+
+
+def test_one_transient_bounce_does_not_suppress(app, db):
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='soft@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+
+        EmailAnalytics.record_from_webhook(
+            _payload(
+                'email.bounced',
+                email='soft@example.com',
+                bounce={'type': 'Transient'},
+            )
+        )
+
+        db.session.expire_all()
+        refreshed = DailyBriefSubscriber.query.filter_by(email='soft@example.com').first()
+        assert refreshed.status == 'active'
+
+
+def test_recipient_email_from_webhook_accepts_resend_shapes():
+    from app.lib.email_analytics import recipient_email_from_webhook
+
+    assert recipient_email_from_webhook({'to': ['Ada <ada@example.com>']}) == 'ada@example.com'
+    assert recipient_email_from_webhook({'to': 'plain@example.com'}) == 'plain@example.com'
+    assert recipient_email_from_webhook({'to': [{'email': 'obj@example.com'}]}) == 'obj@example.com'
+    assert recipient_email_from_webhook({'to': []}) is None
+
+
+def test_mixed_case_permanent_bounce_still_suppresses(app, db):
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='Case.Person@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+
+        EmailAnalytics.record_from_webhook(
+            _payload(
+                'email.bounced',
+                email='case.person@example.com',
+                bounce={'type': 'Permanent'},
+            )
+        )
+        db.session.expire_all()
+        refreshed = DailyBriefSubscriber.query.filter_by(
+            email='Case.Person@example.com'
+        ).first()
+        assert refreshed.status == 'bounced'
+
+
+def test_bounce_does_not_overwrite_unsubscribed(app, db):
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='unsub@example.com', status='unsubscribed')
+        db.session.add(sub)
+        db.session.commit()
+
+        EmailAnalytics.record_from_webhook(
+            _payload(
+                'email.bounced',
+                email='unsub@example.com',
+                bounce={'type': 'Permanent'},
+            )
+        )
+        db.session.expire_all()
+        refreshed = DailyBriefSubscriber.query.filter_by(email='unsub@example.com').first()
+        assert refreshed.status == 'unsubscribed'
+
+
+def test_bounce_pauses_game_reminder(app, db):
+    from app.models import DailyBriefSubscriber, GameReminderSubscription
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='both@example.com', status='active')
+        reminder = GameReminderSubscription(email='both@example.com')
+        db.session.add_all([sub, reminder])
+        db.session.commit()
+
+        EmailAnalytics.record_from_webhook(
+            _payload(
+                'email.bounced',
+                email='both@example.com',
+                bounce={'type': 'Permanent'},
+            )
+        )
+        db.session.expire_all()
+        paused = GameReminderSubscription.query.filter_by(email='both@example.com').first()
+        assert paused.unsubscribed_at is not None
+        assert paused.unsubscribe_reason == 'bounce'
+
+
+def test_process_subscription_refuses_bounced_address(app, db):
+    from app.brief.subscription import process_subscription
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='dead@example.com', status='bounced')
+        db.session.add(sub)
+        db.session.commit()
+        with app.test_request_context('/brief/subscribe'):
+            result = process_subscription('dead@example.com')
+        assert result['status'] == 'undeliverable'
+        db.session.expire_all()
+        assert DailyBriefSubscriber.query.filter_by(email='dead@example.com').first().status == 'bounced'
+
+
+def test_three_transient_bounces_suppress(app, db):
+    from app.models import DailyBriefSubscriber
+
+    with app.app_context():
+        sub = DailyBriefSubscriber(email='chronic@example.com', status='active')
+        db.session.add(sub)
+        db.session.commit()
+
+        for i in range(3):
+            EmailAnalytics.record_from_webhook(
+                _payload(
+                    'email.bounced',
+                    email='chronic@example.com',
+                    email_id=f're_soft_{i}',
+                    bounce={'type': 'Transient'},
+                )
+            )
+
+        db.session.expire_all()
+        refreshed = DailyBriefSubscriber.query.filter_by(
+            email='chronic@example.com'
+        ).first()
+        assert refreshed.status == 'bounced'
+
+
+def test_discussion_mail_skipped_when_brief_bounced(app, db):
+    from app.email_utils import user_accepts_discussion_notification_email
+    from app.models import DailyBriefSubscriber, User
+
+    with app.app_context():
+        user = User(email='host@example.com', username='hostbounce')
+        user.set_password('x')
+        db.session.add(user)
+        db.session.flush()
+        db.session.add(DailyBriefSubscriber(email='host@example.com', status='bounced'))
+        db.session.commit()
+        assert user_accepts_discussion_notification_email(user, 'new_participant') is False

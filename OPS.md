@@ -320,6 +320,10 @@ python3 scripts/activate_imported_subscribers.py --batch 250 --source <label>   
 python3 scripts/activate_imported_subscribers.py --batch 250 --source <label> --commit
 ```
 
+The script excludes UTC/unknown timezones by default (`--include-utc` to
+override after a real IANA backfill). After `--commit` they join the next
+local-18:00 Daily Brief wave — no separate welcome blast.
+
 Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 
 1. No activation while any send pipeline change is unverified or a bounce
@@ -335,8 +339,8 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
    `status='imported'` can ever be activated.
 4. Prefer real IANA `timezone` on the batch before `--commit`. Import sets
    timezone for *new* rows from chapter/country; **activation does not**.
-   UTC leftovers still receive 18:00 UTC. Check readiness with section 7 of
-   `docs/analysis/sql/stance-loop-scoreboard.sql`.
+   UTC leftovers still receive 18:00 UTC. Check readiness with section 10a
+   of `docs/analysis/sql/stance-loop-scoreboard.sql`.
 
 ### Deliverability monitoring (how to read the numbers)
 
@@ -356,9 +360,12 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 - **Opens exist only for mail sent after 2026-07-12** (webhook reconnect).
   Pre-12 Jul bounce/complaint history in Neon is incomplete.
 
-**Status snapshot (2026-07-14):** webhook + opens live since 12 Jul;
-complaints 0; 13 Jul bounce ~1.96% Neon / 2.11% Resend (all Transient) —
-on the fence, clean week **not** started. 4,526 still `imported`.
+**Status snapshot (2026-08-24):** clean week long since passed (bounce
+1.66–1.84% on full London days, complaints ~0.02%). Staged activation
+started: batch 1 = 250 `b2b_community` with real IANA timezone. Next batch
+after two send-days (check 25–26 Aug London bounce/complaint) if still
+under kill-switch. UTC/unknown leftovers (~867) held. Do not run E5
+win-back as part of this ramp.
 
 ## Daily brief send integrity
 
@@ -384,6 +391,17 @@ hard bounces/complaints). They leave the active pool so every rate stays
 honest. 801 backfilled on 2026-07-13 (791 from the imported cohort); pool
 was **874** suppressed as of 2026-07-14 — expect a similar rate as dormant
 batches activate.
+
+**Bounce auto-remove:** Resend's bounce.type is `Permanent` / `Transient` /
+`Undetermined` (not `hard`/`soft`). Permanent and `email.complained` leave
+the active pool immediately (bounced / unsubscribed). Transient is allowed
+twice, then `status='bounced'` on the third event so a greylist or full
+mailbox is not banned on day one, but a sticky dead address is not mailed
+forever. Sends only go to `status='active'`. The activation script cannot
+flip bounced/suppressed/unsubscribed rows, and it skips addresses that
+already have a hard bounce, complaint, or Resend suppression in
+`email_event`. Discussion notifications and the weekly digest also skip
+undeliverable addresses; password reset is unchanged.
 
 ## Resend webhook verification
 

@@ -28,9 +28,11 @@ from app.lib.time import utcnow_naive
 from typing import Dict, Any, Optional, List, Tuple
 from flask import current_app, has_app_context
 from app import db
+from app.email_utils import extract_clean_email
 from app.models import (
-    EmailEvent, User, DailyBriefSubscriber, 
-    DailyQuestionSubscriber, DailyBrief, DailyQuestion, BriefRecipient
+    EmailEvent, User, DailyBriefSubscriber,
+    DailyQuestionSubscriber, DailyBrief, DailyQuestion, BriefRecipient,
+    GameReminderSubscription, JourneyReminderSubscription,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,64 @@ logger = logging.getLogger(__name__)
 # If that blueprint path ever changes, update this constant too — grep for the
 # other end by the constant name.
 _FIRST_PARTY_CLICK_TRACKER_PATH = "/brief/track/click"
+SOFT_BOUNCE_WINDOW_DAYS = 30
+# Automated bounce handling must not overwrite these — complaint/unsub is a
+# legal state; Resend suppression is stronger than our own bounce flag.
+_DELIVERABILITY_STATUS_LOCK = frozenset({'unsubscribed', 'suppressed'})
+
+
+def recipient_email_from_webhook(data: Dict[str, Any]) -> Optional[str]:
+    """Pull a bare address out of Resend's `to` field (list, string, or dict)."""
+    to_raw = data.get('to') if isinstance(data, dict) else None
+    if to_raw is None:
+        return None
+    if isinstance(to_raw, (list, tuple)):
+        first = to_raw[0] if to_raw else None
+    else:
+        first = to_raw
+    if isinstance(first, dict):
+        first = first.get('email') or first.get('address')
+    if not first:
+        return None
+    return extract_clean_email(str(first))
+
+
+def _email_equals(column, email: str):
+    from sqlalchemy import func
+    return func.lower(column) == email.strip().lower()
+
+
+def address_cannot_receive_mail(email: Optional[str]) -> bool:
+    """True when marketing mail to this address would bounce or is legally blocked.
+
+    Does not apply to transactional auth mail (password reset), which must still
+    be attempted if the user requests it.
+    """
+    if not email or not str(email).strip():
+        return False
+    from sqlalchemy import and_, func, or_
+
+    if DailyBriefSubscriber.query.filter(
+        _email_equals(DailyBriefSubscriber.email, email),
+        DailyBriefSubscriber.status.in_(('bounced', 'suppressed')),
+    ).first():
+        return True
+    cutoff = utcnow_naive() - timedelta(days=SOFT_BOUNCE_WINDOW_DAYS)
+    return (
+        EmailEvent.query.filter(
+            _email_equals(EmailEvent.recipient_email, email),
+            EmailEvent.created_at >= cutoff,
+            or_(
+                EmailEvent.event_type == EmailEvent.EVENT_COMPLAINED,
+                EmailEvent.event_type == 'suppressed',
+                and_(
+                    EmailEvent.event_type == EmailEvent.EVENT_BOUNCED,
+                    func.lower(EmailEvent.bounce_type).in_(('hard', 'permanent')),
+                ),
+            ),
+        ).first()
+        is not None
+    )
 
 
 class EmailAnalytics:
@@ -168,13 +228,23 @@ class EmailAnalytics:
                 logger.warning("Webhook payload missing event type")
                 return None
             
-            # Extract recipient email
-            to_list = data.get('to', [])
-            recipient_email = to_list[0] if to_list else None
-            
+            # Extract recipient email (Resend may send a list, a string, or
+            # "Name <addr>"; look up subscribers case-insensitively).
+            recipient_email = recipient_email_from_webhook(data)
             if not recipient_email:
                 logger.warning("Webhook payload missing recipient email")
                 return None
+            canonical = (
+                DailyBriefSubscriber.query.filter(
+                    _email_equals(DailyBriefSubscriber.email, recipient_email)
+                ).first()
+                or DailyQuestionSubscriber.query.filter(
+                    _email_equals(DailyQuestionSubscriber.email, recipient_email)
+                ).first()
+                or User.query.filter(_email_equals(User.email, recipient_email)).first()
+            )
+            if canonical is not None and getattr(canonical, 'email', None):
+                recipient_email = canonical.email
             
             # Normalize event type (remove 'email.' prefix)
             normalized_type = event_type.replace('email.', '')
@@ -302,10 +372,16 @@ class EmailAnalytics:
         subject = (data.get("subject") or "").lower()
         context: Dict[str, Any] = {}
 
-        brief_subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
-        briefing_recipient = BriefRecipient.query.filter_by(email=email).first()
-        question_subscriber = DailyQuestionSubscriber.query.filter_by(email=email).first()
-        user = User.query.filter_by(email=email).first()
+        brief_subscriber = DailyBriefSubscriber.query.filter(
+            _email_equals(DailyBriefSubscriber.email, email)
+        ).first()
+        briefing_recipient = BriefRecipient.query.filter(
+            _email_equals(BriefRecipient.email, email)
+        ).first()
+        question_subscriber = DailyQuestionSubscriber.query.filter(
+            _email_equals(DailyQuestionSubscriber.email, email)
+        ).first()
+        user = User.query.filter(_email_equals(User.email, email)).first()
 
         if brief_subscriber:
             context["brief_subscriber_id"] = brief_subscriber.id
@@ -356,15 +432,40 @@ class EmailAnalytics:
 
     # Number of soft bounces before an address is suppressed.
     SOFT_BOUNCE_SUPPRESS_THRESHOLD = 3
+    # Resend sends Permanent / Transient / Undetermined. We also accept the
+    # older hard/soft labels so a single comparison covers both vocabularies.
+    _HARD_BOUNCE_TYPES = frozenset({'hard', 'permanent'})
+
+    @classmethod
+    def classify_bounce_type(cls, bounce_type: Optional[str]) -> str:
+        """Map a Resend (or legacy) bounce.type to 'hard' or 'soft'."""
+        token = (bounce_type or '').strip().lower()
+        if token in cls._HARD_BOUNCE_TYPES:
+            return 'hard'
+        return 'soft'
 
     @classmethod
     def _count_soft_bounces(cls, email: str) -> int:
-        """Return the total number of soft-bounce events recorded for *email*."""
+        """Return soft/transient bounce events recorded for *email*.
+
+        Counts anything that is not a hard/Permanent bounce, including
+        historical Resend ``Transient`` rows written before we normalised
+        the vocabulary.
+        """
         try:
-            return EmailEvent.query.filter_by(
-                recipient_email=email,
-                event_type=cls.EVENT_BOUNCED,
-                bounce_type='soft',
+            from sqlalchemy import func, or_
+
+            cutoff = utcnow_naive() - timedelta(days=SOFT_BOUNCE_WINDOW_DAYS)
+            return EmailEvent.query.filter(
+                _email_equals(EmailEvent.recipient_email, email),
+                EmailEvent.event_type == cls.EVENT_BOUNCED,
+                EmailEvent.created_at >= cutoff,
+                or_(
+                    EmailEvent.bounce_type.is_(None),
+                    func.lower(EmailEvent.bounce_type).notin_(
+                        tuple(cls._HARD_BOUNCE_TYPES)
+                    ),
+                ),
             ).count()
         except Exception as e:
             logger.warning(f"Could not count soft bounces for {email}: {e}")
@@ -376,12 +477,13 @@ class EmailAnalytics:
         Handle bounces and complaints by updating subscriber status.
         DRY: Centralized deliverability handling.
 
-        Hard bounces and complaints suppress immediately.
-        Soft bounces are suppressed once SOFT_BOUNCE_SUPPRESS_THRESHOLD is reached
-        (counted across all recorded EmailEvent rows for the address).
+        Hard/Permanent bounces and complaints suppress immediately.
+        Soft/Transient bounces are suppressed once SOFT_BOUNCE_SUPPRESS_THRESHOLD
+        is reached (counted across all recorded EmailEvent rows for the address).
         """
         try:
-            is_hard_bounce = event_type == cls.EVENT_BOUNCED and bounce_type == 'hard'
+            bounce_class = cls.classify_bounce_type(bounce_type)
+            is_hard_bounce = event_type == cls.EVENT_BOUNCED and bounce_class == 'hard'
             is_complaint = event_type == cls.EVENT_COMPLAINED
             is_suppressed = event_type == cls.EVENT_SUPPRESSED
 
@@ -389,7 +491,7 @@ class EmailAnalytics:
             # The current event has already been written to EmailEvent before this
             # method is called, so the count includes the event we just recorded.
             suppress_soft = False
-            if event_type == cls.EVENT_BOUNCED and bounce_type == 'soft':
+            if event_type == cls.EVENT_BOUNCED and bounce_class == 'soft':
                 soft_count = cls._count_soft_bounces(email)
                 if soft_count >= cls.SOFT_BOUNCE_SUPPRESS_THRESHOLD:
                     suppress_soft = True
@@ -409,12 +511,20 @@ class EmailAnalytics:
                 return
 
             # Update brief subscriber
-            brief_sub = DailyBriefSubscriber.query.filter_by(email=email).first()
+            brief_sub = DailyBriefSubscriber.query.filter(
+                _email_equals(DailyBriefSubscriber.email, email)
+            ).first()
             if brief_sub:
+                locked = brief_sub.status in _DELIVERABILITY_STATUS_LOCK
                 if is_complaint:
                     brief_sub.status = 'unsubscribed'
                     brief_sub.unsubscribed_at = utcnow_naive()
                     logger.info(f"Unsubscribed brief subscriber {email} due to complaint")
+                elif locked:
+                    logger.info(
+                        f"Leaving brief subscriber {email} as {brief_sub.status} "
+                        f"(bounce/suppression must not overwrite unsub or Resend suppression)"
+                    )
                 elif is_suppressed:
                     # Distinct status: Resend will never deliver to this address,
                     # so it must leave the active pool — but 'suppressed' keeps it
@@ -423,12 +533,14 @@ class EmailAnalytics:
                     logger.info(f"Marked brief subscriber {email} as suppressed (Resend suppression list)")
                 else:
                     brief_sub.status = 'bounced'
-                    reason = 'hard bounce' if is_hard_bounce else f'repeated soft bounces'
+                    reason = 'hard bounce' if is_hard_bounce else 'repeated soft bounces'
                     logger.info(f"Marked brief subscriber {email} as bounced ({reason})")
 
             # Update question subscriber
-            question_sub = DailyQuestionSubscriber.query.filter_by(email=email).first()
-            if question_sub:
+            question_sub = DailyQuestionSubscriber.query.filter(
+                _email_equals(DailyQuestionSubscriber.email, email)
+            ).first()
+            if question_sub and question_sub.is_active:
                 question_sub.is_active = False
                 if is_complaint:
                     logger.info(f"Deactivated question subscriber {email} due to complaint")
@@ -436,9 +548,12 @@ class EmailAnalytics:
                     reason = 'hard bounce' if is_hard_bounce else 'repeated soft bounces'
                     logger.info(f"Deactivated question subscriber {email} ({reason})")
 
-            # Update briefing recipients (briefing pipeline)
-            briefing_recipient = BriefRecipient.query.filter_by(email=email).first()
-            if briefing_recipient:
+            # Update every briefing-recipient row for this address
+            for briefing_recipient in BriefRecipient.query.filter(
+                _email_equals(BriefRecipient.email, email)
+            ).all():
+                if briefing_recipient.status == 'unsubscribed':
+                    continue
                 briefing_recipient.status = 'unsubscribed'
                 briefing_recipient.unsubscribed_at = utcnow_naive()
                 if is_complaint:
@@ -446,6 +561,22 @@ class EmailAnalytics:
                 else:
                     reason = 'hard bounce' if is_hard_bounce else 'repeated soft bounces'
                     logger.info(f"Unsubscribed briefing recipient {email} ({reason})")
+
+            now = utcnow_naive()
+            pause_reason = 'complaint' if is_complaint else 'bounce'
+            for reminder in GameReminderSubscription.query.filter(
+                _email_equals(GameReminderSubscription.email, email),
+                GameReminderSubscription.unsubscribed_at.is_(None),
+            ).all():
+                reminder.unsubscribed_at = now
+                reminder.unsubscribe_reason = pause_reason
+                logger.info(f"Paused game reminder for {email} ({pause_reason})")
+            for reminder in JourneyReminderSubscription.query.filter(
+                _email_equals(JourneyReminderSubscription.email, email),
+                JourneyReminderSubscription.unsubscribed_at.is_(None),
+            ).all():
+                reminder.unsubscribed_at = now
+                logger.info(f"Paused journey reminder for {email} ({pause_reason})")
 
         except Exception as e:
             logger.error(f"Failed to handle deliverability issue: {e}")

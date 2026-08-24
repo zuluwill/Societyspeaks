@@ -97,9 +97,11 @@ def process_subscription(
     """
     Create or reactivate a Daily Brief subscription.
 
-    Handles three cases:
+    Handles:
       - Already active: links user account if needed, returns 'already_active'.
-      - Unsubscribed: reactivates and optionally updates preferences, returns 'reactivated'.
+      - Unsubscribed / paused / imported: reactivates, returns 'reactivated'.
+      - Bounced / suppressed: refuses to revive a dead address, returns
+        'undeliverable' (admin toggle can still override).
       - New: creates record, sends welcome email, returns 'created'.
 
     Args:
@@ -115,7 +117,7 @@ def process_subscription(
 
     Returns:
         dict with keys:
-            status   — 'created' | 'reactivated' | 'already_active' | 'error'
+            status   — 'created' | 'reactivated' | 'already_active' | 'undeliverable' | 'error'
             subscriber — DailyBriefSubscriber instance, or None on error.
             message  — Human-readable description.
             error    — Present only when status == 'error'.
@@ -133,6 +135,16 @@ def process_subscription(
         user = User.query.filter_by(email=email).first()
         if user and existing.user_id != user.id:
             existing.user_id = user.id
+
+        if existing.status in ('bounced', 'suppressed'):
+            return {
+                'status': 'undeliverable',
+                'subscriber': existing,
+                'message': _(
+                    'This address cannot receive our emails. Try a different '
+                    'address, or contact us if you think this is a mistake.'
+                ),
+            }
 
         if existing.status == 'active':
             try:
