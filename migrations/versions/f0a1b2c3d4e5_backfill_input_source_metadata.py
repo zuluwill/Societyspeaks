@@ -15,12 +15,17 @@ left alone — we have no source of truth for those.
 Safe to re-run: only updates rows where ``political_leaning IS NULL`` so a
 later edit by an admin sticks.
 
+Idempotent for from-empty: skip statements whose columns are not yet present
+(sibling branch may create them later). Production already stamped this
+revision and will not re-execute it.
+
 Revision ID: f0a1b2c3d4e5
 Revises: e9f0a1b2c3d4
 Create Date: 2026-05-20
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 revision = 'f0a1b2c3d4e5'
@@ -31,46 +36,56 @@ depends_on = None
 
 def upgrade():
     bind = op.get_bind()
+    inspector = inspect(bind)
+    tables = set(inspector.get_table_names())
+    if 'input_source' not in tables or 'news_source' not in tables:
+        return
+
+    ins_cols = {c['name'] for c in inspector.get_columns('input_source')}
+    ns_cols = {c['name'] for c in inspector.get_columns('news_source')}
 
     # Backfill political_leaning where unset (don't clobber admin overrides).
-    bind.execute(sa.text(
-        """
-        UPDATE input_source AS ins
-        SET political_leaning = ns.political_leaning
-        FROM news_source AS ns
-        WHERE ins.owner_type = 'system'
-          AND ins.name = ns.name
-          AND ins.political_leaning IS NULL
-          AND ns.political_leaning IS NOT NULL
-        """
-    ))
+    if 'political_leaning' in ins_cols and 'political_leaning' in ns_cols:
+        bind.execute(sa.text(
+            """
+            UPDATE input_source AS ins
+            SET political_leaning = ns.political_leaning
+            FROM news_source AS ns
+            WHERE ins.owner_type = 'system'
+              AND ins.name = ns.name
+              AND ins.political_leaning IS NULL
+              AND ns.political_leaning IS NOT NULL
+            """
+        ))
 
     # Stamp is_verified on every system-owned source that matches a curated
     # NewsSource — those have been editorially vetted by definition.
-    bind.execute(sa.text(
-        """
-        UPDATE input_source AS ins
-        SET is_verified = true
-        FROM news_source AS ns
-        WHERE ins.owner_type = 'system'
-          AND ins.name = ns.name
-          AND ins.is_verified IS DISTINCT FROM true
-        """
-    ))
+    if 'is_verified' in ins_cols:
+        bind.execute(sa.text(
+            """
+            UPDATE input_source AS ins
+            SET is_verified = true
+            FROM news_source AS ns
+            WHERE ins.owner_type = 'system'
+              AND ins.name = ns.name
+              AND ins.is_verified IS DISTINCT FROM true
+            """
+        ))
 
     # Where origin_type is the loose default ('user'), upgrade to 'admin' for
     # system sources sourced from the curated allowlist. The application-level
     # bridge already does this for new rows; this catches the legacy backlog.
-    bind.execute(sa.text(
-        """
-        UPDATE input_source AS ins
-        SET origin_type = 'admin'
-        FROM news_source AS ns
-        WHERE ins.owner_type = 'system'
-          AND ins.name = ns.name
-          AND (ins.origin_type IS NULL OR ins.origin_type = 'user')
-        """
-    ))
+    if 'origin_type' in ins_cols:
+        bind.execute(sa.text(
+            """
+            UPDATE input_source AS ins
+            SET origin_type = 'admin'
+            FROM news_source AS ns
+            WHERE ins.owner_type = 'system'
+              AND ins.name = ns.name
+              AND (ins.origin_type IS NULL OR ins.origin_type = 'user')
+            """
+        ))
 
 
 def downgrade():

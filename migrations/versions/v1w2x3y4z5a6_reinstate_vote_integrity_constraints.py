@@ -24,6 +24,36 @@ def upgrade():
     bind = op.get_bind()
     is_postgres = bind.dialect.name == 'postgresql'
 
+    # Production / model expect anonymous voting columns that were never
+    # introduced by an earlier revision (c1a2 created statement_vote with
+    # NOT NULL user_id and no session_fingerprint; same for statement).
+    # Ensure they exist before the partial-index work below. Idempotent —
+    # no-op on production.
+    op.execute("""
+        ALTER TABLE statement_vote
+            ADD COLUMN IF NOT EXISTS session_fingerprint VARCHAR(64)
+    """)
+    op.execute("""
+        ALTER TABLE statement_vote
+            ALTER COLUMN user_id DROP NOT NULL
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS idx_vote_session_fingerprint
+            ON statement_vote (session_fingerprint)
+    """)
+    op.execute("""
+        ALTER TABLE statement
+            ADD COLUMN IF NOT EXISTS session_fingerprint VARCHAR(64)
+    """)
+    op.execute("""
+        ALTER TABLE statement
+            ALTER COLUMN user_id DROP NOT NULL
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS idx_statement_session
+            ON statement (session_fingerprint)
+    """)
+
     # ------------------------------------------------------------------ #
     # 1. Deduplicate statement_vote by (statement_id, user_id)            #
     #    Keep the row with the latest updated_at; break ties by higher id #
