@@ -315,6 +315,141 @@ def test_disarm_noops_join_under_gevent(monkeypatch):
     assert getattr(client, "_ss_join_neutered", False) is True
 
 
+def test_atexit_patch_skips_sdk_shutdown_too():
+    """Celery integration atexit-registers shutdown; skip that as well."""
+    import atexit
+
+    from app.lib.posthog_utils import (
+        _is_posthog_sdk_join,
+        _patch_atexit_skip_posthog_join,
+    )
+
+    class _Client:
+        def shutdown(self):
+            raise AssertionError("sdk shutdown must not be atexit-registered")
+
+    _Client.__module__ = "posthog.client"
+    client = _Client()
+    assert _is_posthog_sdk_join(client.shutdown) is True
+    _patch_atexit_skip_posthog_join()
+    before = atexit._ncallbacks()
+    atexit.register(client.shutdown)
+    assert atexit._ncallbacks() == before
+
+
+def test_disarm_noops_flush_and_shutdown_under_gevent(monkeypatch):
+    import time
+
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
+
+    class _Client:
+        def join(self):
+            time.sleep(30)
+
+        def flush(self, timeout_seconds=None):
+            time.sleep(30)
+
+        def shutdown(self):
+            time.sleep(30)
+
+    client = _Client()
+    monkeypatch.setattr(ph, "default_client", client, raising=False)
+    started = time.monotonic()
+    disarm_posthog_blocking_shutdown()
+    client.flush(None)
+    client.shutdown()
+    assert time.monotonic() - started < 1.0
+
+
+def test_wrapped_sdk_teardown_noops_under_gevent(monkeypatch):
+    """Class wraps must short-circuit even without instance assignment."""
+    import time
+
+    import posthog.client as ph_client
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
+    utils._TEARDOWN_METHODS_PATCHED = False
+    utils._patch_posthog_blocking_teardown_methods()
+    dummy = object()
+    started = time.monotonic()
+    assert ph_client.Client.join(dummy) is None
+    assert ph_client.Client.flush(dummy, None) is None
+    assert ph_client.Client.shutdown(dummy) is None
+    assert ph_client._Lane.join(dummy) is None
+    assert ph_client._Lane.flush(dummy, None) is None
+    assert ph_client._Lane.wait_for_sync_sends(dummy) is None
+    assert time.monotonic() - started < 1.0
+
+
+def test_shutdown_drains_every_lane_not_just_analytics(monkeypatch):
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_shutdown_done", False)
+    monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
+    monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
+
+    class FakeQueue:
+        def __init__(self, empty_after):
+            self.polls = 0
+            self.empty_after = empty_after
+
+        def qsize(self):
+            self.polls += 1
+            return 0 if self.polls >= self.empty_after else 3
+
+    class FakeLane:
+        def __init__(self, empty_after):
+            self.queue = FakeQueue(empty_after)
+            self.consumers = [MagicMock()]
+
+    analytics = FakeLane(2)
+    ai = FakeLane(4)
+
+    class FakeClient:
+        _lanes = [analytics, ai]
+        queue = analytics.queue
+        consumers = analytics.consumers
+        poller = None
+
+    monkeypatch.setattr(ph, "default_client", FakeClient(), raising=False)
+    shutdown_server_posthog()
+    assert analytics.queue.polls >= 2
+    assert ai.queue.polls >= 4
+    analytics.consumers[0].pause.assert_called_once()
+    ai.consumers[0].pause.assert_called_once()
+
+
+def test_shutdown_pauses_poller_without_join(monkeypatch):
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_shutdown_done", False)
+    monkeypatch.setattr(ph, "api_key", "phc_test", raising=False)
+    monkeypatch.setattr(ph, "project_api_key", "phc_test", raising=False)
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
+
+    poller = MagicMock()
+    poller.join.side_effect = AssertionError("poller must not be joined")
+
+    class FakeClient:
+        queue = MagicMock(qsize=MagicMock(return_value=0))
+        consumers = []
+
+    client = FakeClient()
+    client.poller = poller
+    monkeypatch.setattr(ph, "default_client", client, raising=False)
+    shutdown_server_posthog()
+    poller.stopped.set.assert_called_once()
+    poller.stop.assert_not_called()
+    poller.join.assert_not_called()
+
+
 def test_configure_patches_atexit_to_skip_sdk_join(monkeypatch):
     import atexit
 
@@ -329,4 +464,7 @@ def test_configure_patches_atexit_to_skip_sdk_join(monkeypatch):
     configure_posthog_credentials("phc_test", "https://eu.i.posthog.com")
     assert getattr(atexit.register, "_ss_skip_posthog_join", False)
     assert getattr(ph_client.Client.__init__, "_ss_gevent_atexit_patched", False)
+    assert getattr(ph_client.Client.join, "_ss_gevent_noop", False)
+    assert getattr(ph_client.Client.flush, "_ss_gevent_noop", False)
+    assert getattr(ph_client.Client.shutdown, "_ss_gevent_noop", False)
 

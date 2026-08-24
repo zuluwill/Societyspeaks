@@ -18,21 +18,28 @@ Architecture (intentional):
   the unpatched stdlib ``Queue`` and ``Thread`` so consumers run on real OS
   threads and do not block the hub.
 
-- **Never join from the hub**: after the Queue/Thread rebind, ``flush()`` and
-  ``shutdown()`` wait on real ``threading`` primitives. Calling them from a
-  gunicorn gevent worker (``worker_exit`` / ``atexit``) freezes the hub until
-  gunicorn's 120s timeout SIGKILLs the process (Render ``/health`` connection
-  refused, Aug 2026). :func:`shutdown_server_posthog` drains by ``qsize()``
-  with cooperative sleep, pauses consumers, and only ``Thread.join``s when
-  gevent is not patching threads.
+- **Never join from the hub**: after the Queue/Thread rebind, ``flush()``,
+  ``shutdown()``, ``Client.join``, ``_Lane.join`` / ``_Lane.flush`` /
+  ``wait_for_sync_sends``, and ``Poller.stop`` all wait on real ``threading``
+  primitives (``queue.join``, ``Condition.wait``, ``Thread.join``). Calling any
+  of them from a gunicorn gevent worker (``worker_exit`` / ``atexit``) freezes
+  the hub until gunicorn's 120s timeout SIGKILLs the process (Render ``/health``
+  connection refused, Aug 2026). ``GeventTimeout`` cannot interrupt those OS
+  waits — skipping them is the only reliable control.
+  :func:`shutdown_server_posthog` drains every lane by ``qsize()`` with
+  cooperative sleep, pauses consumers and the poller, and only ``Thread.join``s
+  when gevent is not patching threads.
 
 - **SDK atexit(join)**: ``Client.__init__`` registers ``atexit.register(self.join)``
   with no timeout. Recycle/SIGTERM runs that handler *after* ``worker_exit`` and
-  hangs the main greenlet (Sentry PYTHON-FLASK-JD, 2026-08-24). We unregister
-  it and no-op ``join`` under gevent; our drain is the only shutdown path.
+  hangs the main greenlet (Sentry PYTHON-FLASK-JD, 2026-08-24). We skip that
+  registration, wrap the SDK teardown methods so they no-op under gevent even
+  if a bound method was already atexit-registered, and no-op instance
+  ``join``/``flush``/``shutdown``. Our drain is the only shutdown path.
 
 - **Drain on shutdown**: ``register_posthog_atexit()`` (from ``create_app``) and
-  ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()``.
+  ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()``. Drain every
+  lane (analytics + AI); ``client.queue`` is only the analytics lane.
 
 - **Best-effort delivery**: SIGKILL, OOM, or hard crashes can lose buffered events.
   For revenue‑critical attribution, persist facts in your DB first; analytics mirror
@@ -165,6 +172,7 @@ def configure_posthog_credentials(
         pass
 
     _patch_atexit_skip_posthog_join()
+    _patch_posthog_blocking_teardown_methods()
     _patch_posthog_client_init_for_gevent()
     disarm_posthog_blocking_shutdown()
 
@@ -240,29 +248,62 @@ def _cooperative_sleep(seconds: float) -> None:
     time.sleep(seconds)
 
 
+def _posthog_lanes(client: Any) -> list:
+    """PostHog 7.37+ splits capture across analytics + AI lanes."""
+    lanes = getattr(client, "_lanes", None)
+    if lanes:
+        return list(lanes)
+    return []
+
+
+def _posthog_queues(client: Any) -> list:
+    """Every lane queue. ``client.queue`` is analytics-only (back-compat)."""
+    queues = []
+    for lane in _posthog_lanes(client):
+        queue = getattr(lane, "queue", None)
+        if queue is not None:
+            queues.append(queue)
+    if queues:
+        return queues
+    queue = getattr(client, "queue", None)
+    return [queue] if queue is not None else []
+
+
+def _posthog_consumers(client: Any) -> list:
+    """Every lane consumer. ``client.consumers`` is None in sync_mode."""
+    consumers: list = []
+    for lane in _posthog_lanes(client):
+        consumers.extend(getattr(lane, "consumers", None) or ())
+    if consumers:
+        return consumers
+    return list(getattr(client, "consumers", None) or ())
+
+
 def _drain_client_queue(client: Any, timeout: float = 1.0) -> None:
-    """Wait for the client's consumer threads to empty the capture queue.
+    """Wait for the client's consumer threads to empty the capture queues.
 
     Never use ``flush()`` here. After :func:`apply_posthog_gevent_compat`
     rebinds PostHog to stdlib ``Queue``, ``flush()`` waits on
     ``all_tasks_done`` — a real ``threading.Condition`` — from the gunicorn
-    greenlet, which wedges the hub.
+    greenlet, which wedges the hub. Drain every lane; skipping the AI lane
+    leaves events that ``Client.shutdown`` would then ``queue.join()`` forever.
     """
     import time
 
-    queue = getattr(client, "queue", None)
-    if queue is None:
+    queues = _posthog_queues(client)
+    if not queues:
         return
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            if queue.qsize() == 0:
+            if all(queue.qsize() == 0 for queue in queues):
                 return
         except Exception:
             return
         _cooperative_sleep(0.05)
+    leftover: Any = 0
     try:
-        leftover = queue.qsize()
+        leftover = sum(queue.qsize() for queue in queues)
     except Exception:
         leftover = "?"
     _log.warning(
@@ -277,7 +318,7 @@ def _pause_posthog_consumers(client: Any) -> None:
     ``Consumer.pause()`` is the SDK's cooperative stop. The worker/process is
     about to exit; leftover daemon threads die with it. Do not ``join()``.
     """
-    for consumer in getattr(client, "consumers", None) or ():
+    for consumer in _posthog_consumers(client):
         for method_name in ("pause", "stop"):
             method = getattr(consumer, method_name, None)
             if callable(method):
@@ -288,11 +329,27 @@ def _pause_posthog_consumers(client: Any) -> None:
                 break
 
 
+def _pause_posthog_poller(client: Any) -> None:
+    """Stop the feature-flag poller without ``Thread.join``.
+
+    ``Poller.stop`` sets the event then ``join()``s with no timeout.
+    """
+    poller = getattr(client, "poller", None)
+    if poller is None:
+        return
+    stopped = getattr(poller, "stopped", None)
+    if stopped is not None and callable(getattr(stopped, "set", None)):
+        try:
+            stopped.set()
+        except Exception:
+            pass
+
+
 def _join_posthog_consumers(client: Any, timeout: float = 1.0) -> None:
     """Bounded ``Thread.join`` — only safe when gevent is not patching threads."""
     import time
 
-    consumers = list(getattr(client, "consumers", None) or ())
+    consumers = _posthog_consumers(client)
     if not consumers:
         return
     deadline = time.monotonic() + timeout
@@ -310,9 +367,17 @@ def _join_posthog_consumers(client: Any, timeout: float = 1.0) -> None:
             pass
 
 
+_POSTHOG_TEARDOWN_NAMES = frozenset({"join", "shutdown", "flush", "stop"})
+
+
 def _is_posthog_sdk_join(func: Any) -> bool:
-    """True for ``Client.join`` bound methods the SDK atexit-registers."""
-    if getattr(func, "__name__", None) != "join":
+    """True for SDK teardown bound methods the SDK atexit-registers.
+
+    ``Client.join`` is the production path (PYTHON-FLASK-JD). Celery
+    integration registers ``shutdown``. ``flush`` / ``Poller.stop`` are
+    included so a future SDK atexit cannot bypass the skip.
+    """
+    if getattr(func, "__name__", None) not in _POSTHOG_TEARDOWN_NAMES:
         return False
     inst = getattr(func, "__self__", None)
     if inst is None:
@@ -340,19 +405,26 @@ def _uninstall_posthog_sdk_atexit(client: Any = None) -> None:
             continue
         seen.add(ident)
         join = getattr(candidate, "join", None)
-        if not callable(join):
-            continue
-        try:
-            atexit.unregister(join)
-        except Exception:
-            pass
+        if callable(join):
+            try:
+                atexit.unregister(join)
+            except Exception:
+                pass
+        for name in ("shutdown", "flush"):
+            method = getattr(candidate, name, None)
+            if callable(method):
+                try:
+                    atexit.unregister(method)
+                except Exception:
+                    pass
 
 
 _ATEXIT_PATCHED = False
+_TEARDOWN_METHODS_PATCHED = False
 
 
 def _patch_atexit_skip_posthog_join() -> None:
-    """Do not let PostHog ``Client.join`` onto the atexit list.
+    """Do not let PostHog teardown methods onto the atexit list.
 
     ``Client.__init__`` does ``atexit.register(self.join)`` with no timeout.
     Recycle then hangs in ``lane.join()`` (PYTHON-FLASK-JD). Skip that
@@ -376,40 +448,127 @@ def _patch_atexit_skip_posthog_join() -> None:
     _ATEXIT_PATCHED = True
 
 
-def _neuter_client_join_under_gevent(client: Any) -> None:
-    """Make ``Client.join`` a no-op when gevent owns threading.
+def _wrap_noop_under_gevent(cls: Any, name: str) -> None:
+    """Replace *cls.name* so gevent-patched processes never enter the original."""
+    orig = getattr(cls, name, None)
+    if orig is None or getattr(orig, "_ss_gevent_noop", False):
+        return
 
-    Defense in depth if anything still calls ``join()`` / ``shutdown()`` after
-    we unregister the atexit handler.
+    def wrapped(self, *args, **kwargs):
+        if _gevent_is_patching_threads():
+            return None
+        return orig(self, *args, **kwargs)
+
+    wrapped._ss_gevent_noop = True  # type: ignore[attr-defined]
+    wrapped._ss_orig = orig  # type: ignore[attr-defined]
+    wrapped.__name__ = getattr(orig, "__name__", name)
+    wrapped.__doc__ = getattr(orig, "__doc__", None)
+    setattr(cls, name, wrapped)
+
+
+def _patch_posthog_blocking_teardown_methods() -> None:
+    """No-op SDK teardown that joins OS threads when gevent owns threading.
+
+    Instance assignment of ``client.join`` does not rewrite a bound method
+    already sitting on the atexit list. Wrapping the class methods means
+    even that leftover bound call short-circuits under gevent. ``flush`` /
+    ``shutdown`` / lane waits / ``Poller.stop`` are the leftover PYTHON-FLASK-JD
+    siblings: any one of them wedges the hub the same way.
+    """
+    global _TEARDOWN_METHODS_PATCHED
+    if _TEARDOWN_METHODS_PATCHED:
+        return
+    try:
+        import posthog.client as ph_client
+    except Exception:
+        return
+
+    for name in ("join", "flush", "shutdown"):
+        _wrap_noop_under_gevent(ph_client.Client, name)
+    lane = getattr(ph_client, "_Lane", None)
+    if lane is not None:
+        for name in ("join", "flush", "wait_for_sync_sends"):
+            _wrap_noop_under_gevent(lane, name)
+
+    try:
+        import posthog.poller as ph_poller
+    except Exception:
+        ph_poller = None
+    if ph_poller is not None:
+        orig_stop = getattr(ph_poller.Poller, "stop", None)
+        if orig_stop is not None and not getattr(orig_stop, "_ss_gevent_noop", False):
+
+            def stop(self):
+                if _gevent_is_patching_threads():
+                    stopped = getattr(self, "stopped", None)
+                    if stopped is not None and callable(getattr(stopped, "set", None)):
+                        try:
+                            stopped.set()
+                        except Exception:
+                            pass
+                    return None
+                return orig_stop(self)
+
+            stop._ss_gevent_noop = True  # type: ignore[attr-defined]
+            stop._ss_orig = orig_stop  # type: ignore[attr-defined]
+            ph_poller.Poller.stop = stop
+
+    _TEARDOWN_METHODS_PATCHED = True
+
+
+def _neuter_blocking_teardown_under_gevent(client: Any) -> None:
+    """Make ``join`` / ``flush`` / ``shutdown`` no-ops on this instance.
+
+    Defense in depth if anything still calls those APIs after we skip atexit.
+    Class-level wraps in :func:`_patch_posthog_blocking_teardown_methods` are
+    the path that covers already-registered bound methods.
     """
     if client is None or not _gevent_is_patching_threads():
         return
     if getattr(client, "_ss_join_neutered", False):
         return
 
-    def _no_join(*_a, **_k):
+    def _no_teardown(*_a, **_k):
         return None
 
     try:
-        client.join = _no_join
+        client.join = _no_teardown
+        client.flush = _no_teardown
+        client.shutdown = _no_teardown
         client._ss_join_neutered = True
     except Exception:
         pass
+    for lane in _posthog_lanes(client):
+        try:
+            lane.join = _no_teardown
+            lane.flush = _no_teardown
+            lane.wait_for_sync_sends = _no_teardown
+        except Exception:
+            pass
+
+
+def _neuter_client_join_under_gevent(client: Any) -> None:
+    """Back-compat alias used by tests and older call sites."""
+    _neuter_blocking_teardown_under_gevent(client)
 
 
 def disarm_posthog_blocking_shutdown() -> None:
-    """Unregister SDK atexit(join) and no-op join under gevent.
+    """Skip SDK atexit teardown and no-op join/flush/shutdown under gevent.
 
     Safe to call before the default client exists (no-op) and again from
-    gunicorn ``worker_exit`` immediately before our drain.
+    gunicorn ``worker_exit`` immediately before our drain. Re-applies the
+    class wraps so a worker whose ``create_app`` order skipped them is still
+    covered.
     """
+    _patch_atexit_skip_posthog_join()
+    _patch_posthog_blocking_teardown_methods()
     try:
         import posthog as ph
     except Exception:
         return
     client = getattr(ph, "default_client", None)
     _uninstall_posthog_sdk_atexit(client)
-    _neuter_client_join_under_gevent(client)
+    _neuter_blocking_teardown_under_gevent(client)
 
 
 _CLIENT_INIT_PATCHED = False
@@ -433,7 +592,7 @@ def _patch_posthog_client_init_for_gevent() -> None:
         orig(self, *args, **kwargs)
         try:
             _uninstall_posthog_sdk_atexit(self)
-            _neuter_client_join_under_gevent(self)
+            _neuter_blocking_teardown_under_gevent(self)
         except Exception:
             pass
 
@@ -469,6 +628,7 @@ def shutdown_server_posthog() -> None:
             return
         _drain_client_queue(client)
         _pause_posthog_consumers(client)
+        _pause_posthog_poller(client)
         if not _gevent_is_patching_threads():
             _join_posthog_consumers(client)
     except Exception:

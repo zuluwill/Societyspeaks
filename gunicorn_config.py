@@ -216,8 +216,11 @@ def worker_exit(server, worker):
             shutdown_server_posthog,
         )
 
-        # SDK atexit(self.join) runs *after* this hook on interpreter exit.
-        # Disarm it before our drain so recycle cannot hang (PYTHON-FLASK-JD).
+        # SDK atexit teardown (join/flush/shutdown) runs *after* this hook on
+        # interpreter exit. Disarm it before our drain so recycle cannot hang
+        # (PYTHON-FLASK-JD). GeventTimeout only covers cooperative drain;
+        # it cannot interrupt OS Thread.join / Condition.wait — those APIs
+        # must never be entered from the hub.
         disarm_posthog_blocking_shutdown()
         try:
             from gevent import Timeout as GeventTimeout

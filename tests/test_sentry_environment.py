@@ -182,6 +182,7 @@ def test_before_send_keeps_worker_stall_before_llm_timeout_filter():
     assert "continuous_profiling_auto_start" in src
     assert "resolve_sentry_continuous_profiling()" in src
     assert "resolve_sentry_profiles_sample_rate()" in src
+    assert '"shutdown_timeout": 2' in src
     assert "TRANSIENT_DB_ERROR_PHRASES" in src
     assert "ssl error: unexpected message" in Path("app/lib/db_transient_errors.py").read_text(
         encoding="utf-8"

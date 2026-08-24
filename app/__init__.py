@@ -444,6 +444,9 @@ def create_app():
             "integrations": [FlaskIntegration()],
             "traces_sample_rate": resolve_sentry_traces_sample_rate(),
             "profiles_sample_rate": resolve_sentry_profiles_sample_rate(),
+            # Atexit close() flushes the transport. Bound this so gunicorn
+            # recycle cannot wait the SDK default forever after worker_exit.
+            "shutdown_timeout": 2,
             "before_send": _sentry_before_send,
         }
         if resolve_sentry_continuous_profiling():
