@@ -9,6 +9,15 @@ on:
   schedule:
     - cron: "0 6 * * 1" # Mondays 06:00 UTC, before the Dependabot PRs land
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - requirements.txt
+      - Dockerfile
+      - scripts/install_python_deps.sh
+      - package.json
+      - package-lock.json
+      - .github/workflows/security.yml
   pull_request:
     paths:
       - requirements.txt
@@ -23,9 +32,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            scripts/install_python_deps.sh
       - name: Install dependencies as production would
         run: bash scripts/install_python_deps.sh
       - name: Assert security floors landed
@@ -66,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm

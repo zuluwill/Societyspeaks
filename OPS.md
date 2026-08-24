@@ -481,6 +481,12 @@ for pip + npm, and monthly for Actions/Docker. Pip uses
 noise PRs that only raise the floor. Exact `==` pins are bumped in the
 `python-minor-patch` group. Docker Python majors and Tailwind CSS majors
 are ignored — those are deliberate platform/CSS migrations, not drive-bys.
+Stripe / redis-py / Flask-Limiter majors are ignored for the same reason
+(documented breakages or exact pins); cachelib 0.10+ is ignored as a 0.x
+minor because 0.16 changes `FileSystemCache` hashing. Security advisories
+still open PRs. Leaving those majors open starved the weekly 5-PR slot
+limit and blocked real patch PRs.
+
 Source of truth for Python deps is `requirements.txt` only (no Poetry lock).
 
 Exception: when a GHSA shows the current floor still admits a vulnerable
@@ -497,13 +503,11 @@ GHSA-g6cj-pr64-35w5; earlier OpenSSL fix was `>=48.0.1`). Keep the
 force-reinstall the patched wheel via **`scripts/install_python_deps.sh` only**
 (Dockerfile, Tests, Security audit, and local/setup scripts all call it — do
 not duplicate the override pin). Security CI also asserts
-`cryptography>=50.0.0` before `pip-audit`. Dependabot will keep flagging the
-manifest pin until atproto relaxes — that is noise against the resolve line,
-not against the installed runtime. Do not “fix” the audit by ignoring the
-GHSA; drop the force-reinstall once atproto allows `cryptography>=50`.
-Dependabot is configured to ignore the `requirements.txt` cryptography pin
-so it does not reopen weekly “raise the ceiling to <51” PRs that cannot
-resolve alongside atproto.
+`cryptography>=50.0.0` before `pip-audit`. Dependabot ignores the
+`requirements.txt` cryptography pin so it does not reopen weekly
+“raise the ceiling to <51” PRs that cannot resolve alongside atproto.
+Do not “fix” the audit by ignoring the GHSA; drop the force-reinstall
+once atproto allows `cryptography>=50`.
 
 Special case — `setuptools` / PYSEC-2026-3447: the `python:3.11-slim` image
 ships setuptools 79.x. GHSA-h35f-9h28-mq5c (MANIFEST.in NFC/NFD exclusion

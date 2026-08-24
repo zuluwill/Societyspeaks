@@ -102,3 +102,36 @@ def test_dependabot_does_not_open_cryptography_resolve_ceiling_prs():
     """atproto caps <47; patched wheel is the install-script override only."""
     pip_block = _read(".github/dependabot.yml").split("package-ecosystem: npm", 1)[0]
     assert 'dependency-name: "cryptography"' in pip_block
+
+
+def test_dependabot_does_not_let_known_majors_starve_the_weekly_slot_limit():
+    """Version majors we will not merge as drive-bys must not occupy open-pull-requests-limit."""
+    pip_block = _read(".github/dependabot.yml").split("package-ecosystem: npm", 1)[0]
+    for name in ("stripe", "redis", "flask-limiter", "cachelib"):
+        assert f'dependency-name: "{name}"' in pip_block, (
+            f"Dependabot must ignore {name} majors/bound-widens so patch PRs can land"
+        )
+
+
+def test_github_actions_use_current_setup_majors_and_bust_pip_cache_on_install_script():
+    workflows = list((ROOT / ".github" / "workflows").glob("*.yml"))
+    assert workflows, "expected workflow files"
+    for path in workflows:
+        src = path.read_text(encoding="utf-8")
+        assert "actions/setup-python@v6" not in src, path
+        assert "actions/setup-node@v6" not in src, path
+        if "actions/setup-python@" in src:
+            assert "actions/setup-python@v7" in src, path
+            assert "scripts/install_python_deps.sh" in src, (
+                f"{path} must include the install script in pip cache keys"
+            )
+        if "actions/setup-node@" in src:
+            assert "actions/setup-node@v7" in src, path
+
+
+def test_security_audit_runs_on_main_when_the_install_path_changes():
+    source = _read(".github/workflows/security.yml")
+    assert "branches: [main]" in source
+    push_idx = source.index("push:")
+    pr_idx = source.index("pull_request:")
+    assert push_idx < pr_idx, "push-to-main must be a first-class trigger, not only PRs"

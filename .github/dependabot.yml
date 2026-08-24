@@ -22,6 +22,24 @@ updates:
       # force-reinstalled in scripts/install_python_deps.sh. Raising this
       # resolve ceiling makes `pip install -r` fail until atproto relaxes.
       - dependency-name: "cryptography"
+      # StripeObject dropped dict-style .get in v13; last incident was the
+      # Replit→Render migration (OPS.md). Security advisories still open PRs.
+      - dependency-name: "stripe"
+        update-types: ["version-update:semver-major"]
+      # redis-py 6+ is a client major. Stay on the 5.x exact pin until a
+      # dedicated upgrade; patches on 5.x still group as python-minor-patch.
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
+      # Flask-Limiter 4 is a config/API major. Exact 3.8.x pin until we migrate.
+      - dependency-name: "flask-limiter"
+        update-types: ["version-update:semver-major"]
+      # 0.10+ is the next 0.x minor. 0.16 changes FileSystemCache hashing
+      # (md5 → sha256), which would orphan flask_session files on Redis fallback.
+      # Patches on 0.9.x and security advisories still open PRs.
+      - dependency-name: "cachelib"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
 
   - package-ecosystem: npm
     directory: "/"
