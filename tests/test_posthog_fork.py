@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from app.lib.posthog_utils import (
     apply_posthog_gevent_compat,
     configure_posthog_credentials,
+    disarm_posthog_blocking_shutdown,
     reinitialize_posthog_after_fork,
     shutdown_server_posthog,
 )
@@ -260,4 +261,72 @@ def test_shutdown_server_posthog_source_never_calls_sdk_join_apis():
     assert "posthog.flush(" not in body
     assert "posthog.shutdown(" not in body
     assert "_gevent_is_patching_threads" in body
+    assert "disarm_posthog_blocking_shutdown" in body
+
+
+def test_atexit_patch_skips_sdk_client_join():
+    """PYTHON-FLASK-JD: Client.__init__ must not land join on the atexit list."""
+    import atexit
+
+    from app.lib.posthog_utils import (
+        _is_posthog_sdk_join,
+        _patch_atexit_skip_posthog_join,
+    )
+
+    class _Client:
+        def join(self):
+            raise AssertionError("sdk join must not be atexit-registered")
+
+    _Client.__module__ = "posthog.client"
+    client = _Client()
+    assert _is_posthog_sdk_join(client.join) is True
+
+    _patch_atexit_skip_posthog_join()
+    before = atexit._ncallbacks()
+    atexit.register(client.join)
+    assert atexit._ncallbacks() == before
+
+    def _safe():
+        return None
+
+    atexit.register(_safe)
+    assert atexit._ncallbacks() == before + 1
+    atexit.unregister(_safe)
+
+
+def test_disarm_noops_join_under_gevent(monkeypatch):
+    import time
+
+    import posthog as ph
+    import app.lib.posthog_utils as utils
+
+    monkeypatch.setattr(utils, "_gevent_is_patching_threads", lambda: True)
+
+    class _Client:
+        def join(self):
+            time.sleep(30)
+
+    client = _Client()
+    monkeypatch.setattr(ph, "default_client", client, raising=False)
+    started = time.monotonic()
+    disarm_posthog_blocking_shutdown()
+    client.join()
+    assert time.monotonic() - started < 1.0
+    assert getattr(client, "_ss_join_neutered", False) is True
+
+
+def test_configure_patches_atexit_to_skip_sdk_join(monkeypatch):
+    import atexit
+
+    import posthog as ph
+    import posthog.client as ph_client
+
+    monkeypatch.setattr(ph, "api_key", None, raising=False)
+    monkeypatch.setattr(ph, "project_api_key", None, raising=False)
+    monkeypatch.setattr(ph, "host", None, raising=False)
+    monkeypatch.setattr(ph, "debug", False, raising=False)
+
+    configure_posthog_credentials("phc_test", "https://eu.i.posthog.com")
+    assert getattr(atexit.register, "_ss_skip_posthog_join", False)
+    assert getattr(ph_client.Client.__init__, "_ss_gevent_atexit_patched", False)
 

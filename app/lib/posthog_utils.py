@@ -26,6 +26,11 @@ Architecture (intentional):
   with cooperative sleep, pauses consumers, and only ``Thread.join``s when
   gevent is not patching threads.
 
+- **SDK atexit(join)**: ``Client.__init__`` registers ``atexit.register(self.join)``
+  with no timeout. Recycle/SIGTERM runs that handler *after* ``worker_exit`` and
+  hangs the main greenlet (Sentry PYTHON-FLASK-JD, 2026-08-24). We unregister
+  it and no-op ``join`` under gevent; our drain is the only shutdown path.
+
 - **Drain on shutdown**: ``register_posthog_atexit()`` (from ``create_app``) and
   ``gunicorn`` ``worker_exit`` call ``shutdown_server_posthog()``.
 
@@ -159,6 +164,10 @@ def configure_posthog_credentials(
     except ImportError:
         pass
 
+    _patch_atexit_skip_posthog_join()
+    _patch_posthog_client_init_for_gevent()
+    disarm_posthog_blocking_shutdown()
+
 
 def reinitialize_posthog_after_fork() -> None:
     """Replace any pre-fork PostHog client with a worker-local one.
@@ -192,6 +201,7 @@ def reinitialize_posthog_after_fork() -> None:
         # setup() builds a fresh Client + consumer threads for this worker.
         if hasattr(ph, "setup"):
             ph.setup()
+        disarm_posthog_blocking_shutdown()
         _log.info("PostHog client reinitialized after fork")
     except Exception as exc:
         _log.warning("PostHog post-fork reinitialize failed: %s", exc)
@@ -300,6 +310,138 @@ def _join_posthog_consumers(client: Any, timeout: float = 1.0) -> None:
             pass
 
 
+def _is_posthog_sdk_join(func: Any) -> bool:
+    """True for ``Client.join`` bound methods the SDK atexit-registers."""
+    if getattr(func, "__name__", None) != "join":
+        return False
+    inst = getattr(func, "__self__", None)
+    if inst is None:
+        return False
+    mod = getattr(type(inst), "__module__", "") or ""
+    return mod.startswith("posthog")
+
+
+def _uninstall_posthog_sdk_atexit(client: Any = None) -> None:
+    """Best-effort drop of ``atexit.register(self.join)``.
+
+    CPython's ``atexit.unregister`` does not match a later bound-method object
+    even when ``==`` is true, so this often no-ops. The reliable control is
+    :func:`_patch_atexit_skip_posthog_join` (never register). Keep this for
+    the rare case unregister does match.
+    """
+    import posthog as ph
+
+    seen: set[int] = set()
+    for candidate in (client, getattr(ph, "default_client", None)):
+        if candidate is None:
+            continue
+        ident = id(candidate)
+        if ident in seen:
+            continue
+        seen.add(ident)
+        join = getattr(candidate, "join", None)
+        if not callable(join):
+            continue
+        try:
+            atexit.unregister(join)
+        except Exception:
+            pass
+
+
+_ATEXIT_PATCHED = False
+
+
+def _patch_atexit_skip_posthog_join() -> None:
+    """Do not let PostHog ``Client.join`` onto the atexit list.
+
+    ``Client.__init__`` does ``atexit.register(self.join)`` with no timeout.
+    Recycle then hangs in ``lane.join()`` (PYTHON-FLASK-JD). Skip that
+    registration; :func:`shutdown_server_posthog` is the drain path.
+    """
+    global _ATEXIT_PATCHED
+    if _ATEXIT_PATCHED:
+        return
+    orig = atexit.register
+    if getattr(orig, "_ss_skip_posthog_join", False):
+        _ATEXIT_PATCHED = True
+        return
+
+    def register(func, *args, **kwargs):
+        if _is_posthog_sdk_join(func):
+            return func
+        return orig(func, *args, **kwargs)
+
+    register._ss_skip_posthog_join = True  # type: ignore[attr-defined]
+    atexit.register = register
+    _ATEXIT_PATCHED = True
+
+
+def _neuter_client_join_under_gevent(client: Any) -> None:
+    """Make ``Client.join`` a no-op when gevent owns threading.
+
+    Defense in depth if anything still calls ``join()`` / ``shutdown()`` after
+    we unregister the atexit handler.
+    """
+    if client is None or not _gevent_is_patching_threads():
+        return
+    if getattr(client, "_ss_join_neutered", False):
+        return
+
+    def _no_join(*_a, **_k):
+        return None
+
+    try:
+        client.join = _no_join
+        client._ss_join_neutered = True
+    except Exception:
+        pass
+
+
+def disarm_posthog_blocking_shutdown() -> None:
+    """Unregister SDK atexit(join) and no-op join under gevent.
+
+    Safe to call before the default client exists (no-op) and again from
+    gunicorn ``worker_exit`` immediately before our drain.
+    """
+    try:
+        import posthog as ph
+    except Exception:
+        return
+    client = getattr(ph, "default_client", None)
+    _uninstall_posthog_sdk_atexit(client)
+    _neuter_client_join_under_gevent(client)
+
+
+_CLIENT_INIT_PATCHED = False
+
+
+def _patch_posthog_client_init_for_gevent() -> None:
+    """Wrap ``Client.__init__`` so every new client drops the atexit join."""
+    global _CLIENT_INIT_PATCHED
+    if _CLIENT_INIT_PATCHED:
+        return
+    try:
+        import posthog.client as ph_client
+    except Exception:
+        return
+    orig = ph_client.Client.__init__
+    if getattr(orig, "_ss_gevent_atexit_patched", False):
+        _CLIENT_INIT_PATCHED = True
+        return
+
+    def wrapped(self, *args, **kwargs):
+        orig(self, *args, **kwargs)
+        try:
+            _uninstall_posthog_sdk_atexit(self)
+            _neuter_client_join_under_gevent(self)
+        except Exception:
+            pass
+
+    wrapped._ss_gevent_atexit_patched = True  # type: ignore[attr-defined]
+    ph_client.Client.__init__ = wrapped
+    _CLIENT_INIT_PATCHED = True
+
+
 def shutdown_server_posthog() -> None:
     """Drain captured events and stop consumers without blocking the caller.
 
@@ -311,6 +453,7 @@ def shutdown_server_posthog() -> None:
     issued from the hub and becomes a 120s WORKER TIMEOUT (production 2026-08).
     """
     global _shutdown_done
+    disarm_posthog_blocking_shutdown()
     if _shutdown_done:
         return
     try:

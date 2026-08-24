@@ -23,6 +23,15 @@ def test_worker_exit_bounds_posthog_shutdown_with_gevent_timeout():
     assert gunicorn_config._WORKER_EXIT_BUDGET_SECONDS <= 5.0
 
 
+def test_worker_exit_disarms_sdk_atexit_join_before_drain():
+    """PYTHON-FLASK-JD: SDK atexit(self.join) runs after worker_exit on recycle."""
+    src = inspect.getsource(gunicorn_config.worker_exit)
+    assert "disarm_posthog_blocking_shutdown" in src
+    assert src.index("disarm_posthog_blocking_shutdown") < src.index(
+        "shutdown_server_posthog()"
+    )
+
+
 def test_render_web_keeps_profiling_off():
     src = Path("render.yaml").read_text(encoding="utf-8")
     assert 'SENTRY_PROFILES_SAMPLE_RATE' in src

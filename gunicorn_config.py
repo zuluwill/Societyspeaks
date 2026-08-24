@@ -211,8 +211,14 @@ def worker_exit(server, worker):
     except Exception:
         pass
     try:
-        from app.lib.posthog_utils import shutdown_server_posthog
+        from app.lib.posthog_utils import (
+            disarm_posthog_blocking_shutdown,
+            shutdown_server_posthog,
+        )
 
+        # SDK atexit(self.join) runs *after* this hook on interpreter exit.
+        # Disarm it before our drain so recycle cannot hang (PYTHON-FLASK-JD).
+        disarm_posthog_blocking_shutdown()
         try:
             from gevent import Timeout as GeventTimeout
         except ImportError:
