@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import atexit
 import logging
+import uuid
 from typing import Any, Optional
 
 _shutdown_done = False
@@ -1008,6 +1009,16 @@ def _drain_posthog_client(posthog_client: Any, *, timeout: float = 0.25) -> None
         _log.warning('PostHog queue drain failed: %s', exc)
 
 
+def event_uuid_from_insert_id(insert_id: str) -> str:
+    """Deterministic UUIDv5 for PostHog ``capture(uuid=...)``.
+
+    posthog-python 7.x requires a valid UUID here; any other string is
+    discarded and replaced with a random id, so ``$insert_id`` in properties
+    does not deduplicate.
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f'https://societyspeaks.io/ph/{insert_id}'))
+
+
 def safe_posthog_capture(
     *,
     posthog_client: Any,
@@ -1029,10 +1040,14 @@ def safe_posthog_capture(
     attributable to discovery channels. Explicit ``properties`` always win over
     the auto-derived values. Outside a request context these are simply omitted.
 
-    ``insert_id`` maps to PostHog ``$insert_id`` for idempotent backfills.
+    ``insert_id`` is attached as ``$insert_id`` (queryable) and as a
+    deterministic UUIDv5 passed to ``capture(uuid=...)``. posthog-python 7.x
+    only deduplicates on that ``uuid`` argument; a non-UUID ``$insert_id``
+    property is ignored and replaced with a random event id (the stance
+    reconciler previously multiplied ``email_vote_confirmed`` ~672× per vote).
     ``durable=True`` performs a bounded queue drain after capture — use only for
-    revenue-critical events (E1 confirmed) where batch loss on fast POST handlers
-    would otherwise under-count.
+    conversion-critical events where batch loss on fast POST handlers would
+    otherwise under-count. Never call ``flush()`` on the HTTP path.
     """
     if not posthog_client or not getattr(posthog_client, "project_api_key", None):
         return False
@@ -1049,8 +1064,14 @@ def safe_posthog_capture(
 
     try:
         props = dict(properties or {})
+        capture_kwargs = {
+            'distinct_id': str(distinct_id),
+            'event': event,
+            'properties': props,
+        }
         if insert_id:
             props['$insert_id'] = insert_id
+            capture_kwargs['uuid'] = event_uuid_from_insert_id(insert_id)
         if "$raw_user_agent" not in props:
             ua = _get_request_user_agent()
             if ua:
@@ -1058,11 +1079,7 @@ def safe_posthog_capture(
         for key, value in request_context_properties().items():
             props.setdefault(key, value)
 
-        posthog_client.capture(
-            distinct_id=str(distinct_id),
-            event=event,
-            properties=props,
-        )
+        posthog_client.capture(**capture_kwargs)
         if identify_properties:
             posthog_client.identify(
                 distinct_id=str(distinct_id),
@@ -1077,23 +1094,39 @@ def safe_posthog_capture(
         return False
 
 
-def safe_system_capture(event: str, properties: Optional[dict] = None) -> None:
+def safe_system_capture(
+    event: str,
+    properties: Optional[dict] = None,
+    *,
+    insert_id: Optional[str] = None,
+    durable: bool = True,
+) -> None:
     """Capture a PostHog event for automated background/scheduler jobs.
 
     Uses ``distinct_id='system'`` because these events have no user identity
     and no HTTP request context. Unlike ``safe_posthog_capture``, this function
     intentionally omits request-context enrichment (``$current_url``, UTM tags)
     since there is no request. Always a no-op when PostHog is not configured.
+
+    Pass ``insert_id`` so scheduler retries do not create duplicate events
+    (posthog-python 7.x dedupes on ``uuid=``, not a property ``$insert_id``).
     """
     try:
         import posthog as ph
 
         if not (getattr(ph, "api_key", None) or getattr(ph, "project_api_key", None)):
             return
-        ph.capture(
-            distinct_id="system",
-            event=event,
-            properties=dict(properties or {}),
-        )
+        props = dict(properties or {})
+        capture_kwargs = {
+            'distinct_id': 'system',
+            'event': event,
+            'properties': props,
+        }
+        if insert_id:
+            props['$insert_id'] = insert_id
+            capture_kwargs['uuid'] = event_uuid_from_insert_id(insert_id)
+        ph.capture(**capture_kwargs)
+        if durable:
+            _drain_posthog_client(ph)
     except Exception as exc:
         _log.warning("PostHog system capture failed for event %s: %s", event, exc)

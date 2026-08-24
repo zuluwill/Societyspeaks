@@ -89,16 +89,27 @@ def vote_choice_label(vote_value: Any) -> str:
         return str(vote_value)
 
 
-def mark_posthog_confirmed_mirrored(response_id: int) -> None:
-    """Stamp audit column after a durable PostHog mirror of an email-confirmed vote."""
+def mark_posthog_confirmed_mirrored(response_id: int) -> bool:
+    """Stamp audit column after a durable PostHog mirror of an email-confirmed vote.
+
+    Uses a filtered UPDATE so a stale identity-map get cannot silently no-op
+    and leave the 15-minute reconciler re-sending forever.
+    """
     try:
+        from sqlalchemy import update
+
         from app import db
 
-        row = db.session.get(DailyQuestionResponse, response_id)
-        if row is None:
-            return
-        row.posthog_confirmed_mirrored_at = utcnow_naive()
+        result = db.session.execute(
+            update(DailyQuestionResponse)
+            .where(
+                DailyQuestionResponse.id == response_id,
+                DailyQuestionResponse.posthog_confirmed_mirrored_at.is_(None),
+            )
+            .values(posthog_confirmed_mirrored_at=utcnow_naive())
+        )
         db.session.commit()
+        return (result.rowcount or 0) > 0
     except Exception as exc:
         from app import db
 
@@ -108,6 +119,7 @@ def mark_posthog_confirmed_mirrored(response_id: int) -> None:
             response_id,
             exc,
         )
+        return False
 
 
 def subscriber_for_analytics(
@@ -274,12 +286,17 @@ def track_daily_question_participated(
     }
     props.update(extra)
 
+    response_id = props.get('response_id')
+    insert_id = (
+        f'dqr:{response_id}:daily_question_participated' if response_id else None
+    )
     safe_posthog_capture(
         posthog_client=_posthog,
         distinct_id=distinct_id,
         event='daily_question_participated',
         properties=props,
         identify_properties=identify_properties,
+        insert_id=insert_id,
     )
 
 
@@ -307,6 +324,18 @@ def record_email_vote_funnel_event(
 
     participation_source = participation_source_for_email_vote(source, voter_channel)
     distinct_id = resolve_email_vote_distinct_id(subscriber)
+
+    brief_id = subscriber.id if voter_channel == 'brief' else None
+    question_sub_id = subscriber.id if voter_channel == 'question' else None
+    if step == 'confirm_view':
+        existing = EmailVoteFunnelEvent.query.filter_by(
+            step=step,
+            daily_question_id=question.id,
+            brief_subscriber_id=brief_id,
+            question_subscriber_id=question_sub_id,
+        ).first()
+        if existing:
+            return
 
     row = EmailVoteFunnelEvent(
         step=step,
@@ -351,9 +380,6 @@ def track_email_vote_confirm_viewed(
     is never gated; this GET step must not be gated more aggressively than that
     POST or the funnel could read confirmed > viewed.
     """
-    if not _posthog or not getattr(_posthog, 'project_api_key', None):
-        return
-
     if request_is_prefetch() or request_is_scripted_client():
         return
 
@@ -367,6 +393,9 @@ def track_email_vote_confirm_viewed(
         source=source,
         device_class=device_class,
     )
+
+    if not _posthog or not getattr(_posthog, 'project_api_key', None):
+        return
 
     distinct_id = resolve_email_vote_distinct_id(subscriber)
     if not distinct_id:
@@ -395,6 +424,7 @@ def track_email_vote_confirm_viewed(
             'device_class': device_class,
         },
         identify_properties=identify_props,
+        insert_id=f'email_vote_confirm_viewed:{getattr(subscriber, "id", "x")}:{question.id}',
     )
 
 
@@ -510,6 +540,8 @@ def mirror_email_vote_confirmed_to_posthog(
         return False
 
     distinct_id = response.posthog_distinct_id
+    if not distinct_id and getattr(response, 'user_id', None):
+        distinct_id = str(response.user_id)
     if not distinct_id and subscriber is not None:
         distinct_id = resolve_email_vote_distinct_id(subscriber)
     if not distinct_id:
@@ -595,10 +627,10 @@ def reconcile_unmirrored_email_votes_to_posthog(
     skipped_no_identity = 0
     failed = 0
     for response in rows:
-        if not response.posthog_distinct_id:
+        if not response.posthog_distinct_id and not response.user_id:
             skipped_no_identity += 1
             continue
-        subscriber = subscriber_index.get(response.posthog_distinct_id)
+        subscriber = subscriber_index.get(response.posthog_distinct_id) if response.posthog_distinct_id else None
         if mirror_email_vote_confirmed_to_posthog(
             response,
             subscriber=subscriber,

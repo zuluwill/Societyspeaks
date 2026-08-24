@@ -22,6 +22,7 @@
 {% block game_content %}
 <div id="game-app"
      data-run-uuid="{{ run.uuid }}"
+     data-turn-index="{{ view.turn_index }}"
      data-csrf="{{ csrf_token() }}"
      data-is-authenticated="{{ 'true' if current_user.is_authenticated else 'false' }}"
      data-beat-labels='{{ beat_labels|tojson }}'

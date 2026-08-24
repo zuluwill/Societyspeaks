@@ -160,6 +160,7 @@ def _capture_daily_brief_sent_batch(results: dict, *, cadence: str) -> None:
                 'brief_type': meta.get('brief_type'),
                 'daily_question_id': meta.get('daily_question_id'),
             },
+            insert_id=f'daily_brief_sent:{cadence}:{meta.get("brief_id") or meta.get("brief_date") or "batch"}',
         )
     except Exception as exc:
         logger.warning('PostHog daily_brief_sent capture failed: %s', exc)

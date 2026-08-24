@@ -256,6 +256,8 @@ def start_self_serve_trial(
             'sources_failed': sources_failed,
             **utms,
         },
+        insert_id=f'paid_briefing_trial_started_self_serve:{sub.id}',
+        durable=True,
     )
 
     current_app.logger.info(

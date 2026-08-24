@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session, make_response
 from flask_login import login_required, current_user
 from app import db, limiter, talisman
@@ -380,7 +382,9 @@ def create_discussion():
                         'topic': discussion.topic,
                         'has_native_statements': discussion.has_native_statements,
                         'seed_statement_count': statement_count
-                    }
+                    },
+                    insert_id=f'discussion_created:{discussion.id}',
+                    durable=True,
                 )
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
@@ -570,7 +574,8 @@ def edit_discussion(discussion_id):
                     'discussion_id': discussion.id,
                     'topic': discussion.topic,
                     'programme_id': discussion.programme_id,
-                }
+                },
+                insert_id=f'discussion_edited:{discussion.id}:{date.today().isoformat()}',
             )
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")

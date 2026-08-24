@@ -39,21 +39,30 @@ try:
     import posthog
 except ImportError:
     posthog = None
-from app.lib.posthog_utils import safe_posthog_capture
+from app.lib.posthog_utils import email_subscriber_distinct_id, safe_posthog_capture
 from flask_babel import gettext as _
 
 logger = logging.getLogger(__name__)
 
 
-def _track_posthog(event, distinct_id, properties=None):
+def _track_posthog(event, distinct_id, properties=None, *, insert_id=None, durable=True):
     """Fire a PostHog event silently — never raises."""
     if not distinct_id:
         return
+
+    resolved = str(distinct_id)
+    if '@' in resolved:
+        hashed = email_subscriber_distinct_id(resolved)
+        if not hashed:
+            return
+        resolved = hashed
     safe_posthog_capture(
         posthog_client=posthog,
-        distinct_id=str(distinct_id),
+        distinct_id=resolved,
         event=event,
         properties=properties or {},
+        insert_id=insert_id,
+        durable=durable,
     )
 
 
@@ -914,7 +923,7 @@ def _handle_start_trial_post(featured_templates, default_slug):
         'template_slug': template_slug,
         'is_returning_email': is_returning_email,
         **peek_utms(),
-    })
+    }, insert_id=f'trial_signup_started:{user.id}:{template_slug}')
 
     # Record campaign attribution + intent in session so the magic-link round
     # trip lands on the right destination and bypasses the profile gate.
@@ -954,7 +963,7 @@ def _handle_start_trial_post(featured_templates, default_slug):
     _track_posthog('paid_briefing_trial_magic_link_sent', user.id, {
         'template_slug': template_slug,
         'is_returning_email': is_returning_email,
-    })
+    }, insert_id=f'trial_magic_link:{user.id}:{template_slug}')
 
     account_notice = None
     if is_returning_email:
@@ -1019,7 +1028,7 @@ def refine_briefing(briefing_id):
         'briefing_id': briefing.id,
         'note_length': len(note),
         # Don't log note content — privacy.
-    })
+    }, insert_id=f'briefing_refinement:{briefing.id}:{len(combined)}')
 
     flash(
         _("Got it. Your next brief will reflect this — we don't regenerate the one you just saw."),
@@ -1180,13 +1189,14 @@ def start_trial_complete():
             'elapsed_s': round(first_brief.elapsed_s, 2),
             'generation_time_ms': round(first_brief.elapsed_s * 1000),
         },
+        insert_id=f'first_brief_generated:{result.briefing.id}',
     )
     if first_brief.status == 'pending':
         _track_posthog('paid_briefing_first_brief_timed_out', current_user.id, {
             'briefing_id': result.briefing.id,
             'template_slug': template_slug,
             'elapsed_s': round(first_brief.elapsed_s, 2),
-        })
+        }, insert_id=f'first_brief_timeout:{result.briefing.id}')
 
     if first_brief.status == 'ready':
         flash(
@@ -1507,7 +1517,7 @@ def use_template(template_id):
                 'from_template': True,
                 'template_id': template_id,
                 'sources_added': sources_added,
-            })
+            }, insert_id=f'briefing_created:{briefing.id}')
 
             # Show appropriate success message
             if sources_added > 0:
@@ -1742,7 +1752,7 @@ def create_briefing():
                 'from_template': bool(template_id),
                 'template_id': template_id,
                 'sources_added': sources_added,
-            })
+            }, insert_id=f'briefing_created:{briefing.id}')
 
             if sources_added > 0:
                 msg = _('Briefing "%(name)s" created successfully with %(count)d sources from template!', name=name, count=sources_added)
@@ -2030,13 +2040,13 @@ def edit(briefing_id):
                 'briefing_name': briefing.name,
                 'owner_type': briefing.owner_type,
                 'cadence': briefing.cadence,
-            })
+            }, insert_id=f'briefing_edited:{briefing.id}:{date.today().isoformat()}')
             if old_cadence != briefing.cadence:
                 _track_posthog('daily_brief_cadence_changed', current_user.id, {
                     'briefing_id': briefing.id,
                     'previous_cadence': old_cadence,
                     'new_cadence': briefing.cadence,
-                })
+                }, insert_id=f'briefing_cadence:{briefing.id}:{old_cadence}:{briefing.cadence}')
 
             flash(_('Briefing updated successfully'), 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
@@ -2669,7 +2679,7 @@ def manage_recipients(briefing_id):
                         'briefing_name': briefing.name,
                         'recipient_count': 1,
                         'bulk': False,
-                    })
+                    }, insert_id=f'briefing_recipient_added:{recipient.id}')
                     flash(_('Recipient %(email)s added successfully', email=email), 'success')
 
             elif action == 'bulk_add':
@@ -2686,6 +2696,7 @@ def manage_recipients(briefing_id):
                 
                 added = 0
                 skipped = 0
+                added_recipient_ids = []
                 
                 for email in emails:
                     # Check limit (plan-based enforcement)
@@ -2719,6 +2730,7 @@ def manage_recipients(briefing_id):
                             existing.generate_magic_token()
                             existing.ensure_unsubscribe_token()
                             added += 1
+                            added_recipient_ids.append(existing.id)
                         else:
                             skipped += 1
                     else:
@@ -2732,16 +2744,18 @@ def manage_recipients(briefing_id):
                         recipient.generate_magic_token()
                         recipient.ensure_unsubscribe_token()
                         db.session.add(recipient)
+                        db.session.flush()
                         added += 1
+                        added_recipient_ids.append(recipient.id)
                 
                 db.session.commit()
-                if added > 0:
+                for recipient_id in added_recipient_ids:
                     _track_posthog('briefing_recipient_added', current_user.id, {
                         'briefing_id': briefing_id,
                         'briefing_name': briefing.name,
-                        'recipient_count': added,
+                        'recipient_count': 1,
                         'bulk': True,
-                    })
+                    }, insert_id=f'briefing_recipient_added:{recipient_id}')
                 flash(_('Imported %(added)s recipients. %(skipped)s skipped (already exists or invalid).', added=added, skipped=skipped), 'success')
                 
             elif action == 'bulk_remove':
@@ -2867,7 +2881,7 @@ def unsubscribe(briefing_id, token):
             'briefing_name': briefing.name,
             'recipient_id': recipient.id,
             'method': 'one_click' if is_one_click else 'link',
-        })
+        }, insert_id=f'briefing_recipient_unsubscribed:{recipient.id}')
 
     # RFC 8058 / machine POST — empty 200. Human confirm form gets the page.
     if is_one_click or not request.form.get('confirm'):
@@ -3075,7 +3089,7 @@ def send_run(briefing_id, run_id):
             'brief_run_id': brief_run.id,
             'recipients_sent': result.get('sent', 0),
             'recipients_failed': result.get('failed', 0),
-        })
+        }, insert_id=f'brief_run_sent:{brief_run.id}')
         flash(f'Sent to {result["sent"]} recipients ({result["failed"]} failed)', 'success')
     except Exception as e:
         logger.error(f"Error sending BriefRun: {e}", exc_info=True)
@@ -4234,12 +4248,14 @@ def invite_member():
             )
         except Exception as e:
             logger.warning(f"Invitation email failed for {email}: {e}")
+        hashed_invitee = email_subscriber_distinct_id(email)
         _track_posthog('organization_invite_sent', current_user.id, {
             'org_id': org.id,
             'org_name': org.company_name,
-            'invitee_email': email,
             'role': role,
-        })
+        }, insert_id=(
+            f'org_invite:{org.id}:{hashed_invitee}' if hashed_invitee else None
+        ))
         flash(_('Invitation sent to %(email)s.', email=email), "success")
     except ValueError as e:
         flash(str(e), "error")

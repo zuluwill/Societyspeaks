@@ -1,4 +1,6 @@
 # app/profiles/routes.py
+from datetime import date
+
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app, make_response, abort
 from flask_login import login_required, current_user
 from app import db, limiter
@@ -137,7 +139,9 @@ def create_individual_profile():
                             'profile_type': 'individual',
                             'profile_id': profile.id,
                             'profile_slug': profile.slug,
-                        }
+                        },
+                        insert_id=f'profile_created:{profile.id}',
+                        durable=True,
                     )
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
@@ -224,7 +228,9 @@ def create_company_profile():
                             'profile_type': 'company',
                             'profile_id': profile.id,
                             'profile_slug': profile.slug,
-                        }
+                        },
+                        insert_id=f'profile_created:{profile.id}',
+                        durable=True,
                     )
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
@@ -309,7 +315,8 @@ def edit_individual_profile(username):
                             'profile_type': 'individual',
                             'profile_id': profile.id,
                             'profile_slug': profile.slug,
-                        }
+                        },
+                        insert_id=f'profile_edited:{profile.id}:{date.today().isoformat()}',
                     )
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
@@ -378,7 +385,8 @@ def edit_company_profile(company_name):
                             'profile_type': 'company',
                             'profile_id': profile.id,
                             'profile_slug': profile.slug,
-                        }
+                        },
+                        insert_id=f'profile_edited:{profile.id}:{date.today().isoformat()}',
                     )
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")

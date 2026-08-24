@@ -30,7 +30,7 @@ from app.lib.posthog_utils import safe_posthog_capture
 from flask_babel import gettext as _
 
 
-def _track_posthog(event, user_id, properties=None):
+def _track_posthog(event, user_id, properties=None, *, insert_id=None, durable=True):
     """Fire a PostHog billing event silently — never raises."""
     if not user_id:
         return
@@ -39,6 +39,8 @@ def _track_posthog(event, user_id, properties=None):
         distinct_id=str(user_id),
         event=event,
         properties=properties or {},
+        insert_id=insert_id,
+        durable=durable,
     )
 
 
@@ -207,7 +209,7 @@ def checkout():
             'plan_code': plan_code,
             'billing_interval': billing_interval,
             'plan_name': target_plan.name if target_plan else plan_code,
-        })
+        }, insert_id=f'checkout_started:{checkout_session.id}')
         return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
@@ -286,7 +288,7 @@ def checkout_success():
                         'price_pence': price_pence,
                         'price': (price_pence / 100.0) if price_pence else None,
                         **pop_utms_for_event(),
-                    })
+                    }, insert_id=f'paid_briefing_subscribed:{sub.id}')
         except stripe.error.StripeError as e:
             current_app.logger.error(f"Stripe error retrieving checkout session: {e}")
         except ValueError as e:
@@ -619,7 +621,7 @@ def handle_subscription_created(subscription_data):
                     'billing_interval': new_sub.billing_interval if new_sub else None,
                     'trial_end': trial_end_date,
                     'trial_source': 'stripe',
-                })
+                }, insert_id=f'paid_briefing_trial_started:{new_sub.id}' if new_sub else None)
         except ValueError as e:
             current_app.logger.error(f"Failed to create subscription for user {user.id}: {e}")
 
@@ -667,7 +669,7 @@ def handle_subscription_updated(subscription_data):
                     'trial_source': _extra.get('trial_source'),
                     'template_slug': _template_slug,
                     'days_into_trial': _days_into_trial,
-                })
+                }, insert_id=f'paid_briefing_trial_converted:{sub.id}')
 
             if (prev_plan_id != new_plan_id or prev_interval != new_interval) and user_id:
                 new_plan = db.session.get(PricingPlan, new_plan_id) if new_plan_id else None
@@ -679,7 +681,7 @@ def handle_subscription_updated(subscription_data):
                     'new_plan_code': new_plan.code if new_plan else None,
                     'previous_interval': prev_interval,
                     'new_interval': new_interval,
-                })
+                }, insert_id=f'paid_briefing_subscription_changed:{sub.id}:{new_plan_id}:{new_interval}')
         except ValueError as e:
             current_app.logger.error(f"Failed to update subscription {sub.id}: {e}")
 
@@ -949,7 +951,7 @@ def handle_subscription_deleted(subscription_data):
             'billing_interval': billing_interval,
             'price_pence': price_pence,
             'days_active': days_active,
-        })
+        }, insert_id=f'paid_briefing_canceled:{sub.id}')
 
 
 def handle_payment_failed(invoice_data):
@@ -1006,6 +1008,7 @@ def handle_payment_failed(invoice_data):
         from datetime import timezone as _tz
 
         next_retry = _dt.fromtimestamp(next_retry_ts, tz=_tz.utc).strftime('%Y-%m-%d %H:%M UTC')
+    invoice_id = invoice_data.get('id')
     _track_posthog('paid_briefing_payment_failed', sub.user_id, {
         'subscription_id': sub.id,
         'plan_name': sub.plan.name if sub.plan else None,
@@ -1013,7 +1016,7 @@ def handle_payment_failed(invoice_data):
         'billing_interval': sub.billing_interval,
         'attempt_count': invoice_data.get('attempt_count'),
         'next_retry': next_retry,
-    })
+    }, insert_id=f'paid_briefing_payment_failed:{invoice_id}' if invoice_id else None)
 
 
 def handle_trial_ending(subscription_data):
@@ -1154,7 +1157,7 @@ def pending_checkout():
             'billing_interval': billing_interval,
             'plan_name': target_plan.name if target_plan else plan_code,
             'source': 'pending_checkout',
-        })
+        }, insert_id=f'checkout_started:{checkout_session.id}')
         return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')

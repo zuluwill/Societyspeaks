@@ -102,7 +102,7 @@ def test_register_fires_user_signed_up_with_signup_method(app, db, monkeypatch):
 
     captured = []
 
-    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None, **_kwargs):
         captured.append({
             'event': event,
             'distinct_id': distinct_id,

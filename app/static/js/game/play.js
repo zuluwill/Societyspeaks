@@ -7,6 +7,7 @@
   var runUuid = app.dataset.runUuid;
   var csrf = app.dataset.csrf;
   var isAuthenticated = app.dataset.isAuthenticated === 'true';
+  var currentTurnIndex = parseInt(app.dataset.turnIndex || '0', 10);
 
   var overlay = document.getElementById('consequence-overlay');
   var headlineEl = document.getElementById('consequence-headline');
@@ -266,6 +267,7 @@
 
       updatePressure(next.pressure_level);
       updateMood(next.mood_level);
+      captureTurnStarted(next.turn_index);
 
       turnPanel.classList.remove('is-swapping');
     }, 220);
@@ -273,16 +275,20 @@
 
   // ----- Main flow -----
 
+  function captureTurnStarted(index) {
+    if (!window.gameAnalytics) return;
+    window.gameAnalytics.capture('game_turn_started', {
+      run_uuid: runUuid,
+      turn_index: index,
+      is_authenticated: isAuthenticated,
+      $insert_id: 'game_turn_started:' + runUuid + ':' + String(index),
+    });
+  }
+
+  captureTurnStarted(currentTurnIndex);
+
   function choose(choiceId) {
     setButtonsDisabled(true);
-
-    if (window.gameAnalytics) {
-      window.gameAnalytics.capture('game_turn_started', {
-        run_uuid: runUuid,
-        choice_id: choiceId,
-        is_authenticated: isAuthenticated,
-      });
-    }
 
     fetch('/play/api/run/' + runUuid + '/choose', {
       method: 'POST',
@@ -320,13 +326,6 @@
         showConsequence(data.consequence, function () {
           var afterImmediate = function () {
             if (data.game_complete && data.outcome_url) {
-              if (window.gameAnalytics) {
-                window.gameAnalytics.capture('game_run_completed', {
-                  run_uuid: runUuid,
-                  turn_index: data.turn_index,
-                  is_authenticated: isAuthenticated,
-                });
-              }
               document.body.classList.add('is-leaving');
               window.location.href = data.outcome_url;
               return;

@@ -194,7 +194,7 @@ def test_consume_fires_email_verified_once(app, db, captured_emails, monkeypatch
     client = app.test_client()
     captured = []
 
-    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None, **_kwargs):
         captured.append({
             'event': event,
             'distinct_id': distinct_id,

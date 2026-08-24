@@ -83,3 +83,42 @@ def test_bot_user_agent_not_persisted(client, db, app):
         )
     assert resp.status_code == 200
     assert EmailVoteFunnelEvent.query.count() == 0
+
+
+def test_confirm_view_is_idempotent_per_subscriber_question(client, db, app):
+    q, sub = _seed()
+    token = sub.generate_vote_token(q.id)
+    ua = (
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+        'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+    )
+
+    with patch('app.daily.vote_analytics._posthog', MagicMock(project_api_key='phk_test')):
+        client.get(f'/daily/v/{token}/agree?source=brief_email', headers={'User-Agent': ua})
+        client.get(f'/daily/v/{token}/agree?source=brief_email', headers={'User-Agent': ua})
+
+    assert EmailVoteFunnelEvent.query.filter_by(
+        daily_question_id=q.id,
+        step=EmailVoteFunnelEvent.STEP_CONFIRM_VIEW,
+    ).count() == 1
+
+
+def test_confirm_view_records_neon_when_posthog_unconfigured(client, db, app):
+    """Neon is source of truth — confirm views persist even if PostHog is off."""
+    q, sub = _seed()
+    token = sub.generate_vote_token(q.id)
+    ua = (
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+        'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+    )
+
+    with patch('app.daily.vote_analytics._posthog', None):
+        resp = client.get(
+            f'/daily/v/{token}/agree?source=brief_email',
+            headers={'User-Agent': ua},
+        )
+    assert resp.status_code == 200
+    assert EmailVoteFunnelEvent.query.filter_by(
+        daily_question_id=q.id,
+        step=EmailVoteFunnelEvent.STEP_CONFIRM_VIEW,
+    ).count() == 1

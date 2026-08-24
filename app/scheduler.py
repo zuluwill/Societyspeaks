@@ -1984,6 +1984,8 @@ def init_scheduler(app):
                                     'send_hour': subscriber.preferred_send_hour,
                                     'timezone': subscriber.timezone or 'UTC',
                                 },
+                                insert_id=f'weekly_digest_sent:{subscriber.id}:{utc_now.isocalendar()[0]}-W{utc_now.isocalendar()[1]:02d}',
+                                durable=True,
                             )
                         else:
                             failed_count += 1
@@ -2088,6 +2090,8 @@ def init_scheduler(app):
                                     'question_ids': [q.id for q in questions],
                                     'timezone': subscriber.timezone or 'UTC',
                                 },
+                                insert_id=f'monthly_digest_sent:{subscriber.id}:{utc_now.strftime("%Y-%m")}',
+                                durable=True,
                             )
                         else:
                             logger.warning(f"Failed to send monthly digest to {subscriber.email}")
@@ -2241,7 +2245,7 @@ def init_scheduler(app):
                             'question_number': question.question_number,
                             'tweet_id': tweet_id,
                             'response_count': question.response_count,
-                        })
+                        }, insert_id=f'daily_question_posted_to_x:{question.id}')
                 except DuplicatePostError:
                     logger.info(f"Daily question #{question.question_number} already posted to X (duplicate)")
                 except Exception as e:
@@ -2276,7 +2280,7 @@ def init_scheduler(app):
                                 'question_number': question.question_number,
                                 'bluesky_uri': bluesky_uri,
                                 'response_count': question.response_count,
-                            })
+                            }, insert_id=f'daily_question_posted_to_bluesky:{question.id}')
                 except Exception as e:
                     logger.error(f"Error posting daily question to Bluesky: {e}")
                     
@@ -2334,7 +2338,7 @@ def init_scheduler(app):
                             'platform': 'x',
                             'tweet_id': tweet_id,
                             'content_type': 'value_first',
-                        })
+                        }, insert_id=f'weekly_insights_posted:x:{tweet_id}')
                 except DuplicatePostError:
                     logger.info("Weekly insights already posted to X (duplicate)")
                 except Exception as e:
@@ -2358,7 +2362,7 @@ def init_scheduler(app):
                             'platform': 'bluesky',
                             'post_uri': bluesky_uri,
                             'content_type': 'value_first',
-                        })
+                        }, insert_id=f'weekly_insights_posted:bluesky:{bluesky_uri}')
                 except Exception as e:
                     logger.error(f"Error posting weekly insights to Bluesky: {e}")
                     
@@ -2438,7 +2442,7 @@ def init_scheduler(app):
                             'brief_date': brief.date.isoformat(),
                             'tweet_id': tweet_id,
                             'item_count': brief.item_count,
-                        })
+                        }, insert_id=f'daily_brief_posted_to_x:{brief.id}')
                 except DuplicatePostError:
                     logger.info(f"Daily brief already posted to X (duplicate)")
                 except Exception as e:
@@ -2474,7 +2478,7 @@ def init_scheduler(app):
                                 'brief_date': brief.date.isoformat(),
                                 'bluesky_uri': bluesky_uri,
                                 'item_count': brief.item_count,
-                            })
+                            }, insert_id=f'daily_brief_posted_to_bluesky:{brief.id}')
                 except Exception as e:
                     logger.error(f"Error posting daily brief to Bluesky: {e}")
                     

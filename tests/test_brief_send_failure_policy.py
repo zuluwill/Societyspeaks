@@ -161,6 +161,7 @@ def test_log_brief_batch_results_captures_daily_brief_sent(app):
                     'brief_type': 'daily',
                     'daily_question_id': 80,
                 },
+                insert_id='daily_brief_sent:daily:236',
             )
 
 

@@ -65,6 +65,7 @@ from app.game.services.reminder_service import (
 from app.game.services.share_text_service import build_share_text
 from app.game.services.society_name_service import generate_society_names
 from app.game.services.stats_service import participation_stats
+from app.game.analytics import track_game_event
 from app.game.services.run_service import (
     GameRunNotFound,
     build_outcome_view,
@@ -75,6 +76,7 @@ from app.game.services.run_service import (
 )
 from app.models.game import GameChallenge, GameReminderSubscription
 from app.lib.url_utils import safe_next_url
+from app.lib.posthog_utils import request_is_prefetch, request_is_scripted_client
 from app.lib.vote_identity import (
     get_voter_fingerprint,
     set_voter_client_cookies_if_needed,
@@ -272,6 +274,7 @@ def daily(schedule_date: str | None = None):
         society_name=society_name,
         name_was_custom=name_was_custom,
         seed_date=play_date,
+        persist=not request_is_scripted_client(),
     )
 
     if run.status == 'completed':
@@ -313,19 +316,13 @@ def quick_run(scenario_slug: str):
     # Scripted clients get an ephemeral run: no DB row, no analytics event.
     # Runs were minted on every GET, so crawlers created ~40x more rows than
     # real players (2026-07: ~800 single-run fingerprints vs ~20 turn-takers).
-    from app.lib.session_policy import SESSION_SKIP_UA_INDICATORS, user_agent_is_bot
-
-    is_scripted = user_agent_is_bot(
-        request.headers.get('User-Agent'), SESSION_SKIP_UA_INDICATORS
-    )
-
     run = start_quick_run(
         scenario_slug=scenario_slug,
         user_id=user_id,
         session_fingerprint=fingerprint,
         society_name=society_name,
         name_was_custom=name_was_custom,
-        persist=not is_scripted,
+        persist=not request_is_scripted_client(),
     )
 
     view = build_turn_view(run)
@@ -379,6 +376,22 @@ def outcome(run_uuid: str):
 
     if run.status != 'completed' or not run.outcome:
         return redirect(url_for('game.daily'))
+
+    # Idempotent backup: POST-choice capture can be lost if the worker dies
+    # before the PostHog queue drains. Same $insert_id as apply_run_choice.
+    # Skip prefetch/scripted GETs — outcome URLs are shareable.
+    if not request_is_prefetch():
+        track_game_event(
+            run,
+            'game_run_completed',
+            properties={
+                'mode': run.mode,
+                'outcome_category': getattr(run.outcome, 'outcome_category', None),
+                'source': 'outcome_page',
+            },
+            durable=True,
+            insert_id=f'game_run_completed:{run.uuid}',
+        )
 
     view = build_outcome_view(run)
     emblem = emblem_for_run(run)

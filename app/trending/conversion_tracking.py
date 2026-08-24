@@ -10,11 +10,19 @@ Events tracked:
 """
 
 import logging
-import uuid
+from datetime import date
 from typing import Optional, Dict
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlunparse
 
 logger = logging.getLogger(__name__)
+
+
+def _referer_without_query(url: str) -> str:
+    """Keep scheme/host/path; drop query/fragment so tokens never leak."""
+    if not url:
+        return ''
+    parsed = urlparse(url)
+    return urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))
 
 
 def track_social_conversion(
@@ -28,7 +36,7 @@ def track_social_conversion(
     Args:
         event_name: Name of the event (e.g., 'social_post_clicked')
         properties: Event properties (platform, campaign, etc.)
-        distinct_id: User ID (if available, otherwise 'anonymous')
+        distinct_id: User ID (if available, otherwise resolved from the request)
     """
     try:
         import posthog
@@ -36,19 +44,23 @@ def track_social_conversion(
             return
 
         from app.lib.posthog_utils import (
+            request_is_prefetch,
             resolve_request_distinct_id,
             safe_posthog_capture,
         )
 
-        # Prefer an explicit id, then the browser's PostHog cookie id (so an
-        # anonymous social click stitches to that visitor's pageviews) and only
-        # fall back to a throwaway uuid when no identity is resolvable.
-        resolved = distinct_id or resolve_request_distinct_id() or str(uuid.uuid4())
+        if request_is_prefetch():
+            return
+        resolved = distinct_id or resolve_request_distinct_id()
+        if not resolved:
+            return
+        campaign = properties.get('utm_campaign') or properties.get('utm_source') or 'none'
         safe_posthog_capture(
             posthog_client=posthog,
             distinct_id=resolved,
             event=event_name,
             properties=properties,
+            insert_id=f'{event_name}:{resolved[:32]}:{campaign}:{date.today().isoformat()}',
         )
     except Exception as e:
         logger.warning(f"PostHog tracking error: {e}")
@@ -88,8 +100,7 @@ def track_social_click(request, user_id: Optional[str] = None) -> None:
         track_social_conversion(
             event_name='social_post_clicked',
             properties={
-                'referer': referer,
-                'url': url,
+                'referer': _referer_without_query(referer),
                 **utm_params
             },
             distinct_id=str(user_id) if user_id else None

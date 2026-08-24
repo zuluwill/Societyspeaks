@@ -5,7 +5,7 @@ from app import db, cache
 from app.models import User, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, generate_unique_slug
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func, or_
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
 from app.analytics.events import record_event
@@ -53,7 +53,7 @@ def _stash_checkout_intent_from_querystring():
     session['pending_checkout_interval'] = interval
 
 
-def _track_posthog(event, user_id, properties=None, identify_properties=None):
+def _track_posthog(event, user_id, properties=None, identify_properties=None, *, insert_id=None, durable=False):
     """Fire a PostHog event silently — never raises."""
     if not user_id:
         return
@@ -63,6 +63,8 @@ def _track_posthog(event, user_id, properties=None, identify_properties=None):
         event=event,
         properties=properties or {},
         identify_properties=identify_properties,
+        insert_id=insert_id,
+        durable=durable,
     )
 
 
@@ -233,7 +235,7 @@ def _finalize_login(user, *, method, next_url=None):
     _track_posthog(
         'user_logged_in',
         user.id,
-        {'email': user.email, 'method': method, 'is_authenticated': True},
+        {'method': method, 'is_authenticated': True},
         identify_properties={'email': user.email, 'username': user.username},
     )
 
@@ -1179,7 +1181,12 @@ def password_reset_request():
             # Send the password reset email with the generated token
             send_password_reset_email(user, reset_token)
 
-            _track_posthog('password_reset_requested', user.id, {'user_id': user.id})
+            _track_posthog(
+                'password_reset_requested',
+                user.id,
+                {'user_id': user.id},
+                insert_id=f'password_reset_requested:{user.id}:{date.today().isoformat()}',
+            )
 
         flash(_("Password reset instructions have been sent to your email."), "info")
         return redirect(url_for('auth.login'))
@@ -1210,7 +1217,13 @@ def password_reset(token):
 
         try:
             db.session.commit()  # Save changes to the database
-            _track_posthog('password_reset_completed', user.id, {'user_id': user.id})
+            _track_posthog(
+                'password_reset_completed',
+                user.id,
+                {'user_id': user.id},
+                insert_id=f'password_reset_completed:{user.id}',
+                durable=True,
+            )
             flash(_("Your password has been reset successfully!"), "success")
             return redirect(url_for('auth.login'))
         except Exception as e:
@@ -1286,7 +1299,8 @@ def magic_link_request():
                             _track_posthog(
                                 'magic_link_requested',
                                 user.id,
-                                {'email': user.email},
+                                {'method': 'magic_link'},
+                                insert_id=f'magic_link_requested:{user.id}:{date.today().isoformat()}',
                             )
                             current_app.logger.info(
                                 f"Magic-link requested for user {user.id}"

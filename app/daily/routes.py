@@ -91,7 +91,8 @@ def _track_context_engagement(question, response, source='web'):
                 'source': source,
                 'context_expanded': bool(response.context_expanded),
                 'source_link_click_count': int(response.source_link_click_count or 0),
-            }
+            },
+            insert_id=f'context_engaged:{response.id}',
         )
     except Exception as e:
         current_app.logger.warning(f"PostHog context tracking error: {e}")
@@ -763,6 +764,19 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
     statement = db.session.get(Statement,question.source_statement_id)
     if not statement:
         return False, False
+
+    def _capture_synced_statement_vote(stmt, value, distinct_id):
+        try:
+            from app.discussions.statements import capture_statement_voted
+
+            capture_statement_voted(
+                stmt,
+                value,
+                distinct_id=distinct_id,
+                source='email_vote',
+            )
+        except Exception as exc:
+            current_app.logger.warning(f"PostHog synced statement vote error: {exc}")
     
     # Check for existing statement vote
     existing_vote = None
@@ -810,6 +824,7 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
                     user_id=current_user.id if current_user.is_authenticated else None,
                     anon_fallback=fingerprint,
                 )
+            _capture_synced_statement_vote(statement, vote_value, existing_vote.posthog_distinct_id)
             return False, True
         return False, False
     else:
@@ -834,7 +849,8 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
             statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
         else:
             statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
-        
+
+        _capture_synced_statement_vote(statement, vote_value, stmt_vote.posthog_distinct_id)
         return True, False
 
 
@@ -997,10 +1013,12 @@ def unsubscribe(token):
                 distinct_id=distinct_id,
                 event='daily_question_unsubscribed',
                 properties={
-                    'email': subscriber.email,
                     'reason': reason,
                     'method': 'one_click' if is_one_click else 'form',
-                }
+                    'question_subscriber_id': subscriber.id,
+                },
+                insert_id=f'question_unsub:{subscriber.id}:{subscriber.unsubscribed_at.isoformat() if subscriber.unsubscribed_at else "now"}',
+                durable=True,
             )
             current_app.logger.info(
                 "PostHog: daily_question_unsubscribed for %s (method=%s)",
@@ -1152,7 +1170,12 @@ def manage_preferences():
                                 'send_day': subscriber.preferred_send_day,
                                 'send_hour': subscriber.preferred_send_hour,
                                 'timezone': subscriber.timezone or 'UTC'
-                            }
+                            },
+                            insert_id=(
+                                f'frequency_preference_changed:{subscriber.id}:'
+                                f'{old_frequency}:{subscriber.email_frequency}'
+                            ),
+                            durable=True,
                         )
                 except Exception as e:
                     current_app.logger.warning(f"PostHog tracking error: {e}")

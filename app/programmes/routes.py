@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Blueprint, abort, current_app, flash, make_response, redirect, render_template, request, session, url_for, jsonify, send_file
 from flask_login import current_user, login_required
 try:
@@ -11,8 +13,13 @@ from io import BytesIO
 from app import cache, csrf, db, limiter
 from app.lib.auth_utils import normalize_email
 from app.lib.posthog_utils import (
+    email_subscriber_distinct_id,
     resolve_request_distinct_id,
     safe_posthog_capture,
+)
+from app.programmes.journey_analytics import (
+    capture_journey_completed,
+    journey_distinct_id as _journey_distinct_id,
 )
 from app.lib.participation_metrics import visible_statement_vote_filters
 from app.lib.time import utcnow_naive
@@ -64,31 +71,6 @@ from flask_babel import format_time, force_locale, get_locale, gettext as _
 
 
 programmes_bp = Blueprint('programmes', __name__, template_folder='../templates/programmes')
-
-
-def _journey_anon_fallback():
-    """Stable anonymous identity shared across *all* journey events for a visitor.
-
-    Prefers the vote fingerprint (so journey funnel events stitch to the same
-    person as their votes), else a per-session UUID persisted in the Flask
-    session. Using one source for every journey event is what lets
-    started -> step_completed -> completed connect for anonymous players.
-    """
-    import uuid as _uuid
-
-    fp = session.get('statement_vote_fingerprint') or session.get('journey_anon_id')
-    if not fp:
-        fp = str(_uuid.uuid4())
-        session['journey_anon_id'] = fp
-        session.modified = True
-    return fp
-
-
-def _journey_distinct_id():
-    """Canonical PostHog distinct_id for a journey event in this request."""
-    if current_user.is_authenticated:
-        return str(current_user.id)
-    return resolve_request_distinct_id(anon_fallback=_journey_anon_fallback())
 
 
 def _programme_summary_cache_key(programme_id):
@@ -480,10 +462,9 @@ def view_programme(slug):
             if candidate and candidate.programme_id == programme.id:
                 journey_reminder_subscription = candidate
 
-        # journey_started fires client-side after PostHog JS init (see view.html).
-        # Server-side capture on this GET was removed Jul 2026: the PostHog cookie
-        # is not present until after JS runs, so a server-side gate on that cookie
-        # dropped every first-page load (including direct email/deep links).
+        # journey_started is captured server-side on the first vote (action-gated,
+        # crawler-proof). Hub GETs are not a start signal — recap/sitemap crawlers
+        # inflated that funnel for months.
 
     view_lang = resolve_language(request)
     programme_translation = (
@@ -546,34 +527,11 @@ def programme_journey_recap(slug):
         _external=True,
     )
 
-    # PostHog: fire journey_completed once per user per journey (30-day dedup).
-    # Cache-based dedup (not session): the old Redis session gate persisted
-    # indefinitely and permanently blocked the event for returning users.
-    # Browser-evidence gate: fires on a bare GET of the recap page, so it was
-    # crawler-dominated (667 of 669 distinct_ids had no client-side event).
-    if _posthog and getattr(_posthog, 'project_api_key', None):
-        try:
-            _ph_id = _journey_distinct_id()
-            _complete_cache_key = f'ph_journey_completed:{programme.id}:{_ph_id[:32]}'
-            if _ph_id and not cache.get(_complete_cache_key):
-                _ordered = ordered_discussions
-                _journey_type = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
-                safe_posthog_capture(
-                    posthog_client=_posthog,
-                    distinct_id=_ph_id,
-                    event='journey_completed',
-                    properties={
-                        'journey_id': programme.id,
-                        'journey_type': _journey_type,
-                        'journey_slug': programme.slug,
-                        'journey_name': programme.name,
-                        'total_steps': len(_ordered),
-                        'is_authenticated': current_user.is_authenticated,
-                    },
-                )
-                cache.set(_complete_cache_key, True, timeout=86400 * 30)  # 30-day dedup
-        except Exception as _e:
-            current_app.logger.warning(f"PostHog journey_completed error: {_e}")
+    capture_journey_completed(
+        programme,
+        is_complete=bool(recap.get('is_journey_complete')),
+        total_steps=len(ordered_discussions),
+    )
 
     return render_template(
         'programmes/journey_recap.html',
@@ -725,19 +683,23 @@ def journey_reminder_subscribe(slug):
         if _posthog and getattr(_posthog, 'project_api_key', None):
             try:
                 _jid = resolve_request_distinct_id(
-                    user_id=user_id, anon_fallback=normalize_email(email)
+                    user_id=user_id,
+                    anon_fallback=email_subscriber_distinct_id(email),
                 )
-                safe_posthog_capture(
-                    posthog_client=_posthog,
-                    distinct_id=_jid,
-                    event='journey_reminder_opt_in',
-                    properties={
-                        'journey_id': programme.id,
-                        'journey_slug': programme.slug,
-                        'cadence': cadence,
-                        'is_authenticated': bool(user_id),
-                    },
-                )
+                if _jid:
+                    safe_posthog_capture(
+                        posthog_client=_posthog,
+                        distinct_id=_jid,
+                        event='journey_reminder_opt_in',
+                        properties={
+                            'journey_id': programme.id,
+                            'journey_slug': programme.slug,
+                            'cadence': cadence,
+                            'is_authenticated': bool(user_id),
+                        },
+                        insert_id=f'journey_reminder_opt_in:{programme.id}:{_jid[:32]}',
+                        durable=True,
+                    )
             except Exception as _e:
                 current_app.logger.warning(f"PostHog journey_reminder_opt_in error: {_e}")
 
@@ -1407,6 +1369,7 @@ def journey_step_timing():
                 'time_on_step_seconds': round(time_on_step_ms / 1000),
                 'is_authenticated': current_user.is_authenticated,
             },
+            insert_id=f'journey_step_timed:{programme.id}:{discussion.id}:{ph_id[:32]}',
         )
         return jsonify({'ok': True})
     except Exception as e:
@@ -1464,6 +1427,8 @@ def journey_abandon():
             distinct_id=ph_id,
             event='journey_abandoned',
             properties=props,
+            insert_id=f'journey_abandoned:{programme.id}:{ph_id[:32]}:{date.today().isoformat()}',
+            durable=True,
         )
         return jsonify({'ok': True})
     except Exception as e:

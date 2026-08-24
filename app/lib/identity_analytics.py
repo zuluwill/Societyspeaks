@@ -79,6 +79,8 @@ def track_user_signed_up(
             'username': getattr(user, 'username', None),
             'signup_method': signup_method,
         },
+        insert_id=f'user_signed_up:{user.id}',
+        durable=True,
     )
 
 
@@ -107,4 +109,6 @@ def track_email_verified(
         distinct_id=str(user.id),
         event='email_verified',
         properties=props,
+        insert_id=f'email_verified:{user.id}',
+        durable=True,
     )

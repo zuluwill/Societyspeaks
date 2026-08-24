@@ -342,6 +342,7 @@ def test_track_confirm_viewed_fires_event(app, db):
         mock_ph.capture.assert_called_once()
         assert mock_ph.capture.call_args.kwargs['event'] == 'email_vote_confirm_viewed'
         props = mock_ph.capture.call_args.kwargs['properties']
+        assert props['$insert_id'] == f'email_vote_confirm_viewed:{sub.id}:{q.id}'
         assert props['participation_source'] == 'brief_stance_email'
         assert props['voter_channel'] == 'brief'
 
@@ -576,6 +577,10 @@ def test_track_email_vote_confirmed_uses_insert_id_without_stamping_mirror(app, 
 
         confirmed = mock_ph.capture.call_args_list[0].kwargs
         assert confirmed['properties']['$insert_id'] == f'dqr:{response.id}:email_vote_confirmed'
+        from app.lib.posthog_utils import event_uuid_from_insert_id
+        assert confirmed['uuid'] == event_uuid_from_insert_id(
+            f'dqr:{response.id}:email_vote_confirmed'
+        )
         db.session.refresh(response)
         assert response.posthog_confirmed_mirrored_at is None
 
@@ -656,3 +661,46 @@ def test_mirror_email_vote_confirmed_to_posthog_is_idempotent(app, db):
                 assert mirror_email_vote_confirmed_to_posthog(response, subscriber=sub) is False
 
         assert mock_ph.capture.call_count == 1
+
+
+def test_mirror_uses_response_user_id_when_posthog_distinct_id_missing(app, db):
+    from app.daily.vote_analytics import mirror_email_vote_confirmed_to_posthog
+    from app.models import DailyQuestionResponse, User
+
+    with app.app_context():
+        db.create_all()
+        user = User(
+            email='mirror-user@example.com',
+            username='mirroruser',
+            password='hashed-password',
+        )
+        q = DailyQuestion(
+            question_date=date.today(),
+            question_number=102,
+            question_text='Backfill via user_id?',
+            status='published',
+            source_type='discussion',
+        )
+        db.session.add_all([user, q])
+        db.session.commit()
+
+        response = DailyQuestionResponse(
+            daily_question_id=q.id,
+            user_id=user.id,
+            vote=1,
+            voted_via_email=True,
+            posthog_distinct_id=None,
+        )
+        db.session.add(response)
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+
+        with patch('app.daily.vote_analytics._posthog', mock_ph):
+            with patch('app.lib.posthog_utils._drain_posthog_client'):
+                assert mirror_email_vote_confirmed_to_posthog(response, subscriber=None) is True
+
+        assert mock_ph.capture.call_args.kwargs['distinct_id'] == str(user.id)
+        props = mock_ph.capture.call_args.kwargs['properties']
+        assert props['$insert_id'] == f'dqr:{response.id}:email_vote_confirmed'

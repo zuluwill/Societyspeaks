@@ -78,6 +78,8 @@ def _capture_daily_brief_subscribed_posthog(
             distinct_id=distinct_id,
             event='daily_brief_subscribed',
             properties=props,
+            insert_id=f'brief_sub:{subscriber.id}:{subscription_status}',
+            durable=True,
         )
     except Exception as e:
         logger.warning(f"PostHog tracking error: {e}")

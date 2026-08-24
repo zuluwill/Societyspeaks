@@ -113,6 +113,8 @@ class BriefingGenerator:
                     'dominance': round(quality.dominance, 3),
                     'configured_sources': len(briefing.sources or []),
                 },
+                insert_id=f'paid_brief_held:{brief_run.id}',
+                durable=True,
             )
         except Exception as exc:
             logger.debug(f"Could not emit quality-hold event: {exc}")

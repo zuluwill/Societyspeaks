@@ -1,103 +1,236 @@
-"""
-Rank discussion topics by engagement for guided-journey curriculum design.
+"""Server-side PostHog captures for guided-journey lifecycle events.
 
-Used by `flask journey-theme-analytics` and importable for admin tooling.
+Flow-critical events (started / step_completed / completed) are captured on
+vote POSTs. Recap GET is an idempotent backup for completed only, and only
+when this visitor actually finished — sitemap crawlers must not count.
 """
 from __future__ import annotations
 
-from typing import Any, List
+from datetime import date
+from typing import Optional
 
-from sqlalchemy import func
+from flask import current_app, session
+from flask_login import current_user
+from sqlalchemy import distinct, func
 
-from app import db
+from app import cache, db
 from app.lib.participation_metrics import visible_statement_vote_filters
-from app.models import Discussion, Statement, StatementVote, TrendingTopic
+from app.lib.posthog_utils import (
+    request_is_prefetch,
+    resolve_request_distinct_id,
+    safe_posthog_capture,
+)
+from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
+from app.models import Discussion, Programme, Statement, StatementVote
+
+try:
+    import posthog as _posthog
+except ImportError:
+    _posthog = None
 
 
-def compute_topic_rankings(limit: int = 15) -> List[dict[str, Any]]:
+def _journey_anon_fallback():
+    """Stable anonymous identity shared across journey events for a visitor."""
+    import uuid as _uuid
+
+    fp = session.get('statement_vote_fingerprint') or session.get('journey_anon_id')
+    if not fp:
+        fp = str(_uuid.uuid4())
+        session['journey_anon_id'] = fp
+        session.modified = True
+    return fp
+
+
+def journey_distinct_id():
+    """Canonical PostHog distinct_id for a journey event in this request."""
+    if current_user.is_authenticated:
+        return str(current_user.id)
+    return resolve_request_distinct_id(anon_fallback=_journey_anon_fallback())
+
+
+def _posthog_ready() -> bool:
+    return bool(_posthog and getattr(_posthog, 'project_api_key', None))
+
+
+def _journey_type(programme: Programme) -> str:
+    return 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
+
+
+def _common_props(programme: Programme, extra: Optional[dict] = None) -> dict:
+    props = {
+        'journey_id': programme.id,
+        'journey_type': _journey_type(programme),
+        'journey_slug': programme.slug,
+        'journey_name': programme.name,
+        'is_authenticated': current_user.is_authenticated,
+    }
+    if extra:
+        props.update(extra)
+    return props
+
+
+def capture_journey_started(programme: Programme, *, total_steps: int) -> None:
+    """Fire journey_started once per visitor per programme per 24h (action-gated)."""
+    if not _posthog_ready():
+        return
+    ph_id = journey_distinct_id()
+    if not ph_id:
+        return
+    cache_key = f'ph_journey_started:{programme.id}:{ph_id[:32]}'
+    try:
+        if cache.get(cache_key):
+            return
+        sent = safe_posthog_capture(
+            posthog_client=_posthog,
+            distinct_id=ph_id,
+            event='journey_started',
+            properties=_common_props(programme, {'total_steps': total_steps}),
+            durable=True,
+            insert_id=f'journey_started:{programme.id}:{ph_id[:32]}:{date.today().isoformat()}',
+        )
+        if sent:
+            cache.set(cache_key, True, timeout=86400)
+    except Exception as exc:
+        current_app.logger.warning('PostHog journey_started error: %s', exc)
+
+
+def capture_journey_completed(programme: Programme, *, is_complete: bool, total_steps: int) -> None:
+    """Fire journey_completed only when this visitor finished every theme.
+
+    Recap URLs are in the sitemap; firing on every GET re-inflated completions
+    with crawler hits (~30–70/week vs a handful of real voters).
     """
-    Rank Discussion.topic by vote volume and participant breadth, with optional
-    civic/quality signals from published TrendingTopic rows on the same primary_topic.
-    """
-    _vis = visible_statement_vote_filters(Statement)
-    vote_rows = (
-        db.session.query(
-            Discussion.topic.label("topic"),
-            func.count(StatementVote.id).label("vote_count"),
-            func.count(func.distinct(StatementVote.user_id)).label("distinct_users"),
+    if not is_complete or request_is_prefetch() or not _posthog_ready():
+        return
+    ph_id = journey_distinct_id()
+    if not ph_id:
+        return
+    cache_key = f'ph_journey_completed:{programme.id}:{ph_id[:32]}'
+    try:
+        if cache.get(cache_key):
+            return
+        sent = safe_posthog_capture(
+            posthog_client=_posthog,
+            distinct_id=ph_id,
+            event='journey_completed',
+            properties=_common_props(programme, {'total_steps': total_steps}),
+            durable=True,
+            insert_id=f'journey_completed:{programme.id}:{ph_id[:32]}',
         )
-        .join(StatementVote, StatementVote.discussion_id == Discussion.id)
-        .join(Statement, StatementVote.statement_id == Statement.id)
-        .filter(
-            Discussion.topic.isnot(None),
-            Discussion.partner_env != "test",
-            *_vis,
-        )
-        .group_by(Discussion.topic)
-        .all()
+        if sent:
+            cache.set(cache_key, True, timeout=86400 * 30)
+    except Exception as exc:
+        current_app.logger.warning('PostHog journey_completed error: %s', exc)
+
+
+def _theme_vote_progress(discussion: Discussion) -> tuple[int, int]:
+    """Published (visible-statement) vote count vs statement total for this visitor."""
+    vis = visible_statement_vote_filters(Statement)
+    total = (
+        Statement.query.filter(
+            Statement.discussion_id == discussion.id,
+            *vis,
+        ).count()
     )
-
-    disc_counts = dict(
-        db.session.query(Discussion.topic, func.count(Discussion.id))
-        .filter(
-            Discussion.topic.isnot(None),
-            Discussion.partner_env != "test",
-        )
-        .group_by(Discussion.topic)
-        .all()
-    )
-
-    topic_meta = {}
-    for row in (
-        db.session.query(
-            TrendingTopic.primary_topic,
-            func.avg(TrendingTopic.civic_score),
-            func.avg(TrendingTopic.quality_score),
-        )
-        .filter(
-            TrendingTopic.primary_topic.isnot(None),
-            TrendingTopic.status == "published",
-        )
-        .group_by(TrendingTopic.primary_topic)
-        .all()
-    ):
-        topic_meta[row[0]] = (row[1], row[2])
-
-    out: List[dict[str, Any]] = []
-    for topic, vote_count, distinct_users in vote_rows:
-        votes = int(vote_count or 0)
-        users = int(distinct_users or 0)
-        dcount = int(disc_counts.get(topic, 0))
-        meta = topic_meta.get(topic)
-        civic = float(meta[0] or 0) if meta else 0.0
-        quality = float(meta[1] or 0) if meta else 0.0
-        composite = votes * 1.0 + users * 2.0 + dcount * 3.0 + civic * 50 + quality * 30
-        out.append(
-            {
-                "topic": topic,
-                "vote_count": votes,
-                "distinct_voters": users,
-                "discussion_count": dcount,
-                "avg_trending_civic": round(civic, 3),
-                "avg_trending_quality": round(quality, 3),
-                "composite_score": round(composite, 2),
-            }
-        )
-
-    seen = {r["topic"] for r in out}
-    for topic, cnt in disc_counts.items():
-        if topic not in seen:
-            out.append(
-                {
-                    "topic": topic,
-                    "vote_count": 0,
-                    "distinct_voters": 0,
-                    "discussion_count": int(cnt),
-                    "avg_trending_civic": 0.0,
-                    "avg_trending_quality": 0.0,
-                    "composite_score": float(cnt),
-                }
+    if current_user.is_authenticated:
+        voted = (
+            db.session.query(func.count(distinct(StatementVote.statement_id)))
+            .join(Statement, Statement.id == StatementVote.statement_id)
+            .filter(
+                StatementVote.discussion_id == discussion.id,
+                StatementVote.user_id == current_user.id,
+                *vis,
             )
+            .scalar()
+        ) or 0
+    else:
+        aliases = anonymous_fingerprint_aliases_for_daily_lookup()
+        fps = [fp for fp in aliases if fp]
+        if not fps:
+            return 0, total
+        voted = (
+            db.session.query(func.count(distinct(StatementVote.statement_id)))
+            .join(Statement, Statement.id == StatementVote.statement_id)
+            .filter(
+                StatementVote.discussion_id == discussion.id,
+                StatementVote.user_id.is_(None),
+                StatementVote.session_fingerprint.in_(fps),
+                *vis,
+            )
+            .scalar()
+        ) or 0
+    return int(voted), int(total)
 
-    out.sort(key=lambda x: x["composite_score"], reverse=True)
-    return out[:limit]
+
+def capture_journey_vote_events(discussion: Discussion) -> None:
+    """On a guided-journey vote: started (24h dedup) and step_completed when done."""
+    if not discussion or not discussion.programme_id:
+        return
+    from app.programmes.journey import (
+        is_guided_journey_programme,
+        ordered_journey_discussions,
+    )
+
+    programme = discussion.programme
+    if not programme or not is_guided_journey_programme(programme):
+        return
+    if not discussion.has_native_statements:
+        return
+
+    ordered = ordered_journey_discussions(programme)
+    total_steps = len(ordered)
+    capture_journey_started(programme, total_steps=total_steps)
+
+    if not _posthog_ready():
+        return
+    try:
+        voted, total = _theme_vote_progress(discussion)
+        if total <= 0 or voted < total:
+            return
+        step_num = next(
+            (i + 1 for i, d in enumerate(ordered) if d.id == discussion.id),
+            None,
+        )
+        if step_num is None:
+            return
+        ph_id = journey_distinct_id()
+        if not ph_id:
+            return
+        cache_key = f'ph_journey_step_completed:{programme.id}:{discussion.id}:{ph_id[:32]}'
+        if not cache.get(cache_key):
+            sent = safe_posthog_capture(
+                posthog_client=_posthog,
+                distinct_id=ph_id,
+                event='journey_step_completed',
+                properties=_common_props(
+                    programme,
+                    {
+                        'step_number': step_num,
+                        'step_name': discussion.programme_theme or discussion.slug,
+                        'step_type': 'voting',
+                        'is_final_step': step_num == total_steps,
+                        'total_steps': total_steps,
+                    },
+                ),
+                durable=True,
+                insert_id=f'journey_step_completed:{programme.id}:{discussion.id}:{ph_id[:32]}',
+            )
+            if sent:
+                cache.set(cache_key, True, timeout=86400)
+
+        from app.programmes.journey import build_journey_progress
+
+        uid = current_user.id if current_user.is_authenticated else None
+        aliases = None if uid else anonymous_fingerprint_aliases_for_daily_lookup()
+        progress = build_journey_progress(
+            programme,
+            uid,
+            discussions=ordered,
+            anon_fingerprint_aliases=aliases,
+        )
+        if progress.get('is_journey_complete'):
+            capture_journey_completed(
+                programme, is_complete=True, total_steps=total_steps
+            )
+    except Exception as exc:
+        current_app.logger.warning('PostHog journey_step_completed error: %s', exc)

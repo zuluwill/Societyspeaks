@@ -98,6 +98,22 @@ def _resolve_has_custom_name(
     return society_name != DEFAULT_SOCIETY_NAME
 
 
+_HAS_CUSTOM_NAME_KEY = '_ss_has_custom_name'
+
+
+def _stamp_has_custom_name(state_dict: dict, has_custom_name: bool) -> dict:
+    """Keep the create-time naming flag until the first turn (analytics only)."""
+    stamped = dict(state_dict or {})
+    stamped[_HAS_CUSTOM_NAME_KEY] = 1 if has_custom_name else 0
+    return stamped
+
+
+def _pop_has_custom_name(state_blob) -> Optional[bool]:
+    if not isinstance(state_blob, dict) or _HAS_CUSTOM_NAME_KEY not in state_blob:
+        return None
+    return bool(state_blob.get(_HAS_CUSTOM_NAME_KEY))
+
+
 def get_or_start_daily_run(
     *,
     scenario_slug: str,
@@ -106,6 +122,7 @@ def get_or_start_daily_run(
     society_name: Optional[str] = None,
     name_was_custom: Optional[bool] = None,
     seed_date: Optional[date] = None,
+    persist: bool = True,
 ) -> GameRun:
     """Return in-progress, completed, or fresh daily run for this scenario.
 
@@ -118,6 +135,9 @@ def get_or_start_daily_run(
     everyone who plays a given day's daily — on the day, within the 48h streak
     grace window, or via a daily challenge — inherits the identical opening,
     preserving the shared-daily and cohort/challenge guarantees.
+
+    ``persist=False`` renders an ephemeral run (no DB row, no analytics) for
+    scripted clients — same contract as ``start_quick_run``.
     """
     scenario = load_scenario(scenario_slug)
     turns = scenario.get('turns') or []
@@ -209,7 +229,12 @@ def get_or_start_daily_run(
         society_name=name[:80],
         emblem_seed=GameRun.generate_uuid(),
         variant_seed=seed,
-        state_json=_seeded_initial_state(scenario, seed).to_dict(),
+        state_json=_stamp_has_custom_name(
+            _seeded_initial_state(scenario, seed).to_dict(),
+            _resolve_has_custom_name(
+                society_name=name, name_was_custom=name_was_custom
+            ),
+        ),
         choice_log_json=[],
         delayed_queue_json=[],
         headline_log_json=[],
@@ -218,6 +243,8 @@ def get_or_start_daily_run(
         status=GAME_RUN_STATUS_IN_PROGRESS,
     )
     run.posthog_distinct_id = resolve_distinct_id_for_run(run)
+    if not persist:
+        return run
     db.session.add(run)
     try:
         db.session.commit()
@@ -236,15 +263,6 @@ def get_or_start_daily_run(
     except Exception:
         db.session.rollback()
         raise GameRunError('Could not create run — please try again')
-    track_game_event(
-        run,
-        'game_run_started',
-        properties={
-            'has_custom_name': _resolve_has_custom_name(
-                society_name=run.society_name, name_was_custom=name_was_custom
-            )
-        },
-    )
     return run
 
 
@@ -289,7 +307,12 @@ def start_quick_run(
         society_name=name[:80],
         emblem_seed=GameRun.generate_uuid(),
         variant_seed=seed,
-        state_json=_seeded_initial_state(scenario, seed).to_dict(),
+        state_json=_stamp_has_custom_name(
+            _seeded_initial_state(scenario, seed).to_dict(),
+            _resolve_has_custom_name(
+                society_name=name, name_was_custom=name_was_custom
+            ),
+        ),
         choice_log_json=[],
         delayed_queue_json=[],
         headline_log_json=[],
@@ -306,16 +329,6 @@ def start_quick_run(
     except Exception:
         db.session.rollback()
         raise GameRunError('Could not create run — please try again')
-    track_game_event(
-        run,
-        'game_run_started',
-        properties={
-            'mode': 'quick',
-            'has_custom_name': _resolve_has_custom_name(
-                society_name=run.society_name, name_was_custom=name_was_custom
-            ),
-        },
-    )
     return run
 
 
@@ -424,6 +437,7 @@ def apply_run_choice(run: GameRun, choice_id: str) -> Dict[str, Any]:
     if not choice:
         raise InvalidChoice('Invalid choice')
 
+    has_custom_name = _pop_has_custom_name(run.state_json)
     state = SocietyState.from_dict(run.state_json)
     delayed_queue = clone_delayed_queue(run.delayed_queue_json or [])
     choice_log = list(run.choice_log_json or [])
@@ -489,7 +503,28 @@ def apply_run_choice(run: GameRun, choice_id: str) -> Dict[str, Any]:
             'completed_turn_index': completed_turn_index,
             'game_complete': game_complete,
         },
+        durable=True,
+        insert_id=f'game_turn_completed:{run.uuid}:{completed_turn_index}',
     )
+    if completed_turn_index == 0:
+        # Action-gated: GET-minted crawler rows never play a turn. Firing
+        # started here keeps dashboards aligned with Neon "played a turn".
+        track_game_event(
+            run,
+            'game_run_started',
+            properties={
+                'mode': run.mode,
+                'has_custom_name': (
+                    has_custom_name
+                    if has_custom_name is not None
+                    else _resolve_has_custom_name(
+                        society_name=run.society_name, name_was_custom=None
+                    )
+                ),
+            },
+            durable=True,
+            insert_id=f'game_run_started:{run.uuid}',
+        )
     if game_complete:
         track_game_event(
             run,
@@ -498,6 +533,8 @@ def apply_run_choice(run: GameRun, choice_id: str) -> Dict[str, Any]:
                 'mode': run.mode,
                 'outcome_category': (outcome_payload or {}).get('outcome_category'),
             },
+            durable=True,
+            insert_id=f'game_run_completed:{run.uuid}',
         )
         if run.mode == 'daily':
             from app.game.services.identity_service import compute_daily_streak
@@ -514,6 +551,8 @@ def apply_run_choice(run: GameRun, choice_id: str) -> Dict[str, Any]:
                         'current_streak': streak['current'],
                         'longest_streak': streak['longest'],
                     },
+                    durable=True,
+                    insert_id=f'game_streak_extended:{run.uuid}',
                 )
 
     state_dict = state.to_dict()

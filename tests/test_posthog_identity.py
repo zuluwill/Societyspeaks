@@ -8,6 +8,7 @@ These lock in the fixes that let server events stitch to the JS SDK's person:
 """
 
 import json
+import uuid
 from unittest.mock import MagicMock, patch
 from urllib.parse import quote
 
@@ -255,6 +256,63 @@ def test_safe_capture_skips_when_distinct_id_missing(app, caplog):
     assert any('no distinct_id' in r.message for r in caplog.records)
 
 
+def test_event_uuid_from_insert_id_is_stable_uuid5():
+    from app.lib.posthog_utils import event_uuid_from_insert_id
+
+    first = event_uuid_from_insert_id('dqr:42:email_vote_confirmed')
+    second = event_uuid_from_insert_id('dqr:42:email_vote_confirmed')
+    other = event_uuid_from_insert_id('dqr:43:email_vote_confirmed')
+    assert first == second
+    assert first != other
+    uuid.UUID(first)
+
+
+def test_safe_capture_passes_deterministic_uuid_for_insert_id(app):
+    """posthog-python 7.x dedupes on capture(uuid=), not $insert_id in properties."""
+    captured = []
+
+    class _Client:
+        project_api_key = 'phc_x'
+
+        def capture(self, **kwargs):
+            captured.append(kwargs)
+
+    from app.lib.posthog_utils import event_uuid_from_insert_id, safe_posthog_capture
+
+    with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0'}):
+        safe_posthog_capture(
+            posthog_client=_Client(),
+            distinct_id='subscriber:abc',
+            event='email_vote_confirmed',
+            insert_id='dqr:9:email_vote_confirmed',
+        )
+    assert len(captured) == 1
+    assert captured[0]['properties']['$insert_id'] == 'dqr:9:email_vote_confirmed'
+    assert captured[0]['uuid'] == event_uuid_from_insert_id('dqr:9:email_vote_confirmed')
+
+
+def test_safe_system_capture_passes_deterministic_uuid_for_insert_id():
+    import posthog as real_posthog
+
+    captured = []
+
+    from app.lib.posthog_utils import event_uuid_from_insert_id, safe_system_capture
+
+    with patch('app.lib.posthog_utils._drain_posthog_client'):
+        with patch.object(real_posthog, 'project_api_key', 'phc_x'):
+            with patch.object(real_posthog, 'api_key', 'phc_x'):
+                with patch.object(real_posthog, 'capture', side_effect=lambda **kw: captured.append(kw)):
+                    safe_system_capture(
+                        'daily_brief_sent',
+                        properties={'cadence': 'daily'},
+                        insert_id='daily_brief_sent:daily:42',
+                    )
+    assert len(captured) == 1
+    assert captured[0]['distinct_id'] == 'system'
+    assert captured[0]['properties']['$insert_id'] == 'daily_brief_sent:daily:42'
+    assert captured[0]['uuid'] == event_uuid_from_insert_id('daily_brief_sent:daily:42')
+
+
 def test_email_subscriber_id_is_pseudonymous_and_stable():
     """Email-only subscribers get one stable, PII-free id so subscribe ->
     digest_sent -> vote -> unsubscribe all stitch (and raw email never leaks)."""
@@ -418,6 +476,8 @@ def test_brief_reactivate_fires_daily_brief_subscribed(app, db):
         assert result['status'] == 'reactivated'
         capture.assert_called_once()
         assert capture.call_args.kwargs['event'] == 'daily_brief_subscribed'
+        assert capture.call_args.kwargs['durable'] is True
+        assert capture.call_args.kwargs['insert_id'] == f'brief_sub:{sub.id}:reactivated'
         props = capture.call_args.kwargs['properties']
         assert props['subscription_status'] == 'reactivated'
         assert props['reactivation'] is True
@@ -456,3 +516,424 @@ def test_game_run_started_includes_brief_email_source(app):
             track_game_event(run, 'game_run_started')
         props = capture.call_args.kwargs['properties']
         assert props['source'] == 'brief_email'
+
+
+def test_journey_started_fires_without_posthog_cookie(app):
+    """First-vote started must not require the JS cookie (July 2026 regression)."""
+    from unittest.mock import MagicMock, patch
+
+    from app.programmes.journey_analytics import capture_journey_started
+
+    programme = MagicMock()
+    programme.id = 9
+    programme.slug = 'humanity-big-questions'
+    programme.name = "Humanity's big questions"
+    programme.geographic_scope = 'global'
+
+    fake_ph = MagicMock()
+    fake_ph.project_api_key = 'phc_x'
+    browser_ua = {'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+
+    with patch('app.programmes.journey_analytics._posthog', fake_ph):
+        with patch('app.programmes.journey_analytics.safe_posthog_capture') as cap:
+            with patch('app.programmes.journey_analytics.cache') as cache_mock:
+                cache_mock.get.return_value = None
+                with app.test_request_context('/discussions/x', headers=browser_ua):
+                    capture_journey_started(programme, total_steps=8)
+                cap.assert_called_once()
+                assert cap.call_args.kwargs['event'] == 'journey_started'
+                assert cap.call_args.kwargs['durable'] is True
+
+
+def test_journey_vote_events_started_then_step_completed(app):
+    from unittest.mock import MagicMock, patch
+
+    from app.programmes.journey_analytics import capture_journey_vote_events
+
+    programme = MagicMock()
+    programme.id = 9
+    programme.slug = 'humanity-big-questions'
+    programme.name = "Humanity's big questions"
+    programme.geographic_scope = 'global'
+
+    discussion = MagicMock()
+    discussion.programme_id = 9
+    discussion.has_native_statements = True
+    discussion.id = 42
+    discussion.slug = 'theme-one'
+    discussion.programme_theme = 'T1'
+    discussion.programme = programme
+
+    fake_ph = MagicMock()
+    fake_ph.project_api_key = 'phc_x'
+
+    with patch('app.programmes.journey_analytics._posthog', fake_ph):
+        with patch(
+            'app.programmes.journey.is_guided_journey_programme', return_value=True
+        ):
+            with patch(
+                'app.programmes.journey.ordered_journey_discussions',
+                return_value=[discussion],
+            ):
+                with patch(
+                    'app.programmes.journey_analytics.capture_journey_started'
+                ) as started:
+                    with patch(
+                        'app.programmes.journey_analytics.safe_posthog_capture'
+                    ) as cap:
+                        with patch(
+                            'app.programmes.journey_analytics.cache'
+                        ) as cache_mock:
+                            cache_mock.get.return_value = None
+                            with patch(
+                                'app.programmes.journey.build_journey_progress',
+                                return_value={'is_journey_complete': False},
+                            ):
+                                with app.test_request_context('/discussions/x'):
+                                    with patch(
+                                        'app.programmes.journey_analytics._theme_vote_progress',
+                                        return_value=(1, 2),
+                                    ):
+                                        capture_journey_vote_events(discussion)
+                                    started.assert_called_once()
+                                    cap.assert_not_called()
+
+                                    with patch(
+                                        'app.programmes.journey_analytics._theme_vote_progress',
+                                        return_value=(2, 2),
+                                    ):
+                                        capture_journey_vote_events(discussion)
+                                    assert cap.call_count == 1
+                                    assert cap.call_args.kwargs['event'] == 'journey_step_completed'
+                                    assert cap.call_args.kwargs['durable'] is True
+
+
+def test_journey_vote_events_fires_completed_when_all_themes_done(app):
+    from unittest.mock import MagicMock, patch
+
+    from app.programmes.journey_analytics import capture_journey_vote_events
+
+    programme = MagicMock()
+    programme.id = 9
+    programme.slug = 'humanity-big-questions'
+    programme.name = "Humanity's big questions"
+    programme.geographic_scope = 'global'
+
+    discussion = MagicMock()
+    discussion.programme_id = 9
+    discussion.has_native_statements = True
+    discussion.id = 42
+    discussion.slug = 'theme-one'
+    discussion.programme_theme = 'T1'
+    discussion.programme = programme
+
+    fake_ph = MagicMock()
+    fake_ph.project_api_key = 'phc_x'
+
+    with patch('app.programmes.journey_analytics._posthog', fake_ph):
+        with patch(
+            'app.programmes.journey.is_guided_journey_programme', return_value=True
+        ):
+            with patch(
+                'app.programmes.journey.ordered_journey_discussions',
+                return_value=[discussion],
+            ):
+                with patch(
+                    'app.programmes.journey_analytics.capture_journey_started'
+                ):
+                    with patch(
+                        'app.programmes.journey_analytics.safe_posthog_capture',
+                        return_value=True,
+                    ) as cap:
+                        with patch(
+                            'app.programmes.journey_analytics.cache'
+                        ) as cache_mock:
+                            cache_mock.get.return_value = None
+                            with patch(
+                                'app.programmes.journey.build_journey_progress',
+                                return_value={'is_journey_complete': True},
+                            ):
+                                with patch(
+                                    'app.programmes.journey_analytics._theme_vote_progress',
+                                    return_value=(2, 2),
+                                ):
+                                    with app.test_request_context('/discussions/x'):
+                                        capture_journey_vote_events(discussion)
+                            events = [c.kwargs['event'] for c in cap.call_args_list]
+                            assert 'journey_step_completed' in events
+                            assert 'journey_completed' in events
+
+
+def test_journey_completed_skipped_unless_visitor_finished(app):
+    """Recap GETs from crawlers must not count as completions."""
+    from unittest.mock import MagicMock, patch
+
+    from app.programmes.journey_analytics import capture_journey_completed
+
+    programme = MagicMock()
+    programme.id = 9
+    programme.slug = 'humanity-big-questions'
+    programme.name = "Humanity's big questions"
+    programme.geographic_scope = 'global'
+
+    fake_ph = MagicMock()
+    fake_ph.project_api_key = 'phc_x'
+
+    with patch('app.programmes.journey_analytics._posthog', fake_ph):
+        with patch('app.programmes.journey_analytics.safe_posthog_capture') as cap:
+            with patch('app.programmes.journey_analytics.cache') as cache_mock:
+                cache_mock.get.return_value = None
+                with app.test_request_context('/programmes/x/recap'):
+                    capture_journey_completed(programme, is_complete=False, total_steps=8)
+                    cap.assert_not_called()
+                    capture_journey_completed(programme, is_complete=True, total_steps=8)
+                    cap.assert_called_once()
+                    assert cap.call_args.kwargs['event'] == 'journey_completed'
+                    assert cap.call_args.kwargs['durable'] is True
+
+
+def test_journey_completed_skipped_on_prefetch(app):
+    from unittest.mock import MagicMock, patch
+
+    from app.programmes.journey_analytics import capture_journey_completed
+
+    programme = MagicMock()
+    programme.id = 9
+    programme.slug = 'humanity-big-questions'
+    programme.name = "Humanity's big questions"
+    programme.geographic_scope = 'global'
+
+    fake_ph = MagicMock()
+    fake_ph.project_api_key = 'phc_x'
+
+    with patch('app.programmes.journey_analytics._posthog', fake_ph):
+        with patch('app.programmes.journey_analytics.safe_posthog_capture') as cap:
+            with app.test_request_context(
+                '/programmes/x/recap',
+                headers={'Sec-Purpose': 'prefetch'},
+            ):
+                capture_journey_completed(programme, is_complete=True, total_steps=8)
+                cap.assert_not_called()
+
+
+def test_game_run_completed_sends_insert_id_and_durable_flag(app):
+    from unittest.mock import patch
+
+    from app.game.analytics import track_game_event
+    from app.models.game import GameRun
+
+    run = GameRun(
+        uuid='complete-uuid',
+        scenario_slug='s',
+        mode='daily',
+        session_fingerprint='fp-1',
+        turn_index=10,
+        total_turns=10,
+    )
+    browser_ua = {'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36'}
+
+    with patch('app.game.analytics.safe_posthog_capture') as capture:
+        with app.test_request_context('/play/choice', headers=browser_ua):
+            track_game_event(
+                run,
+                'game_run_completed',
+                durable=True,
+                insert_id='game_run_completed:complete-uuid',
+            )
+        assert capture.call_args.kwargs['durable'] is True
+        assert capture.call_args.kwargs['insert_id'] == 'game_run_completed:complete-uuid'
+
+
+def test_daily_run_persist_false_creates_no_row_or_event(app, db):
+    from unittest.mock import patch
+
+    from app.game.services.daily_service import scheduled_scenario_slug
+    from app.game.services.run_service import get_or_start_daily_run
+    from app.models.game import GameRun
+
+    with app.app_context():
+        db.create_all()
+        before = GameRun.query.count()
+        with patch('app.game.services.run_service.track_game_event') as track:
+            run = get_or_start_daily_run(
+                scenario_slug=scheduled_scenario_slug(),
+                user_id=None,
+                session_fingerprint='fp-crawler-daily',
+                persist=False,
+            )
+            assert track.call_count == 0
+        assert run.uuid
+        assert GameRun.query.count() == before
+
+
+def test_partner_embed_uses_visitor_identity_and_omits_ip(app):
+    """Embed views must not collapse onto partner:<ref> or send client IPs."""
+    captured = []
+
+    def _capture(**kwargs):
+        captured.append(kwargs)
+        return True
+
+    client_id = 'a' * 64
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+    with patch('app.lib.posthog_utils.safe_posthog_capture', side_effect=_capture):
+        with app.test_request_context(
+            '/embed/1?ref=acme',
+            headers={
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+                'X-Forwarded-For': '203.0.113.9',
+                'Cookie': f'ss_voter_client_id={client_id}',
+            },
+        ):
+            from app.api.utils import track_partner_event
+
+            track_partner_event('partner_embed_loaded', {'discussion_id': 1})
+
+    assert len(captured) == 1
+    assert not str(captured[0]['distinct_id']).startswith('partner:')
+    props = captured[0]['properties']
+    assert 'ip_address' not in props
+    assert '203.0.113.9' not in str(props)
+    assert captured[0]['insert_id']
+    assert captured[0]['insert_id'].startswith('partner_embed_loaded:acme:')
+
+
+def test_partner_api_event_keeps_partner_ref_identity(app):
+    captured = []
+
+    def _capture(**kwargs):
+        captured.append(kwargs)
+        return True
+
+    app.config['POSTHOG_API_KEY'] = PH_KEY
+    with patch('app.lib.posthog_utils.safe_posthog_capture', side_effect=_capture):
+        with app.test_request_context(
+            '/api/v1/snapshot?ref=acme',
+            headers={'User-Agent': 'partner-sdk/1.0'},
+        ):
+            from app.api.utils import track_partner_event
+
+            track_partner_event('partner_api_snapshot')
+
+    assert captured[0]['distinct_id'] == 'partner:acme'
+
+
+def test_social_click_skips_when_identity_missing(app):
+    from flask import request as flask_request
+    import posthog as real_posthog
+
+    with patch.object(real_posthog, 'project_api_key', 'phk_test'):
+        with patch('app.lib.posthog_utils.resolve_request_distinct_id', return_value=None):
+            with patch('app.lib.posthog_utils.safe_posthog_capture') as capture:
+                with app.test_request_context(
+                    '/discussions/1?utm_source=twitter',
+                    headers={
+                        'User-Agent': 'Mozilla/5.0',
+                        'Referer': 'https://twitter.com/x?token=secret',
+                    },
+                ):
+                    from app.trending.conversion_tracking import track_social_click
+
+                    track_social_click(flask_request, user_id=None)
+    capture.assert_not_called()
+
+
+def test_social_click_strips_referer_query_and_sets_insert_id(app):
+    from flask import request as flask_request
+    import posthog as real_posthog
+
+    captured = []
+
+    def _capture(**kwargs):
+        captured.append(kwargs)
+        return True
+
+    with patch.object(real_posthog, 'project_api_key', 'phk_test'):
+        with patch('app.lib.posthog_utils.resolve_request_distinct_id', return_value='anon-fp-1'):
+            with patch('app.lib.posthog_utils.safe_posthog_capture', side_effect=_capture):
+                with app.test_request_context(
+                    '/discussions/1?utm_source=twitter&utm_campaign=civic',
+                    headers={
+                        'User-Agent': 'Mozilla/5.0',
+                        'Referer': 'https://twitter.com/x?token=secret',
+                    },
+                ):
+                    from app.trending.conversion_tracking import track_social_click
+
+                    track_social_click(flask_request, user_id=None)
+
+    assert len(captured) == 1
+    assert captured[0]['event'] == 'social_post_clicked'
+    assert 'token=secret' not in (captured[0]['properties'] or {}).get('referer', '')
+    assert captured[0]['insert_id']
+    assert 'anon-fp-1' in captured[0]['insert_id']
+
+
+def test_briefing_track_posthog_hashes_email_distinct_ids(app):
+    from app.lib.posthog_utils import email_subscriber_distinct_id
+
+    captured = []
+
+    class _Client:
+        project_api_key = 'phk_test'
+
+        def capture(self, **kwargs):
+            captured.append(kwargs)
+
+        def identify(self, **kwargs):
+            pass
+
+    with patch('app.briefing.routes.posthog', _Client()):
+        with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0'}):
+            from app.briefing.routes import _track_posthog
+
+            _track_posthog(
+                'briefing_recipient_unsubscribed',
+                'person@example.com',
+                {'recipient_id': 9},
+                insert_id='briefing_recipient_unsubscribed:9',
+            )
+
+    assert len(captured) == 1
+    assert captured[0]['distinct_id'] == email_subscriber_distinct_id('person@example.com')
+    assert 'person@example.com' not in captured[0]['distinct_id']
+
+
+def test_capture_statement_voted_email_source_insert_id(app, db):
+    from app.discussions.statements import capture_statement_voted
+    from app.models import Discussion, Statement
+
+    with app.app_context():
+        db.create_all()
+        discussion = Discussion(
+            title='Email sync vote',
+            slug='email-sync-vote',
+            has_native_statements=True,
+            topic='Society',
+            geographic_scope='global',
+        )
+        db.session.add(discussion)
+        db.session.commit()
+        statement = Statement(
+            discussion_id=discussion.id,
+            content='A claim long enough to store as a statement.',
+            statement_type='claim',
+        )
+        db.session.add(statement)
+        db.session.commit()
+
+        mock_ph = MagicMock()
+        mock_ph.project_api_key = 'phk_test'
+        with patch('app.discussions.statements.posthog', mock_ph):
+            with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0'}):
+                capture_statement_voted(
+                    statement,
+                    1,
+                    distinct_id='subscriber:abc',
+                    source='email_vote',
+                )
+
+        assert mock_ph.capture.call_args.kwargs['event'] == 'statement_voted'
+        props = mock_ph.capture.call_args.kwargs['properties']
+        assert props['source'] == 'email_vote'
+        assert props['$insert_id'] == f'statement_voted:{statement.id}:subscriber:abc:1'

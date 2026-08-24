@@ -704,10 +704,12 @@ def unsubscribe(token):
                     distinct_id=distinct_id,
                     event='daily_brief_unsubscribed',
                     properties={
-                        'email': subscriber.email,
                         'was_cadence': 'daily' if was_daily else 'weekly',
                         'method': 'one_click' if request.form.get('List-Unsubscribe') == 'One-Click' else 'link',
-                    }
+                        'brief_subscriber_id': subscriber.id,
+                    },
+                    insert_id=f'brief_unsub:{subscriber.id}:{subscriber.unsubscribed_at.isoformat() if subscriber.unsubscribed_at else "now"}',
+                    durable=True,
                 )
                 logger.info(
                     "PostHog: daily_brief_unsubscribed captured for %s (method=%s)",
@@ -771,7 +773,9 @@ def switch_to_weekly(token):
                 posthog_client=posthog,
                 distinct_id=distinct_id,
                 event='daily_brief_switched_to_weekly',
-                properties={'email': subscriber.email}
+                properties={'brief_subscriber_id': subscriber.id},
+                insert_id=f'brief_switched_weekly:{subscriber.id}',
+                durable=True,
             )
     except Exception as e:
         logger.warning(f"PostHog tracking error: {e}")

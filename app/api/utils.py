@@ -445,28 +445,60 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
 
     partner_ref = get_partner_ref() or 'unknown'
 
-    # Build base properties
+    from app.lib.posthog_utils import request_is_prefetch, resolve_request_distinct_id
+
+    # Human-facing GET events must not collapse every visitor into one
+    # ``partner:<ref>`` person (that made unique-user embed metrics always 1).
+    visitor_events = {'partner_embed_loaded', 'partner_consensus_view'}
+    if event_name in visitor_events and request_is_prefetch():
+        return
+
+    if event_name in visitor_events:
+        user_id = None
+        try:
+            from flask_login import current_user
+
+            if current_user.is_authenticated:
+                user_id = current_user.id
+        except Exception:
+            user_id = None
+        fp = None
+        try:
+            from app.lib.vote_identity import get_voter_fingerprint
+
+            fp = get_voter_fingerprint()
+        except Exception:
+            fp = None
+        distinct_id = resolve_request_distinct_id(user_id=user_id, anon_fallback=fp)
+        if not distinct_id:
+            return
+        from datetime import date
+
+        insert_id = f'{event_name}:{partner_ref}:{distinct_id[:32]}:{date.today().isoformat()}'
+    else:
+        distinct_id = f'partner:{partner_ref}'
+        insert_id = None
+
+    # Never send client IPs to PostHog.
     event_properties = {
         'partner_ref': partner_ref,
-        'ip_address': get_remote_address(),
         '$raw_user_agent': request.headers.get('User-Agent', ''),
         'referer': request.headers.get('Referer', ''),
     }
 
-    # Add origin if available (for embed tracking)
     origin = request.headers.get('Origin')
     if origin:
         event_properties['origin'] = origin
 
-    # Merge with custom properties
     if properties:
         event_properties.update(properties)
 
     safe_posthog_capture(
         posthog_client=_posthog,
-        distinct_id=f"partner:{partner_ref}",
+        distinct_id=distinct_id,
         event=event_name,
         properties=event_properties,
+        insert_id=insert_id,
     )
 
 

@@ -101,6 +101,20 @@ def test_quick_run_page_loads(app, client, db):
     assert resp.status_code == 200
     assert b'game-app' in resp.data
     assert b'game-choice' in resp.data
+    assert b'data-turn-index="' in resp.data
+
+
+def test_play_js_fires_turn_started_on_display_not_choose():
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parents[1].joinpath('app/static/js/game/play.js').read_text()
+    assert 'function captureTurnStarted' in src
+    assert "$insert_id: 'game_turn_started:'" in src
+    choose_idx = src.find('function choose(')
+    assert choose_idx > 0
+    next_fn = src.find('\n  function ', choose_idx + 10)
+    choose_body = src[choose_idx:next_fn if next_fn > 0 else choose_idx + 400]
+    assert 'game_turn_started' not in choose_body
 
 
 def test_quick_run_404s_unknown_scenario(app, client, db):
@@ -712,7 +726,7 @@ def _captured_started_events(monkeypatch):
     """Patch analytics so we can inspect game_run_started properties."""
     events = []
 
-    def _capture(run, event, properties=None):
+    def _capture(run, event, properties=None, **kwargs):
         events.append((event, properties or {}))
 
     monkeypatch.setattr(
@@ -721,19 +735,27 @@ def _captured_started_events(monkeypatch):
     return events
 
 
+def _play_first_turn(db, run):
+    scenario = load_scenario(run.scenario_slug)
+    result = apply_run_choice(run, scenario['turns'][0]['choices'][0]['id'])
+    return db.session.get(GameRun, run.id), result
+
+
 def test_suggested_name_is_not_counted_as_custom(app, db, monkeypatch):
     """A player who accepts/rolls our suggestion is not flagged has_custom_name,
     even though the stored name differs from the default."""
     events = _captured_started_events(monkeypatch)
     with app.app_context():
         db.create_all()
-        start_quick_run(
+        run = start_quick_run(
             scenario_slug='debt-inherited',
             user_id=None,
             session_fingerprint=fingerprint_from_client_id('s' * 64),
             society_name='The Halcyon Republic',
             name_was_custom=False,
         )
+        assert not any(e == 'game_run_started' for e, _ in events)
+        _play_first_turn(db, run)
     started = [p for (e, p) in events if e == 'game_run_started']
     assert started and started[0]['has_custom_name'] is False
 
@@ -742,13 +764,14 @@ def test_typed_name_is_counted_as_custom(app, db, monkeypatch):
     events = _captured_started_events(monkeypatch)
     with app.app_context():
         db.create_all()
-        get_or_start_daily_run(
+        run = get_or_start_daily_run(
             scenario_slug=scheduled_scenario_slug(),
             user_id=None,
             session_fingerprint=fingerprint_from_client_id('t' * 64),
             society_name='My Own Republic',
             name_was_custom=True,
         )
+        _play_first_turn(db, run)
     started = [p for (e, p) in events if e == 'game_run_started']
     assert started and started[0]['has_custom_name'] is True
 
@@ -759,12 +782,13 @@ def test_missing_flag_falls_back_to_legacy_string_compare(app, db, monkeypatch):
     events = _captured_started_events(monkeypatch)
     with app.app_context():
         db.create_all()
-        start_quick_run(
+        run = start_quick_run(
             scenario_slug='debt-inherited',
             user_id=None,
             session_fingerprint=fingerprint_from_client_id('u' * 64),
             society_name='Riverlands',
         )
+        _play_first_turn(db, run)
     started = [p for (e, p) in events if e == 'game_run_started']
     assert started and started[0]['has_custom_name'] is True
 

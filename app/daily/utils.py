@@ -135,7 +135,7 @@ def user_has_active_daily_question_subscription_for_preferences(user):
     )
 
 
-def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_posthog):
+def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_posthog, subscription_status='created'):
     if not track_posthog:
         return
     try:
@@ -148,7 +148,7 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
         props = {
             'subscription_tier': 'free',
             'plan_name': 'Daily Question',
-            'email': email,
+            'question_subscriber_id': subscriber.id,
             'email_frequency': subscriber.email_frequency,
             'timezone': subscriber.timezone or '',
             'preferred_send_day': subscriber.preferred_send_day,
@@ -162,6 +162,8 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
                 else 'direct'
             ),
             'referrer': request.referrer,
+            'subscription_status': subscription_status,
+            'reactivation': subscription_status == 'reactivated',
         }
         from app.lib.posthog_utils import (
             email_subscriber_distinct_id,
@@ -186,6 +188,8 @@ def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_
             distinct_id=distinct_id,
             event='daily_question_subscribed',
             properties=props,
+            insert_id=f'question_sub:{subscriber.id}:{subscription_status}',
+            durable=True,
         )
     except Exception as e:
         from flask import current_app
@@ -248,7 +252,9 @@ def process_daily_question_subscription(
                 'message': _('An error occurred. Please try again.'),
                 'error': str(e),
             }
-        _capture_daily_question_subscribe_posthog(email, existing, user, track_posthog=track_posthog)
+        _capture_daily_question_subscribe_posthog(
+            email, existing, user, track_posthog=track_posthog, subscription_status='reactivated'
+        )
         return {
             'status': 'reactivated',
             'subscriber': existing,
@@ -272,7 +278,9 @@ def process_daily_question_subscription(
         from app.resend_client import send_daily_question_welcome_email
         send_daily_question_welcome_email(subscriber)
 
-        _capture_daily_question_subscribe_posthog(email, subscriber, user, track_posthog=track_posthog)
+        _capture_daily_question_subscribe_posthog(
+            email, subscriber, user, track_posthog=track_posthog, subscription_status='created'
+        )
 
         return {
             'status': 'created',

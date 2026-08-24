@@ -90,6 +90,8 @@ def track_game_event(
     event: str,
     *,
     properties: Optional[Dict[str, Any]] = None,
+    durable: bool = False,
+    insert_id: Optional[str] = None,
 ) -> None:
     """Fire a game analytics event; never raises into callers."""
     try:
@@ -112,6 +114,8 @@ def track_game_event(
             distinct_id=_distinct_id_for_run(run),
             event=event,
             properties=props,
+            durable=durable,
+            insert_id=insert_id,
         )
     except Exception:
         # Analytics must never break run creation / choice application.

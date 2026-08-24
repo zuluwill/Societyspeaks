@@ -733,7 +733,7 @@ def post_to_bluesky(
             'has_custom_text': custom_text is not None,
             'topic': topic,
             'hook_variant': hook_variant,
-        })
+        }, insert_id=f'social_post_created:bluesky:{post.uri}')
 
         return post.uri
         
@@ -978,7 +978,7 @@ def post_to_x(
                 'has_custom_text': custom_text is not None,
                 'topic': topic,
                 'hook_variant': hook_variant,
-            })
+            }, insert_id=f'social_post_created:x:{tweet_id}')
 
         return tweet_id
     

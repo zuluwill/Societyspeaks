@@ -41,6 +41,7 @@ except ImportError:
     posthog = None
 
 from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
+from app.programmes.journey_analytics import capture_journey_vote_events
 
 statements_bp = Blueprint('statements', __name__)
 
@@ -531,7 +532,9 @@ def create_statement(discussion_id):
                         'statement_id': statement.id,
                         'statement_type': form.statement_type.data,
                         'is_authenticated': identifier['user_id'] is not None
-                    }
+                    },
+                    insert_id=f'statement_created:{statement.id}',
+                    durable=True,
                 )
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
@@ -561,6 +564,44 @@ def get_or_create_statement_client_id():
 def get_statement_vote_fingerprint():
     """Anonymous voter fingerprint; unified across statements + daily flows."""
     return get_voter_fingerprint()
+
+
+def capture_statement_voted(statement, vote_value, *, distinct_id, source='web', extra=None):
+    """Server-side ``statement_voted`` (and optional social companion event)."""
+    if not posthog or not getattr(posthog, 'project_api_key', None):
+        return
+    if not distinct_id:
+        return
+    vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
+    _disc = statement.discussion
+    properties = {
+        'statement_id': statement.id,
+        'discussion_id': statement.discussion_id,
+        'discussion_topic': _disc.topic if _disc else None,
+        'discussion_title': _disc.title if _disc else None,
+        'vote': vote_label,
+        'source': source,
+        'is_authenticated': current_user.is_authenticated,
+    }
+    if extra:
+        properties.update(extra)
+    identity_key = str(distinct_id)[:32]
+    insert_id = f'statement_voted:{statement.id}:{identity_key}:{vote_value}'
+    if source == 'social':
+        safe_posthog_capture(
+            posthog_client=posthog,
+            distinct_id=distinct_id,
+            event='discussion_participated_from_social',
+            properties=properties,
+            insert_id=f'social_vote:{statement.id}:{identity_key}:{vote_value}',
+        )
+    safe_posthog_capture(
+        posthog_client=posthog,
+        distinct_id=distinct_id,
+        event='statement_voted',
+        properties=properties,
+        insert_id=insert_id,
+    )
 
 
 def normalize_embed_fingerprint(value):
@@ -1269,102 +1310,29 @@ def vote_statement(statement_id):
                 user_id=current_user.id if current_user.is_authenticated else None,
                 anon_fallback=session_fingerprint or get_statement_vote_fingerprint(),
             )
-
-            vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
-            _disc = statement.discussion
-            properties = {
-                'statement_id': statement_id,
-                'discussion_id': statement.discussion_id,
-                'discussion_topic': _disc.topic if _disc else None,
-                'discussion_title': _disc.title if _disc else None,
-                'vote': vote_label,
-                'is_authenticated': current_user.is_authenticated
-            }
-
+            extra = None
+            source = 'embed' if is_embed_request else 'web'
             if is_social:
-                properties['source'] = 'social'
-                properties['referer'] = referer
-                safe_posthog_capture(posthog_client=posthog, distinct_id=distinct_id, event='discussion_participated_from_social', properties=properties)
-
-            safe_posthog_capture(posthog_client=posthog, distinct_id=distinct_id, event='statement_voted', properties=properties)
+                source = 'social'
+                from app.trending.conversion_tracking import _referer_without_query
+                extra = {'referer': _referer_without_query(referer)}
+            capture_statement_voted(
+                statement,
+                vote_value,
+                distinct_id=distinct_id,
+                source=source,
+                extra=extra,
+            )
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
-    # PostHog: track journey step completion for guided journey discussions
-    # Fires for both authenticated and anonymous users.
-    # Cache-based 24-hour dedup: prevents duplicate events when a user changes
-    # a vote on an already-completed step (which still satisfies _voted >= _total).
-    # Consistent with the journey_started / journey_completed dedup pattern in
-    # programmes/routes.py.  The old session-based gate was replaced because it
-    # persisted indefinitely and silently blocked events for returning users.
-    if (
-        posthog
-        and getattr(posthog, 'project_api_key', None)
-        and discussion.programme_id
-        and discussion.has_native_statements
-    ):
-        try:
-            from app.programmes.journey import (
-                is_guided_journey_programme,
-                ordered_journey_discussions,
-            )
-            _programme = discussion.programme
-            if _programme and is_guided_journey_programme(_programme):
-                # Resolve distinct_id and the right vote-count filter.
-                # For anonymous users, use the session_fingerprint that was
-                # used when persisting the vote (embed_fingerprint takes
-                # priority over the cookie fingerprint). Using
-                # get_statement_vote_fingerprint() here was wrong for embed
-                # votes because the two fingerprints differ.
-                if current_user.is_authenticated:
-                    _ph_id = str(current_user.id)
-                    _vote_filter = StatementVote.query.filter_by(
-                        discussion_id=discussion.id, user_id=current_user.id
-                    )
-                else:
-                    _ph_id = session_fingerprint or get_statement_vote_fingerprint()
-                    _vote_filter = StatementVote.query.filter_by(
-                        discussion_id=discussion.id, session_fingerprint=_ph_id
-                    )
-
-                _total = Statement.query.filter_by(discussion_id=discussion.id, is_deleted=False).count()
-                _voted = _vote_filter.count()
-
-                if _total > 0 and _voted >= _total:
-                    _ordered = ordered_journey_discussions(_programme)
-                    _step_num = next(
-                        (i + 1 for i, d in enumerate(_ordered) if d.id == discussion.id),
-                        None,
-                    )
-                    if _step_num is not None:
-                        _step_cache_key = f'ph_journey_step_completed:{_programme.id}:{discussion.id}:{_ph_id[:32]}'
-                        if not cache.get(_step_cache_key):
-                            _total_steps = len(_ordered)
-                            _is_final = _step_num == _total_steps
-                            # Stitch to the same person as the rest of the journey
-                            # funnel: prefer the JS cookie id, else the vote
-                            # fingerprint (_ph_id, which also keys the dedup above).
-                            _step_distinct_id = resolve_request_distinct_id(
-                                user_id=current_user.id if current_user.is_authenticated else None,
-                                anon_fallback=_ph_id,
-                            )
-                            safe_posthog_capture(
-                                posthog_client=posthog,
-                                distinct_id=_step_distinct_id,
-                                event='journey_step_completed',
-                                properties={
-                                    'journey_id': _programme.id,
-                                    'journey_name': _programme.name,
-                                    'step_number': _step_num,
-                                    'step_name': discussion.programme_theme or discussion.slug,
-                                    'step_type': 'voting',
-                                    'is_final_step': _is_final,
-                                    'is_authenticated': current_user.is_authenticated,
-                                },
-                            )
-                            cache.set(_step_cache_key, True, timeout=86400)  # 24-hour dedup
-        except Exception as _e:
-            current_app.logger.warning(f"PostHog journey_step_completed error: {_e}")
+    # Guided-journey lifecycle: started on first vote, step_completed when
+    # every visible statement in this theme has a vote. Action-gated so
+    # hub crawlers cannot inflate the funnel.
+    try:
+        capture_journey_vote_events(discussion)
+    except Exception as _e:
+        current_app.logger.warning(f"PostHog journey vote events error: {_e}")
 
     # Consolidate participant tracking + analytics event into a single commit
     try:

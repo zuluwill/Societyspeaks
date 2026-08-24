@@ -186,7 +186,7 @@ def test_post_start_happy_path_sends_magic_link_and_renders_inbox(trial_app, db)
 
     captured = []
 
-    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None, **_kwargs):
         captured.append({
             'event': event,
             'distinct_id': distinct_id,
@@ -249,7 +249,7 @@ def test_post_start_returning_email_skips_user_signed_up(trial_app, db):
 
     captured = []
 
-    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None):
+    def _fake_capture(*, posthog_client, distinct_id, event, properties=None, identify_properties=None, **_kwargs):
         captured.append({'event': event, 'distinct_id': distinct_id, 'properties': dict(properties or {})})
 
     def _fake_send(user, magic_url, **kwargs):

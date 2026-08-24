@@ -331,7 +331,7 @@
           }),
           (e.__SV = 1));
       })(document, window.posthog || []);
-      posthog.init('{{ config.get("POSTHOG_API_KEY", "") }}', {
+        posthog.init('{{ config.get("POSTHOG_API_KEY", "") }}', {
         api_host:
           '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
         person_profiles: "identified_only",
@@ -342,6 +342,9 @@
             username: '{{ current_user.username | e }}'
           });
           {% endif %}
+          try {
+            document.dispatchEvent(new CustomEvent('ss:analytics-ready'));
+          } catch (e) {}
         },
         before_send: function (event) {
           var ua = (navigator.userAgent || "").toLowerCase();
@@ -385,6 +388,9 @@
           return event;
         },
       });
+          try {
+            document.dispatchEvent(new CustomEvent('ss:analytics-ready'));
+          } catch (e) {}
         }
 
         if (document.readyState === "loading") {
