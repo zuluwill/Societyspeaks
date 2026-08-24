@@ -99,7 +99,7 @@ googlenewsdecoder>=0.1.7,<0.2
 # LLMs (lazy-imported in generators and briefing; code uses the modern client API
 # that exists in both openai 1.x and 2.x)
 openai>=1.88.0,<3
-anthropic>=0.75.0,<0.117
+anthropic>=0.75.0,<1.1
 
 # Social Media Posting
 atproto>=0.0.30,<0.1
