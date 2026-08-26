@@ -316,13 +316,18 @@ Activate in batches, watching deliverability between batches:
 
 ```bash
 export DATABASE_URL='postgres://…'   # Neon owner URL
+python3 scripts/activate_imported_subscribers.py --status --source <label>
 python3 scripts/activate_imported_subscribers.py --batch 250 --source <label>           # dry run
 python3 scripts/activate_imported_subscribers.py --batch 250 --source <label> --commit
 ```
 
-The script excludes UTC/unknown timezones by default (`--include-utc` to
-override after a real IANA backfill). After `--commit` they join the next
-local-18:00 Daily Brief wave — no separate welcome blast.
+`--status` prints yesterday’s London-day kill-switch (bounce / complaint /
+open), how many never-sent actives are waiting for tonight, and remaining
+imported. The script excludes UTC/unknown timezones by default
+(`--include-utc` to override after a real IANA backfill). After `--commit`
+they join the next local-18:00 Daily Brief wave — no separate welcome blast.
+`--commit` refuses if ≥100 never-sent actives are already waiting (two
+first-send batches must not share a night).
 
 Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 
@@ -332,10 +337,12 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
    **comfortably under 2%** and complaints **<0.1%**, after E0 webhook
    reconnect (opens/delivers landing). A single day sitting on the 2% line
    does **not** start the clock.
-2. Batches of 250–500; after each batch, check bounce + complaint rates in
-   `email_event` for the following two sends before the next batch.
-   Kill-switch: complaints >0.1% or bounces >2% → stop the ramp.
-3. Both dry-run by default; `--commit` applies. Only rows with
+2. **One batch of 250 per send-day**, only after a green morning
+   kill-switch (bounce &lt;2%, complaints &lt;0.1%, existing-list opens not
+   sagging). Do **not** step to 500 while first-send bounce on a new tranche
+   is ~14% — two such batches in one night would push the domain near the
+   2% line. Kill-switch: complaints >0.1% or bounces >2% → stop the ramp.
+3. Dry-run by default; `--commit` applies. Only rows with
    `status='imported'` can ever be activated.
 4. Prefer real IANA `timezone` on the batch before `--commit`. Import sets
    timezone for *new* rows from chapter/country; **activation does not**.
@@ -360,12 +367,14 @@ Ramp rules (deliverability failures are hard to recover from — ramp slowly):
 - **Opens exist only for mail sent after 2026-07-12** (webhook reconnect).
   Pre-12 Jul bounce/complaint history in Neon is incomplete.
 
-**Status snapshot (2026-08-24):** clean week long since passed (bounce
-1.66–1.84% on full London days, complaints ~0.02%). Staged activation
-started: batch 1 = 250 `b2b_community` with real IANA timezone. Next batch
-after two send-days (check 25–26 Aug London bounce/complaint) if still
-under kill-switch. UTC/unknown leftovers (~867) held. Do not run E5
-win-back as part of this ramp.
+**Status snapshot (2026-08-26):** Batches 1–3 of 250 committed. Batch 3
+joins tonight’s wave — do not stack a fourth until after that send.
+First-send bounce on new tranches is ~14–16% (dead B2B addresses; Permanent
+→ `bounced`, Resend-suppressed → `suppressed`). Remaining actives then
+bounce like the old list (~0.1–1%). Existing-list bounce on 25 Aug was
+1.06% list-wide / 0.1% on the pre-ramp cohort; complaints 0; opens ~16%.
+UTC/unknown leftovers (~867) held. 2,909 TZ-ready imported remain after
+batch 3 (~12 more send-days). Do not run E5 win-back as part of this ramp.
 
 ## Daily brief send integrity
 

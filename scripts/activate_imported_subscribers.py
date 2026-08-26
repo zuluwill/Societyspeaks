@@ -8,11 +8,17 @@ batches while bounce/complaint rates are watched between batches (OPS.md →
 exactly 'imported' are ever touched — unsubscribed/bounced/paused rows are
 structurally out of reach.
 
+Cadence: one batch of 250 per send-day, after a green morning kill-switch.
+Never stack two first-send batches on the same night (that pushes domain
+bounce toward 2% and can hurt the existing list).
+
 By default the batch excludes UTC/unknown timezones. Those leftovers still
 receive 18:00 UTC; hold them until a real IANA timezone is backfilled.
 Pass --include-utc only after that backfill.
 
 Usage:
+    DATABASE_URL=postgres://... python3 scripts/activate_imported_subscribers.py \
+        --status [--source <label>]
     DATABASE_URL=postgres://... python3 scripts/activate_imported_subscribers.py \
         --batch 250 [--source <label>] [--commit]
 """
@@ -24,6 +30,10 @@ import sys
 
 SOURCE_RE = re.compile(r'^[a-z0-9_]+$')
 MAX_BATCH = 1000
+# Refuse --commit when this many never-sent actives are already waiting.
+# One 250-batch in tonight's wave is the plan; a second would stack first-send
+# bounce (~14%) and can push the domain bounce rate onto the 2% kill-switch.
+STACKING_GUARD = 100
 
 # Real IANA zones have a region/city slash. UTC/GMT leftovers are held.
 REAL_TZ_SQL = (
@@ -51,6 +61,79 @@ KNOWN_BAD_EMAIL_SQL = """
 def resolve_database_url():
     """Owner URL required: the dry-run still issues UPDATE inside a rolled-back txn."""
     return os.environ.get('DATABASE_URL') or os.environ.get('NEON_OWNER_DATABASE_URL')
+
+
+NEVER_SENT_WAITING_SQL = """
+SELECT count(*) FROM daily_brief_subscriber
+WHERE status = 'active'
+  AND last_sent_at IS NULL
+  AND coalesce(total_briefs_received, 0) = 0;
+"""
+
+
+def stacking_would_hurt(waiting, guard=STACKING_GUARD):
+    return waiting >= guard
+
+
+def build_status_sql(source=None):
+    if source and not SOURCE_RE.fullmatch(source):
+        raise ValueError('--source must be a lowercase slug (a-z, 0-9, _)')
+    source_filter = f"AND source = '{source}'" if source else ''
+    return f"""
+\\set ON_ERROR_STOP on
+\\echo '--- kill-switch (last full Europe/London send-day):'
+SELECT
+  (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/London')::date AS london_day,
+  count(DISTINCT recipient_email) FILTER (WHERE event_type = 'sent') AS sent_u,
+  round(100.0 * count(DISTINCT recipient_email) FILTER (WHERE event_type = 'bounced')
+    / nullif(count(DISTINCT recipient_email) FILTER (WHERE event_type = 'sent'), 0), 2) AS bounce_pct,
+  round(100.0 * count(DISTINCT recipient_email) FILTER (WHERE event_type = 'complained')
+    / nullif(count(DISTINCT recipient_email) FILTER (WHERE event_type = 'delivered'), 0), 3) AS complaint_pct,
+  round(100.0 * count(DISTINCT recipient_email) FILTER (WHERE event_type = 'opened')
+    / nullif(count(DISTINCT recipient_email) FILTER (WHERE event_type = 'delivered'), 0), 1) AS open_pct
+FROM email_event
+WHERE email_category = 'daily_brief'
+  AND (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/London')::date
+      = (current_date AT TIME ZONE 'Europe/London' - interval '1 day')::date
+GROUP BY 1;
+
+\\echo '--- never-sent actives waiting for tonight (do not stack if this is ~250):'
+SELECT count(*) AS never_sent_waiting
+FROM daily_brief_subscriber
+WHERE status = 'active'
+  AND last_sent_at IS NULL
+  AND coalesce(total_briefs_received, 0) = 0;
+
+\\echo '--- remaining imported:'
+SELECT
+    count(*) FILTER (
+        WHERE timezone IS NOT NULL
+          AND btrim(timezone) <> ''
+          AND timezone NOT IN ('UTC', 'GMT', 'Etc/UTC')
+          AND timezone LIKE '%/%'
+    ) AS tz_ready_still_imported,
+    count(*) FILTER (
+        WHERE timezone IS NULL
+           OR btrim(timezone) = ''
+           OR timezone IN ('UTC', 'GMT', 'Etc/UTC')
+           OR timezone NOT LIKE '%/%'
+    ) AS utc_or_unknown_still_imported,
+    count(*) AS still_imported
+FROM daily_brief_subscriber
+WHERE status = 'imported' {source_filter};
+"""
+
+
+def never_sent_waiting_count(db_url):
+    result = subprocess.run(
+        ['psql', db_url, '-t', '-A', '-v', 'ON_ERROR_STOP=1'],
+        input=NEVER_SENT_WAITING_SQL,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or 'failed to count never-sent actives')
+    return int((result.stdout or '0').strip() or '0')
 
 
 def build_activation_sql(batch, source=None, commit=False, include_utc=False):
@@ -123,7 +206,7 @@ WHERE status = 'imported' {source_filter};
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
-    ap.add_argument('--batch', type=int, required=True, help='number of subscribers to activate')
+    ap.add_argument('--batch', type=int, default=None, help='number of subscribers to activate')
     ap.add_argument('--source', default=None, help='only activate rows with this source label')
     ap.add_argument('--commit', action='store_true',
                     help='apply changes (default: dry-run, transaction rolled back)')
@@ -132,11 +215,41 @@ def main():
         action='store_true',
         help='also activate UTC/unknown-timezone leftovers (default: hold them)',
     )
+    ap.add_argument(
+        '--status',
+        action='store_true',
+        help='print kill-switch, waiting first-sends, and remaining imported; do not activate',
+    )
     args = ap.parse_args()
 
     db_url = resolve_database_url()
     if not db_url:
         sys.exit('DATABASE_URL or NEON_OWNER_DATABASE_URL is not set')
+
+    if args.status:
+        try:
+            sql = build_status_sql(source=args.source)
+        except ValueError as exc:
+            sys.exit(str(exc))
+        result = subprocess.run(['psql', db_url, '-v', 'ON_ERROR_STOP=1'], input=sql, text=True)
+        sys.exit(result.returncode)
+
+    if args.batch is None:
+        sys.exit('--batch is required unless --status')
+
+    if args.commit:
+        try:
+            waiting = never_sent_waiting_count(db_url)
+        except RuntimeError as exc:
+            sys.exit(str(exc))
+        if stacking_would_hurt(waiting):
+            sys.exit(
+                f'Refusing --commit: {waiting} never-sent actives are already '
+                f'waiting for tonight\'s send. Stacking another first-send '
+                f'batch would push domain bounce toward 2% and can hurt the '
+                f'existing list. Wait until after that send, then check the '
+                f'kill-switch.'
+            )
 
     try:
         sql = build_activation_sql(
@@ -155,10 +268,11 @@ def main():
     result = subprocess.run(['psql', db_url, '-v', 'ON_ERROR_STOP=1'], input=sql, text=True)
     if result.returncode == 0 and args.commit:
         print(
-            "\nNext: wait for two Europe/London send-days, then check bounce "
-            "(<2%) and complaints (<0.1%) in email_event before the next "
-            "batch of 250. Do not pass --include-utc until UTC leftovers "
-            "have a real IANA timezone."
+            "\nNext: one batch of 250 per send-day. Tomorrow morning, run "
+            "--status; if bounce <2%, complaints <0.1%, and existing-list "
+            "opens have not sagged, activate the next 250. Do not pass "
+            "--include-utc until UTC leftovers have a real IANA timezone. "
+            "Do not stack two first-send batches on the same night."
         )
     sys.exit(result.returncode)
 
