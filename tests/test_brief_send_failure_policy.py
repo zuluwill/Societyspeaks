@@ -17,7 +17,9 @@ from app.brief.email_client import (
     classify_send_failure,
     format_send_failure_message,
     log_brief_batch_results,
+    log_send_failure,
     truncate_resend_error,
+    _PAGEABLE_BATCH_ERROR_THRESHOLD,
 )
 from app.models import DailyBrief, DailyBriefSubscriber, db
 
@@ -53,6 +55,8 @@ def brief_and_subscriber(app, db):
     ('API error: 401 - unauthorized', 'transient'),   # bad API key — global
     ('API error: 429 - rate limited', 'transient'),
     ('API error: 500 - server error', 'transient'),
+    ('API error: 520 - resend.com | 520: Web server is returning an unknown error', 'transient'),
+    ('Transient 520 after 3 attempts', 'transient'),
     ('Rate limited after 3 attempts', 'transient'),
     ('Transient 503 after 3 attempts', 'transient'),
     ('simulated API failure', 'transient'),           # no status code — unknown → retry
@@ -131,6 +135,71 @@ def test_log_brief_batch_results_emits_summary_only(app):
             assert mock_logger.info.call_args[0][1:] == ('Daily', 71, 1)
             mock_logger.warning.assert_called_once()
             mock_logger.error.assert_not_called()
+
+
+def test_log_brief_batch_results_isolated_pageable_is_warning(app):
+    """One Cloudflare 520 must not page — catch-up retries the claim."""
+    with app.app_context():
+        with patch('app.brief.email_client.logger') as mock_logger:
+            log_brief_batch_results(
+                {
+                    'sent': 70,
+                    'failed': 1,
+                    'failures': [
+                        build_send_failure_record(
+                            subscriber_id=1,
+                            email='a@example.com',
+                            brief_id=2,
+                            resend_error='API error: 520 - HTML error page',
+                            send_failure_count=0,
+                        )
+                    ],
+                },
+                cadence='daily',
+            )
+            mock_logger.error.assert_not_called()
+            mock_logger.warning.assert_called_once()
+            assert 'pageable failure' in mock_logger.warning.call_args[0][0]
+
+
+def test_log_brief_batch_results_outage_pageable_is_error(app):
+    """A burst of transient failures in one batch is an outage — ERROR."""
+    failures = [
+        build_send_failure_record(
+            subscriber_id=i,
+            email=f'u{i}@example.com',
+            brief_id=2,
+            resend_error='Transient 520 after 3 attempts',
+            send_failure_count=0,
+        )
+        for i in range(_PAGEABLE_BATCH_ERROR_THRESHOLD)
+    ]
+    with app.app_context():
+        with patch('app.brief.email_client.logger') as mock_logger:
+            log_brief_batch_results(
+                {'sent': 10, 'failed': len(failures), 'failures': failures},
+                cadence='daily',
+            )
+            mock_logger.error.assert_called_once()
+            mock_logger.warning.assert_not_called()
+
+
+def test_log_send_failure_pageable_is_warning_and_omits_email_extra(app):
+    record = build_send_failure_record(
+        subscriber_id=4188,
+        email='user@example.com',
+        brief_id=284,
+        resend_error='API error: 520 - resend.com | 520',
+        send_failure_count=0,
+    )
+    with app.app_context():
+        with patch('app.brief.email_client.logger') as mock_logger:
+            log_send_failure(record)
+            mock_logger.error.assert_not_called()
+            mock_logger.warning.assert_called_once()
+            extra = mock_logger.warning.call_args.kwargs.get('extra') or {}
+            assert 'email' not in extra
+            assert extra.get('subscriber_id') == 4188
 
 
 def test_log_brief_batch_results_captures_daily_brief_sent(app):

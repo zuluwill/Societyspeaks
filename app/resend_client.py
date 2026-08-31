@@ -10,7 +10,9 @@ Replaces Loops.so integration with a single, simpler provider.
 """
 
 import os
+import re
 import time
+import random
 import logging
 from datetime import datetime
 from app.lib.time import utcnow_naive
@@ -100,6 +102,146 @@ _RETRYABLE_ERRORS = (
     IOError,
 )
 
+# 501/505 are protocol-level "this will never work"; everything else in 5xx
+# (including Cloudflare 520–527/530 in front of api.resend.com) is transient.
+_NON_RETRYABLE_5XX = frozenset({501, 505})
+_MAX_RETRY_WAIT_SECONDS = 30.0
+_MAX_ERROR_BODY_CHARS = 240
+_RE_HTML_TITLE = re.compile(r'<title>\s*([^<]+?)\s*</title>', re.IGNORECASE)
+_RE_HTML_TAGS = re.compile(r'<[^>]+>')
+_RE_CF_RAY_BODY = re.compile(
+    r'Cloudflare Ray ID:\s*(?:<[^>]+>)?([a-f0-9]+)',
+    re.IGNORECASE,
+)
+
+
+def is_retryable_http_status(status_code: int) -> bool:
+    """True for statuses that are safe (and worth) retrying against Resend.
+
+    Covers 408/429, standard gateway 5xx, and Cloudflare edge 52x pages that
+    wrap api.resend.com. Observed in production as HTTP 520 HTML dumps that
+    previously failed on the first attempt and waited for hourly catch-up.
+    """
+    if status_code in (408, 429):
+        return True
+    if 500 <= status_code <= 599:
+        return status_code not in _NON_RETRYABLE_5XX
+    return False
+
+
+def _response_headers(response) -> dict:
+    headers = getattr(response, 'headers', None)
+    if not headers:
+        return {}
+    try:
+        return dict(headers)
+    except Exception:
+        return {}
+
+
+def _header_ci(headers: dict, name: str) -> str:
+    want = name.lower()
+    for key, value in headers.items():
+        if str(key).lower() == want and value is not None:
+            return str(value)
+    return ''
+
+
+def compact_resend_error_body(response) -> str:
+    """Collapse a Resend/Cloudflare error body into a single log-safe line.
+
+    Cloudflare 520 pages are multi-kilobyte HTML; logging ``response.text``
+    verbatim floods Sentry (PYTHON-FLASK-DX) and splits across log lines.
+    """
+    raw = (getattr(response, 'text', None) or '')[:4000]
+    headers = _response_headers(response)
+    content_type = _header_ci(headers, 'Content-Type').lower()
+
+    json_fn = getattr(response, 'json', None)
+    if callable(json_fn):
+        try:
+            data = json_fn()
+        except Exception:
+            data = None
+        if isinstance(data, dict):
+            err = data.get('error')
+            if isinstance(err, dict):
+                name = err.get('name') or err.get('type') or data.get('name')
+                message = err.get('message') or data.get('message')
+            else:
+                name = data.get('name') or data.get('type')
+                message = data.get('message') or (err if isinstance(err, str) else None)
+            parts = [str(p) for p in (name, message) if p]
+            if parts:
+                return ' — '.join(parts)[:_MAX_ERROR_BODY_CHARS]
+            dumped = str(data)
+            return dumped[:_MAX_ERROR_BODY_CHARS]
+
+    stripped = raw.lstrip()
+    looks_html = (
+        'html' in content_type
+        or stripped[:15].lower().startswith('<!doctype')
+        or stripped[:6].lower().startswith('<html')
+    )
+    if looks_html:
+        title = ''
+        match = _RE_HTML_TITLE.search(raw)
+        if match:
+            title = ' '.join(match.group(1).split())
+        ray = _header_ci(headers, 'cf-ray')
+        if not ray:
+            ray_match = _RE_CF_RAY_BODY.search(raw)
+            ray = ray_match.group(1) if ray_match else ''
+        bits = [title or 'HTML error page']
+        if ray:
+            bits.append(f'cf-ray={ray}')
+        return ' — '.join(bits)[:_MAX_ERROR_BODY_CHARS]
+
+    text = ' '.join(_RE_HTML_TAGS.sub(' ', raw).split())
+    return text[:_MAX_ERROR_BODY_CHARS]
+
+
+def format_resend_http_error(response) -> str:
+    """Canonical ``API error: <status> - <compact body>`` string for callers."""
+    status = getattr(response, 'status_code', '?')
+    body = compact_resend_error_body(response) or '(empty body)'
+    return f'API error: {status} - {body}'
+
+
+def _retry_wait_seconds(response, attempt: int, retry_delay: float) -> float:
+    """Backoff for the next attempt. Honor numeric Retry-After, then exp+jitter.
+
+    Capped so one Cloudflare blip cannot stall a whole brief batch.
+    """
+    headers = _response_headers(response) if response is not None else {}
+    retry_after = _header_ci(headers, 'Retry-After')
+    if retry_after:
+        try:
+            parsed = float(retry_after.strip())
+            if parsed >= 0:
+                return min(parsed, _MAX_RETRY_WAIT_SECONDS)
+        except (TypeError, ValueError):
+            pass
+    wait = retry_delay * (2 ** attempt)
+    wait += wait * 0.25 * random.random()
+    return min(wait, _MAX_RETRY_WAIT_SECONDS)
+
+
+def _log_resend_failure(
+    log_prefix: str,
+    err: str,
+    status_code: Optional[int],
+    warn_statuses: frozenset,
+    warn_on_retryable: bool,
+) -> None:
+    warn = False
+    if status_code is not None:
+        if status_code in warn_statuses:
+            warn = True
+        elif warn_on_retryable and is_retryable_http_status(status_code):
+            warn = True
+    (logger.warning if warn else logger.error)(f"{log_prefix}: {err}")
+
 
 def _resend_http_post(
     api_key: str,
@@ -111,6 +253,7 @@ def _resend_http_post(
     log_prefix: str = "Resend",
     idempotency_key: Optional[str] = None,
     warn_statuses: frozenset = frozenset(),
+    warn_on_retryable: bool = False,
 ) -> Tuple[Optional[requests.Response], Optional[str]]:
     """
     POST to the Resend API with exponential-backoff retry on transient errors.
@@ -120,6 +263,10 @@ def _resend_http_post(
 
     Pass idempotency_key for sends that must not be duplicated (e.g. brief emails).
     Resend deduplicates requests with the same Idempotency-Key within a short window.
+
+    ``warn_statuses`` / ``warn_on_retryable`` opt a caller (daily brief) into
+    WARNING after a failure that will be retried upstream, so isolated
+    Cloudflare 52x blips do not page. Transactional mail keeps ERROR.
     """
     headers = {
         'Authorization': f'Bearer {api_key}',
@@ -132,19 +279,18 @@ def _resend_http_post(
             response = requests.post(url, json=body, headers=headers, timeout=timeout)
             if response.status_code == 200:
                 return response, None
-            elif response.status_code in (429, 500, 502, 503, 504):
+            elif is_retryable_http_status(response.status_code):
                 if attempt < max_retries - 1:
-                    wait = retry_delay * (2 ** attempt)
-                    if response.status_code == 429:
-                        logger.warning(
-                            f"{log_prefix} rate limited — waiting {wait:.1f}s "
-                            f"(attempt {attempt + 1}/{max_retries})"
-                        )
-                    else:
-                        logger.warning(
-                            f"{log_prefix} transient {response.status_code} — waiting {wait:.1f}s "
-                            f"(attempt {attempt + 1}/{max_retries})"
-                        )
+                    wait = _retry_wait_seconds(response, attempt, retry_delay)
+                    kind = (
+                        'rate limited'
+                        if response.status_code == 429
+                        else f'transient {response.status_code}'
+                    )
+                    logger.warning(
+                        f"{log_prefix} {kind} — waiting {wait:.1f}s "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
                     time.sleep(wait)
                     continue
                 err = (
@@ -152,7 +298,10 @@ def _resend_http_post(
                     if response.status_code == 429
                     else f"Transient {response.status_code} after {max_retries} attempts"
                 )
-                logger.error(f"{log_prefix}: {err}")
+                _log_resend_failure(
+                    log_prefix, err, response.status_code,
+                    warn_statuses, warn_on_retryable,
+                )
                 return None, err
             elif response.status_code == 409:
                 # Resend distinguishes concurrent (safe to retry) from
@@ -163,28 +312,29 @@ def _resend_http_post(
                 except Exception:
                     err_name = ''
                 if err_name == 'concurrent_idempotent_requests' and attempt < max_retries - 1:
-                    wait = retry_delay * (2 ** attempt)
+                    wait = _retry_wait_seconds(response, attempt, retry_delay)
                     logger.warning(
                         f"{log_prefix} concurrent idempotent request — waiting {wait:.1f}s "
                         f"(attempt {attempt + 1}/{max_retries})"
                     )
                     time.sleep(wait)
                     continue
-                err = f"API error: {response.status_code} - {response.text}"
-                logger.error(f"{log_prefix}: {err}")
+                err = format_resend_http_error(response)
+                _log_resend_failure(
+                    log_prefix, err, response.status_code,
+                    warn_statuses, warn_on_retryable,
+                )
                 return None, err
             else:
-                err = f"API error: {response.status_code} - {response.text}"
-                sev = (
-                    logger.warning
-                    if response.status_code in warn_statuses
-                    else logger.error
+                err = format_resend_http_error(response)
+                _log_resend_failure(
+                    log_prefix, err, response.status_code,
+                    warn_statuses, warn_on_retryable,
                 )
-                sev(f"{log_prefix}: {err}")
                 return None, err
         except _RETRYABLE_ERRORS as e:
             if attempt < max_retries - 1:
-                wait = retry_delay * (2 ** attempt)
+                wait = _retry_wait_seconds(None, attempt, retry_delay)
                 logger.warning(
                     f"{log_prefix} transient error (attempt {attempt + 1}/{max_retries}): "
                     f"{type(e).__name__}: {e} — retrying in {wait:.1f}s"
@@ -276,13 +426,15 @@ def resend_post_with_retry(
     timeout: int = 30,
     idempotency_key: Optional[str] = None,
     warn_statuses: frozenset = frozenset(),
+    warn_on_retryable: bool = False,
 ) -> Tuple[bool, Optional[str]]:
     """
     POST a single email to the Resend API with exponential-backoff retry.
 
     Retries on transient OS/network errors (OSError/IOError/Timeout/ConnectionError)
     that can occur when TLS certificate files are read from the overlay filesystem.
-    Also retries on 429, 502, 503, 504 — all transient, server-side conditions.
+    Also retries on 408, 429, and 5xx except 501/505 — including Cloudflare 52x
+    in front of api.resend.com.
 
     Pass idempotency_key for sends that must not be duplicated on retry.
     Resend deduplicates requests with the same Idempotency-Key within a short window,
@@ -308,6 +460,7 @@ def resend_post_with_retry(
         api_key, payload, url, max_retries, retry_delay, timeout,
         idempotency_key=idempotency_key,
         warn_statuses=warn_statuses,
+        warn_on_retryable=warn_on_retryable,
     )
     if response is None:
         return False, err

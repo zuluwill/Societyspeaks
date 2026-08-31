@@ -10,6 +10,7 @@ import secrets
 import threading
 import logging
 import pytz
+from contextlib import nullcontext
 from datetime import datetime, date, timedelta
 from app.lib.time import utcnow_naive
 from email.utils import parseaddr
@@ -134,7 +135,8 @@ def pin_magic_link_to_edition(target_url: str, brief: Optional[DailyBrief]) -> s
 
 # Failure classification ------------------------------------------------------
 # resend_post_with_retry returns errors like "API error: 400 - <body>" (client
-# already retried 429/5xx internally). We map those to a send-handling policy.
+# already retried 408/429/5xx including Cloudflare 52x internally). We map
+# those to a send-handling policy.
 _RESEND_STATUS_RE = re.compile(r'API error:\s*(\d{3})')
 
 # Resend's definitive "this address is invalid" signal — suppress immediately.
@@ -147,7 +149,11 @@ _INVALID_RECIPIENT_CODES = frozenset({422})
 _PERMANENT_RECIPIENT_CODES = frozenset({400})
 # Brief sends pass these to resend_post_with_retry so per-recipient 400/422
 # log at WARNING in the HTTP client; transactional flows keep ERROR.
+# Retryable 5xx/408/429 use warn_on_retryable=True (catch-up retries the claim).
 _BRIEF_RESEND_WARN_STATUSES = frozenset({400, 422})
+# Isolated Cloudflare/Resend blips must not page. A batch of this many
+# pageable failures in one run is treated as an outage and logs ERROR.
+_PAGEABLE_BATCH_ERROR_THRESHOLD = 5
 _RESEND_ERROR_LOG_MAX_LEN = 240
 _RE_HTML_TAGS = re.compile(r'<[^>]+>')
 
@@ -201,13 +207,16 @@ def format_send_failure_message(record: Dict[str, Any]) -> str:
 
 
 def log_send_failure(record: Dict[str, Any]) -> None:
-    """Emit one structured log for a send failure at the correct severity."""
+    """Emit one structured log for a send failure at the correct severity.
+
+    Pageable (transient) failures already exhausted HTTP retries and will be
+    picked up by catch-up — WARNING, not ERROR, so one Cloudflare 520 does
+    not page. Permanent/invalid stay WARNING as well (one bad address must
+    not page). Extra omits the raw email so Sentry does not store PII.
+    """
     msg = format_send_failure_message(record)
-    extra = dict(record)
-    if record.get('pageable'):
-        logger.error(msg, extra=extra)
-    else:
-        logger.warning(msg, extra=extra)
+    extra = {k: v for k, v in record.items() if k != 'email'}
+    logger.warning(msg, extra=extra)
 
 
 def _attach_brief_send_metadata(results: dict, brief, *, cadence: str) -> dict:
@@ -275,11 +284,14 @@ def log_brief_batch_results(results: Optional[dict], *, cadence: str = 'daily') 
         pageable = sum(1 for f in (results.get('failures') or []) if f.get('pageable'))
         permanent = failed - pageable
         if pageable:
-            logger.error(
-                '%s brief batch had %d pageable failure(s) (infra/transient — claim released for retry)',
-                label,
-                pageable,
+            summary = (
+                '%s brief batch had %d pageable failure(s) '
+                '(infra/transient — claim released for retry)'
             )
+            if pageable >= _PAGEABLE_BATCH_ERROR_THRESHOLD:
+                logger.error(summary, label, pageable)
+            else:
+                logger.warning(summary, label, pageable)
         if permanent:
             logger.warning(
                 '%s brief batch had %d per-recipient failure(s) (logged individually above)',
@@ -1059,6 +1071,7 @@ class ResendClient:
             retry_delay=self.RETRY_DELAY,
             idempotency_key=resolved_key,
             warn_statuses=_BRIEF_RESEND_WARN_STATUSES,
+            warn_on_retryable=True,
         )
         self.last_send_error = result if not success else None
         return success
@@ -1576,41 +1589,46 @@ class BriefEmailScheduler:
                 if not claimed:
                     continue  # another send loop owns this subscriber+brief
 
-                # Attach Sentry context so every error in this iteration is
-                # tagged with the subscriber and brief for fast triage at scale.
-                if _sentry_sdk:
-                    _sentry_sdk.set_tag('brief_subscriber_id', current_subscriber.id)
-                    _sentry_sdk.set_tag('brief_id', getattr(brief, 'id', None))
+                # Isolate Sentry tags per recipient. Hub-level set_tag leaked
+                # the *last* subscriber onto the batch summary (PYTHON-FLASK-JF
+                # was tagged 2456 after 4188 was the one that failed).
+                sentry_scope = (
+                    _sentry_sdk.new_scope() if _sentry_sdk else nullcontext()
+                )
+                with sentry_scope as scope:
+                    if scope is not None:
+                        scope.set_tag('brief_subscriber_id', current_subscriber.id)
+                        scope.set_tag('brief_id', getattr(brief, 'id', None))
 
-                success = self.client.send_brief(current_subscriber, brief)
-                if success:
-                    results['sent'] += 1
-                else:
-                    results['failed'] += 1
-                    resend_error = getattr(self.client, 'last_send_error', None) or 'unknown error'
-                    db.session.rollback()
-                    # Re-fetch after send_brief may have committed failure counters /
-                    # suppression so logs and batch results reflect persisted state.
-                    refreshed = db.session.get(DailyBriefSubscriber, current_subscriber.id)
-                    failure_record = build_send_failure_record(
-                        subscriber_id=current_subscriber.id,
-                        email=current_subscriber.email,
-                        brief_id=getattr(brief, 'id', None),
-                        resend_error=resend_error,
-                        send_failure_count=(
-                            refreshed.send_failure_count if refreshed else 0
-                        ),
-                    )
-                    results['failures'].append(failure_record)
-                    results['errors'].append(format_send_failure_message(failure_record))
-                    log_send_failure(failure_record)
-                    if failure_record['pageable']:
-                        # Genuine transient/infra failure (retries already exhausted
-                        # in the client) — release the claim so a catch-up run picks
-                        # this subscriber up again.
-                        self._release_claim(
-                            current_subscriber.id, brief.id, prev_brief_id, prev_sent_at
+                    success = self.client.send_brief(current_subscriber, brief)
+                    if success:
+                        results['sent'] += 1
+                    else:
+                        results['failed'] += 1
+                        resend_error = getattr(self.client, 'last_send_error', None) or 'unknown error'
+                        db.session.rollback()
+                        # Re-fetch after send_brief may have committed failure counters /
+                        # suppression so logs and batch results reflect persisted state.
+                        refreshed = db.session.get(DailyBriefSubscriber, current_subscriber.id)
+                        failure_record = build_send_failure_record(
+                            subscriber_id=current_subscriber.id,
+                            email=current_subscriber.email,
+                            brief_id=getattr(brief, 'id', None),
+                            resend_error=resend_error,
+                            send_failure_count=(
+                                refreshed.send_failure_count if refreshed else 0
+                            ),
                         )
+                        results['failures'].append(failure_record)
+                        results['errors'].append(format_send_failure_message(failure_record))
+                        log_send_failure(failure_record)
+                        if failure_record['pageable']:
+                            # Genuine transient/infra failure (retries already exhausted
+                            # in the client) — release the claim so a catch-up run picks
+                            # this subscriber up again.
+                            self._release_claim(
+                                current_subscriber.id, brief.id, prev_brief_id, prev_sent_at
+                            )
 
             except Exception as e:
                 db.session.rollback()
