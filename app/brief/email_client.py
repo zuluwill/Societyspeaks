@@ -813,7 +813,7 @@ class ResendClient:
 
     def _get_sorted_brief_items(self, brief: DailyBrief) -> List[BriefItem]:
         """Fetch brief items once in position order for reuse across renderers."""
-        return list(brief.items.order_by(BriefItem.position.asc()).all())
+        return list(brief.ordered_items())
 
     def _render_welcome_text(
         self,

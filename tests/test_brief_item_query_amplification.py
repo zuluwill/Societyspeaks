@@ -16,8 +16,12 @@ fetched over and over, not one-row-per-item lookups.
 """
 
 from datetime import date
+from pathlib import Path
 
 from sqlalchemy import event
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _count_brief_item_queries(db):
@@ -169,6 +173,39 @@ def test_to_dict_uses_the_shared_load(db):
     assert item_selects == [], (
         f"to_dict re-queried items instead of reusing the load: {item_selects}"
     )
+
+
+def test_email_sorted_items_share_the_instance_cache(db):
+    """The send path used to query items once for the text renderer and again
+    for every is_sectioned / reading_time access during HTML render."""
+    _make_brief(db, item_count=5)
+    db.session.expunge_all()
+
+    from app.brief.email_client import ResendClient
+    from app.models import DailyBrief
+
+    loaded = DailyBrief.query.one()
+    seen, stop = _count_brief_item_queries(db)
+    try:
+        items = ResendClient._get_sorted_brief_items(None, loaded)
+        assert len(items) == 5
+        assert loaded.is_sectioned is True
+        assert loaded.reading_time >= 1
+    finally:
+        stop()
+
+    assert len(seen) == 1, (
+        f"email render re-queried brief items ({len(seen)} SELECTs)"
+    )
+
+
+def test_email_template_asks_is_sectioned_once():
+    """Hoisted before the per-item loop so a cache miss cannot multiply."""
+    source = (ROOT / 'app/templates/emails/daily_brief.html').read_text(encoding='utf-8')
+    assert source.count('brief.is_sectioned') == 1
+    stories = source.split('<!-- Stories -->', 1)[1]
+    stories_loop = stories.split('{% for item in sorted_items %}', 1)[1]
+    assert 'brief.is_sectioned' not in stories_loop
 
 
 def test_empty_brief_reads_cleanly(db):

@@ -58,16 +58,20 @@ def _exclude_test_discussions(query):
 
 
 def _statement_queries_for_discussion(discussion):
-    """Build filtered statement queries used by HTML + API read paths."""
-    from app.models import Response
+    """Build filtered statement queries used by HTML + API read paths.
 
+    The list card only needs the author and a response *count*. Loading every
+    Response row (and its User) for 20 statements is how a page that returns
+    20 claims used to pull hundreds of kilobytes of argument bodies it never
+    rendered. Counts are attached separately by
+    ``_annotate_visible_response_counts``.
+    """
     base_query = Statement.query.filter_by(
         discussion_id=discussion.id,
         is_deleted=False
     )
     query = Statement.query.options(
         joinedload(Statement.user),
-        selectinload(Statement.responses).joinedload(Response.user)
     ).filter_by(
         discussion_id=discussion.id,
         is_deleted=False
@@ -78,6 +82,31 @@ def _statement_queries_for_discussion(discussion):
         base_query = base_query.filter(Statement.mod_status >= 0)
 
     return base_query, query
+
+
+def _annotate_visible_response_counts(statements):
+    """Set ``_visible_response_count`` from one grouped COUNT, not N+1 loads.
+
+    Matches the card's previous ``rejectattr('is_deleted')`` filter so the
+    badge still hides deleted arguments without pulling their bodies.
+    """
+    from app.models import Response
+
+    ids = [statement.id for statement in statements]
+    counts = {}
+    if ids:
+        rows = (
+            db.session.query(Response.statement_id, func.count(Response.id))
+            .filter(
+                Response.statement_id.in_(ids),
+                Response.is_deleted.is_(False),
+            )
+            .group_by(Response.statement_id)
+            .all()
+        )
+        counts = {statement_id: int(n) for statement_id, n in rows}
+    for statement in statements:
+        statement._visible_response_count = counts.get(statement.id, 0)
 
 
 def _build_user_votes_map(statement_ids):
@@ -974,6 +1003,7 @@ def view_discussion(discussion_id, slug):
         query = apply_statement_sort(query, sort, discussion_id, db.session)
         statements_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         statements = statements_pagination.items
+        _annotate_visible_response_counts(statements)
 
         can_view_unapproved = current_user.is_authenticated and (
             current_user.id == discussion.creator_id or getattr(current_user, 'is_admin', False)
@@ -1363,6 +1393,7 @@ def api_discussion_statements(discussion_id):
     query = _apply_statement_text_search(query, search_term)
     query = apply_statement_sort(query, sort, discussion.id, db.session)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    _annotate_visible_response_counts(pagination.items)
     statement_user_votes_map = _build_user_votes_map([s.id for s in pagination.items])
 
     html = ''.join(
