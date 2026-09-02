@@ -20,12 +20,40 @@ from datetime import timedelta
 from typing import Optional, List, Dict, Set
 
 import numpy as np
+from sqlalchemy import or_
+from sqlalchemy.orm import undefer
 
 from app import db
 from app.lib.time import utcnow_naive
 from app.models import TrendingTopic, PolymarketMarket, TopicMarketMatch
 
 logger = logging.getLogger(__name__)
+
+
+class CandidatePool:
+    """Markets for one matching pass, with their embeddings parsed once.
+
+    ``question_embedding`` is ~21 KB of JSON per market and the candidate SQL
+    does not depend on the topic, so a batch run loads this once and reuses it
+    for every topic instead of re-downloading ~2 MB per topic.
+
+    Vectors are kept as plain numpy arrays keyed by market id so the maths
+    neither re-parses JSON per topic nor re-reads attributes that a mid-run
+    ``db.session.commit()`` would have expired.
+    """
+
+    __slots__ = ('markets', 'vectors')
+
+    def __init__(self, markets: List[PolymarketMarket]):
+        self.markets = markets
+        self.vectors: Dict[int, np.ndarray] = {}
+        for market in markets:
+            embedding = market.question_embedding
+            if embedding:
+                self.vectors[market.id] = np.array(embedding)
+
+    def __len__(self) -> int:
+        return len(self.markets)
 
 
 class MarketMatcher:
@@ -58,6 +86,12 @@ class MarketMatcher:
     EMBEDDING_THRESHOLD = 0.60
     KEYWORD_MIN_OVERLAP = 2
 
+    # How long before a topic that matched nothing is reconsidered by the
+    # 30-minute batch job. Topics with no match never get a TopicMarketMatch
+    # row, so without this they were re-matched 48x/day for 7 days. The daily
+    # pre-brief pass uses reprocess_existing=True and ignores this window.
+    MATCH_RETRY_HOURS = 24
+
     def __init__(self, embedding_service=None):
         """
         Args:
@@ -68,16 +102,24 @@ class MarketMatcher:
 
     def match_topic(self, topic: TrendingTopic,
                     max_matches: int = 2,
-                    min_quality_tier: str = 'medium') -> List[Dict]:
+                    min_quality_tier: str = 'medium',
+                    candidate_pool: Optional['CandidatePool'] = None) -> List[Dict]:
         """
         Find relevant markets for a single topic.
+
+        Args:
+            candidate_pool: Pool to match against. Batch callers pass one pool
+                for the whole run (see run_batch_matching); when omitted a
+                pool is loaded for this call alone.
 
         Returns:
             List of match dicts with 'market', 'similarity', 'method' keys
             Empty list if no matches found
         """
         try:
-            candidates = self._get_candidates(topic, min_quality_tier)
+            pool = (candidate_pool if candidate_pool is not None
+                    else self._load_candidate_pool(min_quality_tier))
+            candidates = self._get_candidates(topic, min_quality_tier, pool=pool)
             if not candidates:
                 return []
 
@@ -86,7 +128,7 @@ class MarketMatcher:
             # Method 1: Embedding similarity
             if topic.topic_embedding:
                 embedding_matches = self._match_by_embedding(
-                    topic.topic_embedding, candidates
+                    topic.topic_embedding, candidates, pool=pool
                 )
                 matches.extend(embedding_matches)
 
@@ -106,31 +148,57 @@ class MarketMatcher:
             return []
 
     def run_batch_matching(self, days_back: int = 7,
-                           reprocess_existing: bool = False) -> Dict[str, int]:
+                           reprocess_existing: bool = False,
+                           min_quality_tier: str = 'medium') -> Dict[str, int]:
         """
         Batch match all recent topics to markets.
         Called by scheduler every 30 minutes.
+
+        The candidate market pool is loaded once for the whole run and shared
+        across topics; see _load_candidate_pool. Topics that match nothing
+        record market_match_attempted_at so they back off for
+        MATCH_RETRY_HOURS instead of returning on every run.
         """
         stats = {'processed': 0, 'matched': 0, 'skipped': 0, 'errors': 0}
 
-        cutoff = utcnow_naive() - timedelta(days=days_back)
-
-        query = TrendingTopic.query.filter(
-            TrendingTopic.created_at >= cutoff,
-            TrendingTopic.status.in_(['approved', 'published', 'pending_review'])
+        due_query = self._topics_due_for_matching_query(
+            days_back, reprocess_existing
         )
 
-        if not reprocess_existing:
-            query = query.outerjoin(TopicMarketMatch).filter(
-                TopicMarketMatch.id == None  # noqa: E711
-            )
+        # Existence check without pulling deferred topic_embedding (~16 KB/row).
+        if due_query.with_entities(TrendingTopic.id).first() is None:
+            logger.info("Market matching: no topics due, skipping candidate load")
+            return stats
 
-        topics = query.all()
+        pool = self._load_candidate_pool(min_quality_tier)
+        if not pool:
+            # An empty book is a transient sync gap, not evidence that these
+            # topics have no market. Stamping attempted_at would hide them for
+            # MATCH_RETRY_HOURS after markets return, and loading embeddings
+            # here would still pull ~6 MB of topic vectors for no work.
+            logger.info("Market matching: no candidate markets, skipping")
+            return stats
+
+        topics = due_query.options(
+            undefer(TrendingTopic.topic_embedding)
+        ).all()
+        logger.info(
+            "Market matching: %d topic(s) against %d candidate market(s)",
+            len(topics), len(pool),
+        )
+
+        attempted_at = utcnow_naive()
 
         for topic in topics:
             stats['processed'] += 1
             try:
-                matches = self.match_topic(topic)
+                matches = self.match_topic(
+                    topic, min_quality_tier=min_quality_tier, candidate_pool=pool
+                )
+
+                # Recorded whether or not we matched: a topic with no market is
+                # the normal case and must not be retried every 30 minutes.
+                topic.market_match_attempted_at = attempted_at
 
                 if not matches:
                     stats['skipped'] += 1
@@ -204,8 +272,63 @@ class MarketMatcher:
     # PRIVATE METHODS
     # =========================================================================
 
+    def _topics_due_for_matching_query(
+        self, days_back: int, reprocess_existing: bool
+    ):
+        """Topics the batch job should consider, without undeferring embeddings."""
+        cutoff = utcnow_naive() - timedelta(days=days_back)
+        query = TrendingTopic.query.filter(
+            TrendingTopic.created_at >= cutoff,
+            TrendingTopic.status.in_(['approved', 'published', 'pending_review']),
+        )
+        if not reprocess_existing:
+            retry_cutoff = utcnow_naive() - timedelta(hours=self.MATCH_RETRY_HOURS)
+            query = query.outerjoin(TopicMarketMatch).filter(
+                TopicMarketMatch.id == None,  # noqa: E711
+                or_(
+                    TrendingTopic.market_match_attempted_at.is_(None),
+                    TrendingTopic.market_match_attempted_at < retry_cutoff,
+                ),
+            )
+        return query
+
+    def _load_candidate_pool(self, min_quality_tier: str) -> 'CandidatePool':
+        """Load the market pool for a matching pass.
+
+        This SQL deliberately has no topic-dependent term — category
+        preference is applied in Python by _get_candidates — so one pool is
+        valid for every topic in a batch run. Loading it per topic pulled
+        ~2 MB of question_embedding JSON out of Postgres each time, which was
+        the single largest source of Neon egress on this project.
+        """
+        if min_quality_tier == 'high':
+            min_volume = PolymarketMarket.HIGH_QUALITY_VOLUME
+        elif min_quality_tier == 'medium':
+            min_volume = PolymarketMarket.MIN_VOLUME_24H
+        else:
+            min_volume = 0
+
+        now = utcnow_naive()
+        # Deliberately NOT load_only(): measured against production, the
+        # embedding is 94% of a pool row (1,286 kB of 1,362 kB for the whole
+        # pool), so narrowing the heap columns saves ~4.5% — while any
+        # consumer touching an unloaded attribute silently lazy-loads per row.
+        # Market Pulse's _signal_dict/to_signal_dict reads most of the row, so
+        # a narrowed pool would trade 4.5% for an N+1. undefer() is the part
+        # that matters.
+        markets = PolymarketMarket.query.options(
+            undefer(PolymarketMarket.question_embedding),
+        ).filter(
+            PolymarketMarket.is_active == True,  # noqa: E712
+            PolymarketMarket.volume_24h >= min_volume,
+            (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
+        ).order_by(PolymarketMarket.volume_24h.desc()).limit(400).all()
+
+        return CandidatePool(markets)
+
     def _get_candidates(self, topic: TrendingTopic,
-                        min_quality_tier: str) -> List[PolymarketMarket]:
+                        min_quality_tier: str = 'medium',
+                        pool: Optional['CandidatePool'] = None) -> List[PolymarketMarket]:
         """Get candidate markets — soft tag preference, never hard-empty."""
 
         primary_topic = getattr(topic, 'primary_topic', None)
@@ -216,31 +339,20 @@ class MarketMatcher:
                 self.CATEGORY_MAP.get(primary_topic.title()) or \
                 self.CATEGORY_MAP.get(primary_topic.capitalize()) or []
 
-        if min_quality_tier == 'high':
-            min_volume = PolymarketMarket.HIGH_QUALITY_VOLUME
-        elif min_quality_tier == 'medium':
-            min_volume = PolymarketMarket.MIN_VOLUME_24H
-        else:
-            min_volume = 0
-
-        now = utcnow_naive()
-        query = PolymarketMarket.query.filter(
-            PolymarketMarket.is_active == True,  # noqa: E712
-            PolymarketMarket.volume_24h >= min_volume,
-            (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
-        ).order_by(PolymarketMarket.volume_24h.desc())
+        if pool is None:
+            pool = self._load_candidate_pool(min_quality_tier)
 
         # Pull a broad pool, then prefer tag-aligned markets in Python.
         # Hard SQL category filters are wrong when tags were historically null.
-        pool = query.limit(400).all()
-        if not pool:
+        markets = pool.markets
+        if not markets:
             return []
 
         if not pm_categories:
-            return pool[:150]
+            return markets[:150]
 
         preferred = [
-            m for m in pool
+            m for m in markets
             if self._market_matches_categories(m, pm_categories)
         ]
         if len(preferred) >= 15:
@@ -248,7 +360,7 @@ class MarketMatcher:
 
         # Not enough tagged matches — keep preferred first, then fill
         preferred_ids = {m.id for m in preferred}
-        filled = preferred + [m for m in pool if m.id not in preferred_ids]
+        filled = preferred + [m for m in markets if m.id not in preferred_ids]
         return filled[:200]
 
     def _market_matches_categories(self, market: PolymarketMarket,
@@ -260,16 +372,26 @@ class MarketMatcher:
         return bool(tags & cats)
 
     def _match_by_embedding(self, topic_embedding: List[float],
-                           candidates: List[PolymarketMarket]) -> List[Dict]:
-        """Match using embedding similarity."""
+                           candidates: List[PolymarketMarket],
+                           pool: Optional['CandidatePool'] = None) -> List[Dict]:
+        """Match using embedding similarity.
+
+        When a pool is supplied its pre-parsed vectors are used, so a batch run
+        converts each market embedding to numpy once rather than once per topic.
+        """
         matches = []
         topic_vec = np.array(topic_embedding)
 
         for market in candidates:
-            if not market.question_embedding:
-                continue
+            if pool is not None:
+                market_vec = pool.vectors.get(market.id)
+                if market_vec is None:
+                    continue
+            else:
+                if not market.question_embedding:
+                    continue
+                market_vec = np.array(market.question_embedding)
 
-            market_vec = np.array(market.question_embedding)
             similarity = self._cosine_similarity(topic_vec, market_vec)
 
             if similarity >= self.EMBEDDING_THRESHOLD:

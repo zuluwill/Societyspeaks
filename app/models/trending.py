@@ -20,6 +20,8 @@ references; this submodule has no inbound model imports.
 
 from datetime import timedelta
 
+from sqlalchemy.orm import deferred
+
 from app import db
 from app.lib.time import utcnow_naive
 
@@ -63,8 +65,17 @@ class TrendingTopic(db.Model):
 
     source_count = db.Column(db.Integer, default=0)  # Number of unique sources
 
-    # Embedding for question-level deduplication (last 30 days)
-    topic_embedding = db.Column(db.JSON)
+    # Embedding for question-level deduplication (last 30 days).
+    # Deferred: ~16 KB per row. Undeferred it turned every topic listing into
+    # a bulk vector download. Duplicate detection and market matching undefer
+    # it explicitly.
+    topic_embedding = deferred(db.Column(db.JSON))
+
+    # Last time the Polymarket matcher looked at this topic. Topics that match
+    # nothing never get a TopicMarketMatch row, so without this they re-entered
+    # the 30-minute batch every run for their whole 7-day window. See
+    # MarketMatcher.MATCH_RETRY_HOURS.
+    market_match_attempted_at = db.Column(db.DateTime, nullable=True)
 
     # Workflow status
     status = db.Column(db.String(20), default='pending')

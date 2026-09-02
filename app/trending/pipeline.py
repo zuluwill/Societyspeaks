@@ -15,13 +15,14 @@ from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from typing import List, Tuple
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, undefer
 
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle
 from app.trending.news_fetcher import NewsFetcher, seed_default_sources
 from app.trending.scorer import score_articles_with_llm, score_topic
 from app.trending.clustering import (
+    TopicEmbeddingIndex,
     cluster_articles,
     create_topic_from_cluster,
     recount_topic_source_count,
@@ -104,14 +105,33 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     
     clusters = cluster_articles(articles_to_cluster, threshold=0.7)
     logger.info(f"Created {len(clusters)} clusters")
-    
+
+    # One duplicate-detection index for the whole run. Built once here instead
+    # of once per cluster inside find_duplicate_topic. New topics are created
+    # as 'pending', which the index does not treat as a duplicate target — the
+    # same filter the per-cluster query used — so we do not append them.
+    topic_index = TopicEmbeddingIndex()
+
+    # Singleton backfill *does* attach to pending topics, so that cache is a
+    # different status set from the dedupe index. Built once for the run and
+    # updated when a cluster creates a topic, instead of re-downloading every
+    # recent topic_embedding per singleton article.
+    has_singletons = any(len(cluster) == 1 for cluster in clusters)
+    topic_backfill_cache = (
+        _load_topic_embedding_cache() if has_singletons else None
+    )
+
     topics_created = 0
     for cluster in clusters:
         if len(cluster) >= 2:  # Require at least 2 articles for a new topic
             try:
-                topic = create_topic_from_cluster(cluster, hold_minutes=hold_minutes)
+                topic = create_topic_from_cluster(
+                    cluster, hold_minutes=hold_minutes, topic_index=topic_index
+                )
                 if topic:
                     topics_created += 1
+                    if topic_backfill_cache is not None:
+                        _remember_topic_embedding(topic_backfill_cache, topic)
             except Exception as e:
                 logger.error(f"Error creating topic from cluster: {e}")
                 db.session.rollback()
@@ -119,7 +139,7 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
         elif len(cluster) == 1:
             # Single articles: try to match to existing topics
             try:
-                _backfill_single_article(cluster[0])
+                _backfill_single_article(cluster[0], topic_backfill_cache)
             except Exception as e:
                 logger.warning(f"Failed to backfill article {cluster[0].id}: {e}")
                 db.session.rollback()
@@ -416,6 +436,43 @@ def get_pipeline_stats() -> dict:
     }
 
 
+def _load_topic_embedding_cache(days: int = 7) -> dict:
+    """Recent topic vectors for singleton/orphan article backfill.
+
+    Distinct from TopicEmbeddingIndex: backfill attaches to pending topics,
+    which duplicate-detection deliberately ignores.
+    """
+    import numpy as np
+
+    cutoff = utcnow_naive() - timedelta(days=days)
+    recent_topics = TrendingTopic.query.options(
+        undefer(TrendingTopic.topic_embedding)
+    ).filter(
+        TrendingTopic.created_at >= cutoff,
+        TrendingTopic.topic_embedding.isnot(None),
+        TrendingTopic.status.in_(
+            ['pending', 'pending_review', 'approved', 'published']
+        ),
+    ).all()
+
+    cache = {}
+    for topic in recent_topics:
+        if topic.topic_embedding:
+            cache[topic.id] = (topic, np.array(topic.topic_embedding))
+    return cache
+
+
+def _remember_topic_embedding(cache: dict, topic: TrendingTopic) -> None:
+    """Keep the backfill cache current after a topic is created this run."""
+    import numpy as np
+
+    if topic.id in cache:
+        return
+    embedding = topic.topic_embedding
+    if embedding:
+        cache[topic.id] = (topic, np.array(embedding))
+
+
 def _backfill_single_article(
     article: NewsArticle,
     topic_embeddings_cache: dict = None
@@ -426,7 +483,9 @@ def _backfill_single_article(
     
     Args:
         article: The article to backfill
-        topic_embeddings_cache: Optional pre-computed dict of {topic_id: (topic, embedding_array)}
+        topic_embeddings_cache: Pre-computed {topic_id: (topic, embedding_array)}.
+            Pass an empty dict to match against nothing. Omit (None) to load
+            the 7-day pool for this call alone.
     
     Returns True if article was added to an existing topic.
     """
@@ -448,33 +507,22 @@ def _backfill_single_article(
     best_match = None
     best_similarity = 0.0
     
-    if topic_embeddings_cache:
-        for topic_id, (topic, topic_embedding) in topic_embeddings_cache.items():
-            similarity = np.dot(article_embedding, topic_embedding) / (
-                np.linalg.norm(article_embedding) * np.linalg.norm(topic_embedding)
-            )
-            
-            if similarity > best_similarity and similarity >= BACKFILL_THRESHOLD:
-                best_similarity = float(similarity)
-                best_match = topic
+    # `is not None` so an empty cache ("no topics this window") is not
+    # mistaken for "caller didn't supply a cache" and re-queried per article.
+    if topic_embeddings_cache is not None:
+        cache = topic_embeddings_cache
     else:
-        cutoff = utcnow_naive() - timedelta(days=7)
-        recent_topics = TrendingTopic.query.filter(
-            TrendingTopic.created_at >= cutoff,
-            TrendingTopic.topic_embedding.isnot(None),
-            TrendingTopic.status.in_(['pending', 'pending_review', 'approved', 'published'])
-        ).all()
-        
-        for topic in recent_topics:
-            if topic.topic_embedding:
-                topic_embedding = np.array(topic.topic_embedding)
-                similarity = np.dot(article_embedding, topic_embedding) / (
-                    np.linalg.norm(article_embedding) * np.linalg.norm(topic_embedding)
-                )
-                
-                if similarity > best_similarity and similarity >= BACKFILL_THRESHOLD:
-                    best_similarity = float(similarity)
-                    best_match = topic
+        cache = _load_topic_embedding_cache()
+
+    for topic_id, (topic, topic_embedding) in cache.items():
+        denom = np.linalg.norm(article_embedding) * np.linalg.norm(topic_embedding)
+        if denom == 0:
+            continue
+        similarity = np.dot(article_embedding, topic_embedding) / denom
+
+        if similarity > best_similarity and similarity >= BACKFILL_THRESHOLD:
+            best_similarity = float(similarity)
+            best_match = topic
     
     if best_match:
         existing_link = TrendingTopicArticle.query.filter_by(
@@ -506,13 +554,15 @@ def backfill_orphan_articles(limit: int = 100) -> int:
     
     Returns: Number of articles successfully backfilled.
     """
-    import numpy as np
-    
     cutoff = utcnow_naive() - timedelta(days=7)
     
     linked_article_ids = db.session.query(TrendingTopicArticle.article_id).distinct()
     
-    orphan_articles = NewsArticle.query.filter(
+    orphan_articles = NewsArticle.query.options(
+        # _backfill_single_article reads the vector; without this the deferred
+        # column would lazy-load one row at a time.
+        undefer(NewsArticle.title_embedding)
+    ).filter(
         NewsArticle.fetched_at >= cutoff,
         NewsArticle.relevance_score.isnot(None),
         NewsArticle.relevance_score >= 0.4,
@@ -525,17 +575,7 @@ def backfill_orphan_articles(limit: int = 100) -> int:
     
     logger.info(f"Attempting to backfill {len(orphan_articles)} orphan articles")
     
-    recent_topics = TrendingTopic.query.filter(
-        TrendingTopic.created_at >= cutoff,
-        TrendingTopic.topic_embedding.isnot(None),
-        TrendingTopic.status.in_(['pending', 'pending_review', 'approved', 'published'])
-    ).all()
-    
-    topic_embeddings_cache = {}
-    for topic in recent_topics:
-        if topic.topic_embedding:
-            topic_embeddings_cache[topic.id] = (topic, np.array(topic.topic_embedding))
-    
+    topic_embeddings_cache = _load_topic_embedding_cache(days=7)
     logger.info(f"Loaded {len(topic_embeddings_cache)} topic embeddings for similarity matching")
     
     backfilled = 0

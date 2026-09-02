@@ -14,6 +14,8 @@ app/models/__init__.py.
 
 from typing import Optional
 
+from sqlalchemy.orm import deferred
+
 from app import db
 from app.lib.time import utcnow_naive
 
@@ -57,7 +59,11 @@ class PolymarketMarket(db.Model):
     tags = db.Column(db.JSON)  # ['politics', 'elections', ...] from parent event tags
 
     # Automated Matching
-    question_embedding = db.Column(db.JSON)  # Vector for similarity search
+    # Deferred: a single vector is ~21 KB of JSON. Loading it on every
+    # SELECT sent terabytes/month out of Neon (price refresh, admin lists,
+    # source adapters) for code that never reads it. Only the matcher needs
+    # it — see MarketMatcher._load_candidate_pool, which undefers explicitly.
+    question_embedding = deferred(db.Column(db.JSON))  # Vector for similarity search
 
     # Outcomes & Pricing
     outcomes = db.Column(db.JSON)  # [{"name": "Yes", "token_id": "...", "price": 0.78}, ...]

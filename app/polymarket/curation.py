@@ -399,7 +399,10 @@ class MarketCurator:
             )
             return True
 
-        # Pass 1 — link to today's topics (stored match, then live match)
+        # Pass 1 — link to today's topics (stored match, then live match).
+        # One candidate pool for the whole pass: match_topic would otherwise
+        # re-download ~2 MB of market embeddings per topic.
+        live_pool = None
         for topic in list(topics)[:10]:
             if len(signals) >= max_markets:
                 break
@@ -408,7 +411,14 @@ class MarketCurator:
             if market and _try_add(market, (topic.title or '')[:80], topic_bonus=10 + _title_overlap_bonus(topic, market)):
                 continue
 
-            live_matches = market_matcher.match_topic(topic, max_matches=1, min_quality_tier='medium')
+            if live_pool is None:
+                live_pool = market_matcher._load_candidate_pool('medium')
+            live_matches = market_matcher.match_topic(
+                topic,
+                max_matches=1,
+                min_quality_tier='medium',
+                candidate_pool=live_pool,
+            )
             if live_matches:
                 market = live_matches[0]['market']
                 bonus = 8 + float(live_matches[0].get('similarity', 0)) * 5

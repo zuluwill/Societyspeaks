@@ -226,6 +226,44 @@ class TestLookupByArticleUrl:
         data = resp.get_json()
         assert data['error'] == 'partner_disabled'
 
+    def test_lookup_finds_rss_discussion_via_normalized_url(self, client, db, discussion):
+        """Partner lookup is a single indexed normalized_url probe.
+
+        Tracking-parameter variants must still hit the discussion. There is
+        deliberately no raw-url fallback: that scanned news_article sequentially
+        and could not find a row the normalised lookup had already missed.
+        """
+        from app.models import DiscussionSourceArticle, NewsArticle, NewsSource
+
+        source = NewsSource(name='Lookup Wire', feed_url='https://example.com/feed')
+        db.session.add(source)
+        db.session.flush()
+        article = NewsArticle(
+            source_id=source.id,
+            title='Cities and cars',
+            url='https://www.example.com/story?utm_source=twitter&utm_medium=social',
+            external_id='lookup-rss-1',
+        )
+        db.session.add(article)
+        db.session.flush()
+        db.session.add(DiscussionSourceArticle(
+            discussion_id=discussion.id,
+            article_id=article.id,
+        ))
+        db.session.commit()
+
+        assert article.normalized_url == 'https://example.com/story'
+
+        from urllib.parse import quote
+        tracked = 'https://example.com/story?utm_campaign=partner'
+        resp = client.get(
+            '/api/discussions/by-article-url?url=' + quote(tracked, safe='')
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['discussion_id'] == discussion.id
+        assert data.get('source') == 'rss'
+
 
 # ---------------------------------------------------------------------------
 # Snapshot Endpoint

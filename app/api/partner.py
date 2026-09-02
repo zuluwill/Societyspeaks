@@ -123,10 +123,14 @@ def lookup_by_article_url():
         ).first()
         source = 'partner'
     else:
-        # Look up NewsArticle by normalized_url, then fall back to raw url
+        # Single indexed lookup on normalized_url. There is deliberately no
+        # second probe: url_hash is sha256(normalize_url(url)), so hashing
+        # here would re-ask the question above and always give the same
+        # answer (verified across all 51k rows). The old raw-url fallback
+        # seq-scanned the table to reach rows this query had already ruled
+        # out. If normaliser rules ever change, backfill normalized_url and
+        # url_hash together rather than reinstating a scan.
         article = NewsArticle.query.filter_by(normalized_url=normalized).first()
-        if not article:
-            article = NewsArticle.query.filter_by(url=url).first()
         if article:
             link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
             if link:
@@ -1396,11 +1400,11 @@ def create_discussion():
                 409
             )
 
-    # Also check NewsArticle path (normalized_url + raw url fallback)
+    # Also check the NewsArticle path. One indexed lookup — see the note in
+    # lookup_by_article_url: url_hash is derived from normalize_url, so a hash
+    # probe cannot find anything normalized_url missed.
     if key_env == 'live' and normalized_url:
         article = NewsArticle.query.filter_by(normalized_url=normalized_url).first()
-        if not article:
-            article = NewsArticle.query.filter_by(url=article_url).first()
         if article:
             link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
             if link:

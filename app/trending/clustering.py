@@ -225,45 +225,145 @@ def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> Lis
         return _numpy_cluster_articles(articles, embeddings_array, threshold)
 
 
-def find_duplicate_topic(topic_embedding: List[float], days: int = 30) -> Optional[TrendingTopic]:
+# Lowered from 0.85 to catch more related articles.
+DUPLICATE_SIMILARITY_THRESHOLD = 0.78
+
+# Topic statuses that a new cluster can be deduplicated against.
+DUPLICATE_CANDIDATE_STATUSES = ('published', 'pending_review', 'approved')
+
+
+class TopicEmbeddingIndex:
+    """Recent topic embeddings held in memory for duplicate detection.
+
+    find_duplicate_topic() runs once per cluster and the 30-day pool is ~1,700
+    topics of ~16 KB vector each, so re-querying it per cluster re-downloaded
+    tens of MB per cluster for information that had not changed. A pipeline run
+    builds this index once and passes it down.
+
+    Topics created during the run can be appended via add() when they are
+    actually dedupe candidates. create_topic_from_cluster writes status
+    ``pending``, which is *not* in DUPLICATE_CANDIDATE_STATUSES, so the
+    pipeline's append is normally a no-op — matching the previous per-cluster
+    query, which never saw pending rows. Do not append unconditionally: that
+    would silently widen dedup and merge clusters that previously stayed
+    separate.
+
+    Only (id, topic_embedding) is fetched and vectors are kept as plain numpy
+    arrays, so the index is unaffected by the session commit/rollback that
+    create_topic_from_cluster performs between clusters.
+    """
+
+    def __init__(self, days: int = 30, load: bool = True):
+        self.days = days
+        self._ids: List[int] = []
+        self._vectors: List[np.ndarray] = []
+        self._dim: Optional[int] = None
+        self._matrix: Optional[np.ndarray] = None
+        self._norms: Optional[np.ndarray] = None
+        if load:
+            self._load()
+
+    def _load(self) -> None:
+        cutoff = utcnow_naive() - timedelta(days=self.days)
+        rows = db.session.query(
+            TrendingTopic.id, TrendingTopic.topic_embedding
+        ).filter(
+            TrendingTopic.created_at >= cutoff,
+            TrendingTopic.topic_embedding.isnot(None),
+            TrendingTopic.status.in_(DUPLICATE_CANDIDATE_STATUSES),
+        ).all()
+
+        skipped = 0
+        for topic_id, embedding in rows:
+            if not self.add(topic_id, embedding):
+                skipped += 1
+
+        logger.info(
+            "Topic embedding index: %d topic(s) over %d days (%d skipped)",
+            len(self._ids), self.days, skipped,
+        )
+
+    def add(self, topic_id: int, embedding) -> bool:
+        """Register a topic. Returns False if the vector is unusable."""
+        if not embedding:
+            return False
+
+        vector = np.asarray(embedding, dtype=float)
+        if vector.ndim != 1 or vector.size == 0:
+            return False
+        if self._dim is None:
+            self._dim = vector.size
+        elif vector.size != self._dim:
+            # Mixed embedding models would make the similarity meaningless.
+            return False
+        if np.linalg.norm(vector) == 0:
+            return False
+
+        self._ids.append(topic_id)
+        self._vectors.append(vector)
+        self._matrix = None  # invalidate the stacked cache
+        self._norms = None
+        return True
+
+    def find_duplicate_id(
+        self, embedding, threshold: float = DUPLICATE_SIMILARITY_THRESHOLD
+    ) -> Optional[int]:
+        """Return the id of the most similar topic above threshold, or None.
+
+        Note: this returns the *best* match. The previous per-cluster loop
+        returned the first row above threshold in whatever order Postgres
+        happened to return, which was not deterministic between runs.
+        """
+        if not self._ids or not embedding:
+            return None
+
+        vector = np.asarray(embedding, dtype=float)
+        if vector.ndim != 1 or vector.size != self._dim:
+            return None
+        norm = np.linalg.norm(vector)
+        if norm == 0:
+            return None
+
+        if self._matrix is None:
+            self._matrix = np.vstack(self._vectors)
+            self._norms = np.linalg.norm(self._matrix, axis=1)
+
+        similarities = (self._matrix @ vector) / (self._norms * norm)
+        best = int(np.argmax(similarities))
+        if float(similarities[best]) >= threshold:
+            return self._ids[best]
+        return None
+
+    def __len__(self) -> int:
+        return len(self._ids)
+
+
+def find_duplicate_topic(
+    topic_embedding: List[float],
+    days: int = 30,
+    index: Optional[TopicEmbeddingIndex] = None,
+) -> Optional[TrendingTopic]:
     """
     Check if a similar topic already exists in the last N days.
     Returns the existing topic if found.
+
+    Pass an index to reuse one load across a whole pipeline run; without one a
+    fresh index is built for this call alone (the original behaviour).
     """
-    cutoff = utcnow_naive() - timedelta(days=days)
-    
-    recent_topics = TrendingTopic.query.filter(
-        TrendingTopic.created_at >= cutoff,
-        TrendingTopic.topic_embedding.isnot(None),
-        TrendingTopic.status.in_(['published', 'pending_review', 'approved'])
-    ).all()
-    
-    if not recent_topics:
-        return None
-    
-    new_embedding = np.array(topic_embedding)
-    
-    new_norm = np.linalg.norm(new_embedding)
-    if new_norm == 0:
+    if index is None:
+        index = TopicEmbeddingIndex(days=days)
+
+    topic_id = index.find_duplicate_id(topic_embedding)
+    if topic_id is None:
         return None
 
-    for topic in recent_topics:
-        if topic.topic_embedding:
-            existing_embedding = np.array(topic.topic_embedding)
-            existing_norm = np.linalg.norm(existing_embedding)
-            if existing_norm == 0:
-                continue
-            similarity = np.dot(new_embedding, existing_embedding) / (new_norm * existing_norm)
-
-            if similarity >= 0.78:  # Lowered from 0.85 to catch more related articles
-                return topic
-    
-    return None
+    return db.session.get(TrendingTopic, topic_id)
 
 
 def create_topic_from_cluster(
     articles: List[NewsArticle],
-    hold_minutes: int = 60
+    hold_minutes: int = 60,
+    topic_index: Optional[TopicEmbeddingIndex] = None
 ) -> Optional[TrendingTopic]:
     """
     Create a TrendingTopic from a cluster of articles.
@@ -336,7 +436,7 @@ def create_topic_from_cluster(
     unique_sources = len(set(article_source_ids))
 
     if topic_embedding:
-        existing = find_duplicate_topic(topic_embedding)
+        existing = find_duplicate_topic(topic_embedding, index=topic_index)
         if existing:
             logger.info(f"Topic duplicate found: {existing.title}")
             for article_id in article_ids:
@@ -379,6 +479,18 @@ def create_topic_from_cluster(
         db.session.add(link)
 
     db.session.commit()
+
+    # Keep the shared index current so the next cluster in this run sees
+    # exactly what a fresh per-cluster query would have returned. Note the
+    # status gate: topics are created 'pending', which is not a dedupe
+    # candidate status, so this is normally a no-op — matching the previous
+    # behaviour rather than silently widening it.
+    if (
+        topic_index is not None
+        and topic_embedding
+        and topic.status in DUPLICATE_CANDIDATE_STATUSES
+    ):
+        topic_index.add(topic.id, topic_embedding)
 
     return topic
 
