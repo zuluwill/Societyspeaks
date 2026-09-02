@@ -200,23 +200,81 @@ def _mark_ops_alert_sent(fingerprint: str) -> None:
         _ops_alert_last_sent[fingerprint] = utcnow_naive()
 
 
-def build_queue_lag_alerts(label: str, metrics: dict, threshold_seconds: int,
+def _nonneg_int(value, default: int = 0) -> int:
+    try:
+        return max(0, int(value if value is not None else default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _consensus_worker_heartbeat_ok():
+    """True if a worker heartbeat key is present, False if absent, None if unknown.
+
+    The worker writes ``consensus_worker:last_heartbeat_at`` with a 120s TTL
+    on every loop. Key absence is the death signal. Redis errors/unconfigured
+    return None so we do not page on an observability gap.
+    """
+    try:
+        from app.lib.redis_client import get_client
+        client = get_client(decode_responses=True)
+        if client is None:
+            return None
+        return bool(client.get('consensus_worker:last_heartbeat_at'))
+    except Exception as exc:
+        logger.debug('Consensus worker heartbeat probe failed: %s', exc)
+        return None
+
+
+def build_stale_job_alerts(label: str, stale_count,
                            service_hint: str = 'societyspeaks-consensus-worker') -> list:
+    """A running job that hit its timeout is a failed user request."""
+    count = _nonneg_int(stale_count)
+    if not count:
+        return []
+    return [
+        f"{label} JOBS STALE: {count} timed out while running. "
+        f"Check the {service_hint} service."
+    ]
+
+
+def build_queue_lag_alerts(label: str, metrics: dict, threshold_seconds: int,
+                           service_hint: str = 'societyspeaks-consensus-worker',
+                           heartbeat_ok=None) -> list:
     """Alert messages a stuck job queue warrants, or [] when healthy.
 
     Split out from the scheduler jobs so the escalation rule is testable
-    without standing up APScheduler. Only *queued* work counts toward lag: a
-    long-running job is claimed, so it is progress rather than a stall.
+    without standing up APScheduler.
+
+    Only *queued* work counts toward lag when the worker looks alive: a
+    long-running job has been claimed, so it is progress rather than a stall.
+    If the worker heartbeat is gone, running jobs are *not* progress — that
+    is a crash mid-job, which queued-lag alone would miss.
+
+    Dead-letter paging uses ``recent_dead_letter_count`` when present so a
+    historical exhausted job cannot page every cooldown forever. Callers
+    that omit it fall back to ``dead_letter_count``.
     """
     alerts = []
-    queued = int(metrics.get('queued_count') or 0)
-    lag = int(metrics.get('queue_lag_seconds') or 0)
-    dead = int(metrics.get('dead_letter_count') or 0)
+    queued = _nonneg_int(metrics.get('queued_count'))
+    running = _nonneg_int(metrics.get('running_count'))
+    lag = _nonneg_int(metrics.get('queue_lag_seconds'))
+    if 'recent_dead_letter_count' in metrics:
+        dead = _nonneg_int(metrics.get('recent_dead_letter_count'))
+    else:
+        dead = _nonneg_int(metrics.get('dead_letter_count'))
+    threshold = _nonneg_int(threshold_seconds)
 
-    if queued and lag > threshold_seconds:
+    if heartbeat_ok is False and (queued or running):
+        alerts.append(
+            f"{label} WORKER UNRESPONSIVE: no heartbeat from {service_hint} "
+            f"with {queued} queued and {running} running. Jobs will not drain."
+        )
+    elif queued and lag > threshold:
+        # Skip QUEUE STUCK when the worker is already known dead — that would
+        # be a second page for the same incident.
         alerts.append(
             f"{label} QUEUE STUCK: {queued} job(s) queued, oldest waiting {lag}s "
-            f"(threshold {threshold_seconds}s). Check the {service_hint} service."
+            f"(threshold {threshold}s). Check the {service_hint} service."
         )
     if dead:
         alerts.append(
@@ -535,10 +593,16 @@ def init_scheduler(app):
                 metrics = get_consensus_queue_metrics()
             except Exception as e:
                 logger.error(f"Consensus queue metrics check failed: {e}", exc_info=True)
-                return
+                metrics = None
 
             threshold = int(app.config.get('CONSENSUS_QUEUE_LAG_ALERT_SECONDS', 120) or 120)
-            for message in build_queue_lag_alerts('CONSENSUS', metrics, threshold):
+            messages = build_stale_job_alerts('CONSENSUS', stale_count)
+            if metrics is not None:
+                messages.extend(build_queue_lag_alerts(
+                    'CONSENSUS', metrics, threshold,
+                    heartbeat_ok=_consensus_worker_heartbeat_ok(),
+                ))
+            for message in messages:
                 logger.warning(message)
                 _send_ops_alert(message)
 
@@ -589,10 +653,16 @@ def init_scheduler(app):
                 metrics = get_programme_export_queue_metrics()
             except Exception as e:
                 logger.error(f"Export queue metrics check failed: {e}", exc_info=True)
-                return
+                metrics = None
 
             threshold = int(app.config.get('EXPORT_QUEUE_LAG_ALERT_SECONDS', 300) or 300)
-            for message in build_queue_lag_alerts('PROGRAMME EXPORT', metrics, threshold):
+            messages = build_stale_job_alerts('PROGRAMME EXPORT', stale_count)
+            if metrics is not None:
+                messages.extend(build_queue_lag_alerts(
+                    'PROGRAMME EXPORT', metrics, threshold,
+                    heartbeat_ok=_consensus_worker_heartbeat_ok(),
+                ))
+            for message in messages:
                 logger.warning(message)
                 _send_ops_alert(message)
 

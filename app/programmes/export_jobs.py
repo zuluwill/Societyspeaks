@@ -17,6 +17,8 @@ from app.storage_utils import upload_bytes_to_object_storage, download_bytes_fro
 
 logger = logging.getLogger(__name__)
 
+DEAD_LETTER_ALERT_LOOKBACK = timedelta(hours=24)
+
 DOWNLOAD_SALT = "programme-export-download"
 
 
@@ -97,10 +99,16 @@ def get_programme_export_queue_metrics():
     lag_seconds = int((now - oldest.queued_at).total_seconds()) if oldest and oldest.queued_at else 0
     running_count = ProgrammeExportJob.query.filter_by(status=ProgrammeExportJob.STATUS_RUNNING).count()
     dead_letter_count = ProgrammeExportJob.query.filter_by(status=ProgrammeExportJob.STATUS_DEAD_LETTER).count()
+    recent_dead_letter_count = ProgrammeExportJob.query.filter(
+        ProgrammeExportJob.status == ProgrammeExportJob.STATUS_DEAD_LETTER,
+        ProgrammeExportJob.completed_at.isnot(None),
+        ProgrammeExportJob.completed_at >= now - DEAD_LETTER_ALERT_LOOKBACK,
+    ).count()
     return {
         "queued_count": queued_count,
         "running_count": running_count,
         "dead_letter_count": dead_letter_count,
+        "recent_dead_letter_count": recent_dead_letter_count,
         "queue_lag_seconds": max(0, lag_seconds),
     }
 

@@ -625,8 +625,8 @@ class Config:
     # /admin/slo. The consensus worker is a separate Render service, so if it
     # dies the scheduler is the only process left that can notice: jobs would
     # otherwise sit queued forever behind a UI that promises results.
-    CONSENSUS_QUEUE_LAG_ALERT_SECONDS = int(os.getenv('CONSENSUS_QUEUE_LAG_ALERT_SECONDS', '120'))
-    EXPORT_QUEUE_LAG_ALERT_SECONDS = int(os.getenv('EXPORT_QUEUE_LAG_ALERT_SECONDS', '300'))
+    CONSENSUS_QUEUE_LAG_ALERT_SECONDS = _env_int('CONSENSUS_QUEUE_LAG_ALERT_SECONDS', 120)
+    EXPORT_QUEUE_LAG_ALERT_SECONDS = _env_int('EXPORT_QUEUE_LAG_ALERT_SECONDS', 300)
 
     # Async programme export queue controls.
     EXPORT_QUEUE_PROCESS_IN_SCHEDULER = os.getenv('EXPORT_QUEUE_PROCESS_IN_SCHEDULER', 'false').lower() == 'true'
