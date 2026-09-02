@@ -348,7 +348,21 @@ def test_both_queues_are_wired_into_the_scheduler_sweeps():
 
 
 def test_lag_check_lives_in_the_scheduler_not_the_worker():
-    """The worker cannot report its own death."""
+    """The worker cannot report its own death.
+
+    Checks executable lines only: the worker is allowed — and expected — to
+    document in comments why its heartbeat must outlive a long job, since that
+    is the contract the scheduler's alert depends on. What it must not do is
+    carry the alerting itself.
+    """
     worker = _read("scripts/run_consensus_worker.py")
-    assert "CONSENSUS QUEUE STUCK" not in worker
-    assert "WORKER UNRESPONSIVE" not in worker
+    code = "\n".join(
+        line for line in worker.splitlines()
+        if not line.lstrip().startswith("#")
+    )
+
+    assert "_send_ops_alert" not in code
+    assert "build_queue_lag_alerts" not in code
+    assert "build_stale_job_alerts" not in code
+    assert "CONSENSUS QUEUE STUCK" not in code
+    assert "WORKER UNRESPONSIVE" not in code

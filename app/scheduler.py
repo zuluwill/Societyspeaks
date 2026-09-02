@@ -211,8 +211,11 @@ def _consensus_worker_heartbeat_ok():
     """True if a worker heartbeat key is present, False if absent, None if unknown.
 
     The worker writes ``consensus_worker:last_heartbeat_at`` with a 120s TTL
-    on every loop. Key absence is the death signal. Redis errors/unconfigured
-    return None so we do not page on an observability gap.
+    from a dedicated heartbeat thread (not the work loop, which a long
+    clustering run would block — see run_consensus_worker.run_heartbeat_loop).
+    Key absence therefore means the process is gone, not that it is busy.
+    Redis errors/unconfigured return None so we do not page on an
+    observability gap.
     """
     try:
         from app.lib.redis_client import get_client
