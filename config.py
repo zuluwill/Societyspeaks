@@ -621,6 +621,12 @@ class Config:
     CONSENSUS_WORKER_IDLE_SLEEP_SECONDS = float(os.getenv('CONSENSUS_WORKER_IDLE_SLEEP_SECONDS', '2.0'))
     CONSENSUS_WORKER_ACTIVE_SLEEP_SECONDS = float(os.getenv('CONSENSUS_WORKER_ACTIVE_SLEEP_SECONDS', '0.2'))
     CONSENSUS_WORKER_METRICS_INTERVAL_SECONDS = int(os.getenv('CONSENSUS_WORKER_METRICS_INTERVAL_SECONDS', '30'))
+    # Queue-lag alert thresholds. These mirror the SLO targets published by
+    # /admin/slo. The consensus worker is a separate Render service, so if it
+    # dies the scheduler is the only process left that can notice: jobs would
+    # otherwise sit queued forever behind a UI that promises results.
+    CONSENSUS_QUEUE_LAG_ALERT_SECONDS = int(os.getenv('CONSENSUS_QUEUE_LAG_ALERT_SECONDS', '120'))
+    EXPORT_QUEUE_LAG_ALERT_SECONDS = int(os.getenv('EXPORT_QUEUE_LAG_ALERT_SECONDS', '300'))
 
     # Async programme export queue controls.
     EXPORT_QUEUE_PROCESS_IN_SCHEDULER = os.getenv('EXPORT_QUEUE_PROCESS_IN_SCHEDULER', 'false').lower() == 'true'

@@ -200,6 +200,32 @@ def _mark_ops_alert_sent(fingerprint: str) -> None:
         _ops_alert_last_sent[fingerprint] = utcnow_naive()
 
 
+def build_queue_lag_alerts(label: str, metrics: dict, threshold_seconds: int,
+                           service_hint: str = 'societyspeaks-consensus-worker') -> list:
+    """Alert messages a stuck job queue warrants, or [] when healthy.
+
+    Split out from the scheduler jobs so the escalation rule is testable
+    without standing up APScheduler. Only *queued* work counts toward lag: a
+    long-running job is claimed, so it is progress rather than a stall.
+    """
+    alerts = []
+    queued = int(metrics.get('queued_count') or 0)
+    lag = int(metrics.get('queue_lag_seconds') or 0)
+    dead = int(metrics.get('dead_letter_count') or 0)
+
+    if queued and lag > threshold_seconds:
+        alerts.append(
+            f"{label} QUEUE STUCK: {queued} job(s) queued, oldest waiting {lag}s "
+            f"(threshold {threshold_seconds}s). Check the {service_hint} service."
+        )
+    if dead:
+        alerts.append(
+            f"{label} DEAD LETTER: {dead} job(s) exhausted their retries and "
+            f"will never produce results."
+        )
+    return alerts
+
+
 def _is_production_environment() -> bool:
     """
     Check if we're running in the DEPLOYED production environment.
@@ -488,12 +514,33 @@ def init_scheduler(app):
 
     @scheduler.scheduled_job('interval', minutes=5, id='mark_stale_consensus_jobs', max_instances=1, coalesce=True)
     def mark_stale_consensus_jobs_job():
-        """Mark timed-out running consensus jobs as stale."""
+        """Mark timed-out consensus jobs stale, and alert if the queue is stuck.
+
+        Consensus runs in a dedicated worker service. If that worker dies, the
+        jobs it should have claimed sit queued indefinitely while the results
+        page keeps telling the user "results will appear once processing
+        completes". The scheduler is the only always-on process able to notice,
+        so the lag check lives here rather than in the worker.
+        """
         with app.app_context():
-            from app.discussions.jobs import mark_stale_consensus_jobs
+            from app.discussions.jobs import (
+                mark_stale_consensus_jobs,
+                get_consensus_queue_metrics,
+            )
             stale_count = mark_stale_consensus_jobs()
             if stale_count:
                 logger.warning(f"Marked {stale_count} consensus jobs as stale")
+
+            try:
+                metrics = get_consensus_queue_metrics()
+            except Exception as e:
+                logger.error(f"Consensus queue metrics check failed: {e}", exc_info=True)
+                return
+
+            threshold = int(app.config.get('CONSENSUS_QUEUE_LAG_ALERT_SECONDS', 120) or 120)
+            for message in build_queue_lag_alerts('CONSENSUS', metrics, threshold):
+                logger.warning(message)
+                _send_ops_alert(message)
 
 
     @scheduler.scheduled_job('interval', minutes=1, id='process_programme_export_queue', max_instances=1, coalesce=True)
@@ -523,12 +570,31 @@ def init_scheduler(app):
 
     @scheduler.scheduled_job('interval', minutes=5, id='mark_stale_programme_export_jobs', max_instances=1, coalesce=True)
     def mark_stale_programme_export_jobs_job():
-        """Mark timed-out running programme export jobs as stale."""
+        """Mark timed-out export jobs stale, and alert if the queue is stuck.
+
+        Same failure mode as consensus: the export queue is drained by the
+        consensus worker service, so a dead worker strands user-requested
+        exports silently.
+        """
         with app.app_context():
-            from app.programmes.export_jobs import mark_stale_programme_export_jobs
+            from app.programmes.export_jobs import (
+                mark_stale_programme_export_jobs,
+                get_programme_export_queue_metrics,
+            )
             stale_count = mark_stale_programme_export_jobs()
             if stale_count:
                 logger.warning(f"Marked {stale_count} programme export jobs as stale")
+
+            try:
+                metrics = get_programme_export_queue_metrics()
+            except Exception as e:
+                logger.error(f"Export queue metrics check failed: {e}", exc_info=True)
+                return
+
+            threshold = int(app.config.get('EXPORT_QUEUE_LAG_ALERT_SECONDS', 300) or 300)
+            for message in build_queue_lag_alerts('PROGRAMME EXPORT', metrics, threshold):
+                logger.warning(message)
+                _send_ops_alert(message)
 
 
     @scheduler.scheduled_job('interval', minutes=5, id='translate_pending_content', max_instances=1, coalesce=True)
