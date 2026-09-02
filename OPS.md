@@ -489,6 +489,87 @@ findings (extra DB indexes, unique-rule-as-index) are listed but non-fatal.
 Run it after any incident touching the schema and before/after risky data
 imports.
 
+## Neon egress (public network transfer)
+
+The August 2026 bill was $255.61, of which **$214.72 was public network
+transfer** — 2,647 GB moved out of a 3 GB database. Compute was only $39.73
+and storage ~$1. The cause was not crawler traffic: it was scheduled jobs
+re-downloading TOASTed JSON embedding vectors in loops.
+
+Three columns carry multi-KB JSON vectors and are therefore **`deferred()`**
+in the models — `news_article.title_embedding` (~13 KB),
+`trending_topic.topic_embedding` (~16 KB),
+`polymarket_market.question_embedding` (~21 KB). Only load them with an
+explicit `undefer()` where the maths actually needs them. Undeferring one by
+default puts a vector on every query that touches the table; a discussion page
+eager-loads its source articles, so this reaches public page renders too.
+
+To re-diagnose, rank tables by TOAST blocks touched rather than by slow
+queries — the expensive query here is fast and enormous, so it never appears
+in a slow-query list:
+
+```bash
+psql "$NEON_OWNER_DATABASE_URL" -c "
+select relname,
+       pg_size_pretty((coalesce(toast_blks_read,0)+coalesce(toast_blks_hit,0))*8192::bigint)
+         as toast_touched
+from pg_statio_user_tables
+order by coalesce(toast_blks_read,0)+coalesce(toast_blks_hit,0) desc limit 10;"
+```
+
+Counters reset when the Neon compute restarts — check the window first with
+`select pg_postmaster_start_time()`. Note TOAST *blocks* overstate wire bytes
+(8 KB page granularity, roughly 4x for these vectors); for actual egress,
+measure the payload of a specific query:
+
+```bash
+psql "$NEON_OWNER_DATABASE_URL" -c "
+select count(*), pg_size_pretty(sum(pg_column_size(m.*))::bigint)
+from (<the query as the ORM issues it>) m;"
+```
+
+`pg_stat_statements` is installed (created 2026-09-02; already in
+`shared_preload_libraries`). Stats reset when the Neon compute restarts
+(currently since 2026-08-17). Rank by `rows` and
+`shared_blks_hit+shared_blks_read`, not `total_exec_time`:
+
+```bash
+psql "$NEON_OWNER_DATABASE_URL" -c "
+select calls, rows,
+       round((shared_blks_hit+shared_blks_read)*8192/1024.0/1024.0, 1) as mb_touched,
+       left(regexp_replace(query, E'\\\\s+', ' ', 'g'), 160) as q
+from pg_stat_statements
+order by shared_blks_hit+shared_blks_read desc
+limit 20;"
+```
+
+The matcher must not record `market_match_attempted_at` when the candidate
+pool is empty — that is a sync gap, not a negative match. Stamping would hide
+topics for 24 hours after markets return.
+
+Do **not** migrate the JSON embedding columns to `pgvector` as part of an
+egress hotfix. `vector` 0.8.0 is available on this Neon project, but CI tests
+run on SQLite (no `vector` type), the matcher still needs market metadata for
+keyword fallback, and exact cosine over a 400-row pool is cheaper as a Python
+matmul once the pool is loaded once. The follow-up is a dedicated migration:
+`CREATE EXTENSION vector`, `vector(1536)` (or `halfvec`) columns, backfill,
+then `ORDER BY embedding <=> :q` so similarity never downloads the pool.
+Enabling the extension with no consumers is not that patch.
+
+Known remaining offenders (from `pg_stat_statements`, window since
+2026-08-17), *not* addressed by the loop/defer/url_hash fix:
+
+- **`brief_item` N+1** — 2,957,803 calls returning 11.1 rows each (~1.8 KB/row,
+  ~3.6 GB/day, ~4% of the bill). `DailyBrief.items` is `lazy='dynamic'`, so
+  every access re-queries; brief email sends appear to re-read the item list
+  per recipient. Fix by loading the items once per send, not per recipient.
+- **Statement listing burns buffers, not bytes** — 1,667 calls returning 20
+  rows each but touching 423 GB of buffers (~254 MB per call). That is compute,
+  not egress: it belongs to the always-on CU line, not the transfer line.
+
+Do **not** buy Scale-plan private networking to make this cheaper ($0.01/GB
+instead of $0.10/GB) — at TB scale that is still paying for a bug.
+
 ## Dependency pinning policy
 
 Every runtime dependency in `requirements.txt` carries an upper bound at the

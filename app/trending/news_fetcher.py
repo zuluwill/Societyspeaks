@@ -17,6 +17,7 @@ from flask import current_app
 
 from app import db
 from app.models import NewsSource, NewsArticle
+from app.lib.url_normalizer import url_hash
 from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
@@ -470,7 +471,15 @@ class NewsFetcher:
                         from urllib.parse import urlparse as _urlparse
                         _path = _urlparse(link_url).path.rstrip('/')
                         if len(_path) > 5:  # Non-trivial path = episode-specific URL
-                            if NewsArticle.query.filter_by(url=link_url[:1000]).first():
+                            # Match on the indexed url_hash, not raw url: there
+                            # is no index on url (String(1000)), so equality
+                            # there sequentially scanned all ~51k articles on
+                            # every RSS entry. url_hash also normalises away
+                            # tracking params, so it dedupes slightly better.
+                            _url_hash = url_hash(link_url)
+                            if _url_hash and db.session.query(NewsArticle.id).filter_by(
+                                url_hash=_url_hash
+                            ).first():
                                 continue
                 except Exception as db_err:
                     logger.warning(f"DB error checking existing article: {db_err}")

@@ -340,9 +340,6 @@ class PolymarketService:
         offset = 0
         limit = 500
 
-        # Collect markets that need embeddings (new or missing)
-        markets_needing_embeddings = []
-
         # Only a sync that walked every page may conclude a market is gone.
         pagination_complete = False
 
@@ -362,17 +359,10 @@ class PolymarketService:
 
             for market_data in markets:
                 try:
-                    result, market_obj = self._upsert_market(market_data, event_meta=event_meta)
+                    result, _market_obj = self._upsert_market(market_data, event_meta=event_meta)
                     stats[result] += 1
                     condition_id = market_data.get('conditionId') or market_data.get('condition_id')
                     seen_condition_ids.add(condition_id)
-
-                    if (
-                        market_obj
-                        and market_obj.is_high_quality
-                        and not market_obj.question_embedding
-                    ):
-                        markets_needing_embeddings.append(market_obj)
 
                 except Exception as e:
                     logger.warning(f"Error syncing market {market_data.get('conditionId')}: {e}")
@@ -420,25 +410,21 @@ class PolymarketService:
 
         db.session.commit()
 
-        # Backfill embeddings for liquid markets missing vectors (cap per sync)
-        if not markets_needing_embeddings:
-            markets_needing_embeddings = PolymarketMarket.query.filter(
-                PolymarketMarket.is_active == True,
-                PolymarketMarket.question_embedding.is_(None),
-                PolymarketMarket.volume_24h >= PolymarketMarket.MIN_VOLUME_24H,
-            ).order_by(PolymarketMarket.volume_24h.desc()).limit(100).all()
+        # Backfill embeddings for liquid markets missing vectors (cap per sync).
+        # Resolved in SQL rather than by testing market.question_embedding on
+        # each synced market: that column is deferred and ~21 KB, so probing it
+        # per market to see whether it is NULL is the expensive way to ask.
+        # The filters mirror PolymarketMarket.is_high_quality.
+        markets_needing_embeddings = PolymarketMarket.query.filter(
+            PolymarketMarket.is_active == True,  # noqa: E712
+            PolymarketMarket.question_embedding.is_(None),
+            PolymarketMarket.volume_24h >= PolymarketMarket.MIN_VOLUME_24H,
+            PolymarketMarket.liquidity >= PolymarketMarket.MIN_LIQUIDITY,
+        ).order_by(PolymarketMarket.volume_24h.desc()).limit(100).all()
 
-        # Deduplicate while preserving order
-        seen_ids = set()
-        unique_for_embeddings = []
-        for m in markets_needing_embeddings:
-            if m.id not in seen_ids:
-                seen_ids.add(m.id)
-                unique_for_embeddings.append(m)
-
-        if unique_for_embeddings:
+        if markets_needing_embeddings:
             stats['embeddings_generated'] = self._generate_embeddings_for_markets(
-                unique_for_embeddings[:150]
+                markets_needing_embeddings
             )
 
         logger.info(f"Polymarket sync complete: {stats}")

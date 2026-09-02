@@ -22,6 +22,7 @@ and asserting the slug got populated.
 """
 
 from sqlalchemy import event
+from sqlalchemy.orm import deferred
 
 from app import db
 from app.lib.time import utcnow_naive
@@ -195,8 +196,11 @@ class NewsArticle(db.Model):
     geographic_scope = db.Column(db.String(20), default='unknown')  # 'global', 'regional', 'national', 'local', 'unknown'
     geographic_countries = db.Column(db.String(500))  # Comma-separated list of countries mentioned (e.g., "UK, US" or "Global")
 
-    # Embedding for clustering (stored as JSON array of floats)
-    title_embedding = db.Column(db.JSON)
+    # Embedding for clustering (stored as JSON array of floats).
+    # Deferred: ~13 KB per row. Discussion pages eager-load their source
+    # articles, so an undeferred vector rode along on every public render.
+    # Clustering/backfill undefer it explicitly where the maths needs it.
+    title_embedding = deferred(db.Column(db.JSON))
 
     created_at = db.Column(db.DateTime, default=utcnow_naive)
 
