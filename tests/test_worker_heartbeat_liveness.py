@@ -23,7 +23,7 @@ def _read(path: str) -> str:
 
 def test_heartbeat_survives_a_missed_tick():
     """Losing one beat must not expire the key, or restarts would flap."""
-    from scripts.run_consensus_worker import (
+    from app.lib.process_heartbeat import (
         HEARTBEAT_TTL_SECONDS,
         HEARTBEAT_INTERVAL_SECONDS,
     )
@@ -34,10 +34,10 @@ def test_heartbeat_survives_a_missed_tick():
     )
 
 
-def test_heartbeat_ttl_outlives_the_scheduler_sweep():
+def test_heartbeat_ttl_shorter_than_scheduler_sweep():
     """The scheduler only looks every 5 minutes; the TTL must not be so long
     that a real crash goes unnoticed for multiple sweeps."""
-    from scripts.run_consensus_worker import HEARTBEAT_TTL_SECONDS
+    from app.lib.process_heartbeat import HEARTBEAT_TTL_SECONDS
 
     scheduler_sweep_seconds = 300
     assert HEARTBEAT_TTL_SECONDS < scheduler_sweep_seconds
@@ -50,7 +50,7 @@ def test_heartbeat_keeps_beating_through_a_long_job():
     continues. A heartbeat published from the work loop would produce exactly
     one beat here and then expire.
     """
-    from scripts.run_consensus_worker import run_heartbeat_loop
+    from app.lib.process_heartbeat import run_heartbeat_loop
 
     beats = []
     stop = threading.Event()
@@ -78,7 +78,7 @@ def test_heartbeat_keeps_beating_through_a_long_job():
 
 def test_publish_failure_does_not_kill_the_heartbeat_thread():
     """Redis blipping must not silently end liveness reporting for good."""
-    from scripts.run_consensus_worker import run_heartbeat_loop
+    from app.lib.process_heartbeat import run_heartbeat_loop
 
     calls = []
     stop = threading.Event()
@@ -94,13 +94,33 @@ def test_publish_failure_does_not_kill_the_heartbeat_thread():
 
 
 def test_stop_event_ends_the_loop_promptly():
-    from scripts.run_consensus_worker import run_heartbeat_loop
+    from app.lib.process_heartbeat import run_heartbeat_loop
 
     stop = threading.Event()
     stop.set()
     calls = []
     run_heartbeat_loop(lambda: calls.append(1), stop, interval=999)
     assert calls == []
+
+
+def test_liveness_helpers_do_not_set_worker_env(monkeypatch):
+    """Importing cadence helpers must not mark this process as the worker.
+
+    scripts/run_consensus_worker.py setdefaults CONSENSUS_WORKER_PROCESS at
+    import; tests that only need the beat loop must not pay that side effect,
+    or later tests would run clustering they expected to skip.
+    """
+    import os
+    import sys
+
+    monkeypatch.delenv("CONSENSUS_WORKER_PROCESS", raising=False)
+    monkeypatch.delenv("DISABLE_SCHEDULER", raising=False)
+    sys.modules.pop("app.lib.process_heartbeat", None)
+
+    from app.lib.process_heartbeat import run_heartbeat_loop  # noqa: F401
+
+    assert os.getenv("CONSENSUS_WORKER_PROCESS") is None
+    assert os.getenv("DISABLE_SCHEDULER") is None
 
 
 def test_work_loop_no_longer_owns_the_heartbeat():

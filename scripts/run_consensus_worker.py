@@ -27,6 +27,10 @@ os.environ.setdefault("DISABLE_SCHEDULER", "1")
 # Mark this process as the approved heavy-consensus worker context.
 os.environ.setdefault("CONSENSUS_WORKER_PROCESS", "1")
 
+from app.lib.process_heartbeat import (  # noqa: E402
+    HEARTBEAT_TTL_SECONDS,
+    run_heartbeat_loop,
+)
 from app import create_app, db  # noqa: E402
 from app.discussions.jobs import process_next_consensus_job, mark_stale_consensus_jobs, get_consensus_queue_metrics  # noqa: E402
 from app.programmes.export_jobs import (
@@ -58,24 +62,8 @@ def _handle_shutdown(signum, _frame):
 # there is unfinished work, so the key must mean "process alive" — not "process
 # is between jobs". Consensus jobs carry a 900s timeout and an explicit oversize
 # mode, so a beat tied to the work loop would expire during a healthy long run
-# and page a false crash. The beat therefore runs on its own thread, often
-# enough that losing a tick cannot expire the key.
-HEARTBEAT_TTL_SECONDS = 120
-HEARTBEAT_INTERVAL_SECONDS = 20
-
-
-def run_heartbeat_loop(publish, stop_event, interval=HEARTBEAT_INTERVAL_SECONDS):
-    """Beat until stop_event is set. A publish failure must not kill the thread.
-
-    Separate from the thread wiring so the cadence is testable without
-    spawning one.
-    """
-    while not stop_event.is_set():
-        try:
-            publish()
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.debug(f"Consensus worker heartbeat tick failed: {exc}")
-        stop_event.wait(interval)
+# and page a false crash. Cadence lives in app.lib.process_heartbeat so tests
+# can drive it without importing this script (which mutates process env).
 
 
 def _start_heartbeat_thread(worker_id, stop_event):
