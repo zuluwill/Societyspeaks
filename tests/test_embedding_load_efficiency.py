@@ -250,8 +250,63 @@ def test_due_check_does_not_select_topic_embedding(db):
     assert "topic_embedding" not in sql
 
 
+def test_due_query_is_not_mutated_by_existence_probe(db):
+    """with_entities() must not poison the query that later loads full topics.
+
+    run_batch_matching probes due_query.with_entities(TrendingTopic.id).first()
+    then calls due_query.options(undefer(...)).all(). If with_entities mutated
+    the original query in place, .all() would yield Row tuples, match_topic
+    would throw, and every topic would land in stats['errors'] — silently
+    matching nothing. The load-count test would still pass.
+    """
+    from app.models import TrendingTopic
+    from app.polymarket.matcher import MarketMatcher
+
+    _make_unrelated_market(db)
+    _make_topics(db, count=2)
+    db.session.commit()
+
+    matcher = MarketMatcher()
+    due_query = matcher._topics_due_for_matching_query(7, False)
+    assert due_query.with_entities(TrendingTopic.id).first() is not None
+
+    topics = due_query.all()
+    assert len(topics) == 2
+    assert all(isinstance(t, TrendingTopic) for t in topics)
+    assert all(hasattr(t, "title") and t.title for t in topics)
+
+
+def test_batch_matching_writes_embedding_matches(db):
+    """End-to-end: the due-check, one pool, undefer, and a real TopicMarketMatch."""
+    from app.models import TopicMarketMatch
+    from app.polymarket.matcher import MarketMatcher
+
+    market = _make_market(db)
+    market.question_embedding = [1.0, 0.0, 0.0]
+    topic = _make_topics(db, count=1)[0]
+    topic.topic_embedding = [1.0, 0.0, 0.0]
+    db.session.commit()
+
+    stats = MarketMatcher().run_batch_matching(days_back=7)
+    assert stats["processed"] == 1
+    assert stats["matched"] == 1
+    assert stats["errors"] == 0
+    assert stats["skipped"] == 0
+
+    rows = TopicMarketMatch.query.all()
+    assert len(rows) == 1
+    assert rows[0].trending_topic_id == topic.id
+    assert rows[0].market_id == market.id
+    assert rows[0].match_method == "embedding"
+    assert rows[0].similarity_score >= MarketMatcher.EMBEDDING_THRESHOLD
+
+    # Matched topics must not re-enter the 30-minute job.
+    again = MarketMatcher().run_batch_matching(days_back=7)
+    assert again["processed"] == 0
+
+
 def test_match_topic_survives_session_expire_when_pool_holds_vectors(db):
-    """Batch matching commits per-topic writes; the pool must not re-read JSON."""
+    """Parsed pool vectors must survive ORM expire; do not re-read JSON from the row."""
     from sqlalchemy.orm import undefer
     from app.models import TrendingTopic
     from app.polymarket.matcher import MarketMatcher
