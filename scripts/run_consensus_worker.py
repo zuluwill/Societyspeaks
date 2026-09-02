@@ -10,6 +10,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 
 # Ensure the workspace root is on sys.path so `app` can be imported
@@ -26,6 +27,10 @@ os.environ.setdefault("DISABLE_SCHEDULER", "1")
 # Mark this process as the approved heavy-consensus worker context.
 os.environ.setdefault("CONSENSUS_WORKER_PROCESS", "1")
 
+from app.lib.process_heartbeat import (  # noqa: E402
+    HEARTBEAT_TTL_SECONDS,
+    run_heartbeat_loop,
+)
 from app import create_app, db  # noqa: E402
 from app.discussions.jobs import process_next_consensus_job, mark_stale_consensus_jobs, get_consensus_queue_metrics  # noqa: E402
 from app.programmes.export_jobs import (
@@ -53,6 +58,25 @@ def _handle_shutdown(signum, _frame):
     _RUNNING = False
 
 
+# The scheduler pages CONSENSUS WORKER UNRESPONSIVE when this key is gone and
+# there is unfinished work, so the key must mean "process alive" — not "process
+# is between jobs". Consensus jobs carry a 900s timeout and an explicit oversize
+# mode, so a beat tied to the work loop would expire during a healthy long run
+# and page a false crash. Cadence lives in app.lib.process_heartbeat so tests
+# can drive it without importing this script (which mutates process env).
+
+
+def _start_heartbeat_thread(worker_id, stop_event):
+    thread = threading.Thread(
+        target=run_heartbeat_loop,
+        args=(lambda: _publish_heartbeat(worker_id), stop_event),
+        name="consensus-worker-heartbeat",
+        daemon=True,
+    )
+    thread.start()
+    return thread
+
+
 def _publish_heartbeat(worker_id):
     """Publish a heartbeat for this worker via the shared Redis pool.
 
@@ -71,9 +95,9 @@ def _publish_heartbeat(worker_id):
     try:
         now_ts = str(int(time.time()))
         # Per-worker heartbeat key for horizontal worker pool visibility.
-        redis_client.setex(f"consensus_worker:heartbeat:{worker_id}", 120, now_ts)
+        redis_client.setex(f"consensus_worker:heartbeat:{worker_id}", HEARTBEAT_TTL_SECONDS, now_ts)
         # Backward-compatible single key used by existing monitors/tests.
-        redis_client.setex("consensus_worker:last_heartbeat_at", 120, now_ts)
+        redis_client.setex("consensus_worker:last_heartbeat_at", HEARTBEAT_TTL_SECONDS, now_ts)
     except Exception as exc:
         logger.debug(f"Consensus worker heartbeat failed: {exc}")
 
@@ -93,11 +117,17 @@ def main():
     last_export_stale_at = 0.0
     stale_sweep_interval = 60  # stale timeout is 900s; sweeping more often adds no value
 
+    # Beat once synchronously so the key exists the moment the worker is up,
+    # then hand the cadence to a daemon thread that keeps beating through long
+    # jobs. The thread dies with the process, which is exactly the signal the
+    # scheduler's UNRESPONSIVE alert is looking for.
+    _publish_heartbeat(worker_id)
+    _start_heartbeat_thread(worker_id, threading.Event())
+
     logger.info(f"Consensus worker started (id={worker_id}).")
     with app.app_context():
         while _RUNNING:
             try:
-                _publish_heartbeat(worker_id)
                 now = time.time()
                 if (now - last_stale_at) >= stale_sweep_interval:
                     stale_count = mark_stale_consensus_jobs()
