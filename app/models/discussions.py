@@ -629,6 +629,17 @@ class Statement(db.Model):
             'vote_count_agree',
             'id'
         ),
+        # Cross-discussion recent feed (/statements/search). The two indexes
+        # above are prefixed by discussion_id, so neither can serve a global
+        # ORDER BY created_at DESC — that query seq-scanned every statement and
+        # top-N sorted the lot to return 20 rows. Postgres reads this backwards
+        # for the DESC ordering, so a plain ascending index is enough (and stays
+        # portable to SQLite in CI).
+        db.Index(
+            'idx_statement_recent_global',
+            'created_at',
+            'id'
+        ),
         db.UniqueConstraint('discussion_id', 'content', name='uq_discussion_statement'),
     )
     

@@ -23,10 +23,16 @@ from datetime import timedelta
 
 import pytz
 from flask import current_app
+from sqlalchemy import event
 from itsdangerous import URLSafeTimedSerializer as Serializer
 
 from app import db
 from app.lib.time import utcnow_naive
+
+# Instance-local cache key for DailyBrief.ordered_items(). Kept out of the
+# mapper so SQLAlchemy never treats it as a column, and cleared on expire /
+# refresh so it cannot outlive the row state it was built from.
+_ORDERED_ITEMS_CACHE = '_ordered_items_cache'
 
 
 class DailyBrief(db.Model):
@@ -158,19 +164,46 @@ class DailyBrief(db.Model):
             .first()
         )
 
+    def ordered_items(self):
+        """This brief's items by position, fetched once per instance.
+
+        ``items`` is lazy='dynamic', which re-queries on *every* access and
+        never caches. Four read paths below each pulled the full list, and the
+        brief email template asks ``brief.is_sectioned`` from inside its
+        per-item loop — so rendering one 11-item brief issued dozens of
+        identical SELECTs. In production that was 2.9M calls returning 11.1
+        rows each.
+
+        The cache is dropped whenever SQLAlchemy expires or refreshes the row,
+        which includes every commit under the default expire_on_commit, so a
+        writer can never read a stale list. Deliberately not used by
+        ``item_count``: that runs a cheap COUNT, and routing it through here
+        would turn brief listings into full item loads.
+        """
+        cached = self.__dict__.get(_ORDERED_ITEMS_CACHE)
+        if cached is not None:
+            return cached
+
+        related = self.items
+        if hasattr(related, 'all'):
+            items = related.order_by(BriefItem.position).all()
+        else:
+            # Already-loaded list; the relationship declares order_by=position.
+            items = list(related)
+        self.__dict__[_ORDERED_ITEMS_CACHE] = items
+        return items
+
     @property
     def is_sectioned(self):
         """Check if this brief uses the sectioned format (vs legacy flat)."""
         from app.brief.sections import is_sectioned_brief
-        items = self.items.all() if hasattr(self.items, 'all') else list(self.items)
-        return is_sectioned_brief(items)
+        return is_sectioned_brief(self.ordered_items())
 
     @property
     def items_by_section(self):
         """Get items grouped by section for template rendering."""
         from app.brief.sections import group_items_by_section
-        items = self.items.order_by(BriefItem.position).all() if hasattr(self.items, 'all') else list(self.items)
-        return group_items_by_section(items)
+        return group_items_by_section(self.ordered_items())
 
     @property
     def reading_time(self):
@@ -180,7 +213,7 @@ class DailyBrief(db.Model):
         """
         word_count = 0
         try:
-            items = self.items.all() if hasattr(self.items, 'all') else list(self.items)
+            items = self.ordered_items()
         except Exception:
             return 0
         if not items:
@@ -212,7 +245,7 @@ class DailyBrief(db.Model):
             'brief_type': self.brief_type,
             'item_count': self.item_count,
             'reading_time': self.reading_time,
-            'items': [item.to_dict() for item in self.items.order_by(BriefItem.position)],
+            'items': [item.to_dict() for item in self.ordered_items()],
             'lens_check': self.lens_check,
             'week_ahead': self.week_ahead,
             'market_pulse': self.market_pulse,
@@ -223,6 +256,18 @@ class DailyBrief(db.Model):
 
     def __repr__(self):
         return f'<DailyBrief {self.date} {self.brief_type} ({self.status})>'
+
+
+def _drop_ordered_items_cache(target, *_args, **_kwargs):
+    """Invalidate the cached item list when the row state is no longer trusted."""
+    target.__dict__.pop(_ORDERED_ITEMS_CACHE, None)
+
+
+# expire fires on commit (expire_on_commit defaults to True) and on explicit
+# session.expire(); refresh fires on session.refresh(). Between them, a caller
+# that writes items and re-reads a property always sees the new list.
+event.listen(DailyBrief, 'expire', _drop_ordered_items_cache, propagate=True)
+event.listen(DailyBrief, 'refresh', _drop_ordered_items_cache, propagate=True)
 
 
 class BriefItem(db.Model):
