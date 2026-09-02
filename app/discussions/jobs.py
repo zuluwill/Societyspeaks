@@ -19,6 +19,10 @@ from app.models import ConsensusJob, Discussion, StatementVote
 
 logger = logging.getLogger(__name__)
 
+# Ops pages on recently exhausted jobs only. An all-time dead-letter count
+# would re-alert every cooldown forever for a job that died months ago.
+DEAD_LETTER_ALERT_LOOKBACK = timedelta(hours=24)
+
 
 def _discussion_vote_window_key(discussion_id):
     """
@@ -94,10 +98,16 @@ def get_consensus_queue_metrics():
     lag_seconds = int((now - oldest.queued_at).total_seconds()) if oldest and oldest.queued_at else 0
     running_count = ConsensusJob.query.filter_by(status=ConsensusJob.STATUS_RUNNING).count()
     dead_letter_count = ConsensusJob.query.filter_by(status=ConsensusJob.STATUS_DEAD_LETTER).count()
+    recent_dead_letter_count = ConsensusJob.query.filter(
+        ConsensusJob.status == ConsensusJob.STATUS_DEAD_LETTER,
+        ConsensusJob.completed_at.isnot(None),
+        ConsensusJob.completed_at >= now - DEAD_LETTER_ALERT_LOOKBACK,
+    ).count()
     return {
         "queued_count": queued_count,
         "running_count": running_count,
         "dead_letter_count": dead_letter_count,
+        "recent_dead_letter_count": recent_dead_letter_count,
         "queue_lag_seconds": max(0, lag_seconds),
     }
 
