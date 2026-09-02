@@ -275,7 +275,8 @@
               </td>
             </tr>
 
-            {% set sorted_items = sorted_items if sorted_items is defined else brief.items|sort(attribute='position') %}
+            {% set sorted_items = sorted_items if sorted_items is defined else brief.ordered_items() %}
+            {% set is_sectioned = brief.is_sectioned %}
 
             {# E1: question-first stance card — one tap in email, above the fold
                so Gmail clip does not hide the ask. Placed before headline index + stories. #}
@@ -545,11 +546,11 @@
             {% set current_section = namespace(key='') %}
             {% for item in sorted_items %}
             {# --- Determine depth: sectioned items use their depth, legacy items default to full --- #}
-            {% set depth = (item.effective_depth if item.effective_depth is defined else (item.depth or 'full')) if brief.is_sectioned else 'full' %}
+            {% set depth = (item.effective_depth if item.effective_depth is defined else (item.depth or 'full')) if is_sectioned else 'full' %}
             {% set item_section = item.section or '_unsectioned' %}
 
             {# --- Section Headers (sectioned briefs only, from SECTIONS config) --- #}
-            {% if brief.is_sectioned %}
+            {% if is_sectioned %}
             {% if item_section != current_section.key and item_section not in ['_unsectioned', 'lead'] %}
             {% set current_section.key = item_section %}
             {% set sec_cfg = SECTIONS.get(item_section, {}) %}
@@ -700,7 +701,7 @@
                   width="100%"
                 >
                   <!-- Thematic Section Heading (legacy non-sectioned briefs only) -->
-                  {% if not brief.is_sectioned and item.trending_topic and item.trending_topic.primary_topic %}
+                  {% if not is_sectioned and item.trending_topic and item.trending_topic.primary_topic %}
                   {% set display_label = TOPIC_DISPLAY_LABELS.get(item.trending_topic.primary_topic.lower(), item.trending_topic.primary_topic|upper) %}
                   {% set display_color = TOPIC_DISPLAY_COLORS.get(display_label, '#64748b') %}
                   <tr>
@@ -724,7 +725,7 @@
                   {% endif %}
 
                   <!-- Story Number / Under the Radar Badge (legacy non-sectioned briefs only) -->
-                  {% if not brief.is_sectioned %}
+                  {% if not is_sectioned %}
                   <tr>
                     <td style="padding-bottom: 8px">
                       {% if item.is_underreported %}

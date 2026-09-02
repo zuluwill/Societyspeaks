@@ -55,7 +55,7 @@
       title="See full discussion thread with all responses"
     >
       <div class="font-bold">
-        💬 {{ _('View Discussion') }} {% set response_count = statement.responses|rejectattr('is_deleted')|list|length %} {% if response_count > 0 %}
+        💬 {{ _('View Discussion') }} {% set response_count = statement._visible_response_count|default(0) %} {% if response_count > 0 %}
         <span class="ml-1 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">{{ response_count }}</span>
         {% endif %}
       </div>
