@@ -303,3 +303,87 @@ def test_count_below_one_selects_nothing(db):
     assert select_questions_in_date_range(
         date.today() - timedelta(days=7), date.today(), count=0
     ) == []
+
+
+def test_batch_scoring_matches_per_question_scoring(db):
+    """The batch precomputes must not change who wins or by how much."""
+    start = date(2026, 7, 20)
+    end = start + timedelta(days=6)
+    from app.models import Statement
+
+    disc = _discussion(db)
+    quiet = _question(db, start, number=500, text='Quiet', discussion_id=disc.id)
+    active_disc = _discussion(db, title='Active batch')
+    active = _question(
+        db, start + timedelta(days=1), number=501, text='Active', discussion_id=active_disc.id,
+    )
+    plain = _question(db, start + timedelta(days=2), number=502, text='Plain')
+    _responses(db, active, 12)
+
+    stmt = Statement(discussion_id=active_disc.id, content='A claim with enough length here.')
+    db.session.add(stmt)
+    db.session.flush()
+    db.session.add(
+        StatementVote(
+            discussion_id=active_disc.id,
+            statement_id=stmt.id,
+            vote=1,
+            session_fingerprint='batch-voter',
+            created_at=utcnow_naive(),
+        )
+    )
+    db.session.commit()
+
+    kwargs = dict(window_start=start, window_end=end, reference_date=end)
+    solo = {
+        q.id: score_question_for_digest(q, **kwargs)
+        for q in (quiet, active, plain)
+    }
+    selected = select_questions_in_date_range(start, end, count=3, reference_date=end)
+    assert [q.id for q in selected] == sorted(solo, key=solo.get, reverse=True)
+    assert selected[0].id == active.id
+
+
+def test_select_questions_in_date_range_does_not_n_plus_one_statement_votes(db):
+    """Weekly brief stance scored every question with its own statement_vote SELECT
+    (Sentry PYTHON-FLASK-JG on brief.weekly_by_date). Batch the activity probe."""
+    from sqlalchemy import event
+
+    start = date(2026, 7, 20)
+    from app.models import Statement
+
+    for i in range(6):
+        disc = _discussion(db, title=f'Discussion {i}')
+        _question(
+            db, start + timedelta(days=i), number=400 + i,
+            text=f'Q{i}', discussion_id=disc.id,
+        )
+        stmt = Statement(discussion_id=disc.id, content=f'A claim with enough length {i}.')
+        db.session.add(stmt)
+        db.session.flush()
+        db.session.add(
+            StatementVote(
+                discussion_id=disc.id,
+                statement_id=stmt.id,
+                vote=1,
+                session_fingerprint=f'recent-{i}',
+                created_at=utcnow_naive(),
+            )
+        )
+    db.session.commit()
+
+    seen = []
+
+    def _record(conn, cursor, statement, params, context, executemany):
+        sql = statement.lower()
+        if 'statement_vote' in sql and 'select' in sql:
+            seen.append(statement)
+
+    event.listen(db.engine, 'before_cursor_execute', _record)
+    try:
+        selected = select_questions_in_date_range(start, start + timedelta(days=6), count=1)
+    finally:
+        event.remove(db.engine, 'before_cursor_execute', _record)
+
+    assert selected
+    assert len(seen) == 1

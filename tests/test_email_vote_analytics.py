@@ -384,8 +384,8 @@ def test_track_confirmed_fires_both_events(app, db):
         assert confirmed['properties']['confirmation_step'] == 'confirmed'
         assert confirmed['properties']['participation_source'] == 'brief_stance_email'
         assert confirmed['properties']['question_text'] == 'Track confirmed vote?'
-        mock_ph.identify.assert_called()
-        assert mock_ph.identify.call_args.kwargs['properties']['brief_subscriber_id'] == sub.id
+        assert confirmed['properties']['$set']['brief_subscriber_id'] == sub.id
+        mock_ph.identify.assert_not_called()
         participated = mock_ph.capture.call_args_list[1].kwargs
         assert participated['distinct_id'] == expected_id
 

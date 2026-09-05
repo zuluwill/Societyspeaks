@@ -1019,6 +1019,22 @@ def event_uuid_from_insert_id(insert_id: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f'https://societyspeaks.io/ph/{insert_id}'))
 
 
+def _merge_person_set_properties(props: dict, identify_properties: dict) -> None:
+    """Attach person properties as ``$set`` on the capture payload.
+
+    posthog-python 6+ deprecated ``identify()`` (removed on the 7.x module
+    and Client). Backend person updates go on the event as ``$set`` —
+    https://posthog.com/docs/product-analytics/identify and
+    https://posthog.com/docs/product-analytics/person-properties. A separate
+    ``set()`` / ``$identify`` call would enqueue a second event for the same
+    write. Merge into any ``$set`` already on the event so explicit keys win.
+    """
+    existing = props.get("$set")
+    merged = dict(existing) if isinstance(existing, dict) else {}
+    merged.update(identify_properties)
+    props["$set"] = merged
+
+
 def safe_posthog_capture(
     *,
     posthog_client: Any,
@@ -1045,6 +1061,11 @@ def safe_posthog_capture(
     only deduplicates on that ``uuid`` argument; a non-UUID ``$insert_id``
     property is ignored and replaced with a random event id (the stance
     reconciler previously multiplied ``email_vote_confirmed`` ~672× per vote).
+    ``identify_properties`` become ``properties['$set']`` on the same
+    capture. That is the supported backend path after ``identify()`` was
+    removed; do not send a follow-up ``set()`` / ``$identify`` for the
+    same write.
+
     ``durable=True`` performs a bounded queue drain after capture — use only for
     conversion-critical events where batch loss on fast POST handlers would
     otherwise under-count. Never call ``flush()`` on the HTTP path.
@@ -1078,13 +1099,10 @@ def safe_posthog_capture(
                 props["$raw_user_agent"] = ua
         for key, value in request_context_properties().items():
             props.setdefault(key, value)
+        if identify_properties:
+            _merge_person_set_properties(props, identify_properties)
 
         posthog_client.capture(**capture_kwargs)
-        if identify_properties:
-            posthog_client.identify(
-                distinct_id=str(distinct_id),
-                properties=identify_properties,
-            )
         if durable:
             _drain_posthog_client(posthog_client)
         return True

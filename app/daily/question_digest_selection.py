@@ -13,10 +13,11 @@ for backwards compatibility) and ``app.scheduler._run_weekly_digest_in_thread``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, timedelta
-from typing import List, Optional
+from datetime import date, datetime, timedelta
+from typing import Collection, List, Optional
 
 from flask import current_app
+from sqlalchemy import func
 
 from app.lib.time import utcnow_naive
 from app.models import DailyQuestion, DailyQuestionResponse, StatementVote
@@ -51,6 +52,43 @@ MONTHLY_DIGEST_PROFILE = DigestScoringProfile(
 )
 
 
+def _discussion_ids_with_recent_votes(
+    discussion_ids: Collection[int],
+    cutoff: datetime,
+) -> set[int]:
+    """Discussion ids that have at least one statement vote since *cutoff*."""
+    ids = {did for did in discussion_ids if did}
+    if not ids:
+        return set()
+    rows = (
+        StatementVote.query.with_entities(StatementVote.discussion_id)
+        .filter(
+            StatementVote.discussion_id.in_(ids),
+            StatementVote.created_at >= cutoff,
+        )
+        .distinct()
+        .all()
+    )
+    return {row[0] for row in rows}
+
+
+def _response_counts_by_question_id(question_ids: Collection[int]) -> dict[int, int]:
+    """``DailyQuestionResponse`` counts keyed by question id (missing → 0)."""
+    ids = [qid for qid in question_ids if qid]
+    if not ids:
+        return {}
+    rows = (
+        DailyQuestionResponse.query.with_entities(
+            DailyQuestionResponse.daily_question_id,
+            func.count(DailyQuestionResponse.id),
+        )
+        .filter(DailyQuestionResponse.daily_question_id.in_(ids))
+        .group_by(DailyQuestionResponse.daily_question_id)
+        .all()
+    )
+    return {qid: n for qid, n in rows}
+
+
 def score_question_for_digest(
     question: DailyQuestion,
     *,
@@ -58,8 +96,15 @@ def score_question_for_digest(
     window_end: date,
     reference_date: Optional[date] = None,
     profile: DigestScoringProfile = WEEKLY_DIGEST_PROFILE,
+    has_recent_discussion_activity: Optional[bool] = None,
+    response_count: Optional[int] = None,
 ) -> float:
-    """Return a higher-is-better engagement score for *question* in the window."""
+    """Return a higher-is-better engagement score for *question* in the window.
+
+    ``has_recent_discussion_activity`` and ``response_count`` are optional
+    precomputes for batch scoring (weekly brief / digest). When omitted the
+    scorer queries itself so unit tests can score one question in isolation.
+    """
     ref = reference_date or date.today()
     window_days = max((window_end - window_start).days, 1)
 
@@ -68,21 +113,26 @@ def score_question_for_digest(
     if question.source_discussion_id:
         score += profile.discussion_boost
 
-        activity_cutoff = utcnow_naive() - profile.activity_window
-        recent_activity = StatementVote.query.filter(
-            StatementVote.discussion_id == question.source_discussion_id,
-            StatementVote.created_at >= activity_cutoff,
-        ).first()
-        if recent_activity:
+        if has_recent_discussion_activity is None:
+            activity_cutoff = utcnow_naive() - profile.activity_window
+            has_recent_discussion_activity = (
+                StatementVote.query.filter(
+                    StatementVote.discussion_id == question.source_discussion_id,
+                    StatementVote.created_at >= activity_cutoff,
+                ).first()
+                is not None
+            )
+        if has_recent_discussion_activity:
             score += profile.activity_boost
 
     days_old = max((ref - question.question_date).days, 0)
     recency_score = 1.0 - (days_old / window_days) * profile.recency_decay
     score += recency_score * profile.recency_weight
 
-    response_count = DailyQuestionResponse.query.filter_by(
-        daily_question_id=question.id,
-    ).count()
+    if response_count is None:
+        response_count = DailyQuestionResponse.query.filter_by(
+            daily_question_id=question.id,
+        ).count()
     if response_count > 0:
         score += min(response_count / profile.response_divisor, profile.response_cap)
 
@@ -123,6 +173,12 @@ def select_questions_in_date_range(
         return []
 
     ref = reference_date or date.today()
+    activity_cutoff = utcnow_naive() - profile.activity_window
+    active_discussions = _discussion_ids_with_recent_votes(
+        [q.source_discussion_id for q in questions if q.source_discussion_id],
+        activity_cutoff,
+    )
+    response_counts = _response_counts_by_question_id([q.id for q in questions])
     scored = [
         (
             question,
@@ -132,6 +188,12 @@ def select_questions_in_date_range(
                 window_end=end_date,
                 reference_date=ref,
                 profile=profile,
+                has_recent_discussion_activity=(
+                    question.source_discussion_id in active_discussions
+                    if question.source_discussion_id
+                    else False
+                ),
+                response_count=response_counts.get(question.id, 0),
             ),
         )
         for question in questions

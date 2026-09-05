@@ -179,7 +179,8 @@ def test_email_vote_confirm_aliases_cookie_to_subscriber(app, db):
         )
         capture = mock_ph.capture.call_args.kwargs
         assert capture['distinct_id'] == email_subscriber_distinct_id(sub.email)
-        assert mock_ph.identify.call_args.kwargs['properties']['brief_subscriber_id'] == sub.id
+        assert capture['properties']['$set']['brief_subscriber_id'] == sub.id
+        mock_ph.identify.assert_not_called()
 
 
 def test_logged_in_resolves_to_plain_user_id(app):
@@ -289,6 +290,63 @@ def test_safe_capture_passes_deterministic_uuid_for_insert_id(app):
     assert len(captured) == 1
     assert captured[0]['properties']['$insert_id'] == 'dqr:9:email_vote_confirmed'
     assert captured[0]['uuid'] == event_uuid_from_insert_id('dqr:9:email_vote_confirmed')
+
+
+def test_safe_capture_sets_person_properties_via_dollar_set_not_identify(app):
+    """posthog-python 7.x has no identify(); person updates belong on the event."""
+    captured = []
+    extra_calls = []
+
+    class _Sdk7Client:
+        project_api_key = 'phc_x'
+
+        def capture(self, **kwargs):
+            captured.append(kwargs)
+
+        def set(self, **kwargs):
+            extra_calls.append(('set', kwargs))
+
+        def identify(self, **kwargs):
+            extra_calls.append(('identify', kwargs))
+
+    from app.lib.posthog_utils import safe_posthog_capture
+
+    with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0'}):
+        ok = safe_posthog_capture(
+            posthog_client=_Sdk7Client(),
+            distinct_id='subscriber:abc',
+            event='email_vote_confirmed',
+            identify_properties={'brief_subscriber_id': 9, 'subscriber_cadence': 'daily'},
+        )
+    assert ok is True
+    assert captured[0]['properties']['$set']['brief_subscriber_id'] == 9
+    assert captured[0]['properties']['$set']['subscriber_cadence'] == 'daily'
+    assert extra_calls == []
+
+
+def test_safe_capture_succeeds_when_real_posthog_module_has_no_identify(app):
+    """The scheduler passes the ``posthog`` module, which 7.x ships without identify()."""
+    import posthog as real_posthog
+
+    captured = []
+    person_sets = []
+
+    from app.lib.posthog_utils import safe_posthog_capture
+
+    with app.test_request_context('/', headers={'User-Agent': 'Mozilla/5.0'}):
+        with patch.object(real_posthog, 'project_api_key', 'phc_x'):
+            with patch.object(real_posthog, 'capture', side_effect=lambda **kw: captured.append(kw)):
+                with patch.object(real_posthog, 'set', side_effect=lambda **kw: person_sets.append(kw)):
+                    assert not hasattr(real_posthog, 'identify')
+                    ok = safe_posthog_capture(
+                        posthog_client=real_posthog,
+                        distinct_id='subscriber:abc',
+                        event='email_vote_confirmed',
+                        identify_properties={'brief_subscriber_id': 3},
+                    )
+    assert ok is True
+    assert captured[0]['properties']['$set']['brief_subscriber_id'] == 3
+    assert person_sets == []
 
 
 def test_safe_system_capture_passes_deterministic_uuid_for_insert_id():
