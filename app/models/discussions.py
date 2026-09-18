@@ -541,12 +541,16 @@ class Discussion(db.Model):
         programme_phase=None,
         programme_theme=None,
         page=1,
-        per_page=9
+        per_page=9,
+        sort='recent',
     ):
         # Lazy import: Programme now lives in app.models.programme; importing it at
         # module top would create a circular dependency with generate_slug.
         from app.models.programme import Programme
         query = Discussion.query.options(db.joinedload(Discussion.creator)).filter(Discussion.partner_env != 'test')
+        # Qualify every column after this join. Programme also has ``country``;
+        # ``filter_by(topic=...)`` binds to Programme and raises
+        # InvalidRequestError (Sentry PYTHON-FLASK-JH).
         query = query.outerjoin(Programme, Discussion.programme_id == Programme.id).filter(
             db.or_(
                 Discussion.programme_id.is_(None),
@@ -588,8 +592,15 @@ class Discussion(db.Model):
         if programme_theme:
             query = query.filter(Discussion.programme_theme == programme_theme)
 
-        return query.order_by(Discussion.created_at.desc())\
-                    .paginate(page=page, per_page=per_page, error_out=False)
+        if sort == 'popular':
+            query = query.order_by(
+                Discussion.participant_count.desc(),
+                Discussion.created_at.desc(),
+            )
+        else:
+            query = query.order_by(Discussion.created_at.desc())
+
+        return query.paginate(page=page, per_page=per_page, error_out=False)
 
 
 # ============================================================================
