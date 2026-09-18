@@ -1458,43 +1458,24 @@ def mark_information_viewed(discussion_id):
 
 
 def fetch_discussions(search, country, city, topic, keywords, programme_id, page, per_page=9, sort='recent'):
-    query = _exclude_test_discussions(Discussion.query).options(
-        joinedload(Discussion.creator),
-    ).outerjoin(
-        Programme, Discussion.programme_id == Programme.id
-    ).filter(
-        or_(
-            Discussion.programme_id.is_(None),
-            and_(Programme.status == 'active', Programme.visibility == 'public')
-        )
+    """HTML search uses the same qualified query as the JSON API.
+
+    Do not rebuild this with ``filter_by`` after the Programme join —
+    Programme has ``country`` and no ``topic``/``city``, which 500s
+    topic filters (Sentry PYTHON-FLASK-JH) and silently mis-filters
+    country against the programme row.
+    """
+    return Discussion.search_discussions(
+        search=search,
+        country=country,
+        city=city,
+        topic=topic,
+        keywords=keywords,
+        programme_id=programme_id,
+        page=page,
+        per_page=per_page,
+        sort=sort,
     )
-
-    # Apply filters if provided - search both title and description
-    if search:
-        query = query.filter(
-            or_(
-                Discussion.title.ilike(f"%{search}%"),
-                Discussion.description.ilike(f"%{search}%")
-            )
-        )
-    if country:
-        query = query.filter_by(country=country)
-    if city:
-        query = query.filter_by(city=city)
-    if topic:
-        query = query.filter_by(topic=topic)
-    if keywords:
-        query = query.filter(Discussion.keywords.ilike(f"%{keywords}%"))
-    if programme_id:
-        query = query.filter(Discussion.programme_id == programme_id)
-
-    # Apply sorting
-    if sort == 'recent':
-        query = query.order_by(Discussion.created_at.desc())
-    elif sort == 'popular':
-        query = query.order_by(Discussion.participant_count.desc())  # Example for popular sorting
-
-    return query.paginate(page=page, per_page=per_page, error_out=False)
 
 
 

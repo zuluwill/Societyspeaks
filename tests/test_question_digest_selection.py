@@ -387,3 +387,59 @@ def test_select_questions_in_date_range_does_not_n_plus_one_statement_votes(db):
 
     assert selected
     assert len(seen) == 1
+
+
+def test_weekly_by_date_does_not_n_plus_one_statement_votes(client, db):
+    """The weekly brief page is the Sentry culprit for PYTHON-FLASK-JG."""
+    from sqlalchemy import event
+
+    from app.models import DailyBrief, Statement
+
+    start = date(2026, 7, 20)
+    end = start + timedelta(days=6)
+    db.session.add(
+        DailyBrief(
+            date=end,
+            brief_type='weekly',
+            status='published',
+            title='Weekly stance N+1',
+            week_start_date=start,
+            week_end_date=end,
+        )
+    )
+
+    for i in range(6):
+        disc = _discussion(db, title=f'Weekly discussion {i}')
+        _question(
+            db, start + timedelta(days=i), number=500 + i,
+            text=f'Weekly Q{i}', discussion_id=disc.id,
+        )
+        stmt = Statement(discussion_id=disc.id, content=f'A claim with enough length {i}.')
+        db.session.add(stmt)
+        db.session.flush()
+        db.session.add(
+            StatementVote(
+                discussion_id=disc.id,
+                statement_id=stmt.id,
+                vote=1,
+                session_fingerprint=f'weekly-{i}',
+                created_at=utcnow_naive(),
+            )
+        )
+    db.session.commit()
+
+    seen = []
+
+    def _record(conn, cursor, statement, params, context, executemany):
+        sql = statement.lower()
+        if 'statement_vote' in sql and 'select' in sql:
+            seen.append(statement)
+
+    event.listen(db.engine, 'before_cursor_execute', _record)
+    try:
+        response = client.get(f'/brief/weekly/{end.isoformat()}')
+    finally:
+        event.remove(db.engine, 'before_cursor_execute', _record)
+
+    assert response.status_code == 200
+    assert len(seen) == 1
