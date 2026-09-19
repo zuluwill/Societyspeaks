@@ -21,6 +21,8 @@
 
     <form method="POST" action="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}" class="mt-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% from 'components/bot_protection.html' import honeypot_field %}
+        {{ honeypot_field() }}
         {% if next_url %}
         <input type="hidden" name="next" value="{{ next_url }}">
         {% endif %}

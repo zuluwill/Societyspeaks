@@ -561,6 +561,11 @@ class Config:
     ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '3'))  # Max failed login attempts
     ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '1800'))  # Timeout in seconds (30 minutes)
     
+    # Combined-signal threshold for user-authored statement/response spam.
+    # Civic mentions of WhatsApp, Telegram, or drug policy stay below this
+    # unless they also carry contact solicitation / marketplace cues.
+    CONTENT_SPAM_SCORE_THRESHOLD = int(os.getenv('CONTENT_SPAM_SCORE_THRESHOLD', '6'))
+
     # Spam Detection Patterns
     SPAM_PATTERNS = [
         'bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph',

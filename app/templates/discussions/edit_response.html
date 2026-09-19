@@ -21,6 +21,8 @@ block content %}
       action="{{ url_for('statements.edit_response', response_id=response.id) }}"
     >
       {{ form.hidden_tag() }}
+      {% from 'components/bot_protection.html' import honeypot_field %}
+      {{ honeypot_field() }}
 
       <!-- Position -->
       <div class="mb-6">

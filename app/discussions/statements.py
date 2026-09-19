@@ -41,9 +41,46 @@ except ImportError:
     posthog = None
 
 from app.lib.posthog_utils import resolve_request_distinct_id, safe_posthog_capture
+from app.lib.content_spam import assess_user_content_spam
+from app.lib.bot_protection import check_honeypot_only
 from app.programmes.journey_analytics import capture_journey_vote_events
 
 statements_bp = Blueprint('statements', __name__)
+
+
+def _unsolicited_content_message():
+    return _(
+        "This submission looks like promotional or unsolicited content. "
+        "Please share a view on the discussion topic instead."
+    )
+
+
+def _reject_unsolicited_content(content, *, context):
+    """Return a user-facing message when content is marketplace/contact spam."""
+    verdict = assess_user_content_spam(content)
+    if not verdict.blocked:
+        return None
+    current_app.logger.warning(
+        "Blocked unsolicited %s (score=%s reasons=%s length=%s)",
+        context,
+        verdict.score,
+        ','.join(verdict.reasons),
+        len(content or ''),
+    )
+    return _unsolicited_content_message()
+
+
+def _user_can_post_response():
+    return current_user.is_authenticated and bool(
+        getattr(current_user, 'email_verified', False)
+    )
+
+
+def _email_verification_required_message():
+    return _(
+        "Please verify your email before posting a response. "
+        "Check your inbox, or resend the verification email from the banner."
+    )
 
 # Legacy cookie name (still written via unified voter cookie helper for backward compatibility).
 STATEMENT_CLIENT_COOKIE_NAME = LEGACY_STATEMENT_CLIENT_COOKIE_NAME
@@ -418,6 +455,21 @@ def create_statement(discussion_id):
     form = StatementForm()
     
     if form.validate_on_submit():
+        if check_honeypot_only():
+            flash(_("Statement posted successfully!"), "success")
+            return redirect(url_for('discussions.view_discussion',
+                                  discussion_id=discussion.id,
+                                  slug=discussion.slug))
+        spam_message = _reject_unsolicited_content(
+            form.content.data, context='statement'
+        )
+        if spam_message:
+            flash(spam_message, "error")
+            return render_template(
+                'discussions/create_statement.html',
+                form=form,
+                discussion=discussion,
+            )
         # Check rate limits only on POST — the Redis path increments a counter,
         # so calling it on GET would burn slots every time the form page is viewed.
         allowed, remaining, rate_message = check_statement_rate_limit(identifier)
@@ -745,6 +797,14 @@ def create_statement_from_embed(discussion_id):
             'success': False,
             'error': 'invalid_content',
             'message': _('Statement must be 500 characters or fewer.'),
+        }), 400
+
+    spam_message = _reject_unsolicited_content(content, context='embed_statement')
+    if spam_message:
+        return jsonify({
+            'success': False,
+            'error': 'unsolicited_content',
+            'message': spam_message,
         }), 400
 
     # Identifier mirrors vote handling so anonymous embeds remain deduplicated/rate-limited.
@@ -1501,6 +1561,19 @@ def edit_statement(statement_id):
     form = StatementForm(obj=statement)
     
     if form.validate_on_submit():
+        if check_honeypot_only():
+            flash(_("Statement updated successfully"), "success")
+            return redirect(url_for('statements.view_statement', statement_id=statement_id))
+        spam_message = _reject_unsolicited_content(
+            form.content.data, context='statement_edit'
+        )
+        if spam_message:
+            flash(spam_message, "error")
+            return render_template(
+                'discussions/edit_statement.html',
+                form=form,
+                statement=statement,
+            )
         statement.content = form.content.data.strip()
         statement.statement_type = form.statement_type.data
         statement.updated_at = utcnow_naive()
@@ -1682,6 +1755,18 @@ def quick_response(statement_id):
 
     _enforce_programme_visibility_for_discussion(discussion)
 
+    if not _user_can_post_response():
+        flash(_email_verification_required_message(), "warning")
+        return redirect(url_for('discussions.view_discussion',
+                              discussion_id=discussion.id,
+                              slug=discussion.slug) + f'#statement-{statement_id}')
+
+    if check_honeypot_only():
+        flash(_("Your thought has been added!"), "success")
+        return redirect(url_for('discussions.view_discussion',
+                              discussion_id=discussion.id,
+                              slug=discussion.slug) + f'#statement-{statement_id}')
+
     content = request.form.get('content', '').strip()
     position = request.form.get('position', 'neutral')
 
@@ -1693,6 +1778,12 @@ def quick_response(statement_id):
     # Only create response if content meets minimum length
     min_length = 5
     if content and len(content) >= min_length:
+        spam_message = _reject_unsolicited_content(content, context='quick_response')
+        if spam_message:
+            flash(spam_message, "error")
+            return redirect(url_for('discussions.view_discussion',
+                                  discussion_id=discussion.id,
+                                  slug=discussion.slug) + f'#statement-{statement_id}')
         try:
             response = Response(
                 statement_id=statement.id,
@@ -1747,6 +1838,10 @@ def create_response(statement_id):
 
     _enforce_programme_visibility_for_discussion(statement.discussion)
 
+    if not _user_can_post_response():
+        flash(_email_verification_required_message(), "warning")
+        return redirect(url_for('statements.view_statement', statement_id=statement.id))
+
     form = ResponseForm()
     # Pre-fill position from query param when coming from inline "write a detailed argument" link
     if request.method == 'GET':
@@ -1755,6 +1850,19 @@ def create_response(statement_id):
             form.position.data = position_param
 
     if form.validate_on_submit():
+        if check_honeypot_only():
+            flash(_("Response posted successfully!"), "success")
+            return redirect(url_for('statements.view_statement', statement_id=statement.id))
+        spam_message = _reject_unsolicited_content(
+            form.content.data, context='response'
+        )
+        if spam_message:
+            flash(spam_message, "error")
+            return render_template(
+                'discussions/create_response.html',
+                statement=statement,
+                form=form,
+            )
         try:
             response = Response(
                 statement_id=statement.id,
@@ -1854,7 +1962,24 @@ def edit_response(response_id):
     
     form = ResponseForm(obj=response)
     
+    if not _user_can_post_response():
+        flash(_email_verification_required_message(), "warning")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+
     if form.validate_on_submit():
+        if check_honeypot_only():
+            flash(_("Response updated successfully!"), "success")
+            return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+        spam_message = _reject_unsolicited_content(
+            form.content.data, context='response_edit'
+        )
+        if spam_message:
+            flash(spam_message, "error")
+            return render_template(
+                'discussions/edit_response.html',
+                form=form,
+                response=response,
+            )
         try:
             response.content = form.content.data
             response.position = form.position.data

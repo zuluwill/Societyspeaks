@@ -563,6 +563,18 @@ def sync_daily_reason_to_statement(statement_id, user_id, vote, reason, is_anony
         tuple: (Response object, is_new boolean)
     """
     from app.models import Response
+    from app.lib.content_spam import assess_user_content_spam
+
+    spam_verdict = assess_user_content_spam(reason)
+    if spam_verdict.blocked:
+        current_app.logger.warning(
+            "Skipped daily-reason sync for unsolicited content "
+            "(statement_id=%s score=%s reasons=%s)",
+            statement_id,
+            spam_verdict.score,
+            ','.join(spam_verdict.reasons),
+        )
+        return None, False
 
     # Check if user/session already has a response on this statement
     if user_id:

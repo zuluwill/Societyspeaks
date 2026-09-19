@@ -640,6 +640,7 @@
 
 <!-- AJAX Voting Script -->
 <script nonce="{{ csp_nonce() }}">
+  const canPostResponse = {{ (current_user.is_authenticated and current_user.email_verified)|tojson }};
   let isLoadingMoreStatements = false;
   if (!window.userVotes || typeof window.userVotes !== 'object') {
       window.userVotes = {};
@@ -1032,6 +1033,7 @@
 
   // Show inline argument prompt after voting
   function showArgumentPrompt(statementId, voteValue) {
+      if (!canPostResponse) return;
       const statementDiv = document.getElementById(`statement-${statementId}`);
       if (!statementDiv) return;
 
@@ -1061,6 +1063,8 @@
               </div>
               <form action="${quickResponseUrl}" method="POST" class="flex flex-col sm:flex-row gap-2">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  {% from 'components/bot_protection.html' import honeypot_field %}
+                  {{ honeypot_field() }}
                   <input type="hidden" name="position" value="${position}">
                   <input type="text" name="content"
                          class="w-full sm:flex-1 min-w-0 px-3 py-2 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"

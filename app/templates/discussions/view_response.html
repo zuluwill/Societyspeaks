@@ -148,7 +148,7 @@ endblock %} {% block content %}
   {% endif %}
 
   <!-- Add Reply Form -->
-  {% if current_user.is_authenticated %}
+  {% if current_user.is_authenticated and current_user.email_verified %}
   <div class="bg-white rounded-lg shadow p-6">
     <h3 class="text-lg font-semibold mb-4">{{ _('Add a Reply') }}</h3>
     <form
@@ -156,6 +156,8 @@ endblock %} {% block content %}
       action="{{ url_for('statements.create_response', statement_id=response.statement_id) }}"
     >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {% from 'components/bot_protection.html' import honeypot_field %}
+      {{ honeypot_field() }}
       <input
         type="hidden"
         name="parent_response_id"
@@ -190,6 +192,16 @@ endblock %} {% block content %}
         class="bg-primary-600 text-white px-6 py-2 rounded hover:bg-primary-700"
       >
         {{ _('Post Reply') }}
+      </button>
+    </form>
+  </div>
+  {% elif current_user.is_authenticated %}
+  <div class="bg-yellow-50 rounded-lg p-6 text-center border border-yellow-200">
+    <p class="text-yellow-800 mb-3">{{ _('Verify your email to reply to this response.') }}</p>
+    <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="text-sm font-semibold text-yellow-900 underline hover:text-yellow-700">
+        {{ _('Resend verification email') }}
       </button>
     </form>
   </div>

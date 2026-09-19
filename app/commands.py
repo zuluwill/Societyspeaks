@@ -89,8 +89,60 @@ from app.trending.allsides_seed import update_source_leanings
 from app.discussions.thresholds import CONSENSUS_RECOMMENDED_STATEMENT_COUNT
 from datetime import date as date_type
 
+@click.command('hide-content-spam')
+@click.option('--apply', is_flag=True, help='Commit soft-deletes. Dry-run without this flag.')
+@with_appcontext
+def hide_content_spam(apply):
+    """Soft-delete published statements/responses that match unsolicited spam."""
+    from app.lib.content_spam import assess_user_content_spam
+    from app.models import Response, Statement
+
+    hidden_statements = 0
+    hidden_responses = 0
+    statement_hits = []
+    response_hits = []
+    discussion_ids = set()
+
+    statements = Statement.query.filter_by(is_deleted=False).all()
+    for statement in statements:
+        if assess_user_content_spam(statement.content).blocked:
+            statement_hits.append(statement.id)
+            discussion_ids.add(statement.discussion_id)
+            if apply:
+                statement.is_deleted = True
+                statement.mod_status = -1
+                hidden_statements += 1
+
+    responses = Response.query.filter_by(is_deleted=False).all()
+    for response in responses:
+        if assess_user_content_spam(response.content).blocked:
+            response_hits.append(response.id)
+            if response.statement is not None:
+                discussion_ids.add(response.statement.discussion_id)
+            if apply:
+                response.is_deleted = True
+                hidden_responses += 1
+
+    click.echo(
+        f"Matched {len(statement_hits)} statements {statement_hits} "
+        f"and {len(response_hits)} responses {response_hits}"
+    )
+    if apply:
+        db.session.commit()
+        click.echo(
+            f"Soft-deleted {hidden_statements} statements and "
+            f"{hidden_responses} responses"
+        )
+        from app.api.utils import invalidate_partner_snapshot_cache
+        for discussion_id in discussion_ids:
+            invalidate_partner_snapshot_cache(discussion_id)
+    else:
+        click.echo("Dry-run only. Re-run with --apply to hide the matches.")
+
+
 def init_commands(app):
     app.cli.add_command(clean_spam)
+    app.cli.add_command(hide_content_spam)
     @app.cli.command('seed-db')
     def seed_database():
         """Seeds the database with a sample native discussion (dev only)."""

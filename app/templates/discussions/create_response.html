@@ -72,6 +72,8 @@ statement.content[:50] }}...{% endblock %} {% block content %}
       action="{{ url_for('statements.create_response', statement_id=statement.id) }}"
     >
       {{ form.hidden_tag() }}
+      {% from 'components/bot_protection.html' import honeypot_field %}
+      {{ honeypot_field() }}
 
       <!-- Position -->
       <div class="mb-6">

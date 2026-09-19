@@ -21,6 +21,8 @@ discussion.title }}{% endblock %} {% block content %}
       action="{{ url_for('statements.edit_statement', statement_id=statement.id) }}"
     >
       {{ form.hidden_tag() }}
+      {% from 'components/bot_protection.html' import honeypot_field %}
+      {{ honeypot_field() }}
 
       <!-- Statement Type -->
       <div class="mb-6">

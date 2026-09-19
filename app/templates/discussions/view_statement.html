@@ -110,7 +110,7 @@
   <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
     <h2 class="text-2xl font-bold mb-4">{{ _('Responses & Discussion') }}</h2>
 
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and current_user.email_verified %}
     <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
       <h3 class="font-semibold text-blue-900 mb-3">{{ _('Add Your Response') }}</h3>
       <form
@@ -118,6 +118,8 @@
         action="{{ url_for('statements.create_response', statement_id=statement.id) }}"
       >
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {% from 'components/bot_protection.html' import honeypot_field %}
+        {{ honeypot_field() }}
 
         <div class="mb-4">
           <label class="block text-gray-700 font-medium mb-2">{{ _('Position') }}</label>
@@ -163,6 +165,18 @@
           class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 font-semibold min-h-11"
         >
           {{ _('Post Response') }}
+        </button>
+      </form>
+    </div>
+    {% elif current_user.is_authenticated %}
+    <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center">
+      <p class="text-yellow-800 mb-3">
+        {{ _('Verify your email to add a response to this statement.') }}
+      </p>
+      <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="text-sm font-semibold text-yellow-900 underline hover:text-yellow-700">
+          {{ _('Resend verification email') }}
         </button>
       </form>
     </div>

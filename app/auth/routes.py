@@ -631,6 +631,14 @@ def register():
         return num1, num2
 
     if request.method == 'POST':
+        from app.lib.bot_protection import check_honeypot_only
+        if check_honeypot_only():
+            flash(
+                _("Welcome! We've sent a verification email. You can continue setting up your account."),
+                "success",
+            )
+            return redirect(url_for('auth.login'))
+
         username = (request.form.get('username') or '').strip()
         email_raw = (request.form.get('email') or '').strip()
         password = request.form.get('password') or ''

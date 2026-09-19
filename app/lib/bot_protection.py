@@ -27,10 +27,22 @@ def generate_form_token():
     return f"{ts}.{sig}"
 
 
-def check_bot_submission():
+def check_honeypot_only():
+    """True when the hidden honeypot field was filled.
+
+    Use this on long-lived discussion forms where a signed timestamp would
+    expire while a page is left open. Full ``check_bot_submission`` still
+    applies to short-lived subscribe/register-adjacent flows.
+    """
     honeypot_value = request.form.get(HONEYPOT_FIELD, '')
     if honeypot_value:
         logger.warning(f"Bot detected (honeypot filled): {request.remote_addr}")
+        return True
+    return False
+
+
+def check_bot_submission():
+    if check_honeypot_only():
         return True
 
     ts_token = request.form.get(TIMESTAMP_FIELD, '')
