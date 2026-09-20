@@ -65,6 +65,14 @@ def test_can_start_trial_rejects_disposable_domain(app):
     assert reason == 'disposable_domain'
 
 
+def test_is_disposable_email_matches_trial_list():
+    from app.lib.trial_abuse import is_disposable_email
+    assert is_disposable_email('throwaway@mailinator.com') is True
+    assert is_disposable_email('alice@example.com') is False
+    assert is_disposable_email('') is False
+    assert is_disposable_email(None) is False
+
+
 def test_can_start_trial_allows_legit_email(app, db):
     from app.lib.trial_abuse import can_start_trial
     with app.app_context():

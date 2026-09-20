@@ -1243,7 +1243,7 @@
     <div class="border-b border-yellow-200 bg-yellow-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <p class="text-sm text-yellow-800">
-          <strong>{{ _('Please verify your email') }}</strong> — {{ _('Check your inbox for the verification link.') }}
+          <strong>{{ _('Please verify your email') }}</strong> — {{ _('Check your inbox for a short link — we ask this so replies stay human.') }}
         </p>
         <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="whitespace-nowrap">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

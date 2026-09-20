@@ -94,48 +94,18 @@ from datetime import date as date_type
 @with_appcontext
 def hide_content_spam(apply):
     """Soft-delete published statements/responses that match unsolicited spam."""
-    from app.lib.content_spam import assess_user_content_spam
-    from app.models import Response, Statement
+    from app.lib.content_spam import hide_matching_unsolicited_content
 
-    hidden_statements = 0
-    hidden_responses = 0
-    statement_hits = []
-    response_hits = []
-    discussion_ids = set()
-
-    statements = Statement.query.filter_by(is_deleted=False).all()
-    for statement in statements:
-        if assess_user_content_spam(statement.content).blocked:
-            statement_hits.append(statement.id)
-            discussion_ids.add(statement.discussion_id)
-            if apply:
-                statement.is_deleted = True
-                statement.mod_status = -1
-                hidden_statements += 1
-
-    responses = Response.query.filter_by(is_deleted=False).all()
-    for response in responses:
-        if assess_user_content_spam(response.content).blocked:
-            response_hits.append(response.id)
-            if response.statement is not None:
-                discussion_ids.add(response.statement.discussion_id)
-            if apply:
-                response.is_deleted = True
-                hidden_responses += 1
-
+    result = hide_matching_unsolicited_content(apply=apply)
     click.echo(
-        f"Matched {len(statement_hits)} statements {statement_hits} "
-        f"and {len(response_hits)} responses {response_hits}"
+        f"Matched {len(result['statement_ids'])} statements {result['statement_ids']} "
+        f"and {len(result['response_ids'])} responses {result['response_ids']}"
     )
     if apply:
-        db.session.commit()
         click.echo(
-            f"Soft-deleted {hidden_statements} statements and "
-            f"{hidden_responses} responses"
+            f"Soft-deleted {result['hidden_statements']} statements and "
+            f"{result['hidden_responses']} responses"
         )
-        from app.api.utils import invalidate_partner_snapshot_cache
-        for discussion_id in discussion_ids:
-            invalidate_partner_snapshot_cache(discussion_id)
     else:
         click.echo("Dry-run only. Re-run with --apply to hide the matches.")
 

@@ -134,3 +134,59 @@ def assess_user_content_spam(text: str | None) -> ContentSpamVerdict:
 
 def is_unsolicited_spam(text: str | None) -> bool:
     return assess_user_content_spam(text).blocked
+
+
+def hide_matching_unsolicited_content(*, apply: bool) -> dict:
+    """Soft-delete published statements/responses that match the spam scorer.
+
+    Dry-run when ``apply`` is false. Caller must be inside an app context.
+    """
+    from sqlalchemy.orm import joinedload
+
+    from app import db
+    from app.models import Response, Statement
+
+    statement_hits = []
+    response_hits = []
+    discussion_ids = set()
+    hidden_statements = 0
+    hidden_responses = 0
+
+    statements = Statement.query.filter_by(is_deleted=False).all()
+    for statement in statements:
+        if assess_user_content_spam(statement.content).blocked:
+            statement_hits.append(statement.id)
+            discussion_ids.add(statement.discussion_id)
+            if apply:
+                statement.is_deleted = True
+                statement.mod_status = -1
+                hidden_statements += 1
+
+    responses = (
+        Response.query
+        .options(joinedload(Response.statement))
+        .filter_by(is_deleted=False)
+        .all()
+    )
+    for response in responses:
+        if assess_user_content_spam(response.content).blocked:
+            response_hits.append(response.id)
+            if response.statement is not None:
+                discussion_ids.add(response.statement.discussion_id)
+            if apply:
+                response.is_deleted = True
+                hidden_responses += 1
+
+    if apply:
+        db.session.commit()
+        from app.api.utils import invalidate_partner_snapshot_cache
+        for discussion_id in discussion_ids:
+            invalidate_partner_snapshot_cache(discussion_id)
+
+    return {
+        'statement_ids': statement_hits,
+        'response_ids': response_hits,
+        'hidden_statements': hidden_statements,
+        'hidden_responses': hidden_responses,
+        'applied': apply,
+    }

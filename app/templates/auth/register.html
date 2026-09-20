@@ -35,10 +35,18 @@
         <label class="block text-sm font-medium text-gray-700 mt-4">{{ _('Password') }}</label>
         <input type="password" name="password" autocomplete="new-password" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
 
+        {% if turnstile_site_key|default('') %}
+        <div class="mt-4">
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer nonce="{{ csp_nonce() }}"></script>
+            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>
+            <p class="mt-2 text-xs text-gray-500">{{ _('A short check keeps sign-up human. You will still verify your email before posting replies.') }}</p>
+        </div>
+        {% else %}
         <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700">{{ _("Verify you're human: What is %(num1)s + %(num2)s?", num1=captcha_num1, num2=captcha_num2) }}</label>
             <input type="number" name="verification" class="mt-1 p-2 w-full border rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
         </div>
+        {% endif %}
 
         <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg transition min-h-11">{{ _('Register') }}</button>
     </form>

@@ -17,6 +17,7 @@ CANONICAL_EVENT_NAMES = {
     'response_created',
     'cohort_assigned',
     'analysis_generated',
+    'content_spam_blocked',
 }
 
 

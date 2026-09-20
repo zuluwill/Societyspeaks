@@ -631,12 +631,8 @@ def register():
         return num1, num2
 
     if request.method == 'POST':
-        from app.lib.bot_protection import check_honeypot_only
+        from app.lib.bot_protection import check_honeypot_only, turnstile_is_configured, verify_turnstile_token
         if check_honeypot_only():
-            flash(
-                _("Welcome! We've sent a verification email. You can continue setting up your account."),
-                "success",
-            )
             return redirect(url_for('auth.login'))
 
         username = (request.form.get('username') or '').strip()
@@ -652,11 +648,46 @@ def register():
             flash(_("Password must be at least 8 characters."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
+        if turnstile_is_configured():
+            if not verify_turnstile_token(
+                request.form.get('cf-turnstile-response'),
+                request.remote_addr,
+            ):
+                flash(_("Please complete the human verification and try again."), "error")
+                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+        else:
+            # Math captcha fallback when Cloudflare Turnstile keys are unset.
+            verification = request.form.get('verification')
+            expected = session.pop('captcha_expected', None)  # Pop to prevent reuse
+
+            if expected is None:
+                flash(_("Session expired. Please try again."), "error")
+                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+
+            if not verification:
+                flash(_("Please answer the verification question."), "error")
+                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+
+            try:
+                verification_int = int(verification)
+            except (ValueError, TypeError):
+                flash(_("Incorrect verification answer. Please try again."), "error")
+                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+
+            if verification_int != expected:
+                flash(_("Incorrect verification answer. Please try again."), "error")
+                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+
         clean_email = extract_clean_email(email_raw)
         if clean_email is None:
             flash(_("Please provide a valid email address."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
         email = clean_email.lower()
+
+        from app.lib.trial_abuse import is_disposable_email
+        if is_disposable_email(email):
+            flash(_("Please use a lasting email address so we can reach you."), "error")
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Get spam patterns from config
         spam_patterns = current_app.config.get('SPAM_PATTERNS', [])
@@ -669,30 +700,6 @@ def register():
 
         if User.query.filter_by(email=email).first():
             flash(_("Email already registered. Please log in."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
-
-        # Verify CAPTCHA (server-side session validation)
-        verification = request.form.get('verification')
-        expected = session.pop('captcha_expected', None)  # Pop to prevent reuse
-
-        # Check if session has expected value (prevents replay attacks)
-        if expected is None:
-            flash(_("Session expired. Please try again."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
-
-        # Check if verification answer was provided
-        if not verification:
-            flash(_("Please answer the verification question."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
-
-        try:
-            verification_int = int(verification)
-        except (ValueError, TypeError):
-            flash(_("Incorrect verification answer. Please try again."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
-
-        if verification_int != expected:
-            flash(_("Incorrect verification answer. Please try again."), "error")
             return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Hash the password and create the user
@@ -770,15 +777,23 @@ def register():
             return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
         return redirect(url_for('profiles.select_profile_type'))
 
-    # GET request - generate fresh CAPTCHA
-    captcha_num1, captcha_num2 = generate_captcha()
+    from app.lib.bot_protection import turnstile_is_configured
+    turnstile_site_key = (
+        (current_app.config.get('TURNSTILE_SITE_KEY') or '').strip()
+        if turnstile_is_configured()
+        else ''
+    )
+    captcha_num1 = captcha_num2 = None
+    if not turnstile_site_key:
+        captcha_num1, captcha_num2 = generate_captcha()
 
     return render_template('auth/register.html',
                          invitation_email=pending_invitation_email,
                          invitation_org=pending_invitation_org,
                          next_url=next_url,
                          captcha_num1=captcha_num1,
-                         captcha_num2=captcha_num2)
+                         captcha_num2=captcha_num2,
+                         turnstile_site_key=turnstile_site_key)
 
 
 

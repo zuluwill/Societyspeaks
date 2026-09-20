@@ -65,7 +65,8 @@ csp = {
         "https://pol.is",
         "https://*.posthog.com",
         "https://us-assets.i.posthog.com",
-        "https://eu-assets.i.posthog.com"
+        "https://eu-assets.i.posthog.com",
+        "https://challenges.cloudflare.com",
     ],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],

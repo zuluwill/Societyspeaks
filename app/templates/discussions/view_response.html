@@ -197,7 +197,7 @@ endblock %} {% block content %}
   </div>
   {% elif current_user.is_authenticated %}
   <div class="bg-yellow-50 rounded-lg p-6 text-center border border-yellow-200">
-    <p class="text-yellow-800 mb-3">{{ _('Verify your email to reply to this response.') }}</p>
+    <p class="text-yellow-800 mb-3">{{ _('Check your inbox for a short link so we know replies are from a real person. You can still vote and add statements.') }}</p>
     <form method="POST" action="{{ url_for('auth.resend_verification') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="text-sm font-semibold text-yellow-900 underline hover:text-yellow-700">

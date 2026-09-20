@@ -565,6 +565,9 @@ class Config:
     # Civic mentions of WhatsApp, Telegram, or drug policy stay below this
     # unless they also carry contact solicitation / marketplace cues.
     CONTENT_SPAM_SCORE_THRESHOLD = int(os.getenv('CONTENT_SPAM_SCORE_THRESHOLD', '6'))
+    CONTENT_SPAM_ALERT_THRESHOLD = int(os.getenv('CONTENT_SPAM_ALERT_THRESHOLD', '8'))
+    TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '')
+    TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
 
     # Spam Detection Patterns
     SPAM_PATTERNS = [

@@ -171,7 +171,7 @@
     {% elif current_user.is_authenticated %}
     <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center">
       <p class="text-yellow-800 mb-3">
-        {{ _('Verify your email to add a response to this statement.') }}
+        {{ _('Check your inbox for a short link so we know replies are from a real person. You can still vote and add statements.') }}
       </p>
       <form method="POST" action="{{ url_for('auth.resend_verification') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

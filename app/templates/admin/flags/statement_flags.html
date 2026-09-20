@@ -9,10 +9,28 @@
             <h1 class="text-3xl font-bold text-gray-900">Statement Flags</h1>
             <p class="mt-1 text-gray-500">{{ pending_count }} pending, {{ reviewed_count }} reviewed, {{ dismissed_count }} dismissed</p>
         </div>
-        <a href="{{ url_for('admin.dashboard') }}"
-           class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
-            Back to Dashboard
-        </a>
+        <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-2">
+            <form method="POST" action="{{ url_for('admin.admin_hide_content_spam') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition">
+                    Preview unsolicited spam
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin.admin_hide_content_spam') }}"
+                  onsubmit="return confirm('Hide matching unsolicited statements and responses from the public site?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="apply" value="1">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition">
+                    Hide matching spam
+                </button>
+            </form>
+            <a href="{{ url_for('admin.dashboard') }}"
+               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                Back to Dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Filter Tabs -->

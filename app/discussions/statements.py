@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 from app import db, limiter, csrf, cache
 from app.db_retry import with_db_retry
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
-from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
+from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant, User
 from app.email_utils import create_discussion_notification
 from app.discussions.follower_notifications import notify_discussion_followers
 from app.programmes.permissions import can_view_programme
@@ -55,7 +55,7 @@ def _unsolicited_content_message():
     )
 
 
-def _reject_unsolicited_content(content, *, context):
+def _reject_unsolicited_content(content, *, context, discussion_id=None):
     """Return a user-facing message when content is marketplace/contact spam."""
     verdict = assess_user_content_spam(content)
     if not verdict.blocked:
@@ -66,6 +66,13 @@ def _reject_unsolicited_content(content, *, context):
         verdict.score,
         ','.join(verdict.reasons),
         len(content or ''),
+    )
+    from app.lib.spam_telemetry import record_content_spam_block
+    record_content_spam_block(
+        context=context,
+        score=verdict.score,
+        reasons=verdict.reasons,
+        discussion_id=discussion_id,
     )
     return _unsolicited_content_message()
 
@@ -79,7 +86,8 @@ def _user_can_post_response():
 def _email_verification_required_message():
     return _(
         "Please verify your email before posting a response. "
-        "Check your inbox, or resend the verification email from the banner."
+        "Check your inbox, or resend the link from the banner — "
+        "we ask this so replies stay human."
     )
 
 # Legacy cookie name (still written via unified voter cookie helper for backward compatibility).
@@ -354,24 +362,62 @@ def embed_statement_submissions_allowed(discussion):
     return bool(getattr(discussion, 'embed_statement_submissions_enabled', False))
 
 
+def _statement_hourly_limit(identifier):
+    """Hourly statement cap. New or unverified accounts are tighter."""
+    user_id = identifier.get('user_id')
+    if not user_id:
+        return 5
+    user = None
+    if (
+        current_user.is_authenticated
+        and getattr(current_user, 'id', None) == user_id
+    ):
+        user = current_user
+    if user is None:
+        user = db.session.get(User, user_id)
+    if user is None:
+        return 10
+    if not getattr(user, 'email_verified', False):
+        return 2
+    created = getattr(user, 'created_at', None)
+    if created is not None:
+        age = utcnow_naive() - created
+        if age.total_seconds() < 24 * 3600:
+            return 2
+    return 10
+
+
+def _statement_rate_limit_message(rate_limit, identifier):
+    if not identifier.get('user_id'):
+        actor = "anonymous users"
+    elif rate_limit <= 2:
+        actor = "new or unverified accounts"
+    else:
+        actor = "logged-in users"
+    return (
+        f"Rate limit exceeded. {actor.capitalize()} can post "
+        f"{rate_limit} statements per hour. Please try again later."
+    )
+
+
 def check_statement_rate_limit(identifier):
     """
     Check if user has exceeded statement rate limit.
 
     Rate limits (per hour):
     - Anonymous users: 5 statements
-    - Authenticated users: 10 statements
+    - New or unverified accounts: 2 statements
+    - Established authenticated users: 10 statements
 
     Primary path: Redis INCR with ~1-hour TTL — atomic, no DB query.
     Fallback path: DB COUNT (original behaviour) if Redis is unavailable.
 
     Returns: (allowed: bool, remaining: int, message: str)
     """
+    rate_limit = _statement_hourly_limit(identifier)
     if identifier['user_id']:
-        rate_limit = 10
         actor_key = f"u:{identifier['user_id']}"
     else:
-        rate_limit = 5
         actor_key = f"a:{(identifier['session_fingerprint'] or '')[:16]}"
 
     now = utcnow_naive()
@@ -402,8 +448,7 @@ def check_statement_rate_limit(identifier):
             remaining = max(0, rate_limit - weighted_count)
             allowed = weighted_count <= rate_limit
             if not allowed:
-                user_type = "logged-in users" if identifier['user_id'] else "anonymous users"
-                message = f"Rate limit exceeded. {user_type.capitalize()} can post {rate_limit} statements per hour. Please try again later."
+                message = _statement_rate_limit_message(rate_limit, identifier)
             else:
                 message = None
             return allowed, remaining, message
@@ -427,8 +472,7 @@ def check_statement_rate_limit(identifier):
     remaining = max(0, rate_limit - recent_count)
     allowed = recent_count < rate_limit
     if not allowed:
-        user_type = "logged-in users" if identifier['user_id'] else "anonymous users"
-        message = f"Rate limit exceeded. {user_type.capitalize()} can post {rate_limit} statements per hour. Please try again later."
+        message = _statement_rate_limit_message(rate_limit, identifier)
     else:
         message = None
     return allowed, remaining, message
@@ -456,12 +500,11 @@ def create_statement(discussion_id):
     
     if form.validate_on_submit():
         if check_honeypot_only():
-            flash(_("Statement posted successfully!"), "success")
             return redirect(url_for('discussions.view_discussion',
                                   discussion_id=discussion.id,
                                   slug=discussion.slug))
         spam_message = _reject_unsolicited_content(
-            form.content.data, context='statement'
+            form.content.data, context='statement', discussion_id=discussion.id
         )
         if spam_message:
             flash(spam_message, "error")
@@ -799,7 +842,9 @@ def create_statement_from_embed(discussion_id):
             'message': _('Statement must be 500 characters or fewer.'),
         }), 400
 
-    spam_message = _reject_unsolicited_content(content, context='embed_statement')
+    spam_message = _reject_unsolicited_content(
+        content, context='embed_statement', discussion_id=discussion.id
+    )
     if spam_message:
         return jsonify({
             'success': False,
@@ -1562,10 +1607,11 @@ def edit_statement(statement_id):
     
     if form.validate_on_submit():
         if check_honeypot_only():
-            flash(_("Statement updated successfully"), "success")
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
         spam_message = _reject_unsolicited_content(
-            form.content.data, context='statement_edit'
+            form.content.data,
+            context='statement_edit',
+            discussion_id=statement.discussion_id,
         )
         if spam_message:
             flash(spam_message, "error")
@@ -1762,7 +1808,6 @@ def quick_response(statement_id):
                               slug=discussion.slug) + f'#statement-{statement_id}')
 
     if check_honeypot_only():
-        flash(_("Your thought has been added!"), "success")
         return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug) + f'#statement-{statement_id}')
@@ -1778,7 +1823,9 @@ def quick_response(statement_id):
     # Only create response if content meets minimum length
     min_length = 5
     if content and len(content) >= min_length:
-        spam_message = _reject_unsolicited_content(content, context='quick_response')
+        spam_message = _reject_unsolicited_content(
+            content, context='quick_response', discussion_id=discussion.id
+        )
         if spam_message:
             flash(spam_message, "error")
             return redirect(url_for('discussions.view_discussion',
@@ -1851,10 +1898,11 @@ def create_response(statement_id):
 
     if form.validate_on_submit():
         if check_honeypot_only():
-            flash(_("Response posted successfully!"), "success")
             return redirect(url_for('statements.view_statement', statement_id=statement.id))
         spam_message = _reject_unsolicited_content(
-            form.content.data, context='response'
+            form.content.data,
+            context='response',
+            discussion_id=statement.discussion_id,
         )
         if spam_message:
             flash(spam_message, "error")
@@ -1968,10 +2016,11 @@ def edit_response(response_id):
 
     if form.validate_on_submit():
         if check_honeypot_only():
-            flash(_("Response updated successfully!"), "success")
             return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
         spam_message = _reject_unsolicited_content(
-            form.content.data, context='response_edit'
+            form.content.data,
+            context='response_edit',
+            discussion_id=response.statement.discussion_id if response.statement else None,
         )
         if spam_message:
             flash(spam_message, "error")

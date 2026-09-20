@@ -69,3 +69,42 @@ def check_bot_submission():
         return True
 
     return False
+
+
+TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+
+
+def turnstile_is_configured() -> bool:
+    try:
+        site = (current_app.config.get('TURNSTILE_SITE_KEY') or '').strip()
+        secret = (current_app.config.get('TURNSTILE_SECRET_KEY') or '').strip()
+    except RuntimeError:
+        return False
+    return bool(site and secret)
+
+
+def verify_turnstile_token(token: str | None, remote_ip: str | None = None) -> bool:
+    """Verify a Cloudflare Turnstile token. Returns True when Turnstile is unset.
+
+    When keys are configured, missing/invalid tokens fail closed.
+    """
+    if not turnstile_is_configured():
+        return True
+    if not token or not str(token).strip():
+        logger.warning('Turnstile token missing from submission')
+        return False
+    secret = current_app.config.get('TURNSTILE_SECRET_KEY')
+    try:
+        import requests
+        payload = {'secret': secret, 'response': token}
+        if remote_ip:
+            payload['remoteip'] = remote_ip
+        resp = requests.post(TURNSTILE_VERIFY_URL, data=payload, timeout=5)
+        data = resp.json() if resp.ok else {}
+        success = bool(data.get('success'))
+        if not success:
+            logger.warning('Turnstile verification failed: %s', data.get('error-codes'))
+        return success
+    except Exception:
+        logger.warning('Turnstile verification request failed', exc_info=True)
+        return False

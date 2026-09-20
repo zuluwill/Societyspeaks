@@ -2216,6 +2216,40 @@ def list_statement_flags():
     )
 
 
+@admin_bp.route('/moderation/hide-content-spam', methods=['POST'])
+@login_required
+@admin_required
+def admin_hide_content_spam():
+    """Dry-run or apply the unsolicited-content hide used by the CLI."""
+    apply = request.form.get('apply') == '1'
+    from app.lib.content_spam import hide_matching_unsolicited_content
+    result = hide_matching_unsolicited_content(apply=apply)
+    _log_admin_audit_event(
+        'hide_content_spam',
+        target_type='moderation',
+        metadata={
+            'apply': apply,
+            'statement_ids': result['statement_ids'],
+            'response_ids': result['response_ids'],
+        },
+    )
+    matched = len(result['statement_ids']) + len(result['response_ids'])
+    if apply:
+        flash(
+            f"Hid {result['hidden_statements']} statements and "
+            f"{result['hidden_responses']} responses matching unsolicited content.",
+            'success' if matched else 'info',
+        )
+    else:
+        flash(
+            f"Preview: {len(result['statement_ids'])} statements and "
+            f"{len(result['response_ids'])} responses would be hidden. "
+            "Run again with apply to hide them.",
+            'info',
+        )
+    return redirect(url_for('admin.list_statement_flags'))
+
+
 @admin_bp.route('/flags/statements/<int:flag_id>/review', methods=['POST'])
 @login_required
 @admin_required

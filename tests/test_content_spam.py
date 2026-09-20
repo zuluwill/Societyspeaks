@@ -261,3 +261,249 @@ def test_hide_content_spam_command_dry_run_and_apply(app, db):
     assert applied.exit_code == 0
     assert db.session.get(Response, spam_id).is_deleted is True
     assert db.session.get(Statement, statement.id).is_deleted is False
+
+
+def test_honeypot_does_not_flash_fake_success(app, db, client):
+    user, discussion, statement = _seed_discussion(db)
+    _login(client, user.id)
+
+    client.post(
+        f'/statements/{statement.id}/responses/create',
+        data={
+            'content': 'This is a thoughtful civic argument about platform rules.',
+            'position': 'pro',
+            'website_url': 'https://spam.example',
+        },
+        follow_redirects=False,
+    )
+    with client.session_transaction() as sess:
+        flashes = sess.get('_flashes') or []
+    assert not any(category == 'success' for category, _message in flashes)
+
+
+def test_register_honeypot_does_not_flash_welcome(app, db, client):
+    with client.session_transaction() as sess:
+        sess['captcha_expected'] = 7
+
+    client.post(
+        '/auth/register',
+        data={
+            'username': 'honeypotbot2',
+            'email': 'honeypotbot2@example.com',
+            'password': 'ValidPass123!',
+            'verification': '7',
+            'website_url': 'https://spam.example',
+        },
+        follow_redirects=False,
+    )
+    with client.session_transaction() as sess:
+        flashes = sess.get('_flashes') or []
+    assert not any('Welcome' in str(message) for _category, message in flashes)
+    assert User.query.filter_by(email='honeypotbot2@example.com').first() is None
+
+
+def test_register_rejects_disposable_email(app, db, client):
+    with client.session_transaction() as sess:
+        sess['captcha_expected'] = 7
+
+    resp = client.post(
+        '/auth/register',
+        data={
+            'username': 'tempbox',
+            'email': 'throwaway@mailinator.com',
+            'password': 'ValidPass123!',
+            'verification': '7',
+        },
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    assert b'lasting email address' in resp.data
+    assert User.query.filter_by(email='throwaway@mailinator.com').first() is None
+
+
+def test_register_turnstile_rejects_missing_token(app, db, client):
+    app.config['TURNSTILE_SITE_KEY'] = 'test-site-key'
+    app.config['TURNSTILE_SECRET_KEY'] = 'test-secret-key'
+
+    resp = client.post(
+        '/auth/register',
+        data={
+            'username': 'turnstilebot',
+            'email': 'turnstilebot@example.com',
+            'password': 'ValidPass123!',
+        },
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    assert b'human verification' in resp.data
+    assert User.query.filter_by(email='turnstilebot@example.com').first() is None
+
+
+def test_register_turnstile_accepts_verified_token(app, db, client, monkeypatch):
+    app.config['TURNSTILE_SITE_KEY'] = 'test-site-key'
+    app.config['TURNSTILE_SECRET_KEY'] = 'test-secret-key'
+    monkeypatch.setattr(
+        'app.lib.bot_protection.verify_turnstile_token',
+        lambda *args, **kwargs: True,
+    )
+
+    resp = client.post(
+        '/auth/register',
+        data={
+            'username': 'turnstileok',
+            'email': 'turnstileok@example.com',
+            'password': 'ValidPass123!',
+            'cf-turnstile-response': 'ok-token',
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert User.query.filter_by(email='turnstileok@example.com').first() is not None
+
+
+def test_register_page_falls_back_to_math_captcha(app, db, client):
+    resp = client.get('/auth/register')
+    assert resp.status_code == 200
+    assert b'verification' in resp.data
+    assert b'cf-turnstile' not in resp.data
+
+
+def test_unverified_user_statement_hourly_limit(app, db, client):
+    user = User(
+        username='newunverified',
+        email='newunverified@example.com',
+        password='hashed',
+        email_verified=False,
+    )
+    db.session.add(user)
+    db.session.flush()
+    discussion = Discussion(
+        title='How should cities plan housing?',
+        slug=generate_slug('How should cities plan housing?'),
+        creator_id=user.id,
+        has_native_statements=True,
+        topic='Society',
+        geographic_scope='global',
+    )
+    db.session.add(discussion)
+    db.session.commit()
+    _login(client, user.id)
+
+    for index in range(2):
+        resp = client.post(
+            f'/discussions/{discussion.id}/statements/create',
+            data={
+                'content': f'Civic housing idea number {index} about density near transit.',
+                'statement_type': 'claim',
+            },
+            follow_redirects=False,
+        )
+        assert resp.status_code == 302
+
+    assert Statement.query.filter_by(discussion_id=discussion.id, is_deleted=False).count() == 2
+
+    resp = client.post(
+        f'/discussions/{discussion.id}/statements/create',
+        data={
+            'content': 'A third civic housing idea should wait until the hour resets.',
+            'statement_type': 'claim',
+        },
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    assert b'new or unverified accounts' in resp.data.lower()
+    assert Statement.query.filter_by(discussion_id=discussion.id, is_deleted=False).count() == 2
+
+
+def test_anonymous_civic_statement_still_allowed(app, db, client):
+    _user, discussion, _statement = _seed_discussion(db)
+    resp = client.post(
+        f'/discussions/{discussion.id}/statements/create',
+        data={
+            'content': 'Residents should be asked before a high street is pedestrianised.',
+            'statement_type': 'claim',
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert Statement.query.filter_by(discussion_id=discussion.id, is_deleted=False).count() == 2
+
+
+def test_blocked_spam_records_canonical_event(app, db, client):
+    from app.models import AnalyticsEvent
+
+    user, discussion, statement = _seed_discussion(db)
+    _login(client, user.id)
+
+    client.post(
+        f'/statements/{statement.id}/responses/create',
+        data={
+            'content': ASIAN_THERAPIST_SAMPLE,
+            'position': 'neutral',
+        },
+        follow_redirects=True,
+    )
+    events = AnalyticsEvent.query.filter_by(event_name='content_spam_blocked').all()
+    assert len(events) == 1
+    assert events[0].discussion_id == discussion.id
+    assert events[0].event_metadata.get('score') >= 6
+
+
+def test_turnstile_unconfigured_allows_submission(app):
+    from app.lib.bot_protection import turnstile_is_configured, verify_turnstile_token
+    app.config['TURNSTILE_SITE_KEY'] = ''
+    app.config['TURNSTILE_SECRET_KEY'] = ''
+    assert turnstile_is_configured() is False
+    assert verify_turnstile_token(None) is True
+
+
+def test_content_spam_spike_pages_ops(app, monkeypatch):
+    alerts = []
+    fake_redis = type('R', (), {})()
+    fake_redis.incr = lambda key: 8
+    fake_redis.expire = lambda key, ttl: None
+    monkeypatch.setattr('app.lib.redis_client.get_client', lambda **kw: fake_redis)
+    monkeypatch.setattr('app.scheduler._send_ops_alert', lambda message: alerts.append(message))
+    app.config['CONTENT_SPAM_ALERT_THRESHOLD'] = 8
+
+    from app.lib.spam_telemetry import record_content_spam_block
+    with app.app_context():
+        record_content_spam_block(
+            context='statement',
+            score=12,
+            reasons=('known_spam_campaign',),
+            discussion_id=1,
+        )
+    assert alerts
+    assert 'spiked' in alerts[0]
+
+
+def test_admin_can_hide_matching_spam(app, db, client):
+    user, discussion, statement = _seed_discussion(db)
+    user.is_admin = True
+    spam = Response(
+        statement_id=statement.id,
+        user_id=user.id,
+        position='neutral',
+        content=ASIAN_THERAPIST_SAMPLE,
+    )
+    db.session.add(spam)
+    db.session.commit()
+    spam_id = spam.id
+    _login(client, user.id)
+
+    preview = client.post(
+        '/admin/moderation/hide-content-spam',
+        follow_redirects=True,
+    )
+    assert preview.status_code == 200
+    assert b'Preview' in preview.data
+    assert db.session.get(Response, spam_id).is_deleted is False
+
+    applied = client.post(
+        '/admin/moderation/hide-content-spam',
+        data={'apply': '1'},
+        follow_redirects=True,
+    )
+    assert applied.status_code == 200
+    assert db.session.get(Response, spam_id).is_deleted is True

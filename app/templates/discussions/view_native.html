@@ -1033,7 +1033,12 @@
 
   // Show inline argument prompt after voting
   function showArgumentPrompt(statementId, voteValue) {
-      if (!canPostResponse) return;
+      if (!canPostResponse) {
+          {% if current_user.is_authenticated and not current_user.email_verified %}
+          showToast({{ _('Check your inbox for a short link before adding a reply. You can still vote.')|tojson }}, 'info');
+          {% endif %}
+          return;
+      }
       const statementDiv = document.getElementById(`statement-${statementId}`);
       if (!statementDiv) return;
 

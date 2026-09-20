@@ -25,6 +25,7 @@ def test_canonical_event_names_defined():
     assert "'response_created'" in source
     assert "'cohort_assigned'" in source
     assert "'analysis_generated'" in source
+    assert "'content_spam_blocked'" in source
 
 
 def test_rollup_job_is_scheduled():

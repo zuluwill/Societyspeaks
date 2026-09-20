@@ -37,6 +37,15 @@ _IP_RATE_LIMIT_COUNT = 5
 _IP_RATE_LIMIT_WINDOW = timedelta(hours=24)
 
 
+def is_disposable_email(email: Optional[str]) -> bool:
+    """True when the address uses a known disposable mailbox domain."""
+    normalized = normalize_trial_email(email)
+    if not normalized:
+        return False
+    domain = normalized.rpartition('@')[2]
+    return domain in _DISPOSABLE_DOMAINS
+
+
 def can_start_trial(email: Optional[str], ip: Optional[str]) -> tuple[bool, Optional[str]]:
     """Return ``(ok, reason)`` for whether this (email, IP) pair may start a trial.
 

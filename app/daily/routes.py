@@ -574,6 +574,12 @@ def sync_daily_reason_to_statement(statement_id, user_id, vote, reason, is_anony
             spam_verdict.score,
             ','.join(spam_verdict.reasons),
         )
+        from app.lib.spam_telemetry import record_content_spam_block
+        record_content_spam_block(
+            context='daily_reason_sync',
+            score=spam_verdict.score,
+            reasons=spam_verdict.reasons,
+        )
         return None, False
 
     # Check if user/session already has a response on this statement
