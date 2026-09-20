@@ -23,7 +23,7 @@ from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import load_only, selectinload, validates
 
 from app import db, cache
 from app.lib.time import utcnow_naive
@@ -39,6 +39,12 @@ class DiscussionView(db.Model):
 
 
 class Notification(db.Model):
+    __table_args__ = (
+        db.Index('ix_notification_user_created', 'user_id', 'created_at'),
+        db.Index('ix_notification_discussion_created', 'discussion_id', 'created_at'),
+        db.Index('ix_notification_type', 'type'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
@@ -49,8 +55,10 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     email_sent = db.Column(db.Boolean, default=False)
 
-    # Relationships
-    discussion = db.relationship('Discussion', backref='notifications')
+    # selectin so any list of notifications issues one Discussion IN-query
+    # instead of one SELECT per row. query_for_user() further limits columns
+    # to the permalink slug (Sentry PYTHON-FLASK-JJ).
+    discussion = db.relationship('Discussion', backref='notifications', lazy='selectin')
 
     def mark_as_read(self):
         """Mark notification as read"""
@@ -58,10 +66,28 @@ class Notification(db.Model):
         db.session.commit()
 
     @classmethod
+    def query_for_user(cls, user_id):
+        """Notifications for *user_id* with the discussion slug preloaded.
+
+        The list templates only need ``discussion.slug`` for permalinks.
+        ``selectinload`` + ``load_only`` keeps that to one extra IN query
+        instead of a full Discussion row per notification (Sentry
+        PYTHON-FLASK-JJ on ``auth.notifications``).
+        """
+        return cls.query.options(
+            selectinload(cls.discussion).load_only(Discussion.slug)
+        ).filter_by(user_id=user_id)
+
+    @classmethod
     def unread_count_for_user(cls, user_id):
         if not user_id:
             return 0
-        return cls.query.filter_by(user_id=user_id, is_read=False).count()
+        return (
+            db.session.query(db.func.count(cls.id))
+            .filter(cls.user_id == user_id, cls.is_read.is_(False))
+            .scalar()
+            or 0
+        )
 
     @classmethod
     def mark_all_as_read_for_user(cls, user_id):
