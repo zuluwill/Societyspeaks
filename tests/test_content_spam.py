@@ -263,6 +263,17 @@ def test_hide_content_spam_command_dry_run_and_apply(app, db):
     assert db.session.get(Statement, statement.id).is_deleted is False
 
 
+def test_deleted_statement_permalink_redirects_to_discussion(app, db, client):
+    user, discussion, statement = _seed_discussion(db)
+    statement.is_deleted = True
+    statement.mod_status = -1
+    db.session.commit()
+
+    resp = client.get(f'/statements/{statement.id}', follow_redirects=False)
+    assert resp.status_code == 302
+    assert f'/discussions/{discussion.id}' in resp.headers['Location']
+
+
 def test_honeypot_does_not_flash_fake_success(app, db, client):
     user, discussion, statement = _seed_discussion(db)
     _login(client, user.id)

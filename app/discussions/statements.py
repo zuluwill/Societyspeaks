@@ -1558,6 +1558,16 @@ def view_statement(statement_id):
     statement = db.get_or_404(Statement, statement_id)
     discussion = statement.discussion
     _enforce_programme_visibility_for_discussion(discussion)
+
+    if statement.is_deleted:
+        flash(_("This statement has been deleted"), "info")
+        if discussion:
+            return redirect(url_for(
+                'discussions.view_discussion',
+                discussion_id=discussion.id,
+                slug=discussion.slug,
+            ))
+        return redirect(url_for('discussions.search_discussions'))
     
     # Get user's vote if logged in
     user_vote = None
