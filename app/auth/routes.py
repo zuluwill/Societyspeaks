@@ -918,7 +918,7 @@ def dashboard():
         Notification.created_at.desc(),
         Notification.id.desc(),
     ).limit(5).all()
-    unread_notifications = Notification.unread_count_for_user(current_user.id)
+    unread_notifications = current_user.unread_notification_count
     continue_item = recent_contributions[0] if recent_contributions else None
     continue_discussion = continue_item['discussion'] if continue_item else None
     continue_url = continue_item['url'] if continue_item else None
@@ -1118,7 +1118,7 @@ def notifications():
         'auth/notifications.html',
         notifications=pagination.items,
         pagination=pagination,
-        unread_notifications=Notification.unread_count_for_user(current_user.id),
+        unread_notifications=current_user.unread_notification_count,
     )
 
 

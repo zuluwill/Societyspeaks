@@ -39,6 +39,12 @@ class DiscussionView(db.Model):
 
 
 class Notification(db.Model):
+    __table_args__ = (
+        db.Index('ix_notification_user_created', 'user_id', 'created_at'),
+        db.Index('ix_notification_discussion_created', 'discussion_id', 'created_at'),
+        db.Index('ix_notification_type', 'type'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
@@ -49,8 +55,10 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     email_sent = db.Column(db.Boolean, default=False)
 
-    # Relationships
-    discussion = db.relationship('Discussion', backref='notifications')
+    # selectin so any list of notifications issues one Discussion IN-query
+    # instead of one SELECT per row. query_for_user() further limits columns
+    # to the permalink slug (Sentry PYTHON-FLASK-JJ).
+    discussion = db.relationship('Discussion', backref='notifications', lazy='selectin')
 
     def mark_as_read(self):
         """Mark notification as read"""
