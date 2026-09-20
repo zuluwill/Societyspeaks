@@ -23,7 +23,7 @@ from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import load_only, selectinload, validates
 
 from app import db, cache
 from app.lib.time import utcnow_naive
@@ -58,10 +58,28 @@ class Notification(db.Model):
         db.session.commit()
 
     @classmethod
+    def query_for_user(cls, user_id):
+        """Notifications for *user_id* with the discussion slug preloaded.
+
+        The list templates only need ``discussion.slug`` for permalinks.
+        ``selectinload`` + ``load_only`` keeps that to one extra IN query
+        instead of a full Discussion row per notification (Sentry
+        PYTHON-FLASK-JJ on ``auth.notifications``).
+        """
+        return cls.query.options(
+            selectinload(cls.discussion).load_only(Discussion.slug)
+        ).filter_by(user_id=user_id)
+
+    @classmethod
     def unread_count_for_user(cls, user_id):
         if not user_id:
             return 0
-        return cls.query.filter_by(user_id=user_id, is_read=False).count()
+        return (
+            db.session.query(db.func.count(cls.id))
+            .filter(cls.user_id == user_id, cls.is_read.is_(False))
+            .scalar()
+            or 0
+        )
 
     @classmethod
     def mark_all_as_read_for_user(cls, user_id):
