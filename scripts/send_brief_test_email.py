@@ -73,8 +73,18 @@ def main() -> int:
         client.from_email = f'Daily Brief <{client._from_email_addr}>'
         client.reply_to = os.environ.get('BRIEF_REPLY_TO', client._from_email_addr)
 
+        from app.brief.email_display import (
+            brief_email_display_date,
+            brief_email_display_title,
+        )
+
         items = client._get_sorted_brief_items(brief)
-        html = client._render_email(sub, brief, sorted_items=items)
+        display_date = brief_email_display_date(brief, sub)
+        display_title = brief_email_display_title(brief, display_date)
+        html = client._render_email(
+            sub, brief, sorted_items=items,
+            display_date=display_date, display_title=display_title,
+        )
         base_url = get_base_url()
         html = wrap_links(html=html, base_url=base_url, run_id=brief.id,
                           r_hash=str(sub.id or 0), secret=app.config.get('SECRET_KEY', ''),
@@ -82,6 +92,7 @@ def main() -> int:
 
         size_kb = _email_html_byte_size(html) / 1024
         print(f"Brief:      {brief.date} ({len(items)} stories)")
+        print(f"Shown as:   {display_date} / {display_title}")
         print(f"Recipient:  {recipient}   [{using}]")
         print(f"From:       {client.from_email}")
         print(f"HTML size:  {size_kb:.1f} KB")
@@ -92,7 +103,7 @@ def main() -> int:
             json={
                 'from': client.from_email,
                 'to': [recipient],            # single recipient, by construction
-                'subject': f'[TEST] {brief.title}',
+                'subject': f'[TEST] {display_title}',
                 'html': html,
                 'reply_to': client.reply_to,
             },

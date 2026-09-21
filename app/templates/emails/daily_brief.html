@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="x-apple-disable-message-reformatting" />
-    <title>{{ brief.title|e }}</title>
+    <title>{{ (display_title|default(brief.title))|e }}</title>
     <!--[if mso]>
       <noscript>
         <xml>
@@ -230,7 +230,7 @@
                       "
                     >
                       <a href="{{ web_brief_url or magic_link_url }}" target="_blank" style="color: #bfdbfe; text-decoration: none;">
-                      {{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}{% endif %}
+                      {{ (display_date|default(brief.date)).strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; {{ _('~%(minutes)s min read', minutes=brief.reading_time) }}{% endif %}
                       </a>
                     </td>
                   </tr>
