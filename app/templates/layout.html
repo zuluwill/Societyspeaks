@@ -363,24 +363,55 @@
             }
           }
           if (event.event === "$exception") {
-            var msg =
-              (event.properties && event.properties.$exception_message) || "";
-            var type =
-              (event.properties && event.properties.$exception_type) || "";
-            var stack =
-              (event.properties &&
-                event.properties.$exception_stack_trace_raw) ||
-              "";
+            // posthog-js now puts the useful text on $exception_list /
+            // $exception_values, not the legacy singular $exception_message.
+            var props = event.properties || {};
+            var parts = [];
+            var typeParts = [];
+            function ssPushExceptionText(value) {
+              if (value == null) return;
+              if (typeof value === "string") {
+                parts.push(value);
+                return;
+              }
+              if (Array.isArray(value)) {
+                for (var i = 0; i < value.length; i++) ssPushExceptionText(value[i]);
+                return;
+              }
+              if (typeof value === "object") {
+                ssPushExceptionText(value.value);
+                ssPushExceptionText(value.type);
+                ssPushExceptionText(value.message);
+                if (value.stacktrace && value.stacktrace.frames) {
+                  for (var f = 0; f < value.stacktrace.frames.length; f++) {
+                    ssPushExceptionText(value.stacktrace.frames[f].source);
+                    ssPushExceptionText(value.stacktrace.frames[f].filename);
+                  }
+                }
+              }
+            }
+            ssPushExceptionText(props.$exception_message);
+            ssPushExceptionText(props.$exception_type);
+            ssPushExceptionText(props.$exception_stack_trace_raw);
+            ssPushExceptionText(props.$exception_values);
+            ssPushExceptionText(props.$exception_list);
+            if (typeof props.$exception_type === "string") typeParts.push(props.$exception_type);
+            if (Array.isArray(props.$exception_types)) {
+              for (var t = 0; t < props.$exception_types.length; t++) {
+                if (typeof props.$exception_types[t] === "string") typeParts.push(props.$exception_types[t]);
+              }
+            }
+            var blob = parts.join("\n");
+            var typeBlob = typeParts.join("\n");
             if (
-              msg.includes("not an error object") ||
-              type.includes("Extension") ||
-              stack.includes("chrome-extension") ||
-              stack.includes("moz-extension") ||
-              msg.includes("Script error") ||
-              msg.includes("ResizeObserver loop") ||
-              msg.includes("Object Not Found Matching Id") ||
-              msg.includes("MethodName:update, ParamCount:4") ||
-              (type === "UnhandledRejection" && msg.includes("Object Not Found"))
+              blob.includes("not an error object") ||
+              typeBlob.includes("Extension") ||
+              blob.includes("chrome-extension") ||
+              blob.includes("moz-extension") ||
+              blob.includes("Script error") ||
+              blob.includes("ResizeObserver loop") ||
+              blob.includes("Object Not Found Matching Id") ||
+              blob.includes("MethodName:update")
             ) {
               return null;
             }
