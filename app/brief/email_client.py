@@ -32,6 +32,10 @@ from app.lib.email_idempotency import (
 from app.briefing.link_tracker import wrap_links as _wrap_links, sign_url as _sign_url
 from app.lib.unsubscribe_tokens import build_brief_unsubscribe_url
 from app.storage_utils import get_base_url
+from app.brief.email_display import (
+    brief_email_display_date,
+    brief_email_display_title,
+)
 
 try:
     import sentry_sdk as _sentry_sdk
@@ -769,15 +773,18 @@ class ResendClient:
         preferences_url: str,
         sorted_items: Optional[List[BriefItem]] = None,
         web_brief_url: Optional[str] = None,
+        display_date: Optional[date] = None,
+        display_title: Optional[str] = None,
     ) -> str:
         """Render a plain-text alternative to improve inbox deliverability."""
         if sorted_items is None:
             sorted_items = self._get_sorted_brief_items(brief)
 
+        shown_date = display_date or getattr(brief, 'date', None)
         lines = [
-            brief.title or "Daily Brief",
+            display_title or brief.title or "Daily Brief",
             "",
-            f"Date: {brief.date.strftime('%A, %B %d, %Y') if getattr(brief, 'date', None) else 'Today'}",
+            f"Date: {shown_date.strftime('%A, %B %d, %Y') if shown_date else 'Today'}",
         ]
 
         intro_text = getattr(brief, 'intro_text', None)
@@ -934,8 +941,17 @@ class ResendClient:
             unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
 
+            display_date = brief_email_display_date(brief, subscriber)
+            display_title = brief_email_display_title(brief, display_date)
+
             # Render email HTML (sorted_items passed to avoid a second DB query)
-            html_content = self._render_email(subscriber, brief, sorted_items=sorted_items)
+            html_content = self._render_email(
+                subscriber,
+                brief,
+                sorted_items=sorted_items,
+                display_date=display_date,
+                display_title=display_title,
+            )
 
             # Wrap links for click tracking (tracks clicks in EmailEvent)
             secret = current_app.config.get('SECRET_KEY', '')
@@ -960,7 +976,7 @@ class ResendClient:
             email_data = {
                 'from': self._from_for_brief(brief),
                 'to': [cleaned_email],
-                'subject': brief.title,
+                'subject': display_title,
                 'html': html_content,
                 'text': self._render_brief_text(
                     brief=brief,
@@ -969,6 +985,8 @@ class ResendClient:
                     preferences_url=preferences_url,
                     sorted_items=sorted_items,
                     web_brief_url=web_brief_url,
+                    display_date=display_date,
+                    display_title=display_title,
                 ),
                 'reply_to': self.reply_to,
                 'tags': [
@@ -1012,7 +1030,7 @@ class ResendClient:
                     EmailAnalytics.record_send(
                         email=subscriber.email,
                         category=EmailAnalytics.CATEGORY_DAILY_BRIEF,
-                        subject=brief.title,
+                        subject=display_title,
                         brief_subscriber_id=subscriber.id,
                         brief_id=brief.id
                     )
@@ -1081,6 +1099,8 @@ class ResendClient:
         subscriber: DailyBriefSubscriber,
         brief: DailyBrief,
         sorted_items=None,
+        display_date=None,
+        display_title=None,
     ) -> str:
         """
         Render email HTML from template.
@@ -1090,12 +1110,19 @@ class ResendClient:
             brief: Brief content to render
             sorted_items: Pre-fetched brief items (avoids a redundant DB query when
                           called from send_brief which already fetches them for the text renderer)
+            display_date: Receive-day label (subscriber local date). Defaults
+                from subscriber + brief so direct callers stay correct.
+            display_title: Subject/header title rewritten to display_date.
 
         Returns:
             str: HTML email content
         """
         # Get base URL from config or env
         base_url = get_base_url()
+        if display_date is None:
+            display_date = brief_email_display_date(brief, subscriber)
+        if display_title is None:
+            display_title = brief_email_display_title(brief, display_date)
 
         # Build URLs — pin the magic link to this edition so "view in browser"
         # (and Gmail-trim "read the full brief") open the emailed day, not today.
@@ -1163,6 +1190,8 @@ class ResendClient:
                 TOPIC_DISPLAY_LABELS=TOPIC_DISPLAY_LABELS,
                 TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS,
                 stance_handoff=stance_handoff,
+                display_date=display_date,
+                display_title=display_title,
             )
             # Minify first so the size budget is measured against the true wire
             # size. Minify preserves the <!--email-trim:*--> markers and the
@@ -1183,9 +1212,22 @@ class ResendClient:
                 db.session.rollback()
             except Exception:
                 pass
-            return self._fallback_html(brief, magic_link_url, unsubscribe_url)
+            return self._fallback_html(
+                brief,
+                magic_link_url,
+                unsubscribe_url,
+                display_date=display_date,
+                display_title=display_title,
+            )
 
-    def _fallback_html(self, brief: DailyBrief, magic_link_url: str, unsubscribe_url: str) -> str:
+    def _fallback_html(
+        self,
+        brief: DailyBrief,
+        magic_link_url: str,
+        unsubscribe_url: str,
+        display_date: Optional[date] = None,
+        display_title: Optional[str] = None,
+    ) -> str:
         """
         Generate simple HTML email if template rendering fails.
 
@@ -1223,8 +1265,8 @@ class ResendClient:
         # exception inside this fallback.  getattr with safe defaults prevents
         # the fallback itself from crashing and ensures the subscriber always
         # gets at least a minimal email they can click through on.
-        brief_title = getattr(brief, 'title', None) or 'Daily Brief'
-        brief_date = getattr(brief, 'date', None)
+        brief_title = display_title or getattr(brief, 'title', None) or 'Daily Brief'
+        brief_date = display_date or getattr(brief, 'date', None)
         brief_date_str = brief_date.strftime('%A, %B %d, %Y') if brief_date else ''
         brief_intro = getattr(brief, 'intro_text', None) or ''
 
