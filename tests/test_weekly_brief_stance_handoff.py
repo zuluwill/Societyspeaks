@@ -61,6 +61,8 @@ def test_weekly_brief_email_includes_stance_handoff(db, app):
     assert f'/brief/weekly/{week_end.isoformat()}' in html
     assert '/daily/v/' in html
     assert 'source=weekly_brief_email' in html
+    assert 'utm_source=weekly_brief' in html
+    assert 'utm_medium=email' in html
 
 
 # --------------------------------------------------------------------------

@@ -541,6 +541,24 @@ def build_question_email_data(question, subscriber, base_url=None):
             current_app.logger.warning(f"Error getting source articles for question {question.id}: {e}")
         source_articles = []
 
+    from app.lib.utm import brief_email_utm_params, with_utm_params
+
+    digest_utm = brief_email_utm_params(source='weekly_digest')
+    vote_urls = {
+        key: with_utm_params(url, digest_utm, content=f'stance_{key}')
+        for key, url in vote_urls.items()
+    }
+    question_url = with_utm_params(question_url, digest_utm, content='question')
+    discussion_url = discussion_stats.get('discussion_url')
+    if discussion_url:
+        discussion_stats['discussion_url'] = with_utm_params(
+            discussion_url,
+            digest_utm,
+            content='discussion',
+            source='weekly_digest',
+            q=str(question.id),
+        )
+
     return {
         'question': question,
         'discussion_stats': discussion_stats,

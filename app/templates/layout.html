@@ -335,6 +335,7 @@
         api_host:
           '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
         person_profiles: "identified_only",
+        {% block posthog_extra_config %}{% endblock %}
         loaded: function(ph) {
           {% if current_user.is_authenticated %}
           ph.identify('{{ current_user.id }}', {
@@ -1722,7 +1723,9 @@
       });
     </script>
 
-    <!-- Shared JavaScript Components -->
+    <!-- Shared JavaScript Components. Content/auth pages override this block
+         so vote/audio/copy helpers are not parsed on routes that never use them. -->
+    {% block shared_scripts %}
     <script defer src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/vote-resilience.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/brief-audio.js') }}"></script>
@@ -1730,6 +1733,7 @@
     <script defer src="{{ url_for('static', filename='js/code-copy.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/read-more-toggle.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/journey-tracking.js') }}"></script>
+    {% endblock %}
     <!-- Global handlers replacing unsafe-inline patterns (CSP compliance) -->
     <script nonce="{{ csp_nonce() }}">
     (function() {

@@ -173,7 +173,7 @@
                                 <td align="center">
                                     <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #6b7280; margin: 0;">
                                         &#128172; {{ _('%(count)d people discussing', count=q_data.discussion_stats.participant_count) }}
-                                        <a href="{{ q_data.discussion_stats.discussion_url }}?source=weekly_digest&q={{ q_data.question.id }}" style="color: #1e40af; text-decoration: underline;">{{ _('View discussion') }} &rarr;</a>
+                                        <a href="{{ q_data.discussion_stats.discussion_url }}" style="color: #1e40af; text-decoration: underline;">{{ _('View discussion') }} &rarr;</a>
                                     </p>
                                     <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 4px 0 0 0;">
                                         {{ _('(vote first, then join the conversation)') }}
@@ -223,7 +223,7 @@
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                             <td align="center" style="background-color: #ffffff; border-radius: 6px;">
-                                <a href="{{ base_url }}/briefings/landing" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af; text-decoration: none; padding: 12px 24px;">
+                                <a href="{{ personal_briefs_cta_url or (base_url ~ '/briefings/landing') }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af; text-decoration: none; padding: 12px 24px;">
                                     &#10084; {{ _('Support Our Work') }}
                                 </a>
                             </td>

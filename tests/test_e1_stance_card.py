@@ -204,13 +204,17 @@ def test_stance_email_handoff_url(app):
             base_url='https://societyspeaks.io',
         )
         assert handoff is not None
-        assert handoff['stance_url'] == (
+        assert handoff['stance_url'].startswith(
             f'https://societyspeaks.io/brief/{today.isoformat()}'
-            f'?src=brief_stance#stance'
         )
-        assert handoff['tradeoffs_url'] == (
-            f'https://societyspeaks.io/play/daily/{today.isoformat()}?src=brief_tradeoffs'
+        assert 'src=brief_stance' in handoff['stance_url']
+        assert 'utm_source=daily_brief' in handoff['stance_url']
+        assert handoff['stance_url'].endswith('#stance')
+        assert handoff['tradeoffs_url'].startswith(
+            f'https://societyspeaks.io/play/daily/{today.isoformat()}'
         )
+        assert 'src=brief_tradeoffs' in handoff['tradeoffs_url']
+        assert 'utm_medium=email' in handoff['tradeoffs_url']
         assert handoff['subline'] == 'Where do you stand?'
         assert 'vote_agree_url' not in handoff
         assert handoff.get('tradeoffs') is not None
@@ -258,13 +262,13 @@ def test_morning_wave_brief_gets_todays_wired_question(app):
         )
         assert handoff is not None
         assert handoff['question'].question_number == 17
-        assert (
-            handoff['stance_url']
-            == f'https://societyspeaks.io/brief/{yesterday.isoformat()}?src=brief_stance#stance'
+        assert handoff['stance_url'].startswith(
+            f'https://societyspeaks.io/brief/{yesterday.isoformat()}'
         )
-        assert handoff['tradeoffs_url'].endswith(
-            f'/play/daily/{yesterday.isoformat()}?src=brief_tradeoffs'
-        )
+        assert 'src=brief_stance' in handoff['stance_url']
+        assert handoff['stance_url'].endswith('#stance')
+        assert f'/play/daily/{yesterday.isoformat()}' in handoff['tradeoffs_url']
+        assert 'src=brief_tradeoffs' in handoff['tradeoffs_url']
         assert 'press leaned' in handoff['subline'].lower()
 
 
@@ -375,7 +379,8 @@ def test_stance_email_handoff_includes_one_click_urls(app):
         assert handoff['vote_agree_url'].startswith(
             'https://societyspeaks.io/daily/v/'
         )
-        assert handoff['vote_agree_url'].endswith('?source=brief_email')
+        assert 'source=brief_email' in handoff['vote_agree_url']
+        assert 'utm_source=daily_brief' in handoff['vote_agree_url']
         assert '/agree' in handoff['vote_agree_url']
         assert '/disagree' in handoff['vote_disagree_url']
         assert '/unsure' in handoff['vote_unsure_url']

@@ -61,6 +61,31 @@ def _render_for_user(user, template, **ctx) -> str:
         return render_template(template, **merged)
 
 
+def _digest_first_party_urls(base_url: str, subscriber, questions, *, source: str):
+    """Batch + Personal Briefs URLs with UTMs; leave unsubscribe/preferences bare."""
+    from app.lib.personal_briefs_cta import (
+        DEFAULT_TRIAL_TEMPLATE_SLUG,
+        personal_briefs_cta_url,
+    )
+    from app.lib.utm import brief_email_utm_params, with_utm_params
+
+    digest_utm = brief_email_utm_params(source=source)
+    question_ids = ','.join(str(q.id) for q in questions)
+    batch_url = with_utm_params(
+        f"{base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}",
+        digest_utm,
+        content='batch',
+    )
+    personal_briefs_url = personal_briefs_cta_url(
+        base_url,
+        utm_source=source,
+        utm_medium='email',
+        utm_campaign='personal_briefs_cta',
+        template_slug=DEFAULT_TRIAL_TEMPLATE_SLUG,
+    )
+    return batch_url, personal_briefs_url
+
+
 def _subject_for_user(user, message: str, **variables) -> str:
     """Translate an email subject under the user's preferred locale.
 
@@ -1118,9 +1143,9 @@ class ResendEmailClient:
             logger.warning(f"No questions provided for weekly digest to {subscriber.email}")
             return False
 
-        # Build URLs with question IDs for batch page
-        question_ids = ','.join(str(q.id) for q in questions)
-        batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
+        batch_url, personal_briefs_url = _digest_first_party_urls(
+            self.base_url, subscriber, questions, source='weekly_digest',
+        )
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
         unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
 
@@ -1147,7 +1172,8 @@ class ResendEmailClient:
                 unsubscribe_url=unsubscribe_url,
                 send_day_name=send_day_name,
                 send_hour=send_hour,
-                base_url=self.base_url
+                base_url=self.base_url,
+                personal_briefs_cta_url=personal_briefs_url,
             )
         except Exception as e:
             logger.error(f"Template rendering failed for weekly_questions_digest: {e}")
@@ -1226,9 +1252,9 @@ class ResendEmailClient:
             logger.warning(f"No questions provided for monthly digest to {subscriber.email}")
             return False
 
-        # Build URLs with question IDs for batch page
-        question_ids = ','.join(str(q.id) for q in questions)
-        batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
+        batch_url, personal_briefs_url = _digest_first_party_urls(
+            self.base_url, subscriber, questions, source='monthly_digest',
+        )
         preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
         unsubscribe_url = build_question_unsubscribe_url(self.base_url, subscriber)
 
@@ -1253,7 +1279,8 @@ class ResendEmailClient:
                 send_day_name='Monthly',
                 send_hour=9,
                 base_url=self.base_url,
-                is_monthly=True
+                is_monthly=True,
+                personal_briefs_cta_url=personal_briefs_url,
             )
         except Exception as e:
             logger.error(f"Template rendering failed for monthly_questions_digest: {e}")

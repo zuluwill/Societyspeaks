@@ -1110,6 +1110,18 @@ def view_discussion(discussion_id, slug):
         og_png_kwargs['lang'] = view_lang
     og_png_url = url_for('discussions.og_png', **og_png_kwargs)
 
+    from app.brief.routes import get_subscriber_status as _get_brief_subscriber_status
+    _, is_brief_subscriber = _get_brief_subscriber_status()
+    show_email_capture = (
+        bool(discussion.has_native_statements)
+        and guided_journey_context is None
+        and not is_brief_subscriber
+    )
+    reveal_email_capture = bool(
+        consensus_ui_state.get('user_vote_count')
+        or any(v is not None for v in (user_votes_map or {}).values())
+    )
+
     view_response = make_response(render_template('discussions/view_discussion.html',
                          discussion=discussion,
                          statements=statements,
@@ -1119,6 +1131,8 @@ def view_discussion(discussion_id, slug):
                          form=form,
                          user_vote_count=consensus_ui_state['user_vote_count'],
                          user_votes_map=user_votes_map,
+                         show_email_capture=show_email_capture,
+                         reveal_email_capture=reveal_email_capture,
                          discussion_participant_count=discussion_participant_count,
                          is_consensus_unlocked=consensus_ui_state['is_consensus_unlocked'],
                          participation_threshold=consensus_ui_state['participation_threshold'],

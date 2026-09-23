@@ -1130,6 +1130,14 @@ class ResendClient:
             base_url, subscriber.magic_token, brief,
         )
         web_brief_url = public_brief_url(base_url, brief)
+        from app.lib.utm import brief_email_utm_params, with_utm_params
+        email_utm = brief_email_utm_params(brief)
+        magic_link_url = with_utm_params(
+            magic_link_url, email_utm, content='view_in_browser',
+        )
+        web_brief_url = with_utm_params(
+            web_brief_url, email_utm, content='web_brief',
+        )
         unsubscribe_url = build_brief_unsubscribe_url(base_url, subscriber)
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
         if sorted_items is None:
@@ -1150,7 +1158,7 @@ class ResendClient:
         # when the self-serve flow is enabled. See build doc Block C item 16.
         personal_briefs_url = personal_briefs_cta_url(
             base_url,
-            utm_source='daily_brief',
+            utm_source=email_utm['utm_source'],
             utm_medium='email',
             utm_campaign='personal_briefs_cta',
             template_slug=DEFAULT_TRIAL_TEMPLATE_SLUG,
@@ -1192,6 +1200,7 @@ class ResendClient:
                 stance_handoff=stance_handoff,
                 display_date=display_date,
                 display_title=display_title,
+                email_utm_source=email_utm['utm_source'],
             )
             # Minify first so the size budget is measured against the true wire
             # size. Minify preserves the <!--email-trim:*--> markers and the

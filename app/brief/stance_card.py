@@ -14,7 +14,24 @@ from typing import Any, Optional
 from flask import has_request_context, url_for
 from flask_babel import gettext as _, lazy_gettext as _l
 
+from app.lib.utm import brief_email_utm_params, with_utm_params
 from app.models import DailyQuestion
+
+
+def _tag_email_handoff_urls(handoff: dict[str, Any], *, source: str) -> dict[str, Any]:
+    """Tag first-party stance / vote URLs so email clicks are not Direct."""
+    params = brief_email_utm_params(source=source)
+    contents = {
+        'stance_url': 'stance',
+        'tradeoffs_url': 'play_tradeoffs',
+        'vote_agree_url': 'stance_agree',
+        'vote_disagree_url': 'stance_disagree',
+        'vote_unsure_url': 'stance_unsure',
+    }
+    for key, content in contents.items():
+        if handoff.get(key):
+            handoff[key] = with_utm_params(handoff[key], params, content=content)
+    return handoff
 
 
 # lazy_gettext so pybabel extracts these literals — a dynamic `_(dict.get(...))`
@@ -247,7 +264,7 @@ def build_stance_email_handoff(
 
     handoff['tradeoffs'] = _tradeoffs_daily_context()
 
-    return handoff
+    return _tag_email_handoff_urls(handoff, source='daily_brief')
 
 
 def build_weekly_stance_card_context(
@@ -346,7 +363,7 @@ def build_weekly_stance_email_handoff(
 
     handoff['tradeoffs'] = _tradeoffs_daily_context()
 
-    return handoff
+    return _tag_email_handoff_urls(handoff, source='weekly_brief')
 
 
 def _tradeoffs_daily_context() -> Optional[dict[str, Any]]:

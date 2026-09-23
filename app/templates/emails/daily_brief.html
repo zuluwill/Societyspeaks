@@ -1710,7 +1710,7 @@
                             "
                           >
                             <a
-                              href="{% if brief.brief_type == 'weekly' %}{{ base_url }}/brief/weekly/{{ brief.date.strftime('%Y-%m-%d') }}#item-{{ item.id }}{% else %}{{ base_url }}/brief/{{ brief.date.strftime('%Y-%m-%d') }}#item-{{ item.id }}{% endif %}"
+                              href="{% if brief.brief_type == 'weekly' %}{{ (base_url ~ '/brief/weekly/' ~ brief.date.strftime('%Y-%m-%d') ~ '#item-' ~ item.id)|with_utm('listen', email_utm_source|default('daily_brief')) }}{% else %}{{ (base_url ~ '/brief/' ~ brief.date.strftime('%Y-%m-%d') ~ '#item-' ~ item.id)|with_utm('listen', email_utm_source|default('daily_brief')) }}{% endif %}"
                               target="_blank"
                               style="
                                 display: inline-block;
@@ -1770,7 +1770,7 @@
                             "
                           >
                             <a
-                              href="{{ base_url }}/discussions/{{ item.discussion_id }}"
+                              href="{{ (base_url ~ '/discussions/' ~ item.discussion_id)|with_utm('discussion', email_utm_source|default('daily_brief')) }}"
                               target="_blank"
                               style="
                                 display: inline-block;
@@ -3242,7 +3242,7 @@
                           </td>
                           <td style="padding: 0 12px">
                             <a
-                              href="{{ base_url }}/brief/archive"
+                              href="{{ (base_url ~ '/brief/archive')|with_utm('archive', email_utm_source|default('daily_brief')) }}"
                               target="_blank"
                               style="
                                 font-family:
@@ -3258,7 +3258,7 @@
                           </td>
                           <td style="padding: 0 12px">
                             <a
-                              href="{{ base_url }}/brief/methodology"
+                              href="{{ (base_url ~ '/brief/methodology')|with_utm('methodology', email_utm_source|default('daily_brief')) }}"
                               target="_blank"
                               style="
                                 font-family:

@@ -600,10 +600,44 @@ def handle_invitation(token):
         else:
             return redirect(url_for('auth.register'))
 
+def _render_register_form(next_url, *, form_values=None, field_errors=None):
+    """Render register with submitted values so a failed attempt is not a blank form."""
+    import random
+    from app.lib.bot_protection import turnstile_is_configured
+
+    pending_invitation_email = session.get('pending_invitation_email')
+    pending_invitation_org = session.get('pending_invitation_org')
+    values = dict(form_values or {})
+    if pending_invitation_email and not values.get('email'):
+        values['email'] = pending_invitation_email
+
+    turnstile_site_key = (
+        (current_app.config.get('TURNSTILE_SITE_KEY') or '').strip()
+        if turnstile_is_configured()
+        else ''
+    )
+    captcha_num1 = captcha_num2 = None
+    if not turnstile_site_key:
+        captcha_num1 = random.randint(1, 9)
+        captcha_num2 = random.randint(1, 9)
+        session['captcha_expected'] = captcha_num1 + captcha_num2
+
+    return render_template(
+        'auth/register.html',
+        invitation_email=pending_invitation_email,
+        invitation_org=pending_invitation_org,
+        next_url=next_url,
+        captcha_num1=captcha_num1,
+        captcha_num2=captcha_num2,
+        turnstile_site_key=turnstile_site_key,
+        form_values=values,
+        field_errors=field_errors or {},
+    )
+
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5/hour")
 def register():
-    import random
     next_url = _current_next_url()
 
     # Capture checkout intent from query params (for briefing signups)
@@ -619,17 +653,6 @@ def register():
                                 plan=checkout_plan,
                                 interval=session.get('pending_checkout_interval', 'month')))
 
-    # Get invitation context from session (set by /invite/<token> route)
-    pending_invitation_email = session.get('pending_invitation_email')
-    pending_invitation_org = session.get('pending_invitation_org')
-
-    # Generate CAPTCHA numbers for GET requests or failed POST attempts
-    def generate_captcha():
-        num1 = random.randint(1, 9)
-        num2 = random.randint(1, 9)
-        session['captcha_expected'] = num1 + num2
-        return num1, num2
-
     if request.method == 'POST':
         from app.lib.bot_protection import check_honeypot_only, turnstile_is_configured, verify_turnstile_token
         if check_honeypot_only():
@@ -638,56 +661,56 @@ def register():
         username = (request.form.get('username') or '').strip()
         email_raw = (request.form.get('email') or '').strip()
         password = request.form.get('password') or ''
-        
-        # Validation checks
+        kept = {'username': username, 'email': email_raw}
+
+        def _reject(message, field=None):
+            flash(message, "error")
+            errors = {field: message} if field else {}
+            return _render_register_form(next_url, form_values=kept, field_errors=errors)
+
         if not username or not email_raw or not password:
-            flash(_("All fields are required."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+            return _reject(_("All fields are required."))
+
+        if len(username) < 2:
+            return _reject(_("Username must be at least 2 characters."), 'username')
 
         if len(password) < 8:
-            flash(_("Password must be at least 8 characters."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+            return _reject(_("Password must be at least 8 characters."), 'password')
 
         if turnstile_is_configured():
             if not verify_turnstile_token(
                 request.form.get('cf-turnstile-response'),
                 request.remote_addr,
             ):
-                flash(_("Please complete the human verification and try again."), "error")
-                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+                return _reject(_("Please complete the human verification and try again."), 'verification')
         else:
             # Math captcha fallback when Cloudflare Turnstile keys are unset.
             verification = request.form.get('verification')
             expected = session.pop('captcha_expected', None)  # Pop to prevent reuse
 
             if expected is None:
-                flash(_("Session expired. Please try again."), "error")
-                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+                return _reject(_("Session expired. Please try again."), 'verification')
 
             if not verification:
-                flash(_("Please answer the verification question."), "error")
-                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+                return _reject(_("Please answer the verification question."), 'verification')
 
             try:
                 verification_int = int(verification)
             except (ValueError, TypeError):
-                flash(_("Incorrect verification answer. Please try again."), "error")
-                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+                return _reject(_("Incorrect verification answer. Please try again."), 'verification')
 
             if verification_int != expected:
-                flash(_("Incorrect verification answer. Please try again."), "error")
-                return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+                return _reject(_("Incorrect verification answer. Please try again."), 'verification')
 
         clean_email = extract_clean_email(email_raw)
         if clean_email is None:
-            flash(_("Please provide a valid email address."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+            return _reject(_("Please provide a valid email address."), 'email')
         email = clean_email.lower()
+        kept['email'] = email
 
         from app.lib.trial_abuse import is_disposable_email
         if is_disposable_email(email):
-            flash(_("Please use a lasting email address so we can reach you."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+            return _reject(_("Please use a lasting email address so we can reach you."), 'email')
 
         # Get spam patterns from config
         spam_patterns = current_app.config.get('SPAM_PATTERNS', [])
@@ -695,19 +718,25 @@ def register():
         # Check for spam in a case-insensitive way
         input_text = f"{username.lower()} {email}"
         if any(pattern in input_text for pattern in spam_patterns):
-            flash(_("Registration denied due to suspicious content"), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+            return _reject(_("Registration denied due to suspicious content"))
 
         if User.query.filter_by(email=email).first():
-            flash(_("Email already registered. Please log in."), "error")
-            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
+            return _reject(_("Email already registered. Please log in."), 'email')
+
+        if User.query.filter(func.lower(User.username) == username.lower()).first():
+            return _reject(_("That username is already taken. Please choose another."), 'username')
 
         # Hash the password and create the user
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, email=email, password=hashed_password)
         new_user.email_verified = False
         db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.warning('Registration commit failed for username=%s', username)
+            return _reject(_("That username or email is already registered. Please log in or choose another."), 'email')
 
         # Identity event — path-agnostic acquisition signal + campaign UTMs.
         # peek (not pop) so a later trial conversion can still attribute.
@@ -777,23 +806,7 @@ def register():
             return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
         return redirect(url_for('profiles.select_profile_type'))
 
-    from app.lib.bot_protection import turnstile_is_configured
-    turnstile_site_key = (
-        (current_app.config.get('TURNSTILE_SITE_KEY') or '').strip()
-        if turnstile_is_configured()
-        else ''
-    )
-    captcha_num1 = captcha_num2 = None
-    if not turnstile_site_key:
-        captcha_num1, captcha_num2 = generate_captcha()
-
-    return render_template('auth/register.html',
-                         invitation_email=pending_invitation_email,
-                         invitation_org=pending_invitation_org,
-                         next_url=next_url,
-                         captcha_num1=captcha_num1,
-                         captcha_num2=captcha_num2,
-                         turnstile_site_key=turnstile_site_key)
+    return _render_register_form(next_url)
 
 
 
@@ -856,12 +869,20 @@ def login():
                 )
                 return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
             flash(_("Invalid email or password."), "error")
-            return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
+            return render_template(
+                'auth/login.html',
+                next_url=next_url,
+                form_email=request.form.get('email') or '',
+            )
 
         # User record found - verify password
         if not check_password_hash(user.password, password):
             flash(_("Invalid email or password."), "error")
-            return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
+            return render_template(
+                'auth/login.html',
+                next_url=next_url,
+                form_email=request.form.get('email') or '',
+            )
 
         return _finalize_login(user, method='password', next_url=next_url)
 

@@ -827,6 +827,9 @@ def create_app():
     from app.lib.share_utils import share_urlencode
     app.jinja_env.filters['share_urlencode'] = share_urlencode
 
+    from app.lib.utm import with_utm_filter
+    app.jinja_env.filters['with_utm'] = with_utm_filter
+
     def drop_nulls(value):
         """Recursively remove keys whose values are None (used for JSON-LD so we don't emit `null` fields)."""
         if isinstance(value, dict):

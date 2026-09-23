@@ -1,5 +1,6 @@
 <!-- Native Statement System UI (Phase 1) -->
 <!-- This template is included within view_discussion.html for native discussions -->
+{% from "components/email_capture.html" import email_capture_after_vote %}
 
 {# Creator / admin — used across header, journey script, and moderation link #}
 {% set is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id %}
@@ -472,6 +473,9 @@
     {% include 'discussions/_statement_card.html' %}
     {% endfor %}
   </div>
+  {% if show_email_capture %}
+  {{ email_capture_after_vote(discussion.id, reveal=reveal_email_capture) }}
+  {% endif %}
   {% else %}
   <!-- Empty State -->
   <div class="text-center py-12 bg-gray-50 rounded-lg">
