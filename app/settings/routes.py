@@ -172,10 +172,8 @@ def update_language():
     return response
 
 
-@settings_bp.route('/delete-account', methods=['POST'])
-@login_required
-def delete_account():
-    """Delete user account and all related data (handles foreign keys properly)"""
+def purge_user_account(user):
+    """Remove a user and every row that would block the delete. Caller commits."""
     from app.models import (
         IndividualProfile, CompanyProfile, Discussion, Notification,
         DiscussionParticipant, Statement, StatementVote, Response,
@@ -185,154 +183,173 @@ def delete_account():
         DailyQuestionSelection,
         SendingDomain
     )
+
+    user_id = user.id
+    from app.lib.account_deletion import release_user_event_references
+    release_user_event_references(user_id)
+
+    # 1. Clear nullable FK references (set to NULL instead of delete)
+    # These reference the user but can exist without them
+    DiscussionView.query.filter_by(viewer_id=user_id).update(
+        {'viewer_id': None}, synchronize_session=False
+    )
+    ProfileView.query.filter_by(viewer_id=user_id).update(
+        {'viewer_id': None}, synchronize_session=False
+    )
+    DiscussionParticipant.query.filter_by(user_id=user_id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+    Statement.query.filter_by(user_id=user_id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+    StatementVote.query.filter_by(user_id=user_id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+    Evidence.query.filter_by(added_by_user_id=user_id).update(
+        {'added_by_user_id': None}, synchronize_session=False
+    )
+    StatementFlag.query.filter_by(reviewed_by_user_id=user_id).update(
+        {'reviewed_by_user_id': None}, synchronize_session=False
+    )
+    TrendingTopic.query.filter_by(reviewed_by_id=user_id).update(
+        {'reviewed_by_id': None}, synchronize_session=False
+    )
+    DailyQuestion.query.filter_by(created_by_id=user_id).update(
+        {'created_by_id': None}, synchronize_session=False
+    )
+    DailyQuestionResponse.query.filter_by(user_id=user_id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+    DailyQuestionSubscriber.query.filter_by(user_id=user_id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+
+    # 1b. Clean up Briefing system data owned by user
+    _delete_briefing_data('user', user_id)
+
+    # 2. Delete user's created content that can't exist without them
+
+    # Delete Evidence for the user's own responses BEFORE deleting those
+    # responses.  Evidence.response_id is NOT NULL, so deleting a Response
+    # without first removing its Evidence rows violates the FK constraint on
+    # PostgreSQL.  This covers responses to *other* users' discussions; the
+    # per-discussion loop below handles evidence inside discussions owned by
+    # this user.
+    user_response_ids = _pluck_ids(
+        Response.query.filter_by(user_id=user_id),
+        Response.id,
+    )
+    if user_response_ids:
+        Evidence.query.filter(
+            Evidence.response_id.in_(user_response_ids)
+        ).delete(synchronize_session=False)
+
+    # Delete responses (requires user_id)
+    Response.query.filter_by(user_id=user_id).delete(synchronize_session=False)
     
+    # Delete flags created by user
+    StatementFlag.query.filter_by(flagger_user_id=user_id).delete(synchronize_session=False)
+    
+    # Delete notifications
+    Notification.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    
+    # Delete API keys
+    UserAPIKey.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    
+    # 3. Handle user's discussions (delete them completely)
+    user_discussion_ids = [d.id for d in Discussion.query.filter_by(creator_id=user_id).all()]
+    for disc_id in user_discussion_ids:
+        # Clear references to this discussion
+        TrendingTopic.query.filter_by(merged_into_discussion_id=disc_id).update(
+            {'merged_into_discussion_id': None}, synchronize_session=False
+        )
+        TrendingTopic.query.filter_by(discussion_id=disc_id).update(
+            {'discussion_id': None}, synchronize_session=False
+        )
+        BriefItem.query.filter_by(discussion_id=disc_id).update(
+            {'discussion_id': None}, synchronize_session=False
+        )
+        DailyQuestion.query.filter_by(source_discussion_id=disc_id).update(
+            {'source_discussion_id': None}, synchronize_session=False
+        )
+        DailyQuestionSelection.query.filter_by(source_discussion_id=disc_id).update(
+            {'source_discussion_id': None}, synchronize_session=False
+        )
+        from app.models import AnalyticsEvent, DiscussionFollow, DiscussionUpdate
+        AnalyticsEvent.query.filter(
+            AnalyticsEvent.discussion_id == disc_id
+        ).update(
+            {'discussion_id': None, 'statement_id': None},
+            synchronize_session=False,
+        )
+        DiscussionFollow.query.filter_by(discussion_id=disc_id).delete(
+            synchronize_session=False
+        )
+        DiscussionUpdate.query.filter_by(discussion_id=disc_id).delete(
+            synchronize_session=False
+        )
+        
+        # Delete discussion's children
+        stmt_ids = [s.id for s in Statement.query.filter_by(discussion_id=disc_id).all()]
+        if stmt_ids:
+            StatementFlag.query.filter(StatementFlag.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+            resp_ids = _pluck_ids(
+                Response.query.filter(Response.statement_id.in_(stmt_ids)),
+                Response.id,
+            )
+            if resp_ids:
+                Evidence.query.filter(Evidence.response_id.in_(resp_ids)).delete(
+                    synchronize_session=False
+                )
+            Response.query.filter(Response.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+            StatementVote.query.filter(StatementVote.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+        
+        Statement.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        StatementVote.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        ConsensusAnalysis.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        DiscussionSourceArticle.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        DiscussionParticipant.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        DiscussionView.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        Notification.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+    
+    Discussion.query.filter_by(creator_id=user_id).delete(synchronize_session=False)
+    
+    # 4. Delete profiles
+    if user.individual_profile:
+        ProfileView.query.filter_by(individual_profile_id=user.individual_profile.id).delete(synchronize_session=False)
+        db.session.delete(user.individual_profile)
+    if user.company_profile:
+        org_id = user.company_profile.id
+        ProfileView.query.filter_by(company_profile_id=org_id).delete(synchronize_session=False)
+
+        # Clean up org-owned briefing data before deleting company_profile
+        _delete_briefing_data('org', org_id)
+
+        # Delete SendingDomains (CASCADE will handle this, but explicit is safer)
+        SendingDomain.query.filter_by(org_id=org_id).delete(synchronize_session=False)
+
+        db.session.delete(user.company_profile)
+
+    # 4b. Society Play — runs, outcomes, challenges, reminder subscriptions
+    _delete_game_data_for_user(user_id)
+
+    # 5. Finally delete the user. Caller commits.
+    db.session.delete(user)
+
+
+@settings_bp.route('/delete-account', methods=['POST'])
+@login_required
+def delete_account():
+    """Delete user account and all related data (handles foreign keys properly)"""
     user = db.session.get(User, current_user.id)
     if not user:
         flash(_('Account deletion failed. Please try again.'), 'error')
         return redirect(url_for('settings.view_settings'))
 
     user_id = user.id
-
     try:
-        from app.lib.account_deletion import release_user_event_references
-        release_user_event_references(user_id)
-
-        # 1. Clear nullable FK references (set to NULL instead of delete)
-        # These reference the user but can exist without them
-        DiscussionView.query.filter_by(viewer_id=user_id).update(
-            {'viewer_id': None}, synchronize_session=False
-        )
-        ProfileView.query.filter_by(viewer_id=user_id).update(
-            {'viewer_id': None}, synchronize_session=False
-        )
-        DiscussionParticipant.query.filter_by(user_id=user_id).update(
-            {'user_id': None}, synchronize_session=False
-        )
-        Statement.query.filter_by(user_id=user_id).update(
-            {'user_id': None}, synchronize_session=False
-        )
-        StatementVote.query.filter_by(user_id=user_id).update(
-            {'user_id': None}, synchronize_session=False
-        )
-        Evidence.query.filter_by(added_by_user_id=user_id).update(
-            {'added_by_user_id': None}, synchronize_session=False
-        )
-        StatementFlag.query.filter_by(reviewed_by_user_id=user_id).update(
-            {'reviewed_by_user_id': None}, synchronize_session=False
-        )
-        TrendingTopic.query.filter_by(reviewed_by_id=user_id).update(
-            {'reviewed_by_id': None}, synchronize_session=False
-        )
-        DailyQuestion.query.filter_by(created_by_id=user_id).update(
-            {'created_by_id': None}, synchronize_session=False
-        )
-        DailyQuestionResponse.query.filter_by(user_id=user_id).update(
-            {'user_id': None}, synchronize_session=False
-        )
-        DailyQuestionSubscriber.query.filter_by(user_id=user_id).update(
-            {'user_id': None}, synchronize_session=False
-        )
-
-        # 1b. Clean up Briefing system data owned by user
-        _delete_briefing_data('user', user_id)
-
-        # 2. Delete user's created content that can't exist without them
-
-        # Delete Evidence for the user's own responses BEFORE deleting those
-        # responses.  Evidence.response_id is NOT NULL, so deleting a Response
-        # without first removing its Evidence rows violates the FK constraint on
-        # PostgreSQL.  This covers responses to *other* users' discussions; the
-        # per-discussion loop below handles evidence inside discussions owned by
-        # this user.
-        user_response_ids = _pluck_ids(
-            Response.query.filter_by(user_id=user_id),
-            Response.id,
-        )
-        if user_response_ids:
-            Evidence.query.filter(
-                Evidence.response_id.in_(user_response_ids)
-            ).delete(synchronize_session=False)
-
-        # Delete responses (requires user_id)
-        Response.query.filter_by(user_id=user_id).delete(synchronize_session=False)
-        
-        # Delete flags created by user
-        StatementFlag.query.filter_by(flagger_user_id=user_id).delete(synchronize_session=False)
-        
-        # Delete notifications
-        Notification.query.filter_by(user_id=user_id).delete(synchronize_session=False)
-        
-        # Delete API keys
-        UserAPIKey.query.filter_by(user_id=user_id).delete(synchronize_session=False)
-        
-        # 3. Handle user's discussions (delete them completely)
-        user_discussion_ids = [d.id for d in Discussion.query.filter_by(creator_id=user_id).all()]
-        for disc_id in user_discussion_ids:
-            # Clear references to this discussion
-            TrendingTopic.query.filter_by(merged_into_discussion_id=disc_id).update(
-                {'merged_into_discussion_id': None}, synchronize_session=False
-            )
-            TrendingTopic.query.filter_by(discussion_id=disc_id).update(
-                {'discussion_id': None}, synchronize_session=False
-            )
-            BriefItem.query.filter_by(discussion_id=disc_id).update(
-                {'discussion_id': None}, synchronize_session=False
-            )
-            DailyQuestion.query.filter_by(source_discussion_id=disc_id).update(
-                {'source_discussion_id': None}, synchronize_session=False
-            )
-            DailyQuestionSelection.query.filter_by(source_discussion_id=disc_id).update(
-                {'source_discussion_id': None}, synchronize_session=False
-            )
-            
-            # Delete discussion's children
-            stmt_ids = [s.id for s in Statement.query.filter_by(discussion_id=disc_id).all()]
-            if stmt_ids:
-                StatementFlag.query.filter(StatementFlag.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
-                resp_ids = _pluck_ids(
-                    Response.query.filter(Response.statement_id.in_(stmt_ids)),
-                    Response.id,
-                )
-                if resp_ids:
-                    Evidence.query.filter(Evidence.response_id.in_(resp_ids)).delete(
-                        synchronize_session=False
-                    )
-                Response.query.filter(Response.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
-                StatementVote.query.filter(StatementVote.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
-            
-            Statement.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-            StatementVote.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-            ConsensusAnalysis.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-            DiscussionSourceArticle.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-            DiscussionParticipant.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-            DiscussionView.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-            Notification.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
-        
-        Discussion.query.filter_by(creator_id=user_id).delete(synchronize_session=False)
-        
-        # 4. Delete profiles
-        if user.individual_profile:
-            ProfileView.query.filter_by(individual_profile_id=user.individual_profile.id).delete(synchronize_session=False)
-            db.session.delete(user.individual_profile)
-        if user.company_profile:
-            org_id = user.company_profile.id
-            ProfileView.query.filter_by(company_profile_id=org_id).delete(synchronize_session=False)
-
-            # Clean up org-owned briefing data before deleting company_profile
-            _delete_briefing_data('org', org_id)
-
-            # Delete SendingDomains (CASCADE will handle this, but explicit is safer)
-            SendingDomain.query.filter_by(org_id=org_id).delete(synchronize_session=False)
-
-            db.session.delete(user.company_profile)
-
-        # 4b. Society Play — runs, outcomes, challenges, reminder subscriptions
-        _delete_game_data_for_user(user_id)
-
-        # 5. Finally delete the user
-        db.session.delete(user)
+        purge_user_account(user)
         db.session.commit()
-        
         current_app.logger.info(f"User deleted their account (ID: {user_id})")
         logout_user()
         session.clear()
