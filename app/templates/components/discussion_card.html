@@ -1,4 +1,4 @@
-{% macro discussion_card(discussion, style='default', button_label=none, disc_title=none, disc_desc=none) %}
+{% macro discussion_card(discussion, style='default', button_label=none, disc_title=none, disc_desc=none, participant_count=none) %}
 {%- set _title = disc_title if disc_title else discussion.title -%}
 {%- set _desc  = disc_desc  if disc_desc  else discussion.description -%}
 {%- set _btn   = button_label if button_label else _('Join Discussion') -%}
@@ -101,6 +101,13 @@
             {{ _('Global') }}
             {% endif %}
         </div>
+
+        {% set _participants = participant_count if participant_count is not none else discussion.public_participant_count %}
+        {% if _participants %}
+        <p class="mt-3 text-sm font-medium text-gray-800">
+            {{ ngettext('%(num)d person has voted', '%(num)d people have voted', _participants) }}
+        </p>
+        {% endif %}
     </div>
 
     <!-- Action Button -->

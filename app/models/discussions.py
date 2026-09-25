@@ -22,6 +22,7 @@ generate_slug, which lives in app.models._base.
 from datetime import timedelta
 
 from flask import current_app
+from sqlalchemy import case, distinct, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, selectinload, validates
 
@@ -457,48 +458,196 @@ class Discussion(db.Model):
         }
 
 
-    def get_featured(limit=6):
-        # Try to get from cache first, fallback to direct query if cache fails
-        cache_key = f'featured_discussions_{limit}'
-        try:
-            cached_result = cache.get(cache_key)
-            if cached_result is not None:
-                return cached_result
-        except Exception as e:
-            # Log cache error but continue with database query
-            current_app.logger.warning(f"Cache get failed for featured discussions: {e}")
-        
-        # First get discussions marked as featured, excluding test discussions
-        featured = Discussion.query\
-            .filter_by(is_featured=True)\
-            .filter(Discussion.partner_env != 'test')\
-            .filter(~Discussion.title.ilike('%test%'))\
-            .filter(~Discussion.description.ilike('%test%'))\
-            .order_by(Discussion.created_at.desc())\
+    # Homepage rail: recent voters first, so an old editorial pin cannot
+    # outrank discussions people are actually joining.
+    TRENDING_WINDOW_DAYS = 14
+
+    @classmethod
+    def _apply_homepage_scope(cls, query, programme_model):
+        """Native, open, public discussions. Pol.is embeds are excluded."""
+        # Whole-word "test" only. A substring match hides real topics such as
+        # "Protest" and "Contest".
+        fixture_title = db.or_(
+            cls.title.ilike('test'),
+            cls.title.ilike('test %'),
+            cls.title.ilike('% test'),
+            cls.title.ilike('% test %'),
+        )
+        return (
+            query.filter(cls.has_native_statements.is_(True))
+            .filter(cls.is_closed.isnot(True))
+            .filter(cls.partner_env != 'test')
+            .filter(~fixture_title)
+            .filter(db.or_(
+                cls.programme_id.is_(None),
+                db.and_(
+                    programme_model.status == 'active',
+                    programme_model.visibility == 'public',
+                ),
+            ))
+        )
+
+    @classmethod
+    def _published_voter_expr(cls, *, since=None):
+        """Unique published voters: authenticated ids plus anonymous fingerprints.
+
+        Matches ``batch_discussion_participant_counts``: a fingerprint counts
+        only when the vote has no user id, so one person is not counted twice.
+        """
+        auth_when = StatementVote.user_id.isnot(None)
+        anon_when = db.and_(
+            StatementVote.user_id.is_(None),
+            StatementVote.session_fingerprint.isnot(None),
+        )
+        if since is not None:
+            auth_when = db.and_(auth_when, StatementVote.created_at >= since)
+            anon_when = db.and_(anon_when, StatementVote.created_at >= since)
+        return (
+            func.count(distinct(case((auth_when, StatementVote.user_id))))
+            + func.count(distinct(case((anon_when, StatementVote.session_fingerprint))))
+        )
+
+    @classmethod
+    def _voter_rankings(cls, *, cap=80):
+        """Recent and lifetime published voters in one pass over visible votes."""
+        from app.lib.participation_metrics import visible_statement_vote_filters
+        from app.models.programme import Programme
+
+        since = utcnow_naive() - timedelta(days=cls.TRENDING_WINDOW_DAYS)
+        recent = cls._published_voter_expr(since=since)
+        lifetime = cls._published_voter_expr()
+        rows = (
+            db.session.query(
+                StatementVote.discussion_id,
+                recent.label('recent_participants'),
+                lifetime.label('lifetime_participants'),
+                func.max(StatementVote.created_at).label('last_vote_at'),
+            )
+            .join(cls, cls.id == StatementVote.discussion_id)
+            .join(Statement, Statement.id == StatementVote.statement_id)
+            .outerjoin(Programme, cls.programme_id == Programme.id)
+            .filter(*visible_statement_vote_filters(Statement))
+            .filter(db.or_(
+                StatementVote.user_id.isnot(None),
+                StatementVote.session_fingerprint.isnot(None),
+            ))
+        )
+        rows = cls._apply_homepage_scope(rows, Programme)
+        rows = (
+            rows.group_by(StatementVote.discussion_id)
+            .order_by(recent.desc(), lifetime.desc(), func.max(StatementVote.created_at).desc())
+            .limit(cap)
             .all()
+        )
+        return rows
 
-        # If we have fewer than limit (6), add recent non-featured discussions
-        if len(featured) < limit:
-            featured_ids = [d.id for d in featured]
-            additional = Discussion.query\
-                .filter(Discussion.id.notin_(featured_ids))\
-                .filter(Discussion.partner_env != 'test')\
-                .filter(~Discussion.title.ilike('%test%'))\
-                .filter(~Discussion.description.ilike('%test%'))\
-                .order_by(Discussion.created_at.desc())\
-                .limit(limit - len(featured))\
-                .all()
-            featured.extend(additional)
+    @classmethod
+    def _diversify_by_topic(cls, ranked_ids, by_id, limit):
+        """Keep the strongest discussion per topic before repeating a topic."""
+        selected = []
+        seen_topics = set()
+        deferred = []
+        for discussion_id in ranked_ids:
+            discussion = by_id.get(discussion_id)
+            if discussion is None:
+                continue
+            topic = discussion.topic or ''
+            if topic and topic in seen_topics:
+                deferred.append(discussion)
+                continue
+            selected.append(discussion)
+            if topic:
+                seen_topics.add(topic)
+            if len(selected) >= limit:
+                return selected
+        for discussion in deferred:
+            selected.append(discussion)
+            if len(selected) >= limit:
+                break
+        return selected
 
-        result = featured[:limit]
-        
-        # Try to cache the result, but don't fail if caching fails
+    @classmethod
+    def get_featured(cls, limit=6):
+        """
+        Discussions for the homepage and platform rails.
+
+        Rank open native discussions by unique voters in the last 14 days,
+        then by lifetime voters. One slot per topic until the rail is full,
+        so the strip shows how the product works now rather than a pinned
+        Pol.is embed or three copies of the same news cycle.
+        """
+        cache_key = f'featured_discussions_v2_{limit}'
+        cached_ids = None
         try:
-            cache.set(cache_key, result, timeout=300)  # Cache for 5 minutes
+            cached_ids = cache.get(cache_key)
+        except Exception as e:
+            current_app.logger.warning(f"Cache get failed for featured discussions: {e}")
+
+        if isinstance(cached_ids, list) and cached_ids:
+            from app.models.programme import Programme
+
+            still_eligible = cls._apply_homepage_scope(
+                cls.query.outerjoin(Programme, cls.programme_id == Programme.id)
+                .filter(cls.id.in_(cached_ids)),
+                Programme,
+            ).all()
+            by_id = {d.id: d for d in still_eligible}
+            ordered = [by_id[i] for i in cached_ids if i in by_id]
+            if len(ordered) == len(cached_ids):
+                cls._attach_public_participant_counts(ordered)
+                return ordered
+
+        rankings = cls._voter_rankings()
+        ranked_ids = [row.discussion_id for row in rankings]
+
+        by_id = {
+            d.id: d
+            for d in cls.query.filter(cls.id.in_(ranked_ids)).all()
+        } if ranked_ids else {}
+        selected = cls._diversify_by_topic(ranked_ids, by_id, limit)
+
+        if len(selected) < limit:
+            from app.lib.participation_metrics import visible_statement_vote_filters
+            from app.models.programme import Programme
+
+            selected_ids = [d.id for d in selected]
+            visible_statement = (
+                db.session.query(Statement.id)
+                .filter(
+                    Statement.discussion_id == cls.id,
+                    *visible_statement_vote_filters(Statement),
+                )
+                .exists()
+            )
+            filler = cls._apply_homepage_scope(
+                cls.query.outerjoin(Programme, cls.programme_id == Programme.id),
+                Programme,
+            ).filter(visible_statement)
+            if selected_ids:
+                filler = filler.filter(~cls.id.in_(selected_ids))
+            selected.extend(
+                filler.order_by(cls.created_at.desc()).limit(limit - len(selected)).all()
+            )
+
+        result = selected[:limit]
+        try:
+            cache.set(cache_key, [d.id for d in result], timeout=300)
         except Exception as e:
             current_app.logger.warning(f"Cache set failed for featured discussions: {e}")
-        
+
+        cls._attach_public_participant_counts(result)
         return result
+
+    @staticmethod
+    def _attach_public_participant_counts(discussions):
+        """Stash published voter totals for card social proof. Not persisted."""
+        if not discussions:
+            return
+        from app.api.utils import batch_discussion_participant_counts
+
+        counts = batch_discussion_participant_counts([d.id for d in discussions])
+        for discussion in discussions:
+            discussion.public_participant_count = counts.get(discussion.id, 0)
 
     @staticmethod
     def feature_discussion(discussion_id, feature=True):
