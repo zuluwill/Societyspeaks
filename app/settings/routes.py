@@ -194,6 +194,9 @@ def delete_account():
     user_id = user.id
 
     try:
+        from app.lib.account_deletion import release_user_event_references
+        release_user_event_references(user_id)
+
         # 1. Clear nullable FK references (set to NULL instead of delete)
         # These reference the user but can exist without them
         DiscussionView.query.filter_by(viewer_id=user_id).update(

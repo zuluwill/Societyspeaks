@@ -1199,6 +1199,8 @@ def delete_user(user_id):
         flash('You cannot delete your own account.', 'error')
         return redirect(url_for('admin.list_users'))
     try:
+        from app.lib.account_deletion import release_user_event_references
+        release_user_event_references(user.id)
         # Delete associated data
         if user.individual_profile:
             db.session.delete(user.individual_profile)
