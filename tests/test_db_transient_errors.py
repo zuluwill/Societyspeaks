@@ -103,7 +103,9 @@ def test_engine_read_write_guard_registers_once_on_postgres_url(monkeypatch):
         register_engine_read_write_guard,
     )
 
-    engine = create_engine("postgresql://u:p@localhost/db")
+    # psycopg2 is the installed driver. A bare postgresql:// URL makes newer
+    # SQLAlchemy import the psycopg v3 package, which CI does not install.
+    engine = create_engine("postgresql+psycopg2://u:p@localhost/db")
     listened = []
 
     def _fake_listen(target, identifier, fn, *args, **kwargs):
