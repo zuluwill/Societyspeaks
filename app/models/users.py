@@ -12,6 +12,10 @@ inside User.unread_notification_count to avoid depending on a sibling
 submodule at import time.
 """
 
+import hashlib
+import secrets
+from datetime import timedelta
+
 from flask import current_app, g
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -239,3 +243,51 @@ class UserAPIKey(db.Model):
 
     # Relationships
     user = db.relationship('User', backref='api_keys')
+
+
+class PendingRegistration(db.Model):
+    """Signup held until the person opens the confirmation link.
+
+    The User row is created only after the inbox is confirmed, so abandoned
+    or scripted signups never appear as accounts.
+    """
+
+    __tablename__ = 'pending_registration'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), nullable=False, unique=True, index=True)
+    username = db.Column(db.String(150), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    token_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    next_url = db.Column(db.String(500), nullable=True)
+    invitation_token = db.Column(db.String(255), nullable=True)
+    checkout_plan = db.Column(db.String(50), nullable=True)
+    checkout_interval = db.Column(db.String(20), nullable=True)
+    utm_json = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+    def issue_token(self, hours=24):
+        """Rotate the confirmation secret. Returns the raw token for the email."""
+        raw = secrets.token_urlsafe(32)
+        self.token_hash = hashlib.sha256(raw.encode('utf-8')).hexdigest()
+        now = utcnow_naive()
+        self.created_at = now
+        self.expires_at = now + timedelta(hours=hours)
+        return raw
+
+    @staticmethod
+    def _digest(token):
+        return hashlib.sha256((token or '').encode('utf-8')).hexdigest()
+
+    @classmethod
+    def find_by_token(cls, token):
+        """Return (row, expired). row is None when the token is unknown."""
+        if not token:
+            return None, False
+        row = cls.query.filter_by(token_hash=cls._digest(token)).first()
+        if row is None:
+            return None, False
+        if row.expires_at < utcnow_naive():
+            return row, True
+        return row, False

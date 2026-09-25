@@ -110,7 +110,7 @@ from app.models.discussions import (  # noqa: F401
     JourneyReminderSubscription,
     StatementFlag,
 )
-from app.models.users import User, UserAPIKey  # noqa: F401
+from app.models.users import PendingRegistration, User, UserAPIKey  # noqa: F401
 from app.models.game import (  # noqa: F401
     GameChallenge,
     GameDailySchedule,

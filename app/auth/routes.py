@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import urlparse
 from app import db, cache
-from app.models import User, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, generate_unique_slug
+from app.models import User, PendingRegistration, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, generate_unique_slug
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func, or_
 from datetime import date, datetime, timedelta
@@ -202,7 +202,7 @@ def _auto_create_individual_profile_for_trial(user) -> IndividualProfile:
     return profile
 
 
-def _finalize_login(user, *, method, next_url=None):
+def _finalize_login(user, *, method, next_url=None, success_message=None):
     """Run all post-authentication side-effects and return the redirect Response.
 
     Shared by the password ``/login`` route and the magic-link consume route
@@ -275,7 +275,7 @@ def _finalize_login(user, *, method, next_url=None):
                                     plan=pending_plan,
                                     interval=pending_interval))
 
-    flash(_("Logged in successfully!"), "success")
+    flash(success_message or _("Logged in successfully!"), "success")
 
     profile = user.individual_profile or user.company_profile
     if not profile:
@@ -517,7 +517,14 @@ def verify_email(token):
                 track_email_verified,
             )
             track_email_verified(user, verification_method=VERIFICATION_METHOD_EMAIL_LINK)
-        flash(_('Your email has been verified! You can now log in.'), 'success')
+            if current_user.is_authenticated and current_user.id != user.id:
+                logout_user()
+            return _finalize_login(
+                user,
+                method='password',
+                success_message=_("Email confirmed. Your account is ready."),
+            )
+        flash(_('Your email is already confirmed. Please log in.'), 'success')
         return redirect(url_for('auth.login'))
     return render_template(
         'auth/verify_email_expired.html',
@@ -539,8 +546,14 @@ def resend_verification():
     if current_user.is_authenticated:
         user = current_user
     else:
-        email = request.form.get('email', '').strip().lower()
-        user = User.query.filter_by(email=email).first() if email else None
+        email = (request.form.get('email') or session.get('pending_signup_email') or '').strip().lower()
+        user = User.query.filter(func.lower(User.email) == email).first() if email else None
+
+    pending = None
+    if user is None and email and not current_user.is_authenticated:
+        pending = PendingRegistration.query.filter(
+            func.lower(PendingRegistration.email) == email
+        ).first()
 
     if user and not user.email_verified:
         try:
@@ -550,11 +563,149 @@ def resend_verification():
             current_app.logger.info(f"Verification email resent to {user.email}")
         except Exception as e:
             current_app.logger.error(f"Failed to resend verification email: {e}")
+    elif pending is not None:
+        try:
+            _resend_pending_confirmation(pending)
+            current_app.logger.info("Signup confirmation resent to %s", pending.email)
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Failed to resend signup confirmation: {e}")
 
-    flash(_('If that address is registered and unverified, a new verification link has been sent.'), 'info')
-    if current_user.is_authenticated:
+    flash(_('If that address is waiting for confirmation, a new link has been sent.'), 'info')
+    if current_user.is_authenticated and current_user.email_verified:
         return redirect(_safe_referrer_or('auth.dashboard'))
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth.check_email'))
+
+
+@auth_bp.route('/check-email', methods=['GET'])
+def check_email():
+    """Shown after signup, and while an existing account is still unverified."""
+    if current_user.is_authenticated:
+        email = current_user.email
+    else:
+        email = session.get('pending_signup_email')
+    return render_template('auth/check_email.html', email=email)
+
+
+def _load_pending_signup(token):
+    """Return (pending, response). response is set when the token cannot be used."""
+    pending, expired = PendingRegistration.find_by_token(token)
+    if pending is None:
+        return None, render_template('auth/verify_email_expired.html', expired=False, email=None)
+    if expired:
+        session['pending_signup_email'] = pending.email
+        return None, render_template('auth/verify_email_expired.html', expired=True, email=pending.email)
+    return pending, None
+
+
+def _resend_pending_confirmation(pending):
+    raw_token = pending.issue_token()
+    db.session.commit()
+    verification_url = url_for('auth.confirm_signup', token=raw_token, _external=True)
+    send_verification_email(pending, verification_url)
+    session['pending_signup_email'] = pending.email
+
+
+@auth_bp.route('/confirm-signup/<token>', methods=['GET'])
+@limiter.limit("20/minute")
+def confirm_signup(token):
+    """Show a confirm button. GET must not create the account.
+
+    Inbox scanners and link prefetchers request the URL. The account is
+    created only when the person submits the form.
+    """
+    pending, error = _load_pending_signup(token)
+    if error is not None:
+        return error
+    return render_template('auth/confirm_signup.html', token=token, email=pending.email)
+
+
+@auth_bp.route('/confirm-signup/<token>', methods=['POST'])
+@limiter.limit("20/minute")
+def confirm_signup_submit(token):
+    """Create the account once the person confirms the address."""
+    pending, error = _load_pending_signup(token)
+    if error is not None:
+        return error
+
+    existing = User.query.filter(func.lower(User.email) == pending.email.lower()).first()
+    if existing:
+        db.session.delete(pending)
+        db.session.commit()
+        flash(_('This email already has an account. Please log in.'), 'info')
+        return redirect(url_for('auth.login'))
+
+    if User.query.filter(func.lower(User.username) == pending.username.lower()).first():
+        session['pending_signup_email'] = pending.email
+        flash(_('That username was taken while you were confirming. Please choose another and we will send a new link.'), 'error')
+        return redirect(url_for('auth.register'))
+
+    import json
+    utms = {}
+    if pending.utm_json:
+        try:
+            utms = json.loads(pending.utm_json) or {}
+        except (TypeError, ValueError):
+            utms = {}
+    next_url = pending.next_url
+    pending_invitation = pending.invitation_token
+    checkout_plan = pending.checkout_plan
+    checkout_interval = pending.checkout_interval or 'month'
+
+    user = User(
+        username=pending.username,
+        email=pending.email,
+        password=pending.password,
+        email_verified=True,
+    )
+    db.session.add(user)
+    db.session.delete(pending)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.warning('Confirming signup failed for %s', pending.email)
+        flash(_('We could not finish creating your account. Please try registering again.'), 'error')
+        return redirect(url_for('auth.register'))
+
+    from app.lib.identity_analytics import (
+        SIGNUP_METHOD_REGISTER,
+        VERIFICATION_METHOD_EMAIL_LINK,
+        track_email_verified,
+        track_user_signed_up,
+    )
+    track_user_signed_up(user, signup_method=SIGNUP_METHOD_REGISTER, properties=utms, source='web')
+    track_email_verified(user, verification_method=VERIFICATION_METHOD_EMAIL_LINK)
+
+    from app.models import ProgrammeSteward
+    from app.lib.time import utcnow_naive as _utcnow
+    stewards = ProgrammeSteward.query.filter_by(pending_email=user.email.lower(), status='pending').all()
+    for steward in stewards:
+        steward.user_id = user.id
+        steward.pending_email = None
+        steward.status = 'active'
+        steward.accepted_at = _utcnow()
+        steward.invite_token = None
+    if stewards:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.warning('Failed to link steward invites after email confirmation')
+
+    session.pop('pending_signup_email', None)
+    if pending_invitation and not session.get('pending_invitation_token'):
+        session['pending_invitation_token'] = pending_invitation
+    if checkout_plan:
+        session['pending_checkout_plan'] = checkout_plan
+        session['pending_checkout_interval'] = checkout_interval
+
+    return _finalize_login(
+        user,
+        method='password',
+        next_url=next_url,
+        success_message=_("Email confirmed. Your account is ready."),
+    )
 
 
 @auth_bp.route('/invite/<token>', methods=['GET'])
@@ -726,85 +877,43 @@ def register():
         if User.query.filter(func.lower(User.username) == username.lower()).first():
             return _reject(_("That username is already taken. Please choose another."), 'username')
 
-        # Hash the password and create the user
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(username=username, email=email, password=hashed_password)
-        new_user.email_verified = False
-        db.session.add(new_user)
+        from app.lib.time import utcnow_naive as _utcnow
+        username_held = PendingRegistration.query.filter(
+            func.lower(PendingRegistration.username) == username.lower(),
+            func.lower(PendingRegistration.email) != email,
+            PendingRegistration.expires_at > _utcnow(),
+        ).first()
+        if username_held:
+            return _reject(_("That username is already taken. Please choose another."), 'username')
+
+        # Hold the signup until the inbox link is opened. No User row yet.
+        import json
+        from app.lib.utm import peek_utms
+        pending = PendingRegistration.query.filter(func.lower(PendingRegistration.email) == email).first()
+        if pending is None:
+            pending = PendingRegistration(email=email, username=username, password='', token_hash='')
+            db.session.add(pending)
+        pending.email = email
+        pending.username = username
+        pending.password = generate_password_hash(password, method='pbkdf2:sha256')
+        pending.next_url = safe_next_url(next_url)
+        pending.invitation_token = session.get('pending_invitation_token')
+        pending.checkout_plan = session.get('pending_checkout_plan')
+        pending.checkout_interval = session.get('pending_checkout_interval') or 'month'
+        utms = peek_utms() or {}
+        pending.utm_json = json.dumps(utms) if utms else None
+        raw_token = pending.issue_token()
         try:
             db.session.commit()
         except Exception:
             db.session.rollback()
-            current_app.logger.warning('Registration commit failed for username=%s', username)
+            current_app.logger.warning('Pending registration commit failed for username=%s', username)
             return _reject(_("That username or email is already registered. Please log in or choose another."), 'email')
 
-        # Identity event — path-agnostic acquisition signal + campaign UTMs.
-        # peek (not pop) so a later trial conversion can still attribute.
-        from app.lib.identity_analytics import (
-            SIGNUP_METHOD_REGISTER,
-            track_user_signed_up,
-        )
-        from app.lib.utm import peek_utms
-        track_user_signed_up(
-            new_user,
-            signup_method=SIGNUP_METHOD_REGISTER,
-            properties=peek_utms(),
-            source='web',
-        )
-
-        # Generate email verification token (24-hour expiry, separate salt from password reset)
-        token = new_user.get_email_verification_token()
-
-        # Send welcome email with the verification link embedded
-        verification_url = url_for('auth.verify_email', token=token, _external=True)
-        send_welcome_email(new_user, verification_url=verification_url)
-
-        # Auto-login the new user for frictionless checkout flow
-        login_user(new_user)
-        merge_anonymous_statement_votes_into_user(new_user)
-        sync_partner_portal_session_for_email(new_user.email)
-        _set_pending_post_auth_redirect(next_url)
-        _consume_pending_discussion_follow(new_user)
-
-        # Auto-link any pending steward invites sent to this email address
-        from app.models import ProgrammeSteward
-        from app.lib.time import utcnow_naive as _utcnow
-        _pending_stewards = ProgrammeSteward.query.filter_by(
-            pending_email=new_user.email.lower(),
-            status='pending',
-        ).all()
-        if _pending_stewards:
-            for _ps in _pending_stewards:
-                _ps.user_id = new_user.id
-                _ps.pending_email = None
-                _ps.status = 'active'
-                _ps.accepted_at = _utcnow()
-                _ps.invite_token = None
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                current_app.logger.warning('Failed to auto-link pending steward invites on registration')
-        # Consume any pending steward invite token so it is not re-processed on login
-        session.pop('pending_steward_invite_token', None)
-
-        # Check for pending checkout (user came from pricing page)
-        pending_plan = session.pop('pending_checkout_plan', None)
-        pending_interval = session.pop('pending_checkout_interval', 'month')
-
-        if pending_plan:
-            # Direct to checkout - don't make them log in separately
-            flash(_("Welcome! Complete your subscription setup below. We've sent a verification email to confirm your address."), "success")
-            return redirect(url_for('billing.pending_checkout',
-                                    plan=pending_plan,
-                                    interval=pending_interval))
-
-        # No pending checkout - normal registration flow
-        flash(_("Welcome! We've sent a verification email. You can continue setting up your account."), "success")
-        pending_redirect = _peek_pending_post_auth_redirect()
-        if pending_redirect:
-            return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
-        return redirect(url_for('profiles.select_profile_type'))
+        verification_url = url_for('auth.confirm_signup', token=raw_token, _external=True)
+        send_welcome_email(pending, verification_url=verification_url)
+        session['pending_signup_email'] = email
+        return redirect(url_for('auth.check_email'))
 
     return _render_register_form(next_url)
 
@@ -858,6 +967,18 @@ def login():
         # partners who never created a main-site account can still sign in here
         # and land directly on their portal dashboard.
         if not user:
+            from app.lib.time import utcnow_naive as _utcnow
+            pending_signup = PendingRegistration.query.filter(
+                func.lower(PendingRegistration.email) == email,
+                PendingRegistration.expires_at > _utcnow(),
+            ).first()
+            if pending_signup and check_password_hash(pending_signup.password, password):
+                session['pending_signup_email'] = pending_signup.email
+                flash(
+                    _("Confirm your email to finish creating your account. We sent a link to %(email)s.", email=pending_signup.email),
+                    "info",
+                )
+                return redirect(url_for('auth.check_email'))
             partner_response = attempt_partner_only_login(email, password)
             if partner_response:
                 return partner_response
@@ -1218,6 +1339,24 @@ def password_reset_request():
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
 
+        if user is None and email:
+            from app.lib.time import utcnow_naive as _utcnow
+            pending_signup = PendingRegistration.query.filter(
+                func.lower(PendingRegistration.email) == email.strip().lower(),
+                PendingRegistration.expires_at > _utcnow(),
+            ).first()
+            if pending_signup is not None:
+                try:
+                    _resend_pending_confirmation(pending_signup)
+                except Exception:
+                    db.session.rollback()
+                    current_app.logger.exception('Failed to resend signup confirmation from password reset')
+                flash(
+                    _("That address is not confirmed yet. We sent a fresh link to %(email)s.", email=pending_signup.email),
+                    'info',
+                )
+                return redirect(url_for('auth.check_email'))
+
         if user:
             # Generate a secure token for resetting the password
             reset_token = user.get_reset_token()
@@ -1363,6 +1502,24 @@ def magic_link_request():
                 # Cooldown for known accounts only after a successful send, and
                 # always for unknown emails (anti-enumeration timing). Skip on
                 # send failure so the user can retry immediately.
+                if user is None:
+                    from app.lib.time import utcnow_naive as _utcnow
+                    pending_signup = PendingRegistration.query.filter(
+                        func.lower(PendingRegistration.email) == email,
+                        PendingRegistration.expires_at > _utcnow(),
+                    ).first()
+                    if pending_signup is not None:
+                        try:
+                            _resend_pending_confirmation(pending_signup)
+                        except Exception:
+                            db.session.rollback()
+                            current_app.logger.exception('Failed to resend signup confirmation from magic-link request')
+                        flash(
+                            _("Confirm your email to finish creating your account. We sent a fresh link to %(email)s.", email=pending_signup.email),
+                            'info',
+                        )
+                        return redirect(url_for('auth.check_email'))
+
                 if user is None or send_ok:
                     try:
                         cache.set(

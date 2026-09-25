@@ -369,7 +369,8 @@ def test_register_turnstile_accepts_verified_token(app, db, client, monkeypatch)
         follow_redirects=False,
     )
     assert resp.status_code == 302
-    assert User.query.filter_by(email='turnstileok@example.com').first() is not None
+    assert '/auth/check-email' in resp.headers['Location']
+    assert User.query.filter_by(email='turnstileok@example.com').first() is None
 
 
 def test_register_page_falls_back_to_math_captcha(app, db, client):
@@ -384,7 +385,7 @@ def test_unverified_user_statement_hourly_limit(app, db, client):
         username='newunverified',
         email='newunverified@example.com',
         password='hashed',
-        email_verified=False,
+        email_verified=True,
     )
     db.session.add(user)
     db.session.flush()

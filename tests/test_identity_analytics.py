@@ -110,8 +110,13 @@ def test_register_fires_user_signed_up_with_signup_method(app, db, monkeypatch):
             'identify_properties': dict(identify_properties or {}),
         })
 
+    sent = {}
+
+    def _capture_welcome(user, verification_url=None):
+        sent['url'] = verification_url
+
     monkeypatch.setattr('app.lib.identity_analytics.safe_posthog_capture', _fake_capture)
-    monkeypatch.setattr('app.auth.routes.send_welcome_email', lambda *a, **k: None)
+    monkeypatch.setattr('app.auth.routes.send_welcome_email', _capture_welcome)
 
     client = app.test_client()
     with client.session_transaction() as sess:
@@ -128,11 +133,22 @@ def test_register_fires_user_signed_up_with_signup_method(app, db, monkeypatch):
         },
         follow_redirects=False,
     )
-    assert resp.status_code in (200, 302)
+    assert resp.status_code == 302
+    assert '/auth/check-email' in resp.headers['Location']
+
+    with app.app_context():
+        assert User.query.filter_by(email='classicuser@example.com').first() is None
+
+    from urllib.parse import urlparse
+    path = urlparse(sent['url']).path
+    assert client.get(path, follow_redirects=False).status_code == 200
+    confirm = client.post(path, follow_redirects=False)
+    assert confirm.status_code == 302
 
     with app.app_context():
         created = User.query.filter_by(email='classicuser@example.com').first()
         assert created is not None
+        assert created.email_verified is True
         created_id = created.id
 
     signup_events = [e for e in captured if e['event'] == 'user_signed_up']

@@ -45,7 +45,7 @@ def test_resend_verification_authenticated_ignores_posted_email(app, db, monkeyp
     )
 
     assert response.status_code == 302
-    assert response.headers['Location'] == 'http://localhost/platform'
+    assert response.headers['Location'].endswith('/auth/check-email')
     assert sent_to == ['actor@example.com']
 
 
@@ -71,5 +71,5 @@ def test_resend_verification_unauthenticated_uses_posted_email(app, db, monkeypa
     )
 
     assert response.status_code == 302
-    assert response.headers['Location'].endswith('/auth/login')
+    assert response.headers['Location'].endswith('/auth/check-email')
     assert sent_to == ['target@example.com']

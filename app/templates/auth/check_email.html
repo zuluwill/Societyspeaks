@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md text-center">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+    </div>
+
+    <h1 class="mt-4 text-2xl font-bold text-gray-800">{{ _('Check your email') }}</h1>
+
+    {% if email %}
+    <p class="mt-2 text-sm text-gray-600">
+        {{ _('We sent a confirmation link to %(email)s. Open it to finish creating your account.', email=email) }}
+    </p>
+    {% else %}
+    <p class="mt-2 text-sm text-gray-600">
+        {{ _('We sent a confirmation link to the address you entered. Open it to finish creating your account.') }}
+    </p>
+    {% endif %}
+
+    <p class="mt-4 text-sm text-gray-500">
+        {{ _('The link expires in 24 hours. If it is not in your inbox, check spam or promotions.') }}
+    </p>
+
+    <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="mt-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if email and not current_user.is_authenticated %}
+        <input type="hidden" name="email" value="{{ email }}">
+        {% endif %}
+        <button type="submit" class="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition min-h-11">
+            {{ _('Resend confirmation email') }}
+        </button>
+    </form>
+
+    <div class="mt-4 space-y-2">
+        <a href="{{ url_for('auth.register') }}" class="inline-block text-sm text-primary-500 hover:underline">
+            {{ _('Use a different email') }}
+        </a>
+        {% if current_user.is_authenticated %}
+        <div>
+            <a href="{{ url_for('auth.logout') }}" class="text-sm text-gray-500 hover:underline">{{ _('Log out') }}</a>
+        </div>
+        {% else %}
+        <div>
+            <a href="{{ url_for('auth.login') }}" class="text-sm text-gray-500 hover:underline">{{ _('Already confirmed? Log in') }}</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

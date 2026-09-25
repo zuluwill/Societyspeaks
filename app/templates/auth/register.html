@@ -75,7 +75,7 @@
         {% if errors.get('password') %}
         <p id="register-password-error" class="mt-1 text-xs text-red-600">{{ errors.password }}</p>
         {% endif %}
-        <p id="register-password-hint" class="mt-1 text-xs text-gray-500">{{ _('At least 8 characters. You will verify this email before posting replies.') }}</p>
+        <p id="register-password-hint" class="mt-1 text-xs text-gray-500">{{ _('At least 8 characters. We email you a confirmation link before the account is created.') }}</p>
         <p id="register-email-hint" class="sr-only">{{ _('We use this to save your votes and send a verification link.') }}</p>
 
         {% if turnstile_site_key|default('') %}

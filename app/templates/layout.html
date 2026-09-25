@@ -1271,7 +1271,7 @@
     </header>
 
     {# Persistent email verification banner — shown until the user verifies #}
-    {% if current_user.is_authenticated and not current_user.email_verified %}
+    {% if current_user.is_authenticated and not current_user.email_verified and request.endpoint != 'auth.check_email' %}
     <div class="border-b border-yellow-200 bg-yellow-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <p class="text-sm text-yellow-800">

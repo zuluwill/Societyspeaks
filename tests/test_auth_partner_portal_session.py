@@ -111,7 +111,12 @@ def test_register_auto_syncs_partner_session_and_replaces_stale_values(app, db):
         flask_session["partner_portal_id"] = stale_partner.id
         flask_session["partner_member_id"] = stale_owner.id
 
-    with patch("app.auth.routes.send_welcome_email"):
+    sent = {}
+
+    def _capture_welcome(user, verification_url=None):
+        sent["url"] = verification_url
+
+    with patch("app.auth.routes.send_welcome_email", side_effect=_capture_welcome):
         response = client.post(
             "/auth/register",
             data={
@@ -120,8 +125,14 @@ def test_register_auto_syncs_partner_session_and_replaces_stale_values(app, db):
                 "password": "ValidPass123!",
                 "verification": "7",
             },
-            follow_redirects=True,
+            follow_redirects=False,
         )
+
+    assert response.status_code == 302
+    from urllib.parse import urlparse
+    path = urlparse(sent["url"]).path
+    assert client.get(path, follow_redirects=False).status_code == 200
+    response = client.post(path, follow_redirects=True)
 
     assert response.status_code == 200
     assert b"Partner Portal" in response.data

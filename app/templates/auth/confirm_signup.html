@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md text-center">
+    <h1 class="text-2xl font-bold text-gray-800">{{ _('Confirm your email') }}</h1>
+    <p class="mt-2 text-sm text-gray-600">
+        {{ _('This creates your Society Speaks account for') }}
+        <strong class="text-gray-900 break-all">{{ email }}</strong>.
+    </p>
+
+    <form method="POST" action="{{ url_for('auth.confirm_signup_submit', token=token) }}" class="mt-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit"
+                class="w-full bg-blue-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition min-h-11">
+            {{ _('Create my account') }}
+        </button>
+    </form>
+
+    <p class="mt-6 text-xs text-gray-500">
+        {{ _("If you didn't sign up, close this page. Nothing is created until you press the button.") }}
+    </p>
+</div>
+{% endblock %}
