@@ -617,14 +617,21 @@ def init_scheduler(app):
             return
         with app.app_context():
             from app import db
+            from app.lib.job_queue import is_missing_relation
             try:
                 from app.consultations.jobs import run_sweep
                 result = run_sweep()
                 if result['closed'] or result['notices']:
                     logger.info('Consultation sweep: %s', result)
-            except Exception:
+            except Exception as exc:
                 db.session.rollback()
-                logger.exception('Consultation sweep failed')
+                if is_missing_relation(exc):
+                    logger.warning(
+                        'Consultation sweep is ahead of the migration and will retry: %s',
+                        exc,
+                    )
+                else:
+                    logger.exception('Consultation sweep failed')
 
 
     @scheduler.scheduled_job('interval', minutes=5, id='background_job_health', max_instances=1, coalesce=True)
@@ -636,13 +643,19 @@ def init_scheduler(app):
         """
         with app.app_context():
             from app import db
-            from app.lib.job_queue import get_queue_metrics, recover_stale_jobs
+            from app.lib.job_queue import get_queue_metrics, is_missing_relation, recover_stale_jobs
             try:
                 recovered = recover_stale_jobs()
                 metrics = get_queue_metrics()
             except Exception as e:
                 db.session.rollback()
-                logger.error(f"Background job health check failed: {e}", exc_info=True)
+                if is_missing_relation(e):
+                    logger.warning(
+                        "Background job health check is ahead of the migration and will retry: %s",
+                        e,
+                    )
+                else:
+                    logger.error(f"Background job health check failed: {e}", exc_info=True)
                 return
             if recovered:
                 logger.warning(f"Requeued {recovered} background jobs that timed out")

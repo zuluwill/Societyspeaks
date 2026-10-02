@@ -101,7 +101,7 @@ Pillow>=10.4.0,<13
 # WeasyPrint needs Pango at runtime (installed in the Dockerfile). Where it is
 # missing, app/consultations/pdf.py falls back to the browser's print view.
 segno>=1.6,<2
-weasyprint>=68,<70
+weasyprint>=70,<71
 
 # CORS for API endpoints
 flask-cors>=6.0.2,<7
@@ -120,6 +120,8 @@ anthropic>=0.75.0,<0.126
 
 # Social Media Posting
 atproto>=0.0.30,<0.1
+# tweepy still caps oauthlib at <4. scripts/install_python_deps.sh
+# force-installs oauthlib 4 afterwards (GHSA-xpv3-w29h-x7cv, GHSA-hj66-6f7g-4r5v).
 tweepy>=4.14.0,<5
 
 # Briefing System v2 - Ingestion

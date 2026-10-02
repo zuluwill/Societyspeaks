@@ -676,11 +676,11 @@ query `transaction:/billing/webhook http.status_code:>=500`, critical at ≥1.
 ## Self-serve consultations
 
 One question, one audience, one report: `app/consultations/`. Gated by
-`CONSULTATIONS_SELF_SERVE_ENABLED` (shared config group, default `"false"`).
-While it is off, every product route, `/c/<token>`, `/r/<token>` and
-`/help/consultations` answers 404, the scheduler sweep does nothing, and the
-site does not link to the product. Switching it off again is the rollback:
-data is kept, nothing is deleted.
+`CONSULTATIONS_SELF_SERVE_ENABLED` (shared config group). It is `"true"` as
+of 2 Oct 2026. Setting it back to `"false"` is the rollback: every product
+route, `/c/<token>`, `/r/<token>` and `/help/consultations` answers 404, the
+scheduler sweep does nothing, and the site does not link to the product.
+Existing consultations are kept.
 
 ### Before setting the flag to "true"
 
@@ -693,12 +693,12 @@ data is kept, nothing is deleted.
    Drafting, screening and the report narrative use it (`PLATFORM_LLM_MODEL`,
    default `claude-opus-5-5`). With no key, hosts write statements by hand and
    reports use the template narrative.
-4. **Stripe webhook** (`/billing/webhook`): add `charge.refunded` and
-   `charge.dispute.created` to the events the endpoint receives. Checkout and
-   `customer.subscription.*` events are already sent.
-   Checked in Stripe on 2 Oct 2026: the live endpoint does not yet receive
-   these two events, and test mode has no webhook endpoint at all, so a
-   test-mode payment reaches the app only through the checkout return page.
+4. **Stripe webhook** (`/billing/webhook`): `charge.refunded`,
+   `charge.dispute.created` and `charge.dispute.closed` must be enabled, along
+   with the checkout and `customer.subscription.*` events already sent.
+   Done on the live endpoint `we_1SrIbyAjRojnyfWfqepGQ3LZ` on 2 Oct 2026.
+   Test mode still has no webhook endpoint, so a test-mode payment reaches
+   the app only through the checkout return page.
 5. **Stripe customer portal**: allow subscription cancellation and invoice
    history. It is where a customer cancels the annual plan.
 6. **VAT**: leave `STRIPE_AUTOMATIC_TAX_ENABLED` unset until the company is
@@ -715,6 +715,14 @@ data is kept, nothing is deleted.
    the new strings are not English-only in the other ten languages.
 10. **Load test** at the room size you intend to promise:
     `load-tests/k6/consultation_room.js`. State a capacity only after it passes.
+
+### Deploy order
+
+The worker and scheduler go live as soon as their image is built, which can be
+before the web service's `preDeployCommand` has run the migration. On the
+2 Oct 2026 deploy the worker logged `relation "background_job" does not exist`
+for about 90 seconds and then recovered by itself. A migration that adds a
+table the worker reads will do the same; it is harmless, but expect the errors.
 
 ### How it runs
 

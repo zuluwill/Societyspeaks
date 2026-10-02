@@ -29,6 +29,24 @@ from app.models import BackgroundJob
 
 logger = logging.getLogger(__name__)
 
+
+def is_missing_relation(exc: BaseException) -> bool:
+    """True when the database says a table or column is not there yet.
+
+    The worker process starts as soon as its image is built, which can be
+    before the web service has finished ``flask db upgrade``. That gap is a
+    retry, not a defect in the job.
+    """
+    orig = getattr(exc, 'orig', exc)
+    if getattr(orig, 'pgcode', None) in ('42P01', '42703'):
+        return True
+    text = str(orig).lower()
+    return (
+        'no such table' in text
+        or 'no such column' in text
+        or ('does not exist' in text and ('relation ' in text or 'column ' in text))
+    )
+
 # Ops pages on recently exhausted jobs only, as for the consensus queue.
 DEAD_LETTER_ALERT_LOOKBACK = timedelta(hours=24)
 _RETRY_BASE_SECONDS = 20

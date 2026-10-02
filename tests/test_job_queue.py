@@ -8,6 +8,7 @@ from app.lib.job_queue import (
     drain_jobs,
     enqueue_job,
     get_queue_metrics,
+    is_missing_relation,
     job_handler,
     on_dead_letter,
     process_next_job,
@@ -155,6 +156,19 @@ def test_a_job_whose_row_is_deleted_while_it_runs_does_not_break_the_worker(db):
 
     assert process_next_job() is True
     assert BackgroundJob.query.count() == 0
+
+
+def test_a_missing_table_is_a_migration_gap_not_a_job_failure():
+    class _PgError(Exception):
+        pgcode = '42P01'
+
+    class _Wrapped(Exception):
+        orig = _PgError('relation "background_job" does not exist')
+
+    assert is_missing_relation(_Wrapped()) is True
+    assert is_missing_relation(Exception('relation "background_job" does not exist')) is True
+    assert is_missing_relation(Exception('no such table: background_job')) is True
+    assert is_missing_relation(RuntimeError('boom')) is False
 
 
 def test_a_failing_job_whose_row_is_deleted_does_not_break_the_worker(db):

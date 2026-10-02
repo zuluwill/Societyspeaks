@@ -40,6 +40,7 @@ from app.programmes.export_jobs import (
 )  # noqa: E402
 from app.lib.job_queue import (  # noqa: E402
     get_queue_metrics as get_background_queue_metrics,
+    is_missing_relation,
     process_next_job as process_next_background_job,
     recover_stale_jobs as recover_stale_background_jobs,
 )
@@ -172,7 +173,16 @@ def main():
 
                 time.sleep(active_sleep if processed else idle_sleep)
             except Exception as exc:
-                logger.error(f"Consensus worker loop error: {exc}", exc_info=True)
+                if is_missing_relation(exc):
+                    # Logged without a traceback: Sentry treats logger.error
+                    # with exc_info as an issue, and this clears itself once
+                    # the migration commits.
+                    logger.warning(
+                        "Consensus worker is ahead of the migration and will retry: %s",
+                        exc,
+                    )
+                else:
+                    logger.error(f"Consensus worker loop error: {exc}", exc_info=True)
                 try:
                     db.session.rollback()
                 except Exception:

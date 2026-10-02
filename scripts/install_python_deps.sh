@@ -43,3 +43,12 @@ PIP_FLAGS=(--disable-pip-version-check --timeout 60 --retries 5)
 "$PYTHON_BIN" -m pip install "${PIP_FLAGS[@]}" -r requirements.txt
 "$PYTHON_BIN" -m pip install "${PIP_FLAGS[@]}" --force-reinstall --no-deps \
   "$CRYPTOGRAPHY_OVERRIDE"
+
+# tweepy 4.17 still requires oauthlib<4. The two advisories fixed only in
+# 4.0.0 are in the OAuth server (PKCE comparison and the revocation
+# endpoint's JSONP callback). This app uses oauthlib as a client, through
+# tweepy, and the 4.0.0 breaking changes are on that server code. Install
+# the patched release over tweepy's cap so the production environment and
+# pip-audit are clean. Drop this when tweepy allows oauthlib 4.
+"$PYTHON_BIN" -m pip install "${PIP_FLAGS[@]}" --force-reinstall --no-deps \
+  'oauthlib>=4.0.0,<5'
