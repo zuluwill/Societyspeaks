@@ -34,7 +34,7 @@
 {%- if verdict == 'agrees' %}{{ _('%(share)s agree', share=percent(row.agree_share)|trim) }}
 {%- elif verdict == 'disagrees' %}{{ _('%(share)s disagree', share=percent(row.disagree_share)|trim) }}
 {%- elif verdict == 'unsure' %}{{ _('%(share)s unsure', share=percent(row.unsure_share)|trim) }}
-{%- elif verdict in ('split', 'no_clear_result') %}{{ _('%(agree)s agree, %(disagree)s disagree', agree=percent(row.agree_share)|trim, disagree=percent(row.disagree_share)|trim) }}
+{%- elif verdict in ('split', 'no_clear_result') %}<span class="ssr-pair">{{ _('%(share)s agree', share=percent(row.agree_share)|trim) }}</span><span class="ssr-pair">{{ _('%(share)s disagree', share=percent(row.disagree_share)|trim) }}</span>
 {%- endif %}
 {% endmacro %}
 
