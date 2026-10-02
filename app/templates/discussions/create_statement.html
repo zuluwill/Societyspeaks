@@ -86,13 +86,17 @@
         maxlength="500") }}
 
         <!-- Character Counter -->
-        <div class="flex justify-between items-center mt-2">
+        <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-1 mt-2">
           <div class="text-sm text-gray-500">
             {% if form.content.errors %}
             <span class="text-red-600">{{ form.content.errors[0] }}</span>
             {% else %} {{ _('Min: 10 characters | Max: 500 characters') }} {% endif %}
           </div>
-          <div id="charCount" class="text-sm text-gray-500">
+          <!-- Fixed width + tabular digits: the counter must not resize as it
+               counts up, or the row re-wraps and the form jumps under the
+               cursor. Weight is constant for the same reason; only colour
+               changes. -->
+          <div id="charCount" class="text-sm text-gray-500 font-medium shrink-0 tabular-nums text-right w-24">
             <span id="currentCount">0</span> / 500
           </div>
         </div>
@@ -140,11 +144,11 @@
 
         // Color code based on length
         if (count < 10) {
-          currentCount.className = "text-red-600 font-semibold";
+          currentCount.className = "text-red-600";
         } else if (count > 450) {
-          currentCount.className = "text-yellow-600 font-semibold";
+          currentCount.className = "text-yellow-700";
         } else {
-          currentCount.className = "text-green-600 font-semibold";
+          currentCount.className = "text-green-700";
         }
 
         // Update preview

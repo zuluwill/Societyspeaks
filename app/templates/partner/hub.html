@@ -477,10 +477,16 @@
   title="Society Speaks discussion"
 &gt;&lt;/iframe&gt;</pre>
       </div>
+      {# Build the anchors with block capture: a plain-string param is escaped
+         by newstyle gettext (Markup.__mod__) and `~` escapes string literals
+         under autoescape, so both of those render the tags as visible text.
+         `{% set %}…{% endset %}` yields Markup, which survives both. The
+         msgid is unchanged, so existing translations still apply. #}
+      {% set lookup_link %}<a href="{{ url_for('partner.api_docs') }}" class="text-primary-600 hover:underline">{{ _('Lookup API') }}</a>{% endset %}
+      {% set generator_link %}<a href="{{ url_for('partner.embed_generator') }}" class="text-primary-600 hover:underline">{{ _('embed generator') }}</a>{% endset %}
       <p class="text-xs text-gray-500 mt-3">
         {{ _('Get <code>{id}</code> from the %(lookup_link)s or the %(generator_link)s.',
-              lookup_link='<a href="' ~ url_for('partner.api_docs') ~ '" class="text-primary-600 hover:underline">' ~ _('Lookup API') ~ '</a>',
-              generator_link='<a href="' ~ url_for('partner.embed_generator') ~ '" class="text-primary-600 hover:underline">' ~ _('embed generator') ~ '</a>')|safe }}
+              lookup_link=lookup_link, generator_link=generator_link) }}
       </p>
     </div>
     <div class="rounded-xl border border-primary-200 bg-primary-50 p-6 shadow-sm mt-8">

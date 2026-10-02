@@ -12,6 +12,40 @@ import logging
 load_dotenv()
 
 
+def database_url_for_sqlalchemy(url):
+    """Pin a Postgres URL to the psycopg2 driver this app ships.
+
+    Heroku-style ``postgres://`` is rewritten first. A bare ``postgresql://``
+    lets the installed SQLAlchemy choose the DBAPI: 2.0 picks psycopg2, 2.1
+    picks psycopg (v3), which is not a dependency. Naming the driver in the
+    URL makes that a deployment decision. A URL that already names a driver
+    is left alone.
+    """
+    if not url:
+        return url
+    if url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    if url.startswith('postgresql://'):
+        url = url.replace('postgresql://', 'postgresql+psycopg2://', 1)
+    return url
+
+
+def libpq_dsn(url):
+    """DSN for ``psycopg2.connect()``, which rejects SQLAlchemy's ``+driver`` suffix.
+
+    Any ``postgresql+<driver>://`` form is stripped, not only ``+psycopg2``.
+    The engine creator always calls psycopg2, so leaving ``+psycopg`` in the
+    DSN makes libpq reject the connection.
+    """
+    if not url:
+        return None
+    if url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    elif url.startswith('postgresql+') and '://' in url:
+        url = 'postgresql://' + url.split('://', 1)[1]
+    return url or None
+
+
 def _make_retry_creator(uri: str, connect_args: dict, max_attempts: int = 3, base_backoff_s: float = 0.3):
     """Return a zero-argument psycopg2 connector with retry on transient network errors.
 
@@ -232,9 +266,8 @@ class Config:
             "(or set NEON_DATABASE_URL as a fallback)"
         )
 
-    # Add near start of Config class
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+    # See database_url_for_sqlalchemy: scheme normalisation + explicit driver.
+    SQLALCHEMY_DATABASE_URI = database_url_for_sqlalchemy(SQLALCHEMY_DATABASE_URI)
 
     # Neon's direct-connect endpoints publish both A and AAAA records.  In
     # environments without IPv6 connectivity (Replit deployments) the IPv6
@@ -340,6 +373,10 @@ class Config:
         'keepalives_count': 3,   # was 5 — fail faster on a dead link
     }
 
+    # libpq rejects SQLAlchemy's `driver` suffix, so the creator below — which
+    # calls psycopg2.connect() directly — gets the DSN with it stripped.
+    _LIBPQ_DSN = libpq_dsn(SQLALCHEMY_DATABASE_URI)
+
     # Use a creator function so that every new physical DB connection —
     # including pool-recycle reconnects, scheduler jobs, and consensus worker
     # connections — gets retry logic for transient network errors.  When
@@ -351,7 +388,7 @@ class Config:
         'pool_size': DB_POOL_SIZE,
         'max_overflow': DB_MAX_OVERFLOW,
         'pool_timeout': DB_POOL_TIMEOUT,
-        'creator': _make_retry_creator(SQLALCHEMY_DATABASE_URI, _connect_args),
+        'creator': _make_retry_creator(_LIBPQ_DSN, _connect_args),
     }
     
     

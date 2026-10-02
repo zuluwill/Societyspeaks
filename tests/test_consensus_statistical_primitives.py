@@ -613,3 +613,96 @@ def test_native_system_help_page_surfaces_rigour_copy(app):
         html = render_template('help/native_system.html')
     for phrase in ('Wilson', 'FDR', 'Newcombe', 'permutation', 'Limitations'):
         assert phrase in html, f"expected {phrase!r} in native_system help page"
+
+
+# ── Bridge gating: per-cluster floor, and no overlap with division ───────
+
+def test_bridge_requires_every_group_on_the_same_side():
+    """A mean-only gate let through statements the groups split on.
+
+    Cluster 0 rejects unanimously (10/10); cluster 1 rejects 3 of 10. The
+    mean strict-disagree rate is 0.65 — exactly the old threshold — but one
+    group is 70% *not* rejecting. That is not common ground.
+    """
+    rows = (
+        [[-1]] * 10            # cluster 0: unanimous reject
+        + [[-1]] * 3 + [[1]] * 7   # cluster 1: 3 reject, 7 agree
+    )
+    vm = pd.DataFrame(
+        rows,
+        index=[f"u_{i}" for i in range(20)],
+        columns=[1],
+    ).astype(float)
+    labels = np.array([0] * 10 + [1] * 10)
+
+    bridges = identify_bridge_statements(vm, labels)
+    assert bridges == [], (
+        "a statement one group rejects unanimously and another mostly "
+        "agrees with must not be presented as a bridge"
+    )
+
+
+def test_bridge_and_divisive_sets_are_disjoint():
+    """No statement may appear as both common ground and a division.
+
+    Statement 1 is the pathological case: shared rejection on paper
+    (mean 0.65), but a 70-point between-group agreement gap, which makes it
+    FDR-divisive. It must land in exactly one bucket.
+    """
+    rows = (
+        [[-1, 1]] * 10
+        + [[-1, 1]] * 3 + [[1, 1]] * 7
+    )
+    vm = pd.DataFrame(
+        rows,
+        index=[f"u_{i}" for i in range(20)],
+        columns=[1, 2],
+    ).astype(float)
+    labels = np.array([0] * 10 + [1] * 10)
+
+    bridges = {b["statement_id"] for b in identify_bridge_statements(vm, labels)}
+    divisive = {
+        d["statement_id"]
+        for d in identify_divisive_statements(
+            vm, labels, n_permutations=200, rng=np.random.default_rng(0)
+        )
+    }
+    assert bridges & divisive == set(), (
+        f"statements {sorted(bridges & divisive)} were surfaced as both a "
+        "bridge and a point of division"
+    )
+    # Statement 2 is unanimous agreement across both groups — a real bridge.
+    assert 2 in bridges
+
+
+def test_bridge_entries_carry_per_cluster_floor_and_gap():
+    """The surfaced metrics must include what the gate actually tested, so
+    the report can say 'every group agrees (weakest N%)' honestly."""
+    vm, labels = _toy_matrix()
+    bridges = identify_bridge_statements(vm, labels)
+    assert bridges
+    for b in bridges:
+        assert 'min_cluster_agreement' in b
+        assert 'min_cluster_disagreement' in b
+        assert 'group_gap' in b
+        assert b['group_gap'] < 0.30
+        floor = (
+            b['min_cluster_disagreement'] if b['polarity'] == 'reject'
+            else b['min_cluster_agreement']
+        )
+        assert floor >= 0.65
+
+
+def test_bridge_metric_keys_match_what_the_report_template_reads():
+    """Regression for the report printing 'Bridge score: 0.00' and
+    'Division score: 0.00' — fields the engine has never produced."""
+    vm, labels = _toy_matrix()
+    bridges = identify_bridge_statements(vm, labels)
+    divisive = identify_divisive_statements(
+        vm, labels, n_permutations=200, rng=np.random.default_rng(0)
+    )
+    assert bridges and divisive
+    for b in bridges:
+        assert 'bridge_score' not in b
+    for d in divisive:
+        assert 'division_score' not in d

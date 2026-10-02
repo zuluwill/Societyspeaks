@@ -1,12 +1,21 @@
 {% extends 'layout.html' %}
-{% block title %}{{ _('Consensus Report') }} - {{ discussion.title }}{% endblock %}
+{% from 'components/_translation_pending.html' import translation_pending_notice %}
+{% set disc_title = discussion_display_title(discussion, discussion_translation) %}
+{% block title %}{{ _('Consensus Report') }} — {{ disc_title }}{% endblock %}
+{# Utility page: behind the participation gate, print-oriented, and reachable
+   at several URLs (?print=, ?lang=) for the same content. layout.html defaults
+   to "index, follow", so this block is required. Follow stays on so crawlers
+   can still reach the analysis page, matching the participation gate. The
+   canonical points at that page, which is the indexable version of this data. #}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block canonical %}{{ url_for('consensus.view_results', discussion_id=discussion.id, _external=True) }}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8 {% if for_print %}print:p-0{% endif %}">
   <div class="mb-6 flex justify-between items-start">
     <div>
       <h1 class="text-3xl font-bold mb-2">{{ _('Consensus Report') }}</h1>
-      <p class="text-gray-600">{{ discussion.title }}</p>
+      <p class="text-gray-600">{{ disc_title }}</p>
     </div>
     <div class="flex gap-2 print:hidden">
       <button id="printReportBtn" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center">
@@ -20,6 +29,11 @@
       </a>
     </div>
   </div>
+
+  {# See consensus_results.html: completeness is decided in the route. #}
+  {% if translation_incomplete|default(false) %}
+    {{ translation_pending_notice() }}
+  {% endif %}
 
   <div class="bg-white rounded-lg shadow p-6 mb-6">
     <h2 class="text-xl font-semibold mb-4">{{ _('Report Summary') }}</h2>
@@ -44,7 +58,7 @@
     <p class="text-sm text-gray-500">{{ _('Generated: %(date)s', date=analysis.created_at.strftime('%B %d, %Y at %I:%M %p')) }}</p>
   </div>
 
-  {% if analysis.cluster_data.get('ai_summary') %}
+  {% if analysis.cluster_data and analysis.cluster_data.get('ai_summary') %}
   <div class="bg-purple-50 rounded-lg shadow p-6 mb-6 border border-purple-200">
     <h2 class="text-xl font-semibold mb-3 text-purple-900">{{ _('AI Summary') }}</h2>
     <div class="text-gray-800 leading-relaxed">{{ analysis.cluster_data.ai_summary }}</div>
@@ -57,14 +71,22 @@
     <p class="text-gray-600 mb-4">{{ _('Statements where most participants agree, regardless of their opinion group.') }}</p>
     <div class="space-y-3">
       {% for stmt in consensus_statements %}
+      {% set stmt_data = consensus_data_by_id.get(stmt.id, {}) %}
       <div class="p-4 bg-green-50 rounded-lg border border-green-200">
-        <p class="text-gray-800">{{ stmt.content | e }}</p>
-        {% set stmt_data = analysis.cluster_data.get('consensus_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
-        {% if stmt_data %}
-        <div class="mt-2 text-sm text-green-700">
-          {{ _('%(pct)s%% agreement', pct="%.0f"|format(stmt_data.get('agreement_rate', 0) * 100)) }}
+        <p class="text-gray-800">{{ (translation_map.get(stmt.id) or stmt.content) | e }}</p>
+        <div class="mt-2 text-sm text-green-700 flex flex-wrap gap-x-3 gap-y-1">
+          {% if stmt_data.get('agreement_rate') is not none %}
+          <span>{{ _('%(pct)s%% agreement', pct="%.0f"|format(stmt_data.get('agreement_rate') * 100)) }}</span>
+          {% endif %}
+          {% if stmt_data.get('wilson_low') is not none and stmt_data.get('wilson_high') is not none %}
+          <span class="text-gray-600" title="{{ _('Wilson 95%% score interval for the agreement rate.') }}">
+            {{ _('95%% CI %(low)s–%(high)s%%', low="%.0f"|format(stmt_data.get('wilson_low') * 100), high="%.0f"|format(stmt_data.get('wilson_high') * 100)) }}
+          </span>
+          {% endif %}
+          {% if stmt_data.get('vote_count') is not none %}
+          <span class="text-gray-600">{{ _('%(n)d votes', n=stmt_data.get('vote_count')) }}</span>
+          {% endif %}
         </div>
-        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -74,17 +96,37 @@
   {% if bridge_statements %}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
     <h2 class="text-xl font-semibold mb-4 text-primary-700">{{ _('Bridge Statements') }}</h2>
-    <p class="text-gray-600 mb-4">{{ _('Statements that find common ground between different opinion groups.') }}</p>
+    <p class="text-gray-600 mb-4">{{ _('Statements every opinion group lands on the same side of — all agree, or all reject. A shared rejection is common ground too.') }}</p>
     <div class="space-y-3">
       {% for stmt in bridge_statements %}
-      <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <p class="text-gray-800">{{ stmt.content | e }}</p>
-        {% set stmt_data = analysis.cluster_data.get('bridge_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
-        {% if stmt_data %}
-        <div class="mt-2 text-sm text-primary-700">
-          {{ _('Bridge score: %(score)s', score="%.2f"|format(stmt_data.get('bridge_score', 0))) }}
+      {% set stmt_data = bridge_data_by_id.get(stmt.id, {}) %}
+      {% set polarity = stmt_data.get('polarity') or ('reject' if (stmt_data.get('mean_disagreement') or 0) > (stmt_data.get('mean_agreement') or 0) else 'agree') %}
+      {% set weakest = stmt_data.get('min_cluster_disagreement') if polarity == 'reject' else stmt_data.get('min_cluster_agreement') %}
+      {% set bmean = stmt_data.get('mean_disagreement') if polarity == 'reject' else stmt_data.get('mean_agreement') %}
+      <div class="p-4 {% if polarity == 'reject' %}bg-red-50 border-red-200{% else %}bg-blue-50 border-blue-200{% endif %} rounded-lg border">
+        <p class="text-xs font-semibold uppercase tracking-wide mb-1 {% if polarity == 'reject' %}text-red-700{% else %}text-primary-700{% endif %}">
+          {% if polarity == 'reject' %}{{ _('Shared rejection') }}{% else %}{{ _('Shared agreement') }}{% endif %}
+        </p>
+        <p class="text-gray-800">{{ (translation_map.get(stmt.id) or stmt.content) | e }}</p>
+        <div class="mt-2 text-sm {% if polarity == 'reject' %}text-red-700{% else %}text-primary-700{% endif %} flex flex-wrap gap-x-3 gap-y-1">
+          {% if weakest is not none %}
+          <span title="{{ _('The least-aligned opinion group still lands on this side by at least this much.') }}">
+            {% if polarity == 'reject' %}{{ _('Every group rejects (weakest %(pct)s%%)', pct="%.0f"|format(weakest * 100)) }}{% else %}{{ _('Every group agrees (weakest %(pct)s%%)', pct="%.0f"|format(weakest * 100)) }}{% endif %}
+          </span>
+          {% elif bmean is not none %}
+          <span class="text-gray-600">{{ _('Mean cross-group: %(v)s%%', v="%.0f"|format(bmean * 100)) }}</span>
+          {% endif %}
+          {% if stmt_data.get('group_gap') is not none %}
+          <span class="text-gray-600" title="{{ _('Agreement-rate gap between the most- and least-agreeing opinion groups.') }}">
+            {{ _('Group gap %(v)s%%', v="%.0f"|format(stmt_data.get('group_gap') * 100)) }}
+          </span>
+          {% endif %}
+          {% if stmt_data.get('wilson_low') is not none and stmt_data.get('wilson_high') is not none %}
+          <span class="text-gray-600" title="{{ _('Wilson 95%% score interval on the dominant polarity.') }}">
+            {{ _('95%% CI %(low)s–%(high)s%%', low="%.0f"|format(stmt_data.get('wilson_low') * 100), high="%.0f"|format(stmt_data.get('wilson_high') * 100)) }}
+          </span>
+          {% endif %}
         </div>
-        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -97,14 +139,30 @@
     <p class="text-gray-600 mb-4">{{ _('Statements where opinion groups disagree most strongly.') }}</p>
     <div class="space-y-3">
       {% for stmt in divisive_statements %}
+      {% set stmt_data = divisive_data_by_id.get(stmt.id, {}) %}
+      {% set gap_lo = stmt_data.get('gap_ci_low') if stmt_data.get('gap_ci_low') is not none else stmt_data.get('wilson_low') %}
+      {% set gap_hi = stmt_data.get('gap_ci_high') if stmt_data.get('gap_ci_high') is not none else stmt_data.get('wilson_high') %}
       <div class="p-4 bg-red-50 rounded-lg border border-red-200">
-        <p class="text-gray-800">{{ stmt.content | e }}</p>
-        {% set stmt_data = analysis.cluster_data.get('divisive_statements', []) | selectattr('statement_id', 'equalto', stmt.id) | first %}
-        {% if stmt_data %}
-        <div class="mt-2 text-sm text-red-700">
-          {{ _('Division score: %(score)s', score="%.2f"|format(stmt_data.get('division_score', 0))) }}
+        <p class="text-gray-800">{{ (translation_map.get(stmt.id) or stmt.content) | e }}</p>
+        <div class="mt-2 text-sm text-red-700 flex flex-wrap gap-x-3 gap-y-1">
+          {% if stmt_data.get('group_gap') is not none %}
+          <span class="font-semibold" title="{{ _('Agreement-rate gap between the most- and least-agreeing opinion groups on this statement.') }}">
+            {{ _('Group gap %(v)s%%', v="%.0f"|format(stmt_data.get('group_gap') * 100)) }}
+          </span>
+          {% endif %}
+          {% if gap_lo is not none and gap_hi is not none %}
+          <span class="text-gray-600" title="{{ _('Newcombe 95%% CI for the proportion difference (MOVER-Wilson, Method 10).') }}">
+            {{ _('95%% CI %(low)s–%(high)s%%', low="%.0f"|format(gap_lo * 100), high="%.0f"|format(gap_hi * 100)) }}
+          </span>
+          {% endif %}
+          {% if stmt_data.get('significant') %}
+          <span class="text-emerald-700 font-medium" title="{{ _('Omnibus permutation χ² across all clusters survives FDR correction.') }}">
+            ✓ {{ _('FDR-significant') }}
+          </span>
+          {% elif stmt_data.get('p_value') is not none %}
+          <span class="text-gray-500" title="{{ _('Omnibus permutation χ² p-value (the FDR-screened test).') }}">p={{ "%.3f"|format(stmt_data.get('p_value')) }}</span>
+          {% endif %}
         </div>
-        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -120,7 +178,7 @@
 
   <div class="bg-gray-50 rounded-lg p-6 text-center text-sm text-gray-500 print:mt-8">
     <p>{{ _('Report generated by Society Speaks') }}</p>
-    <p>{{ discussion.title }} - {{ analysis.created_at.strftime('%B %d, %Y') }}</p>
+    <p>{{ disc_title }} - {{ analysis.created_at.strftime('%B %d, %Y') }}</p>
   </div>
 </div>
 

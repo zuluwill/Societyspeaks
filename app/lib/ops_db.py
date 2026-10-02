@@ -46,6 +46,20 @@ def to_direct_neon_url(url: str | None) -> str | None:
     return _NEON_POOLER_RE.sub(r'\1\2', url)
 
 
+def to_libpq_dsn(url: str | None) -> str | None:
+    """Drop any SQLAlchemy ``postgresql+<driver>://`` suffix.
+
+    libpq only understands ``postgresql://`` / ``postgres://``. Mirrors
+    ``config.libpq_dsn``; kept here so this module has no import-time
+    dependency on the Config class body.
+    """
+    if not url:
+        return url
+    if url.startswith('postgresql+') and '://' in url:
+        return 'postgresql://' + url.split('://', 1)[1]
+    return url
+
+
 def resolve_direct_db_url(url: str | None = None) -> str:
     """Return a direct (non-pooler) DB URL for ops use, or raise ``PoolerUrlError``.
 
@@ -67,7 +81,12 @@ def resolve_direct_db_url(url: str | None = None) -> str:
             'No database URL available to resolve a direct connection '
             '(set NEON_DIRECT_DATABASE_URL to a non-pooler endpoint).'
         )
-    direct = to_direct_neon_url(candidate) or ''
+    # The returned URL is handed to ``psycopg2.connect()``, and libpq rejects
+    # SQLAlchemy's ``+driver`` suffix. An ops one-liner that passes
+    # ``app.config['SQLALCHEMY_DATABASE_URI']`` (which names psycopg2
+    # explicitly — see config.database_url_for_sqlalchemy) would otherwise
+    # fail with an opaque libpq error.
+    direct = to_libpq_dsn(to_direct_neon_url(candidate)) or ''
     if _POOLER_MARKER in direct:
         raise PoolerUrlError(
             'Refusing a pooler URL for a direct-only operation. Session-level '

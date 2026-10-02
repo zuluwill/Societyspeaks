@@ -370,3 +370,38 @@ def test_with_db_retry_catches_disconnection_error(app):
 
     assert result == "ok"
     assert call_count["n"] == 2, "Expected exactly one retry after DisconnectionError"
+
+
+# ── DBAPI pinning: fresh installs must not depend on SQLAlchemy's default ──
+
+def _rewrite_uri(raw: str) -> str:
+    """Mirror config.py's scheme normalisation for a single URL."""
+    uri = raw
+    if uri.startswith('postgres://'):
+        uri = uri.replace('postgres://', 'postgresql://', 1)
+    if uri.startswith('postgresql://'):
+        uri = uri.replace('postgresql://', 'postgresql+psycopg2://', 1)
+    return uri
+
+
+def test_config_pins_psycopg2_in_the_sqlalchemy_url():
+    from config import Config
+
+    uri = Config.SQLALCHEMY_DATABASE_URI or ''
+    if uri.startswith('postgres'):
+        assert uri.startswith('postgresql+psycopg2://'), (
+            'a bare postgresql:// URL lets SQLAlchemy 2.1 pick psycopg v3, '
+            'which this app does not ship'
+        )
+        # libpq rejects the driver suffix, so the raw-psycopg2 creator must
+        # get it stripped back off.
+        assert Config._LIBPQ_DSN.startswith('postgresql://')
+        assert '+psycopg2' not in Config._LIBPQ_DSN
+
+
+def test_uri_normalisation_covers_each_scheme_shape():
+    assert _rewrite_uri('postgres://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
+    assert _rewrite_uri('postgresql://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
+    # Already-explicit drivers are left exactly as the operator wrote them.
+    assert _rewrite_uri('postgresql+psycopg://u:p@h/db') == 'postgresql+psycopg://u:p@h/db'
+    assert _rewrite_uri('sqlite:///:memory:') == 'sqlite:///:memory:'

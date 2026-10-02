@@ -874,15 +874,19 @@ class Statement(db.Model):
     @property
     def total_votes(self):
         """Total number of votes cast on this statement"""
-        return self.vote_count_agree + self.vote_count_disagree + self.vote_count_unsure
+        return (self.vote_count_agree or 0) + (self.vote_count_disagree or 0) + (self.vote_count_unsure or 0)
     
     @property
     def agreement_rate(self):
         """Percentage of agree votes (excluding unsure)"""
-        decisive_votes = self.vote_count_agree + self.vote_count_disagree
+        agree = self.vote_count_agree or 0
+        decisive_votes = agree + (self.vote_count_disagree or 0)
         if decisive_votes == 0:
             return 0
-        return self.vote_count_agree / decisive_votes
+        # Numerator needs the same NULL guard as the denominator: a legacy row
+        # with vote_count_agree IS NULL and disagree > 0 raised TypeError here,
+        # which the embed renders straight into a page (`agreement_rate * 100`).
+        return agree / decisive_votes
     
     @property
     def controversy_score(self):

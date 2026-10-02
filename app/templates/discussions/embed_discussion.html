@@ -1013,7 +1013,9 @@
         </div>
 
         <div class="vote-stats" aria-live="polite">
-          <span class="total-votes">{{ statement.total_votes }}</span> {{ _('total votes') }}
+          {% set vote_total = statement.total_votes or 0 %}
+          {# Jinja's ngettext fills ``num`` only. Pass ``n`` so the msgid matches the JS catalog. #}
+          <span class="total-votes">{{ ngettext('%(n)d total vote', '%(n)d total votes', vote_total, n=vote_total) }}</span>
           {% if statement.total_votes > 0 %}
           &middot; <span class="agreement-rate">{{ "%.0f"|format(statement.agreement_rate * 100) }}%</span> {{ _('agreement') }}
           {% endif %}
@@ -1231,11 +1233,47 @@
         statementSubmitted: {{ gettext_js('Statement submitted. It will appear in the discussion shortly.')|tojson }},
         networkErrorStatement: {{ gettext_js('Network error while submitting statement.')|tojson }},
         charCountFmt: {{ gettext_js('%(cur)d / %(max)d')|tojson }},
-        totalVotesFmt: {{ gettext_js('%(n)d total votes')|tojson }},
+        totalVotesForms: {{ ngettext_js_forms('%(n)d total vote', '%(n)d total votes')|tojson }},
         agreementNoun: {{ gettext_js('agreement')|tojson }}
-      }
+      },
+      lang: {{ (current_lang or 'en')|tojson }}
     };
 
+    // Plural category chosen by the browser's own CLDR rules, then filled
+    // from the catalog-resolved forms. Arabic has six categories, Chinese /
+    // Japanese / Korean have one; hard-coding `n === 1` was wrong for both.
+    let votePluralRules = null;
+    try {
+      votePluralRules = new Intl.PluralRules(config.lang || 'en');
+    } catch (e) {
+      votePluralRules = null;
+    }
+    function totalVotesLabel(n) {
+      const parsed = Number(n);
+      // Non-numeric or negative totals cannot happen via the vote API; floor
+      // at 0 so a regression upstream never renders "-1 total vote".
+      const count = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
+      const forms = config.i18n.totalVotesForms || {};
+      let category = 'other';
+      if (votePluralRules) {
+        try {
+          category = votePluralRules.select(count);
+        } catch (e) {
+          category = 'other';
+        }
+      } else if (count === 1) {
+        category = 'one';
+      }
+      const fmt = forms[category] || forms.other || forms.one || '%(n)d';
+      const value = String(count);
+      // Translators may write %(n)s or %(num)d. If the placeholder is missing
+      // entirely, keep the number visible rather than dropping the count.
+      const filled = String(fmt)
+        .split('%(n)d').join(value)
+        .split('%(n)s').join(value)
+        .split('%(num)d').join(value);
+      return filled === String(fmt) ? (value + ' ' + fmt) : filled;
+    }
     function fmtVotesProgress(c, t) {
       return config.i18n.votesProgressFmt
         .replace('%(current)d', String(c))
@@ -1592,9 +1630,11 @@
             statsEl.textContent = '';
             const totalSpan = document.createElement('span');
             totalSpan.className = 'total-votes';
-            totalSpan.textContent = total;
+            // The format string already contains the count. Appending it
+            // again rendered "231 231 total votes". Singular and plural are
+            // separate msgids because the client has no plural catalog.
+            totalSpan.textContent = totalVotesLabel(total);
             statsEl.appendChild(totalSpan);
-            statsEl.appendChild(document.createTextNode(' ' + config.i18n.totalVotesFmt.replace('%(n)d', String(total))));
             if (total > 0) {
               statsEl.appendChild(document.createTextNode(' \u00B7 '));
               const pctSpan = document.createElement('span');

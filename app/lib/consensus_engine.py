@@ -140,6 +140,13 @@ def apply_sparsity_scaling(pca_coordinates, vote_matrix_sparse):
 WILSON_Z = 1.959963984540054  # norm.ppf(0.975)
 FDR_ALPHA = 0.05
 
+# Minimum max-vs-min between-group agreement gap for a statement to count as a
+# point of division. Shared by ``identify_divisive_statements`` (which requires
+# at least this gap) and ``identify_bridge_statements`` (which requires less
+# than this gap), so the two categories are mutually exclusive by construction:
+# a statement can never be presented as both common ground and a division.
+DIVISIVE_MIN_GROUP_GAP = 0.30
+
 
 def wilson_interval(successes, n, z=WILSON_Z):
     """
@@ -1308,7 +1315,13 @@ def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=
     return consensus_statements
 
 
-def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max_variance=0.15):
+def identify_bridge_statements(
+    vote_matrix,
+    user_labels,
+    min_agreement=0.65,
+    max_variance=0.15,
+    max_group_gap=DIVISIVE_MIN_GROUP_GAP,
+):
     """
     Identify bridge statements — those every opinion group agrees on (or
     every opinion group rejects). Symmetric bridges matter because a
@@ -1316,11 +1329,19 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
 
     Criteria:
       - Every cluster has voted.
-      - Variance between cluster rates ≤ max_variance (the groups agree
-        with *each other* about this statement).
-      - Either mean agreement across clusters ≥ min_agreement (shared
-        agreement), OR mean *strict disagreement* (vote == -1 only) across
-        clusters ≥ min_agreement (shared rejection).
+      - **Every** cluster is on the same side by at least min_agreement —
+        not merely the mean across clusters. A mean-only gate passed
+        statements where one group was unanimous and another was barely
+        over a third: "10 of 10 reject / 3 of 10 reject" averages to 0.65
+        and was being presented as common ground.
+      - Variance between cluster rates ≤ max_variance.
+      - The max-vs-min *agreement*-rate gap stays under max_group_gap, the
+        same threshold ``identify_divisive_statements`` requires to call a
+        statement divisive. Without this a shared-rejection bridge could
+        simultaneously appear under "Points of division".
+      - Either every cluster's agreement rate ≥ min_agreement (shared
+        agreement), OR every cluster's *strict disagreement* rate
+        (vote == -1 only) ≥ min_agreement (shared rejection).
 
     IMPORTANT: shared rejection is evaluated on the strict disagree rate
     (disagree_strict / n), not on 1 - agreement_rate. A statement on which
@@ -1328,9 +1349,9 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
     shared-rejection bridge — that's indifference, not common ground.
 
     Returns a list of dicts with: statement_id, mean_agreement,
-    mean_disagreement, variance, cluster_agreements, polarity
-    ('agree'|'reject'), agree_count, disagree_count, vote_count,
-    wilson_low, wilson_high.
+    mean_disagreement, min_cluster_agreement, min_cluster_disagreement,
+    group_gap, variance, cluster_agreements, polarity ('agree'|'reject'),
+    agree_count, disagree_count, vote_count, wilson_low, wilson_high.
     """
     bridge_statements = []
     n_clusters = len(np.unique(user_labels))
@@ -1352,19 +1373,29 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
 
         mean_agreement = float(np.mean(cluster_agreements))
         mean_disagreement = float(np.mean(cluster_disagreements))
+        min_cluster_agreement = float(min(cluster_agreements))
+        min_cluster_disagreement = float(min(cluster_disagreements))
         variance_agree = float(np.var(cluster_agreements))
         variance_disagree = float(np.var(cluster_disagreements))
+        # Measured on agreement rates so it is directly comparable with the
+        # group_gap that identify_divisive_statements reports.
+        group_gap = float(max(cluster_agreements) - min_cluster_agreement)
 
         agree_votes = int((statement_votes == 1).sum())
         disagree_strict_total = int((statement_votes == -1).sum())
         total_votes = int(statement_votes.notna().sum())
         non_agree_votes = total_votes - agree_votes
 
-        if mean_agreement >= min_agreement and variance_agree <= max_variance:
+        if group_gap >= max_group_gap:
+            # The groups are too far apart to call this common ground; it
+            # belongs under "Points of division", not here.
+            continue
+
+        if min_cluster_agreement >= min_agreement and variance_agree <= max_variance:
             polarity = 'agree'
             variance_for_polarity = variance_agree
             _, w_low, w_high = wilson_interval(agree_votes, total_votes)
-        elif mean_disagreement >= min_disagreement and variance_disagree <= max_variance:
+        elif min_cluster_disagreement >= min_disagreement and variance_disagree <= max_variance:
             polarity = 'reject'
             variance_for_polarity = variance_disagree
             _, w_low, w_high = wilson_interval(disagree_strict_total, total_votes)
@@ -1375,6 +1406,9 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
             'statement_id': int(statement_id),
             'mean_agreement': mean_agreement,
             'mean_disagreement': mean_disagreement,
+            'min_cluster_agreement': min_cluster_agreement,
+            'min_cluster_disagreement': min_cluster_disagreement,
+            'group_gap': group_gap,
             'variance': variance_for_polarity,
             'cluster_agreements': cluster_agreements,
             'cluster_disagreements': cluster_disagreements,
@@ -1403,7 +1437,7 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
 def identify_divisive_statements(
     vote_matrix,
     user_labels,
-    min_group_gap=0.30,
+    min_group_gap=DIVISIVE_MIN_GROUP_GAP,
     min_cluster_votes=3,
     fdr_method='bh',
     n_permutations=1000,

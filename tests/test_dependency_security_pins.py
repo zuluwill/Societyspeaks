@@ -170,3 +170,41 @@ def test_security_audit_runs_on_main_when_the_install_path_changes():
     push_idx = source.index("push:")
     pr_idx = source.index("pull_request:")
     assert push_idx < pr_idx, "push-to-main must be a first-class trigger, not only PRs"
+
+
+def test_sqlalchemy_is_capped_below_the_psycopg3_default():
+    """Fresh-install contract.
+
+    SQLAlchemy 2.1 changed the default DBAPI for a bare ``postgresql://`` URL
+    from psycopg2 to psycopg (v3). We ship psycopg2-binary only, so an
+    unbounded ``<3`` range resolved to 2.1 and killed fresh installs at engine
+    creation. The URL now names the driver explicitly, but Flask-SQLAlchemy
+    3.1.1 is only validated against the 2.0 line, so keep the ceiling.
+    """
+    pins = _requirement_pins(_read("requirements.txt"))
+    assert "SQLAlchemy>=2.0.0,<2.1" in pins, (
+        "SQLAlchemy must stay on the 2.0 line while psycopg2-binary is the "
+        f"only driver shipped; found {[p for p in pins if 'SQLAlchemy' in p]}"
+    )
+    assert any(p.startswith("psycopg2-binary==") for p in pins)
+
+
+def test_postgres_url_names_the_driver_explicitly():
+    """The driver must be a deployment decision, not a resolver accident."""
+    config_source = _read("config.py")
+    assert "'postgresql://', 'postgresql+psycopg2://', 1" in config_source, (
+        "config.py must pin the DBAPI in SQLALCHEMY_DATABASE_URI"
+    )
+    # …and the raw psycopg2 creator must still get a DSN libpq accepts.
+    assert "_LIBPQ_DSN" in config_source
+    assert "_make_retry_creator(_LIBPQ_DSN" in config_source
+
+    from config import database_url_for_sqlalchemy, libpq_dsn
+    assert database_url_for_sqlalchemy('postgres://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
+    assert database_url_for_sqlalchemy('postgresql://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
+    # An explicit driver is a deployment choice. The libpq DSN still has to
+    # drop the suffix, because the creator always calls psycopg2.connect().
+    assert database_url_for_sqlalchemy('postgresql+psycopg://u:p@h/db') == 'postgresql+psycopg://u:p@h/db'
+    assert libpq_dsn('postgresql+psycopg2://u:p@h/db') == 'postgresql://u:p@h/db'
+    assert libpq_dsn('postgresql+psycopg://u:p@h/db') == 'postgresql://u:p@h/db'
+    assert 'database_url_for_sqlalchemy' in _read('scripts/check_schema_drift.py')

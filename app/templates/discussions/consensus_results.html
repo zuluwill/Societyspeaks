@@ -22,9 +22,11 @@
 
 {% block content %}
 <div class="container mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 max-w-7xl">
-  {% set _cs_total = (consensus_statements|length if consensus_statements else 0) + (bridge_statements|length if bridge_statements else 0) + (divisive_statements|length if divisive_statements else 0) %}
-  {% set _any_untranslated = _cs_total > 0 and translation_map|length < _cs_total %}
-  {% if current_lang != 'en' and (not discussion_translation or _any_untranslated) %}
+  {# Completeness is decided in the route, over the de-duplicated set of
+     statements this page shows. Summing the section lengths here counted any
+     statement that is both a consensus statement and a bridge twice, so the
+     notice stuck on fully translated pages. #}
+  {% if translation_incomplete|default(false) %}
     {{ translation_pending_notice() }}
   {% endif %}
   <div class="mb-6">
@@ -104,7 +106,19 @@
   {% if is_stale_analysis %}
   <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm text-blue-900">
     <strong class="font-semibold">{{ _('Newer votes are in.') }}</strong>
-    {{ _('This analysis covered %(analysed)d statements; %(current)d are live now. Ask the discussion owner to re-run to refresh the picture.', analysed=analysed_stmt_count, current=current_stmt_count) }}
+    {% set _analysed_stmts = analysed_stmt_count|default(0) %}
+    {% set _current_stmts = current_stmt_count|default(0) %}
+    {% set _analysed_people = analysed_participants|default(0) %}
+    {% set _current_people = current_participant_count|default(0) %}
+    {% set _stmt_drift = _current_stmts - _analysed_stmts %}
+    {% set _participant_drift = _current_people - _analysed_people %}
+    {% if _stmt_drift > 0 and _participant_drift > 0 %}
+    {{ _('This analysis covered %(analysed_stmts)d statements and %(analysed_people)d participants; %(current_stmts)d statements and %(current_people)d participants are in now. Ask the discussion owner to re-run to refresh the picture.', analysed_stmts=_analysed_stmts, current_stmts=_current_stmts, analysed_people=_analysed_people, current_people=_current_people) }}
+    {% elif _stmt_drift > 0 %}
+    {{ _('This analysis covered %(analysed)d statements; %(current)d are live now. Ask the discussion owner to re-run to refresh the picture.', analysed=_analysed_stmts, current=_current_stmts) }}
+    {% else %}
+    {{ _('This analysis covered %(analysed)d participants; %(current)d have taken part now. Ask the discussion owner to re-run to refresh the picture.', analysed=_analysed_people, current=_current_people) }}
+    {% endif %}
   </div>
   {% endif %}
 
@@ -446,8 +460,8 @@
       <div class="text-gray-900 mb-2">{{ translation_map.get(statement.id) or statement.content }}</div>
       <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
         <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
-        {% if cdata.agreement_rate %}
-        <span class="text-green-700 font-semibold">{{ "%.0f"|format(cdata.agreement_rate * 100) }}% {{ _('agreement') }}</span>
+        {% if cdata.get('agreement_rate') is not none %}
+        <span class="text-green-700 font-semibold">{{ "%.0f"|format(cdata.get('agreement_rate') * 100) }}% {{ _('agreement') }}</span>
         {% endif %}
         {% if cdata.get('wilson_low') is not none and cdata.get('wilson_high') is not none %}
         <span class="text-gray-500" title="{{ _('Wilson 95%% score interval.') }}">
@@ -471,7 +485,7 @@
     </p>
     {% for statement in bridge_statements %}
       {% set bdata = bridge_data_by_id.get(statement.id, {}) %}
-      {% set polarity = bdata.polarity or 'agree' %}
+      {% set polarity = bdata.get('polarity') or ('reject' if (bdata.get('mean_disagreement') or 0) > (bdata.get('mean_agreement') or 0) else 'agree') %}
     <div class="bg-white rounded-lg p-4 mb-3 border-l-4 {% if polarity == 'reject' %}border-red-400{% else %}border-yellow-500{% endif %}">
       <div class="flex items-start gap-2 mb-2">
         <span class="text-xs font-semibold uppercase tracking-wide {% if polarity == 'reject' %}text-red-700{% else %}text-yellow-700{% endif %} mt-0.5 flex-shrink-0">
@@ -481,8 +495,18 @@
       </div>
       <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1 items-center">
         <span>{{ statement.vote_count_agree }} {{ _('agree') }} · {{ statement.vote_count_disagree }} {{ _('disagree') }} · {{ statement.vote_count_unsure }} {{ _('unsure') }}</span>
-        {% if bdata.get('mean_agreement') is not none %}
-        <span class="text-gray-500">{{ _('Mean cross-group: %(v)s%%', v="%.0f"|format(bdata.get('mean_agreement') * 100)) }}</span>
+        {# Report the rate for the polarity actually claimed: a shared-rejection
+           bridge has a low mean *agreement*, so showing that figure under a
+           "Shared rejection" badge read as though the groups barely agreed. #}
+        {% set bweakest = bdata.get('min_cluster_disagreement') if polarity == 'reject' else bdata.get('min_cluster_agreement') %}
+        {% set bmean = bdata.get('mean_disagreement') if polarity == 'reject' else bdata.get('mean_agreement') %}
+        {% if bweakest is not none %}
+        <span class="text-gray-500" title="{{ _('The least-aligned opinion group still lands on this side by at least this much.') }}">
+          {% if polarity == 'reject' %}{{ _('Every group rejects (weakest %(pct)s%%)', pct="%.0f"|format(bweakest * 100)) }}{% else %}{{ _('Every group agrees (weakest %(pct)s%%)', pct="%.0f"|format(bweakest * 100)) }}{% endif %}
+        </span>
+        {% elif bmean is not none %}
+        {# Analyses stored before per-cluster floors were recorded. #}
+        <span class="text-gray-500">{{ _('Mean cross-group: %(v)s%%', v="%.0f"|format(bmean * 100)) }}</span>
         {% endif %}
         {% if bdata.get('wilson_low') is not none and bdata.get('wilson_high') is not none %}
         <span class="text-gray-500" title="{{ _('Wilson 95%% score interval on the dominant polarity.') }}">

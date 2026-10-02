@@ -67,10 +67,13 @@
 <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
   <div class="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900 mb-8">
     <p class="font-semibold mb-1">{{ _('Use the Partner Portal for production onboarding') }}</p>
+    {# Anchors built by block capture so they arrive at gettext as Markup —
+       see the note in partner/hub.html. #}
+    {% set portal_link %}<a href="{{ url_for('partner.portal_signup') }}" class="underline">{{ _('Partner Portal') }}</a>{% endset %}
+    {% set api_link %}<a href="{{ url_for('partner.api_docs') }}" class="underline">{{ _('API Reference') }}</a>{% endset %}
     <p>
       {{ _('Create your test keys, verify domains, and activate live keys from the %(portal_link)s. For scale, use the API to create discussions and store the returned <strong>discussion ID</strong> in your CMS. See the %(api_link)s for the programmatic workflow.',
-            portal_link='<a href="' ~ url_for('partner.portal_signup') ~ '" class="underline">' ~ _('Partner Portal') ~ '</a>',
-            api_link='<a href="' ~ url_for('partner.api_docs') ~ '" class="underline">' ~ _('API Reference') ~ '</a>')|safe }}
+            portal_link=portal_link, api_link=api_link) }}
     </p>
   </div>
   <div class="grid gap-6 md:grid-cols-3">

@@ -30,6 +30,12 @@ def main():
     if not url:
         sys.exit('DATABASE_URL is not set')
 
+    # Same driver pin as the app. A bare postgresql:// URL is psycopg2 on
+    # SQLAlchemy 2.0 and psycopg v3 on 2.1; this script must not depend on
+    # which release a fresh environment resolved.
+    from config import database_url_for_sqlalchemy
+    url = database_url_for_sqlalchemy(url)
+
     from app import db
     import app.models  # noqa: F401 — populate metadata
 

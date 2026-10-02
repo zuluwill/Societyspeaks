@@ -53,3 +53,43 @@ def test_resolve_raises_when_no_url(monkeypatch):
         monkeypatch.delenv(var, raising=False)
     with pytest.raises(PoolerUrlError):
         resolve_direct_db_url()
+
+
+def test_direct_url_strips_a_sqlalchemy_driver_suffix(monkeypatch):
+    """The result goes to ``psycopg2.connect()``, which libpq parses. An ops
+    caller passing ``Config.SQLALCHEMY_DATABASE_URI`` (driver-pinned) must not
+    get an unusable DSN."""
+    from app.lib.ops_db import resolve_direct_db_url, to_libpq_dsn
+
+    for name in (
+        'NEON_DIRECT_DATABASE_URL', 'DATABASE_URL_DIRECT',
+        'NEON_OWNER_DATABASE_URL', 'DATABASE_URL', 'NEON_DATABASE_URL',
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+    resolved = resolve_direct_db_url(
+        'postgresql+psycopg2://u:p@ep-abc-123.eu-central-1.aws.neon.tech/db'
+    )
+    assert resolved.startswith('postgresql://')
+    assert '+psycopg2' not in resolved
+
+    assert to_libpq_dsn('postgresql+psycopg://u:p@h/db') == 'postgresql://u:p@h/db'
+    assert to_libpq_dsn('postgresql://u:p@h/db') == 'postgresql://u:p@h/db'
+    assert to_libpq_dsn('postgres://u:p@h/db') == 'postgres://u:p@h/db'
+    assert to_libpq_dsn(None) is None
+
+
+def test_direct_url_still_refuses_a_pooler_endpoint_after_stripping(monkeypatch):
+    """Stripping the driver must not weaken the fail-closed pooler guard."""
+    import pytest
+
+    from app.lib.ops_db import PoolerUrlError, resolve_direct_db_url
+
+    for name in (
+        'NEON_DIRECT_DATABASE_URL', 'DATABASE_URL_DIRECT',
+        'NEON_OWNER_DATABASE_URL', 'DATABASE_URL', 'NEON_DATABASE_URL',
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+    with pytest.raises(PoolerUrlError):
+        resolve_direct_db_url('postgresql+psycopg2://u:p@db-pooler.example.com/db')

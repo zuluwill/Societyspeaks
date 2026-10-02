@@ -41,6 +41,32 @@ from app.lib.db_transient_errors import (
     is_transient_db_connectivity_error,
 )
 
+@lru_cache(maxsize=32)
+def _plural_category_probes(locale_name: str) -> dict:
+    """CLDR plural category -> a representative count, for one locale.
+
+    Pure function of the locale, so it is cached: the 0–200 sweep below runs
+    once per locale per process rather than on every render. The range covers
+    every category boundary in the supported locales (Arabic's `few` starts at
+    3, `many` at 11); CJK locales yield `other` alone.
+    """
+    from babel import Locale
+
+    try:
+        locale = Locale.parse(locale_name)
+    except Exception:
+        locale = Locale.parse('en')
+
+    probes: dict = {}
+    for n in range(0, 201):
+        try:
+            category = locale.plural_form(n)
+        except Exception:
+            category = 'other'
+        probes.setdefault(category, n)
+    return probes
+
+
 # Hardened CSP without unsafe-inline and unsafe-eval
 csp = {
     'default-src': ["'self'", "https:", "data:", "blob:"],
@@ -747,6 +773,43 @@ def create_app():
     # when no kwargs — use gettext_js for runtime JS format strings.
     from flask_babel import gettext as gettext_js
     app.jinja_env.globals['gettext_js'] = gettext_js
+
+    def ngettext_js_forms(singular, plural):
+        """Plural forms of one msgid pair, keyed by CLDR plural category.
+
+        The JS counterpart of ``gettext_js`` for *pluralised* runtime format
+        strings. Needed because:
+
+          * ``gettext('%(n)d total votes')`` cannot translate — a msgid_plural
+            is not a lookup key in the compiled catalog, so the client would
+            silently show English in every translated locale.
+          * ``ngettext(...)`` always interpolates ``num``, which both destroys
+            the ``%(n)d`` placeholder the client needs and raises KeyError on
+            a msgid that names a different variable.
+
+        Each category is resolved by asking the catalog for a representative
+        count, so the result honours whatever Plural-Forms rule the .po
+        declares. The client picks a category with ``Intl.PluralRules`` — no
+        plural-rule evaluation, so no ``unsafe-eval``.
+        """
+        from flask_babel import get_translations
+        from app.lib.locale_utils import resolve_locale
+
+        translations = get_translations()
+        try:
+            locale_name = resolve_locale()
+        except Exception:
+            locale_name = 'en'
+
+        forms = {
+            category: translations.ungettext(singular, plural, n)
+            for category, n in _plural_category_probes(locale_name).items()
+        }
+        forms.setdefault('other', translations.ungettext(singular, plural, 2))
+        forms.setdefault('one', translations.ungettext(singular, plural, 1))
+        return forms
+
+    app.jinja_env.globals['ngettext_js_forms'] = ngettext_js_forms
 
     @app.context_processor
     def inject_i18n():

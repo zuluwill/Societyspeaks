@@ -9,12 +9,14 @@ from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import Discussion, ConsensusAnalysis, ConsensusJob, Statement, StatementVote
 from app.lib.participation_metrics import visible_statement_vote_filters
+from app.api.utils import get_discussion_participant_count
 from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
 from app.lib.consensus_engine import can_cluster, get_consensus_execution_plan
 from app.discussions.jobs import enqueue_consensus_job
 from app.discussions.thresholds import consensus_thresholds_dict, CONSENSUS_VIEW_RESULTS_MIN_VOTES
 from app.programmes.permissions import can_view_programme
 from datetime import datetime, timedelta
+from sqlalchemy import func, or_
 from app.lib.time import utcnow_naive
 import logging
 from flask_babel import gettext as _
@@ -202,6 +204,239 @@ def get_user_vote_count(discussion_id):
         return 0, "anonymous"
 
 
+# 10% more participants, or any newly-voted statement, is enough drift to
+# suggest a re-run. Below that the picture would not visibly change.
+ANALYSIS_PARTICIPANT_DRIFT_RATIO = 1.1
+
+
+def _analysis_metadata(analysis):
+    cluster = getattr(analysis, 'cluster_data', None) or {}
+    if not isinstance(cluster, dict):
+        return {}
+    meta = cluster.get('metadata') or {}
+    return meta if isinstance(meta, dict) else {}
+
+
+def _live_voted_statement_count(discussion_id):
+    """Statements that would be columns of ``build_vote_matrix``.
+
+    Counted from vote rows, not the denormalised ``vote_count_*`` columns.
+    Those counters can run ahead of (or behind) the rows the engine actually
+    clustered, which made the staleness banner lie.
+    """
+    # Filters mirror ``build_vote_matrix`` exactly: scoped by
+    # ``StatementVote.discussion_id`` (not ``Statement.discussion_id``), joined
+    # to Statement only for ``is_deleted``, and skipping vote rows with neither
+    # identifier — those the matrix builder drops. This also lets the query use
+    # idx_vote_discussion_statement.
+    return (
+        db.session.query(func.count(func.distinct(StatementVote.statement_id)))
+        .join(Statement, StatementVote.statement_id == Statement.id)
+        .filter(
+            StatementVote.discussion_id == discussion_id,
+            Statement.is_deleted.is_(False),
+            or_(
+                StatementVote.user_id.isnot(None),
+                StatementVote.session_fingerprint.isnot(None),
+            ),
+        )
+        .scalar()
+        or 0
+    )
+
+
+def detect_analysis_drift(discussion, analysis):
+    """
+    Compare a stored analysis against live participation.
+
+    Both sides of each comparison must be measured the same way, or the
+    "newer votes are in" notice fires on essentially every analysis:
+
+      * Full-matrix ``analysis.statements_count`` is the vote-matrix column
+        count — statements with at least one identifiable vote. The live
+        figure is that same count, from ``statement_vote`` rows.
+      * Oversize analyses store the full non-deleted catalog instead
+        (``metadata.oversize_mode``). Compare catalogs, or a new statement
+        that nobody has voted on yet is invisible and a voted-only count
+        never exceeds the old catalog.
+      * ``analysis.participants_count`` counts distinct voters, so it must be
+        compared with a distinct-voter count, never with a sum of votes. Every
+        participant casts many votes, so a votes-vs-participants test is true
+        as soon as the average participant votes twice.
+
+    Scope matches the engine: non-deleted statements in any moderation state.
+
+    Returns a dict with current/analysed counts for both dimensions and
+    ``is_stale``.
+    """
+    oversize = bool(_analysis_metadata(analysis).get('oversize_mode'))
+    if oversize:
+        current_stmt_count = Statement.query.filter_by(
+            discussion_id=discussion.id,
+            is_deleted=False,
+        ).count()
+    else:
+        current_stmt_count = _live_voted_statement_count(discussion.id)
+    current_participant_count = get_discussion_participant_count(
+        discussion,
+        include_deleted_statement_votes=False,
+        min_mod_status=None,
+    )
+    analysed_stmt_count = int(getattr(analysis, 'statements_count', 0) or 0)
+    analysed_participants = int(getattr(analysis, 'participants_count', 0) or 0)
+
+    has_new_statements = current_stmt_count > analysed_stmt_count
+    # Strictly more participants *and* at least the drift ratio. The ratio
+    # alone is not enough: truncating 1 * 1.1 to an int made "1 participant,
+    # still 1 participant" read as drift.
+    has_new_participants = (
+        analysed_participants > 0
+        and current_participant_count > analysed_participants
+        and current_participant_count
+        >= analysed_participants * ANALYSIS_PARTICIPANT_DRIFT_RATIO
+    )
+
+    return {
+        'current_stmt_count': current_stmt_count,
+        'analysed_stmt_count': analysed_stmt_count,
+        'current_participant_count': current_participant_count,
+        'analysed_participants': analysed_participants,
+        'has_new_statements': has_new_statements,
+        'has_new_participants': has_new_participants,
+        'is_stale': has_new_statements or has_new_participants,
+    }
+
+
+def _safe_statement_id(entry):
+    """Integer statement id, or None when the stored entry is unusable."""
+    if not isinstance(entry, dict):
+        return None
+    raw = entry.get('statement_id')
+    if raw is None or isinstance(raw, bool):
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _statement_is_public(stmt):
+    """Published consensus views omit deleted and negatively moderated statements."""
+    if stmt is None or stmt.is_deleted:
+        return False
+    return (stmt.mod_status or 0) >= 0
+
+
+def _metrics_by_statement_id(entries):
+    """statement_id -> engine metrics. Later duplicates keep the last entry."""
+    metrics = {}
+    for entry in entries or []:
+        sid = _safe_statement_id(entry)
+        if sid is None:
+            continue
+        metrics[sid] = entry
+    return metrics
+
+
+def _ranked_public_statements(entries):
+    """Statements in the engine's ranked order, published-visible only.
+
+    ``Statement.query.in_()`` returns rows in arbitrary order, so the safest
+    signal (the engine sorts by Wilson lower bound) has to be re-applied here.
+    """
+    ids = []
+    seen = set()
+    for entry in entries or []:
+        sid = _safe_statement_id(entry)
+        if sid is None or sid in seen:
+            continue
+        seen.add(sid)
+        ids.append(sid)
+    if not ids:
+        return []
+    by_id = {
+        stmt.id: stmt
+        for stmt in Statement.query.filter(Statement.id.in_(ids)).all()
+    }
+    return [by_id[sid] for sid in ids if _statement_is_public(by_id.get(sid))]
+
+
+def _unique_statements(statements):
+    """Statement objects, de-duplicated by id, skipping missing rows."""
+    seen = set()
+    unique = []
+    for stmt in statements or []:
+        if stmt is None:
+            continue
+        sid = getattr(stmt, 'id', None)
+        if sid is None or sid in seen:
+            continue
+        seen.add(sid)
+        unique.append(stmt)
+    return unique
+
+
+def _published_translations(discussion, statements):
+    """Cached statement and discussion copy for the viewer's language.
+
+    English viewers get an empty map. Templates then fall back to the
+    canonical English content, which is the same contract as the results page.
+
+    ``incomplete`` says whether the "translation in progress" notice is
+    warranted. It is computed here, over the *de-duplicated* set of
+    statements the page will show, because the templates cannot do it
+    safely: they summed the per-section lengths and compared that with
+    ``translation_map|length``, which is keyed by unique statement id. A
+    statement that is both a consensus statement and a bridge — the normal
+    case, since anything every group agrees on passes both gates — made the
+    sum exceed the map for good, so a fully translated page permanently
+    advertised that it was "showing in English".
+
+    Returns ``(translation_map, discussion_translation, view_lang, incomplete)``.
+    """
+    from app.lib.translation import (
+        get_cached_discussion_translation,
+        get_cached_statement_translations,
+        resolve_language,
+    )
+
+    view_lang = resolve_language(request)
+    if view_lang == 'en':
+        return {}, None, view_lang, False
+
+    unique = _unique_statements(statements)
+    translation_map = (
+        get_cached_statement_translations(unique, view_lang) if unique else {}
+    )
+    discussion_translation = get_cached_discussion_translation(discussion, view_lang)
+    incomplete = discussion_translation is None or any(
+        stmt.id not in translation_map for stmt in unique
+    )
+    return translation_map, discussion_translation, view_lang, incomplete
+
+
+def _axis_loading_entries(stmts_by_id, translation_map):
+    """Axis-label lookup keyed by both int and str ids.
+
+    Stored loadings are ints, but a JSON round-trip can surface them as
+    strings. Snippets prefer the viewer's cached translation.
+    """
+    entries = {}
+    for stmt in (stmts_by_id or {}).values():
+        if stmt is None:
+            continue
+        text = (translation_map or {}).get(stmt.id) or (stmt.content or '')
+        short = (text[:80] + '…') if len(text) > 80 else text
+        entry = {
+            'statement_id': stmt.id,
+            'content': text,
+            'short': short,
+        }
+        entries[stmt.id] = entry
+        entries[str(stmt.id)] = entry
+    return entries
+
+
 def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_count=None):
     """
     Build a single, consistent consensus progress payload for UI consumers.
@@ -214,9 +449,6 @@ def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_c
             aligned with ``view_results`` participation exceptions)
           - consensus_progress
     """
-    from sqlalchemy import func
-    from app.api.utils import get_discussion_participant_count
-
     thresholds = consensus_thresholds_dict()
     user_vote_count, __ = get_user_vote_count(discussion.id)
     participation_threshold = PARTICIPATION_THRESHOLD
@@ -405,19 +637,17 @@ def view_results(discussion_id):
             consensus_thresholds=consensus_thresholds_dict(),
         )
     
-    # Get statement details for consensus/bridge/divisive
-    consensus_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('consensus_statements', [])]
-    bridge_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('bridge_statements', [])]
-    divisive_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('divisive_statements', [])]
-    
-    consensus_statements = Statement.query.filter(Statement.id.in_(consensus_stmt_ids)).all() if consensus_stmt_ids else []
-    bridge_statements = Statement.query.filter(Statement.id.in_(bridge_stmt_ids)).all() if bridge_stmt_ids else []
-    divisive_statements = Statement.query.filter(Statement.id.in_(divisive_stmt_ids)).all() if divisive_stmt_ids else []
+    # Ranked, published-visible statements. Query order is not the engine's
+    # ranking, and deleted / rejected statements must not stay on the page.
+    cluster_data = analysis.cluster_data or {}
+    consensus_statements = _ranked_public_statements(cluster_data.get('consensus_statements'))
+    bridge_statements = _ranked_public_statements(cluster_data.get('bridge_statements'))
+    divisive_statements = _ranked_public_statements(cluster_data.get('divisive_statements'))
     
     # Build opinion groups — include ALL clusters, even those too small to have
     # representative statements, so users are never silently missing groups.
-    cluster_assignments = analysis.cluster_data.get('cluster_assignments', {})
-    representative_data = analysis.cluster_data.get('representative_statements', {})
+    cluster_assignments = cluster_data.get('cluster_assignments') or {}
+    representative_data = cluster_data.get('representative_statements') or {}
 
     # ── Normalise representative_data keys to int/str once ────────────────────
     # JSON round-trips may produce string keys for numeric cluster IDs.
@@ -436,11 +666,22 @@ def view_results(discussion_id):
         all_cluster_ids.add(_norm_cid(c))
 
     # ── Batch-fetch representative Statement objects (single DB round-trip) ───
-    all_rep_stmt_ids = [s['statement_id'] for stmts in _rep_data.values() for s in stmts]
+    # Filtered to published-visible here, not only where the group cards are
+    # built: this map also seeds the PCA axis labels, and a deleted or
+    # rejected statement was still reaching the chart through that path.
+    all_rep_stmt_ids = {
+        sid
+        for stmts in _rep_data.values()
+        for sid in (_safe_statement_id(s) for s in stmts)
+        if sid is not None
+    }
     rep_statements_map: dict = {}
     if all_rep_stmt_ids:
-        rep_stmts = Statement.query.filter(Statement.id.in_(all_rep_stmt_ids)).all()
-        rep_statements_map = {s.id: s for s in rep_stmts}
+        rep_statements_map = {
+            stmt.id: stmt
+            for stmt in Statement.query.filter(Statement.id.in_(all_rep_stmt_ids)).all()
+            if _statement_is_public(stmt)
+        }
 
     def _sort_cid(x):
         try:
@@ -472,8 +713,9 @@ def view_results(discussion_id):
         # fallbacks for analyses written by older versions of the engine.
         group_stmts = []
         for stmt_data in _rep_data.get(target_cluster, []):
-            stmt = rep_statements_map.get(stmt_data['statement_id'])
-            if not stmt:
+            sid = _safe_statement_id(stmt_data)
+            stmt = rep_statements_map.get(sid) if sid is not None else None
+            if not _statement_is_public(stmt):
                 continue
             agree_count = stmt_data.get('agree_count', 0)
             vote_count = stmt_data.get('vote_count', 0)
@@ -525,36 +767,19 @@ def view_results(discussion_id):
             'has_significant_signal': any(s.get('significant') for s in group_stmts),
         })
 
-    # ── Stale-analysis detection ──────────────────────────────────────────
-    # If votes arrived after the analysis was stored, let the viewer know
-    # a re-run would refresh the picture. Thresholds chosen to avoid
-    # nagging when the drift is small.
-    from sqlalchemy import func
-    current_stmt_count = Statement.query.filter_by(
-        discussion_id=discussion.id, is_deleted=False
-    ).count()
-    current_vote_total = db.session.query(
-        func.coalesce(
-            func.sum(Statement.vote_count_agree) + func.sum(Statement.vote_count_disagree) + func.sum(Statement.vote_count_unsure),
-            0,
-        )
-    ).filter(Statement.discussion_id == discussion.id, Statement.is_deleted.is_(False)).scalar() or 0
-    analysed_stmt_count = int(analysis.statements_count or 0)
-    analysed_participants = int(analysis.participants_count or 0)
-    stmt_drift = current_stmt_count - analysed_stmt_count
-    # 10% participant drift or any new statement triggers the notice.
-    is_stale_analysis = (
-        stmt_drift > 0
-        or (analysed_participants > 0 and current_vote_total > 0
-            and current_vote_total >= int(analysed_participants * 1.1))
-    )
+    drift = detect_analysis_drift(discussion, analysis)
+    current_stmt_count = drift['current_stmt_count']
+    analysed_stmt_count = drift['analysed_stmt_count']
+    current_participant_count = drift['current_participant_count']
+    analysed_participants = drift['analysed_participants']
+    is_stale_analysis = drift['is_stale']
 
     # ── PCA axis labels from top loadings ─────────────────────────────────
     # The engine stores top-loading statement IDs per axis. Resolve the
     # statement content so the chart can display "← Agrees: 'X' │ 'Y' →"
     # instead of a bare "Principal Component 1". Re-use already-fetched
     # Statement objects and only issue a DB query for the residual.
-    axis_loadings = analysis.cluster_data.get('pca_axis_loadings', {}) or {}
+    axis_loadings = cluster_data.get('pca_axis_loadings') or {}
     axis_loading_stmts_map = {
         s.id: s
         for s in (
@@ -571,7 +796,8 @@ def view_results(discussion_id):
     missing_ids = needed_ids - axis_loading_stmts_map.keys()
     if missing_ids:
         for stmt in Statement.query.filter(Statement.id.in_(missing_ids)).all():
-            axis_loading_stmts_map[stmt.id] = stmt
+            if _statement_is_public(stmt):
+                axis_loading_stmts_map[stmt.id] = stmt
 
     # ── "You are here": keys that the scatter-plot JS uses to highlight the viewer's dot.
     # Matches build_vote_matrix's participant ids (u_{id} for auth, a_{fp16} for anon).
@@ -606,59 +832,27 @@ def view_results(discussion_id):
             current_app.logger.debug(f"Consensus tracking error: {e}")
 
     from app.lib.locale_utils import language_preference_cookie_params
-    from app.lib.translation import (
-        get_cached_discussion_translation,
-        get_cached_statement_translations,
-        resolve_language,
-    )
 
-    view_lang = resolve_language(request)
-    # Reuse already-fetched Statement objects — no extra DB round-trip needed.
-    # consensus/bridge/divisive are lists of ORM objects; rep_statements_map
-    # holds the objects for representative statements.
-    _all_for_i18n = (
-        list(consensus_statements)
-        + list(bridge_statements)
-        + list(divisive_statements)
-        + list(rep_statements_map.values())
+    # Reuse already-fetched Statement objects — no extra DB round-trip.
+    # Axis-only statements are included so chart labels translate too.
+    translation_map, discussion_translation, view_lang, translation_incomplete = (
+        _published_translations(
+            discussion,
+            list(consensus_statements)
+            + list(bridge_statements)
+            + list(divisive_statements)
+            + list(rep_statements_map.values())
+            + list(axis_loading_stmts_map.values()),
+        )
     )
-    translation_map = (
-        get_cached_statement_translations(_all_for_i18n, view_lang)
-        if view_lang != 'en' and _all_for_i18n
-        else {}
-    )
-    discussion_translation = (
-        get_cached_discussion_translation(discussion, view_lang)
-        if view_lang != 'en'
-        else None
-    )
-
-    # Build a simple id → statement-ish dict for axis labels (template
-    # needs both the statement object and the raw content for truncation).
-    axis_loading_map = {
-        sid: {
-            'statement_id': sid,
-            'content': stmt.content,
-            'short': (stmt.content[:80] + '…') if len(stmt.content) > 80 else stmt.content,
-        }
-        for sid, stmt in axis_loading_stmts_map.items()
-    }
+    axis_loading_map = _axis_loading_entries(axis_loading_stmts_map, translation_map)
 
     # Build lookups so the template can render CI + lift + out-group rate
     # on consensus / bridge / divisive statement cards (previously only
     # carried raw vote counts).
-    consensus_data_by_id = {
-        int(s['statement_id']): s
-        for s in (analysis.cluster_data.get('consensus_statements') or [])
-    }
-    bridge_data_by_id = {
-        int(s['statement_id']): s
-        for s in (analysis.cluster_data.get('bridge_statements') or [])
-    }
-    divisive_data_by_id = {
-        int(s['statement_id']): s
-        for s in (analysis.cluster_data.get('divisive_statements') or [])
-    }
+    consensus_data_by_id = _metrics_by_statement_id(cluster_data.get('consensus_statements'))
+    bridge_data_by_id = _metrics_by_statement_id(cluster_data.get('bridge_statements'))
+    divisive_data_by_id = _metrics_by_statement_id(cluster_data.get('divisive_statements'))
 
     resp = make_response(render_template(
         'discussions/consensus_results.html',
@@ -673,6 +867,7 @@ def view_results(discussion_id):
         opinion_groups=opinion_groups,
         translation_map=translation_map,
         discussion_translation=discussion_translation,
+        translation_incomplete=translation_incomplete,
         current_lang=view_lang,
         axis_loadings=axis_loadings,
         axis_loading_map=axis_loading_map,
@@ -680,6 +875,8 @@ def view_results(discussion_id):
         is_stale_analysis=is_stale_analysis,
         current_stmt_count=current_stmt_count,
         analysed_stmt_count=analysed_stmt_count,
+        current_participant_count=current_participant_count,
+        analysed_participants=analysed_participants,
     ))
     if view_lang != 'en':
         resp.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
@@ -864,23 +1061,43 @@ def generate_report(discussion_id):
             slug=discussion.slug,
         ))
     
-    # Get all statement details
-    consensus_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('consensus_statements', [])]
-    bridge_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('bridge_statements', [])]
-    divisive_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('divisive_statements', [])]
-    
-    consensus_statements = Statement.query.filter(Statement.id.in_(consensus_stmt_ids)).all() if consensus_stmt_ids else []
-    bridge_statements = Statement.query.filter(Statement.id.in_(bridge_stmt_ids)).all() if bridge_stmt_ids else []
-    divisive_statements = Statement.query.filter(Statement.id.in_(divisive_stmt_ids)).all() if divisive_stmt_ids else []
-    
-    # Render report template (can be configured for PDF export)
-    return render_template('discussions/consensus_report.html',
-                         discussion=discussion,
-                         analysis=analysis,
-                         consensus_statements=consensus_statements,
-                         bridge_statements=bridge_statements,
-                         divisive_statements=divisive_statements,
-                         for_print=request.args.get('print') == 'true')
+    # Same ranking, visibility, and translation rules as the results page.
+    cluster_data = analysis.cluster_data or {}
+    consensus_statements = _ranked_public_statements(cluster_data.get('consensus_statements'))
+    bridge_statements = _ranked_public_statements(cluster_data.get('bridge_statements'))
+    divisive_statements = _ranked_public_statements(cluster_data.get('divisive_statements'))
+    translation_map, discussion_translation, view_lang, translation_incomplete = (
+        _published_translations(
+            discussion,
+            list(consensus_statements)
+            + list(bridge_statements)
+            + list(divisive_statements),
+        )
+    )
+
+    resp = make_response(render_template(
+        'discussions/consensus_report.html',
+        discussion=discussion,
+        analysis=analysis,
+        consensus_statements=consensus_statements,
+        bridge_statements=bridge_statements,
+        divisive_statements=divisive_statements,
+        consensus_data_by_id=_metrics_by_statement_id(cluster_data.get('consensus_statements')),
+        bridge_data_by_id=_metrics_by_statement_id(cluster_data.get('bridge_statements')),
+        divisive_data_by_id=_metrics_by_statement_id(cluster_data.get('divisive_statements')),
+        translation_map=translation_map,
+        discussion_translation=discussion_translation,
+        translation_incomplete=translation_incomplete,
+        current_lang=view_lang,
+        for_print=request.args.get('print') == 'true',
+    ))
+    # Persist the language choice exactly as view_results does. Without this a
+    # reader who arrives here with ?lang=fr is thrown back to English the
+    # moment they follow "Back to Analysis".
+    if view_lang != 'en':
+        from app.lib.locale_utils import language_preference_cookie_params
+        resp.set_cookie('ss_lang', view_lang, **language_preference_cookie_params())
+    return resp
 
 
 @consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/export')
@@ -917,48 +1134,90 @@ def export_analysis(discussion_id):
 
         cluster_data = analysis.cluster_data or {}
 
-        # Build a lookup: statement_id -> (classification, metrics) from cluster_data
+        def _first_present(entry, *keys):
+            """First key the entry actually carries — '' if none.
+
+            A plain ``a or b`` chain discards legitimate 0.0 rates, which is
+            exactly what a unanimously-rejected statement scores.
+            """
+            for key in keys:
+                value = entry.get(key)
+                if value is not None:
+                    return value
+            return ''
+
+        def _excel_text(value):
+            """Stop Excel treating statement text as a formula.
+
+            The file is served with a UTF-8 BOM so Excel opens it. A cell
+            starting with ``=``, ``+``, ``-``, ``@``, tab, or CR would run.
+            """
+            text = '' if value is None else str(value)
+            if text[:1] in ('=', '+', '-', '@', '\t', '\r'):
+                return "'" + text
+            return text
+
+        # Build a lookup: statement_id -> (classifications, metrics) from
+        # cluster_data. A statement can legitimately be in more than one
+        # section (consensus statements are usually bridges too), so labels
+        # accumulate rather than overwrite — the previous dict assignment
+        # silently dropped every earlier classification.
         classification_map = {}
         for label, stmts in (
-            ('consensus', cluster_data.get('consensus_statements', [])),
-            ('bridge',    cluster_data.get('bridge_statements', [])),
-            ('divisive',  cluster_data.get('divisive_statements', [])),
+            ('consensus', cluster_data.get('consensus_statements') or []),
+            ('bridge',    cluster_data.get('bridge_statements') or []),
+            ('divisive',  cluster_data.get('divisive_statements') or []),
         ):
+            if not isinstance(stmts, list):
+                continue
             for entry in stmts:
-                sid = entry.get('statement_id')
-                if sid is not None:
-                    # Normalise field names: bridge uses mean_agreement, divisive uses agree_rate
-                    agreement_rate = (
-                        entry.get('agreement_rate')
-                        or entry.get('mean_agreement')
-                        or entry.get('agree_rate')
-                        or ''
+                sid = _safe_statement_id(entry)
+                if sid is None:
+                    continue
+                # Normalise field names: bridge uses mean_agreement, divisive
+                # uses agree_rate.
+                metrics = {
+                    'agreement_rate': _first_present(
+                        entry, 'agreement_rate', 'mean_agreement', 'agree_rate'
+                    ),
+                    'wilson_low':       _first_present(entry, 'wilson_low'),
+                    'wilson_high':      _first_present(entry, 'wilson_high'),
+                    'gap_ci_low':       _first_present(entry, 'gap_ci_low', 'wilson_low'),
+                    'gap_ci_high':      _first_present(entry, 'gap_ci_high', 'wilson_high'),
+                    'p_value':          _first_present(entry, 'p_value'),
+                    'p_value_gap':      _first_present(entry, 'p_value_gap'),
+                    'chi2':             _first_present(entry, 'chi2'),
+                    'significant':      _first_present(entry, 'significant'),
+                    'group_gap':        _first_present(entry, 'group_gap'),
+                    'polarity':         _first_present(entry, 'polarity'),
+                    'strength':         _first_present(entry, 'strength'),
+                    'analysed_vote_count': _first_present(entry, 'vote_count'),
+                }
+                existing = classification_map.get(sid)
+                if existing is None:
+                    classification_map[sid] = dict(
+                        metrics, classification=label
                     )
-                    classification_map[sid] = {
-                        'classification':   label,
-                        'agreement_rate':   agreement_rate,
-                        'wilson_low':       entry.get('wilson_low', ''),
-                        'wilson_high':      entry.get('wilson_high', ''),
-                        'gap_ci_low':       entry.get('gap_ci_low', entry.get('wilson_low', '')),
-                        'gap_ci_high':      entry.get('gap_ci_high', entry.get('wilson_high', '')),
-                        'p_value':          entry.get('p_value', ''),
-                        'p_value_gap':      entry.get('p_value_gap', ''),
-                        'chi2':             entry.get('chi2', ''),
-                        'significant':      entry.get('significant', ''),
-                        'group_gap':        entry.get('group_gap', ''),
-                        'polarity':         entry.get('polarity', ''),
-                        'strength':         entry.get('strength', ''),
-                        'vote_count':       entry.get('vote_count', ''),
-                    }
+                else:
+                    existing['classification'] += f';{label}'
+                    # Keep the first non-empty value for each metric so a
+                    # later section cannot blank out an earlier one.
+                    for key, value in metrics.items():
+                        if existing.get(key) in ('', None):
+                            existing[key] = value
 
         # Collect all statement IDs mentioned in the analysis
         all_stmt_ids = set(classification_map.keys())
         # Also include any that appear only in representative_statements
-        for stmts in cluster_data.get('representative_statements', {}).values():
-            for entry in stmts:
-                sid = entry.get('statement_id')
-                if sid is not None:
-                    all_stmt_ids.add(sid)
+        representative = cluster_data.get('representative_statements') or {}
+        if isinstance(representative, dict):
+            for stmts in representative.values():
+                if not isinstance(stmts, list):
+                    continue
+                for entry in stmts:
+                    sid = _safe_statement_id(entry)
+                    if sid is not None:
+                        all_stmt_ids.add(sid)
 
         statements_by_id = {
             s.id: s
@@ -974,7 +1233,9 @@ def export_analysis(discussion_id):
             'polarity',
             'agree_count',
             'disagree_count',
+            'unsure_count',
             'total_votes',
+            'analysed_vote_count',
             'agreement_rate',
             'wilson_low',
             'wilson_high',
@@ -990,18 +1251,30 @@ def export_analysis(discussion_id):
 
         for sid in sorted(all_stmt_ids):
             stmt = statements_by_id.get(sid)
+            # Skip anything not publishable, and anything whose row is gone
+            # (hard-deleted / purged): a row with blank content and empty
+            # counts is worse than no row, and inconsistent with dropping
+            # soft-deleted statements two lines up.
+            if not _statement_is_public(stmt):
+                continue
             meta = classification_map.get(sid, {})
-            agree   = getattr(stmt, 'agree_count',    0) if stmt else ''
-            disagree = getattr(stmt, 'disagree_count', 0) if stmt else ''
-            total   = (agree + disagree) if isinstance(agree, int) and isinstance(disagree, int) else ''
+            # Statement stores denormalised counters as vote_count_*; the old
+            # `agree_count` / `disagree_count` attribute names do not exist,
+            # so every row exported zeroes.
+            agree = int(stmt.vote_count_agree or 0)
+            disagree = int(stmt.vote_count_disagree or 0)
+            unsure = int(stmt.vote_count_unsure or 0)
+            total = agree + disagree + unsure
             writer.writerow([
                 sid,
-                stmt.content if stmt else '',
+                _excel_text(stmt.content),
                 meta.get('classification', 'unclassified'),
                 meta.get('polarity', ''),
                 agree,
                 disagree,
+                unsure,
                 total,
+                meta.get('analysed_vote_count', ''),
                 meta.get('agreement_rate', ''),
                 meta.get('wilson_low', ''),
                 meta.get('wilson_high', ''),
