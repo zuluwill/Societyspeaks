@@ -8,7 +8,7 @@ Flask-SQLAlchemy==3.1.1
 # this ceiling keeps Flask-SQLAlchemy 3.1.1 on the 2.0 line it supports.
 SQLAlchemy>=2.0.0,<2.1
 Flask-Migrate==4.1.0
-psycopg2-binary==2.9.12
+psycopg2-binary==2.9.13
 flask-login==0.6.3
 Werkzeug>=3.1.8,<4
 Jinja2>=3.1.5,<4
@@ -30,8 +30,8 @@ flask-session==0.8.0
 # serializer is 0.x). Cap at the next minor past what pip-audit resolved
 # (0.21.1) so a 0.22 serializer rewrite cannot land unreviewed.
 msgspec>=0.18.6,<0.22
-sentry-sdk==2.68.0
-Flask-Caching==2.4.1
+sentry-sdk==2.71.0
+Flask-Caching==2.5.1
 Flask-Compress>=1.14,<2
 redis==5.3.1
 # redis-py 5.3.x declares PyJWT>=2.9.0 with no ceiling (token-auth support).
