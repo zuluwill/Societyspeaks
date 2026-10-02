@@ -1,0 +1,95 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md, btn_secondary_sm, link_primary %}
+{% from "consultations/_macros.html" import next_panel with context %}
+{% set host_nav = 'account' %}
+
+{% block title %}{{ _('Plan and billing') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+<h1 class="text-2xl font-bold text-gray-900">{{ _('Plan and billing') }}</h1>
+
+<div class="mt-6 grid gap-8 lg:grid-cols-3">
+  <div class="space-y-6 lg:col-span-2">
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="plan-heading">
+      <h2 id="plan-heading" class="text-lg font-semibold text-gray-900">{{ _('Your plan') }}</h2>
+      {% if plan %}
+      <p class="mt-2 text-gray-900"><span class="font-semibold">{{ _('Annual plan: unlimited consultations') }}</span></p>
+      <p class="mt-1 text-sm text-gray-600">
+        {% if plan.cancel_at_period_end and plan.current_period_end %}
+          {{ _('Cancelled. You keep access until %(date)s.', date=plan.current_period_end.strftime('%Y-%m-%d')) }}
+        {% elif plan.current_period_end %}
+          {{ _('Renews on %(date)s at %(price)s plus VAT where it applies.', date=plan.current_period_end.strftime('%Y-%m-%d'), price=price_annual) }}
+        {% endif %}
+        {% if plan.status == 'past_due' %}
+          <span class="mt-2 block font-medium text-amber-800">{{ _('Your last payment did not go through. Update your card to keep the plan.') }}</span>
+        {% endif %}
+      </p>
+      <p class="mt-3 text-sm text-gray-600">{{ _('For one organisation and its own audiences. It does not cover running consultations for clients.') }}</p>
+      {% else %}
+      <p class="mt-2 text-gray-600">{{ _('You pay per consultation. If you expect to run four or more in a year, the annual plan costs less.') }}</p>
+      <div class="mt-4 rounded-xl bg-gray-50 p-4">
+        <p class="font-semibold text-gray-900">{{ _('Annual plan: %(price)s a year', price=price_annual) }}</p>
+        <p class="mt-1 text-sm text-gray-600">{{ _('Unlimited consultations for one organisation and its own audiences. No per-participant charge. Cancel any time.') }}</p>
+        <form method="post" action="{{ url_for('consultations.checkout') }}" class="mt-3">
+          {{ action_form.hidden_tag() }}
+          <input type="hidden" name="plan" value="annual">
+          <button type="submit" class="{{ btn_primary_md() }}" data-loading-text="{{ _('Opening checkout…') }}">{{ _('Start the annual plan') }}</button>
+        </form>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="purchases-heading">
+      <h2 id="purchases-heading" class="text-lg font-semibold text-gray-900">{{ _('Single consultations') }}</h2>
+      {% if purchases %}
+      <ul class="mt-3 divide-y divide-gray-100">
+        {% for purchase in purchases %}
+        <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+          <div>
+            <p class="font-medium text-gray-900">£{{ '%.2f'|format(purchase.amount_pence / 100) }} <span class="font-normal text-gray-500">· {{ purchase.created_at.strftime('%Y-%m-%d') }}</span></p>
+            <p class="text-sm text-gray-600">
+              {% if purchase.status == 'refunded' %}{{ _('Refunded') }}
+              {% elif purchase.status == 'refunding' %}{{ _('Refund in progress') }}
+              {% elif purchase.status == 'disputed' %}{{ _('Payment disputed') }}
+              {% elif purchase.is_unused %}{{ _('Not used yet. It will be used when you next take a consultation live.') }}
+              {% else %}{{ _('Used') }}{% endif %}
+            </p>
+          </div>
+          {% if purchase.is_unused %}
+          <form method="post" action="{{ url_for('consultations.refund', purchase_id=purchase.id) }}">
+            {{ action_form.hidden_tag() }}
+            <button type="submit" class="{{ btn_secondary_sm() }}" data-confirm="{{ _('Refund this payment in full?') }}" data-loading-text="{{ _('Refunding…') }}">{{ _('Refund') }}</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="mt-2 text-gray-600">{{ _('None yet. You pay for a single consultation when you take it live.') }}</p>
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="billing-heading">
+      <h2 id="billing-heading" class="text-lg font-semibold text-gray-900">{{ _('Invoices, card and cancellation') }}</h2>
+      {% if has_billing_history %}
+      <p class="mt-2 text-gray-600">{{ _('Download invoices, change your card, or cancel the annual plan. This opens our payment provider, Stripe.') }}</p>
+      <form method="post" action="{{ url_for('consultations.billing_portal') }}" class="mt-3">
+        {{ action_form.hidden_tag() }}
+        <button type="submit" class="{{ btn_secondary_md() }}" data-loading-text="{{ _('Opening…') }}">{{ _('Manage billing') }}</button>
+      </form>
+      {% else %}
+      <p class="mt-2 text-gray-600">{{ _('Your invoices will appear here after your first payment.') }}</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div>
+    {% call next_panel(_('How paying works')) %}
+      <p>{{ _('Setting up a consultation is free. You pay when you take it live.') }}</p>
+      <p>{{ _('A single consultation can be refunded in full here at any time before it goes live. The annual plan can be cancelled at any time and runs to the end of the year you have paid for.') }}</p>
+      <p>{{ _('Prices exclude VAT.') }}</p>
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}

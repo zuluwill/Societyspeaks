@@ -235,7 +235,7 @@ msgstr "브라우저(또는 프록시)에서 이 서버가 이해할 수 없는 
 
 #: app/api/errors.py:25
 msgid ""
-"The server could not verify that you are authorized to access the URL "
+"The server could not verify that you are authorised to access the URL "
 "requested."
 msgstr "서버가 요청된 URL에 대한 접근 권한을 확인할 수 없습니다."
 
@@ -573,7 +573,7 @@ msgstr "유효하지 않은 결제 세션입니다."
 #: app/billing/routes.py:301
 msgid ""
 "Welcome! Your team subscription is now active. You can invite team members "
-"from your organization settings."
+"from your organisation settings."
 msgstr "환영합니다! 팀 구독이 이제 활성화되었습니다. 조직 설정에서 팀 멤버를 초대할 수 있습니다."
 
 #: app/billing/routes.py:328
@@ -999,13 +999,13 @@ msgstr "브리핑을 만들려면 활성 구독이 필요합니다. 오늘 무�
 
 #: app/briefing/routes.py:1390
 msgid ""
-"This template is only available for organizations. You need to be part of an"
-" organization to use it."
+"This template is only available for organisations. You need to be part of an"
+" organisation to use it."
 msgstr "이 템플릿은 조직 사용자만 이용할 수 있습니다. 이를 사용하려면 조직의 일부여야 합니다."
 
 #: app/briefing/routes.py:1410
 msgid ""
-"You need to be part of an organization to create organization briefings"
+"You need to be part of an organisation to create organisation briefings"
 msgstr "조직 브리핑을 생성하려면 조직의 일부여야 합니다"
 
 #: app/briefing/routes.py:1501
@@ -1029,7 +1029,7 @@ msgid "An error occurred while creating your briefing. Please try again."
 msgstr "브리핑을 생성하는 중 오류가 발생했습니다. 다시 시도해 주세요."
 
 #: app/briefing/routes.py:1609
-msgid "You need to be part of an organization to create org briefings"
+msgid "You need to be part of an organisation to create org briefings"
 msgstr "조직 브리핑을 생성하려면 조직의 일부여야 합니다"
 
 #: app/briefing/routes.py:1621 app/briefing/routes.py:1903
@@ -1132,7 +1132,7 @@ msgid "An error occurred while deleting the source"
 msgstr "출처를 삭제하는 중 오류가 발생했습니다"
 
 #: app/briefing/routes.py:2231
-msgid "You need to be part of an organization to create org sources"
+msgid "You need to be part of an organisation to create org sources"
 msgstr "조직 출처를 생성하려면 조직의 일부여야 합니다"
 
 #: app/briefing/routes.py:2244
@@ -1502,19 +1502,19 @@ msgstr "이 브리핑을 볼 수 있는 권한이 없습니다"
 
 #: app/briefing/routes.py:4073 app/briefing/routes.py:4130
 msgid ""
-"Organization settings are only available for Team and Enterprise plans."
+"Organisation settings are only available for Team and Enterprise plans."
 msgstr "조직 설정은 Team 및 Enterprise 요금제에서만 사용 가능합니다."
 
 #: app/briefing/routes.py:4090
-msgid "No organization found. Please contact support."
+msgid "No organisation found. Please contact support."
 msgstr "조직을 찾을 수 없습니다. 지원팀에 문의해주세요."
 
 #: app/briefing/routes.py:4135
-msgid "You don't have permission to edit this organization."
+msgid "You don't have permission to edit this organisation."
 msgstr "이 조직을 수정할 수 있는 권한이 없습니다."
 
 #: app/briefing/routes.py:4146
-msgid "Organization details updated successfully."
+msgid "Organisation details updated successfully."
 msgstr "조직 세부 정보가 성공적으로 업데이트되었습니다."
 
 #: app/briefing/routes.py:4157 app/briefing/routes.py:4223
@@ -1524,7 +1524,7 @@ msgstr "팀 관리는 Team 및 Enterprise 요금제에서만 사용 가능합니
 
 #: app/briefing/routes.py:4165 app/briefing/routes.py:4231
 #: app/briefing/routes.py:4258
-msgid "No organization found."
+msgid "No organisation found."
 msgstr "조직을 찾을 수 없습니다."
 
 #: app/briefing/routes.py:4179
@@ -3874,7 +3874,7 @@ msgstr "내 계정"
 
 #: app/programmes/forms.py:45 app/programmes/forms.py:48
 #: app/templates/briefing/use_template.html:63
-msgid "Organization"
+msgid "Organisation"
 msgstr "조직"
 
 #: app/programmes/forms.py:50 app/templates/briefing/create.html:190
@@ -4313,7 +4313,7 @@ msgstr "다시 유용해진 불일치"
 
 #: app/templates/about.html:55
 msgid ""
-"Open-source civic infrastructure for structured public judgment — and the "
+"Open-source civic infrastructure for structured public judgement — and the "
 "daily habits that feed it."
 msgstr "구조화된 공중 판단을 위한 오픈소스 시민 인프라 — 그리고 이를 뒷받침하는 일상의 습관."
 
@@ -4366,12 +4366,12 @@ msgid "Our theory of change"
 msgstr "우리의 변화 이론"
 
 #: app/templates/about.html:110
-msgid "How participation becomes better judgment"
+msgid "How participation becomes better judgement"
 msgstr "참여가 더 나은 판단으로 어떻게 변하는가"
 
 #: app/templates/about.html:113
 msgid ""
-"We are building toward a more accurate, transparent view of public opinion "
+"We are building towards a more accurate, transparent view of public opinion "
 "on the issues people engage with here — not another comment section, but a "
 "shared reasoning layer. Each product is a step in the same chain."
 msgstr ""
@@ -6053,7 +6053,7 @@ msgstr "언제든지 취소할 수 있나요?"
 
 #: app/templates/faq.html:428
 msgid ""
-"Yes. Cancel anytime from your account settings. There are no lock-in "
+"Yes. Cancel any time from your account settings. There are no lock-in "
 "periods. If you cancel during a trial, you will not be charged."
 msgstr "예. 계정 설정에서 언제든지 취소할 수 있습니다. 잠금 기간이 없습니다. 체험 중에 취소하면 요금이 청구되지 않습니다."
 
@@ -6820,7 +6820,7 @@ msgid "Get by Email"
 msgstr "이메일로 받기"
 
 #: app/templates/index.html:569
-msgid "5 questions weekly by default · Adjust frequency anytime"
+msgid "5 questions weekly by default · Adjust frequency any time"
 msgstr "기본 설정 시 주 5개 질문 · 언제든지 빈도 조정 가능"
 
 #: app/templates/index.html:581
@@ -7408,7 +7408,7 @@ msgid "Terms of Service"
 msgstr "서비스 약관"
 
 #: app/templates/layout.html:1335
-msgid "SocietySpeaks inquiry"
+msgid "SocietySpeaks enquiry"
 msgstr "SocietySpeaks 문의"
 
 #: app/templates/layout.html:1337 app/templates/partner/api_docs.html:44
@@ -8587,7 +8587,7 @@ msgid ""
 msgstr "<strong>데이터 컨트롤러:</strong> William Roberts Coaching and Advisory Ltd"
 
 #: app/templates/privacy-policy.html:18
-msgid "<strong>For data privacy inquiries:</strong> info@societyspeaks.io"
+msgid "<strong>For data privacy enquiries:</strong> info@societyspeaks.io"
 msgstr "<strong>데이터 개인정보 보호 문의:</strong> info@societyspeaks.io"
 
 #: app/templates/privacy-policy.html:19
@@ -8967,7 +8967,7 @@ msgid "Provide customer support"
 msgstr "고객 지원 제공"
 
 #: app/templates/privacy-policy.html:116
-msgid "Analyze usage patterns and improve user experience"
+msgid "Analyse usage patterns and improve user experience"
 msgstr "사용 패턴 분석 및 사용자 경험 개선"
 
 #: app/templates/privacy-policy.html:117
@@ -9180,7 +9180,7 @@ msgstr "7. 데이터 보안"
 
 #: app/templates/privacy-policy.html:212
 msgid ""
-"We implement appropriate technical and organizational measures to protect "
+"We implement appropriate technical and organisational measures to protect "
 "your personal data, including:"
 msgstr "우리는 다음을 포함하여 개인 데이터를 보호하기 위한 적절한 기술적, 조직적 조치를 구현합니다:"
 
@@ -9436,7 +9436,7 @@ msgstr ""
 msgid ""
 "4.2 Your Content: While you retain ownership of content you create, by "
 "submitting content to discussions you grant us and other users the right to "
-"view, analyze, and interact with that content as part of the collective "
+"view, analyse, and interact with that content as part of the collective "
 "discussion process."
 msgstr ""
 "4.2 사용자 콘텐츠: 사용자가 작성한 콘텐츠의 소유권은 사용자가 유지하지만, 논의에 콘텐츠를 제출함으로써 사용자는 당사 및 다른 "
@@ -9565,7 +9565,7 @@ msgid "Violation of these Terms"
 msgstr "이 약관 위반"
 
 #: app/templates/terms-and-conditions.html:106
-msgid "Abusive behavior in discussions"
+msgid "Abusive behaviour in discussions"
 msgstr "논의에서의 욕설 행위"
 
 #: app/templates/terms-and-conditions.html:107
@@ -9735,10 +9735,6 @@ msgstr "개인"
 #: app/templates/components/profile_avatar.html:20
 msgid "Company logo"
 msgstr "회사 로고"
-
-#: app/templates/auth/dashboard.html:117
-msgid "Organisation"
-msgstr "조직"
 
 #: app/templates/auth/dashboard.html:124 app/templates/auth/dashboard.html:660
 #: app/templates/auth/discussions.html:55
@@ -10984,7 +10980,7 @@ msgid "Full Archive Access"
 msgstr "전체 보관함 접근"
 
 #: app/templates/brief/landing.html:480 app/templates/brief/no_brief.html:203
-msgid "Browse past briefs anytime to catch up on what you missed."
+msgid "Browse past briefs any time to catch up on what you missed."
 msgstr "언제든지 과거 브리프를 검색하여 놓친 내용을 확인하세요."
 
 #: app/templates/brief/landing.html:493 app/templates/brief/no_brief.html:216
@@ -11082,7 +11078,7 @@ msgstr ""
 "않습니다. 자세한 내용은 개인정보보호정책을 참조하세요."
 
 #: app/templates/brief/landing.html:559 app/templates/brief/no_brief.html:278
-msgid "Can I unsubscribe anytime?"
+msgid "Can I unsubscribe any time?"
 msgstr "언제든지 구독 취소할 수 있나요?"
 
 #: app/templates/brief/landing.html:560 app/templates/brief/no_brief.html:279
@@ -11365,7 +11361,7 @@ msgstr "투명성"
 #: app/templates/brief/methodology.html:372
 msgid ""
 "Society Speaks is built with transparency in mind. Our code is publicly "
-"available under the AGPL-3.0 license, which means you can inspect exactly "
+"available under the AGPL-3.0 licence, which means you can inspect exactly "
 "how our AI systems work and suggest improvements. We believe civic "
 "technology should be accountable."
 msgstr ""
@@ -11792,7 +11788,7 @@ msgid ""
 msgstr "아침 배달에는 어제 스토리가 포함되고, 저녁 배달에는 당일 최신 보도가 포함됩니다."
 
 #: app/templates/brief/subscribe.html:118
-msgid "No credit card required. Unsubscribe anytime with one click."
+msgid "No credit card required. Unsubscribe any time with one click."
 msgstr "신용카드 불필요. 한 번의 클릭으로 언제든지 구독 취소할 수 있습니다."
 
 #: app/templates/brief/subscribe.html:208
@@ -11906,7 +11902,7 @@ msgid "Check your inbox for a welcome email with your magic link"
 msgstr "매직 링크가 포함된 환영 이메일을 받은 편지함에서 확인하세요"
 
 #: app/templates/brief/subscribe_success.html:30
-msgid "Use the magic link to access your personalised brief anytime"
+msgid "Use the magic link to access your personalised brief any time"
 msgstr "매직 링크를 사용하여 언제든지 개인화된 브리프에 접근하세요"
 
 #: app/templates/brief/subscribe_success.html:34
@@ -12001,7 +11997,7 @@ msgstr "주간 브리프로 전환"
 
 #: app/templates/brief/unsubscribed.html:40
 msgid ""
-"Changed your mind? You can always resubscribe to the daily brief anytime."
+"Changed your mind? You can always resubscribe to the daily brief any time."
 msgstr "생각이 바뀌셨나요? 언제든지 일일 브리프를 다시 구독할 수 있습니다."
 
 #: app/templates/brief/unsubscribed.html:44
@@ -12319,7 +12315,7 @@ msgid_plural "%(num)d sources configured"
 msgstr[0] "%(num)d개 출처 설정됨"
 
 #: app/templates/briefing/_template_card.html:36
-msgid "Organizations"
+msgid "Organisations"
 msgstr "조직"
 
 #: app/templates/briefing/_template_card.html:36
@@ -12767,7 +12763,7 @@ msgstr "<strong>1단계:</strong> 아래에서 기본 설정(이름, 일정, 템
 #: app/templates/briefing/create.html:35
 msgid ""
 "<strong>Step 2:</strong> On the next screen, you'll add content sources (RSS"
-" feeds, curated sources, or documents) and customize AI settings."
+" feeds, curated sources, or documents) and customise AI settings."
 msgstr ""
 "<strong>2단계:</strong> 다음 화면에서 콘텐츠 소스(RSS 피드, 큐레이션된 소스 또는 문서)를 추가하고 AI 설정을 "
 "사용자 지정합니다."
@@ -13498,7 +13494,7 @@ msgid "Current logo"
 msgstr "현재 로고"
 
 #: app/templates/briefing/edit.html:248
-msgid "Color used for headers, links, and accents"
+msgid "Colour used for headers, links, and accents"
 msgstr "헤더, 링크 및 강조에 사용되는 색상"
 
 #: app/templates/briefing/edit.html:253
@@ -13730,7 +13726,7 @@ msgstr "마음에 안 들면 어떻게 하나요?"
 
 #: app/templates/briefing/landing.html:101
 #: app/templates/briefing/landing.html:1771
-msgid "Cancel anytime, no questions asked. 30-day free trial."
+msgid "Cancel any time, no questions asked. 30-day free trial."
 msgstr "언제든지 취소할 수 있습니다. 30일 무료 체험."
 
 #: app/templates/briefing/landing.html:106
@@ -14689,7 +14685,7 @@ msgstr "PDF, 연구 논문, 내부 보고서를 업로드하세요. 공개 출�
 #: app/templates/briefing/landing.html:1245
 msgid ""
 "Daily at 7am? Weekly on Monday? You decide when and how often. Pause "
-"anytime."
+"any time."
 msgstr "매일 오전 7시? 월요일마다 매주? 일정과 빈도를 결정하세요. 언제든 일시 중지할 수 있습니다."
 
 #: app/templates/briefing/landing.html:1256
@@ -14829,7 +14825,7 @@ msgid "No card needed"
 msgstr "카드 불필요"
 
 #: app/templates/briefing/landing.html:1375
-msgid "Cancel anytime"
+msgid "Cancel any time"
 msgstr "언제든지 취소 가능"
 
 #: app/templates/briefing/landing.html:1385
@@ -14887,7 +14883,7 @@ msgstr "PDF 문서 업로드"
 
 #: app/templates/briefing/landing.html:1436
 #: app/templates/briefing/landing.html:1510
-msgid "30-day free trial, cancel anytime"
+msgid "30-day free trial, cancel any time"
 msgstr "30일 무료 체험, 언제든지 취소 가능"
 
 #: app/templates/briefing/landing.html:1439
@@ -15058,7 +15054,7 @@ msgstr "GDPR 준수"
 
 #: app/templates/briefing/landing.html:1685
 msgid ""
-"UK/EU compliant by design. Export or delete your data anytime. Right to be "
+"UK/EU compliant by design. Export or delete your data any time. Right to be "
 "forgotten honoured."
 msgstr "UK/EU 준수를 설계 단계부터 고려했습니다. 언제든지 데이터를 내보내거나 삭제할 수 있습니다. 잊혀질 권리를 존중합니다."
 
@@ -15138,7 +15134,7 @@ msgid "Start free 30-day trial"
 msgstr "30일 무료 체험 시작"
 
 #: app/templates/briefing/landing.html:1813
-msgid "Cancel anytime."
+msgid "Cancel any time."
 msgstr "언제든지 취소할 수 있습니다."
 
 #: app/templates/briefing/landing.html:1826
@@ -15172,7 +15168,7 @@ msgstr "무료 평가판이 %(days)s일 후 종료됩니다"
 
 #: app/templates/briefing/list.html:37
 msgid ""
-"Your trial is active. Add a payment method anytime so briefings continue "
+"Your trial is active. Add a payment method any time so briefings continue "
 "smoothly after it ends."
 msgstr "평가판이 활성화되었습니다. 브리핑이 끝난 후에도 원활하게 계속될 수 있도록 언제든지 결제 수단을 추가하세요."
 
@@ -15368,11 +15364,11 @@ msgstr "필터를 조정하거나 처음부터 브리핑을 만들어보세요."
 #: app/templates/briefing/organization_settings.html:2
 #: app/templates/briefing/organization_settings.html:13
 #: app/templates/briefing/organization_settings.html:15
-msgid "Organization Settings"
+msgid "Organisation Settings"
 msgstr "조직 설정"
 
 #: app/templates/briefing/organization_settings.html:16
-msgid "Manage your team subscription and organization details."
+msgid "Manage your team subscription and organisation details."
 msgstr "팀 구독 및 조직 정보를 관리하세요."
 
 #: app/templates/briefing/organization_settings.html:21
@@ -15398,15 +15394,15 @@ msgid "Manage billing →"
 msgstr "결제 관리 →"
 
 #: app/templates/briefing/organization_settings.html:54
-msgid "Organization Details"
+msgid "Organisation Details"
 msgstr "조직 정보"
 
 #: app/templates/briefing/organization_settings.html:60
-msgid "Organization Name"
+msgid "Organisation Name"
 msgstr "조직명"
 
 #: app/templates/briefing/organization_settings.html:69
-msgid "Brief description of your organization"
+msgid "Brief description of your organisation"
 msgstr "조직에 대한 간단한 설명"
 
 #: app/templates/briefing/organization_settings.html:88
@@ -15468,7 +15464,7 @@ msgid "Send Invite"
 msgstr "초대 발송"
 
 #: app/templates/briefing/organization_settings.html:185
-msgid "They'll receive an email with a link to join your organization."
+msgid "They'll receive an email with a link to join your organisation."
 msgstr "조직에 가입할 수 있는 링크가 포함된 이메일을 받게 됩니다."
 
 #: app/templates/briefing/organization_settings.html:189
@@ -15583,7 +15579,7 @@ msgid "AI Guidance"
 msgstr "AI 지침"
 
 #: app/templates/briefing/preview_template.html:163
-msgid "You can customize this prompt after creating your briefing."
+msgid "You can customise this prompt after creating your briefing."
 msgstr "브리프를 생성한 후 이 프롬프트를 커스터마이즈할 수 있습니다."
 
 #: app/templates/briefing/preview_template.html:171
@@ -15687,7 +15683,7 @@ msgstr "당신의 변경사항은 비공개입니다"
 
 #: app/templates/briefing/preview_template.html:282
 msgid ""
-"Any customizations you make only affect your personal briefing. The original"
+"Any customisations you make only affect your personal briefing. The original"
 " template stays unchanged for everyone else."
 msgstr "만드신 맞춤설정은 당신의 개인 브리핑에만 적용됩니다. 원본 템플릿은 다른 모든 사람에게 변경되지 않습니다."
 
@@ -16042,7 +16038,7 @@ msgid "Delete"
 msgstr "삭제"
 
 #: app/templates/briefing/sources.html:85
-msgid "Organization Sources"
+msgid "Organisation Sources"
 msgstr "조직 출처"
 
 #: app/templates/briefing/sources.html:139
@@ -16259,7 +16255,7 @@ msgid "Default: 6:00 PM - a popular time for end-of-day reading"
 msgstr "기본값: 오후 6:00 - 하루 마무리 시간의 인기 있는 시간"
 
 #: app/templates/briefing/use_template.html:133
-msgid "Organization Only"
+msgid "Organisation Only"
 msgstr "조직만"
 
 #: app/templates/briefing/use_template.html:145
@@ -16309,7 +16305,7 @@ msgstr "발신 도메인 추가"
 
 #: app/templates/briefing/domains/add.html:16
 msgid ""
-"Configure a custom domain to send briefs from your organization's email "
+"Configure a custom domain to send briefs from your organisation's email "
 "address"
 msgstr "조직의 이메일 주소에서 브리핑을 보낼 사용자 정의 도메인 구성"
 
@@ -16341,7 +16337,7 @@ msgid "Once verified, you can send briefs from this domain"
 msgstr "확인된 후 이 도메인에서 브리핑을 보낼 수 있습니다"
 
 #: app/templates/briefing/domains/list.html:17
-msgid "Manage custom email domains for your organization"
+msgid "Manage custom email domains for your organisation"
 msgstr "조직의 사용자 정의 이메일 도메인 관리"
 
 #: app/templates/briefing/domains/list.html:18
@@ -16728,7 +16724,7 @@ msgid "Dive deeper with AI:"
 msgstr "AI와 함께 더 깊이 있게:"
 
 #: app/templates/components/dive_deeper_links.html:16
-msgid "Analyze this news story:"
+msgid "Analyse this news story:"
 msgstr "뉴스 기사 분석:"
 
 #: app/templates/components/dive_deeper_links.html:40
@@ -16783,7 +16779,7 @@ msgid "Subscribe Free"
 msgstr "무료 구독"
 
 #: app/templates/components/email_capture.html:40
-msgid "Free forever. Unsubscribe anytime. We respect your inbox."
+msgid "Free forever. Unsubscribe any time. We respect your inbox."
 msgstr "완전히 무료입니다. 언제든지 구독 취소할 수 있습니다. 우리는 당신의 받은편지함을 존중합니다."
 
 #: app/templates/components/email_capture.html:42
@@ -17320,7 +17316,7 @@ msgid "Email Preferences"
 msgstr "이메일 설정"
 
 #: app/templates/daily/preferences.html:12
-msgid "Customize how you receive questions from Society Speaks"
+msgid "Customise how you receive questions from Society Speaks"
 msgstr "Society Speaks에서 받는 질문의 방식을 사용자 정의하세요"
 
 #: app/templates/daily/preferences.html:31
@@ -17741,7 +17737,7 @@ msgstr "토론"
 
 #: app/templates/daily/results.html:555
 #: app/templates/daily/weekly_batch.html:329
-msgid "Analyze"
+msgid "Analyse"
 msgstr "분석"
 
 #: app/templates/daily/results.html:572
@@ -18012,7 +18008,7 @@ msgid "Magic link — no password needed"
 msgstr "매직 링크 — 비밀번호 필요 없음"
 
 #: app/templates/daily/subscribe.html:125
-msgid "Change preferences anytime from any email"
+msgid "Change preferences any time from any email"
 msgstr "언제든지 이메일에서 기본 설정 변경"
 
 #: app/templates/daily/subscribe.html:132
@@ -18077,7 +18073,7 @@ msgstr "— %(tz)s 사용 중"
 
 #: app/templates/daily/subscribe_success.html:43
 msgid ""
-"You can change frequency, day, time, and time zone anytime from the "
+"You can change frequency, day, time, and time zone any time from the "
 "preferences link in any email we send."
 msgstr "이메일 빈도, 요일, 시간, 시간대는 언제든지 발송하는 이메일의 설정 링크에서 변경할 수 있습니다."
 
@@ -18846,7 +18842,7 @@ msgstr ""
 "실행하여 그림을 새로 고치도록 요청하세요."
 
 #: app/templates/discussions/consensus_results.html:185
-msgid "Opinion Groups Visualization"
+msgid "Opinion Groups Visualisation"
 msgstr "의견 그룹 시각화"
 
 #: app/templates/discussions/consensus_results.html:191
@@ -19286,7 +19282,7 @@ msgid "You"
 msgstr "너"
 
 #: app/templates/discussions/consensus_results.html:775
-msgid "Error loading visualization"
+msgid "Error loading visualisation"
 msgstr "시각화 로드 오류"
 
 #: app/templates/discussions/create_discussion.html:18
@@ -19323,7 +19319,7 @@ msgid "✓ Built-in voting (Agree/Disagree/Unsure)"
 msgstr "✓ 내장 투표 (동의/반대/미정)"
 
 #: app/templates/discussions/create_discussion.html:103
-msgid "✓ Consensus clustering and visualization"
+msgid "✓ Consensus clustering and visualisation"
 msgstr "✓ 합의 클러스터링 및 시각화"
 
 #: app/templates/discussions/create_discussion.html:104
@@ -21051,7 +21047,7 @@ msgstr "매일 아침 브리프를 계속 받으려면 결제 방법을 추가�
 
 #: app/templates/emails/briefing_trial_payment.html:40
 #, python-format
-msgid "Just %(price)s per month after your trial. Cancel anytime."
+msgid "Just %(price)s per month after your trial. Cancel any time."
 msgstr "체험 후 매달 %(price)s입니다. 언제든지 취소할 수 있습니다."
 
 #: app/templates/emails/briefing_trial_payment.html:45
@@ -21115,7 +21111,7 @@ msgstr ""
 #: app/templates/emails/briefing_winback.html:27
 msgid ""
 "If you'd like to pick it up, add a card and tomorrow's brief lands as if "
-"nothing happened. £4.99/month, cancel anytime."
+"nothing happened. £4.99/month, cancel any time."
 msgstr "원하신다면 카드를 추가하고 내일의 브리프가 아무 일도 없었던 것처럼 전달됩니다. £4.99/월, 언제든 취소 가능."
 
 #: app/templates/emails/briefing_winback.html:39
@@ -21265,7 +21261,7 @@ msgstr "%(cadence)s에 오신 것을 환영합니다 - Society Speaks"
 #: app/templates/emails/daily_brief_welcome.html:7
 msgid ""
 "Your free access is now active! Here's your magic link to access briefs "
-"anytime."
+"any time."
 msgstr "무료 이용권이 활성화되었습니다! 언제든지 브리프에 접근할 수 있는 매직 링크입니다."
 
 #: app/templates/emails/daily_brief_welcome.html:14
@@ -21303,7 +21299,7 @@ msgstr "무료 이용 (만료 없음)"
 
 #: app/templates/emails/daily_brief_welcome.html:46
 msgid ""
-"<strong>Your magic link</strong> gives you instant access to briefs anytime "
+"<strong>Your magic link</strong> gives you instant access to briefs any time "
 "- no login required. Bookmark it or save this email:"
 msgstr ""
 "<strong>매직 링크</strong>를 통해 언제든지 브리프에 즉시 접근할 수 있습니다 - 로그인이 필요하지 않습니다. 북마크하거나 "
@@ -21801,7 +21797,7 @@ msgstr "누락된 정보:"
 
 #: app/templates/emails/profile_completion_reminder.html:33
 msgid ""
-"This is a one-time reminder. You can update your profile anytime from your "
+"This is a one-time reminder. You can update your profile any time from your "
 "account settings."
 msgstr "이것은 일회성 알림입니다. 계정 설정에서 언제든지 프로필을 업데이트할 수 있습니다."
 
@@ -22968,7 +22964,7 @@ msgstr ""
 "당신의 사회는 당신의 것입니다. 이름을 지어주고, 당신의 선택에서 모습을 드러내는 상징을 보며, 당신이 어떤 지도자가 되는지 발견하세요."
 
 #: app/templates/game/hub.html:224
-msgid "Replay any past scenario anytime — no streak."
+msgid "Replay any past scenario any time — no streak."
 msgstr "과거의 모든 시나리오를 언제든 다시 플레이하세요 — 연속 기록에 영향 없음."
 
 #: app/templates/game/hub.html:252 app/templates/game/outcome.html:318
@@ -23076,7 +23072,7 @@ msgstr "이 위기에 맞닥뜨린 사람"
 
 #: app/templates/game/outcome.html:152
 #, python-format
-msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
+msgid "You leaned more towards %(dir)s than %(pct)d%% of leaders %(scope)s."
 msgstr "당신은 %(scope)s의 %(pct)d%%의 지도자보다 %(dir)s 방향으로 더 많이 기울었습니다."
 
 #: app/templates/game/outcome.html:157
@@ -23689,7 +23685,7 @@ msgid "✓ Evidence linking (citations, files)"
 msgstr "✓ 증거 연결(인용, 파일)"
 
 #: app/templates/help/creating_discussions.html:73
-msgid "✓ Consensus visualization"
+msgid "✓ Consensus visualisation"
 msgstr "✓ 합의 시각화"
 
 #: app/templates/help/creating_discussions.html:74
@@ -23718,7 +23714,7 @@ msgid "✓ Simple agree/disagree/pass"
 msgstr "✓ 간단한 찬성/반대/보류"
 
 #: app/templates/help/creating_discussions.html:94
-msgid "✓ Instant visualization"
+msgid "✓ Instant visualisation"
 msgstr "✓ 즉시 시각화"
 
 #: app/templates/help/creating_discussions.html:95
@@ -23851,7 +23847,7 @@ msgid "Key features of Pol.is:"
 msgstr "Pol.is의 주요 기능:"
 
 #: app/templates/help/creating_discussions.html:199
-msgid "Real-time visualization of opinions"
+msgid "Real-time visualisation of opinions"
 msgstr "실시간 의견 시각화"
 
 #: app/templates/help/creating_discussions.html:200
@@ -24227,7 +24223,7 @@ msgstr "토론 관리 — Society Speaks 도움말"
 msgid ""
 "Learn how to monitor and maintain engaging discussions on Society Speaks. "
 "Track participation, promote engagement, and understand consensus "
-"visualizations."
+"visualisations."
 msgstr ""
 "Society Speaks에서 토론을 모니터링하고 유지하는 방법을 알아보세요. 참여도를 추적하고, 참여를 촉진하며, 합의 시각화를 "
 "이해합니다."
@@ -24267,7 +24263,7 @@ msgstr "결과 이해"
 
 #: app/templates/help/managing_discussions.html:29
 msgid ""
-"Interpret opinion groups, consensus statements, and visualizations to derive"
+"Interpret opinion groups, consensus statements, and visualisations to derive"
 " insights."
 msgstr "의견 그룹, 합의 진술 및 시각화를 해석하여 인사이트를 도출하세요."
 
@@ -24324,7 +24320,7 @@ msgid "Understanding Results"
 msgstr "결과 이해"
 
 #: app/templates/help/managing_discussions.html:81
-msgid "Interpreting Pol.is Visualizations:"
+msgid "Interpreting Pol.is Visualisations:"
 msgstr "Pol.is 시각화 해석:"
 
 #: app/templates/help/managing_discussions.html:85
@@ -24332,7 +24328,7 @@ msgid "Groups are formed automatically based on voting patterns"
 msgstr "그룹은 투표 패턴을 기반으로 자동으로 형성됩니다"
 
 #: app/templates/help/managing_discussions.html:86
-msgid "Each color represents a distinct opinion group"
+msgid "Each colour represents a distinct opinion group"
 msgstr "각 색상은 서로 다른 의견 그룹을 나타냅니다"
 
 #: app/templates/help/managing_discussions.html:87
@@ -24448,7 +24444,7 @@ msgstr "네이티브 토론 시스템 - Society Speaks | 고급 합의 구축 �
 msgid ""
 "Learn about Society Speaks' advanced native debate system with real-time "
 "voting, threaded responses, evidence linking, and interactive consensus "
-"visualization."
+"visualisation."
 msgstr ""
 "실시간 투표, 스레드 응답, 증거 연결, 대화형 합의 시각화를 포함한 Society Speaks의 고급 네이티브 토론 시스템에 대해 "
 "알아보세요."
@@ -24501,7 +24497,7 @@ msgid "Add detailed pro/con responses with evidence"
 msgstr "증거가 포함된 상세한 찬성/반대 응답 추가"
 
 #: app/templates/help/native_system.html:60
-msgid "Interactive consensus visualizations"
+msgid "Interactive consensus visualisations"
 msgstr "대화형 합의 시각화"
 
 #: app/templates/help/native_system.html:61
@@ -24541,7 +24537,7 @@ msgid "Votes update <strong>instantly</strong> without page reload"
 msgstr "투표가 페이지 새로고침 없이 <strong>즉시</strong> 업데이트됩니다"
 
 #: app/templates/help/native_system.html:90
-msgid "You can change your vote anytime"
+msgid "You can change your vote any time"
 msgstr "언제든지 투표를 변경할 수 있습니다"
 
 #: app/templates/help/native_system.html:100
@@ -24614,7 +24610,7 @@ msgid "Identify \"bridge\" statements that unite groups"
 msgstr "그룹을 연결하는 \"가교\" 의견 파악"
 
 #: app/templates/help/native_system.html:147
-msgid "View interactive scatter plot visualization"
+msgid "View interactive scatter plot visualisation"
 msgstr "대화형 산점도 시각화 보기"
 
 #: app/templates/help/native_system.html:158
@@ -25054,7 +25050,7 @@ msgid "Good"
 msgstr "좋음"
 
 #: app/templates/help/native_system.html:465
-msgid "✓ Tailwind optimized"
+msgid "✓ Tailwind optimised"
 msgstr "✓ Tailwind 최적화"
 
 #: app/templates/help/native_system.html:468
@@ -25118,7 +25114,7 @@ msgstr ""
 #: app/templates/help/news_dashboard.html:18
 msgid ""
 "No sign-up required. It supports the same civic goal as our discussions: "
-"understand issues from multiple angles before forming judgment."
+"understand issues from multiple angles before forming judgement."
 msgstr ""
 "가입이 필요하지 않습니다. 이는 우리 토론과 동일한 시민 목표를 지원합니다: 판단을 형성하기 전에 여러 관점에서 문제를 이해하세요."
 
@@ -25186,7 +25182,7 @@ msgstr "주제 출처"
 msgid ""
 "We monitor <strong>140+ quality news sources</strong> across the political "
 "spectrum to find topics worth debating. Our sources include mainstream news,"
-" policy analysis, investigative journalism, think tanks, data organizations,"
+" policy analysis, investigative journalism, think tanks, data organisations,"
 " and intellectual podcasts."
 msgstr ""
 "정치적 스펙트럼 전반에 걸친 <strong>140개 이상의 신뢰할 수 있는 뉴스 출처</strong>를 모니터링하여 토론할 가치가 있는 "
@@ -25591,7 +25587,7 @@ msgstr "UMAP(균일 다양체 근사 및 프로젝션)"
 msgid ""
 "UMAP helps visualize complex relationships between opinions while preserving"
 " important structures in the data. This creates the opinion group "
-"visualizations you see in Pol.is."
+"visualisations you see in Pol.is."
 msgstr ""
 "UMAP은 데이터의 중요한 구조를 보존하면서 의견 간의 복잡한 관계를 시각화하는 데 도움을 줍니다. 이것이 Pol.is에서 보는 의견 "
 "그룹 시각화를 만듭니다."
@@ -25651,7 +25647,7 @@ msgid "Provides immediate insights as participants engage"
 msgstr "참여자들이 참여함에 따라 즉각적인 인사이트를 제공합니다"
 
 #: app/templates/help/polis_algorithms.html:175
-msgid "Understanding the Visualizations"
+msgid "Understanding the Visualisations"
 msgstr "시각화 이해하기"
 
 #: app/templates/help/polis_algorithms.html:180
@@ -25663,7 +25659,7 @@ msgid "What You'll See"
 msgstr "보게 될 것"
 
 #: app/templates/help/polis_algorithms.html:185
-msgid "Colored clusters representing different opinion groups"
+msgid "Coloured clusters representing different opinion groups"
 msgstr "다양한 의견 그룹을 나타내는 색상 클러스터"
 
 #: app/templates/help/polis_algorithms.html:186
@@ -25709,7 +25705,7 @@ msgid ""
 msgstr "그룹이 가까이 있거나 겹칠 때는 공유된 견해와 합의 가능성을 시사합니다"
 
 #: app/templates/help/polis_algorithms.html:212
-msgid "Polarization"
+msgid "Polarisation"
 msgstr "양극화"
 
 #: app/templates/help/polis_algorithms.html:213
@@ -25765,7 +25761,7 @@ msgid "Healthy Patterns"
 msgstr "건강한 패턴"
 
 #: app/templates/help/polis_algorithms.html:246
-msgid "Multiple distinct but not extremely polarized groups"
+msgid "Multiple distinct but not extremely polarised groups"
 msgstr "여러 개의 뚜렷하지만 극단적으로 양극화되지 않은 그룹"
 
 #: app/templates/help/polis_algorithms.html:247
@@ -25785,7 +25781,7 @@ msgid "Warning Signs"
 msgstr "주의 신호"
 
 #: app/templates/help/polis_algorithms.html:255
-msgid "Extreme polarization with no bridging views"
+msgid "Extreme polarisation with no bridging views"
 msgstr "가교 의견이 없는 극단적 양극화"
 
 #: app/templates/help/polis_algorithms.html:256
@@ -25902,10 +25898,6 @@ msgstr ""
 "공개 프로그램은 공개 카탈로그에 나타나며 모든 사람이 접근할 수 있습니다. 비공개 목록 프로그램은 카탈로그에 나타나지 않지만 직접 링크가"
 " 있는 사람이면 누구나 접근할 수 있습니다. 초대만 프로그램은 숨겨져 있으며 명시적으로 초대한 사용자만 접근할 수 있습니다. 비공개 "
 "프로그램은 소유자와 스튜어드만 접근할 수 있습니다."
-
-#: app/templates/help/programmes.html:49
-msgid "← Help Center"
-msgstr "← 도움말 센터"
 
 #: app/templates/help/programmes.html:51
 msgid ""
@@ -26672,11 +26664,6 @@ msgstr ""
 msgid "Today's Coverage Balance"
 msgstr "오늘의 언론 균형"
 
-#: app/templates/news/dashboard.html:79
-#, python-format
-msgid "%(pct)s%% Center (%(count)d)"
-msgstr "%(pct)s%% 중도 (%(count)d)"
-
 #: app/templates/news/dashboard.html:100
 msgid "Search by headline, summary, or source..."
 msgstr "헤드라인, 요약, 출처로 검색..."
@@ -26693,7 +26680,7 @@ msgstr "좌파 (%(count)d)"
 
 #: app/templates/news/dashboard.html:144
 #, python-format
-msgid "Center (%(count)d)"
+msgid "Centre (%(count)d)"
 msgstr "중도 (%(count)d)"
 
 #: app/templates/news/dashboard.html:150
@@ -26721,10 +26708,6 @@ msgstr "출처 필터"
 msgid "Select Sources"
 msgstr "출처 선택"
 
-#: app/templates/news/dashboard.html:257
-msgid "Center"
-msgstr "중도"
-
 #: app/templates/news/dashboard.html:314
 msgid "Left-Leaning Sources"
 msgstr "좌파 성향 출처"
@@ -26748,7 +26731,7 @@ msgid "Civic Relevance: %(pct)s%%"
 msgstr "시민 관련성: %(pct)s%%"
 
 #: app/templates/news/dashboard.html:393
-msgid "Center Sources"
+msgid "Centre Sources"
 msgstr "중도 출처"
 
 #: app/templates/news/dashboard.html:472
@@ -26785,7 +26768,7 @@ msgstr "28%% 좌파"
 
 #: app/templates/news/landing.html:62
 #, python-format
-msgid "44%% Center"
+msgid "44%% Centre"
 msgstr "44%% 중도"
 
 #: app/templates/news/landing.html:63
@@ -26810,7 +26793,7 @@ msgid "AI-scored for sensationalism"
 msgstr "AI로 선동성 평가"
 
 #: app/templates/news/landing.html:144
-msgid "Unsubscribe anytime"
+msgid "Unsubscribe any time"
 msgstr "언제든지 구독 해제"
 
 #: app/templates/news/landing.html:153
@@ -26898,7 +26881,7 @@ msgstr "오픈소스, 투명성, 비영리"
 
 #: app/templates/news/landing.html:254
 msgid ""
-"Our entire codebase is open source under the AGPL-3.0 license. Anyone can "
+"Our entire codebase is open source under the AGPL-3.0 licence. Anyone can "
 "inspect, fork, or contribute to our consensus-building tools. No hidden "
 "algorithms, no black boxes."
 msgstr ""
@@ -26929,7 +26912,7 @@ msgid "Open Source"
 msgstr "오픈소스"
 
 #: app/templates/news/landing.html:302
-msgid "AGPL-3.0 License"
+msgid "AGPL-3.0 Licence"
 msgstr "AGPL-3.0 라이선스"
 
 #: app/templates/news/landing.html:306
@@ -27709,7 +27692,7 @@ msgid "<code>discussion_not_found</code> - Discussion does not exist"
 msgstr "<code>discussion_not_found</code> - 토론이 없음"
 
 #: app/templates/partner/api_docs.html:624
-msgid "Customize the embed appearance with URL parameters."
+msgid "Customise the embed appearance with URL parameters."
 msgstr "URL 매개변수로 임베드 모양을 사용자 정의하세요."
 
 #: app/templates/partner/api_docs.html:625
@@ -27731,11 +27714,11 @@ msgstr ""
 "<code>minimal</code>, <code>bold</code>, <code>muted</code>"
 
 #: app/templates/partner/api_docs.html:649
-msgid "Primary color (hex without #)"
+msgid "Primary colour (hex without #)"
 msgstr "주요 색상 (16진수, # 제외)"
 
 #: app/templates/partner/api_docs.html:654
-msgid "Background color (hex without #)"
+msgid "Background colour (hex without #)"
 msgstr "배경 색상 (16진수, # 제외)"
 
 #: app/templates/partner/api_docs.html:659
@@ -27899,7 +27882,7 @@ msgid "Request Body"
 msgstr "요청 본문"
 
 #: app/templates/partner/api_docs.html:869
-msgid "Canonical article URL (normalized if provided)"
+msgid "Canonical article URL (normalised if provided)"
 msgstr "정규 기사 URL (제공된 경우 정규화됨)"
 
 #: app/templates/partner/api_docs.html:874
@@ -28448,7 +28431,7 @@ msgstr "임베드 코드 생성기 - Society Speaks"
 #: app/templates/partner/embed_generator.html:5
 msgid ""
 "Generate embed code for Society Speaks. Publishers can add a clean voting "
-"widget to articles, with developer-friendly customization and clear audience"
+"widget to articles, with developer-friendly customisation and clear audience"
 " insight for editors."
 msgstr ""
 "Society Speaks용 임베드 코드를 생성합니다. 퍼블리셔는 깔끔한 투표 위젯을 기사에 추가할 수 있으며, 개발자 친화적인 "
@@ -28461,7 +28444,7 @@ msgstr "임베드 코드 생성기"
 #: app/templates/partner/embed_generator.html:20
 msgid ""
 "Add a Society Speaks voting widget to your article in minutes. Developers "
-"get a clean iframe and customization controls. Editors get structured "
+"get a clean iframe and customisation controls. Editors get structured "
 "insight, not comment noise."
 msgstr ""
 "몇 분 안에 Society Speaks 투표 위젯을 기사에 추가하세요. 개발자는 깔끔한 iframe과 커스터마이제이션 컨트롤을 얻습니다."
@@ -28588,11 +28571,11 @@ msgid "2. Choose a Theme"
 msgstr "2. 테마 선택"
 
 #: app/templates/partner/embed_generator.html:193
-msgid "Or customize colors:"
+msgid "Or customise colours:"
 msgstr "또는 색상 커스터마이제이션:"
 
 #: app/templates/partner/embed_generator.html:196
-msgid "Primary Color"
+msgid "Primary Colour"
 msgstr "기본 색상"
 
 #: app/templates/partner/embed_generator.html:206
@@ -29637,12 +29620,12 @@ msgstr ""
 "있습니다. 이를 통해 뉴스룸 시스템을 폴링 없이 동기화된 상태로 유지할 수 있습니다."
 
 #: app/templates/partner/hub.html:1020
-msgid "Can I customize the embed appearance?"
+msgid "Can I customise the embed appearance?"
 msgstr "임베드 모양을 커스터마이즈할 수 있나요?"
 
 #: app/templates/partner/hub.html:1022
 msgid ""
-"Yes. Choose from preset themes or set custom primary/background colors and "
+"Yes. Choose from preset themes or set custom primary/background colours and "
 "fonts."
 msgstr "네. 사전 설정된 테마에서 선택하거나 사용자 정의 기본 색상, 배경색 및 글꼴을 설정할 수 있습니다."
 
@@ -29797,7 +29780,7 @@ msgstr "<strong>토론, 합의 페이지 및 Society Speaks 홈페이지로 링�
 
 #: app/templates/partner/rules.html:117
 msgid ""
-"<strong>Customize</strong> embed colors and fonts to match your site's "
+"<strong>Customise</strong> embed colours and fonts to match your site's "
 "design using supported parameters"
 msgstr ""
 "<strong>지원되는 매개변수를 사용하여 임베드 색상 및 글꼴을 사이트 디자인과 일치하도록 커스터마이즈</strong>하세요"
@@ -30670,7 +30653,7 @@ msgstr "활성화되면 독자들은 임베드에서 의견을 제안할 수 있
 #: app/templates/partner/portal/discussion_detail.html:178
 msgid ""
 "This discussion is closed. Reopen it before changing embed submission "
-"behavior."
+"behaviour."
 msgstr "이 토론은 종료되었습니다. 임베드 제출 동작을 변경하기 전에 다시 열어주세요."
 
 #: app/templates/partner/portal/discussion_detail.html:182
@@ -31427,7 +31410,7 @@ msgid "Get your test API key in minutes. No credit card required."
 msgstr "몇 분 안에 테스트 API 키를 얻으세요. 신용카드가 필요하지 않습니다."
 
 #: app/templates/partner/portal/signup.html:21
-msgid "Organization name"
+msgid "Organisation name"
 msgstr "조직명"
 
 #: app/templates/partner/portal/signup.html:22
@@ -31663,7 +31646,7 @@ msgstr "조직 프로필, 회사 프로필, %(name)s, SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:20
 msgid ""
-"An organization on SocietySpeaks contributing to public discourse and "
+"An organisation on SocietySpeaks contributing to public discourse and "
 "meaningful change."
 msgstr "SocietySpeaks에서 공공 담론과 의미 있는 변화에 기여하는 조직입니다."
 
@@ -31920,7 +31903,7 @@ msgid ""
 msgstr "커뮤니티와 소통하려는 기업, 조직, 정부, 기관에 이상적입니다."
 
 #: app/templates/profiles/select_profile_type.html:126
-msgid "Official organization presence"
+msgid "Official organisation presence"
 msgstr "공식 조직 정체성"
 
 #: app/templates/profiles/select_profile_type.html:132
@@ -32500,7 +32483,7 @@ msgstr "이 여정의 모든 진술을 통해 진행"
 #: app/templates/programmes/view.html:282
 #, python-format
 msgid ""
-"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is "
+"Each theme is quick (~%(mins)d minutes). Take breaks any time — nothing is "
 "gated."
 msgstr "각 테마는 빠릅니다 (~%(mins)d분). 언제든 쉬세요 — 강제 사항 없습니다."
 
@@ -32539,7 +32522,7 @@ msgstr "이 여행을 완료하라는 알림을 원하시나요?"
 
 #: app/templates/programmes/view.html:385
 msgid ""
-"Short email nudges — pick cadence and time. One tap unsubscribe anytime."
+"Short email nudges — pick cadence and time. One tap unsubscribe any time."
 msgstr "짧은 이메일 넛지 — 리듬과 시간을 선택하세요. 언제든지 한 번의 탭으로 구독을 취소할 수 있습니다."
 
 #: app/templates/programmes/view.html:390
@@ -32570,7 +32553,7 @@ msgid "Turn on reminders"
 msgstr "알림 켜기"
 
 #: app/templates/programmes/view.html:428
-msgid "We only send journey nudges. Unsubscribe anytime from our emails."
+msgid "We only send journey nudges. Unsubscribe any time from our emails."
 msgstr "우리는 여행 넛지만 보냅니다. 언제든지 이메일 구독을 취소하세요."
 
 #: app/templates/programmes/view.html:432
@@ -32677,7 +32660,7 @@ msgid "• Keys are validated before saving"
 msgstr "• 키는 저장하기 전에 검증됩니다"
 
 #: app/templates/settings/add_api_key.html:27
-msgid "• You can disable or delete keys anytime"
+msgid "• You can disable or delete keys any time"
 msgstr "• 언제든지 키를 비활성화하거나 삭제할 수 있습니다"
 
 #: app/templates/settings/add_api_key.html:28
@@ -32814,7 +32797,7 @@ msgid "• Validation only checks if the key is active"
 msgstr "• 검증은 키가 활성 상태인지만 확인합니다"
 
 #: app/templates/settings/add_api_key.html:112
-msgid "• You can delete your key anytime"
+msgid "• You can delete your key any time"
 msgstr "• 언제든지 키를 삭제할 수 있습니다"
 
 #: app/templates/settings/add_api_key.html:113
@@ -33036,7 +33019,7 @@ msgstr "%(name)s 클레임 - SocietySpeaks"
 #: app/templates/sources/claim.html:5
 #, python-format
 msgid ""
-"Request to claim %(name)s as your organization's source profile on "
+"Request to claim %(name)s as your organisation's source profile on "
 "SocietySpeaks."
 msgstr "SocietySpeaks에서 %(name)s를 조직의 소스 프로필로 클레임할 것을 요청하세요."
 
@@ -33086,7 +33069,7 @@ msgstr "귀사 콘텐츠로부터 비롯된 모든 토론이 소개됩니다"
 #: app/templates/sources/claim.html:94
 #, python-format
 msgid ""
-"By submitting this claim, you confirm that you are authorized to represent "
+"By submitting this claim, you confirm that you are authorised to represent "
 "%(name)s. False claims may result in account suspension."
 msgstr ""
 "이 클레임을 제출함으로써 귀하는 %(name)s를 대표할 권한이 있음을 확인합니다. 거짓 클레임은 계정 정지를 초래할 수 있습니다."
@@ -33098,7 +33081,7 @@ msgstr "클레임 요청 제출"
 #: app/templates/sources/index.html:4
 msgid ""
 "Explore news sources and podcasts on SocietySpeaks. Discover discussions "
-"from your favorite media outlets."
+"from your favourite media outlets."
 msgstr "SocietySpeaks에서 뉴스 소스와 팟캐스트를 탐색하세요. 좋아하는 미디어 매체의 토론을 발견하세요."
 
 #: app/templates/sources/index.html:5

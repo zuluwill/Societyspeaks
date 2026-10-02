@@ -1,0 +1,45 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, link_primary %}
+{% from "consultations/_macros.html" import status_badge with context %}
+{% set host_nav = 'mine' %}
+
+{% block title %}{{ _('Your consultations') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <h1 class="text-2xl font-bold text-gray-900">{{ _('Your consultations') }}</h1>
+  <a href="{{ url_for('consultations.new') }}" class="{{ btn_primary_md() }}">{{ _('New consultation') }}</a>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <tr>
+          <th scope="col" class="px-5 py-3">{{ _('Question') }}</th>
+          <th scope="col" class="px-5 py-3">{{ _('Status') }}</th>
+          <th scope="col" class="hidden px-5 py-3 text-right sm:table-cell">{{ _('Took part') }}</th>
+          <th scope="col" class="px-5 py-3"><span class="sr-only">{{ _('Open') }}</span></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for consultation, counts in consultations %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-5 py-4">
+            <a href="{{ url_for('consultations.dashboard', consultation_id=consultation.id) }}" class="font-medium text-gray-900 hover:text-primary-700">{{ consultation.question }}</a>
+            <p class="mt-0.5 text-xs text-gray-500">{{ consultation.organisation_name }}</p>
+          </td>
+          <td class="px-5 py-4">{{ status_badge(consultation) }}</td>
+          <td class="hidden px-5 py-4 text-right tabular-nums text-gray-700 sm:table-cell">{{ counts.participants if counts else '–' }}</td>
+          <td class="px-5 py-4 text-right">
+            <a href="{{ url_for('consultations.dashboard', consultation_id=consultation.id) }}" class="{{ link_primary() }}">
+              {% if consultation.is_draft %}{{ _('Continue set-up') }}{% elif consultation.is_live %}{{ _('Dashboard') }}{% else %}{{ _('Results') }}{% endif %}
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

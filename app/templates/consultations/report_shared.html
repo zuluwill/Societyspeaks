@@ -1,0 +1,37 @@
+<!doctype html>
+{# A report the host chose to share. Standalone: no site chrome, no analytics. #}
+<html lang="{{ current_lang|default('en') }}" dir="{{ (supported_languages|default({})).get(current_lang|default('en'), {}).get('dir', 'ltr') }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>{{ data.question }} | {{ data.organisation_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+  <style nonce="{{ csp_nonce() }}">
+    body { background: #f9fafb; margin: 0; padding: 1.5rem 1rem 3rem; }
+    .sheet { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; margin: 0 auto; max-width: 50rem; padding: 2rem 1.5rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-end; margin: 0 auto 1rem; max-width: 50rem; }
+    .actions a, .actions button { background: #fff; border: 1px solid #d1d5db; border-radius: 0.5rem; color: #374151; cursor: pointer; font: 600 0.9rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 0.65rem 1rem; text-decoration: none; }
+    .actions a:hover, .actions button:hover { background: #f3f4f6; }
+    @media (min-width: 640px) { .sheet { padding: 3rem; } }
+    @media print { body { background: #fff; padding: 0; } .sheet { border: 0; padding: 0; } .actions { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    {% if pdf_available %}
+    <a href="{{ url_for('consultations.shared_report_pdf', share_token=report.share_token) }}">{{ _('Download PDF') }}</a>
+    {% else %}
+    <button type="button" id="print-report">{{ _('Print or save as PDF') }}</button>
+    {% endif %}
+  </div>
+  <main class="sheet">
+    {% include "consultations/_report_body.html" %}
+  </main>
+  <script nonce="{{ csp_nonce() }}">
+    var printButton = document.getElementById('print-report');
+    if (printButton) printButton.addEventListener('click', function () { window.print(); });
+  </script>
+</body>
+</html>

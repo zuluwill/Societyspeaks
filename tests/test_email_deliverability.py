@@ -104,18 +104,6 @@ def test_welcome_payload_has_html_and_text(app, db, monkeypatch, captured_payloa
     assert 'Society Speaks' in payload['text']
 
 
-def test_account_activation_payload_has_html_and_text(app, db, monkeypatch, captured_payload):
-    user = _make_user(db)
-    client = _client(monkeypatch)
-
-    assert client.send_account_activation(user, 'activation-token-abcdef') is True
-
-    payload = captured_payload['payload']
-    assert payload['html']
-    assert payload['text']
-    assert 'activation-token-abcdef' in payload['text']
-
-
 def test_reply_to_included_when_configured(app, db, monkeypatch, captured_payload):
     user = _make_user(db)
     client = _client(monkeypatch, RESEND_REPLY_TO='hello@societyspeaks.io')

@@ -120,7 +120,7 @@ def _stance_subline(question: DailyQuestion) -> str:
             dominant = frame.get('dominant_frame') or 'unknown'
             frame_label = DOMINANT_FRAME_LABELS.get(dominant) or _('the press')
             subline = _(
-                'The press leaned toward %(frame)s on this story. Where do you stand?',
+                'The press leaned towards %(frame)s on this story. Where do you stand?',
                 frame=frame_label,
             )
     return subline

@@ -37,7 +37,7 @@ def crawlable_discussions_query(discussion_model=Discussion, programme_model=Pro
     Excludes partner test data and discussions on non-public or inactive programmes.
     """
     return discussion_model.query.filter(
-        discussion_model.partner_env != 'test',
+        discussion_model.publicly_listable(),
     ).outerjoin(
         programme_model, discussion_model.programme_id == programme_model.id,
     ).filter(

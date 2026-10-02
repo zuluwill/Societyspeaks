@@ -42,10 +42,10 @@ class ProgrammeForm(FlaskForm):
 
     owner_type = SelectField(
         _l('Owner'),
-        choices=[('user', _l('My account')), ('company', _l('Organization'))],
+        choices=[('user', _l('My account')), ('company', _l('Organisation'))],
         validators=[DataRequired()]
     )
-    company_profile_id = SelectField(_l('Organization'), coerce=int, validators=[Optional()])
+    company_profile_id = SelectField(_l('Organisation'), coerce=int, validators=[Optional()])
     visibility = SelectField(
         _l('Visibility'),
         choices=PROGRAMME_VISIBILITY_CHOICES,

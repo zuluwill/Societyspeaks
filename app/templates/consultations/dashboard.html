@@ -1,0 +1,226 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md, btn_secondary_sm, link_primary %}
+{% from "consultations/_macros.html" import next_panel, callout, stat_tile, status_badge, copy_button, input_classes with context %}
+{% set host_nav = 'mine' %}
+
+{% block title %}{{ consultation.question }} | Society Speaks{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">{% endblock %}
+
+{% block host_content %}
+<div class="flex flex-wrap items-start justify-between gap-4">
+  <div class="min-w-0">
+    <p class="flex items-center gap-2 text-sm text-gray-500">{{ status_badge(consultation) }} <span>{{ consultation.organisation_name }}</span></p>
+    <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ consultation.question }}</h1>
+    <p class="mt-1 text-sm text-gray-600" id="closing-line">
+      {% if consultation.is_live and consultation.closes_at %}
+        {% set hours_left = ((consultation.closes_at - now).total_seconds() // 3600)|int %}
+        {% if hours_left >= 48 %}{{ _('Closes in %(n)d days, on %(date)s.', n=hours_left // 24, date=closes_on) }}
+        {% elif hours_left >= 1 %}{{ ngettext('Closes in %(num)d hour.', 'Closes in %(num)d hours.', hours_left) }}
+        {% else %}{{ _('Closes within the hour.') }}{% endif %}
+      {% elif consultation.is_closed and consultation.closed_at %}
+        {{ _('Closed on %(date)s.', date=closed_on) }}
+      {% endif %}
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if consultation.is_live %}
+    <a href="{{ url_for('consultations.share', consultation_id=consultation.id) }}" class="{{ btn_primary_md() }}">{{ _('Link and QR code') }}</a>
+    {% endif %}
+    {% if report or consultation.is_closed %}
+    <a href="{{ url_for('consultations.report', consultation_id=consultation.id) }}" class="{{ btn_primary_md() if consultation.is_closed else btn_secondary_md() }}">{{ _('Your report') }}</a>
+    {% endif %}
+  </div>
+</div>
+
+<dl class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+  {{ stat_tile(_('Took part'), data.participant_count, 'stat-participants') }}
+  {{ stat_tile(_('Votes cast'), data.vote_count, 'stat-votes') }}
+  {{ stat_tile(_('Statements'), data.statement_count) }}
+  {% if data.response_rate is not none %}
+  {{ stat_tile(_('Response rate'), ((data.response_rate * 100)|round|int) ~ '%') }}
+  {% else %}
+  {{ stat_tile(_('Clear results'), data.counts.agrees + data.counts.disagrees + data.counts.unsure + data.counts.split) }}
+  {% endif %}
+</dl>
+
+<div class="mt-6 grid gap-6 lg:grid-cols-3">
+  <div class="space-y-6 lg:col-span-2">
+
+    {% if pending_count %}
+    {% call callout('warning', ngettext('%(num)d suggested statement is waiting for you', '%(num)d suggested statements are waiting for you', pending_count)) %}
+      {{ _('Participants cannot see a suggestion until you approve it.') }}
+      <a href="{{ url_for('consultations.moderation', consultation_id=consultation.id) }}" class="mt-2 block font-semibold underline">{{ _('Review suggestions') }}</a>
+    {% endcall %}
+    {% endif %}
+
+    {% if consultation.is_live and data.is_low_turnout %}
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
+      <p class="text-sm font-semibold text-amber-900">
+        {{ ngettext('%(num)d person has taken part so far.', '%(num)d people have taken part so far.', data.participant_count) }}
+        {{ _('Clear results usually need %(recommended)d or more.', recommended=data.recommended_participants) }}
+      </p>
+      <p class="mt-1 text-sm text-amber-900">{{ _('With fewer, the results below are shown as counts and few are called. A reminder usually helps most.') }}</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        {{ copy_button('reminder-text', _('Copy a reminder to send')) }}
+        <form method="post" action="{{ url_for('consultations.extend', consultation_id=consultation.id) }}">
+          {{ action_form.hidden_tag() }}
+          <input type="hidden" name="days" value="7">
+          <button type="submit" class="{{ btn_secondary_sm() }}">{{ _('Keep it open 7 more days') }}</button>
+        </form>
+      </div>
+      <textarea id="reminder-text" class="sr-only" readonly tabindex="-1" aria-hidden="true">{{ reminder_text }}</textarea>
+    </div>
+    {% endif %}
+
+    <section aria-labelledby="results-heading" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="results-heading" class="text-lg font-semibold text-gray-900">
+          {% if consultation.is_live %}{{ _('Results so far') }}{% else %}{{ _('Results') }}{% endif %}
+        </h2>
+        <a href="{{ url_for('consultations.results_csv', consultation_id=consultation.id) }}" class="text-sm {{ link_primary() }}">{{ _('Download CSV') }}</a>
+      </div>
+      {% if data.vote_count == 0 %}
+      <p class="mt-4 rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-600">{{ _('No answers yet. They will appear here as people take part.') }}</p>
+      {% else %}
+      <div class="ssr" id="statements">
+        {% set verdict_titles = {
+          'agrees': _('They agree'), 'disagrees': _('They disagree'), 'unsure': _('They are unsure'),
+          'split': _('They are split'), 'no_clear_result': _('No clear result yet'), 'too_few_votes': _('Too few votes to say'),
+        } %}
+        {% for verdict, rows in groups %}{% if rows %}
+        <div class="ssr-section">
+          <h3 class="text-base font-semibold text-gray-900"><span class="ssr-marker ssr-marker--{{ verdict }}" aria-hidden="true"></span>{{ verdict_titles[verdict] }} <span class="font-normal text-gray-500">({{ rows|length }})</span></h3>
+          <ol class="ssr-statements">
+            {% for row in rows %}
+            <li class="ssr-statement">
+              <div class="flex items-start justify-between gap-3">
+                <p class="ssr-statement-text">{{ row.content }}{% if row.source == 'user_submitted' %}<span class="ssr-audience-tag">{{ _('Suggested by a participant') }}</span>{% endif %}</p>
+                {% if consultation.is_live %}
+                <form method="post" action="{{ url_for('consultations.remove_statement', consultation_id=consultation.id, statement_id=row.statement_id) }}">
+                  {{ action_form.hidden_tag() }}
+                  <button type="submit" class="shrink-0 rounded px-2 py-1 text-xs font-medium text-gray-500 hover:bg-red-50 hover:text-red-700"
+                          data-confirm="{{ _('Withdraw this statement? It disappears for participants and its votes are no longer counted.') }}">{{ _('Withdraw') }}</button>
+                </form>
+                {% endif %}
+              </div>
+              {% if verdict == 'too_few_votes' %}
+              <p class="ssr-figures">
+                {% if row.total %}<span>{{ _('%(agree)d agree · %(disagree)d disagree · %(unsure)d unsure', agree=row.agree, disagree=row.disagree, unsure=row.unsure) }}</span>
+                {% else %}<span class="ssr-votes">{{ _('No votes yet') }}</span>{% endif %}
+              </p>
+              {% else %}
+              <svg class="ssr-bar" viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true">
+                <rect x="0" y="0" width="100" height="4" fill="#f3f4f6"/>
+                <rect x="0" y="0" width="{{ (row.agree_share * 100)|round(2) }}" height="4" fill="#059669"/>
+                <rect x="{{ (row.agree_share * 100)|round(2) }}" y="0" width="{{ (row.disagree_share * 100)|round(2) }}" height="4" fill="#dc2626"/>
+                <rect x="{{ ((row.agree_share + row.disagree_share) * 100)|round(2) }}" y="0" width="{{ (row.unsure_share * 100)|round(2) }}" height="4" fill="#d97706"/>
+              </svg>
+              <p class="ssr-figures">
+                <span><span class="ssr-key ssr-key--agree" aria-hidden="true"></span>{{ _('%(share)d%% agree', share=(row.agree_share * 100)|round|int) }}</span>
+                <span><span class="ssr-key ssr-key--disagree" aria-hidden="true"></span>{{ _('%(share)d%% disagree', share=(row.disagree_share * 100)|round|int) }}</span>
+                <span><span class="ssr-key ssr-key--unsure" aria-hidden="true"></span>{{ _('%(share)d%% unsure', share=(row.unsure_share * 100)|round|int) }}</span>
+                <span class="ssr-votes">{{ ngettext('%(num)d vote', '%(num)d votes', row.total) }}</span>
+              </p>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+    </section>
+
+    {% if consultation.is_live %}
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="add-heading">
+      <h2 id="add-heading" class="text-base font-semibold text-gray-900">{{ _('Add a statement') }}</h2>
+      <p class="mt-1 text-sm text-gray-600">{{ _('People who have already finished will see it if they come back. Existing statements cannot be reworded once voting has started.') }}</p>
+      <form method="post" action="{{ url_for('consultations.add_statement', consultation_id=consultation.id) }}" class="mt-3">
+        {{ action_form.hidden_tag() }}
+        <label for="new-statement" class="sr-only">{{ _('New statement') }}</label>
+        <textarea id="new-statement" name="content" rows="2" required minlength="10" maxlength="{{ max_length }}" class="{{ input_classes() }}" placeholder="{{ _('We should…') }}"></textarea>
+        <button type="submit" class="{{ btn_secondary_md() }} mt-3">{{ _('Add statement') }}</button>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+
+  <div class="space-y-4">
+    {% if consultation.is_live %}
+    {% call next_panel(_('Voting is open')) %}
+      <p>{{ _('Results update as people answer. Voting closes automatically, your report is built, and we email you.') }}</p>
+      <p>{{ _('A result is called only when the votes clearly support it, so early results often show as “no clear result”.') }}</p>
+    {% endcall %}
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-semibold text-gray-900">{{ _('Closing') }}</p>
+      <form method="post" action="{{ url_for('consultations.extend', consultation_id=consultation.id) }}" class="mt-3 flex items-end gap-2">
+        {{ action_form.hidden_tag() }}
+        <div>
+          <label for="extend-days" class="block text-sm text-gray-600">{{ _('Keep open for more days') }}</label>
+          <input id="extend-days" name="days" type="number" min="1" max="90" value="7" inputmode="numeric" class="{{ input_classes() }} mt-1 max-w-[6rem]">
+        </div>
+        <button type="submit" class="{{ btn_secondary_md() }}">{{ _('Extend') }}</button>
+      </form>
+      <form method="post" action="{{ url_for('consultations.close', consultation_id=consultation.id) }}" class="mt-4 border-t border-gray-100 pt-4">
+        {{ action_form.hidden_tag() }}
+        <button type="submit" class="{{ btn_secondary_md() }}" data-confirm="{{ _('Close voting now and build the report?') }}">{{ _('Close now and build the report') }}</button>
+      </form>
+    </div>
+    {% else %}
+    {% call next_panel(_('Voting has closed')) %}
+      {% if report %}
+      <p>{{ _('Your report is ready. Only you can see it until you choose to share it.') }}</p>
+      {% elif report_state == 'working' %}
+      <p>{{ _('Your report is being built. We will email you when it is ready.') }}</p>
+      {% else %}
+      <p>{{ _('Open your report to build it from the final results.') }}</p>
+      {% endif %}
+    {% endcall %}
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-semibold text-gray-900">{{ _('Need more answers?') }}</p>
+      <p class="mt-1 text-sm text-gray-600">{{ _('Reopen voting with the same link. A new report is built when it closes again.') }}</p>
+      <form method="post" action="{{ url_for('consultations.extend', consultation_id=consultation.id) }}" class="mt-3">
+        {{ action_form.hidden_tag() }}
+        <input type="hidden" name="days" value="7">
+        <button type="submit" class="{{ btn_secondary_md() }}">{{ _('Reopen for 7 days') }}</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-semibold text-gray-900">{{ _('Delete this consultation') }}</p>
+      <p class="mt-1 text-sm text-gray-600">{{ _('Removes the statements, every vote and the reports. This cannot be undone.') }}</p>
+      <form method="post" action="{{ url_for('consultations.delete', consultation_id=consultation.id) }}" class="mt-3">
+        {{ action_form.hidden_tag() }}
+        <button type="submit" class="rounded-lg px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                data-confirm="{{ _('Delete this consultation and all its votes for good?') }}">{{ _('Delete') }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block host_scripts %}
+{% if consultation.is_live or report_state == 'working' %}
+<script nonce="{{ csp_nonce() }}">
+  // Keep the counts fresh without reloading over anything being typed.
+  (function poll() {
+    setTimeout(async function () {
+      try {
+        const response = await fetch('{{ url_for("consultations.status", consultation_id=consultation.id) }}', { headers: { 'Accept': 'application/json' } });
+        const state = await response.json();
+        const votes = document.getElementById('stat-votes');
+        const changed = String(state.votes) !== votes.textContent.trim();
+        document.getElementById('stat-participants').textContent = state.participants;
+        const typing = document.activeElement && document.activeElement.matches('textarea, input');
+        if ((changed || state.status !== '{{ consultation.status }}') && !typing && !document.hidden) {
+          window.location.reload();
+          return;
+        }
+      } catch (error) { /* try again next time */ }
+      poll();
+    }, 15000);
+  })();
+</script>
+{% endif %}
+{% endblock %}

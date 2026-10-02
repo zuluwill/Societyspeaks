@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import link_primary %}
+
+{% block title %}{{ _('Check your inbox') }} | Society Speaks{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="mx-auto max-w-xl px-4 py-16 sm:px-6">
+    <div class="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-700" aria-hidden="true">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <h1 class="mt-5 text-2xl font-bold text-gray-900">{{ _('Check your inbox') }}</h1>
+      <p class="mt-3 text-gray-600">{{ _('We sent a sign-in link to %(email)s. Open it on this device to start your consultation.', email=email) }}</p>
+      <p class="mt-4 text-sm text-gray-500">{{ _('It can take a minute to arrive. Check your spam folder if you do not see it.') }}</p>
+      <a href="{{ url_for('consultations.start') }}" class="mt-5 inline-block text-sm {{ link_primary() }}">{{ _('Use a different email address') }}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}{{ _('Organization Settings') }}{% endblock %}
+{% block title %}{{ _('Organisation Settings') }}{% endblock %}
 
 {% block content %}
 <div class="bg-gray-50 min-h-screen">
@@ -10,10 +10,10 @@
         <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
-        <span class="text-gray-900">{{ _('Organization Settings') }}</span>
+        <span class="text-gray-900">{{ _('Organisation Settings') }}</span>
       </nav>
-      <h1 class="text-2xl font-bold text-gray-900">{{ _('Organization Settings') }}</h1>
-      <p class="text-gray-600 mt-1">{{ _('Manage your team subscription and organization details.') }}</p>
+      <h1 class="text-2xl font-bold text-gray-900">{{ _('Organisation Settings') }}</h1>
+      <p class="text-gray-600 mt-1">{{ _('Manage your team subscription and organisation details.') }}</p>
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
@@ -51,13 +51,13 @@
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">{{ _('Organization Details') }}</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ _('Organisation Details') }}</h2>
       </div>
       <form action="{{ url_for('briefing.update_organization') }}" method="POST" class="px-6 py-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="space-y-4">
           <div>
-            <label for="company_name" class="block text-sm font-medium text-gray-700">{{ _('Organization Name') }}</label>
+            <label for="company_name" class="block text-sm font-medium text-gray-700">{{ _('Organisation Name') }}</label>
             <input type="text" name="company_name" id="company_name" value="{{ org.company_name or '' }}"
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                    required minlength="2" maxlength="150">
@@ -66,7 +66,7 @@
             <label for="description" class="block text-sm font-medium text-gray-700">{{ _('Description') }}</label>
             <textarea name="description" id="description" rows="3"
                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                      placeholder="{{ _('Brief description of your organization') }}">{{ org.description or '' }}</textarea>
+                      placeholder="{{ _('Brief description of your organisation') }}">{{ org.description or '' }}</textarea>
           </div>
           <div>
             <label for="website" class="block text-sm font-medium text-gray-700">{{ _('Website') }}</label>
@@ -182,7 +182,7 @@
               {{ _('Send Invite') }}
             </button>
           </form>
-          <p class="text-xs text-gray-500 mt-2">{{ _("They'll receive an email with a link to join your organization.") }}</p>
+          <p class="text-xs text-gray-500 mt-2">{{ _("They'll receive an email with a link to join your organisation.") }}</p>
           {% else %}
           <div class="bg-yellow-50 rounded-md p-3 border border-yellow-100">
             <p class="text-sm text-yellow-800">

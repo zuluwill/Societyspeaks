@@ -1,0 +1,62 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, link_primary %}
+{% from "consultations/_macros.html" import stepper, next_panel, field_errors, input_classes with context %}
+{% set host_nav = 'mine' %}
+
+{% block title %}{{ _('Settings') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+{{ stepper('settings') }}
+<div class="grid gap-8 lg:grid-cols-3">
+  <div class="lg:col-span-2">
+    <h1 class="text-2xl font-bold text-gray-900">{{ _('How should it run?') }}</h1>
+    <p class="mt-2 text-gray-600">{{ _('The defaults suit most consultations. You can change the closing date later.') }}</p>
+
+    <form method="post" class="mt-6 space-y-6" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <label for="{{ form.open_days.id }}" class="block text-sm font-medium text-gray-900">{{ form.open_days.label.text }}</label>
+        <div class="mt-2 flex items-center gap-2">
+          {{ form.open_days(class_=input_classes() ~ ' max-w-[6rem]', inputmode='numeric', min=1, max=90) }}
+          <span class="text-gray-600">{{ _('days') }}</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-500">{{ _('Voting closes automatically and your report is built straight away. For an event, one day is enough. For a membership, a week gives people time to see a reminder.') }}</p>
+        {{ field_errors(form.open_days) }}
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <label class="flex items-start gap-3">
+          {{ form.allow_audience_statements(class_='mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500') }}
+          <span>
+            <span class="block text-sm font-medium text-gray-900">{{ form.allow_audience_statements.label.text }}</span>
+            <span class="mt-1 block text-sm text-gray-500">{{ _('Surfaces the points you did not think to ask about. Every suggestion is screened, then waits for your approval. Nothing is shown to other participants until you approve it.') }}</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <label class="flex items-start gap-3">
+          {{ form.show_results_to_participants(class_='mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500') }}
+          <span>
+            <span class="block text-sm font-medium text-gray-900">{{ form.show_results_to_participants.label.text }}</span>
+            <span class="mt-1 block text-sm text-gray-500">{{ _('Good for an event, where people want to see the room. Leave it off if you would rather present the results yourself. Results are only ever shown after someone has answered.') }}</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-4">
+        <button type="submit" class="{{ btn_primary_md() }} min-h-11">{{ _('Continue') }}</button>
+        <a href="{{ url_for('consultations.statements', consultation_id=consultation.id) }}" class="text-sm {{ link_primary() }}">{{ _('Back to statements') }}</a>
+      </div>
+    </form>
+  </div>
+
+  <div>
+    {% call next_panel(_('Who can take part')) %}
+      <p>{{ _('Only people with your link can take part. Anyone who has the link can forward it, so share it with the audience you mean to ask.') }}</p>
+      <p>{{ _('Nobody needs an account, and you will never see who answered what.') }}</p>
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}

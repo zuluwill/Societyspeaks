@@ -1,0 +1,45 @@
+{#
+  "Which one is for you?": the five things Society Speaks offers, in one place,
+  so a visitor who landed on the wrong page can find the right one.
+  Usage: {% from "components/_offers.html" import offers %}{{ offers(current='publishers') }}
+#}
+{% macro offers(current=None) %}
+{% set items = [
+  ('platform', url_for('main.platform'), _('Take part'), _('Free'),
+   _('Vote on public discussions and see where people agree.')),
+  ('briefs', url_for('briefing.landing'), _('Personal Briefs'), _('from £4.99 a month'),
+   _('One daily brief written from the news sources you choose.')),
+  ('publishers', url_for('partner.hub'), _('For publishers'), _('from £49 a month'),
+   _('Put voting on your own articles, in place of a comment section.')),
+] %}
+{% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+  {% set items = items + [
+    ('self_serve', url_for('consultations.landing'), _('Run a consultation'),
+     _('from %(price)s', price='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100)),
+     _('Ask your own members, staff or audience one question and get a report.')),
+  ] %}
+{% endif %}
+{% set items = items + [
+  ('government', url_for('main.consultations'), _('For government'), _('from £2,500'),
+   _('A public consultation that we design and run with you.')),
+] %}
+<section class="border-t border-gray-200 bg-white py-12" aria-labelledby="offers-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 id="offers-heading" class="text-lg font-semibold text-gray-900">{{ _('Looking for something else?') }}</h2>
+    {% set shown = items|length - (1 if current else 0) %}
+    <ul class="mt-5 grid gap-4 sm:grid-cols-2 {{ 'lg:grid-cols-4' if shown == 4 else 'lg:grid-cols-3' }}">
+      {% for key, href, name, price, text in items if key != current %}
+      <li>
+        <a href="{{ href }}" class="group block h-full rounded-xl p-4 ring-1 ring-gray-200 transition hover:ring-2 hover:ring-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 motion-reduce:transition-none" data-ph-capture-attribute-cta="offers-{{ key }}">
+          <p class="flex flex-wrap items-baseline justify-between gap-x-2">
+            <span class="font-semibold text-gray-900 group-hover:text-primary-700">{{ name }}</span>
+            <span class="text-xs font-medium text-gray-500">{{ price }}</span>
+          </p>
+          <p class="mt-1 text-sm leading-relaxed text-gray-600">{{ text }}</p>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endmacro %}

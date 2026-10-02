@@ -164,6 +164,14 @@ def _static_entries(*, game_enabled: bool, self_serve_trial: bool) -> list[Sitem
         entries.append(
             SitemapUrl(_external('briefing.sample_brief'), changefreq='monthly', priority='0.7'),
         )
+    if current_app.config.get('CONSULTATIONS_SELF_SERVE_ENABLED'):
+        entries.extend([
+            SitemapUrl(_external('consultations.landing'), changefreq='monthly', priority='0.9'),
+            SitemapUrl(_external('help.consultations'), changefreq='monthly', priority='0.7'),
+        ])
+        entries.append(
+            SitemapUrl(_external('consultations.example_report'), changefreq='monthly', priority='0.7'),
+        )
     return entries
 
 

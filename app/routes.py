@@ -72,7 +72,7 @@ def index():
     if total_discussion_count_display is None:
         try:
             from sqlalchemy import func as _sqlfunc
-            raw = db.session.query(_sqlfunc.count(Discussion.id)).scalar() or 0
+            raw = db.session.query(_sqlfunc.count(Discussion.id)).filter(Discussion.publicly_listable()).scalar() or 0
             floor_hundred = (raw // 100) * 100
             total_discussion_count_display = f"{floor_hundred:,}+" if floor_hundred else "1,000+"
         except Exception:

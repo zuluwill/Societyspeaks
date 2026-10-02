@@ -37,6 +37,10 @@ envVarGroups:
         value: https://societyspeaks.io
       - key: SITE_URL
         value: https://societyspeaks.io
+      # Self-serve consultations. Off until launch: see OPS.md "Self-serve
+      # consultations" for the checklist to run before setting this to "true".
+      - key: CONSULTATIONS_SELF_SERVE_ENABLED
+        value: "false"
       - key: POSTHOG_HOST
         value: https://eu.i.posthog.com
       - key: BRIEF_FROM_EMAIL

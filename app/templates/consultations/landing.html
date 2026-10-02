@@ -1,0 +1,376 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_secondary_lg, btn_secondary_md, link_primary %}
+{% set start_url = url_for('consultations.start') %}
+{% set faqs = [
+  (_('How is this different from a poll?'),
+   _('A poll answers the question you thought to ask. Here your audience responds to a dozen or so short statements that cover your question from different angles, so you see where they agree, where they disagree, where they do not know, and where they are divided. Then you get the write-up, not a results screen.')),
+  (_('How many people do I need?'),
+   _('Clear results usually need 30 or more participants. With fewer you still get a report: it shows the counts and explains why few results can be called. There is no upper limit and no charge per participant.')),
+  (_('Is it anonymous?'),
+   _('Yes. Participants need no account. Answers are stored against a random ID on their device, not a name or email, and you see results, never who answered what. The participant page carries no analytics or advertising scripts.')),
+  (_('Who can see my consultation?'),
+   _('Only people with your link can take part, and it is never listed or searchable on Society Speaks. Anyone who has the link can forward it. If it goes somewhere it should not, you can replace it with a new one and the old link stops working at once. Your report is visible only to you until you choose to share it.')),
+  (_('Who writes the statements?'),
+   _('We draft a balanced set from your question and background, using AI. You edit, remove and add until they are right, and nothing is shown to anyone until you approve it. You can also write them all yourself.')),
+  (_('Can participants add their own statements?'),
+   _('If you switch it on. Every suggestion is screened, then waits for your approval before anyone else sees it.')),
+  (_('What does the report claim?'),
+   _('Only what the votes support. Each result is counted directly from the votes and is called only when it is clear, allowing for how many people took part. The report says who took part and what it does not show: it describes participants, not everyone you invited and not the public.')),
+  (_('What does “unlimited” mean?'),
+   _('Every consultation your organisation runs with its own audiences in the year, with no cap on consultations or participants. The annual plan is for one organisation; it does not cover running consultations on behalf of clients.')),
+  (_('Can I get a refund?'),
+   _('A single consultation is refunded in full, from your account page, at any time before it goes live. The annual plan can be cancelled at any time and runs to the end of the year you have paid for.')),
+] %}
+
+{% block title %}{{ _('See where your audience agrees — Society Speaks') }}{% endblock %}
+{% block canonical %}{{ url_for('consultations.landing', _external=True) }}{% endblock %}
+{% block meta_description %}{{ _('Ask your members, staff or audience one question. They answer on their phones in two minutes. You get a report showing where they agree, disagree, are unsure or are split. %(single)s per consultation, or %(annual)s a year unlimited.', single=price_single, annual=price_annual) }}{% endblock %}
+{% block og_title %}{{ _('See where your audience agrees, disagrees or is unsure') }}{% endblock %}
+{% block og_description %}{{ _('Ask one question. Your audience answers on their phones in two minutes. You get a report you can forward.') }}{% endblock %}
+{% block twitter_title %}{{ _('See where your audience agrees, disagrees or is unsure') }}{% endblock %}
+{% block twitter_description %}{{ _('Ask one question. Your audience answers on their phones in two minutes. You get a report you can forward.') }}{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": {{ url_for('main.index', _external=True)|tojson }}},
+    {"@type": "ListItem", "position": 2, "name": "Consultations", "item": {{ url_for('consultations.landing', _external=True)|tojson }}}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for question, answer in faqs %}
+    {"@type": "Question", "name": {{ question|tojson }}, "acceptedAnswer": {"@type": "Answer", "text": {{ answer|tojson }}}}{{ "," if not loop.last }}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────────── #}
+<section class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white" aria-labelledby="hero-heading">
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-24">
+    <div>
+      <p class="inline-flex rounded-full bg-primary-100 px-3 py-1 text-sm font-semibold text-primary-700">{{ _('For membership bodies, charities, teams and events') }}</p>
+      <h1 id="hero-heading" class="mt-5 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+        {{ _('See where your audience agrees, disagrees or is unsure.') }}
+      </h1>
+      <p class="mt-6 text-xl leading-relaxed text-gray-600">
+        {{ _('Ask one question. Your members, staff or audience answer on their phones in two minutes. You get a report you can forward.') }}
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="{{ start_url }}" class="{{ btn_primary_lg() }} min-h-11" data-ph-capture-attribute-cta="consultations-hero-start">{{ _('Start free') }}</a>
+        <a href="{{ url_for('consultations.example_report') }}" class="{{ btn_secondary_lg() }} min-h-11" data-ph-capture-attribute-cta="consultations-hero-example">{{ _('See an example report') }}</a>
+      </div>
+      {% if has_consultations %}
+      <p class="mt-5 text-sm text-gray-700">
+        <a href="{{ url_for('consultations.mine') }}" class="{{ link_primary() }} font-semibold" data-ph-capture-attribute-cta="consultations-hero-mine">{{ _('Go to your consultations') }} →</a>
+      </p>
+      {% endif %}
+      <p class="mt-5 text-sm text-gray-500">{{ _('Free to set up, no card needed. Pay when you go live. No charge per participant.') }}</p>
+      <p class="mt-2 text-sm text-gray-600">
+        {{ _('Not sure yet?') }}
+        <a href="{{ url_for('consultations.demo') }}" class="{{ link_primary() }}" data-ph-capture-attribute-cta="consultations-hero-demo">{{ _('Answer one yourself in a minute') }} →</a>
+      </p>
+    </div>
+
+    {# Illustration of the report. Labelled as an example: these are not real results. #}
+    <figure class="mx-auto w-full max-w-md" aria-label="{{ _('Example of a report') }}">
+      <div class="rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-200">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ _('Consultation report') }}</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">{{ _('How should we use next year’s surplus?') }}</p>
+        <div class="mt-4 grid grid-cols-4 gap-2 text-center">
+          {% for number, label, colour in [('5', _('agree'), 'border-t-emerald-600'), ('2', _('disagree'), 'border-t-red-600'), ('1', _('unsure'), 'border-t-amber-600'), ('2', _('split'), 'border-t-violet-600')] %}
+          <div class="rounded-lg border border-t-4 border-gray-200 {{ colour }} px-1 py-2">
+            <p class="text-xl font-bold text-gray-900">{{ number }}</p>
+            <p class="text-xs text-gray-600">{{ label }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% for text, a, d in [
+          (_('Members should vote on any spending above £10,000.'), 81, 9),
+          (_('The surplus should stay in reserves until the lease is renewed.'), 44, 41),
+        ] %}
+        <div class="mt-4 border-t border-gray-100 pt-3">
+          <p class="text-sm font-semibold text-gray-900">{{ text }}</p>
+          <div class="mt-2 flex h-2.5 overflow-hidden rounded-full bg-gray-100" aria-hidden="true">
+            <span class="bg-emerald-600" style="width: {{ a }}%"></span>
+            <span class="bg-red-600" style="width: {{ d }}%"></span>
+            <span class="bg-amber-500" style="width: {{ 100 - a - d }}%"></span>
+          </div>
+          <p class="mt-1 text-xs text-gray-600">{{ a }}% {{ _('agree') }} · {{ d }}% {{ _('disagree') }} · {{ 100 - a - d }}% {{ _('unsure') }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      <figcaption class="mt-3 text-center text-xs text-gray-500">{{ _('Illustration. Your report is built from your own audience’s answers.') }}</figcaption>
+    </figure>
+  </div>
+</section>
+
+{# ── How it works ─────────────────────────────────────────────────────── #}
+<section id="how-it-works" class="bg-white py-16 sm:py-20" aria-labelledby="how-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 id="how-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('From question to report in three steps') }}</h2>
+    <ol class="mt-10 grid gap-8 md:grid-cols-3">
+      {% for title, text, detail in [
+        (_('Ask your question'), _('Tell us what you want to know. We draft a balanced set of short statements; you edit and approve them.'), _('About five minutes.')),
+        (_('Share a link or QR code'), _('People answer Agree, Disagree or Unsure, one statement at a time. No login, no app, nothing to install.'), _('About two minutes each.')),
+        (_('Get the report'), _('What they agree on, what they reject, where they are unsure and where they are split, with the numbers and the statements behind each finding.'), _('Built the moment voting closes.')),
+      ] %}
+      <li class="rounded-2xl bg-gray-50 p-8">
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-lg font-bold text-white" aria-hidden="true">{{ loop.index }}</span>
+        <h3 class="mt-5 text-xl font-semibold text-gray-900">{{ title }}</h3>
+        <p class="mt-2 leading-relaxed text-gray-600">{{ text }}</p>
+        <p class="mt-3 text-sm font-medium text-primary-700">{{ detail }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+{# ── What you learn ───────────────────────────────────────────────────── #}
+<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="learn-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <h2 id="learn-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('A poll gives you a number. This gives you the picture.') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('A poll answers the question you thought to ask. A consultation covers your question from a dozen angles and sorts every statement into one of four findings.') }}</p>
+    </div>
+    <dl class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {% for title, text, colour in [
+        (_('Where they agree'), _('The ground you can build on. Often more than you expected.'), 'border-t-emerald-600'),
+        (_('Where they disagree'), _('The ideas your audience has clearly rejected.'), 'border-t-red-600'),
+        (_('Where they are unsure'), _('Where people need more information before they can take a view.'), 'border-t-amber-600'),
+        (_('Where they are split'), _('The real divisions, which are different from not knowing.'), 'border-t-violet-600'),
+      ] %}
+      <div class="rounded-2xl border-t-4 {{ colour }} bg-white p-6 shadow-sm ring-1 ring-gray-200">
+        <dt class="text-lg font-semibold text-gray-900">{{ title }}</dt>
+        <dd class="mt-2 leading-relaxed text-gray-600">{{ text }}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+    <p class="mt-8 max-w-3xl leading-relaxed text-gray-600">{{ _('The report also suggests what to ask next, clearly marked as suggestions. It does not tell you what to do, and it says plainly who took part and what the results do not show.') }}</p>
+  </div>
+</section>
+
+{# ── See it for yourself ──────────────────────────────────────────────── #}
+<section id="example" class="bg-white py-16 sm:py-20" aria-labelledby="example-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <h2 id="example-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('See both sides before you sign up') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('One made-up consultation, from the question your audience answers to the report you receive. No account needed.') }}</p>
+    </div>
+    <div class="mt-10 grid gap-6 md:grid-cols-2">
+      <a href="{{ url_for('consultations.demo') }}" class="group rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:ring-2 hover:ring-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 motion-reduce:transition-none" data-ph-capture-attribute-cta="consultations-example-demo">
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary-700">{{ _('What your audience sees') }}</p>
+        <h3 class="mt-2 text-xl font-semibold text-gray-900">{{ _('Answer it as a participant') }}</h3>
+        <p class="mt-2 leading-relaxed text-gray-600">{{ _('Twelve short statements, one tap each. Best tried on your phone, the way your audience will. Nothing you answer is recorded.') }}</p>
+        <p class="mt-4 font-semibold text-primary-700 group-hover:underline">{{ _('Try it, about a minute') }} →</p>
+      </a>
+      <a href="{{ url_for('consultations.example_report') }}" class="group rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:ring-2 hover:ring-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 motion-reduce:transition-none" data-ph-capture-attribute-cta="consultations-example-report">
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary-700">{{ _('What you get back') }}</p>
+        <h3 class="mt-2 text-xl font-semibold text-gray-900">{{ _('Read the report') }}</h3>
+        <p class="mt-2 leading-relaxed text-gray-600">{{ _('The headline, the themes, every statement with its numbers, and a plain account of who took part and what the results do not show.') }}</p>
+        <p class="mt-4 font-semibold text-primary-700 group-hover:underline">{{ _('See the example report') }} →</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+{# ── Compared with a survey or a live poll ────────────────────────────── #}
+<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="compare-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <h2 id="compare-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Why not a survey or a live poll?') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('Both are good at what they do. Neither hands you a finished account of where a group stands.') }}</p>
+    </div>
+    {% set comparison = [
+      (_('Setting up'), _('You write and test every question'), _('You write each question and its options'), _('You write one question; the statements are drafted for you to approve')),
+      (_('Taking part'), _('Pages of questions to work through'), _('One tap, usually during a live session'), _('One tap per statement, in about two minutes, whenever suits them')),
+      (_('What you get'), _('A spreadsheet and charts to interpret'), _('A bar chart per question'), _('A written report you can forward as it is')),
+      (_('Divided, or just undecided?'), _('Only if you analyse it yourself'), _('Not shown'), _('Shown separately for every statement')),
+      (_('Too few answers to be sure?'), _('Left for you to judge'), _('Left for you to judge'), _('Said plainly, statement by statement')),
+      (_('Price'), _('Usually by seat or by response'), _('Usually by seat or audience size'), _('Per consultation, any number of participants')),
+    ] %}
+
+    {# Phones: one card per row, so the consultation column is never off-screen. #}
+    <dl class="mt-10 space-y-4 md:hidden">
+      {% for label, survey, poll, ours in comparison %}
+      <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
+        <dt class="text-base font-semibold text-gray-900">{{ label }}</dt>
+        <dd class="mt-3 space-y-2 text-sm">
+          <p class="text-gray-600"><span class="font-medium text-gray-900">{{ _('Survey form') }}:</span> {{ survey }}</p>
+          <p class="text-gray-600"><span class="font-medium text-gray-900">{{ _('Live poll') }}:</span> {{ poll }}</p>
+          <p class="rounded-lg bg-blue-50 p-3 font-medium text-gray-900"><span class="text-primary-700">{{ _('Consultation') }}:</span> {{ ours }}</p>
+        </dd>
+      </div>
+      {% endfor %}
+    </dl>
+
+    <div class="mt-10 hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 md:block">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">{{ _('A consultation compared with a survey form and a live poll') }}</caption>
+        <thead>
+          <tr class="border-b border-gray-200 text-gray-900">
+            <td class="p-4"></td>
+            <th scope="col" class="p-4 font-semibold">{{ _('Survey form') }}</th>
+            <th scope="col" class="p-4 font-semibold">{{ _('Live poll') }}</th>
+            <th scope="col" class="bg-blue-50 p-4 font-semibold text-primary-700">{{ _('Consultation') }}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-gray-600">
+          {% for label, survey, poll, ours in comparison %}
+          <tr>
+            <th scope="row" class="p-4 align-top font-semibold text-gray-900">{{ label }}</th>
+            <td class="p-4 align-top">{{ survey }}</td>
+            <td class="p-4 align-top">{{ poll }}</td>
+            <td class="bg-blue-50 p-4 align-top font-medium text-gray-900">{{ ours }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-4 text-sm text-gray-500">{{ _('If you need long written answers, or questions that branch, a survey form is the better tool.') }}</p>
+  </div>
+</section>
+
+{# ── Who it is for ────────────────────────────────────────────────────── #}
+<section class="bg-white py-16 sm:py-20" aria-labelledby="who-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 id="who-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Use it when you need to know where people stand') }}</h2>
+    <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {% for title, text in [
+        (_('Membership bodies'), _('Priorities for the year, a change to fees, a position on a policy. Hear from the members who never speak at the AGM.')),
+        (_('Charities and trustees'), _('Test a strategy with staff, volunteers or the people you serve before the board decides.')),
+        (_('Teams and staff'), _('Find out what a room full of polite nodding hides, without anyone having to say it out loud.')),
+        (_('Events and conferences'), _('Put the QR code on a slide. By the end of the session you know where the room stands.')),
+        (_('Think tanks and researchers'), _('A fast read on how an audience responds to a set of proposals, with every figure exportable.')),
+        (_('Publishers and podcasts'), _('Ask your audience what they think of the issue you just covered, and report back what you found.')),
+      ] %}
+      <li class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+        <p class="mt-2 leading-relaxed text-gray-600">{{ text }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+{# ── Pricing ──────────────────────────────────────────────────────────── #}
+<section id="pricing" class="bg-gray-50 py-16 sm:py-20" aria-labelledby="pricing-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 id="pricing-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Pay for the consultation, never the participant') }}</h2>
+      <p class="mt-4 text-lg text-gray-600">{{ _('Setting up is free. You pay when you go live.') }}</p>
+    </div>
+    <div class="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-3">
+
+      <div class="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('One consultation') }}</h3>
+        <p class="mt-4"><span class="text-4xl font-bold tracking-tight text-gray-900">{{ price_single }}</span></p>
+        <p class="mt-3 leading-relaxed text-gray-600">{{ _('One question, one audience, the full report.') }}</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+          {% for item in [_('Any number of participants'), _('AI-drafted statements you approve'), _('Link and QR code'), _('Report, PDF and CSV'), _('Refunded in full if you do not go live')] %}
+          <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        <div class="mt-auto pt-8">
+          <a href="{{ start_url }}" class="{{ btn_secondary_md() }} w-full min-h-11" data-ph-capture-attribute-cta="consultations-pricing-single">{{ _('Start free') }}</a>
+        </div>
+      </div>
+
+      <div class="relative flex flex-col rounded-2xl bg-white p-8 shadow-md ring-2 ring-primary-600">
+        <span class="absolute -top-3 left-8 rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white">{{ _('Best value from four a year') }}</span>
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Unlimited, for a year') }}</h3>
+        <p class="mt-4"><span class="text-4xl font-bold tracking-tight text-gray-900">{{ price_annual }}</span> <span class="text-gray-600">{{ _('a year') }}</span></p>
+        <p class="mt-3 leading-relaxed text-gray-600">{{ _('Every consultation your organisation runs with its own audiences.') }}</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+          {% for item in [_('Everything in a single consultation'), _('No limit on consultations'), _('No limit on participants'), _('Cancel any time')] %}
+          <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        <div class="mt-auto pt-8">
+          <a href="{{ start_url }}" class="{{ btn_primary_md() }} w-full min-h-11" data-ph-capture-attribute-cta="consultations-pricing-annual">{{ _('Start free') }}</a>
+        </div>
+      </div>
+
+      <div class="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('Facilitated') }}</h3>
+        <p class="mt-4"><span class="text-sm text-gray-600">{{ _('from') }}</span> <span class="text-4xl font-bold tracking-tight text-gray-900">£2,500</span></p>
+        <p class="mt-3 leading-relaxed text-gray-600">{{ _('We design it, run it and present the findings with you. For public bodies and larger programmes.') }}</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+          {% for item in [_('Scoping and statement design'), _('Multi-phase and multi-group work'), _('Findings presented to your team')] %}
+          <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        <div class="mt-auto pt-8">
+          <a href="{{ url_for('main.consultations') }}" class="{{ btn_secondary_md() }} w-full min-h-11" data-ph-capture-attribute-cta="consultations-pricing-facilitated">{{ _('See facilitated consultations') }}</a>
+        </div>
+      </div>
+    </div>
+    <p class="mt-8 text-center text-sm text-gray-500">{{ _('Prices exclude VAT. The annual plan is for one organisation and its own audiences.') }}</p>
+  </div>
+</section>
+
+{# ── Trust ────────────────────────────────────────────────────────────── #}
+<section class="bg-white py-16 sm:py-20" aria-labelledby="trust-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 id="trust-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Built so people answer honestly') }}</h2>
+    <dl class="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      {% for title, text in [
+        (_('Anonymous'), _('No accounts and no names. You see results, never who answered what.')),
+        (_('Link-only'), _('Never listed or searchable. Replace the link at any time and the old one stops working.')),
+        (_('No trackers'), _('The page participants see carries no analytics or advertising scripts.')),
+        (_('Honest about limits'), _('Every report says who took part, how many, and what the results do not show.')),
+      ] %}
+      <div>
+        <dt class="text-lg font-semibold text-gray-900">{{ title }}</dt>
+        <dd class="mt-2 leading-relaxed text-gray-600">{{ text }}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+    <p class="mt-8 text-sm text-gray-600">
+      <a href="{{ url_for('main.security') }}" class="{{ link_primary() }}">{{ _('Security and data protection') }}</a>
+      <span class="text-gray-400">·</span>
+      <a href="{{ url_for('help.consultations') }}" class="{{ link_primary() }}">{{ _('The complete guide') }}</a>
+    </p>
+  </div>
+</section>
+
+{# ── FAQ ──────────────────────────────────────────────────────────────── #}
+<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="faq-heading">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <h2 id="faq-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Questions') }}</h2>
+    <div class="mt-8 space-y-3">
+      {% for question, answer in faqs %}
+      <details class="group rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary class="flex cursor-pointer items-center justify-between gap-4 p-5 text-base font-semibold text-gray-900 marker:content-none">
+          {{ question }}
+          <svg class="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180 motion-reduce:transition-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <p class="px-5 pb-5 leading-relaxed text-gray-600">{{ answer }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ── Final call to action ─────────────────────────────────────────────── #}
+<section class="bg-primary-600 py-14" aria-labelledby="cta-heading">
+  <div class="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+    <h2 id="cta-heading" class="text-3xl font-bold tracking-tight text-white">{{ _('Have your statements drafted in the next five minutes') }}</h2>
+    <p class="mt-3 text-lg text-blue-100">{{ _('Write your question, see the statements, and decide then. It costs nothing until you go live.') }}</p>
+    <a href="{{ start_url }}" class="mt-8 inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-6 py-3.5 text-base font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600" data-ph-capture-attribute-cta="consultations-final-start">{{ _('Start free') }}</a>
+  </div>
+</section>
+{% from "components/_offers.html" import offers %}
+{{ offers(current='self_serve') }}
+{% endblock %}

@@ -243,7 +243,7 @@
         {{ _('How it works') }}
       </div>
       <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-        {{ _('One iframe. Three layers of insight.') }}
+        {{ _('One iframe. Three things you get.') }}
       </h2>
       <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
         {{ _('Paste a single embed into your article. We handle everything &mdash; from generating balanced statements to surfacing where your audience agrees.')|safe }}
@@ -302,7 +302,7 @@
         {{ _('What your readers will experience') }}
       </h2>
       <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-        {{ _('Explore a live discussion on climate action. Vote on statements, then see how the consensus analysis reveals opinion groups, areas of agreement, and bridge ideas.') }}
+        {{ _('Explore a live discussion on climate action. Vote on statements, then see the analysis: areas of agreement, points of division and bridge ideas.') }}
       </p>
     </div>
 
@@ -325,7 +325,7 @@
         <div class="bg-gray-50 rounded-lg border border-gray-100 p-4 mb-4">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{{ _('Demo discussion') }}</p>
           <p class="text-sm font-medium text-gray-900">{{ _('Climate Action: Finding Common Ground') }}</p>
-          <p class="text-xs text-gray-500 mt-1">{{ _('20 statements &middot; 400+ votes &middot; Multiple opinion groups')|safe }}</p>
+          <p class="text-xs text-gray-500 mt-1">{{ _('20 statements &middot; 400+ votes &middot; Live results')|safe }}</p>
         </div>
         <a href="{{ help_demo.discussion_url if help_demo else url_for('discussions.news_feed') }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors">
           {{ _('View Live Discussion') }}
@@ -344,7 +344,7 @@
           </div>
           <div>
             <h3 class="text-lg font-semibold text-gray-900">{{ _('The Consensus Analysis') }}</h3>
-            <p class="text-sm text-gray-500">{{ _('The insight you can cite and reference') }}</p>
+            <p class="text-sm text-gray-500">{{ _('Results you can cite') }}</p>
           </div>
         </div>
         <p class="text-sm text-gray-600 mb-4">
@@ -355,7 +355,7 @@
           <ul class="space-y-1.5 text-sm text-gray-700">
             <li class="flex items-start">
               <svg class="w-4 h-4 text-purple-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-              {{ _('Opinion groups based on voting patterns') }}
+              {{ _('Opinion groups, shown when the votes support them') }}
             </li>
             <li class="flex items-start">
               <svg class="w-4 h-4 text-purple-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -381,7 +381,7 @@
     </div>
 
     <p class="text-center text-sm text-gray-500 mt-6">
-      {{ _('This is a live discussion with real data. Vote on 5 statements to unlock the full consensus analysis.') }}
+      {{ _('This is a live discussion with real data. Vote on 5 statements to see the full analysis.') }}
     </p>
   </div>
 </div>
@@ -393,7 +393,7 @@
         {{ _('Two ways to embed') }}
       </div>
       <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-        {{ _('Pilot manually or integrate at scale') }}
+        {{ _('Pilot by hand or integrate through the API') }}
       </h2>
       <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
         {{ _('Use the embed generator for quick starts and one-off embeds. For production, create discussions via API and render embeds automatically from your CMS.') }}
@@ -417,7 +417,7 @@
         </div>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('At scale (programmatic)') }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ _('Through the API') }}</h3>
         <p class="text-sm text-gray-600 mb-4">
           {{ _('Best for large publishers. Your CMS requests a discussion ID once, then reuses it forever.') }}
         </p>
@@ -582,7 +582,7 @@
             <svg class="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            {{ _('Zero moderation &mdash; we generate and manage all statements')|safe }}
+            {{ _('Low moderation &mdash; statements are drafted for you and readers vote instead of writing comments')|safe }}
           </li>
           <li class="flex items-start">
             <svg class="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
@@ -607,7 +607,7 @@
         {{ _('Plans that scale with your audience') }}
       </h2>
       <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-        {{ _('Start free. Pay only when you go live. Every plan includes the full API, embed generator, and zero moderation overhead.') }}
+        {{ _('Start free. Pay only when you go live. Every plan includes the full API and the embed generator.') }}
       </p>
     </div>
 
@@ -702,7 +702,7 @@
           </li>
           <li class="flex items-start">
             <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            {{ _('Custom embed themes &amp; branding')|safe }}
+            {{ _('Custom embed themes, colours and fonts') }}
           </li>
           <li class="flex items-start">
             <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -751,7 +751,7 @@
     </div>
 
     <p class="text-center text-sm text-gray-500 mt-6">
-      {{ _('All paid plans include a 14-day free trial. Prices exclude VAT.') }}
+      {{ _('Prices exclude VAT.') }}
     </p>
 
     <!-- ROI Calculator -->
@@ -961,7 +961,7 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
         </div>
         <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ _('Broader participation') }}</h3>
         <p class="text-sm text-gray-600">
-          {{ _('More embeds across more publications means more voices are heard &mdash; not just the loudest ones in a comment section.')|safe }}
+          {{ _('More embeds across more publications means more readers are heard, including those who never post a comment.')|safe }}
         </p>
       </div>
       <div class="text-center">
@@ -1028,9 +1028,9 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
         </p>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="font-semibold text-gray-900 mb-2">{{ _('Can I customize the embed appearance?') }}</h3>
+        <h3 class="font-semibold text-gray-900 mb-2">{{ _('Can I customise the embed appearance?') }}</h3>
         <p class="text-sm text-gray-600">
-          {{ _('Yes. Choose from preset themes or set custom primary/background colors and fonts.') }}
+          {{ _('Yes. Choose from preset themes or set custom primary/background colours and fonts.') }}
           {{ _('See') }}
           <a href="{{ url_for('partner.api_docs') }}#embed-url-parameters" class="text-primary-600 hover:underline">{{ _('embed parameters') }}</a>
           {{ _('in the API docs.') }}
@@ -1045,7 +1045,7 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <h3 class="font-semibold text-gray-900 mb-2">{{ _('Do readers need to create an account?') }}</h3>
         <p class="text-sm text-gray-600">
-          {{ _('No. Readers can vote anonymously directly in the embed. Optional sign-in unlocks features like submitting statements and viewing personal voting history on the full Society Speaks site.') }}
+          {{ _('No. Readers can vote anonymously directly in the embed. Signing in is optional and adds features such as submitting statements and seeing your own voting history on the full Society Speaks site.') }}
         </p>
       </div>
     </div>
@@ -1071,4 +1071,6 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
     </div>
   </div>
 </div>
+{% from "components/_offers.html" import offers %}
+{{ offers(current='publishers') }}
 {% endblock %}

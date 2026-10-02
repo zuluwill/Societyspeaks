@@ -285,7 +285,7 @@
                data-journey-target="{{ journey_pct }}%"></div>
         </div>
         <p class="text-xs text-primary-200/95 mt-3 max-w-xl leading-relaxed">
-          {{ _('Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is gated.', mins=jp.theme_minutes_display_hint) }}
+          {{ _('Each theme is quick (~%(mins)d minutes). Take breaks any time — nothing is gated.', mins=jp.theme_minutes_display_hint) }}
         </p>
       </div>
 
@@ -388,7 +388,7 @@
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ _('Want reminders to finish this journey?') }}</p>
-        <p class="text-xs text-gray-500 mb-3">{{ _('Short email nudges — pick cadence and time. One tap unsubscribe anytime.') }}</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _('Short email nudges — pick cadence and time. One tap unsubscribe any time.') }}</p>
 
         <div id="journey-reminder-form" class="space-y-3">
           {% if not current_user.is_authenticated %}
@@ -431,7 +431,7 @@
                   class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ _('Turn on reminders') }}
           </button>
-          <p class="text-xs text-gray-400 leading-relaxed">{{ _('We only send journey nudges. Unsubscribe anytime from our emails.') }}</p>
+          <p class="text-xs text-gray-400 leading-relaxed">{{ _('We only send journey nudges. Unsubscribe any time from our emails.') }}</p>
         </div>
         <p id="journey-reminder-msg" class="text-xs text-gray-500 mt-2 hidden" role="status" aria-live="polite"></p>
       </div>

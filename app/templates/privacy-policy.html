@@ -20,7 +20,7 @@
 
     <div class="space-y-4">
         <p>{{ _('<strong>Data Controller:</strong> William Roberts Coaching and Advisory Ltd')|safe }}</p>
-        <p>{{ _('<strong>For data privacy inquiries:</strong> info@societyspeaks.io')|safe }}</p>
+        <p>{{ _('<strong>For data privacy enquiries:</strong> info@societyspeaks.io')|safe }}</p>
         <p>{{ _('<strong>For account security:</strong> security@societyspeaks.io')|safe }}</p>
     </div>
 
@@ -127,7 +127,7 @@
         <li>{{ _('Process your payments and subscriptions') }}</li>
         <li>{{ _('Send service updates and notifications') }}</li>
         <li>{{ _('Provide customer support') }}</li>
-        <li>{{ _('Analyze usage patterns and improve user experience') }}</li>
+        <li>{{ _('Analyse usage patterns and improve user experience') }}</li>
         <li>{{ _('Generate insights from community discussions') }}</li>
         <li>{{ _('Ensure platform security and prevent abuse') }}</li>
         <li>{{ _('Comply with legal obligations') }}</li>
@@ -189,7 +189,7 @@
             <tr>
                 <td class="border px-4 py-2">PostHog</td>
                 <td class="border px-4 py-2">{{ _('EU') }}</td>
-                <td class="border px-4 py-2">{{ _('Product analytics') }}</td>
+                <td class="border px-4 py-2">{{ _('Product analytics: pages viewed and actions taken, such as that a vote was cast. Not how you voted.') }}</td>
             </tr>
             <tr>
                 <td class="border px-4 py-2">Google (Tag Manager / Analytics)</td>
@@ -204,7 +204,12 @@
             <tr>
                 <td class="border px-4 py-2">Anthropic</td>
                 <td class="border px-4 py-2">{{ _('USA') }}</td>
-                <td class="border px-4 py-2">{{ _('Translation and content generation (public statement text only; no account identifiers)') }}</td>
+                <td class="border px-4 py-2">{{ _('Translation and content generation. For public discussions: statement text. For a consultation: the organiser’s question, background and statements, to draft statements, screen suggestions and write the report narrative. No account identifiers and no individual votes.') }}</td>
+            </tr>
+            <tr>
+                <td class="border px-4 py-2">OpenAI</td>
+                <td class="border px-4 py-2">{{ _('USA') }}</td>
+                <td class="border px-4 py-2">{{ _('Content generation and analysis for news topics, public discussion statements and briefings. Not used for consultations. No account identifiers.') }}</td>
             </tr>
             <tr>
                 <td class="border px-4 py-2">CookieYes</td>
@@ -233,7 +238,7 @@
 
     <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('5. International Data Transfers') }}</h2>
 
-    <p>{{ _('Your data is stored at rest in the United Kingdom (database, uploaded files and backups) and processed by our application in the European Economic Area (Germany). Some of our service providers — for example Stripe, Resend, Google and Anthropic — process limited data in the United States, as set out in the subprocessor table above.') }}</p>
+    <p>{{ _('Your data is stored at rest in the United Kingdom (database, uploaded files and backups) and processed by our application in the European Economic Area (Germany). Some of our service providers — for example Stripe, Resend, Google, Anthropic and OpenAI — process limited data in the United States, as set out in the subprocessor table above.') }}</p>
 
     <p>{{ _('Where data is transferred outside the UK or EEA, we ensure appropriate safeguards are in place through:') }}</p>
     <ul class="list-disc pl-6 space-y-2">
@@ -260,7 +265,7 @@
 
         <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">{{ _('7. Data Security') }}</h2>
 
-        <p>{{ _('We implement appropriate technical and organizational measures to protect your personal data, including:') }}</p>
+        <p>{{ _('We implement appropriate technical and organisational measures to protect your personal data, including:') }}</p>
         <ul class="list-disc pl-6 space-y-2">
             <li>{{ _('Encryption of data in transit and at rest') }}</li>
             <li>{{ _('Access controls and authentication') }}</li>

@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_lg, link_primary %}
+{% from "consultations/_macros.html" import field_errors, input_classes with context %}
+{% from "components/bot_protection.html" import honeypot_field %}
+
+{% block title %}{{ _('Start a consultation') }} | Society Speaks{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block canonical %}{{ url_for('consultations.landing', _external=True) }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="mx-auto grid max-w-5xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-5 lg:px-8">
+    <div class="lg:col-span-3">
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Start your consultation') }}</h1>
+      <p class="mt-3 text-lg text-gray-600">{{ _('Free to set up. You only pay when you are ready to go live.') }}</p>
+
+      <form method="post" action="{{ url_for('consultations.start') }}" class="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm" novalidate>
+        {{ form.hidden_tag() }}
+        {{ honeypot_field() }}
+        <label for="{{ form.email.id }}" class="block text-sm font-medium text-gray-700">{{ form.email.label.text }}</label>
+        {{ form.email(class_=input_classes() ~ ' mt-1', type='email', autocomplete='email', inputmode='email', autofocus=true, required=true, placeholder=_('you@organisation.org')) }}
+        {{ field_errors(form.email) }}
+        <p class="mt-2 text-sm text-gray-500">{{ _('We will email you a link to sign in. No password to remember.') }}</p>
+        <button type="submit" class="{{ btn_primary_lg() }} mt-5 w-full min-h-11" data-loading-text="{{ _('Sending your link…') }}">{{ _('Email me a sign-in link') }}</button>
+      </form>
+      <p class="mt-4 text-sm text-gray-600">
+        {{ _('Already have an account?') }}
+        <a href="{{ url_for('auth.login', next=url_for('consultations.new')) }}" class="{{ link_primary() }}">{{ _('Sign in') }}</a>
+      </p>
+    </div>
+
+    <aside class="lg:col-span-2" aria-labelledby="start-next">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 id="start-next" class="text-sm font-semibold uppercase tracking-wide text-gray-500">{{ _('What happens next') }}</h2>
+        <ol class="mt-4 space-y-4">
+          {% for title, text in [
+            (_('Ask your question'), _('Tell us what you want to know and who you are asking.')),
+            (_('Approve the statements'), _('We draft a balanced set for people to vote on. You edit and approve them.')),
+            (_('Share a link or QR code'), _('Your audience answers on their phones in about two minutes. No logins.')),
+            (_('Get your report'), _('See what they agree on, what they reject, where they are unsure and where they are split.')),
+          ] %}
+          <li class="flex gap-3">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">{{ loop.index }}</span>
+            <span>
+              <span class="block text-sm font-semibold text-gray-900">{{ title }}</span>
+              <span class="block text-sm text-gray-600">{{ text }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

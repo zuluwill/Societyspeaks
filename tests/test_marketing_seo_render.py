@@ -185,7 +185,7 @@ def test_consultations_page_seo_and_pricing(client, db):
     """Civic offer page: SEO blocks, locked pricing ladder, FAQ JSON-LD, free-for-citizens line."""
     html = _get(client, db, '/consultations')
     m = re.search(r'<title>(.*?)</title>', html, re.S)
-    assert m and 'Run a Consultation' in m.group(1)
+    assert m and 'Facilitated consultations for public bodies' in m.group(1)
     assert html.count('rel="canonical"') == 1
     # Locked civic ladder (8 Jul 2026) — one set of numbers everywhere
     assert '£2,500' in html

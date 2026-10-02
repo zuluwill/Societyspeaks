@@ -1,0 +1,137 @@
+{# templates/help/consultations.html #}
+{% extends "layout.html" %}
+{% from "help/macros.html" import help_page_header, help_section_card %}
+{% from "components/ui_tokens.html" import btn_primary_md, link_primary %}
+
+{% block title %}{{ _('Running a consultation — Society Speaks Help') }}{% endblock %}
+{% block meta_description %}{{ _('How to run a consultation with your own audience on Society Speaks: writing the question, sharing it, reading the results, privacy, billing and what to do when something goes wrong.') }}{% endblock %}
+{% block canonical %}{{ url_for('help.consultations', _external=True) }}{% endblock %}
+{% block og_title %}{{ _('Running a consultation — Society Speaks Help') }}{% endblock %}
+{% block og_description %}{{ _('Ask your audience one question, share a link, and get a report: the complete guide.') }}{% endblock %}
+{% block twitter_title %}{{ _('Running a consultation — Society Speaks Help') }}{% endblock %}
+{% block twitter_description %}{{ _('Ask your audience one question, share a link, and get a report: the complete guide.') }}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50">
+<div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+  {{ help_page_header(_('Running a consultation'), _('Ask your own audience one question, and get a report that shows where they agree, disagree, are unsure or are split.')) }}
+
+  <nav aria-label="{{ _('On this page') }}" class="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <p class="text-sm font-semibold text-gray-900">{{ _('On this page') }}</p>
+    <ul class="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+      {% for anchor, label in [
+        ('question', _('Writing your question')),
+        ('statements', _('Getting the statements right')),
+        ('sharing', _('Sharing it')),
+        ('results', _('How results are called')),
+        ('turnout', _('If few people take part')),
+        ('suggestions', _('Statements from your audience')),
+        ('report', _('Your report')),
+        ('privacy', _('Privacy and who can take part')),
+        ('billing', _('Paying, refunds and cancelling')),
+        ('problems', _('When something goes wrong')),
+      ] %}
+      <li><a href="#{{ anchor }}" class="{{ link_primary() }}">{{ label }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <div id="question">
+  {% call help_section_card(_('Writing your question')) %}
+    <p class="text-gray-700">{{ _('Ask one thing, the way you would ask it out loud. “How should we use next year’s surplus?” works. “What do you think about our strategy, culture and communications?” is three consultations.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('The background box matters more than it looks. Paste the decision you face, the options being considered and anything already ruled out. It is used only to draft your statements; participants never see it.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="statements">
+  {% call help_section_card(_('Getting the statements right')) %}
+    <p class="text-gray-700">{{ _('Participants do not answer your question directly. They answer Agree, Disagree or Unsure to a set of short statements about it. We draft the set; you edit it and approve it.') }}</p>
+    <ul class="mt-3 list-disc space-y-2 pl-5 text-gray-700">
+      <li>{{ _('One idea each. If a statement joins two points with “and”, split it.') }}</li>
+      <li>{{ _('Fair to both sides. Give people who favour a change something to agree with, and give sceptics something to agree with too.') }}</li>
+      <li>{{ _('Never a question, and never about a named person.') }}</li>
+      <li>{{ _('Ten to fifteen is about right. You need at least %(n)d to go live.', n=minimum_statements) }}</li>
+    </ul>
+    <p class="mt-3 text-gray-700">{{ _('Once voting starts a statement cannot be reworded, because everyone must answer the same thing. You can withdraw a statement (its votes stop counting) or add a new one.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="sharing">
+  {% call help_section_card(_('Sharing it')) %}
+    <p class="text-gray-700">{{ _('You get a link, a QR code and an invitation to paste into an email or message. In a room, use “Show full screen” and people scan the code with their phone camera.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('One reminder a few days in usually brings in as many people again. The share page has one ready to copy.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="results">
+  {% call help_section_card(_('How results are called')) %}
+    <p class="text-gray-700">{{ _('Each statement gets one result, worked out from the votes on that statement alone. Percentages are of everyone who voted on it, including those who answered “unsure”.') }}</p>
+    <dl class="mt-4 space-y-3 text-gray-700">
+      <div><dt class="font-semibold text-gray-900">{{ _('Agree, or disagree') }}</dt><dd>{{ _('We can be confident that more than half of participants took that view, allowing for how many voted. Eighteen out of thirty is not enough; twenty-four out of thirty is.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('Unsure') }}</dt><dd>{{ _('“Unsure” was the most common answer, by a clear margin.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('Split') }}</dt><dd>{{ _('At least 35%% agreed and at least 35%% disagreed, and the two were within 15 points of each other. Being divided is different from not knowing.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('No clear result') }}</dt><dd>{{ _('The votes lean one way, but not clearly enough to call. The report says which way.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('Too few votes to say') }}</dt><dd>{{ _('Fewer than %(n)d people voted on the statement. You see the counts, and no conclusion is drawn.', n=min_votes) }}</dd></div>
+    </dl>
+    <p class="mt-4 text-gray-700">{{ _('The results describe the people who took part. They are not a poll of everyone you invited, or of the public, and the report says so.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="turnout">
+  {% call help_section_card(_('If few people take part')) %}
+    <p class="text-gray-700">{{ _('Clear results usually need %(n)d or more participants. With fewer you still get a report: it shows the counts and explains why few results are called.', n=recommended) }}</p>
+    <p class="mt-3 text-gray-700">{{ _('If turnout is low the day before closing, we email you a reminder to send and a link to keep the consultation open for longer. You can also reopen a closed consultation from its dashboard: the same link works again.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="suggestions">
+  {% call help_section_card(_('Statements from your audience')) %}
+    <p class="text-gray-700">{{ _('If you switch this on, people who finish can suggest a statement. Nothing they suggest is shown to anyone until you approve it.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('Each suggestion is screened first. Abuse, and anything that names an individual, is rejected automatically. The rest waits in your queue with a note if screening was unsure, and we email you. You approve or reject; you cannot reword someone else’s statement.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="report">
+  {% call help_section_card(_('Your report')) %}
+    <p class="text-gray-700">{{ _('The report is built when voting closes, and we email you. Only you can see it until you create a link to share it. You can stop sharing at any time.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('Every figure in it is counted directly from the votes. The headline and the suggested next questions are written by AI from those results and checked by software so that they add no figures of their own. Suggested questions are labelled as suggestions: the report never tells you what you ought to do.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('While voting is open you can build an interim report at any time. It is marked as interim.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="privacy">
+  {% call help_section_card(_('Privacy and who can take part')) %}
+    <p class="text-gray-700">{{ _('Only people with your link can take part, and the consultation is never listed or searchable on Society Speaks. Anyone who has the link can forward it. If it goes somewhere it should not, create a new link from the share page: the old one stops working at once.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('Participants need no account. Their answers are stored against a random ID on their device, not a name or email, and that ID is different for every consultation. You see results, never who answered what. The participant page carries no analytics or advertising scripts.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('Your question, background and statements are sent to our AI provider to draft statements and write the report narrative. See our security page for the full list of providers.') }}
+      <a href="{{ url_for('main.security') }}" class="{{ link_primary() }}">{{ _('Security and data protection') }}</a></p>
+    <p class="mt-3 text-gray-700">{{ _('Deleting a consultation removes its statements, every vote and its reports for good.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="billing">
+  {% call help_section_card(_('Paying, refunds and cancelling')) %}
+    <p class="text-gray-700">{{ _('Setting up is free. You pay when you take a consultation live: once for a single consultation, or once a year for unlimited consultations. There is no charge per participant. Prices exclude VAT.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('A single consultation you have paid for but not yet taken live can be refunded in full from “Plan and billing”, with one click. The annual plan can be cancelled there at any time and runs to the end of the year you have paid for. Invoices are in the same place.') }}</p>
+    <p class="mt-3 text-gray-700">{{ _('The annual plan covers one organisation consulting its own audiences. It does not cover running consultations on behalf of clients.') }}</p>
+  {% endcall %}
+  </div>
+
+  <div id="problems">
+  {% call help_section_card(_('When something goes wrong')) %}
+    <dl class="space-y-4 text-gray-700">
+      <div><dt class="font-semibold text-gray-900">{{ _('The statements were not drafted') }}</dt><dd>{{ _('Drafting retries by itself. If it still fails, the page says so: press “Try drafting again”, or write the statements yourself. Nothing you typed is lost.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('The report is taking a while') }}</dt><dd>{{ _('It normally takes under a minute. The page updates by itself and we email you. If it could not be built, the page offers “Try again”; your results are always on the dashboard and in the CSV download.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('A participant says the link does not work') }}</dt><dd>{{ _('Check the consultation is live and that you have not created a new link since you shared it. A closed consultation shows participants a “voting has closed” page.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('I paid but the consultation is not live') }}</dt><dd>{{ _('Open “Plan and billing”. Your payment appears there within a minute; then press “Go live” on the consultation. If you would rather not go ahead, refund it from the same page.') }}</dd></div>
+      <div><dt class="font-semibold text-gray-900">{{ _('I am not getting your emails') }}</dt><dd>{{ _('Check your spam folder and add societyspeaks.io to your safe senders. Everything in the emails is also on your dashboard.') }}</dd></div>
+    </dl>
+  {% endcall %}
+  </div>
+
+  <div class="mt-8 text-center">
+    <a href="{{ url_for('consultations.start') }}" class="{{ btn_primary_md() }}">{{ _('Start a consultation') }}</a>
+  </div>
+</div>
+</div>
+{% endblock %}

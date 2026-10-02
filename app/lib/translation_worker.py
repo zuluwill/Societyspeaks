@@ -73,10 +73,12 @@ def _language_codes_for_run() -> list[str]:
 
 def _untranslated_statements(language_code: str, limit: int) -> list:
     from sqlalchemy import and_
-    from app.models import DiscussionSourceArticle, Statement, StatementTranslation
+    from app.models import Discussion, DiscussionSourceArticle, Statement, StatementTranslation
 
     q = (
         Statement.query
+        .join(Discussion, Discussion.id == Statement.discussion_id)
+        .filter(Discussion.publicly_listable())
         .outerjoin(
             StatementTranslation,
             and_(
@@ -113,6 +115,7 @@ def _untranslated_discussions(language_code: str, limit: int) -> list:
         )
         .filter(
             Discussion.has_native_statements.is_(True),
+            Discussion.publicly_listable(),
             DiscussionTranslation.id.is_(None),
         )
     )

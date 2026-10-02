@@ -1,0 +1,362 @@
+<!doctype html>
+{#
+  The participant's page. Standalone on purpose: no site header, no analytics,
+  no third-party scripts and no server session. The first statement is in the
+  HTML, so there is something to answer the moment the page paints.
+#}
+<html lang="{{ current_lang|default('en') }}" dir="{{ (supported_languages|default({})).get(current_lang|default('en'), {}).get('dir', 'ltr') }}" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="{{ 'noindex, follow' if demo else 'noindex, nofollow' }}">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#1d4ed8">
+  <title>{{ consultation.question }} | {{ consultation.organisation_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}?v={{ css_version }}">
+</head>
+<body class="min-h-full bg-gray-50 text-gray-900 antialiased">
+  <a href="#statement" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow">{{ _('Skip to the statement') }}</a>
+
+  {% if demo %}
+  <div class="bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-900" role="status">
+    {{ _('Demonstration. This is what your audience would see, with a made-up question. Nothing you answer is recorded.') }}
+    <a href="{{ url_for('consultations.landing') }}" class="ml-1 font-semibold underline">{{ _('Back to the overview') }}</a>
+  </div>
+  {% elif preview %}
+  <div class="bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-900" role="status">
+    {{ _('Preview. This is what participants will see. Your answers here are not recorded.') }}
+  </div>
+  {% endif %}
+
+  <header class="bg-primary-700 text-white">
+    <div class="mx-auto max-w-xl px-5 py-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-blue-100">{{ consultation.organisation_name }}</p>
+      <h1 class="mt-1 text-xl font-bold leading-snug sm:text-2xl">{{ consultation.question }}</h1>
+      <p class="mt-2 text-sm text-blue-100">
+        {{ ngettext('About %(num)d minute', 'About %(num)d minutes', minutes) }} · {{ _('Anonymous') }} · {{ ngettext('%(num)d statement', '%(num)d statements', statements|length) }}
+      </p>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-xl px-5 pb-16 pt-6">
+
+    {# ── Voting ─────────────────────────────────────────────────────────── #}
+    <section id="vote-view" aria-labelledby="progress-label">
+      <div class="flex items-center justify-between text-sm text-gray-600">
+        <p id="progress-label" role="status" aria-live="polite">{{ _('Statement %(current)s of %(total)s', current=1, total=statements|length) }}</p>
+        <button type="button" id="back-button" class="hidden min-h-11 rounded-lg px-2 font-medium text-primary-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Back') }}</button>
+      </div>
+      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200" aria-hidden="true">
+        <div id="progress-bar" class="h-2 rounded-full bg-primary-600 transition-all duration-300 motion-reduce:transition-none" style="width: 0%"></div>
+      </div>
+
+      <div class="mt-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <p id="statement" tabindex="-1" class="min-h-[6rem] text-xl font-semibold leading-snug text-gray-900 focus:outline-none sm:text-2xl">{{ statements[0].content if statements else '' }}</p>
+      </div>
+
+      <fieldset class="mt-5 border-0 p-0">
+        <legend class="sr-only">{{ _('Your answer to this statement') }}</legend>
+        <div class="grid grid-cols-1 gap-3">
+          <button type="button" class="vote-btn vote-btn-agree" data-vote="1" aria-pressed="false"><span class="vote-label">{{ _('Agree') }}</span></button>
+          <button type="button" class="vote-btn vote-btn-disagree" data-vote="-1" aria-pressed="false"><span class="vote-label">{{ _('Disagree') }}</span></button>
+          <button type="button" class="vote-btn vote-btn-unsure" data-vote="0" aria-pressed="false"><span class="vote-label">{{ _('Unsure') }}</span></button>
+        </div>
+      </fieldset>
+
+      <div class="mt-4 text-center">
+        <button type="button" id="skip-button" class="min-h-11 rounded-lg px-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Skip this one') }}</button>
+      </div>
+
+      <p id="save-problem" class="mt-4 hidden rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+        {{ _('We could not save your last answer. Check your connection.') }}
+        <button type="button" id="retry-button" class="ml-1 font-semibold underline">{{ _('Try again') }}</button>
+      </p>
+    </section>
+
+    {# ── Finished ───────────────────────────────────────────────────────── #}
+    <section id="done-view" class="hidden" aria-labelledby="done-heading">
+      <div class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700" aria-hidden="true">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        {% if demo %}
+        <h2 id="done-heading" tabindex="-1" class="mt-4 text-xl font-bold text-gray-900 focus:outline-none">{{ _('That is all your audience has to do.') }}</h2>
+        <p class="mt-2 text-gray-600">{{ _('No login, no app, and nothing recorded here. Now see what the organiser gets back.') }}</p>
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <a href="{{ url_for('consultations.example_report') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2">{{ _('See the report this produces') }}</a>
+          <a href="{{ url_for('consultations.start') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-5 text-sm font-semibold text-primary-700 shadow-sm ring-1 ring-inset ring-primary-200 hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Start your own, free') }}</a>
+        </div>
+        <button type="button" id="review-button" class="mt-3 min-h-11 rounded-lg px-4 text-sm font-medium text-gray-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Go through it again') }}</button>
+        {% else %}
+        <h2 id="done-heading" tabindex="-1" class="mt-4 text-xl font-bold text-gray-900 focus:outline-none">{{ _('Thank you. Your answers are in.') }}</h2>
+        <p class="mt-2 text-gray-600">{{ _('%(organisation)s will see the overall results, never who answered what.', organisation=consultation.organisation_name) }}</p>
+        <button type="button" id="review-button" class="mt-4 min-h-11 rounded-lg px-4 text-sm font-medium text-primary-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Change an answer') }}</button>
+        {% endif %}
+      </div>
+
+      {% if consultation.show_results_to_participants and not preview %}
+      <div id="results-panel" class="mt-6 hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 class="text-base font-semibold text-gray-900">{{ _('How others have answered so far') }}</h3>
+        <ul id="results-list" class="mt-3 divide-y divide-gray-100"></ul>
+      </div>
+      {% endif %}
+
+      {% if suggestions_enabled %}
+      <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 class="text-base font-semibold text-gray-900">{{ _('Is something missing?') }}</h3>
+        <p class="mt-1 text-sm text-gray-600">{{ _('Suggest a statement for others to vote on. Keep it to one idea. The organiser reviews every suggestion before it is shown.') }}</p>
+        <form id="suggest-form" class="mt-3" novalidate>
+          <label for="suggest-text" class="sr-only">{{ _('Your statement') }}</label>
+          <textarea id="suggest-text" rows="3" maxlength="300" class="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-base shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="{{ _('We should…') }}"></textarea>
+          <input type="text" name="website_url" id="suggest-hp" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+          <p id="suggest-message" class="mt-2 hidden text-sm" role="status"></p>
+          <button type="submit" class="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg bg-primary-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2">{{ _('Send suggestion') }}</button>
+        </form>
+      </div>
+      {% endif %}
+
+    </section>
+
+    <footer class="mt-10 text-center text-xs leading-relaxed text-gray-500">
+      {% if not demo %}<p>{{ _('Your answers are stored against a random ID on this device, not your name or email.') }}</p>{% endif %}
+      <p class="mt-1">{{ _('Made with') }} <a href="{{ url_for('consultations.landing') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a></p>
+    </footer>
+  </main>
+
+  <script nonce="{{ csp_nonce() }}" id="consultation-data" type="application/json">
+  {
+    "statements": {{ statements|tojson }},
+    "votes": {{ votes|tojson }},
+    "preview": {{ preview|tojson }},
+    "voteUrl": {{ url_for('consultations.vote', token=consultation.access_token)|tojson }},
+    "suggestUrl": {{ url_for('consultations.suggest_statement', token=consultation.access_token)|tojson }},
+    "resultsUrl": {{ (url_for('consultations.participant_results', token=consultation.access_token) if consultation.show_results_to_participants and not preview else '')|tojson }},
+    "i18n": {
+      "progress": {{ gettext_js('Statement {current} of {total}')|tojson }},
+      "notEnough": {{ gettext_js('Not enough votes yet to show')|tojson }},
+      "share": {{ gettext_js('{agree} agree · {disagree} disagree · {unsure} unsure')|tojson }},
+      "suggestThanks": {{ gettext_js('Thank you. The organiser will review your suggestion.')|tojson }},
+      "suggestProblem": {{ gettext_js('We could not send that. Please try again.')|tojson }},
+      "suggestShort": {{ gettext_js('Write at least 10 characters.')|tojson }},
+      "cookieProblem": {{ gettext_js('Your answers cannot be saved because this browser is blocking cookies. Allow cookies for this page, then reload it.')|tojson }}
+    }
+  }
+  </script>
+  <script nonce="{{ csp_nonce() }}">
+  (function () {
+    'use strict';
+    var config = JSON.parse(document.getElementById('consultation-data').textContent);
+    var statements = config.statements;
+    var votes = config.votes;            // statementId (string) -> -1 | 0 | 1
+    var skipped = {};
+    var pending = [];                    // answers not yet saved
+    var saving = false;
+    var index = 0;
+
+    var voteView = document.getElementById('vote-view');
+    var doneView = document.getElementById('done-view');
+    var statementEl = document.getElementById('statement');
+    var progressLabel = document.getElementById('progress-label');
+    var progressBar = document.getElementById('progress-bar');
+    var backButton = document.getElementById('back-button');
+    var saveProblem = document.getElementById('save-problem');
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-vote]'));
+
+    function firstUnanswered() {
+      for (var i = 0; i < statements.length; i++) {
+        var id = String(statements[i].id);
+        if (!(id in votes) && !skipped[id]) return i;
+      }
+      return -1;
+    }
+
+    function render(moveFocus) {
+      var current = statements[index];
+      statementEl.textContent = current.content;
+      progressLabel.textContent = config.i18n.progress
+        .replace('{current}', index + 1).replace('{total}', statements.length);
+      progressBar.style.width = Math.round((index / statements.length) * 100) + '%';
+      backButton.classList.toggle('hidden', index === 0);
+      var mine = votes[String(current.id)];
+      buttons.forEach(function (button) {
+        var selected = mine !== undefined && String(mine) === button.dataset.vote;
+        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        if (selected) button.setAttribute('data-vote-selected', '1');
+        else button.removeAttribute('data-vote-selected');
+      });
+      if (moveFocus) statementEl.focus({ preventScroll: false });
+    }
+
+    function showDone() {
+      voteView.classList.add('hidden');
+      doneView.classList.remove('hidden');
+      progressBar.style.width = '100%';
+      document.getElementById('done-heading').focus();
+      loadResults();
+    }
+
+    function advance() {
+      var next = -1;
+      for (var i = index + 1; i < statements.length; i++) {
+        var id = String(statements[i].id);
+        if (!(id in votes) && !skipped[id]) { next = i; break; }
+      }
+      if (next === -1) next = firstUnanswered();
+      if (next === -1) { showDone(); return; }
+      index = next;
+      render(true);
+    }
+
+    function save() {
+      if (saving || !pending.length || config.preview) { if (config.preview) pending = []; return; }
+      saving = true;
+      var answer = pending[0];
+      fetch(config.voteUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(answer)
+      }).then(function (response) {
+        if (response.status === 409) { window.location.reload(); return; }
+        if (response.status === 400) {
+          // Retrying cannot help: the browser is not keeping the cookie that identifies this device.
+          saving = false;
+          saveProblem.textContent = config.i18n.cookieProblem;
+          saveProblem.classList.remove('hidden');
+          return;
+        }
+        if (response.status === 404) {
+          // A withdrawn statement is gone; drop that one answer and keep the rest.
+          // Any other 404 means the link itself no longer works, so the answer was not saved.
+          return response.json().then(function (data) {
+            if (data && data.error === 'not_found') {
+              pending.shift();
+              saving = false;
+              saveProblem.classList.add('hidden');
+              save();
+              return;
+            }
+            throw new Error('save failed');
+          }, function () { throw new Error('save failed'); });
+        }
+        if (!response.ok) throw new Error('save failed');
+        pending.shift();
+        saving = false;
+        saveProblem.classList.add('hidden');
+        save();
+      }).catch(function () {
+        saving = false;
+        answer.attempts = (answer.attempts || 0) + 1;
+        if (answer.attempts < 4) setTimeout(save, 800 * answer.attempts);
+        else saveProblem.classList.remove('hidden');
+      });
+    }
+
+    function answer(value) {
+      var current = statements[index];
+      votes[String(current.id)] = value;
+      delete skipped[String(current.id)];
+      pending.push({ statement_id: current.id, vote: value });
+      save();
+      advance();
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () { answer(parseInt(button.dataset.vote, 10)); });
+    });
+    document.getElementById('skip-button').addEventListener('click', function () {
+      skipped[String(statements[index].id)] = true;
+      advance();
+    });
+    backButton.addEventListener('click', function () {
+      if (index > 0) { index -= 1; render(true); }
+    });
+    document.getElementById('retry-button').addEventListener('click', function () {
+      pending.forEach(function (item) { item.attempts = 0; });
+      save();
+    });
+    document.getElementById('review-button').addEventListener('click', function () {
+      doneView.classList.add('hidden');
+      voteView.classList.remove('hidden');
+      index = 0;
+      render(true);
+    });
+    document.addEventListener('keydown', function (event) {
+      if (voteView.classList.contains('hidden')) return;
+      if (event.target.closest('textarea, input')) return;
+      var key = event.key.toLowerCase();
+      if (key === 'a' || key === '1') answer(1);
+      else if (key === 'd' || key === '2') answer(-1);
+      else if (key === 'u' || key === '3') answer(0);
+    });
+    // Warn before leaving with unsaved answers.
+    window.addEventListener('beforeunload', function (event) {
+      if (pending.length) { event.preventDefault(); event.returnValue = ''; }
+    });
+
+    function loadResults() {
+      var panel = document.getElementById('results-panel');
+      if (!panel || !config.resultsUrl) return;
+      fetch(config.resultsUrl, { credentials: 'same-origin' })
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (data) {
+          if (!data || !data.results || !data.results.length) return;
+          var list = document.getElementById('results-list');
+          list.textContent = '';
+          data.results.forEach(function (row) {
+            var item = document.createElement('li');
+            item.className = 'py-3';
+            var text = document.createElement('p');
+            text.className = 'text-sm font-medium text-gray-900';
+            text.textContent = row.content;
+            var detail = document.createElement('p');
+            detail.className = 'mt-1 text-sm text-gray-600';
+            detail.textContent = row.enough_votes
+              ? config.i18n.share
+                  .replace('{agree}', Math.round(row.agree_share * 100) + '%')
+                  .replace('{disagree}', Math.round(row.disagree_share * 100) + '%')
+                  .replace('{unsure}', Math.round(row.unsure_share * 100) + '%')
+              : config.i18n.notEnough;
+            item.appendChild(text);
+            item.appendChild(detail);
+            list.appendChild(item);
+          });
+          panel.classList.remove('hidden');
+        }).catch(function () { /* results are optional */ });
+    }
+
+    var suggestForm = document.getElementById('suggest-form');
+    if (suggestForm) {
+      suggestForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var field = document.getElementById('suggest-text');
+        var message = document.getElementById('suggest-message');
+        var content = field.value.trim();
+        function say(text, ok) {
+          message.textContent = text;
+          message.className = 'mt-2 text-sm ' + (ok ? 'text-emerald-700' : 'text-red-700');
+        }
+        if (content.length < 10) { say(config.i18n.suggestShort, false); return; }
+        fetch(config.suggestUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ content: content, website_url: document.getElementById('suggest-hp').value })
+        }).then(function (response) {
+          return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+        }).then(function (result) {
+          if (result.ok) { field.value = ''; say(config.i18n.suggestThanks, true); }
+          else say(result.data.message || config.i18n.suggestProblem, false);
+        }).catch(function () { say(config.i18n.suggestProblem, false); });
+      });
+    }
+
+    // Start where this person left off.
+    if (!statements.length) { showDone(); return; }
+    var start = firstUnanswered();
+    if (start === -1) { showDone(); }
+    else { index = start; render(false); }
+  })();
+  </script>
+</body>
+</html>

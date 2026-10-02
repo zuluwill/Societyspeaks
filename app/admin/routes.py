@@ -1,5 +1,5 @@
 # app/admin/routes.py
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, jsonify
+from flask import Blueprint, abort, render_template, redirect, url_for, request, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent, Programme, OrganizationMember, generate_unique_slug
@@ -718,6 +718,27 @@ def send_welcome_email(email, username, password):
         current_app.logger.error(f"Error sending admin welcome email: {e}")
 
 
+def _site_discussion_or_404(discussion_id):
+    """A discussion admins may manage. A customer's consultation is not one:
+    only its owner can see or change it."""
+    discussion = db.get_or_404(Discussion, discussion_id)
+    if discussion.link_only:
+        abort(404)
+    return discussion
+
+
+def _site_statement_or_404(statement_id):
+    statement = db.get_or_404(Statement, statement_id)
+    if statement.discussion is not None and statement.discussion.link_only:
+        abort(404)
+    return statement
+
+
+def _flag_is_on_site_statement(flag):
+    statement = flag.statement
+    return bool(statement) and not (statement.discussion is not None and statement.discussion.link_only)
+
+
 @admin_bp.route('/discussions/<int:discussion_id>/delete', methods=['POST'])
 @login_required
 @admin_required
@@ -730,7 +751,7 @@ def delete_discussion(discussion_id):
         BriefItem, DailyQuestion, DailyQuestionSelection
     )
     
-    discussion = db.get_or_404(Discussion, discussion_id)
+    discussion = _site_discussion_or_404(discussion_id)
     discussion_title = discussion.title
     
     try:
@@ -787,7 +808,7 @@ def delete_discussion(discussion_id):
 @login_required
 @admin_required
 def toggle_discussion_closed(discussion_id):
-    discussion = db.get_or_404(Discussion, discussion_id)
+    discussion = _site_discussion_or_404(discussion_id)
     discussion.is_closed = not discussion.is_closed
     db.session.commit()
     status_label = 'closed' if discussion.is_closed else 'reopened'
@@ -804,9 +825,10 @@ def list_discussions():
     status_filter = request.args.get('status', '').strip().lower()
     search_query = request.args.get('q', '').strip()[:255]
     
+    # Customers' consultations are private to their owners.
     query = Discussion.query.options(
         db.joinedload(Discussion.creator)
-    )
+    ).filter(Discussion.link_only.is_(False))
     if status_filter == 'closed':
         query = query.filter(Discussion.is_closed.is_(True))
     elif status_filter == 'open':
@@ -1504,6 +1526,11 @@ def create_daily_question():
             source_discussion_id = request.form.get('source_discussion_id') or None
             source_statement_id = request.form.get('source_statement_id') or None
             source_trending_topic_id = request.form.get('source_trending_topic_id') or None
+            # A daily question is public, so its source must be too.
+            if source_discussion_id:
+                _site_discussion_or_404(int(source_discussion_id))
+            if source_statement_id:
+                _site_statement_or_404(int(source_statement_id))
             
             question = DailyQuestion(
                 question_date=question_date,
@@ -1545,7 +1572,7 @@ def create_daily_question():
             current_app.logger.error(f"Error creating daily question: {e}")
             flash('Error creating daily question. Please try again.', 'error')
     
-    discussions = Discussion.query.filter(Discussion.partner_env != 'test').order_by(Discussion.created_at.desc()).limit(50).all()
+    discussions = Discussion.query.filter(Discussion.publicly_listable()).order_by(Discussion.created_at.desc()).limit(50).all()
     trending_topics = TrendingTopic.query.filter_by(status='published').order_by(TrendingTopic.created_at.desc()).limit(20).all()
     topics = Discussion.TOPICS
     
@@ -2059,7 +2086,7 @@ def resend_daily_question(subscriber_id):
 @admin_required
 def admin_discussion_statements(discussion_id):
     """View all statements for a discussion so admin can delete spam directly."""
-    discussion = db.get_or_404(Discussion, discussion_id)
+    discussion = _site_discussion_or_404(discussion_id)
     page = max(1, request.args.get('page', 1, type=int))
     per_page = 50
     show_deleted = request.args.get('show_deleted', '0') == '1'
@@ -2087,7 +2114,7 @@ def admin_discussion_statements(discussion_id):
 @admin_required
 def admin_delete_statement(statement_id):
     """Soft-delete a statement directly as admin (no flag required)."""
-    statement = db.get_or_404(Statement, statement_id)
+    statement = _site_statement_or_404(statement_id)
     discussion_id = statement.discussion_id
     try:
         statement.is_deleted = True
@@ -2118,7 +2145,7 @@ def admin_delete_statement(statement_id):
 @admin_required
 def admin_restore_statement(statement_id):
     """Restore a previously deleted statement."""
-    statement = db.get_or_404(Statement, statement_id)
+    statement = _site_statement_or_404(statement_id)
     discussion_id = statement.discussion_id
     try:
         statement.is_deleted = False
@@ -2168,6 +2195,9 @@ def list_statement_flags():
         joinedload(StatementFlag.flagger),
         joinedload(StatementFlag.reviewer)
     ).join(Statement, StatementFlag.statement_id == Statement.id).outerjoin(flagger, StatementFlag.flagger_user_id == flagger.id)
+    query = query.join(Discussion, Statement.discussion_id == Discussion.id).filter(
+        Discussion.link_only.is_(False)
+    )
 
     # Apply filters
     if status_filter and status_filter != 'all':
@@ -2254,7 +2284,7 @@ def review_statement_flag(flag_id):
 
     try:
         statement = flag.statement
-        if not statement:
+        if not _flag_is_on_site_statement(flag):
             flash('Statement no longer exists.', 'error')
             return redirect(url_for('admin.list_statement_flags'))
 
@@ -2312,7 +2342,7 @@ def bulk_review_statement_flags():
                 continue
 
             statement = flag.statement
-            if not statement:
+            if not _flag_is_on_site_statement(flag):
                 skipped += 1
                 continue
 

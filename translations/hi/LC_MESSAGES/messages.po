@@ -238,7 +238,7 @@ msgstr "ब्राउज़र (या प्रॉक्सी) ने एक
 
 #: app/api/errors.py:25
 msgid ""
-"The server could not verify that you are authorized to access the URL "
+"The server could not verify that you are authorised to access the URL "
 "requested."
 msgstr ""
 "सर्वर यह सत्यापित नहीं कर सका कि आप अनुरोध किए गए URL तक पहुंचने के लिए "
@@ -597,7 +597,7 @@ msgstr "अमान्य चेकआउट सत्र।"
 #: app/billing/routes.py:301
 msgid ""
 "Welcome! Your team subscription is now active. You can invite team members "
-"from your organization settings."
+"from your organisation settings."
 msgstr ""
 "स्वागत है! आपकी टीम सदस्यता अब सक्रिय है। आप अपनी संगठन सेटिंग्स से टीम "
 "सदस्यों को आमंत्रित कर सकते हैं।"
@@ -1052,15 +1052,15 @@ msgstr ""
 
 #: app/briefing/routes.py:1390
 msgid ""
-"This template is only available for organizations. You need to be part of an"
-" organization to use it."
+"This template is only available for organisations. You need to be part of an"
+" organisation to use it."
 msgstr ""
 "यह टेम्पलेट केवल संगठनों के लिए उपलब्ध है। इसे उपयोग करने के लिए आपको किसी "
 "संगठन का सदस्य होना चाहिए।"
 
 #: app/briefing/routes.py:1410
 msgid ""
-"You need to be part of an organization to create organization briefings"
+"You need to be part of an organisation to create organisation briefings"
 msgstr "संगठन ब्रीफिंग बनाने के लिए आपको किसी संगठन का सदस्य होना चाहिए"
 
 #: app/briefing/routes.py:1501
@@ -1087,7 +1087,7 @@ msgid "An error occurred while creating your briefing. Please try again."
 msgstr "आपकी ब्रीफिंग बनाते समय एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
 
 #: app/briefing/routes.py:1609
-msgid "You need to be part of an organization to create org briefings"
+msgid "You need to be part of an organisation to create org briefings"
 msgstr "संगठन ब्रीफिंग बनाने के लिए आपको किसी संगठन का सदस्य होना चाहिए"
 
 #: app/briefing/routes.py:1621 app/briefing/routes.py:1903
@@ -1197,7 +1197,7 @@ msgid "An error occurred while deleting the source"
 msgstr "स्रोत हटाते समय एक त्रुटि हुई"
 
 #: app/briefing/routes.py:2231
-msgid "You need to be part of an organization to create org sources"
+msgid "You need to be part of an organisation to create org sources"
 msgstr "संगठन स्रोत बनाने के लिए आपको किसी संगठन का सदस्य होना चाहिए"
 
 #: app/briefing/routes.py:2244
@@ -1586,19 +1586,19 @@ msgstr "आपके पास इस ब्रीफिंग को देख�
 
 #: app/briefing/routes.py:4073 app/briefing/routes.py:4130
 msgid ""
-"Organization settings are only available for Team and Enterprise plans."
+"Organisation settings are only available for Team and Enterprise plans."
 msgstr "संगठन सेटिंग केवल टीम और एंटरप्राइज योजनाओं के लिए उपलब्ध हैं।"
 
 #: app/briefing/routes.py:4090
-msgid "No organization found. Please contact support."
+msgid "No organisation found. Please contact support."
 msgstr "कोई संगठन नहीं मिला। कृपया सहायता से संपर्क करें।"
 
 #: app/briefing/routes.py:4135
-msgid "You don't have permission to edit this organization."
+msgid "You don't have permission to edit this organisation."
 msgstr "आपके पास इस संगठन को संपादित करने की अनुमति नहीं है।"
 
 #: app/briefing/routes.py:4146
-msgid "Organization details updated successfully."
+msgid "Organisation details updated successfully."
 msgstr "संगठन विवरण सफलतापूर्वक अपडेट किए गए।"
 
 #: app/briefing/routes.py:4157 app/briefing/routes.py:4223
@@ -1608,7 +1608,7 @@ msgstr "टीम प्रबंधन केवल टीम और एंट�
 
 #: app/briefing/routes.py:4165 app/briefing/routes.py:4231
 #: app/briefing/routes.py:4258
-msgid "No organization found."
+msgid "No organisation found."
 msgstr "कोई संगठन नहीं मिला।"
 
 #: app/briefing/routes.py:4179
@@ -4020,7 +4020,7 @@ msgstr "मेरा खाता"
 
 #: app/programmes/forms.py:45 app/programmes/forms.py:48
 #: app/templates/briefing/use_template.html:63
-msgid "Organization"
+msgid "Organisation"
 msgstr "संगठन"
 
 #: app/programmes/forms.py:50 app/templates/briefing/create.html:190
@@ -4477,7 +4477,7 @@ msgstr "असहमति को फिर से उपयोगी बना�
 
 #: app/templates/about.html:55
 msgid ""
-"Open-source civic infrastructure for structured public judgment — and the "
+"Open-source civic infrastructure for structured public judgement — and the "
 "daily habits that feed it."
 msgstr ""
 "संरचित सार्वजनिक निर्णय के लिए ओपन-सोर्स नागरिक बुनियादी ढाँचा — और यह जो "
@@ -4534,12 +4534,12 @@ msgid "Our theory of change"
 msgstr "हमारा परिवर्तन सिद्धांत"
 
 #: app/templates/about.html:110
-msgid "How participation becomes better judgment"
+msgid "How participation becomes better judgement"
 msgstr "भागीदारी कैसे बेहतर निर्णय बन जाती है"
 
 #: app/templates/about.html:113
 msgid ""
-"We are building toward a more accurate, transparent view of public opinion "
+"We are building towards a more accurate, transparent view of public opinion "
 "on the issues people engage with here — not another comment section, but a "
 "shared reasoning layer. Each product is a step in the same chain."
 msgstr ""
@@ -6434,7 +6434,7 @@ msgstr "क्या मैं किसी भी समय रद्द कर
 
 #: app/templates/faq.html:428
 msgid ""
-"Yes. Cancel anytime from your account settings. There are no lock-in "
+"Yes. Cancel any time from your account settings. There are no lock-in "
 "periods. If you cancel during a trial, you will not be charged."
 msgstr ""
 "हां। अपनी खाता सेटिंग्स से किसी भी समय रद्द करें। कोई lock-in अवधि नहीं है। "
@@ -7271,7 +7271,7 @@ msgid "Get by Email"
 msgstr "ईमेल द्वारा प्राप्त करें"
 
 #: app/templates/index.html:569
-msgid "5 questions weekly by default · Adjust frequency anytime"
+msgid "5 questions weekly by default · Adjust frequency any time"
 msgstr "डिफ़ॉल्ट रूप से 5 प्रश्न साप्ताहिक · कभी भी आवृत्ति समायोजित करें"
 
 #: app/templates/index.html:581
@@ -7876,7 +7876,7 @@ msgid "Terms of Service"
 msgstr "सेवा की शर्तें"
 
 #: app/templates/layout.html:1335
-msgid "SocietySpeaks inquiry"
+msgid "SocietySpeaks enquiry"
 msgstr "SocietySpeaks पूछताछ"
 
 #: app/templates/layout.html:1337 app/templates/partner/api_docs.html:44
@@ -9153,7 +9153,7 @@ msgstr ""
 "<strong>डेटा नियंत्रक:</strong> William Roberts Coaching and Advisory Ltd"
 
 #: app/templates/privacy-policy.html:18
-msgid "<strong>For data privacy inquiries:</strong> info@societyspeaks.io"
+msgid "<strong>For data privacy enquiries:</strong> info@societyspeaks.io"
 msgstr "<strong>डेटा गोपनीयता प्रश्नों के लिए:</strong> info@societyspeaks.io"
 
 #: app/templates/privacy-policy.html:19
@@ -9578,7 +9578,7 @@ msgid "Provide customer support"
 msgstr "ग्राहक समर्थन प्रदान करना"
 
 #: app/templates/privacy-policy.html:116
-msgid "Analyze usage patterns and improve user experience"
+msgid "Analyse usage patterns and improve user experience"
 msgstr "उपयोग पैटर्न का विश्लेषण और उपयोगकर्ता अनुभव में सुधार करना"
 
 #: app/templates/privacy-policy.html:117
@@ -9816,7 +9816,7 @@ msgstr "7. डेटा सुरक्षा"
 
 #: app/templates/privacy-policy.html:212
 msgid ""
-"We implement appropriate technical and organizational measures to protect "
+"We implement appropriate technical and organisational measures to protect "
 "your personal data, including:"
 msgstr ""
 "आपके व्यक्तिगत डेटा की सुरक्षा के लिए हम उपयुक्त तकनीकी और संगठनात्मक उपाय "
@@ -10109,7 +10109,7 @@ msgstr ""
 msgid ""
 "4.2 Your Content: While you retain ownership of content you create, by "
 "submitting content to discussions you grant us and other users the right to "
-"view, analyze, and interact with that content as part of the collective "
+"view, analyse, and interact with that content as part of the collective "
 "discussion process."
 msgstr ""
 "4.2 आपकी सामग्री: जबकि आप अपने द्वारा बनाई गई सामग्री के स्वामित्व को बनाए "
@@ -10249,7 +10249,7 @@ msgid "Violation of these Terms"
 msgstr "इन शर्तों का उल्लंघन"
 
 #: app/templates/terms-and-conditions.html:106
-msgid "Abusive behavior in discussions"
+msgid "Abusive behaviour in discussions"
 msgstr "चर्चाओं में दुर्व्यवहार"
 
 #: app/templates/terms-and-conditions.html:107
@@ -10426,10 +10426,6 @@ msgstr "व्यक्तिगत"
 #: app/templates/components/profile_avatar.html:20
 msgid "Company logo"
 msgstr "कंपनी लोगो"
-
-#: app/templates/auth/dashboard.html:117
-msgid "Organisation"
-msgstr "संगठन"
 
 #: app/templates/auth/dashboard.html:124 app/templates/auth/dashboard.html:660
 #: app/templates/auth/discussions.html:55
@@ -11726,7 +11722,7 @@ msgid "Full Archive Access"
 msgstr "पूर्ण आर्काइव पहुंच"
 
 #: app/templates/brief/landing.html:480 app/templates/brief/no_brief.html:203
-msgid "Browse past briefs anytime to catch up on what you missed."
+msgid "Browse past briefs any time to catch up on what you missed."
 msgstr ""
 "किसी भी समय पिछली ब्रीफ़िंग ब्राउज़ करें ताकि आप जो छूटे हों उसे पकड़ सकें।"
 
@@ -11837,7 +11833,7 @@ msgstr ""
 "देखें।"
 
 #: app/templates/brief/landing.html:559 app/templates/brief/no_brief.html:278
-msgid "Can I unsubscribe anytime?"
+msgid "Can I unsubscribe any time?"
 msgstr "क्या मैं कभी भी सदस्यता रद्द कर सकता हूँ?"
 
 #: app/templates/brief/landing.html:560 app/templates/brief/no_brief.html:279
@@ -12150,7 +12146,7 @@ msgstr "पारदर्शिता"
 #: app/templates/brief/methodology.html:372
 msgid ""
 "Society Speaks is built with transparency in mind. Our code is publicly "
-"available under the AGPL-3.0 license, which means you can inspect exactly "
+"available under the AGPL-3.0 licence, which means you can inspect exactly "
 "how our AI systems work and suggest improvements. We believe civic "
 "technology should be accountable."
 msgstr ""
@@ -12594,7 +12590,7 @@ msgstr ""
 "डिलीवरी में दिन की सबसे ताज़ी कवरेज होती है।"
 
 #: app/templates/brief/subscribe.html:118
-msgid "No credit card required. Unsubscribe anytime with one click."
+msgid "No credit card required. Unsubscribe any time with one click."
 msgstr ""
 "कोई क्रेडिट कार्ड आवश्यक नहीं। किसी भी समय एक क्लिक से अनसब्सक्राइब करें।"
 
@@ -12716,7 +12712,7 @@ msgid "Check your inbox for a welcome email with your magic link"
 msgstr "अपने इनबॉक्स में स्वागत ईमेल के लिए अपना मैजिक लिंक देखें"
 
 #: app/templates/brief/subscribe_success.html:30
-msgid "Use the magic link to access your personalised brief anytime"
+msgid "Use the magic link to access your personalised brief any time"
 msgstr ""
 "किसी भी समय अपने व्यक्तिगत संक्षिप्त को एक्सेस करने के लिए मैजिक लिंक का "
 "उपयोग करें"
@@ -12820,7 +12816,7 @@ msgstr "साप्ताहिक संक्षिप्त पर स्व
 
 #: app/templates/brief/unsubscribed.html:40
 msgid ""
-"Changed your mind? You can always resubscribe to the daily brief anytime."
+"Changed your mind? You can always resubscribe to the daily brief any time."
 msgstr ""
 "अपना मन बदल गया? आप किसी भी समय दैनिक संक्षिप्त के लिए फिर से सदस्य बन सकते "
 "हैं।"
@@ -13149,7 +13145,7 @@ msgstr[0] "%(num)d स्रोत कॉन्फ़िगर किया ग�
 msgstr[1] "%(num)d स्रोत कॉन्फ़िगर किए गए"
 
 #: app/templates/briefing/_template_card.html:36
-msgid "Organizations"
+msgid "Organisations"
 msgstr "संगठन"
 
 #: app/templates/briefing/_template_card.html:36
@@ -13608,7 +13604,7 @@ msgstr ""
 #: app/templates/briefing/create.html:35
 msgid ""
 "<strong>Step 2:</strong> On the next screen, you'll add content sources (RSS"
-" feeds, curated sources, or documents) and customize AI settings."
+" feeds, curated sources, or documents) and customise AI settings."
 msgstr ""
 "<strong>चरण 2:</strong> अगली स्क्रीन पर, आप कंटेंट स्रोत (RSS फीड, क्यूरेटेड"
 " स्रोत, या दस्तावेज़) जोड़ेंगे और AI सेटिंग्स को कस्टमाइज़ करेंगे।"
@@ -14369,7 +14365,7 @@ msgid "Current logo"
 msgstr "वर्तमान लोगो"
 
 #: app/templates/briefing/edit.html:248
-msgid "Color used for headers, links, and accents"
+msgid "Colour used for headers, links, and accents"
 msgstr "हेडर, लिंक और accents के लिए इस्तेमाल किया गया रंग"
 
 #: app/templates/briefing/edit.html:253
@@ -14620,7 +14616,7 @@ msgstr "अगर मुझे यह पसंद नहीं है?"
 
 #: app/templates/briefing/landing.html:101
 #: app/templates/briefing/landing.html:1771
-msgid "Cancel anytime, no questions asked. 30-day free trial."
+msgid "Cancel any time, no questions asked. 30-day free trial."
 msgstr "किसी भी समय रद्द करें, कोई सवाल नहीं। 30-दिन की निःशुल्क परीक्षा।"
 
 #: app/templates/briefing/landing.html:106
@@ -15645,7 +15641,7 @@ msgstr ""
 #: app/templates/briefing/landing.html:1245
 msgid ""
 "Daily at 7am? Weekly on Monday? You decide when and how often. Pause "
-"anytime."
+"any time."
 msgstr ""
 "सुबह 7 बजे दैनिक? सोमवार को साप्ताहिक? आप तय करें कि कब और कितनी बार। किसी "
 "भी समय रोकें।"
@@ -15803,7 +15799,7 @@ msgid "No card needed"
 msgstr "कोई कार्ड की जरूरत नहीं"
 
 #: app/templates/briefing/landing.html:1375
-msgid "Cancel anytime"
+msgid "Cancel any time"
 msgstr "किसी भी समय रद्द करें"
 
 #: app/templates/briefing/landing.html:1385
@@ -15863,7 +15859,7 @@ msgstr "PDF दस्तावेज़ अपलोड"
 
 #: app/templates/briefing/landing.html:1436
 #: app/templates/briefing/landing.html:1510
-msgid "30-day free trial, cancel anytime"
+msgid "30-day free trial, cancel any time"
 msgstr "30 दिन की निःशुल्क परीक्षण, कभी भी रद्द करें"
 
 #: app/templates/briefing/landing.html:1439
@@ -16038,7 +16034,7 @@ msgstr "GDPR अनुपालन"
 
 #: app/templates/briefing/landing.html:1685
 msgid ""
-"UK/EU compliant by design. Export or delete your data anytime. Right to be "
+"UK/EU compliant by design. Export or delete your data any time. Right to be "
 "forgotten honoured."
 msgstr ""
 "यूके/यूरोपीय संघ डिज़ाइन द्वारा अनुपालन। किसी भी समय अपना डेटा निर्यात करें "
@@ -16127,7 +16123,7 @@ msgid "Start free 30-day trial"
 msgstr "निःशुल्क 30-दिन की परीक्षा शुरू करें"
 
 #: app/templates/briefing/landing.html:1813
-msgid "Cancel anytime."
+msgid "Cancel any time."
 msgstr "किसी भी समय रद्द करें।"
 
 #: app/templates/briefing/landing.html:1826
@@ -16163,7 +16159,7 @@ msgstr "आपका मुफ्त परीक्षण %(days)s दिनो
 
 #: app/templates/briefing/list.html:37
 msgid ""
-"Your trial is active. Add a payment method anytime so briefings continue "
+"Your trial is active. Add a payment method any time so briefings continue "
 "smoothly after it ends."
 msgstr ""
 "आपका परीक्षण सक्रिय है. किसी भी समय भुगतान विधि जोड़ें ताकि ब्रीफिंग समाप्त "
@@ -16371,11 +16367,11 @@ msgstr ""
 #: app/templates/briefing/organization_settings.html:2
 #: app/templates/briefing/organization_settings.html:13
 #: app/templates/briefing/organization_settings.html:15
-msgid "Organization Settings"
+msgid "Organisation Settings"
 msgstr "संगठन सेटिंग"
 
 #: app/templates/briefing/organization_settings.html:16
-msgid "Manage your team subscription and organization details."
+msgid "Manage your team subscription and organisation details."
 msgstr "अपनी टीम सदस्यता और संगठन विवरण प्रबंधित करें।"
 
 #: app/templates/briefing/organization_settings.html:21
@@ -16401,15 +16397,15 @@ msgid "Manage billing →"
 msgstr "बिलिंग प्रबंधित करें →"
 
 #: app/templates/briefing/organization_settings.html:54
-msgid "Organization Details"
+msgid "Organisation Details"
 msgstr "संगठन विवरण"
 
 #: app/templates/briefing/organization_settings.html:60
-msgid "Organization Name"
+msgid "Organisation Name"
 msgstr "संगठन का नाम"
 
 #: app/templates/briefing/organization_settings.html:69
-msgid "Brief description of your organization"
+msgid "Brief description of your organisation"
 msgstr "अपने संगठन का संक्षिप्त विवरण"
 
 #: app/templates/briefing/organization_settings.html:88
@@ -16471,7 +16467,7 @@ msgid "Send Invite"
 msgstr "आमंत्रण भेजें"
 
 #: app/templates/briefing/organization_settings.html:185
-msgid "They'll receive an email with a link to join your organization."
+msgid "They'll receive an email with a link to join your organisation."
 msgstr ""
 "उन्हें आपके संगठन में शामिल होने के लिए एक लिंक के साथ एक ईमेल मिलेगा।"
 
@@ -16590,7 +16586,7 @@ msgid "AI Guidance"
 msgstr "AI मार्गदर्शन"
 
 #: app/templates/briefing/preview_template.html:163
-msgid "You can customize this prompt after creating your briefing."
+msgid "You can customise this prompt after creating your briefing."
 msgstr "आप अपनी ब्रीफिंग बनाने के बाद इस प्रॉम्प्ट को कस्टमाइज़ कर सकते हैं।"
 
 #: app/templates/briefing/preview_template.html:171
@@ -16705,7 +16701,7 @@ msgstr "आपके परिवर्तन निजी हैं"
 
 #: app/templates/briefing/preview_template.html:282
 msgid ""
-"Any customizations you make only affect your personal briefing. The original"
+"Any customisations you make only affect your personal briefing. The original"
 " template stays unchanged for everyone else."
 msgstr ""
 "आप जो भी कस्टमाइज़ेशन करते हैं, वह केवल आपकी व्यक्तिगत ब्रीफिंग को प्रभावित "
@@ -17077,7 +17073,7 @@ msgid "Delete"
 msgstr "हटाएं"
 
 #: app/templates/briefing/sources.html:85
-msgid "Organization Sources"
+msgid "Organisation Sources"
 msgstr "संगठन स्रोत"
 
 #: app/templates/briefing/sources.html:139
@@ -17308,7 +17304,7 @@ msgid "Default: 6:00 PM - a popular time for end-of-day reading"
 msgstr "डिफ़ॉल्ट: 6:00 PM - दिन के अंत में पढ़ने के लिए एक लोकप्रिय समय"
 
 #: app/templates/briefing/use_template.html:133
-msgid "Organization Only"
+msgid "Organisation Only"
 msgstr "केवल संगठन"
 
 #: app/templates/briefing/use_template.html:145
@@ -17360,7 +17356,7 @@ msgstr "भेजने वाला डोमेन जोड़ें"
 
 #: app/templates/briefing/domains/add.html:16
 msgid ""
-"Configure a custom domain to send briefs from your organization's email "
+"Configure a custom domain to send briefs from your organisation's email "
 "address"
 msgstr ""
 "अपने संगठन के ईमेल पते से ब्रीफ़िंग भेजने के लिए एक कस्टम डोमेन कॉन्फ़िगर "
@@ -17397,7 +17393,7 @@ msgid "Once verified, you can send briefs from this domain"
 msgstr "सत्यापित होने के बाद, आप इस डोमेन से ब्रीफ़िंग भेज सकते हैं"
 
 #: app/templates/briefing/domains/list.html:17
-msgid "Manage custom email domains for your organization"
+msgid "Manage custom email domains for your organisation"
 msgstr "अपने संगठन के लिए कस्टम ईमेल डोमेन प्रबंधित करें"
 
 #: app/templates/briefing/domains/list.html:18
@@ -17805,7 +17801,7 @@ msgid "Dive deeper with AI:"
 msgstr "AI के साथ गहराई से जानें:"
 
 #: app/templates/components/dive_deeper_links.html:16
-msgid "Analyze this news story:"
+msgid "Analyse this news story:"
 msgstr "इस समाचार को विश्लेषित करें:"
 
 #: app/templates/components/dive_deeper_links.html:40
@@ -17863,7 +17859,7 @@ msgid "Subscribe Free"
 msgstr "मुफ़्त सदस्यता लें"
 
 #: app/templates/components/email_capture.html:40
-msgid "Free forever. Unsubscribe anytime. We respect your inbox."
+msgid "Free forever. Unsubscribe any time. We respect your inbox."
 msgstr ""
 "हमेशा मुफ़्त। कभी भी अनसदस्य करें। हम आपके इनबॉक्स का सम्मान करते हैं।"
 
@@ -18406,7 +18402,7 @@ msgid "Email Preferences"
 msgstr "ईमेल प्राथमिकताएं"
 
 #: app/templates/daily/preferences.html:12
-msgid "Customize how you receive questions from Society Speaks"
+msgid "Customise how you receive questions from Society Speaks"
 msgstr "Society Speaks से प्रश्न कैसे प्राप्त करना है, इसे अनुकूलित करें"
 
 #: app/templates/daily/preferences.html:31
@@ -18843,7 +18839,7 @@ msgstr "चर्चा करें"
 
 #: app/templates/daily/results.html:555
 #: app/templates/daily/weekly_batch.html:329
-msgid "Analyze"
+msgid "Analyse"
 msgstr "विश्लेषण करें"
 
 #: app/templates/daily/results.html:572
@@ -19129,7 +19125,7 @@ msgid "Magic link — no password needed"
 msgstr "मैजिक लिंक — कोई पासवर्ड की जरूरत नहीं"
 
 #: app/templates/daily/subscribe.html:125
-msgid "Change preferences anytime from any email"
+msgid "Change preferences any time from any email"
 msgstr "किसी भी ईमेल से किसी भी समय प्राथमिकताएं बदलें"
 
 #: app/templates/daily/subscribe.html:132
@@ -19197,7 +19193,7 @@ msgstr "— %(tz)s का उपयोग करते हुए"
 
 #: app/templates/daily/subscribe_success.html:43
 msgid ""
-"You can change frequency, day, time, and time zone anytime from the "
+"You can change frequency, day, time, and time zone any time from the "
 "preferences link in any email we send."
 msgstr ""
 "आप किसी भी समय जिस ईमेल को भेजते हैं उसमें प्राथमिकता लिंक से आवृत्ति, दिन, "
@@ -20009,7 +20005,7 @@ msgstr ""
 "को ताज़ा करने के लिए चर्चा के मालिक से फिर से चलाने को कहें।"
 
 #: app/templates/discussions/consensus_results.html:185
-msgid "Opinion Groups Visualization"
+msgid "Opinion Groups Visualisation"
 msgstr "राय समूह दृश्य"
 
 #: app/templates/discussions/consensus_results.html:191
@@ -20489,7 +20485,7 @@ msgid "You"
 msgstr "आप"
 
 #: app/templates/discussions/consensus_results.html:775
-msgid "Error loading visualization"
+msgid "Error loading visualisation"
 msgstr "दृश्य लोड करने में त्रुटि"
 
 #: app/templates/discussions/create_discussion.html:18
@@ -20526,7 +20522,7 @@ msgid "✓ Built-in voting (Agree/Disagree/Unsure)"
 msgstr "✓ अंतर्निर्मित मतदान (सहमत/असहमत/अनिश्चित)"
 
 #: app/templates/discussions/create_discussion.html:103
-msgid "✓ Consensus clustering and visualization"
+msgid "✓ Consensus clustering and visualisation"
 msgstr "✓ सर्वसम्मति क्लस्टरिंग और दृश्य"
 
 #: app/templates/discussions/create_discussion.html:104
@@ -22360,7 +22356,7 @@ msgstr ""
 
 #: app/templates/emails/briefing_trial_payment.html:40
 #, python-format
-msgid "Just %(price)s per month after your trial. Cancel anytime."
+msgid "Just %(price)s per month after your trial. Cancel any time."
 msgstr "आपके परीक्षण के बाद केवल %(price)s प्रति माह। कभी भी रद्द करें।"
 
 #: app/templates/emails/briefing_trial_payment.html:45
@@ -22431,7 +22427,7 @@ msgstr ""
 #: app/templates/emails/briefing_winback.html:27
 msgid ""
 "If you'd like to pick it up, add a card and tomorrow's brief lands as if "
-"nothing happened. £4.99/month, cancel anytime."
+"nothing happened. £4.99/month, cancel any time."
 msgstr ""
 "अगर शुरू करना चाहें, तो कार्ड जोड़ें और कल का ब्रीफ़ आ जाएगा जैसे कुछ हुआ ही"
 " न हो। £4.99/महीना, कभी भी रद्द कर सकते हैं।"
@@ -22590,7 +22586,7 @@ msgstr "%(cadence)s में स्वागत है - Society Speaks"
 #: app/templates/emails/daily_brief_welcome.html:7
 msgid ""
 "Your free access is now active! Here's your magic link to access briefs "
-"anytime."
+"any time."
 msgstr ""
 "आपकी निःशुल्क पहुंच अब सक्रिय है! यह आपकी जादुई लिंक है ताकि आप कभी भी "
 "ब्रीफ़ एक्सेस कर सकें।"
@@ -22632,7 +22628,7 @@ msgstr "निःशुल्क पहुंच (कोई समाप्त�
 
 #: app/templates/emails/daily_brief_welcome.html:46
 msgid ""
-"<strong>Your magic link</strong> gives you instant access to briefs anytime "
+"<strong>Your magic link</strong> gives you instant access to briefs any time "
 "- no login required. Bookmark it or save this email:"
 msgstr ""
 "<strong>आपकी जादुई लिंक</strong> आपको किसी भी समय तत्काल पहुंच देती है - "
@@ -23178,7 +23174,7 @@ msgstr "लापता जानकारी:"
 
 #: app/templates/emails/profile_completion_reminder.html:33
 msgid ""
-"This is a one-time reminder. You can update your profile anytime from your "
+"This is a one-time reminder. You can update your profile any time from your "
 "account settings."
 msgstr ""
 "यह एक बार की अनुस्मारक है। आप अपने खाता सेटिंग्स से कभी भी अपनी प्रोफ़ाइल "
@@ -24473,7 +24469,7 @@ msgstr ""
 "देखें, और पता लगाएं कि आप किस तरह का नेता बनते हैं।"
 
 #: app/templates/game/hub.html:224
-msgid "Replay any past scenario anytime — no streak."
+msgid "Replay any past scenario any time — no streak."
 msgstr "किसी भी पिछले परिदृश्य को कभी भी फिर से खेलें — कोई स्ट्रीक नहीं।"
 
 #: app/templates/game/hub.html:252 app/templates/game/outcome.html:318
@@ -24585,7 +24581,7 @@ msgstr "जिन्होंने इस संकट का सामना �
 
 #: app/templates/game/outcome.html:152
 #, python-format
-msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
+msgid "You leaned more towards %(dir)s than %(pct)d%% of leaders %(scope)s."
 msgstr ""
 "आपने %(dir)s की ओर अधिक झुकाव दिया है %(scope)s के %(pct)d%% नेताओं की तुलना"
 " में।"
@@ -25258,7 +25254,7 @@ msgid "✓ Evidence linking (citations, files)"
 msgstr "✓ साक्ष्य लिंकिंग (उद्धरण, फ़ाइलें)"
 
 #: app/templates/help/creating_discussions.html:73
-msgid "✓ Consensus visualization"
+msgid "✓ Consensus visualisation"
 msgstr "✓ सर्वसम्मति दृश्यीकरण"
 
 #: app/templates/help/creating_discussions.html:74
@@ -25287,7 +25283,7 @@ msgid "✓ Simple agree/disagree/pass"
 msgstr "✓ सरल सहमत/असहमत/पास"
 
 #: app/templates/help/creating_discussions.html:94
-msgid "✓ Instant visualization"
+msgid "✓ Instant visualisation"
 msgstr "✓ तात्कालिक दृश्यीकरण"
 
 #: app/templates/help/creating_discussions.html:95
@@ -25421,7 +25417,7 @@ msgid "Key features of Pol.is:"
 msgstr "Pol.is की मुख्य सुविधाएँ:"
 
 #: app/templates/help/creating_discussions.html:199
-msgid "Real-time visualization of opinions"
+msgid "Real-time visualisation of opinions"
 msgstr "विचारों की real-time visualization"
 
 #: app/templates/help/creating_discussions.html:200
@@ -25828,7 +25824,7 @@ msgstr "चर्चाओं का प्रबंधन — Society Speaks �
 msgid ""
 "Learn how to monitor and maintain engaging discussions on Society Speaks. "
 "Track participation, promote engagement, and understand consensus "
-"visualizations."
+"visualisations."
 msgstr ""
 "Society Speaks पर आकर्षक चर्चाओं की निगरानी और रखरखाव करना सीखें। भागीदारी "
 "को ट्रैक करें, जुड़ाव को बढ़ावा दें, और सहमति विज़ुअलाइज़ेशन को समझें।"
@@ -25872,7 +25868,7 @@ msgstr "परिणामों को समझें"
 
 #: app/templates/help/managing_discussions.html:29
 msgid ""
-"Interpret opinion groups, consensus statements, and visualizations to derive"
+"Interpret opinion groups, consensus statements, and visualisations to derive"
 " insights."
 msgstr ""
 "विचार समूहों, सहमति कथनों और विज़ुअलाइज़ेशन की व्याख्या करके अंतर्दृष्टि "
@@ -25931,7 +25927,7 @@ msgid "Understanding Results"
 msgstr "परिणामों को समझना"
 
 #: app/templates/help/managing_discussions.html:81
-msgid "Interpreting Pol.is Visualizations:"
+msgid "Interpreting Pol.is Visualisations:"
 msgstr "Pol.is Visualization की व्याख्या:"
 
 #: app/templates/help/managing_discussions.html:85
@@ -25939,7 +25935,7 @@ msgid "Groups are formed automatically based on voting patterns"
 msgstr "मतदान पैटर्न के आधार पर स्वचालित रूप से समूह बनते हैं"
 
 #: app/templates/help/managing_discussions.html:86
-msgid "Each color represents a distinct opinion group"
+msgid "Each colour represents a distinct opinion group"
 msgstr "प्रत्येक रंग एक अलग राय वाले समूह का प्रतिनिधित्व करता है"
 
 #: app/templates/help/managing_discussions.html:87
@@ -26056,7 +26052,7 @@ msgstr ""
 msgid ""
 "Learn about Society Speaks' advanced native debate system with real-time "
 "voting, threaded responses, evidence linking, and interactive consensus "
-"visualization."
+"visualisation."
 msgstr ""
 "Society Speaks की उन्नत Native Debate System के बारे में जानें जिसमें "
 "वास्तविक समय मतदान, थ्रेडेड प्रतिक्रियाएं, साक्ष्य लिंकिंग और इंटरैक्टिव "
@@ -26116,7 +26112,7 @@ msgid "Add detailed pro/con responses with evidence"
 msgstr "साक्ष्य के साथ विस्तृत पक्ष/विपक्ष प्रतिक्रियाएं जोड़ें"
 
 #: app/templates/help/native_system.html:60
-msgid "Interactive consensus visualizations"
+msgid "Interactive consensus visualisations"
 msgstr "इंटरैक्टिव सर्वसम्मति दृश्य"
 
 #: app/templates/help/native_system.html:61
@@ -26160,7 +26156,7 @@ msgid "Votes update <strong>instantly</strong> without page reload"
 msgstr "मत तुरंत <strong>अपडेट होते हैं</strong> बिना पृष्ठ रीलोड के"
 
 #: app/templates/help/native_system.html:90
-msgid "You can change your vote anytime"
+msgid "You can change your vote any time"
 msgstr "आप कभी भी अपना मत बदल सकते हैं"
 
 #: app/templates/help/native_system.html:100
@@ -26234,7 +26230,7 @@ msgid "Identify \"bridge\" statements that unite groups"
 msgstr "समूहों को एकीकृत करने वाले \"सेतु\" कथनों को पहचानें"
 
 #: app/templates/help/native_system.html:147
-msgid "View interactive scatter plot visualization"
+msgid "View interactive scatter plot visualisation"
 msgstr "इंटरैक्टिव स्कैटर प्लॉट विज़ुअलाइज़ेशन देखें"
 
 #: app/templates/help/native_system.html:158
@@ -26723,7 +26719,7 @@ msgid "Good"
 msgstr "अच्छा"
 
 #: app/templates/help/native_system.html:465
-msgid "✓ Tailwind optimized"
+msgid "✓ Tailwind optimised"
 msgstr "✓ Tailwind अनुकूलित"
 
 #: app/templates/help/native_system.html:468
@@ -26793,7 +26789,7 @@ msgstr ""
 #: app/templates/help/news_dashboard.html:18
 msgid ""
 "No sign-up required. It supports the same civic goal as our discussions: "
-"understand issues from multiple angles before forming judgment."
+"understand issues from multiple angles before forming judgement."
 msgstr ""
 "साइन-अप की आवश्यकता नहीं। यह हमारी चर्चाओं के समान सिविक लक्ष्य का समर्थन "
 "करता है: निर्णय बनाने से पहले कई कोणों से मुद्दों को समझें।"
@@ -26870,7 +26866,7 @@ msgstr "हम विषय कहाँ से प्राप्त करत�
 msgid ""
 "We monitor <strong>140+ quality news sources</strong> across the political "
 "spectrum to find topics worth debating. Our sources include mainstream news,"
-" policy analysis, investigative journalism, think tanks, data organizations,"
+" policy analysis, investigative journalism, think tanks, data organisations,"
 " and intellectual podcasts."
 msgstr ""
 "हम राजनीतिक स्पेक्ट्रम के पार <strong>140+ गुणवत्ता वाले समाचार "
@@ -27320,7 +27316,7 @@ msgstr "UMAP (Uniform Manifold Approximation and Projection)"
 msgid ""
 "UMAP helps visualize complex relationships between opinions while preserving"
 " important structures in the data. This creates the opinion group "
-"visualizations you see in Pol.is."
+"visualisations you see in Pol.is."
 msgstr ""
 "UMAP डेटा में महत्वपूर्ण संरचनाओं को संरक्षित करते हुए विचारों के बीच जटिल "
 "संबंधों को दृश्यमान करने में मदद करता है। यह Pol.is में आप जो विचार समूह "
@@ -27387,7 +27383,7 @@ msgid "Provides immediate insights as participants engage"
 msgstr "प्रतिभागियों के सहभाग के साथ तत्काल अंतर्दृष्टि प्रदान करता है"
 
 #: app/templates/help/polis_algorithms.html:175
-msgid "Understanding the Visualizations"
+msgid "Understanding the Visualisations"
 msgstr "विज़ुअलाइज़ेशन को समझना"
 
 #: app/templates/help/polis_algorithms.html:180
@@ -27399,7 +27395,7 @@ msgid "What You'll See"
 msgstr "आप क्या देखेंगे"
 
 #: app/templates/help/polis_algorithms.html:185
-msgid "Colored clusters representing different opinion groups"
+msgid "Coloured clusters representing different opinion groups"
 msgstr "विभिन्न राय समूहों का प्रतिनिधित्व करने वाले रंगीन समूह"
 
 #: app/templates/help/polis_algorithms.html:186
@@ -27447,7 +27443,7 @@ msgstr ""
 "की संभावना को दर्शाता है"
 
 #: app/templates/help/polis_algorithms.html:212
-msgid "Polarization"
+msgid "Polarisation"
 msgstr "ध्रुवीकरण"
 
 #: app/templates/help/polis_algorithms.html:213
@@ -27509,7 +27505,7 @@ msgid "Healthy Patterns"
 msgstr "स्वस्थ पैटर्न"
 
 #: app/templates/help/polis_algorithms.html:246
-msgid "Multiple distinct but not extremely polarized groups"
+msgid "Multiple distinct but not extremely polarised groups"
 msgstr "कई विशिष्ट लेकिन अत्यधिक ध्रुवीकृत नहीं समूह"
 
 #: app/templates/help/polis_algorithms.html:247
@@ -27529,7 +27525,7 @@ msgid "Warning Signs"
 msgstr "चेतावनी के संकेत"
 
 #: app/templates/help/polis_algorithms.html:255
-msgid "Extreme polarization with no bridging views"
+msgid "Extreme polarisation with no bridging views"
 msgstr "कोई पुल बनाने वाली दृष्टि के साथ अत्यधिक ध्रुवीकरण"
 
 #: app/templates/help/polis_algorithms.html:256
@@ -27658,10 +27654,6 @@ msgstr ""
 "किसी को भी सुलभ होते हैं। केवल आमंत्रण द्वारा प्रोग्राम छिपे हुए होते हैं और"
 " केवल उन उपयोगकर्ताओं को सुलभ होते हैं जिन्हें आप स्पष्ट रूप से आमंत्रित "
 "करते हैं। निजी प्रोग्राम केवल मालिक और प्रबंधकों के लिए सुलभ होते हैं।"
-
-#: app/templates/help/programmes.html:49
-msgid "← Help Center"
-msgstr "← सहायता केंद्र"
 
 #: app/templates/help/programmes.html:51
 msgid ""
@@ -28513,11 +28505,6 @@ msgstr ""
 msgid "Today's Coverage Balance"
 msgstr "आज का कवरेज संतुलन"
 
-#: app/templates/news/dashboard.html:79
-#, python-format
-msgid "%(pct)s%% Center (%(count)d)"
-msgstr "%(pct)s%% केंद्र (%(count)d)"
-
 #: app/templates/news/dashboard.html:100
 msgid "Search by headline, summary, or source..."
 msgstr "शीर्षक, सारांश या स्रोत द्वारा खोजें..."
@@ -28534,7 +28521,7 @@ msgstr "वाम (%(count)d)"
 
 #: app/templates/news/dashboard.html:144
 #, python-format
-msgid "Center (%(count)d)"
+msgid "Centre (%(count)d)"
 msgstr "केंद्र (%(count)d)"
 
 #: app/templates/news/dashboard.html:150
@@ -28562,10 +28549,6 @@ msgstr "स्रोत फ़िल्टर करें"
 msgid "Select Sources"
 msgstr "स्रोत चुनें"
 
-#: app/templates/news/dashboard.html:257
-msgid "Center"
-msgstr "केंद्र"
-
 #: app/templates/news/dashboard.html:314
 msgid "Left-Leaning Sources"
 msgstr "वाम-समर्थक स्रोत"
@@ -28589,7 +28572,7 @@ msgid "Civic Relevance: %(pct)s%%"
 msgstr "नागरिक प्रासंगिकता: %(pct)s%%"
 
 #: app/templates/news/dashboard.html:393
-msgid "Center Sources"
+msgid "Centre Sources"
 msgstr "केंद्र स्रोत"
 
 #: app/templates/news/dashboard.html:472
@@ -28629,7 +28612,7 @@ msgstr "28%% वाम"
 
 #: app/templates/news/landing.html:62
 #, python-format
-msgid "44%% Center"
+msgid "44%% Centre"
 msgstr "44%% केंद्र"
 
 #: app/templates/news/landing.html:63
@@ -28654,7 +28637,7 @@ msgid "AI-scored for sensationalism"
 msgstr "संवेदनशीलता के लिए AI-स्कोर किए गए"
 
 #: app/templates/news/landing.html:144
-msgid "Unsubscribe anytime"
+msgid "Unsubscribe any time"
 msgstr "किसी भी समय सदस्यता समाप्त करें"
 
 #: app/templates/news/landing.html:153
@@ -28756,7 +28739,7 @@ msgstr "ओपन सोर्स, पारदर्शी, गैर-लाभ
 
 #: app/templates/news/landing.html:254
 msgid ""
-"Our entire codebase is open source under the AGPL-3.0 license. Anyone can "
+"Our entire codebase is open source under the AGPL-3.0 licence. Anyone can "
 "inspect, fork, or contribute to our consensus-building tools. No hidden "
 "algorithms, no black boxes."
 msgstr ""
@@ -28790,7 +28773,7 @@ msgid "Open Source"
 msgstr "ओपन सोर्स"
 
 #: app/templates/news/landing.html:302
-msgid "AGPL-3.0 License"
+msgid "AGPL-3.0 Licence"
 msgstr "AGPL-3.0 लाइसेंस"
 
 #: app/templates/news/landing.html:306
@@ -29629,7 +29612,7 @@ msgid "<code>discussion_not_found</code> - Discussion does not exist"
 msgstr "<code>discussion_not_found</code> - चर्चा मौजूद नहीं है"
 
 #: app/templates/partner/api_docs.html:624
-msgid "Customize the embed appearance with URL parameters."
+msgid "Customise the embed appearance with URL parameters."
 msgstr "URL पैरामीटर के साथ एम्बेड दिखावट को कस्टमाइज़ करें।"
 
 #: app/templates/partner/api_docs.html:625
@@ -29652,11 +29635,11 @@ msgstr ""
 "<code>muted</code>"
 
 #: app/templates/partner/api_docs.html:649
-msgid "Primary color (hex without #)"
+msgid "Primary colour (hex without #)"
 msgstr "प्राथमिक रंग (# के बिना हेक्स)"
 
 #: app/templates/partner/api_docs.html:654
-msgid "Background color (hex without #)"
+msgid "Background colour (hex without #)"
 msgstr "पृष्ठभूमि रंग (# के बिना हेक्स)"
 
 #: app/templates/partner/api_docs.html:659
@@ -29840,7 +29823,7 @@ msgid "Request Body"
 msgstr "अनुरोध निकाय"
 
 #: app/templates/partner/api_docs.html:869
-msgid "Canonical article URL (normalized if provided)"
+msgid "Canonical article URL (normalised if provided)"
 msgstr "कैनोनिकल लेख URL (यदि प्रदान किया गया हो तो सामान्यीकृत)"
 
 #: app/templates/partner/api_docs.html:874
@@ -30423,7 +30406,7 @@ msgstr "Embed Code Generator - Society Speaks"
 #: app/templates/partner/embed_generator.html:5
 msgid ""
 "Generate embed code for Society Speaks. Publishers can add a clean voting "
-"widget to articles, with developer-friendly customization and clear audience"
+"widget to articles, with developer-friendly customisation and clear audience"
 " insight for editors."
 msgstr ""
 "Society Speaks के लिए embed code जेनरेट करें। प्रकाशक आर्टिकल में एक स्वच्छ "
@@ -30437,7 +30420,7 @@ msgstr "Embed Code Generator"
 #: app/templates/partner/embed_generator.html:20
 msgid ""
 "Add a Society Speaks voting widget to your article in minutes. Developers "
-"get a clean iframe and customization controls. Editors get structured "
+"get a clean iframe and customisation controls. Editors get structured "
 "insight, not comment noise."
 msgstr ""
 "मिनटों में अपने आर्टिकल में Society Speaks वोटिंग विजेट जोड़ें। डेवलपर्स को "
@@ -30573,11 +30556,11 @@ msgid "2. Choose a Theme"
 msgstr "2. एक थीम चुनें"
 
 #: app/templates/partner/embed_generator.html:193
-msgid "Or customize colors:"
+msgid "Or customise colours:"
 msgstr "या रंग कस्टमाइज़ करें:"
 
 #: app/templates/partner/embed_generator.html:196
-msgid "Primary Color"
+msgid "Primary Colour"
 msgstr "प्राथमिक रंग"
 
 #: app/templates/partner/embed_generator.html:206
@@ -31702,12 +31685,12 @@ msgstr ""
 "आपके न्यूजरूम सिस्टम को पोलिंग के बिना सिंक में रखता है।"
 
 #: app/templates/partner/hub.html:1020
-msgid "Can I customize the embed appearance?"
+msgid "Can I customise the embed appearance?"
 msgstr "क्या मैं एम्बेड की उपस्थिति को कस्टमाइज़ कर सकता हूं?"
 
 #: app/templates/partner/hub.html:1022
 msgid ""
-"Yes. Choose from preset themes or set custom primary/background colors and "
+"Yes. Choose from preset themes or set custom primary/background colours and "
 "fonts."
 msgstr ""
 "हां। प्रीसेट थीम चुनें या कस्टम प्राथमिक/पृष्ठभूमि रंग और फॉन्ट सेट करें।"
@@ -31877,7 +31860,7 @@ msgstr ""
 
 #: app/templates/partner/rules.html:117
 msgid ""
-"<strong>Customize</strong> embed colors and fonts to match your site's "
+"<strong>Customise</strong> embed colours and fonts to match your site's "
 "design using supported parameters"
 msgstr ""
 "<strong>कस्टमाइज़ करें</strong> अपनी साइट के डिजाइन से मेल खाने के लिए "
@@ -32822,7 +32805,7 @@ msgstr ""
 #: app/templates/partner/portal/discussion_detail.html:178
 msgid ""
 "This discussion is closed. Reopen it before changing embed submission "
-"behavior."
+"behaviour."
 msgstr ""
 "यह चर्चा बंद है। एम्बेड सबमिशन व्यवहार बदलने से पहले इसे दोबारा खोलें।"
 
@@ -33636,7 +33619,7 @@ msgstr ""
 "मिनटों में अपनी टेस्ट API कुंजी प्राप्त करें। कोई क्रेडिट कार्ड आवश्यक नहीं।"
 
 #: app/templates/partner/portal/signup.html:21
-msgid "Organization name"
+msgid "Organisation name"
 msgstr "संगठन का नाम"
 
 #: app/templates/partner/portal/signup.html:22
@@ -33884,7 +33867,7 @@ msgstr "संगठन प्रोफाइल, कंपनी प्रो�
 
 #: app/templates/profiles/company_profile.html:20
 msgid ""
-"An organization on SocietySpeaks contributing to public discourse and "
+"An organisation on SocietySpeaks contributing to public discourse and "
 "meaningful change."
 msgstr ""
 "SocietySpeaks पर एक संगठन जो सार्वजनिक विचार-विमर्श और सार्थक परिवर्तन में "
@@ -34154,7 +34137,7 @@ msgstr ""
 "जुड़ना चाहते हैं।"
 
 #: app/templates/profiles/select_profile_type.html:126
-msgid "Official organization presence"
+msgid "Official organisation presence"
 msgstr "आधिकारिक संगठन की उपस्थिति"
 
 #: app/templates/profiles/select_profile_type.html:132
@@ -34776,7 +34759,7 @@ msgstr "इस यात्रा में सभी कथनों के म
 #: app/templates/programmes/view.html:282
 #, python-format
 msgid ""
-"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is "
+"Each theme is quick (~%(mins)d minutes). Take breaks any time — nothing is "
 "gated."
 msgstr "हर विषय जल्दी (~%(mins)d मिनट)। कभी विराम लें — कुछ बाध्यकारी नहीं।"
 
@@ -34815,7 +34798,7 @@ msgstr "क्या आप इस यात्रा को समाप्त 
 
 #: app/templates/programmes/view.html:385
 msgid ""
-"Short email nudges — pick cadence and time. One tap unsubscribe anytime."
+"Short email nudges — pick cadence and time. One tap unsubscribe any time."
 msgstr ""
 "लघु ईमेल संकेत - ताल और समय चुनें। किसी भी समय एक टैप से सदस्यता समाप्त "
 "करें।"
@@ -34848,7 +34831,7 @@ msgid "Turn on reminders"
 msgstr "अनुस्मारक चालू करें"
 
 #: app/templates/programmes/view.html:428
-msgid "We only send journey nudges. Unsubscribe anytime from our emails."
+msgid "We only send journey nudges. Unsubscribe any time from our emails."
 msgstr ""
 "हम केवल यात्रा संबंधी सूचनाएं भेजते हैं। हमारे ईमेल से किसी भी समय सदस्यता "
 "समाप्त करें।"
@@ -34963,7 +34946,7 @@ msgid "• Keys are validated before saving"
 msgstr "• Keys को सेव करने से पहले मान्य किया जाता है"
 
 #: app/templates/settings/add_api_key.html:27
-msgid "• You can disable or delete keys anytime"
+msgid "• You can disable or delete keys any time"
 msgstr "• आप किसी भी समय keys को अक्षम या हटा सकते हैं"
 
 #: app/templates/settings/add_api_key.html:28
@@ -35102,7 +35085,7 @@ msgid "• Validation only checks if the key is active"
 msgstr "• वैलिडेशन केवल यह जांचता है कि कुंजी सक्रिय है"
 
 #: app/templates/settings/add_api_key.html:112
-msgid "• You can delete your key anytime"
+msgid "• You can delete your key any time"
 msgstr "• आप किसी भी समय अपनी कुंजी को हटा सकते हैं"
 
 #: app/templates/settings/add_api_key.html:113
@@ -35334,7 +35317,7 @@ msgstr "%(name)s का दावा करें - SocietySpeaks"
 #: app/templates/sources/claim.html:5
 #, python-format
 msgid ""
-"Request to claim %(name)s as your organization's source profile on "
+"Request to claim %(name)s as your organisation's source profile on "
 "SocietySpeaks."
 msgstr ""
 "SocietySpeaks पर %(name)s को अपने संगठन के स्रोत प्रोफाइल के रूप में दावा "
@@ -35388,7 +35371,7 @@ msgstr "आपकी सामग्री से प्राप्त सभ�
 #: app/templates/sources/claim.html:94
 #, python-format
 msgid ""
-"By submitting this claim, you confirm that you are authorized to represent "
+"By submitting this claim, you confirm that you are authorised to represent "
 "%(name)s. False claims may result in account suspension."
 msgstr ""
 "इस दावे को सबमिट करके, आप पुष्टि करते हैं कि आप %(name)s का प्रतिनिधित्व "
@@ -35401,7 +35384,7 @@ msgstr "दावा अनुरोध सबमिट करें"
 #: app/templates/sources/index.html:4
 msgid ""
 "Explore news sources and podcasts on SocietySpeaks. Discover discussions "
-"from your favorite media outlets."
+"from your favourite media outlets."
 msgstr ""
 "SocietySpeaks पर समाचार स्रोत और पॉडकास्ट खोजें। अपने पसंदीदा मीडिया आउटलेट "
 "से चर्चाओं की खोज करें।"

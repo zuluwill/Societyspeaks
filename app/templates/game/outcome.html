@@ -147,7 +147,7 @@
     {% set scope_phrase = _('who played today') if cohort.scope == 'today' else _('who faced this crisis') %}
     {% if cohort.axis %}
     <p class="text-sm text-game-text leading-relaxed mb-2">
-      {{ _('You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s.', dir=cohort.axis.label, pct=cohort.axis.more_than_percent, scope=scope_phrase) }}
+      {{ _('You leaned more towards %(dir)s than %(pct)d%% of leaders %(scope)s.', dir=cohort.axis.label, pct=cohort.axis.more_than_percent, scope=scope_phrase) }}
     </p>
     {% endif %}
     {% if cohort.rarity %}

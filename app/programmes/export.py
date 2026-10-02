@@ -98,7 +98,7 @@ def generate_programme_export_json_bytes(programme, cohort_slug=None, chunk_size
     while True:
         pagination = Discussion.query.filter(
             Discussion.programme_id == programme.id,
-            Discussion.partner_env != 'test'
+            Discussion.publicly_listable()
         ).order_by(Discussion.created_at.asc()).paginate(
             page=page,
             per_page=chunk_size,
@@ -146,7 +146,7 @@ def generate_programme_export_csv_bytes(programme, cohort_slug=None, chunk_size=
     while True:
         pagination = Discussion.query.filter(
             Discussion.programme_id == programme.id,
-            Discussion.partner_env != 'test'
+            Discussion.publicly_listable()
         ).order_by(Discussion.created_at.asc()).paginate(
             page=page,
             per_page=chunk_size,
@@ -203,7 +203,7 @@ def stream_programme_export_json(programme, cohort_slug=None, chunk_size=50):
         while True:
             pagination = Discussion.query.filter(
                 Discussion.programme_id == programme.id,
-                Discussion.partner_env != 'test'
+                Discussion.publicly_listable()
             ).order_by(Discussion.created_at.asc()).paginate(
                 page=page,
                 per_page=chunk_size,
@@ -269,7 +269,7 @@ def stream_programme_export_csv(programme, cohort_slug=None, chunk_size=200):
         while True:
             pagination = Discussion.query.filter(
                 Discussion.programme_id == programme.id,
-                Discussion.partner_env != 'test'
+                Discussion.publicly_listable()
             ).order_by(Discussion.created_at.asc()).paginate(
                 page=page,
                 per_page=chunk_size,

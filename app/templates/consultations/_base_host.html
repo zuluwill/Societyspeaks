@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{# Shell for every host screen: never indexed, with the consultation sub-navigation. #}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{# A host's screens show their question, statements and results. Page views
+   are counted; what is on the page is not captured or recorded. #}
+{% block posthog_extra_config %}
+        autocapture: false,
+        disable_session_recording: true,
+        disable_surveys: true,
+{% endblock %}
+
+{% block content %}
+<nav class="sticky top-0 z-30 border-b border-gray-200 bg-white" aria-label="{{ _('Consultations') }}">
+  <div class="mx-auto flex h-14 max-w-5xl items-center gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
+    <span class="mr-3 hidden shrink-0 text-sm font-semibold text-gray-800 sm:block">{{ _('Consultations') }}</span>
+    {% set nav = [
+      ('consultations.mine', _('Your consultations'), 'mine'),
+      ('consultations.new', _('New consultation'), 'new'),
+      ('consultations.account', _('Plan and billing'), 'account'),
+    ] %}
+    {% for endpoint, label, key in nav %}
+    <a href="{{ url_for(endpoint) }}"
+       class="whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors {% if host_nav == key %}bg-blue-50 text-primary-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}"
+       {% if host_nav == key %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+    <a href="{{ url_for('help.consultations') }}" class="ml-auto whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900">{{ _('Help') }}</a>
+  </div>
+</nav>
+
+<div class="min-h-screen bg-gray-50">
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    {% block host_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce() }}">
+  // Copy buttons: <button data-copy-target="element-id">
+  document.addEventListener('click', async function (event) {
+    const button = event.target.closest('[data-copy-target]');
+    if (!button) return;
+    const source = document.getElementById(button.dataset.copyTarget);
+    if (!source) return;
+    const text = 'value' in source ? source.value : source.textContent;
+    try {
+      await navigator.clipboard.writeText(text.trim());
+    } catch (error) {
+      if ('select' in source) { source.select(); document.execCommand('copy'); }
+    }
+    const original = button.textContent;
+    button.textContent = button.dataset.copiedLabel || original;
+    setTimeout(function () { button.textContent = original; }, 1800);
+  });
+</script>
+{% block host_scripts %}{% endblock %}
+{% endblock %}

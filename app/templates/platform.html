@@ -6,9 +6,9 @@
 {% block canonical %}{{ url_for('main.platform', _external=True) }}{% endblock %}
 {% block meta_description %}{{ _('Nuanced debate backed by rigorous analysis. Society Speaks discussions and programmes give individuals a voice and organisations the tools to run structured deliberation at any scale — from a single conversation to a national consultation.') }}{% endblock %}
 {% block og_title %}{{ _('The Platform — Society Speaks') }}{% endblock %}
-{% block og_description %}{{ _("Vote on statements. Discover where you agree with people you thought you didn't. Society Speaks reveals how opinion actually clusters — not just percentages, but the real structure of public views.") }}{% endblock %}
+{% block og_description %}{{ _("Vote on statements. Discover where you agree with people you thought you didn't. Society Speaks shows how opinion is structured: what most people share, what divides them, and which ideas both sides accept.") }}{% endblock %}
 {% block twitter_title %}{{ _('The Platform — Society Speaks') }}{% endblock %}
-{% block twitter_description %}{{ _("Vote on statements. Discover where you agree with people you thought you didn't. Society Speaks reveals how opinion actually clusters — not just percentages, but the real structure of public views.") }}{% endblock %}
+{% block twitter_description %}{{ _("Vote on statements. Discover where you agree with people you thought you didn't. Society Speaks shows how opinion is structured: what most people share, what divides them, and which ideas both sides accept.") }}{% endblock %}
 
 {% block content %}
 
@@ -178,7 +178,7 @@
           <div class="w-10 h-10 rounded-full bg-primary-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0">2</div>
           <div>
             <h3 class="font-bold text-gray-900 text-lg mb-1">{{ _('Vote agree, disagree, or unsure') }}</h3>
-            <p class="text-gray-600 text-sm leading-relaxed">{{ _("One tap. No essays, no point-scoring. Just your genuine position. You can add reasoning or evidence, but it's optional. Vote on 5 statements to unlock your cluster.") }}</p>
+            <p class="text-gray-600 text-sm leading-relaxed">{{ _("One tap. No essays, no point-scoring. Just your genuine position. You can add reasoning or evidence, but it's optional. Vote on 5 statements to see the results.") }}</p>
           </div>
         </div>
         <div class="flex gap-5">
@@ -215,7 +215,7 @@
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-gray-900">{{ _('What consensus analysis reveals') }}</h2>
-      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">{{ _('We show you the shape of opinion, not just the count — which groups emerge, what they share across divides, and where genuine fault lines lie.') }}</p>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">{{ _('We show the shape of opinion as well as the count: what people share, where they part, and which groups emerge when the votes support them.') }}</p>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-10 items-start">
@@ -445,7 +445,7 @@
           <a href="https://pol.is" target="_blank" rel="noopener" class="text-primary-600 font-semibold hover:underline">Pol.is</a>
           {{ _("pioneered this approach and used it for Taiwan's vTaiwan participatory democracy process — one of the most successful examples of digital deliberation in history. We are inspired by that work and the open-source research behind it.") }}
         </p>
-        <p class="text-gray-600 leading-relaxed mb-5">{{ _('Society Speaks builds on the core clustering insight and takes it further for structured, institutional use:') }}</p>
+        <p class="text-gray-600 leading-relaxed mb-5">{{ _('Society Speaks builds on that approach and extends it for structured, institutional use:') }}</p>
         <div class="space-y-3">
           <div class="flex items-start gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100">
             <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
@@ -458,7 +458,7 @@
             <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
             <div>
               <p class="text-sm font-semibold text-gray-800">{{ _('Programmes — structured multi-discussion campaigns') }}</p>
-              <p class="text-xs text-gray-600 mt-0.5">{{ _('Group many discussions into phases, themes, and cohorts — enabling full consultation campaigns, not just one-off conversations') }}</p>
+              <p class="text-xs text-gray-600 mt-0.5">{{ _('Group many discussions into phases, themes and cohorts, so a consultation can run as a campaign') }}</p>
             </div>
           </div>
           <div class="flex items-start gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100">
@@ -620,7 +620,7 @@
           </li>
           <li class="flex items-start gap-3">
             <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span class="text-gray-700 text-sm">{{ _('<strong>Cohorts</strong> — Compare views across regions, demographics, or stakeholder groups.')|safe }}</span>
+            <span class="text-gray-700 text-sm">{{ _('<strong>Cohorts</strong> — Tag participants by region or stakeholder group with the link you share.')|safe }}</span>
           </li>
           <li class="flex items-start gap-3">
             <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -725,7 +725,7 @@
             <p class="text-sm text-gray-500">{{ _('Citizens, activists, students, curious people') }}</p>
           </div>
         </div>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">{{ _('Take a position on issues that matter to you. See where you stand relative to others — not just as a percentage, but as part of a cluster of people who think like you. Discover where you have more in common with other groups than expected.') }}</p>
+        <p class="text-gray-600 mb-5 text-sm leading-relaxed">{{ _('Take a position on issues that matter to you. See where you stand relative to others, and where you have more in common with them than you expected.') }}</p>
         <ul class="space-y-2.5 text-sm text-gray-700 mb-7">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -869,7 +869,7 @@
             <p class="text-sm text-gray-500">{{ _('Departments, strategy offices, democratic institutions') }}</p>
           </div>
         </div>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">{{ _('Run deliberative polling at national or regional scale. Map what the population agrees on, where genuine divisions lie, and what bridges opposing views. Get structured evidence to inform policy — not just percentages, but clustered insight.') }}</p>
+        <p class="text-gray-600 mb-5 text-sm leading-relaxed">{{ _('Run deliberative polling at national or regional scale. Map what the population agrees on, where genuine divisions lie, and what bridges opposing views. Get structured evidence to inform policy.') }}</p>
         <ul class="space-y-2.5 text-sm text-gray-700 mb-5">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -877,7 +877,7 @@
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            {{ _('Compare views across regions, cohorts, and demographics') }}
+            {{ _('Results by cohort, such as region or stakeholder group') }}
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -1020,7 +1020,13 @@
     <div class="text-center mb-10">
       <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">{{ _('Pricing') }}</p>
       <h2 class="text-3xl font-bold text-gray-900">{{ _('Who pays?') }}</h2>
-      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">{{ _('Free for citizens. Facilitated plans for public bodies. Separate self-serve pricing for publisher embeds.') }}</p>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">
+        {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+        {{ _('Free for citizens. Run a consultation with your own audience from £249. Facilitated plans for public bodies. Publisher embeds from £49 a month.') }}
+        {% else %}
+        {{ _('Free for citizens. Facilitated plans for public bodies. Separate self-serve pricing for publisher embeds.') }}
+        {% endif %}
+      </p>
     </div>
 
     <div class="mx-auto max-w-4xl overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
@@ -1035,12 +1041,21 @@
         <tbody class="divide-y divide-gray-100">
           <tr class="hover:bg-gray-50">
             <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Individuals, community groups, journalists') }}</td>
-            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Full platform, self-serve — participate, create discussions and profiles') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('The public platform: take part, create discussions and profiles') }}</td>
             <td class="px-5 py-4 text-right font-semibold text-emerald-700 whitespace-nowrap align-top">{{ _('Free') }}</td>
           </tr>
+          {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Membership bodies, charities, teams and events') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Ask your own members, staff or audience one question and get a report') }}</td>
+            <td class="px-5 py-4 text-right font-semibold text-gray-900 whitespace-nowrap align-top">
+              <a href="{{ url_for('consultations.landing') }}" class="text-primary-600 hover:underline">{{ _('from £249') }}</a>
+            </td>
+          </tr>
+          {% endif %}
           <tr class="hover:bg-gray-50">
             <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Councils and public bodies — trying it out') }}</td>
-            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Self-serve trial — run a test consultation before you commit') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Try the free public platform before you commission a facilitated consultation') }}</td>
             <td class="px-5 py-4 text-right font-semibold text-emerald-700 whitespace-nowrap align-top">{{ _('Free') }}</td>
           </tr>
           <tr class="hover:bg-gray-50">
@@ -1102,7 +1117,7 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </span>
         </summary>
-        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">{{ _("The clustering algorithm needs enough data to identify meaningful groups. In practice, you'll start to see clear patterns from around 30–40 active participants (people who have voted on at least 5 statements). The analysis becomes significantly more reliable with 100+ participants, and very robust at 500+. Each participant needs to vote on at least 5 statements to be included in their cluster.") }}</p>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">{{ _("The clustering algorithm needs enough data to identify meaningful groups. In practice, you'll start to see clear patterns from around 30–40 active participants (people who have voted on at least 5 statements). The analysis becomes much more reliable with 100+ participants, and more so again at 500+. Each participant needs to vote on at least 5 statements to be included in their cluster.") }}</p>
       </details>
 
       <details class="group py-5">
@@ -1231,4 +1246,6 @@
   </div>
 </div>
 
+{% from "components/_offers.html" import offers %}
+{{ offers(current='platform') }}
 {% endblock %}

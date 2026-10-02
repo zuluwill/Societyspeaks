@@ -336,6 +336,44 @@ class Config:
     SELF_SERVE_TRIAL_ENABLED = (
         os.getenv('SELF_SERVE_TRIAL_ENABLED', 'false').lower() == 'true'
     )
+    # ── Self-serve consultations ────────────────────────────────────────────
+    # One question, one audience, one report. Off until launch: every
+    # /consultations/... product route and /c/<token> answers 404, and the
+    # marketing page keeps selling the facilitated offer only.
+    # Shuffled copies of the votes used to test that opinion groups are real
+    # before they are published. 0 switches the test off.
+    CONSENSUS_GROUP_TEST_PERMUTATIONS = int(os.environ.get('CONSENSUS_GROUP_TEST_PERMUTATIONS', '39'))
+
+    # Product analytics records that someone voted, not how. Set to "true" only
+    # if the privacy policy says vote choices are shared with the analytics provider.
+    ANALYTICS_INCLUDE_VOTE_DIRECTION = os.environ.get('ANALYTICS_INCLUDE_VOTE_DIRECTION', 'false').lower() == 'true'
+
+    CONSULTATIONS_SELF_SERVE_ENABLED = (
+        os.getenv('CONSULTATIONS_SELF_SERVE_ENABLED', 'false').lower() == 'true'
+    )
+    # Prices in pence, excluding VAT. A Stripe Price id, when set, wins over the
+    # inline amount (use one to keep the Stripe dashboard to a single product).
+    CONSULTATION_PRICE_SINGLE_PENCE = _env_int('CONSULTATION_PRICE_SINGLE_PENCE', 24900)
+    CONSULTATION_PRICE_ANNUAL_PENCE = _env_int('CONSULTATION_PRICE_ANNUAL_PENCE', 95000)
+    CONSULTATION_STRIPE_PRICE_SINGLE = os.getenv('CONSULTATION_STRIPE_PRICE_SINGLE') or None
+    CONSULTATION_STRIPE_PRICE_ANNUAL = os.getenv('CONSULTATION_STRIPE_PRICE_ANNUAL') or None
+    # Turn on once the company is VAT registered and Stripe Tax is configured.
+    STRIPE_AUTOMATIC_TAX_ENABLED = (
+        os.getenv('STRIPE_AUTOMATIC_TAX_ENABLED', 'false').lower() == 'true'
+    )
+    CONSULTATION_DRAFT_STATEMENT_COUNT = _env_int('CONSULTATION_DRAFT_STATEMENT_COUNT', 12)
+    CONSULTATION_MIN_STATEMENTS = _env_int('CONSULTATION_MIN_STATEMENTS', 5)
+    CONSULTATION_MAX_STATEMENTS = _env_int('CONSULTATION_MAX_STATEMENTS', 30)
+    CONSULTATION_DEFAULT_OPEN_DAYS = _env_int('CONSULTATION_DEFAULT_OPEN_DAYS', 7)
+    # AI drafting runs before payment, so it is capped per account per day.
+    CONSULTATION_DRAFTS_PER_DAY = _env_int('CONSULTATION_DRAFTS_PER_DAY', 6)
+    # Below this many participants the host is told turnout is low.
+    CONSULTATION_RECOMMENDED_PARTICIPANTS = _env_int('CONSULTATION_RECOMMENDED_PARTICIPANTS', 30)
+    # Model for drafting, screening and report narrative (app/lib/llm_client.py).
+    PLATFORM_LLM_MODEL = os.getenv('PLATFORM_LLM_MODEL') or None
+    # A public discussion whose results are shown as the example report.
+    CONSULTATION_EXAMPLE_DISCUSSION_ID = _env_int('CONSULTATION_EXAMPLE_DISCUSSION_ID', 0) or None
+
     # Bare or "Name <addr>" — used by brief senders and safe-sender UI/email copy.
     BRIEF_FROM_EMAIL = os.getenv('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
     # Model override for first-brief synchronous generation. Falls back to the briefing's normal model.

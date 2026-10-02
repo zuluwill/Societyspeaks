@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="{{ current_lang|default('en') }}" dir="{{ (supported_languages|default({})).get(current_lang|default('en'), {}).get('dir', 'ltr') }}" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>{{ consultation.question }} | {{ consultation.organisation_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}?v={{ css_version }}">
+</head>
+<body class="min-h-full bg-gray-50 text-gray-900 antialiased">
+  <header class="bg-primary-700 text-white">
+    <div class="mx-auto max-w-xl px-5 py-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-blue-100">{{ consultation.organisation_name }}</p>
+      <h1 class="mt-1 text-xl font-bold leading-snug sm:text-2xl">{{ consultation.question }}</h1>
+    </div>
+  </header>
+  <main class="mx-auto max-w-xl px-5 py-10">
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+      {% if reason == 'closed' %}
+      <h2 class="text-xl font-bold text-gray-900">{{ _('Voting has closed') }}</h2>
+      <p class="mt-2 text-gray-600">{{ _('Thank you to everyone who took part. %(organisation)s now has the results.', organisation=consultation.organisation_name) }}</p>
+      {% elif reason == 'empty' %}
+      <h2 class="text-xl font-bold text-gray-900">{{ _('Nothing to answer yet') }}</h2>
+      <p class="mt-2 text-gray-600">{{ _('%(organisation)s has not put any statements up yet. Please try the link again later.', organisation=consultation.organisation_name) }}</p>
+      {% else %}
+      <h2 class="text-xl font-bold text-gray-900">{{ _('Not open yet') }}</h2>
+      <p class="mt-2 text-gray-600">{{ _('%(organisation)s has not opened this for answers yet. Please try the link again later.', organisation=consultation.organisation_name) }}</p>
+      {% endif %}
+    </div>
+    <p class="mt-10 text-center text-xs text-gray-500">{{ _('Made with') }} <a href="{{ url_for('consultations.landing') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a></p>
+  </main>
+</body>
+</html>

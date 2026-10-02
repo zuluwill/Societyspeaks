@@ -634,7 +634,7 @@
                 <div
                   class="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
                 >
-                  {{ _('Premium') }}
+                  {{ _('For individuals') }}
                 </div>
                 <a
                   href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
@@ -647,6 +647,12 @@
                     >{{ _('Pro') }}</span
                   >
                 </a>
+                <div class="border-t border-gray-100 my-1"></div>
+                <div
+                  class="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                >
+                  {{ _('For organisations') }}
+                </div>
                 <a
                   href="{{ url_for('partner.hub') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -658,6 +664,19 @@
                     >{{ _('Pro') }}</span
                   >
                 </a>
+                {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+                <a
+                  href="{{ url_for('consultations.landing') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                >
+                  {{ _('Run a consultation') }}
+                  <span
+                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-primary-800"
+                    >{{ _('Pro') }}</span
+                  >
+                </a>
+                {% endif %}
                 <a
                   href="{{ url_for('main.consultations') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -817,7 +836,7 @@
               href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
               class="ml-3 hidden sm:inline-flex items-center rounded-full bg-amber-400 px-4 py-1.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-amber-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-700 focus:ring-amber-200"
               data-ph-capture-attribute-cta="nav-briefings-trial"
-            >{{ _('Unlock Personal Briefs') }}</a>
+            >{{ _('Get Personal Briefs') }}</a>
             {% endif %}
 
             {% if current_user.is_authenticated %}
@@ -1048,7 +1067,7 @@
               >
               <span
                 class="mt-2 block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
-                >{{ _('Premium') }}</span
+                >{{ _('For individuals') }}</span
               >
               <a
                 href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
@@ -1060,6 +1079,10 @@
                   >{{ _('Pro') }}</span
                 >
               </a>
+              <span
+                class="mt-2 block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
+                >{{ _('For organisations') }}</span
+              >
               <a
                 href="{{ url_for('partner.hub') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
@@ -1070,6 +1093,18 @@
                   >{{ _('Pro') }}</span
                 >
               </a>
+              {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+              <a
+                href="{{ url_for('consultations.landing') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
+              >
+                {{ _('Run a consultation') }}
+                <span
+                  class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white"
+                  >{{ _('Pro') }}</span
+                >
+              </a>
+              {% endif %}
               <a
                 href="{{ url_for('main.consultations') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
@@ -1206,7 +1241,7 @@
                   href="{{ url_for('briefing.list_briefings') }}#briefings-upgrade"
                   class="block rounded-md px-3 py-2 text-base font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300"
                   data-ph-capture-attribute-cta="nav-mobile-briefings-trial"
-                  >{{ _('Unlock Personal Briefs') }}</a
+                  >{{ _('Get Personal Briefs') }}</a
                 >
                 {% endif %}
                 <a
@@ -1379,6 +1414,16 @@
                   <span class="text-xs text-primary-400">{{ _('Pro') }}</span></a
                 >
               </li>
+              {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+              <li>
+                <a
+                  href="{{ url_for('consultations.landing') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >{{ _('Run a consultation') }}
+                  <span class="text-xs text-primary-400">{{ _('Pro') }}</span></a
+                >
+              </li>
+              {% endif %}
               <li>
                 <a
                   href="{{ url_for('main.consultations') }}"
@@ -1445,7 +1490,7 @@
               </li>
               <li>
                 <a
-                  href="mailto:info@societyspeaks.io?subject={{ _('SocietySpeaks inquiry')|urlencode }}"
+                  href="mailto:info@societyspeaks.io?subject={{ _('SocietySpeaks enquiry')|urlencode }}"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _('Contact') }}</a
                 >

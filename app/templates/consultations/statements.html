@@ -1,0 +1,161 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md, btn_secondary_sm, link_primary %}
+{% from "consultations/_macros.html" import stepper, next_panel, callout, input_classes with context %}
+{% set host_nav = 'mine' %}
+{% set warning_text = {
+  'question': _('This reads as a question. People can only agree or disagree with a statement.'),
+  'two_ideas': _('This may contain two ideas. Someone who agrees with only one has no honest answer.'),
+  'long': _('This is long. Shorter statements get more answers.'),
+} %}
+
+{% block title %}{{ _('Review your statements') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+{{ stepper('statements') }}
+<div class="grid gap-8 lg:grid-cols-3">
+  <div class="lg:col-span-2">
+    <p class="text-sm text-gray-500">{{ consultation.organisation_name }}</p>
+    <h1 class="mt-1 text-2xl font-bold text-gray-900">{{ consultation.question }}</h1>
+    <a href="{{ url_for('consultations.question', consultation_id=consultation.id) }}" class="mt-1 inline-block text-sm {{ link_primary() }}">{{ _('Edit the question') }}</a>
+
+    {% if drafting.status == 'working' %}
+    <div id="drafting-working" class="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5" role="status">
+      <div class="flex items-center gap-3">
+        <div class="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-blue-200 border-t-primary-600 motion-reduce:animate-none" aria-hidden="true"></div>
+        <p class="text-sm font-semibold text-blue-900">{{ _('Drafting your statements. This usually takes under a minute.') }}</p>
+      </div>
+      <p class="mt-2 text-sm text-blue-900">{{ _('They will appear here by themselves. You can also start writing your own below.') }}</p>
+    </div>
+    {% elif drafting.status == 'failed' %}
+    <div class="mt-6">
+      {% call callout('warning', _('We could not draft statements this time')) %}
+        {{ _('Nothing you entered has been lost. Try again, or write your own below. The panel on the right shows what makes a good statement.') }}
+        <form method="post" action="{{ url_for('consultations.draft_more', consultation_id=consultation.id) }}" class="mt-3">
+          {{ action_form.hidden_tag() }}
+          <button type="submit" class="{{ btn_secondary_sm() }}" data-loading-text="{{ _('Starting…') }}">{{ _('Try drafting again') }}</button>
+        </form>
+      {% endcall %}
+    </div>
+    {% endif %}
+
+    <div class="mt-6 flex items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold text-gray-900">
+        {{ ngettext('%(num)d statement', '%(num)d statements', rows|length) }}
+      </h2>
+      {% if rows %}
+      <p class="text-sm text-gray-500" title="{{ _('A balanced set gives every point of view something to agree with.') }}">
+        {{ _('Balance:') }}
+        <span class="font-medium text-emerald-700">{{ _('%(n)d for', n=stances.pro) }}</span> ·
+        <span class="font-medium text-red-700">{{ _('%(n)d against', n=stances.con) }}</span> ·
+        <span class="font-medium text-gray-700">{{ _('%(n)d open', n=stances.neutral) }}</span>
+      </p>
+      {% endif %}
+    </div>
+
+    {% if rows %}
+    <ol class="mt-3 space-y-3">
+      {% for row in rows %}
+      {% set statement = row.statement %}
+      <li class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <form method="post" action="{{ url_for('consultations.edit_statement', consultation_id=consultation.id, statement_id=statement.id) }}">
+          {{ action_form.hidden_tag() }}
+          <label for="statement-{{ statement.id }}" class="sr-only">{{ _('Statement %(n)d', n=loop.index) }}</label>
+          <textarea id="statement-{{ statement.id }}" name="content" rows="2" maxlength="{{ max_length }}"
+                    class="block w-full resize-y rounded-lg border border-transparent px-2 py-1 text-base text-gray-900 hover:border-gray-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    data-original="{{ statement.content }}">{{ statement.content }}</textarea>
+          {% for warning in row.warnings %}
+          <p class="mt-1 flex gap-1.5 px-2 text-sm text-amber-800">
+            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            {{ warning_text[warning] }}
+          </p>
+          {% endfor %}
+          <div class="mt-2 flex items-center justify-between gap-3 px-2">
+            <span class="text-xs text-gray-500">
+              {% if statement.source == 'ai_generated' %}{{ _('Drafted by AI') }}{% else %}{{ _('Written by you') }}{% endif %}
+            </span>
+            <span class="flex items-center gap-2">
+              <button type="submit" class="hidden rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-500" data-save-button>{{ _('Save changes') }}</button>
+              <button type="submit" formaction="{{ url_for('consultations.remove_statement', consultation_id=consultation.id, statement_id=statement.id) }}"
+                      class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-700">{{ _('Remove') }}</button>
+            </span>
+          </div>
+        </form>
+      </li>
+      {% endfor %}
+    </ol>
+    {% elif drafting.status != 'working' %}
+    <p class="mt-3 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-600">{{ _('No statements yet. Add your first one below.') }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('consultations.add_statement', consultation_id=consultation.id) }}" class="mt-4 rounded-xl border border-dashed border-gray-300 bg-white p-4">
+      {{ action_form.hidden_tag() }}
+      <label for="new-statement" class="block text-sm font-medium text-gray-700">{{ _('Add a statement of your own') }}</label>
+      <textarea id="new-statement" name="content" rows="2" maxlength="{{ max_length }}" required minlength="10"
+                class="{{ input_classes() }} mt-1" placeholder="{{ _('We should…') }}"></textarea>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button type="submit" class="{{ btn_secondary_md() }}">{{ _('Add statement') }}</button>
+        {% if rows|length < maximum and drafting.status != 'working' %}
+        <button type="submit" formaction="{{ url_for('consultations.draft_more', consultation_id=consultation.id) }}" formnovalidate
+                class="text-sm {{ link_primary() }}">{{ _('Draft more with AI') }}</button>
+        {% endif %}
+      </div>
+    </form>
+
+    <div class="mt-8 flex flex-wrap items-center gap-4">
+      {% if rows|length >= minimum %}
+      <a href="{{ url_for('consultations.settings', consultation_id=consultation.id) }}" class="{{ btn_primary_md() }} min-h-11">{{ _('These look right. Continue') }}</a>
+      {% else %}
+      <span class="{{ btn_primary_md() }} min-h-11 cursor-not-allowed opacity-50" aria-disabled="true">{{ _('Continue') }}</span>
+      <span class="text-sm text-gray-600">{{ _('Add at least %(minimum)d statements to continue.', minimum=minimum) }}</span>
+      {% endif %}
+      <a href="{{ url_for('consultations.participate', token=consultation.access_token) }}" target="_blank" rel="noopener" class="text-sm {{ link_primary() }}">{{ _('Preview as a participant') }}</a>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    {% call next_panel(_('Make them yours')) %}
+      <p>{{ _('Read each statement as a participant would. Edit the wording, remove any that miss the point, and add what is missing.') }}</p>
+      <p>{{ _('Once voting starts, statements cannot be reworded, so that everyone answers the same thing.') }}</p>
+    {% endcall %}
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-semibold text-gray-900">{{ _('A good statement') }}</p>
+      <ul class="mt-2 space-y-2 text-sm text-gray-600">
+        <li>✓ {{ _('Makes one point. “We should meet monthly”, not “We should meet monthly and publish the minutes”.') }}</li>
+        <li>✓ {{ _('Is something a reasonable person could disagree with.') }}</li>
+        <li>✓ {{ _('Uses the words your audience would use.') }}</li>
+        <li>✓ {{ _('Is fair to people who will disagree with it.') }}</li>
+        <li>✗ {{ _('Is not a question, and never names an individual.') }}</li>
+      </ul>
+      <p class="mt-3 text-sm text-gray-600">{{ _('Ten to fifteen statements is about right: enough to cover the question, short enough to finish.') }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block host_scripts %}
+<script nonce="{{ csp_nonce() }}">
+  // Show "Save changes" only once a statement has been edited.
+  document.querySelectorAll('textarea[data-original]').forEach(function (field) {
+    var saveButton = field.form.querySelector('[data-save-button]');
+    field.addEventListener('input', function () {
+      saveButton.classList.toggle('hidden', field.value.trim() === field.dataset.original);
+    });
+  });
+  {% if drafting.status == 'working' %}
+  (function poll() {
+    setTimeout(async function () {
+      try {
+        const response = await fetch('{{ url_for("consultations.drafting_status", consultation_id=consultation.id) }}', { headers: { 'Accept': 'application/json' } });
+        const state = await response.json();
+        const editing = Array.prototype.some.call(document.querySelectorAll('textarea'), function (f) {
+          return f.value.trim() !== (f.dataset.original || '');
+        });
+        // Do not reload over something the host is typing.
+        if (state.status !== 'working' && !editing) { window.location.reload(); return; }
+      } catch (error) { /* keep waiting */ }
+      poll();
+    }, 2500);
+  })();
+  {% endif %}
+</script>
+{% endblock %}

@@ -22,7 +22,7 @@ _WERKZEUG_DEFAULT_DESCRIPTIONS = {
     "The browser (or proxy) sent a request that this server could not understand.":
         lambda: _("The browser (or proxy) sent a request that this server could not understand."),
     "The server could not verify that you are authorized to access the URL requested.":
-        lambda: _("The server could not verify that you are authorized to access the URL requested."),
+        lambda: _("The server could not verify that you are authorised to access the URL requested."),
     "You don't have the permission to access the requested resource.":
         lambda: _("You don't have the permission to access the requested resource."),
     "The requested URL was not found on the server.":

@@ -1,0 +1,178 @@
+{#
+  The report itself. Rendered three ways from this one file: inside the host
+  page, on the shared page, and to PDF. Styled by static/css/report.css.
+
+  Expects: data, narrative, narrative_source, groups, is_interim.
+  Every figure shown comes from ``data``; the narrative never carries numbers.
+#}
+{% set verdict_titles = {
+  'agrees': _('Where participants agree'),
+  'disagrees': _('Where participants disagree'),
+  'unsure': _('Where participants are unsure'),
+  'split': _('Where participants are split'),
+  'no_clear_result': _('No clear result'),
+  'too_few_votes': _('Too few votes to say'),
+} %}
+{% set verdict_leads = {
+  'agrees': _('A clear majority agreed with these statements.'),
+  'disagrees': _('A clear majority disagreed with these statements.'),
+  'unsure': _('“Unsure” was the most common answer to these statements.'),
+  'split': _('Agreement and disagreement were both substantial, and close to each other.'),
+  'no_clear_result': _('The votes lean one way, but not clearly enough to call.'),
+  'too_few_votes': _('Fewer than ten people voted on these statements. The counts are shown, with no conclusion drawn.'),
+} %}
+{% set lean_labels = {
+  'agree': _('Leans towards agreement.'),
+  'disagree': _('Leans towards disagreement.'),
+  'unsure': _('Leans towards unsure.'),
+} %}
+
+{% macro percent(share) %}{{ (share * 100)|round|int }}%{% endmacro %}
+
+{% macro bar(row) %}
+{% set a = (row.agree_share * 100)|round(2) %}
+{% set d = (row.disagree_share * 100)|round(2) %}
+{% set u = (100 - a - d)|round(2) if row.total else 0 %}
+<svg class="ssr-bar" viewBox="0 0 100 4" preserveAspectRatio="none" role="img"
+     aria-label="{{ _('%(agree)s agree, %(disagree)s disagree, %(unsure)s unsure', agree=percent(row.agree_share)|trim, disagree=percent(row.disagree_share)|trim, unsure=percent(row.unsure_share)|trim) }}">
+  <rect x="0" y="0" width="100" height="4" fill="#f3f4f6"/>
+  {% if row.total %}
+  <rect x="0" y="0" width="{{ a }}" height="4" fill="#059669"/>
+  <rect x="{{ a }}" y="0" width="{{ d }}" height="4" fill="#dc2626"/>
+  <rect x="{{ a + d }}" y="0" width="{{ u if u > 0 else 0 }}" height="4" fill="#d97706"/>
+  {% endif %}
+</svg>
+{% endmacro %}
+
+<article class="ssr">
+  <header class="ssr-cover">
+    <p class="ssr-eyebrow">{{ report_eyebrow|default(_('Consultation report'), true) }}</p>
+    <h1>{{ data.question }}</h1>
+    <p class="ssr-org">
+      {{ data.organisation_name }}{% if data.audience_label %} · {{ data.audience_label }}{% endif %}
+      {% if period_label %} · {{ period_label }}{% endif %}
+    </p>
+    {% if is_interim %}
+    <p class="ssr-interim">{{ _('Interim report. Voting was still open when this was made on %(date)s, so the results may change.', date=generated_label) }}</p>
+    {% endif %}
+    <dl class="ssr-facts">
+      <div><dt>{{ _('Took part') }}</dt><dd>{{ data.participant_count }}</dd></div>
+      <div><dt>{{ _('Votes cast') }}</dt><dd>{{ data.vote_count }}</dd></div>
+      <div><dt>{{ _('Statements') }}</dt><dd>{{ data.statement_count }}</dd></div>
+      {% if data.response_rate is not none %}
+      <div><dt>{{ _('Response rate') }}</dt><dd>{{ percent(data.response_rate) }}</dd></div>
+      {% endif %}
+    </dl>
+  </header>
+
+  <section class="ssr-section" aria-labelledby="ssr-glance">
+    <h2 id="ssr-glance">{{ _('At a glance') }}</h2>
+    <p class="ssr-headline">{{ narrative.headline }}</p>
+    <div class="ssr-tiles">
+      {% for key, label in [
+        ('agrees', _('statements they agree with')),
+        ('disagrees', _('statements they disagree with')),
+        ('unsure', _('statements they are unsure about')),
+        ('split', _('statements they are split on')),
+      ] %}
+      <div class="ssr-tile ssr-tile--{{ key }}">
+        <span class="ssr-tile-number">{{ data.counts[key] }}</span>
+        <span class="ssr-tile-label">{{ label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% if narrative.themes %}
+    <div class="ssr-themes">
+      {% for theme in narrative.themes %}
+      <div class="ssr-theme ssr-theme--{{ theme.verdict }}">
+        <h3>{{ theme.title }}</h3>
+        <p>{{ theme.summary }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  {% for verdict, rows in groups %}
+  {% if rows or verdict in ('agrees', 'disagrees', 'unsure', 'split') %}
+  <section class="ssr-section" aria-labelledby="ssr-{{ verdict }}">
+    <h2 id="ssr-{{ verdict }}"><span class="ssr-marker ssr-marker--{{ verdict }}" aria-hidden="true"></span>{{ verdict_titles[verdict] }}</h2>
+    {% if rows %}
+    <p class="ssr-lead">{{ verdict_leads[verdict] }}</p>
+    <ol class="ssr-statements">
+      {% for row in rows %}
+      <li class="ssr-statement">
+        <p class="ssr-statement-text">
+          {{ row.content }}
+          {% if row.source == 'user_submitted' %}<span class="ssr-audience-tag">{{ _('Suggested by a participant') }}</span>{% endif %}
+        </p>
+        {% if verdict == 'too_few_votes' %}
+        <p class="ssr-figures">
+          {% if row.total %}
+          <span>{{ ngettext('%(num)d of %(total)d agreed', '%(num)d of %(total)d agreed', row.agree, total=row.total) }}</span>
+          <span>{{ ngettext('%(num)d disagreed', '%(num)d disagreed', row.disagree) }}</span>
+          <span>{{ ngettext('%(num)d unsure', '%(num)d unsure', row.unsure) }}</span>
+          {% else %}
+          <span class="ssr-votes">{{ _('No votes yet') }}</span>
+          {% endif %}
+        </p>
+        {% else %}
+        {{ bar(row) }}
+        <p class="ssr-figures">
+          <span><span class="ssr-key ssr-key--agree" aria-hidden="true"></span>{{ _('%(share)s agree', share=percent(row.agree_share)|trim) }}</span>
+          <span><span class="ssr-key ssr-key--disagree" aria-hidden="true"></span>{{ _('%(share)s disagree', share=percent(row.disagree_share)|trim) }}</span>
+          <span><span class="ssr-key ssr-key--unsure" aria-hidden="true"></span>{{ _('%(share)s unsure', share=percent(row.unsure_share)|trim) }}</span>
+          <span class="ssr-votes">{{ ngettext('%(num)d vote', '%(num)d votes', row.total) }}</span>
+        </p>
+        {% if verdict == 'no_clear_result' and row.lean %}<p class="ssr-lean">{{ lean_labels[row.lean] }}</p>{% endif %}
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="ssr-empty">{{ _('No statements had this result.') }}</p>
+    {% endif %}
+  </section>
+  {% endif %}
+  {% endfor %}
+
+  {% if narrative.next_questions %}
+  <section class="ssr-suggestions" aria-labelledby="ssr-next">
+    <h2 id="ssr-next">{{ _('Suggested next questions') }}</h2>
+    <p class="ssr-lead">{{ _('These are suggestions for what to ask or look into next. They are not findings.') }}</p>
+    <ul>
+      {% for question in narrative.next_questions %}<li>{{ question }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="ssr-section ssr-limits" aria-labelledby="ssr-limits">
+    <h2 id="ssr-limits">{{ _('Who took part, and what this does not show') }}</h2>
+    <ul>
+      <li>{{ ngettext(
+        'These results describe the %(num)d person who took part. People choose whether to take part, so participants may differ from those who did not. This is not a poll of everyone who was invited, or of the public.',
+        'These results describe the %(num)d people who took part. People choose whether to take part, so participants may differ from those who did not. This is not a poll of everyone who was invited, or of the public.',
+        data.participant_count) }}</li>
+      {% if data.is_low_turnout %}
+      <li>{{ _('Turnout was low. Clear results usually need %(recommended)d or more participants, so treat these results with caution.', recommended=data.recommended_participants) }}</li>
+      {% endif %}
+      <li>{{ _('A result is called only when the votes clearly support it, allowing for how many people voted. With few votes, even a large majority is reported as “no clear result”.') }}</li>
+      <li>{{ _('Percentages are of everyone who voted on that statement, including those who answered “unsure”. People could skip statements, so the number of votes differs between statements.') }}</li>
+      <li>{{ _('Taking part was anonymous, with one set of answers per device. Someone using two devices would be counted twice.') }}</li>
+      <li>
+        {% if narrative_source == 'example' %}
+        {{ _('This example uses made-up votes. In your report every figure is counted directly from the votes; the headline, themes and suggested questions are written by AI from those results and checked by software, so they describe the results and do not add to them.') }}
+        {% elif narrative_source == 'ai' %}
+        {{ _('Every figure in this report is counted directly from the votes. The headline, themes and suggested questions were written by AI from those results and checked by software: they describe the results and do not add to them.') }}
+        {% else %}
+        {{ _('Every figure in this report is counted directly from the votes.') }}
+        {% endif %}
+      </li>
+    </ul>
+  </section>
+
+  <footer class="ssr-footer">
+    <span>{{ _('Made with Society Speaks') }} · <a href="{{ product_url }}">{{ product_url|replace('https://', '')|replace('http://', '') }}</a></span>
+    <span>{{ _('Generated %(date)s', date=generated_label) }}</span>
+  </footer>
+</article>

@@ -38,7 +38,11 @@ LEGACY_STATEMENT_CLIENT_COOKIE_NAME = "statement_client_id"
 LEGACY_DAILY_CLIENT_COOKIE_NAME = "daily_client_id"
 
 VOTER_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
-_CLIENT_ID_HEX_LEN = 64
+VOTER_CLIENT_ID_LENGTH = 64  # hex characters
+_CLIENT_ID_HEX_LEN = VOTER_CLIENT_ID_LENGTH
+# Request-scoped (WSGI environ), unlike ``flask.g``, which outlives a request
+# whenever an app context is already pushed.
+_GENERATED_CLIENT_ID_ENVIRON_KEY = "societyspeaks.generated_voter_client_id"
 
 
 def _raw_client_ids_from_request() -> List[str]:
@@ -63,6 +67,11 @@ def get_or_create_voter_client_id() -> tuple[str, bool]:
 
     Priority: canonical cookie → statement legacy → daily legacy → fresh random id.
     Returns (client_id_hex_64, is_newly_generated).
+
+    A fresh id is generated once per request and reused by every later call, so
+    the fingerprint a first vote is stored under is the one the response cookie
+    carries. Without that, a cookie-less visitor's first vote was orphaned and
+    they were counted as two participants.
     """
     for name in (
         VOTER_CANONICAL_COOKIE_NAME,
@@ -72,7 +81,11 @@ def get_or_create_voter_client_id() -> tuple[str, bool]:
         cid = request.cookies.get(name)
         if cid and len(cid) == _CLIENT_ID_HEX_LEN:
             return cid, False
-    return secrets.token_hex(32), True
+    generated = request.environ.get(_GENERATED_CLIENT_ID_ENVIRON_KEY)
+    if not generated:
+        generated = secrets.token_hex(32)
+        request.environ[_GENERATED_CLIENT_ID_ENVIRON_KEY] = generated
+    return generated, True
 
 
 def fingerprint_from_client_id(client_id: str) -> str:
@@ -99,6 +112,18 @@ def get_voter_fingerprint() -> str:
         session["fingerprint"] = fp
         session.modified = True
     return fp
+
+
+def scoped_voter_fingerprint(scope: str) -> str:
+    """A fingerprint for this browser that is unique to ``scope``.
+
+    Used where one visitor's votes must not be linkable to their activity
+    elsewhere on the site (a consultation): the same browser yields a different,
+    unrelated fingerprint in every scope, and login never merges it into an
+    account, because the merge looks votes up by the unscoped fingerprint.
+    """
+    client_id, __ = get_or_create_voter_client_id()
+    return hashlib.sha256(f"{client_id}:{scope}".encode()).hexdigest()
 
 
 def _maybe_append_embed_fingerprint(fps: List[str], seen: set[str]) -> None:
@@ -158,13 +183,16 @@ def fingerprints_for_anonymous_merge_on_login() -> List[str]:
     return fps
 
 
-def set_voter_client_cookies_if_needed(response):
+def set_voter_client_cookies_if_needed(response, *, include_authenticated=False, canonical_only=False):
     """
     Persist voter client id across all cookie names so surfaces converge.
 
     Called from anonymous `after_request` hooks on voting-related blueprints.
+    ``include_authenticated`` is for surfaces that identify every voter by
+    cookie, signed in or not (consultations). ``canonical_only`` skips the
+    two legacy cookie names, for pages that promise a single cookie.
     """
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and not include_authenticated:
         return response
     client_id, __ = get_or_create_voter_client_id()
     kwargs = {
@@ -174,6 +202,8 @@ def set_voter_client_cookies_if_needed(response):
         "samesite": "Lax",
     }
     response.set_cookie(VOTER_CANONICAL_COOKIE_NAME, client_id, **kwargs)
+    if canonical_only:
+        return response
     response.set_cookie(LEGACY_STATEMENT_CLIENT_COOKIE_NAME, client_id, **kwargs)
     response.set_cookie(LEGACY_DAILY_CLIENT_COOKIE_NAME, client_id, **kwargs)
     return response

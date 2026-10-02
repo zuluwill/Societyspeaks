@@ -8,6 +8,7 @@ produced duplicate labels (e.g. ``prod`` vs SDK default ``production``).
 from __future__ import annotations
 
 import os
+import re
 from typing import Any, Mapping, Optional
 
 # Gunicorn/gevent lifecycle lines. These are process management, not product
@@ -195,3 +196,39 @@ def sentry_should_drop_lifecycle_event(
         if is_expected_process_lifecycle_log(str(exc.get("value") or "")):
             return True
     return False
+
+
+# Addresses that are themselves the key to something private: a consultation's
+# participant link (/c/<token>) and a shared report (/r/<token>).
+_CAPABILITY_PATH = re.compile(r'(/(?:c|r)/)[A-Za-z0-9_-]{16,}')
+
+
+def scrub_capability_urls(event: Any) -> Any:
+    """Remove link tokens from an event before it leaves for Sentry.
+
+    Mutates and returns ``event``. Covers the request URL, the Referer header,
+    the transaction name and breadcrumb URLs.
+    """
+    if not isinstance(event, dict):
+        return event
+
+    def clean(value):
+        return _CAPABILITY_PATH.sub(r'\1[token]', value) if isinstance(value, str) else value
+
+    request = event.get('request')
+    if isinstance(request, dict):
+        request['url'] = clean(request.get('url'))
+        headers = request.get('headers')
+        if isinstance(headers, dict):
+            for name in list(headers):
+                if name.lower() == 'referer':
+                    headers[name] = clean(headers[name])
+    if 'transaction' in event:
+        event['transaction'] = clean(event['transaction'])
+    breadcrumbs = event.get('breadcrumbs')
+    values = breadcrumbs.get('values') if isinstance(breadcrumbs, dict) else breadcrumbs
+    for crumb in values or []:
+        data = crumb.get('data') if isinstance(crumb, dict) else None
+        if isinstance(data, dict) and 'url' in data:
+            data['url'] = clean(data['url'])
+    return event

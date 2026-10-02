@@ -130,6 +130,18 @@ def client(app):
     return app.test_client()
 
 
+@pytest.fixture
+def sqlite_vote_functions(db):
+    """Let SQLite run the real vote path.
+
+    The vote counter SQL uses Postgres ``GREATEST``; give the in-memory
+    SQLite connection the same function.
+    """
+    connection = db.engine.raw_connection()
+    connection.driver_connection.create_function('GREATEST', 2, max)
+    connection.close()
+
+
 class _FakeRedis:
     """In-process dict-backed Redis stub.  Starts empty each test so no state
     leaks between runs via the shared Replit Redis instance."""

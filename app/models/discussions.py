@@ -409,6 +409,24 @@ class Discussion(db.Model):
     # Closed discussions remain visible but no longer accept votes (embed or full site)
     is_closed = db.Column(db.Boolean, default=False, nullable=False)
 
+    # A self-serve consultation: reachable only through its participant link,
+    # never listed, searched, posted or translated. See app/discussions/access.py.
+    link_only = db.Column(db.Boolean, default=False, nullable=False, server_default=db.false())
+
+    @classmethod
+    def publicly_listable(cls):
+        """SQL predicate: may appear outside its own audience.
+
+        Every listing, search, feed, email, social post and background sweep
+        over discussions filters on this. Partner sandbox discussions and
+        link-only consultations never qualify.
+        """
+        return db.and_(cls.partner_env != 'test', cls.link_only.is_(False))
+
+    @property
+    def is_publicly_listable(self) -> bool:
+        return self.partner_env != 'test' and not self.link_only
+
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'
     SCOPE_COUNTRY = 'country'
@@ -476,7 +494,7 @@ class Discussion(db.Model):
         return (
             query.filter(cls.has_native_statements.is_(True))
             .filter(cls.is_closed.isnot(True))
-            .filter(cls.partner_env != 'test')
+            .filter(cls.publicly_listable())
             .filter(~fixture_title)
             .filter(db.or_(
                 cls.programme_id.is_(None),
@@ -722,7 +740,7 @@ class Discussion(db.Model):
         # Lazy import: Programme now lives in app.models.programme; importing it at
         # module top would create a circular dependency with generate_slug.
         from app.models.programme import Programme
-        query = Discussion.query.options(db.joinedload(Discussion.creator)).filter(Discussion.partner_env != 'test')
+        query = Discussion.query.options(db.joinedload(Discussion.creator)).filter(Discussion.publicly_listable())
         # Qualify every column after this join. Programme also has ``country``;
         # ``filter_by(topic=...)`` binds to Programme and raises
         # InvalidRequestError (Sentry PYTHON-FLASK-JH).
@@ -783,6 +801,17 @@ class Discussion(db.Model):
 # Adapted from pol.is architecture (AGPL-3.0)
 # ============================================================================
 
+class ModStatus:
+    """``Statement.mod_status`` values.
+
+    Anything below ``NONE`` is hidden by ``visible_statement_vote_filters``.
+    """
+    PENDING = -2    # held for the host to approve; not yet shown
+    REJECTED = -1
+    NONE = 0        # published without review
+    ACCEPTED = 1
+
+
 class Statement(db.Model):
     """
     Core claim/proposition in native debates (analogous to pol.is 'comments')
@@ -842,8 +871,8 @@ class Statement(db.Model):
     vote_count_disagree = db.Column(db.Integer, default=0)
     vote_count_unsure = db.Column(db.Integer, default=0)
     
-    # Moderation (like pol.is mod field)
-    mod_status = db.Column(db.Integer, default=0)  # -1=reject, 0=no action, 1=accept
+    # Moderation (like pol.is mod field). See ``ModStatus``.
+    mod_status = db.Column(db.Integer, default=0)
     is_deleted = db.Column(db.Boolean, default=False)
     is_seed = db.Column(db.Boolean, default=False)  # Moderator-created seed statement
 
@@ -998,7 +1027,16 @@ class StatementVote(db.Model):
         """
         from app.models import Statement
         
-        anonymous_votes = cls.query.filter_by(session_fingerprint=session_fingerprint, user_id=None).all()
+        # Votes in a consultation stay anonymous: they are never attached to an account.
+        anonymous_votes = (
+            cls.query.join(Discussion, cls.discussion_id == Discussion.id)
+            .filter(
+                cls.session_fingerprint == session_fingerprint,
+                cls.user_id.is_(None),
+                Discussion.link_only.is_(False),
+            )
+            .all()
+        )
         merged_count = 0
         
         for anon_vote in anonymous_votes:

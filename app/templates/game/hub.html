@@ -222,7 +222,7 @@
     {% if quick_pool %}
     <section class="game-hub-quick mb-8" id="quick-run-pool">
       <p class="game-eyebrow mb-1">{{ _('Quick Run') }}</p>
-      <p class="text-xs text-game-muted mb-3">{{ _('Replay any past scenario anytime — no streak.') }}</p>
+      <p class="text-xs text-game-muted mb-3">{{ _('Replay any past scenario any time — no streak.') }}</p>
       <div class="game-hub-quick-grid">
         {% for entry in quick_pool[:6] %}
         <a href="{{ url_for('game.quick_run', scenario_slug=entry.scenario_slug) }}"

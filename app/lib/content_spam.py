@@ -144,7 +144,7 @@ def hide_matching_unsolicited_content(*, apply: bool) -> dict:
     from sqlalchemy.orm import joinedload
 
     from app import db
-    from app.models import Response, Statement
+    from app.models import Discussion, Response, Statement
 
     statement_hits = []
     response_hits = []
@@ -152,7 +152,12 @@ def hide_matching_unsolicited_content(*, apply: bool) -> dict:
     hidden_statements = 0
     hidden_responses = 0
 
-    statements = Statement.query.filter_by(is_deleted=False).all()
+    # Consultations are moderated by their hosts, never by a site-wide sweep.
+    statements = (
+        Statement.query.join(Discussion, Statement.discussion_id == Discussion.id)
+        .filter(Statement.is_deleted.is_(False), Discussion.link_only.is_(False))
+        .all()
+    )
     for statement in statements:
         if assess_user_content_spam(statement.content).blocked:
             statement_hits.append(statement.id)

@@ -491,7 +491,7 @@ def _profile_og_response(*, name: str, is_company: bool, cache_suffix: str):
         png_bytes = og_image_service.render_profile_png(
             name=name,
             is_company=is_company,
-            badge_label=_('Organization') if is_company else _('Community voice'),
+            badge_label=_('Organisation') if is_company else _('Community voice'),
             cta_label=_('Join the conversation on Society Speaks'),
         )
         if not png_bytes:

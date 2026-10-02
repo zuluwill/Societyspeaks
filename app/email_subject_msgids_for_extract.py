@@ -25,7 +25,6 @@ if False:  # pragma: no cover — pybabel extract only (never runs)
     gettext("Your Society Speaks sign-in link")
     gettext("Welcome to Society Speaks!")
     gettext("Verify your Society Speaks email address")
-    gettext("Activate Your Society Speaks Account")
 
     # --- _send_user_transactional_email(..., subject third positional) -----
     gettext("We've paused your briefings — come back any time")

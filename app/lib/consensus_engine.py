@@ -30,6 +30,7 @@ Method references:
     https://github.com/polis-community/red-dwarf  (sparsity-aware scaling)
 """
 import numpy as np
+from app.lib.stats import WILSON_Z, wilson_interval  # noqa: F401 (re-exported)
 import pandas as pd
 from datetime import datetime
 from app.lib.time import utcnow_naive
@@ -136,8 +137,6 @@ def apply_sparsity_scaling(pca_coordinates, vote_matrix_sparse):
 # Fisher as a secondary gap check; see module docstring for references.
 # ==============================================================================
 
-# 95% CI by default; change via WILSON_Z if a different level is required.
-WILSON_Z = 1.959963984540054  # norm.ppf(0.975)
 FDR_ALPHA = 0.05
 
 # Minimum max-vs-min between-group agreement gap for a statement to count as a
@@ -146,35 +145,6 @@ FDR_ALPHA = 0.05
 # than this gap), so the two categories are mutually exclusive by construction:
 # a statement can never be presented as both common ground and a division.
 DIVISIVE_MIN_GROUP_GAP = 0.30
-
-
-def wilson_interval(successes, n, z=WILSON_Z):
-    """
-    Wilson score confidence interval for a binomial proportion.
-
-    More accurate than the normal approximation at small n and at extreme
-    proportions, and never produces impossible bounds (e.g. negative or
-    >1 probabilities). See Wilson (1927).
-
-    Args:
-        successes: number of "yes" outcomes
-        n: total trials (must be >= 0)
-        z: z-score for the desired confidence level (default 1.96 → 95%)
-
-    Returns:
-        (point_estimate, lower_bound, upper_bound) as floats in [0, 1].
-        For n=0 returns (0.0, 0.0, 1.0) — the maximally-uncertain prior.
-    """
-    n = int(n)
-    if n <= 0:
-        return 0.0, 0.0, 1.0
-    k = int(successes)
-    p = k / n
-    z2 = z * z
-    denom = 1.0 + z2 / n
-    centre = (p + z2 / (2.0 * n)) / denom
-    margin = z * np.sqrt((p * (1.0 - p) + z2 / (4.0 * n)) / n) / denom
-    return float(p), float(max(0.0, centre - margin)), float(min(1.0, centre + margin))
 
 
 def _log_factorial_table(nmax):
@@ -899,6 +869,7 @@ def build_oversize_consensus_results(discussion_id, db, plan):
         ),
         **sampling_meta,
         **stability_metrics,
+        **_group_structure_metadata(vote_matrix_real, method='kmeans', seed=int(discussion_id)),
     })
     return base_results
 
@@ -2062,6 +2033,103 @@ def _compute_stability_metrics(
     }
 
 
+# A grouping is published only if the observed separation would be this rare
+# among audiences with the same votes per statement and no groups at all.
+GROUP_STRUCTURE_ALPHA = 0.05
+GROUP_STRUCTURE_PERMUTATIONS = 39
+GROUP_STRUCTURE_MAX_PARTICIPANTS = 400
+
+
+def assess_group_structure(
+    vote_matrix_real,
+    method='agglomerative',
+    n_permutations=GROUP_STRUCTURE_PERMUTATIONS,
+    max_participants=GROUP_STRUCTURE_MAX_PARTICIPANTS,
+    seed=0,
+):
+    """
+    Do these votes contain opinion groups, or would any audience look like this?
+
+    Clustering always returns groups: asked for k ≥ 2, it will split a room
+    that votes at random, or one that broadly agrees, as readily as a divided
+    one. This is the check that the split means something.
+
+    Null hypothesis: participants answer each statement independently of how
+    they answered the others. We simulate it by shuffling each statement's
+    votes among the people who voted on it. That keeps every statement's
+    agree / disagree / unsure counts and every participant's set of answered
+    statements exactly as observed, and removes only the link between one
+    answer and the next, which is what a group is.
+
+    The statistic is the best silhouette the same pipeline finds (PCA,
+    sparsity scaling, k chosen over the same range), so the observed value and
+    the null values are selected in the same way. One-sided Monte Carlo
+    p-value with the +1 correction (Phipson & Smyth 2010).
+
+    Returns a dict for the analysis metadata; ``supported`` is the verdict.
+    """
+    rng = np.random.default_rng(int(seed))
+    real = vote_matrix_real
+    if len(real) > max_participants:
+        rows = np.sort(rng.choice(len(real), size=max_participants, replace=False))
+        real = real.iloc[rows]
+        real = real.loc[:, real.notna().any(axis=0)]
+
+    def best_silhouette(matrix):
+        filled = matrix.fillna(matrix.mean(axis=0)).fillna(0)
+        coordinates, _ = perform_pca(filled)
+        coordinates = apply_sparsity_scaling(coordinates, matrix)
+        _, score = cluster_users(coordinates, method=method, random_state=42)
+        return float(score)
+
+    selection_metrics = list(getattr(cluster_users, 'last_metrics', None) or [])
+    previous_level = logger.level
+    logger.setLevel(max(previous_level, logging.WARNING))  # 40 pipelines' worth of per-k lines
+    try:
+        observed = best_silhouette(real)
+        values = real.to_numpy(dtype=float, copy=True)
+        null_scores = []
+        for _ in range(int(n_permutations)):
+            shuffled = values.copy()
+            for column in range(shuffled.shape[1]):
+                voted = ~np.isnan(shuffled[:, column])
+                shuffled[voted, column] = rng.permutation(shuffled[voted, column])
+            null_scores.append(
+                best_silhouette(pd.DataFrame(shuffled, index=real.index, columns=real.columns))
+            )
+    finally:
+        logger.setLevel(previous_level)
+        cluster_users.last_metrics = selection_metrics
+
+    as_extreme = sum(1 for score in null_scores if score >= observed)
+    p_value = (1 + as_extreme) / (1 + len(null_scores))
+    return {
+        'supported': bool(p_value <= GROUP_STRUCTURE_ALPHA),
+        'p_value': float(p_value),
+        'alpha': GROUP_STRUCTURE_ALPHA,
+        'observed_silhouette': float(observed),
+        'null_silhouette_mean': float(np.mean(null_scores)) if null_scores else None,
+        'null_silhouette_max': float(np.max(null_scores)) if null_scores else None,
+        'permutations': int(len(null_scores)),
+        'participants_tested': int(len(real)),
+    }
+
+
+def _group_structure_metadata(vote_matrix_real, method, seed):
+    """``{'group_structure': …}`` for the analysis metadata, or ``{}`` when the
+    test is switched off (``CONSENSUS_GROUP_TEST_PERMUTATIONS = 0``)."""
+    from flask import current_app
+
+    permutations = int(current_app.config.get('CONSENSUS_GROUP_TEST_PERMUTATIONS', GROUP_STRUCTURE_PERMUTATIONS))
+    if permutations <= 0:
+        return {}
+    return {
+        'group_structure': assess_group_structure(
+            vote_matrix_real, method=method, n_permutations=permutations, seed=seed,
+        )
+    }
+
+
 def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     """
     Main function to run complete consensus analysis on a discussion.
@@ -2112,6 +2180,9 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     results['metadata'].update(stability_metrics)
     results['metadata']['publication_min_stability_mean_ari'] = float(
         current_app.config.get('CONSENSUS_FULL_MATRIX_MIN_STABILITY_ARI', 0.20)
+    )
+    results['metadata'].update(
+        _group_structure_metadata(vote_matrix_real, method=method, seed=int(discussion_id))
     )
 
     logger.info(f"Consensus analysis complete for discussion {discussion_id}")

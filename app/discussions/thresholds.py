@@ -22,3 +22,19 @@ def consensus_thresholds_dict():
         "recommended_statements": CONSENSUS_RECOMMENDED_STATEMENT_COUNT,
         "view_results_min_votes": CONSENSUS_VIEW_RESULTS_MIN_VOTES,
     }
+
+
+# ── Statement-level results ─────────────────────────────────────────────────
+# One statement, one verdict, from the shares of everyone who voted on it
+# (unsure included). See ``app/lib/statement_results.py``.
+
+# Below this many votes a statement is reported as counts, with no percentage
+# and no verdict.
+RESULT_MIN_VOTES = 10
+# "Agrees" / "disagrees": the 95% lower bound of that share reaches a majority.
+RESULT_MAJORITY_SHARE = 0.50
+# "Unsure": unsure is the largest response and its lower bound reaches a third.
+RESULT_UNSURE_SHARE = 1 / 3
+# "Split": both sides are substantial and close to each other.
+RESULT_SPLIT_MIN_SIDE_SHARE = 0.35
+RESULT_SPLIT_MAX_GAP = 0.15

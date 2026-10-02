@@ -15,6 +15,14 @@ from app import db
 from app.lib.time import utcnow_naive
 
 
+def cluster_data_supports_groups(cluster_data) -> bool:
+    """The group-structure verdict stored with an analysis (see
+    ``assess_group_structure``). No verdict recorded counts as supported."""
+    metadata = (cluster_data or {}).get('metadata') or {}
+    verdict = metadata.get('group_structure')
+    return True if not isinstance(verdict, dict) else bool(verdict.get('supported'))
+
+
 class ConsensusAnalysis(db.Model):
     """
     Stores clustering results for caching (like pol.is math_main table)
@@ -44,6 +52,20 @@ class ConsensusAnalysis(db.Model):
 
     # Relationships
     discussion = db.relationship('Discussion', backref='consensus_analyses')
+
+    @property
+    def groups_supported(self) -> bool:
+        """Whether the votes showed more grouping than chance would produce.
+
+        Analyses made before the test existed carry no verdict and are
+        treated as supported, so historical results are not withdrawn.
+        """
+        return cluster_data_supports_groups(self.cluster_data)
+
+    @property
+    def published_group_count(self) -> int:
+        """The number of opinion groups to show or send: none when unsupported."""
+        return int(self.num_clusters or 0) if self.groups_supported else 0
 
 
 class ConsensusJob(db.Model):

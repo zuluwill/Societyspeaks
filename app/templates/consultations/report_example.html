@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_lg, link_primary %}
+
+{% block title %}{{ _('Example consultation report') }} | Society Speaks{% endblock %}
+{% block meta_description %}{{ _('An example of the report you receive from a Society Speaks consultation: where your audience agrees, disagrees, is unsure or is split, worked out from the votes.') }}{% endblock %}
+{% block canonical %}{{ url_for('consultations.example_report', _external=True) }}{% endblock %}
+{% block og_title %}{{ _('Example consultation report') }}{% endblock %}
+{% block og_description %}{{ _('See the report an organisation receives: where its audience agrees, disagrees, is unsure or is split.') }}{% endblock %}
+{% block twitter_title %}{{ _('Example consultation report') }}{% endblock %}
+{% block twitter_description %}{{ _('See the report an organisation receives: where its audience agrees, disagrees, is unsure or is split.') }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 print:hidden">
+      <p class="text-sm font-semibold text-blue-900">{{ _('This is an example') }}</p>
+      {% if illustration %}
+      <p class="mt-1 text-sm leading-relaxed text-blue-900">{{ _('It is the report you receive, shown with a made-up organisation and made-up votes. The results are worked out by the same rules as a real report. Yours is built from your own audience’s answers to your own question.') }}</p>
+      {% else %}
+      <p class="mt-1 text-sm leading-relaxed text-blue-900">{{ _('It is the report format you receive, built from the real votes on a public Society Speaks discussion. Yours is built from your own audience’s answers to your own question.') }}</p>
+      {% endif %}
+      <p class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        <a href="{{ url_for('consultations.landing') }}" class="{{ link_primary() }}">{{ _('How consultations work and what they cost') }} →</a>
+        {% if illustration %}<a href="{{ url_for('consultations.demo') }}" class="{{ link_primary() }}">{{ _('Answer this one as a participant') }} →</a>{% endif %}
+      </p>
+    </div>
+    <div class="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-10 print:border-0 print:p-0 print:shadow-none">
+      {% include "consultations/_report_body.html" %}
+    </div>
+    <div class="mt-8 text-center print:hidden">
+      <a href="{{ url_for('consultations.start') }}" class="{{ btn_primary_lg() }}" data-ph-capture-attribute-cta="example-report-start">{{ _('Run one with your own audience') }}</a>
+      <p class="mt-3 text-sm text-gray-500">{{ _('Free to set up. Pay when you go live.') }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

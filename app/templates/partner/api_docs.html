@@ -162,6 +162,9 @@
         <p class="text-sm text-gray-600 mt-3">
           {{ _('Each hostname where you host the iframe must appear under <strong>Domains</strong> after DNS verification — separately for rehearsal (<strong>test</strong>) and production (<strong>live</strong>). Typical news sites register both <code>www.</code> and the short domain if readers use either.')|safe }}
         </p>
+        <p class="text-sm text-gray-600 mt-2">
+          {{ _('Discussions created with a test key are private to your account and can be embedded only on your own verified domains. Their <code>consensus_url</code> includes a <code>sandbox_key</code> so your team can open the analysis: use the URL exactly as returned. Without the key the page answers <code>404</code>.')|safe }}
+        </p>
         <p class="text-sm text-gray-600 mt-2">{{ _('Readers always interact with Society Speaks over normal encrypted web traffic; your hosting team should keep our public web address (<code>BASE_URL</code> on our side) matching what browsers expect.')|safe }}</p>
         <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <p class="text-sm font-semibold text-amber-900 mb-1">{{ _('Server-to-server only for write operations') }}</p>
@@ -626,7 +629,7 @@ const embedUrl = data.embed_url;</pre>
     <!-- Embed URL -->
     <section id="embed-url-parameters">
       <h2 class="text-xl font-bold text-gray-900 mb-4">{{ _('Embed URL Parameters') }}</h2>
-      <p class="text-gray-600 mb-2">{{ _('Customize the embed appearance with URL parameters.') }}</p>
+      <p class="text-gray-600 mb-2">{{ _('Customise the embed appearance with URL parameters.') }}</p>
       <p class="text-sm text-gray-500 mb-4">{{ _('Embeds are available for Society Speaks native discussions.') }}</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -651,12 +654,12 @@ const embedUrl = data.embed_url;</pre>
               </tr>
               <tr class="border-b">
                 <td class="py-3 font-mono text-purple-600">primary</td>
-                <td class="py-3 text-gray-600">{{ _('Primary color (hex without #)') }}</td>
+                <td class="py-3 text-gray-600">{{ _('Primary colour (hex without #)') }}</td>
                 <td class="py-3 font-mono text-gray-500">primary=1e40af</td>
               </tr>
               <tr class="border-b">
                 <td class="py-3 font-mono text-purple-600">bg</td>
-                <td class="py-3 text-gray-600">{{ _('Background color (hex without #)') }}</td>
+                <td class="py-3 text-gray-600">{{ _('Background colour (hex without #)') }}</td>
                 <td class="py-3 font-mono text-gray-500">bg=f9fafb</td>
               </tr>
               <tr class="border-b">
@@ -871,7 +874,7 @@ const embedUrl = data.embed_url;</pre>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">article_url</td>
                 <td class="py-2 text-gray-500">{{ _('optional') }}</td>
-                <td class="py-2 text-gray-600">{{ _('Canonical article URL (normalized if provided)') }}</td>
+                <td class="py-2 text-gray-600">{{ _('Canonical article URL (normalised if provided)') }}</td>
               </tr>
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">external_id</td>

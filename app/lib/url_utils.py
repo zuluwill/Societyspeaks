@@ -44,3 +44,16 @@ def is_safe_external_http_url(url: str) -> bool:
     except UnicodeError:
         return False
     return True
+
+
+def route_url(base_url: str, endpoint: str, **values) -> str:
+    """Absolute URL for ``endpoint`` on ``base_url``.
+
+    The path comes from the route map, so renaming a route cannot leave a dead
+    link in an email or a Stripe redirect. Needs only an app context, unlike
+    ``url_for(_external=True)``, so it works in background jobs.
+    """
+    from flask import current_app
+
+    path = current_app.url_map.bind('').build(endpoint, values)
+    return f"{base_url.rstrip('/')}{path}"

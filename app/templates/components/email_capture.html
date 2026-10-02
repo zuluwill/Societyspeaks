@@ -37,7 +37,7 @@
                 </button>
             </div>
             <p class="text-xs text-gray-500 mt-3">
-                {{ _('Free forever. Unsubscribe anytime. We respect your inbox.') }}
+                {{ _('Free forever. Unsubscribe any time. We respect your inbox.') }}
             </p>
             {% set _tz_link %}<a href="{{ url_for('brief.subscribe') }}" class="{{ link_primary() }}">{{ _('Choose time zone and delivery time') }}</a>{% endset %}
             <p class="text-xs text-gray-500 mt-2">
@@ -124,7 +124,7 @@
             </button>
         </div>
         <p id="discussion-vote-email-hint" class="text-xs text-gray-600 mt-3">
-            {{ _('Free. Unsubscribe anytime.') }}
+            {{ _('Free. Unsubscribe any time.') }}
             {% set _tz_link %}<a href="{{ url_for('brief.subscribe') }}" class="{{ link_primary() }}">{{ _('Choose time zone and send time') }}</a>{% endset %}
             {{ _('%(link)s on the full sign-up page.', link=_tz_link)|safe }}
         </p>

@@ -36,7 +36,7 @@ from app.models import (
     Discussion, Statement, StatementVote, ConsensusAnalysis, PartnerWebhookEndpoint, PartnerWebhookDelivery,
 )
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
-from app.api.utils import invalidate_partner_snapshot_cache
+from app.api.utils import discussion_consensus_url, invalidate_partner_snapshot_cache
 from app.lib.participation_metrics import visible_statement_vote_filters
 from app.admin.audit import write_admin_audit_event
 from app.lib.time import utcnow_naive
@@ -975,7 +975,7 @@ def portal_discussions():
             'discussion': d,
             'vote_count': vote_counts.get(d.id, 0),
             'embed_url': f"{base}/discussions/{d.id}/embed?ref={partner.slug}",
-            'consensus_url': f"{base}/discussions/{d.id}/{d.slug}/consensus?ref={partner.slug}",
+            'consensus_url': discussion_consensus_url(d, partner.slug),
             'key_label': f"••••{key_rec.key_last4}" if key_rec else None,
         })
 
@@ -1260,7 +1260,7 @@ def portal_discussion_detail(discussion_id):
         latest_consensus=latest_consensus,
         key_info=key_info,
         embed_url=f"{base}/discussions/{discussion.id}/embed?ref={partner.slug}",
-        consensus_url=f"{base}/discussions/{discussion.id}/{discussion.slug}/consensus?ref={partner.slug}",
+        consensus_url=discussion_consensus_url(discussion, partner.slug),
         can_edit=can_edit,
         is_admin_preview=_is_admin_preview(partner),
         portal_page='detail',

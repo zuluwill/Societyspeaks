@@ -726,31 +726,6 @@ def _resolve_default_template_slug():
     return _LOCALE_DEFAULT_TEMPLATE_OVERRIDES.get(country or '', _DEFAULT_TRIAL_TEMPLATE_BY_LOCALE_FALLBACK)
 
 
-def _derive_unique_username(email: str) -> str:
-    """Derive a non-colliding username from the local part of ``email``.
-
-    Trial users don't pick a username; we synthesise one and let them edit it
-    later from the profile screen. Falls back to a random suffix on collision.
-    """
-    import re
-    import secrets
-    local = (email or '').split('@', 1)[0] or 'user'
-    base = re.sub(r'[^a-z0-9]+', '-', local.lower()).strip('-') or 'user'
-    candidate = base[:30]
-    if not User.query.filter_by(username=candidate).first():
-        return candidate
-    # Use ``_attempt`` not ``_`` — the latter is bound to gettext at module
-    # scope and rebinding it inside the loop confuses the i18n_check linter
-    # (and would break any gettext call added later inside this function).
-    for _attempt in range(5):
-        suffix = secrets.token_hex(3)
-        candidate = f"{base[:24]}-{suffix}"
-        if not User.query.filter_by(username=candidate).first():
-            return candidate
-    # Extremely unlikely; final fallback is fully random.
-    return f"user-{secrets.token_hex(6)}"
-
-
 @briefing_bp.route('/start', methods=['GET', 'POST'])
 @limiter.limit("60/minute", methods=['GET'])
 @limiter.limit("10/hour", methods=['POST'])
@@ -883,18 +858,10 @@ def _handle_start_trial_post(featured_templates, default_slug):
 
     if user is None:
         from app.lib.email_normalize import normalize_trial_email
-        from werkzeug.security import generate_password_hash
-        import secrets
+        from app.lib.passwordless_signup import create_passwordless_user
         canonical = normalize_trial_email(email)
         try:
-            user = User(
-                username=_derive_unique_username(canonical),
-                email=canonical,
-                password=generate_password_hash(secrets.token_urlsafe(48)),
-                email_verified=False,  # magic-link consume sets this
-            )
-            db.session.add(user)
-            db.session.commit()
+            user = create_passwordless_user(canonical)
         except Exception as exc:
             db.session.rollback()
             logger.error(f"Failed to create trial user for {email}: {exc}", exc_info=True)
@@ -1416,7 +1383,7 @@ def use_template(template_id):
     
     # Check audience restrictions
     if template.audience_type == 'organization' and not get_user_organization(current_user):
-        flash(_('This template is only available for organizations. You need to be part of an organization to use it.'), 'error')
+        flash(_('This template is only available for organisations. You need to be part of an organisation to use it.'), 'error')
         return redirect(url_for('briefing.marketplace'))
     
     if request.method == 'POST':
@@ -1436,7 +1403,7 @@ def use_template(template_id):
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
-                    flash(_('You need to be part of an organization to create organization briefings'), 'error')
+                    flash(_('You need to be part of an organisation to create organisation briefings'), 'error')
                     return redirect(url_for('briefing.use_template', template_id=template_id))
                 owner_id = user_org.id
             else:
@@ -1635,7 +1602,7 @@ def create_briefing():
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
-                    flash(_('You need to be part of an organization to create org briefings'), 'error')
+                    flash(_('You need to be part of an organisation to create org briefings'), 'error')
                     return redirect(url_for('briefing.create_briefing'))
                 owner_id = user_org.id
 
@@ -2257,7 +2224,7 @@ def add_rss_source():
             if owner_type == 'org':
                 user_org = get_user_organization(current_user)
                 if not user_org:
-                    flash(_('You need to be part of an organization to create org sources'), 'error')
+                    flash(_('You need to be part of an organisation to create org sources'), 'error')
                     return redirect(url_for('briefing.add_rss_source', briefing_id=briefing_id))
                 owner_id = user_org.id
 
@@ -4118,7 +4085,7 @@ def organization_settings():
     sub = get_active_subscription(current_user)
 
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash(_("Organization settings are only available for Team and Enterprise plans."), "info")
+        flash(_("Organisation settings are only available for Team and Enterprise plans."), "info")
         return redirect(url_for("briefing.list_briefings"))
 
     org = current_user.company_profile
@@ -4135,7 +4102,7 @@ def organization_settings():
             org = membership.org
 
     if not org:
-        flash(_("No organization found. Please contact support."), "error")
+        flash(_("No organisation found. Please contact support."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     # Get team members using the proper function
@@ -4175,12 +4142,12 @@ def update_organization():
     sub = get_active_subscription(current_user)
     
     if not sub or not sub.plan or not sub.plan.is_organisation:
-        flash(_("Organization settings are only available for Team and Enterprise plans."), "error")
+        flash(_("Organisation settings are only available for Team and Enterprise plans."), "error")
         return redirect(url_for("briefing.list_briefings"))
     
     org = current_user.company_profile
     if not org or org.user_id != current_user.id:
-        flash(_("You don't have permission to edit this organization."), "error")
+        flash(_("You don't have permission to edit this organisation."), "error")
         return redirect(url_for("briefing.organization_settings"))
     
     org_name = request.form.get("company_name", "").strip()
@@ -4191,7 +4158,7 @@ def update_organization():
     org.website = request.form.get("website", "").strip()
     
     db.session.commit()
-    flash(_("Organization details updated successfully."), "success")
+    flash(_("Organisation details updated successfully."), "success")
     return redirect(url_for("briefing.organization_settings"))
 
 
@@ -4210,7 +4177,7 @@ def invite_member():
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
 
     if not org:
-        flash(_("No organization found."), "error")
+        flash(_("No organisation found."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     # Check if user has permission to invite (owner or admin)
@@ -4278,7 +4245,7 @@ def remove_member(member_id):
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
 
     if not org:
-        flash(_("No organization found."), "error")
+        flash(_("No organisation found."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     try:
@@ -4305,7 +4272,7 @@ def change_member_role(member_id):
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
 
     if not org:
-        flash(_("No organization found."), "error")
+        flash(_("No organisation found."), "error")
         return redirect(url_for("briefing.list_briefings"))
 
     new_role = request.form.get("role", "editor")

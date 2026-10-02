@@ -1,0 +1,20 @@
+<!doctype html>
+{# Rendered by WeasyPrint (app/consultations/pdf.py). No scripts, no external requests. #}
+<html lang="{{ current_lang|default('en') }}" dir="{{ (supported_languages|default({})).get(current_lang|default('en'), {}).get('dir', 'ltr') }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ data.question }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 20mm;
+      @bottom-right { content: counter(page) " / " counter(pages); color: #6b7280; font-size: 9pt; }
+    }
+    body { margin: 0; }
+  </style>
+  <link rel="stylesheet" href="css/report.css">
+</head>
+<body>
+  {% include "consultations/_report_body.html" %}
+</body>
+</html>

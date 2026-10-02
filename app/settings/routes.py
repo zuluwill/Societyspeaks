@@ -185,6 +185,28 @@ def purge_user_account(user):
     )
 
     user_id = user.id
+
+    # Stop billing before anything is deleted. If Stripe cannot confirm the
+    # cancellation this raises and the account is left intact, rather than
+    # deleting a customer who would go on being charged.
+    from app.billing.service import cancel_stripe_subscriptions_for_user
+    cancel_stripe_subscriptions_for_user(user)
+
+    # A consultation paid for and never used is refunded, as promised. The
+    # same rule applies: no confirmation from Stripe, no deletion.
+    from app.consultations.billing import refund_unused_purchases
+    refund_unused_purchases(user)
+
+    from app.consultations.service import delete_consultation
+    from app.models import Consultation, ConsultationPlan, ConsultationPurchase
+    for consultation in Consultation.query.filter_by(owner_user_id=user_id).all():
+        delete_consultation(consultation, commit=False)
+    ConsultationPlan.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    # Payment records are kept for the accounts, without the person.
+    ConsultationPurchase.query.filter_by(user_id=user_id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+
     from app.lib.account_deletion import release_user_event_references
     release_user_event_references(user_id)
 
@@ -358,8 +380,13 @@ def delete_account():
         
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(
-            "Error deleting user account %s: %s", user_id, e, exc_info=True
-        )
-        flash(_('Account deletion failed. Please try again.'), 'error')
+        from app.consultations.billing import BillingError
+        if isinstance(e, BillingError):
+            current_app.logger.warning('Account %s was kept: %s', user_id, e)
+            flash(str(e), 'error')
+        else:
+            current_app.logger.error(
+                "Error deleting user account %s: %s", user_id, e, exc_info=True
+            )
+            flash(_('Account deletion failed. Please try again.'), 'error')
         return redirect(url_for('settings.view_settings'))

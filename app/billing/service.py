@@ -189,6 +189,36 @@ def create_checkout_session(user, plan_code, billing_interval='month', success_u
     return session
 
 
+def cancel_stripe_subscriptions_for_user(user):
+    """Cancel every Stripe subscription this account pays for. Raises if one cannot be cancelled.
+
+    Called before an account is deleted: removing the account without this
+    left the subscription billing a customer who no longer existed.
+    """
+    s = get_stripe()
+    owned = db.or_(Subscription.user_id == user.id)
+    company = getattr(user, 'company_profile', None)
+    if company is not None:
+        owned = db.or_(Subscription.user_id == user.id, Subscription.org_id == company.id)
+    subscription_ids = {
+        row.stripe_subscription_id
+        for row in Subscription.query.filter(
+            owned,
+            Subscription.stripe_subscription_id.isnot(None),
+            Subscription.status.in_(SUBSCRIPTION_ACCESS_STATUSES + ('paused', 'incomplete')),
+        ).all()
+    }
+    for subscription_id in subscription_ids:
+        try:
+            _stripe_call(s.Subscription.cancel, subscription_id)
+        except s.error.InvalidRequestError as exc:
+            # Already gone in Stripe: nothing left to bill.
+            current_app.logger.info(f"Subscription {subscription_id} not cancellable: {exc}")
+
+    from app.consultations.billing import cancel_plan_now
+    cancel_plan_now(user)
+
+
 def create_portal_session(user, return_url=None):
     """Create a Stripe Customer Portal session for self-service billing management."""
     s = get_stripe()

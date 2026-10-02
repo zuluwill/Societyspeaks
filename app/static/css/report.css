@@ -1,0 +1,102 @@
+/* Consultation report.
+ *
+ * One stylesheet for the on-screen report, the shared report and the PDF
+ * (WeasyPrint), so all three look the same. Hand-written rather than
+ * Tailwind: the PDF renderer has no build step and needs plain, stable CSS.
+ * Everything is scoped under .ssr.
+ */
+.ssr {
+  --ssr-ink: #111827;
+  --ssr-body: #374151;
+  --ssr-muted: #6b7280;
+  --ssr-line: #e5e7eb;
+  --ssr-agree: #059669;
+  --ssr-disagree: #dc2626;
+  --ssr-unsure: #d97706;
+  --ssr-split: #7c3aed;
+  --ssr-neutral: #6b7280;
+  color: var(--ssr-body);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+.ssr * { box-sizing: border-box; }
+.ssr h1, .ssr h2, .ssr h3 { color: var(--ssr-ink); line-height: 1.25; margin: 0; }
+.ssr p { margin: 0; }
+
+.ssr-cover { border-bottom: 2px solid var(--ssr-ink); padding-bottom: 1.5rem; }
+.ssr-eyebrow { color: var(--ssr-muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.ssr-cover h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; margin-top: 0.5rem; }
+.ssr-org { color: var(--ssr-body); font-size: 1rem; margin-top: 0.6rem; }
+.ssr-interim { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 0.5rem; color: #92400e; font-size: 0.9rem; margin-top: 1rem; padding: 0.6rem 0.9rem; }
+
+.ssr-facts { display: flex; flex-wrap: wrap; gap: 0.75rem 2.25rem; margin: 1.25rem 0 0; }
+.ssr-facts div { min-width: 6rem; }
+.ssr-facts dt { color: var(--ssr-muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.ssr-facts dd { color: var(--ssr-ink); font-size: 1.5rem; font-variant-numeric: tabular-nums; font-weight: 700; margin: 0.1rem 0 0; }
+
+.ssr-section { margin-top: 2.25rem; }
+.ssr-section > h2 { font-size: 1.3rem; font-weight: 700; }
+.ssr-lead { color: var(--ssr-muted); font-size: 0.95rem; margin-top: 0.3rem !important; }
+
+.ssr-headline { color: var(--ssr-ink); font-size: 1.2rem; font-weight: 600; line-height: 1.45; margin-top: 0.75rem !important; }
+.ssr-tiles { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
+.ssr-tile { border: 1px solid var(--ssr-line); border-radius: 0.75rem; border-top-width: 4px; flex: 1 1 6.5rem; padding: 0.8rem 0.9rem; }
+.ssr-tile-number { color: var(--ssr-ink); display: block; font-size: 1.8rem; font-variant-numeric: tabular-nums; font-weight: 800; line-height: 1.1; }
+.ssr-tile-label { color: var(--ssr-body); display: block; font-size: 0.88rem; margin-top: 0.2rem; }
+.ssr-tile--agrees { border-top-color: var(--ssr-agree); }
+.ssr-tile--disagrees { border-top-color: var(--ssr-disagree); }
+.ssr-tile--unsure { border-top-color: var(--ssr-unsure); }
+.ssr-tile--split { border-top-color: var(--ssr-split); }
+
+.ssr-themes { display: grid; gap: 0.75rem; margin-top: 1rem; }
+.ssr-theme { border-left: 4px solid var(--ssr-line); padding: 0.1rem 0 0.1rem 1rem; }
+.ssr-theme h3 { font-size: 1rem; font-weight: 700; }
+.ssr-theme p { font-size: 0.95rem; margin-top: 0.2rem; }
+.ssr-theme--agrees { border-left-color: var(--ssr-agree); }
+.ssr-theme--disagrees { border-left-color: var(--ssr-disagree); }
+.ssr-theme--unsure { border-left-color: var(--ssr-unsure); }
+.ssr-theme--split { border-left-color: var(--ssr-split); }
+
+.ssr-marker { border-radius: 999px; display: inline-block; height: 0.7rem; margin-right: 0.5rem; width: 0.7rem; }
+.ssr-marker--agrees { background: var(--ssr-agree); }
+.ssr-marker--disagrees { background: var(--ssr-disagree); }
+.ssr-marker--unsure { background: var(--ssr-unsure); }
+.ssr-marker--split { background: var(--ssr-split); }
+.ssr-marker--no_clear_result, .ssr-marker--too_few_votes { background: var(--ssr-neutral); }
+
+.ssr-statements { list-style: none; margin: 1rem 0 0; padding: 0; }
+.ssr-statement { border-top: 1px solid var(--ssr-line); padding: 0.9rem 0; break-inside: avoid; page-break-inside: avoid; }
+.ssr-statement:last-child { border-bottom: 1px solid var(--ssr-line); }
+.ssr-statement-text { color: var(--ssr-ink); font-size: 1.02rem; font-weight: 600; }
+.ssr-audience-tag { border: 1px solid var(--ssr-line); border-radius: 999px; color: var(--ssr-muted); display: inline-block; font-size: 0.72rem; font-weight: 600; margin-left: 0.4rem; padding: 0.05rem 0.5rem; vertical-align: middle; white-space: nowrap; }
+.ssr-bar { display: block; height: 0.8rem; margin-top: 0.55rem; width: 100%; }
+.ssr-figures { color: var(--ssr-body); display: flex; flex-wrap: wrap; font-size: 0.88rem; font-variant-numeric: tabular-nums; gap: 0.1rem 1.1rem; margin-top: 0.4rem; }
+.ssr-figures span { white-space: nowrap; }
+.ssr-key { border-radius: 2px; display: inline-block; height: 0.6rem; margin-right: 0.3rem; width: 0.6rem; }
+.ssr-key--agree { background: var(--ssr-agree); }
+.ssr-key--disagree { background: var(--ssr-disagree); }
+.ssr-key--unsure { background: var(--ssr-unsure); }
+.ssr-votes { color: var(--ssr-muted); }
+.ssr-lean { color: var(--ssr-muted); font-size: 0.85rem; margin-top: 0.25rem !important; }
+.ssr-empty { color: var(--ssr-muted); font-size: 0.95rem; margin-top: 0.75rem !important; }
+
+.ssr-suggestions { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 0.75rem; margin-top: 2.25rem; padding: 1.1rem 1.25rem; }
+.ssr-suggestions h2 { font-size: 1.1rem; font-weight: 700; }
+.ssr-suggestions ul { list-style: disc; margin: 0.6rem 0 0; padding-left: 1.2rem; }
+.ssr-suggestions li { margin-top: 0.3rem; }
+
+.ssr-limits ul { list-style: disc; margin: 0.75rem 0 0; padding-left: 1.2rem; }
+.ssr-limits li { font-size: 0.95rem; margin-top: 0.4rem; }
+
+.ssr-footer { border-top: 1px solid var(--ssr-line); color: var(--ssr-muted); display: flex; flex-wrap: wrap; font-size: 0.8rem; gap: 0.25rem 1.5rem; justify-content: space-between; margin-top: 2.5rem; padding-top: 0.9rem; }
+.ssr-footer a { color: inherit; font-weight: 600; }
+
+@media print {
+  .ssr { font-size: 11pt; max-width: none; }
+  .ssr-section, .ssr-suggestions { break-inside: auto; }
+  .ssr-section > h2 { break-after: avoid; page-break-after: avoid; }
+  .ssr, .ssr * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

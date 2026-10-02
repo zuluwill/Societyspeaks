@@ -168,7 +168,7 @@ def _discussion_base_query():
     return Discussion.query.filter(
         Discussion.is_closed.is_(False),
         Discussion.has_native_statements.is_(True),
-        Discussion.partner_env != 'test',
+        Discussion.publicly_listable(),
     )
 
 

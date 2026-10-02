@@ -1,0 +1,95 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md %}
+{% from "consultations/_macros.html" import stepper, next_panel, field_errors, input_classes with context %}
+{% set host_nav = 'new' if consultation is none else 'mine' %}
+
+{% block title %}{{ _('Your question') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+{{ stepper('question') }}
+<div class="grid gap-8 lg:grid-cols-3">
+  <div class="lg:col-span-2">
+    <h1 class="text-2xl font-bold text-gray-900">{{ _('What do you want to know?') }}</h1>
+    <p class="mt-2 text-gray-600">{{ _('Write it the way you would ask it in the room. We turn it into statements people can agree or disagree with.') }}</p>
+
+    <form method="post" class="mt-6 space-y-6" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div>
+        <label for="{{ form.question.id }}" class="block text-sm font-medium text-gray-700">{{ _('Your question') }}</label>
+        {{ form.question(class_=input_classes() ~ ' mt-1', maxlength=300, required=true, autofocus=true, placeholder=_('How should we use next year’s surplus?')) }}
+        {{ field_errors(form.question) }}
+        <fieldset class="mt-3">
+          <legend class="text-sm text-gray-500">{{ _('Or start from an example:') }}</legend>
+          <div class="mt-2 flex flex-wrap gap-2">
+            {% for label, example, audience in [
+              (_('Members'), _('What should our priorities be for the coming year?'), _('Our members')),
+              (_('Staff'), _('What would make this a better place to work?'), _('All staff')),
+              (_('Event'), _('What should this sector do differently after today?'), _('People at the conference')),
+              (_('Customers'), _('What should we improve first?'), _('Our customers')),
+              (_('Trustees'), _('Where should the organisation be in three years?'), _('Our board of trustees')),
+              (_('Community'), _('What would most improve life in our area?'), _('Local residents')),
+            ] %}
+            <button type="button" class="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-primary-500 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                    data-example-question="{{ example }}" data-example-audience="{{ audience }}">{{ label }}</button>
+            {% endfor %}
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <label for="{{ form.organisation_name.id }}" class="block text-sm font-medium text-gray-700">{{ form.organisation_name.label.text }}</label>
+          {{ form.organisation_name(class_=input_classes() ~ ' mt-1', maxlength=200, required=true, autocomplete='organization') }}
+          <p class="mt-1 text-sm text-gray-500">{{ _('Shown to participants and on the report.') }}</p>
+          {{ field_errors(form.organisation_name) }}
+        </div>
+        <div>
+          <label for="{{ form.audience_label.id }}" class="block text-sm font-medium text-gray-700">{{ form.audience_label.label.text }} <span class="font-normal text-gray-500">{{ _('(optional)') }}</span></label>
+          {{ form.audience_label(class_=input_classes() ~ ' mt-1', maxlength=200, placeholder=_('Our members')) }}
+          {{ field_errors(form.audience_label) }}
+        </div>
+      </div>
+
+      <div>
+        <label for="{{ form.audience_size.id }}" class="block text-sm font-medium text-gray-700">{{ form.audience_size.label.text }} <span class="font-normal text-gray-500">{{ _('(optional)') }}</span></label>
+        {{ form.audience_size(class_=input_classes() ~ ' mt-1 sm:max-w-[12rem]', inputmode='numeric', min=1) }}
+        <p class="mt-1 text-sm text-gray-500">{{ _('If you tell us, the report shows your response rate.') }}</p>
+        {{ field_errors(form.audience_size) }}
+      </div>
+
+      <div>
+        <label for="{{ form.context.id }}" class="block text-sm font-medium text-gray-700">{{ form.context.label.text }} <span class="font-normal text-gray-500">{{ _('(optional, but it makes the statements much better)') }}</span></label>
+        {{ form.context(class_=input_classes() ~ ' mt-1', rows=6, maxlength=6000, placeholder=_('Paste anything that helps: the decision you face, the options on the table, what has been tried before.')) }}
+        <p class="mt-1 text-sm text-gray-500">{{ _('Only used to draft your statements. Participants do not see it.') }}</p>
+        {{ field_errors(form.context) }}
+      </div>
+
+      <button type="submit" class="{{ btn_primary_md() }} min-h-11" data-loading-text="{{ _('Saving…') }}">
+        {% if consultation is none %}{{ _('Draft my statements') }}{% else %}{{ _('Save and continue') }}{% endif %}
+      </button>
+    </form>
+  </div>
+
+  <div>
+    {% call next_panel(_('We draft your statements')) %}
+      <p>{{ _('In about a minute you will have a balanced set of statements to review. You can edit, remove or add to them before anyone sees them.') }}</p>
+      <p>{{ _('Nothing is shared and nothing is charged at this stage.') }}</p>
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}
+
+{% block host_scripts %}
+<script nonce="{{ csp_nonce() }}">
+  document.querySelectorAll('[data-example-question]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var question = document.getElementById('{{ form.question.id }}');
+      var audience = document.getElementById('{{ form.audience_label.id }}');
+      question.value = button.dataset.exampleQuestion;
+      if (!audience.value) audience.value = button.dataset.exampleAudience;
+      question.focus();
+    });
+  });
+</script>
+{% endblock %}

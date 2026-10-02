@@ -103,6 +103,25 @@ def get_partner_ref():
     return None
 
 
+def discussion_consensus_url(discussion, ref: Optional[str] = None) -> str:
+    """The analysis URL handed to partners, the portal and the embed.
+
+    A sandbox discussion's link carries its sandbox key, so the partner's
+    testers can open the analysis without a portal login.
+    """
+    from app.discussions.access import (
+        SANDBOX_KEY_PARAM,
+        is_sandbox_discussion,
+        sandbox_key_for,
+    )
+
+    base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+    url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}/consensus"
+    if is_sandbox_discussion(discussion):
+        url = f"{url}?{urlencode({SANDBOX_KEY_PARAM: sandbox_key_for(discussion)})}"
+    return append_ref_param(url, ref) if ref else url
+
+
 def build_discussion_urls(discussion, include_ref=True):
     """
     Build standard URLs for a discussion (embed, consensus, snapshot).
@@ -120,13 +139,12 @@ def build_discussion_urls(discussion, include_ref=True):
 
     # Build URLs
     embed_url = f"{base_url}/discussions/{discussion.id}/embed"
-    consensus_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}/consensus"
+    consensus_url = discussion_consensus_url(discussion, ref)
     snapshot_url = f"{base_url}/api/discussions/{discussion.id}/snapshot"
 
     # Add ref parameter if we have partner context
     if ref:
         embed_url = append_ref_param(embed_url, ref)
-        consensus_url = append_ref_param(consensus_url, ref)
         snapshot_url = append_ref_param(snapshot_url, ref)
 
     return {
@@ -209,25 +227,32 @@ def origin_matches_app_base_url(origin: Optional[str]) -> bool:
     )
 
 
-def is_partner_origin_allowed(origin, env: Optional[str] = None):
+def is_partner_origin_allowed(origin, env: Optional[str] = None, partner_id: Optional[int] = None):
     """
     Check if the request origin is in the partner allowlist.
 
     Args:
         origin: The Origin header from the request
+        partner_id: limit the allowlist to one partner's verified domains
 
     Returns:
         bool: True if origin is allowed, False otherwise
     """
     if not origin:
         return False
-    allowed_origins = get_partner_allowed_origins(env=env)
+    allowed_origins = get_partner_allowed_origins(env=env, partner_id=partner_id)
     return origin in allowed_origins
 
 
-def get_partner_allowed_origins(env: Optional[str] = None):
+def get_partner_allowed_origins(env: Optional[str] = None, partner_id: Optional[int] = None):
     """
     Return allowed origins for partner embeds/API, including verified partner domains.
+
+    With ``partner_id``, only that partner's verified domains count: one
+    partner's site must not be able to frame, or write to, another partner's
+    discussion. Without it, every verified partner domain for ``env`` counts
+    (public discussions are embeddable by any partner). ``PARTNER_ORIGINS``
+    is an operator override and applies in both cases.
     """
     allowed = set()
 
@@ -246,6 +271,8 @@ def get_partner_allowed_origins(env: Optional[str] = None):
         )
         if env:
             query = query.filter(PartnerDomain.env == env)
+        if partner_id is not None:
+            query = query.filter(PartnerDomain.partner_id == partner_id)
         for row in query.all():
             domain = (row.domain or '').strip().lower()
             if not domain:

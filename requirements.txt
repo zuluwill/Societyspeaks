@@ -97,6 +97,12 @@ posthog>=7.4.2,<7.37.6
 # Image rendering (Society Play OG share cards)
 Pillow>=10.4.0,<13
 
+# Consultations: QR codes (pure Python) and report PDFs.
+# WeasyPrint needs Pango at runtime (installed in the Dockerfile). Where it is
+# missing, app/consultations/pdf.py falls back to the browser's print view.
+segno>=1.6,<2
+weasyprint>=68,<70
+
 # CORS for API endpoints
 flask-cors>=6.0.2,<7
 

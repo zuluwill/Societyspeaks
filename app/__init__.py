@@ -321,9 +321,12 @@ def create_app():
             from app.lib.db_transient_errors import TRANSIENT_DB_ERROR_PHRASES
             from app.lib.llm_transient_errors import sentry_should_drop_transient_llm
             from app.lib.sentry_config import (
+                scrub_capability_urls,
                 sentry_should_drop_lifecycle_event,
                 sentry_should_keep_worker_stall_event,
             )
+
+            scrub_capability_urls(event)
 
             # Keep gunicorn 120s stalls before any "timeout" substring filter.
             if sentry_should_keep_worker_stall_event(event, hint):
@@ -599,6 +602,17 @@ def create_app():
     # Render proxy), which also owns the HTTP→HTTPS redirect. Talisman still
     # emits HSTS: ProxyFix trusts X-Forwarded-Proto, so request.is_secure is
     # true behind the proxy.
+    # Registered before Talisman so that it runs after it (after_request hooks
+    # run in reverse order): a view whose address is itself a secret asks for
+    # a stricter referrer policy than the site default.
+    @app.after_request
+    def _apply_view_referrer_policy(response):
+        from flask import g
+        policy = g.pop('referrer_policy', None)
+        if policy:
+            response.headers['Referrer-Policy'] = policy
+        return response
+
     if talisman:
         talisman.init_app(
             app,
@@ -1196,6 +1210,11 @@ def create_app():
     from app.billing import billing_bp
     app.register_blueprint(billing_bp)
     app.logger.debug("Billing blueprint registered")
+
+    # Register self-serve consultations (gated by CONSULTATIONS_SELF_SERVE_ENABLED)
+    from app.consultations import consultations_bp
+    app.register_blueprint(consultations_bp)
+    app.logger.debug("Consultations blueprint registered")
 
     # Register Partner API blueprint (embed integration)
     from app.api import init_api

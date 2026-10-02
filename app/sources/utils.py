@@ -39,7 +39,7 @@ def get_source_discussions(source_id, page=1, per_page=12):
         )
         .filter(
             NewsArticle.source_id == source_id,
-            Discussion.partner_env != 'test',
+            Discussion.publicly_listable(),
         )
         .distinct()
     )
@@ -152,7 +152,7 @@ def get_source_stats(source_id):
     avg_opinion_groups = 0
 
     if consensus_analyses:
-        total_groups = sum(ca.num_clusters or 0 for ca in consensus_analyses)
+        total_groups = sum(ca.published_group_count for ca in consensus_analyses)
         avg_opinion_groups = round(total_groups / len(consensus_analyses), 1)
 
     # Count articles
@@ -174,7 +174,7 @@ def get_source_stats(source_id):
             DiscussionSourceArticle.article_id == NewsArticle.id
         ).filter(
             NewsArticle.source_id == source_id,
-            Discussion.partner_env != 'test'
+            Discussion.publicly_listable()
         ).order_by(Discussion.created_at.asc()).first()
         
         if oldest_discussion:

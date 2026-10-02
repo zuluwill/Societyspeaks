@@ -923,7 +923,7 @@ def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
 
     discussions = Discussion.query.filter(
         Discussion.id.notin_(recently_used_ids),
-        Discussion.partner_env != 'test',
+        Discussion.publicly_listable(),
         Discussion.topic.in_(allowed_categories)
     ).order_by(Discussion.created_at.desc()).limit(50).all()
 
@@ -960,7 +960,7 @@ def get_guided_journey_priority_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
         for discussion in ordered_journey_discussions(programme):
             if discussion.id in recent_ids:
                 continue
-            if discussion.partner_env == "test":
+            if not discussion.is_publicly_listable:
                 continue
             if discussion.topic not in allowed_categories:
                 continue
@@ -1027,6 +1027,7 @@ def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
     statements = Statement.query.join(Discussion).filter(
         Statement.id.notin_(recently_used_ids),
         Statement.is_seed == True,
+        Discussion.publicly_listable(),
         Discussion.topic.in_(allowed_categories)
     ).order_by(Statement.created_at.desc()).limit(50).all()
 

@@ -672,3 +672,152 @@ query `transaction:/billing/webhook http.status_code:>=500`, critical at ≥1.
 - Production secrets live only in Render (and password manager)
 - `DEPLOYED_PRODUCTION=1` enables real email/social sends — never set it on a second live host while another is still sending
 - Replit is decommissioned (shut down 2026-07-11) — Render is the only live host; if any Replit-era secrets are still valid anywhere, rotate them
+
+## Self-serve consultations
+
+One question, one audience, one report: `app/consultations/`. Gated by
+`CONSULTATIONS_SELF_SERVE_ENABLED` (shared config group, default `"false"`).
+While it is off, every product route, `/c/<token>`, `/r/<token>` and
+`/help/consultations` answers 404, the scheduler sweep does nothing, and the
+site does not link to the product. Switching it off again is the rollback:
+data is kept, nothing is deleted.
+
+### Before setting the flag to "true"
+
+1. **Migration** `c1n2s3l4t5a6` applied (runs in `preDeployCommand`). Check
+   `python3 scripts/check_schema_drift.py` reports no HIGH drift.
+2. **Docker image rebuilt.** Report PDFs need Pango and fonts, added to the
+   Dockerfile (about 140 MB of fonts). Without them the app still works and
+   offers the browser's print view instead of a PDF download.
+3. **`ANTHROPIC_API_KEY`** set on the web service and the consensus worker.
+   Drafting, screening and the report narrative use it (`PLATFORM_LLM_MODEL`,
+   default `claude-opus-5-5`). With no key, hosts write statements by hand and
+   reports use the template narrative.
+4. **Stripe webhook** (`/billing/webhook`): add `charge.refunded` and
+   `charge.dispute.created` to the events the endpoint receives. Checkout and
+   `customer.subscription.*` events are already sent.
+   Checked in Stripe on 2 Oct 2026: the live endpoint does not yet receive
+   these two events, and test mode has no webhook endpoint at all, so a
+   test-mode payment reaches the app only through the checkout return page.
+5. **Stripe customer portal**: allow subscription cancellation and invoice
+   history. It is where a customer cancels the annual plan.
+6. **VAT**: leave `STRIPE_AUTOMATIC_TAX_ENABLED` unset until the company is
+   VAT registered and Stripe Tax is configured, then set it to `true`.
+7. **Optional**: `CONSULTATION_STRIPE_PRICE_SINGLE` / `_ANNUAL` to bill
+   against fixed Stripe Prices instead of inline amounts;
+   `CONSULTATION_EXAMPLE_DISCUSSION_ID` to build the example report from a
+   real public discussion. Without it the product page uses the built-in
+   made-up example (`app/consultations/example.py`), which also drives the
+   try-it page at `/consultations/demo`.
+8. **`app/static/llms.txt`**: add the product page
+   (`/consultations/self-serve`) under Key Features and Links.
+9. **Translations**: run the workflow in `scripts/compile_translations.sh` so
+   the new strings are not English-only in the other ten languages.
+10. **Load test** at the room size you intend to promise:
+    `load-tests/k6/consultation_room.js`. State a capacity only after it passes.
+
+### How it runs
+
+- **Background work** (drafting, screening, report, PDF) is the
+  `background_job` table, drained by `societyspeaks-consensus-worker` ahead of
+  consensus jobs. A failed job retries with backoff (3 attempts), then
+  dead-letters. `background_job_health` (scheduler, every 5 minutes) requeues
+  jobs whose worker died and pages `BACKGROUND QUEUE STUCK` / `WORKER
+  UNRESPONSIVE` / dead-letter alerts through the usual ops channel.
+- **`consultation_sweep`** (scheduler, every 2 minutes) closes consultations
+  at their closing time, starts the final report, and sends the once-only
+  host notices (first responses, low turnout the day before closing).
+- **`reconcile_consultation_plans`** (04:30 UTC) re-reads annual plans from
+  Stripe in case a webhook was missed.
+- The same job re-reads recent paid purchases, so a refund or dispute made
+  in the Stripe dashboard is picked up within a day even if its webhook
+  event was never delivered. It is a safety net, not a substitute for
+  enabling the events in step 4.
+- **Deleting an account** cancels its annual plan and refunds any purchase
+  it paid for and never used. If Stripe cannot confirm either, the account
+  is kept.
+- **Refunds** are claimed first (`consultation_purchase.status =
+  'refunding'`), then requested from Stripe, so a purchase cannot be refunded
+  and spent at once. The sweep completes a refund whose request died halfway.
+- **Nothing here needs a person.** Drafting failure hands the host a blank
+  page with guidance; a failed narrative leaves the template; a failed PDF
+  leaves the print view; low turnout still produces a report.
+
+### Privacy properties to preserve
+
+- A consultation's discussion has `link_only = true`. Every listing, search,
+  feed, sitemap, social post, translation sweep and clustering job filters on
+  `Discussion.publicly_listable()`; `tests/test_consultations.py` fails if a
+  raw `partner_env != 'test'` filter is added.
+- The participant page (`/c/<token>`) loads no analytics, opens no server
+  session and sets one cookie. Votes are stored against a fingerprint scoped
+  to the consultation, with no user id and no analytics id, even for a
+  signed-in visitor.
+- Site admins cannot open, list, moderate or delete a customer's
+  consultation: the admin discussion, statement and flag screens, the
+  site-wide spam sweep and `flask backfill-seed-statements` all skip
+  `link_only` discussions. A customer who needs help has to share their
+  screen or their report link.
+- Host screens count page views only: analytics autocapture and session
+  recording are switched off there (`consultations/_base_host.html`), because
+  those screens show the customer's question, statements and results.
+- Link tokens are removed from error reports before they are sent to Sentry
+  (`scrub_capability_urls`). They still appear in web server and edge access
+  logs, as any address does.
+- Report PDFs are rendered with a fetcher that reads only our own static
+  files, so nothing in a report can make the server request an address.
+- `/c/<token>` and `/r/<token>` send `Referrer-Policy: no-referrer`, because
+  the address is the key. Talisman sets the site default on every response;
+  a view overrides it by setting `g.referrer_policy`.
+- A report's AI narrative is published only in a language the wording check
+  can read (English, Spanish, French, German, Dutch, Portuguese). In any
+  other language the report keeps the template narrative.
+
+### Known limits
+
+- **Fake participants.** Voting needs no login, so someone who has the link
+  can script votes from made-up devices, up to the per-address rate limit.
+  The host sees it as a jump in participants and can rotate the link. A
+  consultation whose result will be contested needs a different product.
+- **Stripe alerts to act on.** `second consultation subscription ... cancel
+  and refund it in Stripe` (error log) means a customer paid for the annual
+  plan twice; `Refund for consultation purchase N needs attention` means
+  Stripe refused a refund the customer asked for.
+
+### Measuring cost
+
+`flask consultation-usage --days 30` prints model calls and tokens per
+consultation and per purpose, with the typical and heaviest consultation.
+Multiply by the provider's current prices. Database transfer for the period
+is on the Neon bill (see "Neon egress").
+
+
+## Opinion groups are published only when the votes show them
+
+Clustering always returns groups, including for an audience that answers at
+random or broadly agrees. Each analysis now tests its grouping against
+shuffled copies of the same votes (`assess_group_structure` in
+`app/lib/consensus_engine.py`; `CONSENSUS_GROUP_TEST_PERMUTATIONS`, default
+39, `0` switches it off). When the test fails, no groups are shown or sent:
+the results page shows where participants agree, disagree, are unsure or are
+split, and the partner API and webhooks report zero groups.
+
+Analyses made before the test carry no verdict and stay published. After
+deploying, run:
+
+```
+flask assess-opinion-groups           # report only
+flask assess-opinion-groups --apply   # store the verdicts
+```
+
+Checked read-only on 2 Oct 2026: none of the three discussions that publish
+groups today (25, 5026, 5027) passes. Discussion 25 is the demo used on the
+help pages; it will show statement-level results until more people vote.
+
+## Analytics records that a vote was cast, not how
+
+Vote direction is removed from every analytics event as it leaves the server
+(`_without_opinions` in `app/lib/posthog_utils.py`). The database keeps it,
+so the SQL in `docs/analysis/` is unaffected. PostHog charts that split by
+agree / disagree / unsure stop receiving new data. To send it again, set
+`ANALYTICS_INCLUDE_VOTE_DIRECTION=true` and say so in the privacy policy.

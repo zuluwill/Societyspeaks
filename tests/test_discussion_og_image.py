@@ -33,6 +33,7 @@ def test_discussion_og_png_route(app, client, monkeypatch):
         title='Climate adaptation funding priorities',
         topic='Climate',
         partner_env='live',
+        is_publicly_listable=True,
     )
 
     monkeypatch.setattr(

@@ -443,13 +443,13 @@
           <p class="text-sm text-gray-600 mt-2 leading-relaxed">
             {{ _('These posts are written by <strong>discussion organisers</strong> (for example policy outcomes, hearings, or next steps). They are <strong>not</strong> where you suggest new voting statements — use')|safe }}
             <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('Suggest a statement') }}</a>
-            {{ _('instead. Suggestions go through the') }}
+            {{ _('instead.') }}
             {% if current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin) %}
-              <a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('moderation queue') }}</a>
+              {% set queue_link %}<a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" class="text-primary-600 font-medium hover:underline">{{ _('moderation queue') }}</a>{% endset %}
+              {{ _('Suggestions appear for voting straight away. Anything flagged goes to the %(queue)s.', queue=queue_link) }}
             {% else %}
-              {{ _('moderation queue') }}
+              {{ _('Suggestions appear for voting straight away, and organisers review anything that is flagged.') }}
             {% endif %}
-            {{ _('before they appear for voting.') }}
           </p>
           {% endif %}
         </div>

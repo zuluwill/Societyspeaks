@@ -24,7 +24,7 @@ from app.daily.utils import (
     process_daily_question_subscription,
 )
 from app.programmes.access import programme_access_labels, query_accessible_programmes, ranked_programme_access_subquery
-from app.programmes.permissions import can_view_programme
+from app.discussions.access import can_view_discussion_on_site
 from app.discussions.query_utils import apply_discussion_visibility
 try:
     import posthog
@@ -161,7 +161,9 @@ def _is_briefing_trial_flow(pending_redirect: str | None) -> bool:
         # Compare against the raw path so a future hostname change doesn't break this.
         from urllib.parse import urlparse
         path = urlparse(pending_redirect).path or pending_redirect
-        if path.startswith('/briefings/start'):
+        # Passwordless product flows: the briefing trial and self-serve
+        # consultations both start from an email address alone.
+        if path.startswith('/briefings/start') or path.startswith('/consultations/'):
             return True
     return False
 
@@ -340,9 +342,7 @@ def _consume_pending_discussion_follow(user):
     discussion = Discussion.query.options(
         db.joinedload(Discussion.programme)
     ).filter_by(id=discussion_id).first()
-    if not discussion or discussion.partner_env == 'test':
-        return None
-    if discussion.programme and not can_view_programme(discussion.programme, user):
+    if not discussion or not can_view_discussion_on_site(discussion, user):
         return None
 
     existing_follow = DiscussionFollow.query.filter_by(
@@ -373,7 +373,7 @@ def _query_saved_discussions(user):
         DiscussionFollow.discussion_id == Discussion.id,
     ).filter(
         DiscussionFollow.user_id == user.id,
-        Discussion.partner_env != 'test',
+        Discussion.publicly_listable(),
     )
     query = apply_discussion_visibility(query, user)
     return query
@@ -383,9 +383,7 @@ def _recent_participating_discussions(user, limit=6):
     activity_by_discussion = {}
 
     def add_activity(discussion, timestamp, activity_key):
-        if not discussion or discussion.partner_env == 'test':
-            return
-        if discussion.programme and not can_view_programme(discussion.programme, user):
+        if not discussion or not can_view_discussion_on_site(discussion, user):
             return
         row = activity_by_discussion.setdefault(
             discussion.id,
@@ -461,9 +459,7 @@ def _recent_user_contributions(user, limit=12):
     ).limit(limit).all()
     for statement in statement_rows:
         discussion = statement.discussion
-        if not discussion or discussion.partner_env == 'test':
-            continue
-        if discussion.programme and not can_view_programme(discussion.programme, user):
+        if not discussion or not can_view_discussion_on_site(discussion, user):
             continue
         entries.append(
             {
@@ -487,9 +483,7 @@ def _recent_user_contributions(user, limit=12):
     for response in response_rows:
         statement = response.statement
         discussion = statement.discussion if statement else None
-        if not discussion or discussion.partner_env == 'test':
-            continue
-        if discussion.programme and not can_view_programme(discussion.programme, user):
+        if not discussion or not can_view_discussion_on_site(discussion, user):
             continue
         entries.append(
             {

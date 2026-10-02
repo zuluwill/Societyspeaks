@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
-{% block title %}{{ _('Personal Briefs - Stop drowning in newsletters. Start knowing what matters.') }} | Society Speaks{% endblock %}
+{% block title %}{{ _('Personal Briefs: one daily brief from the sources you trust') }} | Society Speaks{% endblock %}
 {% block meta_description %}{{ _('Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. Used by policy researchers, analysts, and think tanks.') }}{% endblock %}
 {% block og_title %}{{ _('Personal Briefs - One daily brief from sources you trust') }}{% endblock %}
-{% block og_description %}{{ _('Stop reading 15 newsletters. Start knowing what matters. Synthesised daily briefs from the sources you actually trust. From £4.99/month.') }}{% endblock %}
+{% block og_description %}{{ _('One daily brief written from the sources you choose, in place of 15 newsletters. From £4.99 a month.') }}{% endblock %}
 {% block og_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
-{% block twitter_title %}{{ _('Personal Briefs - Stop drowning in newsletters. Start knowing what matters.') }}{% endblock %}
+{% block twitter_title %}{{ _('Personal Briefs: one daily brief from the sources you trust') }}{% endblock %}
 {% block twitter_description %}{{ _('Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. From £4.99/month.') }}{% endblock %}
 {% block twitter_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
 
@@ -20,7 +20,7 @@
   "name": "Society Speaks Personal Briefs",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
-  "description": _('AI-powered daily briefings from the sources you trust. Replace newsletter overload with one calm, synthesised brief delivered on your schedule.'),
+  "description": _('A daily briefing written from the sources you choose. One calm brief in place of a dozen newsletters, delivered when you want it.'),
   "offers": [
     {
       "@type": "Offer",
@@ -98,7 +98,7 @@
       "name": _("What if I don't like it?"),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": _('Cancel anytime, no questions asked. 30-day free trial.')
+        "text": _('Cancel any time, no questions asked. 30-day free trial.')
       }
     },
     {
@@ -122,7 +122,7 @@
       "name": _("What's the difference between Personal and Professional?"),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": _('Both plans include unlimited briefs and PDF uploads. Personal gives you up to 15 sources in total and up to 10 recipients per brief — perfect for staying informed yourself. Professional unlocks unlimited sources, up to 50 recipients per brief, and priority processing — ideal if you need deeper coverage or want to share briefs with colleagues.')
+        "text": _('Both plans include unlimited briefs and PDF uploads. Personal gives you up to 15 sources in total and up to 10 recipients per brief, which suits keeping yourself informed. Professional has unlimited sources, up to 50 recipients per brief and priority processing, for deeper coverage or sharing briefs with colleagues.')
       }
     },
     {
@@ -154,7 +154,7 @@
       <!-- Left: Copy -->
       <div>
         <p class="text-sm font-semibold tracking-wide uppercase mb-4" style="color: #60a5fa">
-          {{ _('For people who need to know, not just read') }}
+          {{ _('For people whose work depends on being informed') }}
         </p>
         <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-5xl mb-6 leading-tight" style="color: white">
           <span class="block">{{ _('Your papers, your newsletters, your topics.')|escape_i18n }}</span>
@@ -963,7 +963,7 @@
             </svg>
             {{ _('Multi-source synthesis') }}
           </h4>
-          <p class="text-slate-300 text-sm">{{ _("We pull from multiple outlets across different countries and political perspectives — not just one wire service. You get a genuinely multi-angle view.") }}</p>
+          <p class="text-slate-300 text-sm">{{ _("We pull from multiple outlets across different countries and political perspectives, so you see a story from more than one side.") }}</p>
         </div>
 
         <div class="bg-slate-800 rounded-xl p-6">
@@ -1152,7 +1152,7 @@
           </svg>
         </div>
         <h4 class="font-semibold text-slate-900 mb-1">{{ _('Thought Leadership') }}</h4>
-        <p class="text-sm text-slate-500 mb-2">{{ _('Publication-ready analysis and insights') }}</p>
+        <p class="text-sm text-slate-500 mb-2">{{ _('Publication-ready analysis') }}</p>
         <p class="text-xs text-slate-400">{{ _('Custom sources • Weekly') }}</p>
         <span class="inline-block mt-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">{{ _('For Teams') }}</span>
       </div>
@@ -1242,7 +1242,7 @@
           </div>
           <h3 class="font-semibold text-slate-900">{{ _('Your schedule') }}</h3>
         </div>
-        <p class="text-slate-600 text-sm">{{ _('Daily at 7am? Weekly on Monday? You decide when and how often. Pause anytime.') }}</p>
+        <p class="text-slate-600 text-sm">{{ _('Daily at 7am? Weekly on Monday? You decide when and how often. Pause any time.') }}</p>
       </div>
     </div>
   </section>
@@ -1372,7 +1372,7 @@
       </li>
       <li class="flex items-center gap-2">
         <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25z"/></svg>
-        {{ _('Cancel anytime') }}
+        {{ _('Cancel any time') }}
       </li>
     </ul>
   </div>
@@ -1433,7 +1433,7 @@
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('30-day free trial, cancel anytime') }}</span>
+              <span>{{ _('30-day free trial, cancel any time') }}</span>
             </li>
           </ul>
           <p class="text-sm text-slate-500 mb-4 italic">{{ _('"I want one calm daily brief that keeps me informed."') }}</p>
@@ -1507,7 +1507,7 @@
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('30-day free trial, cancel anytime') }}</span>
+              <span>{{ _('30-day free trial, cancel any time') }}</span>
             </li>
           </ul>
           <p class="text-sm text-slate-500 mb-4 italic">{{ _('"I need unlimited sources and the ability to share briefs with my team."') }}</p>
@@ -1614,7 +1614,7 @@
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>{{ _('Custom sending domain, SSO, API access') }}</span>
+              <span>{{ _('Custom sending domain') }}</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-slate-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -1682,7 +1682,7 @@
           </svg>
         </div>
         <h3 class="font-semibold text-slate-900 mb-2">{{ _('GDPR compliant') }}</h3>
-        <p class="text-sm text-slate-600">{{ _('UK/EU compliant by design. Export or delete your data anytime. Right to be forgotten honoured.') }}</p>
+        <p class="text-sm text-slate-600">{{ _('UK/EU compliant by design. Export or delete your data any time. Right to be forgotten honoured.') }}</p>
       </div>
 
       <div class="text-center p-6">
@@ -1710,7 +1710,7 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h3 class="font-semibold text-slate-900 mb-1">{{ _('For organisations: additional controls') }}</h3>
-          <p class="text-slate-600 text-sm">{{ _('Team and Enterprise plans include approval workflows, audit logs, custom data retention, and SSO/SAML integration.') }}</p>
+          <p class="text-slate-600 text-sm">{{ _('Team and Enterprise plans include approval workflows, so a brief can be reviewed before it is sent.') }}</p>
         </div>
         <a href="#pricing-organisations" id="org-plan-link" class="inline-flex items-center text-primary-600 hover:text-primary-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
           {{ _('View organisation plans →') }}
@@ -1768,7 +1768,7 @@
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _("What if I don't like it?") }}</h3>
-        <p class="text-slate-600">{{ _('Cancel anytime, no questions asked. 30-day free trial.') }}</p>
+        <p class="text-slate-600">{{ _('Cancel any time, no questions asked. 30-day free trial.') }}</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _('What sources can I add?') }}</h3>
@@ -1780,7 +1780,7 @@
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _("What's the difference between Personal and Professional?") }}</h3>
-        <p class="text-slate-600">{{ _('Both plans include unlimited briefs and PDF uploads. Personal gives you up to 15 sources in total and up to 10 recipients per brief — perfect for staying informed yourself. Professional unlocks unlimited sources, up to 50 recipients per brief, and priority processing — ideal if you need deeper coverage or want to share briefs with colleagues.') }}</p>
+        <p class="text-slate-600">{{ _('Both plans include unlimited briefs and PDF uploads. Personal gives you up to 15 sources in total and up to 10 recipients per brief, which suits keeping yourself informed. Professional has unlimited sources, up to 50 recipients per brief and priority processing, for deeper coverage or sharing briefs with colleagues.') }}</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">{{ _('Do all plans include a free trial?') }}</h3>
@@ -1810,7 +1810,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
         </svg>
       </a>
-      <p class="text-slate-400 text-sm mt-4">{{ _('Cancel anytime.') }}</p>
+      <p class="text-slate-400 text-sm mt-4">{{ _('Cancel any time.') }}</p>
     </div>
   </section>
 </div>
@@ -1830,4 +1830,6 @@
     });
   });
 </script>
+{% from "components/_offers.html" import offers %}
+{{ offers(current='briefs') }}
 {% endblock %}

@@ -342,7 +342,11 @@ def test_both_queues_are_wired_into_the_scheduler_sweeps():
     assert "build_stale_job_alerts('PROGRAMME EXPORT'" in source
     assert "get_consensus_queue_metrics" in source
     assert "get_programme_export_queue_metrics" in source
-    assert source.count("heartbeat_ok=_consensus_worker_heartbeat_ok()") == 2
+    # Consensus, programme exports, and the background job queue all drain in
+    # the same worker, so all three watch its heartbeat.
+    assert "'BACKGROUND'" in source
+    assert "recover_stale_jobs" in source
+    assert source.count("heartbeat_ok=_consensus_worker_heartbeat_ok()") == 3
     assert source.count("build_stale_job_alerts('CONSENSUS'") == 1
     assert source.count("build_stale_job_alerts('PROGRAMME EXPORT'") == 1
 

@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 {% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_secondary_lg, btn_secondary_md, link_primary %}
 
-{% block title %}{{ _('Run a Consultation — Society Speaks') }}{% endblock %}
+{% block title %}{{ _('Facilitated consultations for public bodies — Society Speaks') }}{% endblock %}
 {% block canonical %}{{ url_for('main.consultations', _external=True) }}{% endblock %}
-{% block meta_description %}{{ _('Online public consultations that go beyond surveys. Society Speaks maps where your community actually agrees — consensus, bridge ideas and real divisions, with the statistics to defend every finding. Facilitated consultations from £2,500.') }}{% endblock %}
-{% block og_title %}{{ _('Find out where your community actually agrees — Society Speaks') }}{% endblock %}
-{% block og_description %}{{ _('Consultations that map common ground, not just collect comments. Residents vote on short statements and add their own; rigorous analysis shows consensus, bridge ideas and genuine divisions.') }}{% endblock %}
-{% block twitter_title %}{{ _('Find out where your community actually agrees — Society Speaks') }}{% endblock %}
-{% block twitter_description %}{{ _('Consultations that map common ground, not just collect comments. Residents vote on short statements and add their own; rigorous analysis shows consensus, bridge ideas and genuine divisions.') }}{% endblock %}
+{% block meta_description %}{{ _('Public consultations designed and run with you. Residents vote on short statements, and the analysis shows where they agree, where they divide and which ideas bridge the divide, with the statistics behind every finding. From £2,500.') }}{% endblock %}
+{% block og_title %}{{ _('Find out where your community agrees — Society Speaks') }}{% endblock %}
+{% block og_description %}{{ _('We design and run the consultation with you. Residents vote on short statements and add their own; the analysis shows consensus, bridge ideas and the divisions that remain.') }}{% endblock %}
+{% block twitter_title %}{{ _('Find out where your community agrees — Society Speaks') }}{% endblock %}
+{% block twitter_description %}{{ _('We design and run the consultation with you. Residents vote on short statements and add their own; the analysis shows consensus, bridge ideas and the divisions that remain.') }}{% endblock %}
 
 {% block extra_head %}
 <script type="application/ld+json">
@@ -58,10 +58,10 @@
   <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
     <div class="mx-auto max-w-3xl text-center">
       <div class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-primary-700 mb-6">
-        <span>{{ _('For governments, public bodies and organisations') }}</span>
+        <span>{{ _('For governments and public bodies') }}</span>
       </div>
       <h1 id="consultations-hero-heading" class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-        {{ _('Find out where your community actually agrees.') }}
+        {{ _('Find out where your community agrees.') }}
       </h1>
       <p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
         {{ _('Society Speaks runs online consultations that go beyond surveys. Residents vote on short statements and add their own, and the analysis shows where people agree, which ideas bridge opposing groups, and where the disagreement really lies.') }}
@@ -125,7 +125,7 @@
           </div>
           <div>
             <dt class="text-base font-semibold text-gray-900">{{ _('One tap, not one essay.') }}</dt>
-            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Voting takes seconds, so you hear from the silent majority, not just the people with time to write.') }}</dd>
+            <dd class="mt-1 text-base text-gray-600 leading-relaxed">{{ _('Voting takes seconds, so you hear from people who would never write a response.') }}</dd>
           </div>
         </div>
         <div class="flex gap-4">
@@ -167,7 +167,7 @@
         (_('Scoping'), _('We turn your consultation question into seed statements that are neutral, clear, and answerable — we draft, you approve.')),
         (_('A consultation space in your colours'), _('Hosted by us and embeddable on your own website with your palette and typography. Works on any phone, no account required to take part, available in 11 languages, built for accessibility.')),
         (_('Live participation'), _('Residents vote, respond and add their own statements, with moderation, anti-abuse and bot protection built in. To compare groups — town by town, or residents versus businesses — we run parallel consultations on the same statements and deliver a side-by-side comparison in your report.')),
-        (_('Consensus analysis'), _('Updated throughout the consultation, not just at the end: opinion groups, consensus statements, bridge statements and divisive statements, all with published statistical methodology.')),
+        (_('Consensus analysis'), _('Updated throughout the consultation: consensus statements, bridge statements, divisive statements and, where the votes show them, opinion groups, all with published statistical methodology.')),
         (_('Reporting and raw data'), _('A findings summary you can put in front of members, plus full CSV and JSON export of every statement and aggregate for your own analysts.'))
       ] %}
       {% for step_title, step_body in steps %}
@@ -244,9 +244,9 @@
           <span class="text-4xl font-bold tracking-tight text-gray-900">£6,000</span>
           <span class="text-sm font-medium text-gray-500">{{ _('/year') }}</span>
         </p>
-        <p class="mt-1 text-sm text-gray-500">{{ _('custom annual agreement') }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ _('facilitated, by annual agreement') }}</p>
         <p class="mt-4 text-base text-gray-600 leading-relaxed">
-          {{ _('Unlimited consultations on a supported instance, priority support, and a quarterly review.') }}
+          {{ _('Facilitated consultations through the year on a supported instance, with priority support and a quarterly review. We agree the programme with you.') }}
         </p>
         <p class="mt-3 text-sm text-gray-500">{{ _('Best for governments and organisations consulting year-round.') }}</p>
         <div class="mt-auto pt-6">
@@ -256,6 +256,16 @@
         </div>
       </div>
     </div>
+
+    {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
+    <div class="mx-auto mt-10 max-w-3xl rounded-2xl border-l-4 border-primary-600 bg-blue-50 p-6">
+      <p class="text-base font-semibold text-gray-900">{{ _('Would you rather run one yourself?') }}</p>
+      <p class="mt-1 text-gray-700">
+        {{ _('Ask your own members, staff or audience one question and get the report, without a scoping call. From %(price)s per consultation.', price='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100)) }}
+      </p>
+      <a href="{{ url_for('consultations.landing') }}" class="mt-3 inline-block {{ link_primary() }}" data-ph-capture-attribute-cta="facilitated-to-self-serve">{{ _('See how to run one yourself') }} →</a>
+    </div>
+    {% endif %}
 
     <div class="mx-auto mt-10 max-w-3xl text-center">
       <p class="text-sm text-gray-500">
@@ -397,4 +407,6 @@
   </div>
 </section>
 
+{% from "components/_offers.html" import offers %}
+{{ offers(current='government') }}
 {% endblock %}

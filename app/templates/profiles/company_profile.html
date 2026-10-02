@@ -25,7 +25,7 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": profile.company_name,
-      "description": (profile.description or _('An organization on SocietySpeaks contributing to public discourse and meaningful change.')),
+      "description": (profile.description or _('An organisation on SocietySpeaks contributing to public discourse and meaningful change.')),
       "url": _company_url,
       "logo": _company_logo,
       "address": ({"@type": "PostalAddress", "addressLocality": profile.city, "addressCountry": profile.country} if (profile.city and profile.country) else None),

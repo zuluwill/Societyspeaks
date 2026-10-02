@@ -1,0 +1,53 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md, link_primary %}
+{% from "consultations/_macros.html" import callout with context %}
+{% set host_nav = 'mine' %}
+
+{% block title %}{{ _('Report') }}: {{ consultation.question }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+<a href="{{ url_for('consultations.dashboard', consultation_id=consultation.id) }}" class="text-sm {{ link_primary() }}">← {{ _('Back to dashboard') }}</a>
+<div class="mx-auto mt-8 max-w-xl rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+  {% if report_state == 'working' %}
+  <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-primary-600 motion-reduce:animate-none" aria-hidden="true"></div>
+  <h1 class="mt-5 text-xl font-bold text-gray-900" role="status">{{ _('Your report is being built') }}</h1>
+  <p class="mt-2 text-gray-600">{{ _('This usually takes under a minute. This page updates by itself, and we will email you when it is ready, so you can close it.') }}</p>
+  {% elif report_state == 'failed' %}
+  <h1 class="text-xl font-bold text-gray-900">{{ _('The report could not be built just now') }}</h1>
+  <p class="mt-2 text-gray-600">{{ _('Your results are safe. Try again, and if it keeps failing your results are still on the dashboard and in the CSV download.') }}</p>
+  <form method="post" action="{{ url_for('consultations.build_report', consultation_id=consultation.id) }}" class="mt-5">
+    {{ action_form.hidden_tag() }}
+    <button type="submit" class="{{ btn_primary_md() }}" data-loading-text="{{ _('Building…') }}">{{ _('Try again') }}</button>
+  </form>
+  {% else %}
+  <h1 class="text-xl font-bold text-gray-900">{{ _('No report yet') }}</h1>
+  <p class="mt-2 text-gray-600">
+    {% if consultation.is_live %}{{ _('Your final report is built automatically when voting closes. You can also build an interim report from the votes so far.') }}
+    {% else %}{{ _('Build your report from the votes cast.') }}{% endif %}
+  </p>
+  <form method="post" action="{{ url_for('consultations.build_report', consultation_id=consultation.id) }}" class="mt-5">
+    {{ action_form.hidden_tag() }}
+    <button type="submit" class="{{ btn_primary_md() }}" data-loading-text="{{ _('Building…') }}">
+      {% if consultation.is_live %}{{ _('Build an interim report') }}{% else %}{{ _('Build the report') }}{% endif %}
+    </button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block host_scripts %}
+{% if report_state == 'working' %}
+<script nonce="{{ csp_nonce() }}">
+  (function poll() {
+    setTimeout(async function () {
+      try {
+        const response = await fetch('{{ url_for("consultations.status", consultation_id=consultation.id) }}', { headers: { 'Accept': 'application/json' } });
+        const state = await response.json();
+        if (state.report !== 'working') { window.location.reload(); return; }
+      } catch (error) { /* keep waiting */ }
+      poll();
+    }, 3000);
+  })();
+</script>
+{% endif %}
+{% endblock %}

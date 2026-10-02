@@ -36,6 +36,14 @@ from app.models.translations import (  # noqa: F401
     ProgrammeTranslation,
 )
 from app.models.consensus import ConsensusAnalysis, ConsensusJob  # noqa: F401
+from app.models.consultation import (  # noqa: F401
+    Consultation,
+    ConsultationReport,
+    ConsultationPurchase,
+    ConsultationPlan,
+    BackgroundJob,
+    LLMUsage,
+)
 from app.models.admin import AdminAuditEvent, AdminSettings  # noqa: F401
 from app.models.briefing import (  # noqa: F401
     BriefTemplate,
@@ -103,6 +111,7 @@ from app.models.discussions import (  # noqa: F401
     DiscussionUpdate,
     DiscussionParticipant,
     Discussion,
+    ModStatus,
     Statement,
     StatementVote,
     Response,

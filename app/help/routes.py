@@ -105,6 +105,15 @@ def _help_categories():
             'section': 'technical',
         },
     ]
+    if current_app.config.get('CONSULTATIONS_SELF_SERVE_ENABLED'):
+        cats.append({
+            'key': 'consultations',
+            'title': _('Running a consultation'),
+            'description': _('Ask your own audience one question and get a report you can forward'),
+            'icon': 'chart',
+            'url': url_for('help.consultations'),
+            'section': 'build',
+        })
     if current_app.config.get('GAME_ENABLED', True):
         cats.insert(
             4,
@@ -163,6 +172,20 @@ def tradeoffs():
         from flask import abort
         abort(404)
     return render_template('help/tradeoffs.html')
+
+
+@help_bp.route('/consultations')
+def consultations():
+    if not current_app.config.get('CONSULTATIONS_SELF_SERVE_ENABLED'):
+        from flask import abort
+        abort(404)
+    from app.discussions.thresholds import RESULT_MIN_VOTES
+    return render_template(
+        'help/consultations.html',
+        min_votes=RESULT_MIN_VOTES,
+        recommended=current_app.config.get('CONSULTATION_RECOMMENDED_PARTICIPANTS', 30),
+        minimum_statements=current_app.config.get('CONSULTATION_MIN_STATEMENTS', 5),
+    )
 
 
 @help_bp.route('/personal-briefs')

@@ -1203,6 +1203,7 @@
       voteGateThreshold: 5,
       isClosed: {{ 'true' if is_closed else 'false' }},
       embedStatementSubmissionsEnabled: {{ 'true' if discussion.embed_statement_submissions_enabled else 'false' }},
+      sandboxEmbedToken: {{ sandbox_embed_token|default('', true)|tojson }},
       i18n: {
         discussionClosed: {{ gettext_js('This discussion is closed.')|tojson }},
         viewFullRecord: {{ gettext_js('View full record')|tojson }},
@@ -1411,6 +1412,13 @@
       }
     }
 
+    function embedAuthHeaders(headers) {
+      if (config.sandboxEmbedToken) {
+        headers['X-Sandbox-Embed-Token'] = config.sandboxEmbedToken;
+      }
+      return headers;
+    }
+
     function buildSnapshotUrl() {
       let url = `/api/discussions/${config.discussionId}/snapshot`;
       if (config.partnerRef) {
@@ -1421,7 +1429,9 @@
 
     async function ensureAnalysisSnapshot() {
       if (analysisSnapshot || analysisFetchInFlight) return;
-      analysisFetchInFlight = fetch(buildSnapshotUrl())
+      analysisFetchInFlight = fetch(buildSnapshotUrl(), {
+        headers: embedAuthHeaders({})
+      })
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data && typeof data === 'object') {
@@ -1541,11 +1551,11 @@
       try {
         const response = await fetch(`/statements/${statementId}/vote`, {
           method: 'POST',
-          headers: {
+          headers: embedAuthHeaders({
             'Content-Type': 'application/json',
             'X-CSRFToken': config.csrfToken,
             'X-Embed-Request': 'true'
-          },
+          }),
           credentials: 'include',
           signal: controller.signal,
           body: JSON.stringify({
@@ -1779,11 +1789,11 @@
       try {
         const response = await fetch(`/api/embed/flag`, {
           method: 'POST',
-          headers: {
+          headers: embedAuthHeaders({
             'Content-Type': 'application/json',
             'X-CSRFToken': config.csrfToken,
             'X-Embed-Request': 'true'
-          },
+          }),
           credentials: 'include',
           body: JSON.stringify({
             statement_id: statementId,
@@ -1851,11 +1861,11 @@
       try {
         const response = await fetch(`/api/embed/discussions/${config.discussionId}/statements`, {
           method: 'POST',
-          headers: {
+          headers: embedAuthHeaders({
             'Content-Type': 'application/json',
             'X-CSRFToken': config.csrfToken,
             'X-Embed-Request': 'true'
-          },
+          }),
           credentials: 'include',
           body: JSON.stringify({
             content,

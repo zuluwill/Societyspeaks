@@ -46,7 +46,7 @@ def build_consensus_dedupe_key(discussion_id):
 
 def enqueue_consensus_job(discussion_id, requested_by_user_id=None, reason='manual'):
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion or not discussion.has_native_statements:
+    if not discussion or not discussion.has_native_statements or discussion.link_only:
         return None, False, "Discussion not eligible for native consensus jobs."
 
     dedupe_key = build_consensus_dedupe_key(discussion_id)

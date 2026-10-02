@@ -62,7 +62,7 @@ def serialize_consensus_payload(discussion, analysis):
     return {
         'discussion_id': discussion.id,
         'analysis_id': analysis.id,
-        'num_clusters': analysis.num_clusters,
+        'num_clusters': analysis.published_group_count,
         'participants_count': analysis.participants_count,
         'statements_count': analysis.statements_count,
         'method': analysis.method,

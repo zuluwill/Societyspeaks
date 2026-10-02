@@ -313,7 +313,7 @@ class BriefingEmailClient:
             company = db.session.get(CompanyProfile, briefing.owner_id)
             if company and company.logo:
                 # Build full URL for logo
-                company_logo_url = f"{base_url}/profiles/image/{company.logo}"
+                company_logo_url = f"{base_url}/profiles/get-image/{company.logo}"
         
         # Get items for template (for audio links)
         items = sorted(brief_run.items, key=lambda x: x.position or 0) if brief_run.items else []

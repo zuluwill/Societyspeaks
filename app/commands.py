@@ -110,7 +110,101 @@ def hide_content_spam(apply):
         click.echo("Dry-run only. Re-run with --apply to hide the matches.")
 
 
+@click.command('assess-opinion-groups')
+@click.option('--apply', is_flag=True, help='Store the verdict on each analysis. Without it, only report.')
+@with_appcontext
+def assess_opinion_groups(apply):
+    """Test whether each discussion's published opinion groups are real.
+
+    Analyses made before the test existed carry no verdict and stay published.
+    This runs the test on the latest analysis of every discussion; with
+    --apply, groups the votes do not support stop being shown, and the results
+    page shows the statement-level results instead.
+    """
+    from sqlalchemy import func
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.lib.consensus_engine import assess_group_structure, build_vote_matrix
+    from app.models import ConsensusAnalysis
+
+    latest_ids = db.session.query(func.max(ConsensusAnalysis.id)).group_by(ConsensusAnalysis.discussion_id)
+    analyses = ConsensusAnalysis.query.filter(ConsensusAnalysis.id.in_(latest_ids)).order_by(ConsensusAnalysis.discussion_id).all()
+    kept = withdrawn = 0
+    for analysis in analyses:
+        _filled, vote_matrix_real, participants, _statements = build_vote_matrix(analysis.discussion_id, db)
+        if vote_matrix_real is None or len(participants) < 4:
+            click.echo(f'discussion {analysis.discussion_id}: too few votes to test, left as it is')
+            continue
+        verdict = assess_group_structure(vote_matrix_real, seed=analysis.discussion_id)
+        kept += verdict['supported']
+        withdrawn += not verdict['supported']
+        click.echo(
+            f"discussion {analysis.discussion_id}: {analysis.num_clusters} groups, "
+            f"{'supported' if verdict['supported'] else 'NOT supported'} (p={verdict['p_value']:.3f})"
+        )
+        if apply:
+            cluster_data = dict(analysis.cluster_data or {})
+            cluster_data['metadata'] = {**(cluster_data.get('metadata') or {}), 'group_structure': verdict}
+            analysis.cluster_data = cluster_data
+            flag_modified(analysis, 'cluster_data')
+    if apply:
+        db.session.commit()
+    click.echo(f"{kept} supported, {withdrawn} not supported" + ('' if apply else ' (dry run: nothing stored)'))
+
+
+@click.command('consultation-usage')
+@click.option('--days', default=30, show_default=True, help='Look back this many days.')
+def consultation_usage(days):
+    """Model usage per consultation: the input to the cost-per-consultation measurement.
+
+    Prints token totals by consultation and by purpose. Multiply by the
+    provider's current per-token prices; none are hard-coded here.
+    """
+    from datetime import timedelta
+    from sqlalchemy import func
+    from app.lib.time import utcnow_naive
+    from app.models import LLMUsage
+
+    since = utcnow_naive() - timedelta(days=days)
+    rows = (
+        db.session.query(
+            LLMUsage.consultation_id,
+            LLMUsage.purpose,
+            LLMUsage.model,
+            func.count(LLMUsage.id),
+            func.sum(LLMUsage.input_tokens),
+            func.sum(LLMUsage.output_tokens),
+        )
+        .filter(LLMUsage.created_at >= since)
+        .group_by(LLMUsage.consultation_id, LLMUsage.purpose, LLMUsage.model)
+        .order_by(LLMUsage.consultation_id, LLMUsage.purpose)
+        .all()
+    )
+    if not rows:
+        click.echo(f'No platform model calls in the last {days} days.')
+        return
+    click.echo('consultation  purpose                            model               calls   input_tokens  output_tokens')
+    totals = {}
+    for consultation_id, purpose, model, calls, tokens_in, tokens_out in rows:
+        click.echo(
+            f'{str(consultation_id or "-"):<13} {purpose:<34} {model:<19} {calls:>5}   {int(tokens_in or 0):>12}  {int(tokens_out or 0):>13}'
+        )
+        total = totals.setdefault(consultation_id, [0, 0])
+        total[0] += int(tokens_in or 0)
+        total[1] += int(tokens_out or 0)
+    per_consultation = [v for k, v in totals.items() if k is not None]
+    if per_consultation:
+        heaviest = max(per_consultation, key=lambda v: v[0] + v[1])
+        typical = sorted(per_consultation, key=lambda v: v[0] + v[1])[len(per_consultation) // 2]
+        click.echo('')
+        click.echo(f'consultations: {len(per_consultation)}')
+        click.echo(f'typical (median): {typical[0]} input + {typical[1]} output tokens')
+        click.echo(f'heaviest:         {heaviest[0]} input + {heaviest[1]} output tokens')
+
+
 def init_commands(app):
+    app.cli.add_command(consultation_usage)
+    app.cli.add_command(assess_opinion_groups)
     app.cli.add_command(clean_spam)
     app.cli.add_command(hide_content_spam)
     @app.cli.command('seed-db')
@@ -926,7 +1020,7 @@ def init_commands(app):
         try:
             if discussion_id is not None:
                 disc = db.session.get(Discussion, discussion_id)
-                if not disc:
+                if not disc or disc.link_only:
                     click.echo(f"Discussion {discussion_id} not found", err=True)
                     return
                 discussions = [disc]
@@ -948,6 +1042,8 @@ def init_commands(app):
                     db.session.query(Discussion)
                     .outerjoin(visible, visible.c.did == Discussion.id)
                     .filter(Discussion.has_native_statements.is_(True))
+                    # A consultation's statements are the host's to approve.
+                    .filter(Discussion.link_only.is_(False))
                     .filter(func.coalesce(visible.c.n, 0) < min_count)
                     .order_by(Discussion.id.desc())
                     .limit(limit)

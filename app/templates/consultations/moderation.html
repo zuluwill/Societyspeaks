@@ -1,0 +1,60 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md, link_primary %}
+{% from "consultations/_macros.html" import next_panel with context %}
+{% set host_nav = 'mine' %}
+{% set concern_text = {
+  'abusive': _('May be abusive.'),
+  'names_a_person': _('May name or identify an individual.'),
+  'off_topic': _('May be off the topic of your question.'),
+  'duplicate': _('May repeat a statement you already have.'),
+  'not_a_statement': _('May be a question, or more than one idea.'),
+} %}
+
+{% block title %}{{ _('Suggested statements') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+<a href="{{ url_for('consultations.dashboard', consultation_id=consultation.id) }}" class="text-sm {{ link_primary() }}">← {{ _('Back to dashboard') }}</a>
+<div class="mt-4 grid gap-8 lg:grid-cols-3">
+  <div class="lg:col-span-2">
+    <h1 class="text-2xl font-bold text-gray-900">{{ _('Suggested statements') }}</h1>
+    <p class="mt-2 text-gray-600">{{ _('Participants suggested these. Approve the ones you want others to vote on.') }}</p>
+
+    {% if pending %}
+    <ul class="mt-6 space-y-3">
+      {% for statement in pending %}
+      {% set note = notes.get(statement.id) %}
+      <li class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p class="text-base font-medium text-gray-900">{{ statement.content }}</p>
+        <p class="mt-2 text-sm {% if note and note.result == 'review' %}text-amber-800{% else %}text-gray-500{% endif %}">
+          {% if not note %}{{ _('Still being screened. You can decide now if you prefer.') }}
+          {% elif note.result == 'review' %}{{ _('Look closely:') }} {{ concern_text.get(note.concern, _('our screening was unsure about this one.')) }}
+          {% elif note.result == 'ok' %}{{ _('Screening found no problems.') }}
+          {% else %}{{ _('Not screened. Please read it carefully.') }}{% endif %}
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <form method="post" action="{{ url_for('consultations.moderate', consultation_id=consultation.id, statement_id=statement.id, decision='approve') }}">
+            {{ action_form.hidden_tag() }}
+            <button type="submit" class="{{ btn_primary_md() }}">{{ _('Approve') }}</button>
+          </form>
+          <form method="post" action="{{ url_for('consultations.moderate', consultation_id=consultation.id, statement_id=statement.id, decision='reject') }}">
+            {{ action_form.hidden_tag() }}
+            <button type="submit" class="{{ btn_secondary_md() }}">{{ _('Reject') }}</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">{{ _('Nothing is waiting for you. New suggestions appear here, and we email you when they arrive.') }}</p>
+    {% endif %}
+  </div>
+
+  <div>
+    {% call next_panel(_('You decide what is shown')) %}
+      <p>{{ _('An approved statement is shown to participants from then on. A rejected one is never shown, and the person who suggested it is not told.') }}</p>
+      <p>{{ _('Suggestions that are clearly abusive, or that name an individual, are rejected automatically and never reach this list.') }}</p>
+      <p>{{ _('You cannot reword a suggestion. Approve it as written, or reject it and add your own version from the dashboard.') }}</p>
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}

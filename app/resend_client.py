@@ -2,7 +2,7 @@
 Unified Resend Email Client
 
 Handles all email delivery via Resend API:
-- Transactional emails (password reset, welcome, account activation)
+- Transactional emails (password reset, welcome, verification)
 - Daily question emails (with batch API support for high volume)
 - Daily brief emails (already handled by brief/email_client.py)
 
@@ -28,6 +28,7 @@ from app.email_utils import (  # shared utilities
 )
 from app.briefing.link_tracker import wrap_links as _wrap_links
 from app.lib.unsubscribe_tokens import build_question_unsubscribe_url
+from app.lib.url_utils import route_url
 from app.lib.locale_utils import resolve_user_locale, email_html_locale_kwargs
 from app.programmes.journey import GUIDED_JOURNEY_DISPLAY_MINUTES_PER_THEME
 from app.lib.email_idempotency import (
@@ -817,8 +818,8 @@ class ResendEmailClient:
     ) -> bool:
         """Render html + plaintext for a transactional email and send via Resend.
 
-        Shared path for password reset, magic login, welcome, verification, and
-        account activation emails. Gmail penalises HTML-only transactional mail, so we always
+        Shared path for password reset, magic login, welcome, and verification
+        emails. Gmail penalises HTML-only transactional mail, so we always
         render the parallel ``{stem}.txt`` template and attach it as the
         ``text`` part of the multipart payload. Also attaches:
 
@@ -863,7 +864,7 @@ class ResendEmailClient:
 
     def send_password_reset(self, user, token: str) -> bool:
         """Send password reset email."""
-        reset_url = f"{self.base_url}/auth/reset-password/{token}"
+        reset_url = route_url(self.base_url, 'auth.password_reset', token=token)
         return self._send_transactional_email(
             user,
             template_stem='emails/password_reset',
@@ -922,29 +923,6 @@ class ResendEmailClient:
             log_label='Verification',
             username=user.username or 'there',
             verification_url=verification_url,
-            base_url=self.base_url,
-        )
-
-    def send_account_activation(self, user, activation_token: str) -> bool:
-        """
-        Send account activation email.
-
-        Args:
-            user: User object with email and username
-            activation_token: Activation token
-
-        Returns:
-            bool: Success status
-        """
-        activation_url = f"{self.base_url}/auth/activate/{activation_token}"
-        return self._send_transactional_email(
-            user,
-            template_stem='emails/account_activation',
-            subject_msgid='Activate Your Society Speaks Account',
-            entity_ref_id=_send_attempt_entity_ref('activate', user.id),
-            log_label='Account activation',
-            username=user.username or 'User',
-            activation_url=activation_url,
             base_url=self.base_url,
         )
 
@@ -1645,19 +1623,6 @@ def send_verification_email(user, verification_url: str) -> bool:
         return False
 
 
-def send_account_activation_email(user, activation_token: str) -> bool:
-    """
-    Send account activation email via Resend.
-    Drop-in replacement for email_utils.send_account_activation_email
-    """
-    try:
-        client = get_resend_client()
-        return client.send_account_activation(user, activation_token)
-    except Exception as e:
-        logger.error(f"Failed to send account activation email: {e}")
-        return False
-
-
 def send_daily_question_welcome_email(subscriber) -> bool:
     """
     Send daily question welcome email via Resend.
@@ -1728,7 +1693,7 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
                 message = gettext("There's been activity in your discussion '%(title)s'", title=discussion.title)
 
         # Render using the standard base email template
-        settings_url = f"{base_url}/settings"
+        settings_url = route_url(base_url, 'settings.view_settings')
         html_content = _render_for_user(
             user,
             'emails/discussion_notification.html',
@@ -2237,8 +2202,8 @@ def send_weekly_discussion_digest(user, digest_data: dict) -> bool:
         client = get_resend_client()
         
         # Build URLs
-        dashboard_url = f"{client.base_url}/dashboard"
-        settings_url = f"{client.base_url}/settings"
+        dashboard_url = route_url(client.base_url, 'auth.dashboard')
+        settings_url = route_url(client.base_url, 'settings.view_settings')
         
         # Render template
         html = _render_for_user(

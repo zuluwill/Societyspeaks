@@ -40,7 +40,7 @@
             {% endif %}
 
             <p class="text-sm text-gray-600 mb-4">
-                {{ _('You can change frequency, day, time, and time zone anytime from the preferences link in any email we send.') }}
+                {{ _('You can change frequency, day, time, and time zone any time from the preferences link in any email we send.') }}
                 {% if can_manage_daily_preferences %}
                 {{ _('If you are logged in, you can also') }}
                 <a href="{{ url_for('daily.manage_preferences') }}" class="text-primary-600 hover:underline font-medium">{{ _('open preferences now') }}</a>.

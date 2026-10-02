@@ -25,6 +25,11 @@ from app.models import (
 )
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.api.errors import api_error
+from app.discussions.access import (
+    is_sandbox_discussion,
+    owning_partner_id,
+    sandbox_embed_token_is_valid,
+)
 from app.api.utils import (
     get_rate_limit_key, get_partner_ref, build_discussion_urls, append_ref_param,
     get_discussion_participant_count, get_discussion_statement_count,
@@ -206,14 +211,18 @@ def get_snapshot(discussion_id):
 
     # Load discussion first so test-env auth is enforced before any cache return.
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    if not discussion or discussion.link_only:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
-    # Auth: test discussions always require the owning partner's test key.
+    # Auth: test discussions require the owning partner's test key, or the
+    # short-lived token minted into an embed page that was actually served.
     # Live discussions are public without a key; if X-API-Key is sent (analytics / tooling),
     # apply the same partner.status / embed_disabled gates as lookup.
     api_key = request.headers.get('X-API-Key')
-    if discussion.partner_env == 'test':
+    embed_token_ok = (
+        discussion.partner_env == 'test' and sandbox_embed_token_is_valid(discussion)
+    )
+    if discussion.partner_env == 'test' and not embed_token_ok:
         is_valid, partner_slug, key_env, partner, __ = _validate_api_key()
         if not is_valid or key_env != 'test' or partner_slug != discussion.partner_id:
             return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
@@ -287,7 +296,7 @@ def get_snapshot(discussion_id):
 
     # Add analysis metadata if available (but NOT content)
     if analysis:
-        response_data['opinion_groups'] = analysis.num_clusters
+        response_data['opinion_groups'] = analysis.published_group_count
         response_data['analyzed_at'] = analysis.created_at.isoformat() if analysis.created_at else None
 
         # Optional teaser text from AI summary (one line only)
@@ -942,7 +951,7 @@ def patch_partner_discussion(discussion_id):
         return err
 
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    if not discussion or discussion.link_only:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
     if not _discussion_owned_by_partner(discussion, partner_slug, partner):
@@ -1029,7 +1038,7 @@ def add_partner_discussion_statements(discussion_id):
         return err
 
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion or not discussion.has_native_statements:
+    if not discussion or discussion.link_only or not discussion.has_native_statements:
         return api_error('discussion_not_found', 'Discussion not found or not a native statement discussion.', 404)
 
     if not _discussion_owned_by_partner(discussion, partner_slug, partner):
@@ -1101,7 +1110,7 @@ def list_partner_discussion_flags(discussion_id):
         return err
 
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    if not discussion or discussion.link_only:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
     if not _discussion_owned_by_partner(discussion, partner_slug, partner):
@@ -1643,7 +1652,7 @@ def oembed():
 
     # Look up the discussion
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    if not discussion or discussion.link_only:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
     # Get optional size constraints
@@ -1750,14 +1759,22 @@ def flag_statement_from_embed():
 
     # Find the statement
     statement = db.session.get(Statement, statement_id)
-    if not statement:
+    if not statement or (statement.discussion and statement.discussion.link_only):
         return api_error('statement_not_found', 'The requested statement does not exist.', 404)
+
+    if statement.discussion and is_sandbox_discussion(statement.discussion):
+        if not sandbox_embed_token_is_valid(statement.discussion):
+            return api_error('statement_not_found', 'The requested statement does not exist.', 404)
 
     discussion_env = getattr(statement.discussion, 'partner_env', None)
     env_for_allowlist = discussion_env if discussion_env else 'live'
     if origin_matches_app_base_url(effective):
         pass
-    elif is_partner_origin_allowed(effective, env=env_for_allowlist):
+    elif is_partner_origin_allowed(
+        effective,
+        env=env_for_allowlist,
+        partner_id=owning_partner_id(statement.discussion) if statement.discussion else None,
+    ):
         pass
     else:
         current_app.logger.warning(

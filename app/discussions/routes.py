@@ -10,16 +10,19 @@ from app.middleware import track_discussion_view
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
 from app.discussions.consensus import build_consensus_ui_state, PARTICIPATION_THRESHOLD
-from app.api.utils import (
-    is_partner_origin_allowed,
-    get_partner_allowed_origins,
-    get_discussion_participant_count,
-    get_effective_embed_parent_origin,
+from app.api.utils import discussion_consensus_url, get_discussion_participant_count
+from app.discussions.access import (
+    allowed_embed_origins,
+    can_view_discussion,
+    embed_parent_denied,
+    enforce_site_visibility,
+    is_sandbox_discussion,
+    sandbox_embed_token,
 )
 from app.trending.conversion_tracking import track_social_click
 from app.lib.time import utcnow_naive
 from app.programmes.permissions import can_add_discussion_to_programme
-from app.programmes.permissions import can_steward_programme, can_view_programme
+from app.programmes.permissions import can_steward_programme
 from app.programmes.utils import (
     parse_label_url_lines,
     render_safe_markdown,
@@ -29,6 +32,7 @@ from app.programmes.utils import (
 )
 from app.programmes.journey import guided_journey_context_for_discussion
 from app.discussions.sorting import apply_statement_sort
+from app.lib.participation_metrics import visible_statement_vote_filters
 from app.discussions.query_utils import apply_discussion_visibility
 from app.discussions.follower_notifications import notify_discussion_followers
 from app.discussions.thresholds import consensus_thresholds_dict
@@ -54,7 +58,7 @@ discussions_bp = Blueprint('discussions', __name__)
 
 
 def _exclude_test_discussions(query):
-    return query.filter(Discussion.partner_env != 'test')
+    return query.filter(Discussion.publicly_listable())
 
 
 def _statement_queries_for_discussion(discussion):
@@ -430,7 +434,7 @@ def create_discussion():
 @login_required
 def edit_discussion(discussion_id):
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    if not discussion or discussion.link_only:
         abort(404)
 
     if discussion.creator_id != current_user.id and not current_user.is_admin:
@@ -617,17 +621,15 @@ def edit_discussion(discussion_id):
 def view_discussion_redirect(discussion_id):
     """Redirect discussion URLs without slug to the canonical URL with slug."""
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    # A consultation answers exactly as a discussion that does not exist.
+    if not discussion or discussion.link_only:
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
             'discussions/embed_unavailable.html',
             unavailable_reason='deleted',
             base_url=base_url
         ), 410
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
     return redirect(url_for('discussions.view_discussion',
                           discussion_id=discussion.id,
                           slug=discussion.slug), code=301)
@@ -669,7 +671,7 @@ def embed_discussion(discussion_id):
 
     # Get partner ref and check if this ref is disabled (kill switch)
     ref = request.args.get('ref', '')
-    from app.api.utils import sanitize_partner_ref, append_ref_param, partner_ref_is_disabled
+    from app.api.utils import sanitize_partner_ref, partner_ref_is_disabled
     ref_normalized = sanitize_partner_ref(ref)
     if ref_normalized and partner_ref_is_disabled(ref_normalized):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
@@ -680,11 +682,11 @@ def embed_discussion(discussion_id):
         ), 403
 
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
+    if not discussion or discussion.link_only:
         abort(404)
 
     # Enforce programme visibility — restricted programmes must not be embeddable
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+    if not can_view_discussion(discussion):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
             'discussions/embed_unavailable.html',
@@ -692,49 +694,9 @@ def embed_discussion(discussion_id):
             base_url=base_url
         ), 403
 
-    # Partner domain allowlist (Origin and/or Referer): only for partner-scoped or
-    # test-key discussions so open public embeds are not blocked when Referer is present.
-    effective_origin = get_effective_embed_parent_origin()
-    partner_env = getattr(discussion, 'partner_env', None) or 'live'
-    partner_domain_locked = (
-        discussion.partner_fk_id is not None
-        or (discussion.partner_id and str(discussion.partner_id).strip())
-        or partner_env == 'test'
-    )
-    if partner_domain_locked:
-        if effective_origin and not is_partner_origin_allowed(
-            effective_origin, env=discussion.partner_env
-        ):
-            base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
-            return render_template(
-                'discussions/embed_unavailable.html',
-                unavailable_reason='domain_not_allowed',
-                base_url=base_url
-            ), 403
-
-    # Stricter: test-key discussions in production require a verifiable parent URL.
-    if (
-        partner_env == 'test'
-        and current_app.config.get('ENV') == 'production'
-        and not current_app.testing
-        and not effective_origin
-    ):
-        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
-        return render_template(
-            'discussions/embed_unavailable.html',
-            unavailable_reason='domain_not_allowed',
-            base_url=base_url
-        ), 403
-
-    # Optional: live partner-scoped embeds require a resolved parent URL (Referer stripped = deny).
-    if (
-        partner_domain_locked
-        and partner_env != 'test'
-        and current_app.config.get('PARTNER_EMBED_REQUIRE_PARENT_ORIGIN')
-        and current_app.config.get('ENV') == 'production'
-        and not current_app.testing
-        and not effective_origin
-    ):
+    # Partner-scoped and sandbox embeds may only be framed by the owning
+    # partner's verified domains; public discussions are embeddable anywhere.
+    if embed_parent_denied(discussion):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
             'discussions/embed_unavailable.html',
@@ -772,11 +734,8 @@ def embed_discussion(discussion_id):
     if bg_color and not hex_pattern.match(bg_color):
         bg_color = 'ffffff'
 
-    # Build consensus URL
     base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
-    consensus_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}/consensus"
-    if ref_normalized:
-        consensus_url = append_ref_param(consensus_url, ref_normalized)
+    consensus_url = discussion_consensus_url(discussion, ref_normalized)
 
     # Get statements for voting (paginated for large discussions)
     statements = []
@@ -787,7 +746,7 @@ def embed_discussion(discussion_id):
     if discussion.has_native_statements:
         statement_page = Statement.query.filter(
             Statement.discussion_id == discussion.id,
-            Statement.is_deleted == False
+            *visible_statement_vote_filters(Statement),
         ).order_by(Statement.created_at.asc(), Statement.id.asc()).paginate(
             page=page,
             per_page=per_page,
@@ -839,6 +798,7 @@ def embed_discussion(discussion_id):
         translation_map=translation_map,
         discussion_translation=discussion_translation,
         supported_languages=SUPPORTED_LANGUAGES,
+        sandbox_embed_token=sandbox_embed_token(discussion) if is_sandbox_discussion(discussion) else '',
     ))
 
     # Persist language preference in a long-lived cookie (1 year)
@@ -846,7 +806,7 @@ def embed_discussion(discussion_id):
         response.set_cookie('ss_lang', current_lang, **language_preference_cookie_params())
 
     # Set CSP frame-ancestors header for partner allowlist
-    partner_origins = get_partner_allowed_origins(env=discussion.partner_env)
+    partner_origins = allowed_embed_origins(discussion)
     if partner_origins:
         frame_ancestors = "'self' " + " ".join(partner_origins)
     else:
@@ -876,7 +836,7 @@ def embed_discussion(discussion_id):
 def og_png(discussion_id: int):
     """OG share image for discussion permalinks — fixes Bluesky/link-card previews."""
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion or discussion.partner_env == 'test':
+    if not discussion or not discussion.is_publicly_listable:
         abort(404)
 
     from app.discussions import og_image_service
@@ -948,10 +908,7 @@ def view_discussion(discussion_id, slug):
         .joinedload(NewsArticle.source)
     ).filter_by(id=discussion_id).first_or_404()
     # Block test discussions from public access
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', 
@@ -1111,7 +1068,7 @@ def view_discussion(discussion_id, slug):
     og_png_url = url_for('discussions.og_png', **og_png_kwargs)
 
     from app.brief.routes import get_subscriber_status as _get_brief_subscriber_status
-    _, is_brief_subscriber = _get_brief_subscriber_status()
+    __, is_brief_subscriber = _get_brief_subscriber_status()
     show_email_capture = (
         bool(discussion.has_native_statements)
         and guided_journey_context is None
@@ -1162,10 +1119,7 @@ def view_discussion(discussion_id, slug):
 @login_required
 def follow_discussion(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
 
     existing = DiscussionFollow.query.filter_by(
         user_id=current_user.id,
@@ -1188,10 +1142,7 @@ def follow_discussion(discussion_id):
 @discussions_bp.route('/<int:discussion_id>/follow/start', methods=['GET'])
 def start_follow_discussion(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
 
     if current_user.is_authenticated:
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
@@ -1211,10 +1162,7 @@ def start_follow_discussion(discussion_id):
 @login_required
 def unfollow_discussion(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
 
     existing = DiscussionFollow.query.filter_by(
         user_id=current_user.id,
@@ -1238,10 +1186,7 @@ def unfollow_discussion(discussion_id):
 @login_required
 def create_discussion_update(discussion_id):
     discussion = db.get_or_404(Discussion, discussion_id)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
     if not _can_manage_discussion_updates(discussion):
         flash(_("You don't have permission to add updates to this discussion."), 'error')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
@@ -1282,10 +1227,7 @@ def edit_discussion_update(discussion_id, update_id):
     update = db.get_or_404(DiscussionUpdate, update_id)
     if update.discussion_id != discussion.id:
         abort(404)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
     if not _can_manage_discussion_updates(discussion):
         flash(_("You don't have permission to edit updates for this discussion."), 'error')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
@@ -1326,10 +1268,7 @@ def delete_discussion_update(discussion_id, update_id):
     update = db.get_or_404(DiscussionUpdate, update_id)
     if update.discussion_id != discussion.id:
         abort(404)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
     if not _can_manage_discussion_updates(discussion):
         flash(_("You don't have permission to delete updates for this discussion."), 'error')
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
@@ -1354,7 +1293,7 @@ def search_statements():
         Discussion,
         Statement.discussion_id == Discussion.id,
     ).filter(
-        Discussion.partner_env != 'test',
+        Discussion.publicly_listable(),
         Discussion.has_native_statements.is_(True),
         Statement.is_deleted.is_(False),
         Statement.mod_status >= 0,
@@ -1387,9 +1326,9 @@ def search_statements():
 @retry_on_db_disconnect()
 def api_discussion_statements(discussion_id):
     discussion = db.session.get(Discussion, discussion_id)
-    if not discussion or discussion.partner_env == 'test':
+    if not discussion or not discussion.is_publicly_listable:
         return jsonify({'success': False, 'error': 'not_found'}), 404
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+    if not can_view_discussion(discussion):
         return jsonify({'success': False, 'error': 'forbidden'}), 403
     if not discussion.has_native_statements:
         return jsonify({'success': False, 'error': 'native_statements_disabled'}), 400
@@ -1441,10 +1380,7 @@ def mark_information_viewed(discussion_id):
     discussion = db.session.get(Discussion, discussion_id)
     if not discussion:
         abort(404)
-    if discussion.partner_env == 'test':
-        abort(404)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(404)
+    enforce_site_visibility(discussion)
 
     user_id = current_user.id if current_user.is_authenticated else None
     participant_identifier = None

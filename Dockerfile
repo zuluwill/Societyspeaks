@@ -8,6 +8,8 @@ FROM python:3.11-slim
 #   libxml2-dev + libxslt1-dev – readability-lxml (briefing ingestion)
 #   curl             – used below to install Node.js 20 LTS, then removed
 #   postgresql-client – pg_dump for scripts/backup_neon_to_s3.py (Render cron)
+#   libpango*, libharfbuzz-subset0 – WeasyPrint (consultation report PDFs)
+#   fonts-dejavu-core, fonts-noto-* – PDF text in every interface language
 # psycopg2-binary bundles libpq so no libpq-dev needed at runtime.
 # ---------------------------------------------------------------------------
 RUN apt-get update \
@@ -19,6 +21,12 @@ RUN apt-get update \
         libxslt1-dev \
         libgomp1 \
         libopenblas0 \
+        libpango-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz-subset0 \
+        fonts-dejavu-core \
+        fonts-noto-core \
+        fonts-noto-cjk \
         postgresql-client \
         curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \

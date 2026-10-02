@@ -83,7 +83,8 @@ def _record_discussion_view(discussion_id, *, max_attempts=2, backoff_s=0.15):
     for attempt in range(1, max_attempts + 1):
         try:
             discussion = db.session.get(Discussion, discussion_id)
-            if not discussion:
+            # A consultation is never served here, so there is no view to record.
+            if not discussion or discussion.link_only:
                 return
             discussion_view = DiscussionView(
                 discussion_id=discussion_id,

@@ -38,6 +38,11 @@ from app.programmes.export_jobs import (
     mark_stale_programme_export_jobs,
     get_programme_export_queue_metrics,
 )  # noqa: E402
+from app.lib.job_queue import (  # noqa: E402
+    get_queue_metrics as get_background_queue_metrics,
+    process_next_job as process_next_background_job,
+    recover_stale_jobs as recover_stale_background_jobs,
+)
 
 
 logger = logging.getLogger("consensus_worker")
@@ -138,21 +143,30 @@ def main():
                     stale_export_count = mark_stale_programme_export_jobs()
                     if stale_export_count:
                         logger.warning(f"Marked {stale_export_count} stale programme export jobs")
+                    recovered = recover_stale_background_jobs()
+                    if recovered:
+                        logger.warning(f"Requeued {recovered} stale background jobs")
                     last_export_stale_at = now
 
+                # Background jobs first: a host is watching statements being
+                # drafted, while a consensus run can take minutes.
+                processed_background = process_next_background_job()
                 processed_consensus = process_next_consensus_job()
                 processed_export = process_next_programme_export_job()
-                processed = bool(processed_consensus or processed_export)
+                processed = bool(processed_background or processed_consensus or processed_export)
                 now = time.time()
                 if (now - last_metrics_at) >= metrics_interval:
                     consensus_metrics = get_consensus_queue_metrics()
                     export_metrics = get_programme_export_queue_metrics()
+                    background_metrics = get_background_queue_metrics()
                     logger.info(
                         f"Queue metrics (worker_id={worker_id}): "
                         f"consensus(queued={consensus_metrics['queued_count']}, running={consensus_metrics['running_count']}, "
                         f"dead_letter={consensus_metrics['dead_letter_count']}, lag_s={consensus_metrics['queue_lag_seconds']}) "
                         f"exports(queued={export_metrics['queued_count']}, running={export_metrics['running_count']}, "
-                        f"dead_letter={export_metrics['dead_letter_count']}, lag_s={export_metrics['queue_lag_seconds']})"
+                        f"dead_letter={export_metrics['dead_letter_count']}, lag_s={export_metrics['queue_lag_seconds']}) "
+                        f"background(queued={background_metrics['queued_count']}, running={background_metrics['running_count']}, "
+                        f"dead_letter={background_metrics['dead_letter_count']}, lag_s={background_metrics['queue_lag_seconds']})"
                     )
                     last_metrics_at = now
 

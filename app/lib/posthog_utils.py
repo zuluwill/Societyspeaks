@@ -1035,6 +1035,24 @@ def _merge_person_set_properties(props: dict, identify_properties: dict) -> None
     props["$set"] = merged
 
 
+# How a person answered. Analytics needs to know that someone took part, not
+# which side they took: an answer on a political question is an opinion, and
+# an event can carry an identity that leads back to an email address.
+_OPINION_PROPERTIES = frozenset({'vote', 'vote_choice', 'vote_value', 'vote_label', 'stance'})
+
+
+def _without_opinions(properties: dict) -> dict:
+    """Drop how the person answered, unless the deployment has opted to send it."""
+    try:
+        from flask import current_app
+
+        if current_app.config.get('ANALYTICS_INCLUDE_VOTE_DIRECTION'):
+            return properties
+    except RuntimeError:
+        pass  # outside an app context: keep the safe default
+    return {key: value for key, value in properties.items() if key not in _OPINION_PROPERTIES}
+
+
 def safe_posthog_capture(
     *,
     posthog_client: Any,
@@ -1084,7 +1102,7 @@ def safe_posthog_capture(
         return False
 
     try:
-        props = dict(properties or {})
+        props = _without_opinions(dict(properties or {}))
         capture_kwargs = {
             'distinct_id': str(distinct_id),
             'event': event,

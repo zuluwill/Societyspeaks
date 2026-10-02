@@ -300,7 +300,7 @@ def checkout_success():
     if sub or sync_success:
         if is_org_plan:
             session.pop('post_checkout_template_id', None)
-            flash(_('Welcome! Your team subscription is now active. You can invite team members from your organization settings.'), 'success')
+            flash(_('Welcome! Your team subscription is now active. You can invite team members from your organisation settings.'), 'success')
             return redirect(url_for('briefing.organization_settings'))
         else:
             msg = 'Welcome! Your subscription is now active.'
@@ -481,8 +481,15 @@ def webhook():
     current_app.logger.info(f"Received Stripe webhook: {event_type}")
     
     try:
+        from app.consultations import billing as consultation_billing
+
+        # Consultation purchases, the annual consultation plan, refunds and
+        # disputes. Claimed first so they never reach the briefing handlers.
+        if consultation_billing.handle_stripe_event(event_type, data):
+            current_app.logger.info(f"Consultation billing handled {event_type}")
+
         # Subscription events (require action)
-        if event_type == 'customer.subscription.created':
+        elif event_type == 'customer.subscription.created':
             if _is_partner_subscription(data):
                 _handle_partner_subscription(data)
             else:

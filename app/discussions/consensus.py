@@ -8,13 +8,14 @@ from flask import abort, render_template, redirect, url_for, flash, request, Blu
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import Discussion, ConsensusAnalysis, ConsensusJob, Statement, StatementVote
+from app.models.consensus import cluster_data_supports_groups
 from app.lib.participation_metrics import visible_statement_vote_filters
 from app.api.utils import get_discussion_participant_count
 from app.lib.vote_identity import anonymous_fingerprint_aliases_for_daily_lookup
 from app.lib.consensus_engine import can_cluster, get_consensus_execution_plan
 from app.discussions.jobs import enqueue_consensus_job
 from app.discussions.thresholds import consensus_thresholds_dict, CONSENSUS_VIEW_RESULTS_MIN_VOTES
-from app.programmes.permissions import can_view_programme
+from app.discussions.access import discussion_access_denial_json, enforce_discussion_access
 from datetime import datetime, timedelta
 from sqlalchemy import func, or_
 from app.lib.time import utcnow_naive
@@ -50,6 +51,12 @@ def _demo_discussion_ids():
     return ids
 
 
+NO_DISTINCT_GROUPS_MESSAGE = (
+    "The votes do not show distinct opinion groups, so none are published. "
+    "The results for each statement are on the results page."
+)
+
+
 def _oversize_publishability_thresholds():
     """Centralized publication thresholds for oversize analyses."""
     return {
@@ -75,6 +82,9 @@ def _assess_analysis_publishability(analysis):
     reproducibility guarantee rather than whatever a single random seed
     happened to produce.
     """
+    if not cluster_data_supports_groups(analysis.cluster_data):
+        return False, NO_DISTINCT_GROUPS_MESSAGE
+
     metadata = (analysis.cluster_data or {}).get('metadata', {})
     mean_ari_raw = metadata.get('stability_mean_ari')
     try:
@@ -361,6 +371,144 @@ def _ranked_public_statements(entries):
     return [by_id[sid] for sid in ids if _statement_is_public(by_id.get(sid))]
 
 
+def _public_statement_entries(entries, public_ids):
+    """Engine entries whose statement is still published-visible."""
+    return [
+        entry for entry in entries or []
+        if _safe_statement_id(entry) in public_ids
+    ]
+
+
+# Aggregate keys of ``ConsensusAnalysis.cluster_data`` that may leave the
+# server. An allowlist, so a key the engine adds later stays private until it
+# is listed here. Per-participant keys (``cluster_assignments``,
+# ``pca_coordinates``) and ``summary_generated_by`` are deliberately absent.
+_EXPORTABLE_CLUSTER_KEYS = (
+    'pca_axis_loadings',
+    'k_selection',
+    'metadata',
+    'ai_summary',
+    'summary_generated_at',
+    'cluster_labels',
+    'labels_generated_at',
+)
+_STATEMENT_LIST_KEYS = ('consensus_statements', 'bridge_statements', 'divisive_statements')
+
+
+def _public_statement_lists(cluster_data):
+    """Consensus / bridge / divisive / representative entries, published-visible only."""
+    cluster_data = cluster_data or {}
+    representative = cluster_data.get('representative_statements') or {}
+    candidate_ids = {
+        sid
+        for entries in (
+            [cluster_data.get(key) for key in _STATEMENT_LIST_KEYS]
+            + list(representative.values())
+        )
+        for sid in (_safe_statement_id(entry) for entry in entries or [])
+        if sid is not None
+    }
+    public_ids = set()
+    if candidate_ids:
+        public_ids = {
+            stmt.id
+            for stmt in Statement.query.filter(Statement.id.in_(candidate_ids)).all()
+            if _statement_is_public(stmt)
+        }
+    lists = {
+        key: _public_statement_entries(cluster_data.get(key), public_ids)
+        for key in _STATEMENT_LIST_KEYS
+    }
+    lists['representative_statements'] = {
+        cluster_id: _public_statement_entries(entries, public_ids)
+        for cluster_id, entries in representative.items()
+    }
+    return lists
+
+
+def _exportable_cluster_data(cluster_data):
+    """The stored analysis with everything per-participant removed."""
+    cluster_data = cluster_data or {}
+    data = {
+        key: cluster_data[key]
+        for key in _EXPORTABLE_CLUSTER_KEYS
+        if key in cluster_data
+    }
+    data.update(_public_statement_lists(cluster_data))
+    sizes = {}
+    for cluster_id in (cluster_data.get('cluster_assignments') or {}).values():
+        sizes[str(cluster_id)] = sizes.get(str(cluster_id), 0) + 1
+    data['cluster_sizes'] = sizes
+    return data
+
+
+def _statements_for_summary(entries):
+    """Published-visible entries, in engine order, with statement text attached.
+
+    Returns copies: writing ``content`` onto the stored entries saved statement
+    text into the analysis the next time it was committed.
+    """
+    metrics = _metrics_by_statement_id(entries)
+    return [
+        {**metrics[stmt.id], 'content': stmt.content}
+        for stmt in _ranked_public_statements(entries)
+    ]
+
+
+def _can_manage_analysis(discussion):
+    """AI summaries and labels are published under the discussion's name."""
+    return current_user.is_authenticated and (
+        discussion.creator_id == current_user.id
+        or getattr(current_user, 'is_admin', False)
+    )
+
+
+def _viewer_participant_keys():
+    """The current viewer's ids in ``build_vote_matrix`` (``u_{id}`` / ``a_{fp16}``).
+
+    Several anonymous aliases (legacy cookies, embed) can yield several keys.
+    """
+    if current_user.is_authenticated:
+        return [f"u_{current_user.id}"]
+    keys = []
+    try:
+        for fp in anonymous_fingerprint_aliases_for_daily_lookup():
+            key = f"a_{fp[:16]}"
+            if key not in keys:
+                keys.append(key)
+    except Exception:
+        pass
+    return keys
+
+
+def _anonymous_cluster_points(cluster_data, viewer_keys=()):
+    """Scatter-plot points with participant identifiers removed.
+
+    The viewer's own point is flagged so the chart can still say "you are
+    here". Points are ordered by position: stored order follows participant
+    id, which would otherwise leak who joined before whom.
+    """
+    cluster_data = cluster_data or {}
+    coordinates = cluster_data.get('pca_coordinates') or {}
+    viewer_keys = set(viewer_keys)
+    points = []
+    for participant_id, cluster_id in (cluster_data.get('cluster_assignments') or {}).items():
+        coords = coordinates.get(participant_id)
+        try:
+            point = {
+                'x': round(float(coords[0]), 4),
+                'y': round(float(coords[1]), 4),
+                'cluster': cluster_id,
+            }
+        except (TypeError, ValueError, IndexError):
+            continue
+        if participant_id in viewer_keys:
+            point['is_viewer'] = True
+        points.append(point)
+    points.sort(key=lambda p: (str(p['cluster']), p['x'], p['y']))
+    return points
+
+
 def _unique_statements(statements):
     """Statement objects, de-duplicated by id, skipping missing rows."""
     seen = set()
@@ -519,8 +667,7 @@ def trigger_analysis(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(403)
+    enforce_discussion_access(discussion)
 
     # Only discussion owner can trigger analysis
     if discussion.creator_id != current_user.id:
@@ -574,6 +721,37 @@ def trigger_analysis(discussion_id):
                               slug=discussion.slug))
 
 
+@consensus_bp.route('/discussions/<int:discussion_id>/<slug>/consensus')
+def view_results_with_slug(discussion_id, slug):
+    """Redirect the slugged ``consensus_url`` the partner API and embed hand out."""
+    args = {k: v for k, v in request.args.items() if k != 'discussion_id'}
+    return redirect(
+        url_for('consensus.view_results', discussion_id=discussion_id, **args),
+        code=301,
+    )
+
+
+def _statement_level_results(discussion):
+    """The results page for an audience that did not divide into groups: where
+    participants agree, disagree, are unsure or are split, statement by
+    statement, with no groups drawn."""
+    from app.consultations.narrative import template_narrative
+    from app.consultations.report import build_report_data, report_view_context
+    from app.models import ConsultationReport
+
+    data = build_report_data(
+        discussion,
+        question=discussion.title,
+        organisation_name='Society Speaks',
+        opened_at=discussion.created_at,
+    )
+    return render_template(
+        'discussions/consensus_statement_results.html',
+        discussion=discussion,
+        **report_view_context(data, template_narrative(data), ConsultationReport.NARRATIVE_TEMPLATE),
+    )
+
+
 @consensus_bp.route('/discussions/<int:discussion_id>/consensus')
 def view_results(discussion_id):
     """
@@ -590,8 +768,7 @@ def view_results(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(403)
+    enforce_discussion_access(discussion)
 
     # Check participation gate (unless user is creator, admin, or demo discussion)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
@@ -626,6 +803,9 @@ def view_results(discussion_id):
                              can_analyze=can_analyze,
                              message=ready_message,
                              consensus_thresholds=consensus_thresholds_dict())
+
+    if not analysis.groups_supported:
+        return _statement_level_results(discussion)
 
     is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
     if not is_publishable:
@@ -799,22 +979,10 @@ def view_results(discussion_id):
             if _statement_is_public(stmt):
                 axis_loading_stmts_map[stmt.id] = stmt
 
-    # ── "You are here": keys that the scatter-plot JS uses to highlight the viewer's dot.
-    # Matches build_vote_matrix's participant ids (u_{id} for auth, a_{fp16} for anon).
-    # Multiple anonymous aliases can yield multiple keys (legacy cookies / embed).
-    viewer_participant_keys: list[str] = []
-    if current_user.is_authenticated:
-        viewer_participant_keys = [f"u_{current_user.id}"]
-    else:
-        try:
-            seen_dot_keys: set[str] = set()
-            for fp in anonymous_fingerprint_aliases_for_daily_lookup():
-                key = f"a_{fp[:16]}"
-                if key not in seen_dot_keys:
-                    seen_dot_keys.add(key)
-                    viewer_participant_keys.append(key)
-        except Exception:
-            pass
+    # "You are here" is only promised when the viewer was in the analysed votes.
+    viewer_is_plotted = any(
+        key in cluster_assignments for key in _viewer_participant_keys()
+    )
 
     # Track consensus view from partner context
     ref = request.args.get('ref')
@@ -825,7 +993,7 @@ def view_results(discussion_id):
                 'discussion_id': discussion.id,
                 'discussion_title': discussion.title,
                 'has_analysis': True,
-                'num_clusters': analysis.num_clusters if analysis else 0,
+                'num_clusters': analysis.published_group_count if analysis else 0,
                 'participants_count': analysis.participants_count if analysis else 0
             })
         except Exception as e:
@@ -871,7 +1039,7 @@ def view_results(discussion_id):
         current_lang=view_lang,
         axis_loadings=axis_loadings,
         axis_loading_map=axis_loading_map,
-        viewer_participant_keys=viewer_participant_keys,
+        viewer_is_plotted=viewer_is_plotted,
         is_stale_analysis=is_stale_analysis,
         current_stmt_count=current_stmt_count,
         analysed_stmt_count=analysed_stmt_count,
@@ -886,13 +1054,16 @@ def view_results(discussion_id):
 @consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/data')
 def get_cluster_data(discussion_id):
     """
-    API endpoint to get cluster data for visualization
-    Returns JSON with user positions and cluster assignments
+    Scatter-plot data for the results page.
+
+    Returns one anonymous point per participant. Participant identifiers
+    never leave the server; only the viewer's own point is marked.
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        return jsonify({'error': 'forbidden'}), 403
+    refusal = discussion_access_denial_json(discussion)
+    if refusal:
+        return refusal
 
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
@@ -909,12 +1080,14 @@ def get_cluster_data(discussion_id):
             'message': withheld_reason,
         }), 409
 
-    # Return cluster data
-    return jsonify({
-        'cluster_assignments': analysis.cluster_data.get('cluster_assignments', {}),
-        'pca_coordinates': analysis.cluster_data.get('pca_coordinates', {}),
-        'metadata': analysis.cluster_data.get('metadata', {})
+    cluster_data = analysis.cluster_data or {}
+    resp = jsonify({
+        'points': _anonymous_cluster_points(cluster_data, _viewer_participant_keys()),
+        'metadata': cluster_data.get('metadata', {}),
     })
+    # The viewer flag makes the body personal: keep it out of shared caches.
+    resp.headers['Cache-Control'] = 'private, no-store'
+    return resp
 
 
 @consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/statements')
@@ -924,8 +1097,9 @@ def get_special_statements(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        return jsonify({'error': 'forbidden'}), 403
+    refusal = discussion_access_denial_json(discussion)
+    if refusal:
+        return refusal
 
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
@@ -942,10 +1116,11 @@ def get_special_statements(discussion_id):
             'message': withheld_reason,
         }), 409
     
+    lists = _public_statement_lists(analysis.cluster_data)
     return jsonify({
-        'consensus': analysis.cluster_data.get('consensus_statements', []),
-        'bridge': analysis.cluster_data.get('bridge_statements', []),
-        'divisive': analysis.cluster_data.get('divisive_statements', [])
+        'consensus': lists['consensus_statements'],
+        'bridge': lists['bridge_statements'],
+        'divisive': lists['divisive_statements'],
     })
 
 
@@ -956,8 +1131,9 @@ def get_analysis_status(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        return jsonify({'error': 'forbidden'}), 403
+    refusal = discussion_access_denial_json(discussion)
+    if refusal:
+        return refusal
 
     # Check if ready
     plan = get_consensus_execution_plan(discussion_id, db)
@@ -999,7 +1175,7 @@ def get_analysis_status(discussion_id):
     if latest_analysis:
         response['analysis'] = {
             'created_at': latest_analysis.created_at.isoformat(),
-            'num_clusters': latest_analysis.num_clusters,
+            'num_clusters': latest_analysis.published_group_count,
             'silhouette_score': latest_analysis.silhouette_score,
             'participants_count': latest_analysis.participants_count,
             'statements_count': latest_analysis.statements_count,
@@ -1021,8 +1197,7 @@ def generate_report(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        abort(403)
+    enforce_discussion_access(discussion)
 
     # Check participation gate (same as view_results)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
@@ -1108,8 +1283,9 @@ def export_analysis(discussion_id):
     """
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        return jsonify({'error': 'forbidden'}), 403
+    refusal = discussion_access_denial_json(discussion)
+    if refusal:
+        return refusal
 
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
@@ -1146,16 +1322,7 @@ def export_analysis(discussion_id):
                     return value
             return ''
 
-        def _excel_text(value):
-            """Stop Excel treating statement text as a formula.
-
-            The file is served with a UTF-8 BOM so Excel opens it. A cell
-            starting with ``=``, ``+``, ``-``, ``@``, tab, or CR would run.
-            """
-            text = '' if value is None else str(value)
-            if text[:1] in ('=', '+', '-', '@', '\t', '\r'):
-                return "'" + text
-            return text
+        from app.lib.csv_safety import excel_safe_text as _excel_text
 
         # Build a lookup: statement_id -> (classifications, metrics) from
         # cluster_data. A statement can legitimately be in more than one
@@ -1300,12 +1467,11 @@ def export_analysis(discussion_id):
             headers={'Content-Disposition': f'attachment; filename="{filename}"'},
         )
 
-    # Return full JSON data
     return jsonify({
         'discussion_id': discussion_id,
         'discussion_title': discussion.title,
         'analysis_date': analysis.created_at.isoformat(),
-        'data': analysis.cluster_data
+        'data': _exportable_cluster_data(analysis.cluster_data),
     })
 
 
@@ -1325,7 +1491,9 @@ def generate_summary(discussion_id):
 
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+    enforce_discussion_access(discussion)
+
+    if not _can_manage_analysis(discussion):
         abort(403)
 
     # Get latest analysis
@@ -1338,7 +1506,12 @@ def generate_summary(discussion_id):
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
-    
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        flash(withheld_reason, "warning")
+        return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
+
     # Check if user has API key
     from app.models import UserAPIKey
     has_key = UserAPIKey.query.filter_by(
@@ -1350,18 +1523,11 @@ def generate_summary(discussion_id):
         flash(_("Please add an LLM API key in settings to use AI summary features"), "info")
         return redirect(url_for('api_keys.add_api_key'))
     
-    # Get statement details
-    consensus_stmts = analysis.cluster_data.get('consensus_statements', [])
-    bridge_stmts = analysis.cluster_data.get('bridge_statements', [])
-    divisive_stmts = analysis.cluster_data.get('divisive_statements', [])
-    
-    # Enrich with content
-    for stmt_list in [consensus_stmts, bridge_stmts, divisive_stmts]:
-        for stmt in stmt_list:
-            statement = db.session.get(Statement, stmt['statement_id'])
-            if statement:
-                stmt['content'] = statement.content
-    
+    cluster_data = analysis.cluster_data or {}
+    consensus_stmts = _statements_for_summary(cluster_data.get('consensus_statements'))
+    bridge_stmts = _statements_for_summary(cluster_data.get('bridge_statements'))
+    divisive_stmts = _statements_for_summary(cluster_data.get('divisive_statements'))
+
     try:
         summary = generate_discussion_summary(
             discussion_id=discussion_id,
@@ -1397,8 +1563,9 @@ def get_summary_api(discussion_id):
     API endpoint to get AI-generated summary
     """
     discussion = db.get_or_404(Discussion, discussion_id)
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
-        return jsonify({'error': 'forbidden'}), 403
+    refusal = discussion_access_denial_json(discussion)
+    if refusal:
+        return refusal
 
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id
@@ -1415,7 +1582,6 @@ def get_summary_api(discussion_id):
     return jsonify({
         'summary': summary,
         'generated_at': analysis.cluster_data.get('summary_generated_at'),
-        'generated_by': analysis.cluster_data.get('summary_generated_by')
     })
 
 
@@ -1431,7 +1597,9 @@ def generate_cluster_labels_route(discussion_id):
 
     discussion = db.get_or_404(Discussion, discussion_id)
 
-    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+    enforce_discussion_access(discussion)
+
+    if not _can_manage_analysis(discussion):
         abort(403)
 
     # Get latest analysis
@@ -1444,7 +1612,12 @@ def generate_cluster_labels_route(discussion_id):
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
-    
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        flash(withheld_reason, "warning")
+        return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
+
     # Check if user has API key
     from app.models import UserAPIKey
     has_key = UserAPIKey.query.filter_by(
@@ -1456,10 +1629,10 @@ def generate_cluster_labels_route(discussion_id):
         flash(_("Please add an LLM API key in settings to use AI labeling features"), "info")
         return redirect(url_for('api_keys.add_api_key'))
     
-    # Get all statements for context
-    statements = Statement.query.filter_by(
-        discussion_id=discussion_id,
-        is_deleted=False
+    # Published-visible statements only: rejected text must not reach the model.
+    statements = Statement.query.filter(
+        Statement.discussion_id == discussion_id,
+        *visible_statement_vote_filters(Statement),
     ).all()
     
     statement_dicts = [{'id': s.id, 'content': s.content} for s in statements]

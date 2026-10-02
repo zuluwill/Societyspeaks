@@ -11,7 +11,7 @@ Provides UI for:
 import logging
 from datetime import datetime
 from app.lib.time import utcnow_naive
-from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import abort, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 
 from app import db
@@ -172,8 +172,9 @@ def view_topic(topic_id):
         .filter_by(id=topic_id)
     )
 
-    recent_discussions = Discussion.query.filter_by(
-        has_native_statements=True
+    recent_discussions = Discussion.query.filter(
+        Discussion.has_native_statements.is_(True),
+        Discussion.publicly_listable(),
     ).order_by(Discussion.created_at.desc()).limit(20).all()
 
     return render_template(
@@ -262,6 +263,8 @@ def merge(topic_id):
         return redirect(url_for('trending.view_topic', topic_id=topic_id))
     
     discussion = db.get_or_404(Discussion, discussion_id)
+    if not discussion.is_publicly_listable:
+        abort(404)
     
     merge_topic_into_discussion(topic, discussion, current_user)
     

@@ -235,7 +235,7 @@ msgstr "浏览器（或代理）发送的请求此服务器无法理解。"
 
 #: app/api/errors.py:25
 msgid ""
-"The server could not verify that you are authorized to access the URL "
+"The server could not verify that you are authorised to access the URL "
 "requested."
 msgstr "服务器无法验证您有权访问所请求的 URL。"
 
@@ -572,7 +572,7 @@ msgstr "无效的结账会话。"
 #: app/billing/routes.py:301
 msgid ""
 "Welcome! Your team subscription is now active. You can invite team members "
-"from your organization settings."
+"from your organisation settings."
 msgstr "欢迎！您的团队订阅已激活。您可以在组织设置中邀请团队成员。"
 
 #: app/billing/routes.py:328
@@ -992,13 +992,13 @@ msgstr "您需要活跃的订阅才能创建简报。立即开始您的免费试
 
 #: app/briefing/routes.py:1390
 msgid ""
-"This template is only available for organizations. You need to be part of an"
-" organization to use it."
+"This template is only available for organisations. You need to be part of an"
+" organisation to use it."
 msgstr "此模板仅适用于组织。您需要是某个组织的成员才能使用它。"
 
 #: app/briefing/routes.py:1410
 msgid ""
-"You need to be part of an organization to create organization briefings"
+"You need to be part of an organisation to create organisation briefings"
 msgstr "您需要是某个组织的成员才能创建组织简报"
 
 #: app/briefing/routes.py:1501
@@ -1020,7 +1020,7 @@ msgid "An error occurred while creating your briefing. Please try again."
 msgstr "创建简报时出错。请重试。"
 
 #: app/briefing/routes.py:1609
-msgid "You need to be part of an organization to create org briefings"
+msgid "You need to be part of an organisation to create org briefings"
 msgstr "您需要是某个组织的成员才能创建组织简报"
 
 #: app/briefing/routes.py:1621 app/briefing/routes.py:1903
@@ -1121,7 +1121,7 @@ msgid "An error occurred while deleting the source"
 msgstr "删除来源时出错"
 
 #: app/briefing/routes.py:2231
-msgid "You need to be part of an organization to create org sources"
+msgid "You need to be part of an organisation to create org sources"
 msgstr "您需要是某个组织的成员才能创建组织来源"
 
 #: app/briefing/routes.py:2244
@@ -1487,19 +1487,19 @@ msgstr "您没有权限查看此简报"
 
 #: app/briefing/routes.py:4073 app/briefing/routes.py:4130
 msgid ""
-"Organization settings are only available for Team and Enterprise plans."
+"Organisation settings are only available for Team and Enterprise plans."
 msgstr "组织设置仅适用于团队版和企业版计划。"
 
 #: app/briefing/routes.py:4090
-msgid "No organization found. Please contact support."
+msgid "No organisation found. Please contact support."
 msgstr "未找到组织。请联系支持。"
 
 #: app/briefing/routes.py:4135
-msgid "You don't have permission to edit this organization."
+msgid "You don't have permission to edit this organisation."
 msgstr "您没有权限编辑此组织。"
 
 #: app/briefing/routes.py:4146
-msgid "Organization details updated successfully."
+msgid "Organisation details updated successfully."
 msgstr "组织详情已成功更新。"
 
 #: app/briefing/routes.py:4157 app/briefing/routes.py:4223
@@ -1509,7 +1509,7 @@ msgstr "团队管理仅适用于团队版和企业版计划。"
 
 #: app/briefing/routes.py:4165 app/briefing/routes.py:4231
 #: app/briefing/routes.py:4258
-msgid "No organization found."
+msgid "No organisation found."
 msgstr "未找到组织。"
 
 #: app/briefing/routes.py:4179
@@ -3850,7 +3850,7 @@ msgstr "我的账户"
 
 #: app/programmes/forms.py:45 app/programmes/forms.py:48
 #: app/templates/briefing/use_template.html:63
-msgid "Organization"
+msgid "Organisation"
 msgstr "组织"
 
 #: app/programmes/forms.py:50 app/templates/briefing/create.html:190
@@ -4288,7 +4288,7 @@ msgstr "让分歧再次有用"
 
 #: app/templates/about.html:55
 msgid ""
-"Open-source civic infrastructure for structured public judgment — and the "
+"Open-source civic infrastructure for structured public judgement — and the "
 "daily habits that feed it."
 msgstr "用于结构化公众判断的开源公民基础设施——以及促进它的日常习惯。"
 
@@ -4339,12 +4339,12 @@ msgid "Our theory of change"
 msgstr "我们的变革理论"
 
 #: app/templates/about.html:110
-msgid "How participation becomes better judgment"
+msgid "How participation becomes better judgement"
 msgstr "参与如何成为更好的判断"
 
 #: app/templates/about.html:113
 msgid ""
-"We are building toward a more accurate, transparent view of public opinion "
+"We are building towards a more accurate, transparent view of public opinion "
 "on the issues people engage with here — not another comment section, but a "
 "shared reasoning layer. Each product is a step in the same chain."
 msgstr "我们正在建立一个更准确、透明的公众舆论观点——不是另一个评论区，而是一个共享的推理层。每个产品都是同一链条中的一步。"
@@ -5917,7 +5917,7 @@ msgstr "我可以随时取消吗？"
 
 #: app/templates/faq.html:428
 msgid ""
-"Yes. Cancel anytime from your account settings. There are no lock-in "
+"Yes. Cancel any time from your account settings. There are no lock-in "
 "periods. If you cancel during a trial, you will not be charged."
 msgstr "可以。随时从账户设置中取消。没有锁定期。如果在试用期间取消，您不会被收费。"
 
@@ -6640,7 +6640,7 @@ msgid "Get by Email"
 msgstr "通过邮件获取"
 
 #: app/templates/index.html:569
-msgid "5 questions weekly by default · Adjust frequency anytime"
+msgid "5 questions weekly by default · Adjust frequency any time"
 msgstr "默认每周5个问题·随时调整频率"
 
 #: app/templates/index.html:581
@@ -7213,7 +7213,7 @@ msgid "Terms of Service"
 msgstr "服务条款"
 
 #: app/templates/layout.html:1335
-msgid "SocietySpeaks inquiry"
+msgid "SocietySpeaks enquiry"
 msgstr "SocietySpeaks 调查"
 
 #: app/templates/layout.html:1337 app/templates/partner/api_docs.html:44
@@ -8352,7 +8352,7 @@ msgid ""
 msgstr "<strong>数据控制者：</strong>William Roberts Coaching and Advisory Ltd"
 
 #: app/templates/privacy-policy.html:18
-msgid "<strong>For data privacy inquiries:</strong> info@societyspeaks.io"
+msgid "<strong>For data privacy enquiries:</strong> info@societyspeaks.io"
 msgstr "<strong>数据隐私咨询：</strong>info@societyspeaks.io"
 
 #: app/templates/privacy-policy.html:19
@@ -8716,7 +8716,7 @@ msgid "Provide customer support"
 msgstr "提供客户支持"
 
 #: app/templates/privacy-policy.html:116
-msgid "Analyze usage patterns and improve user experience"
+msgid "Analyse usage patterns and improve user experience"
 msgstr "分析使用模式并改进用户体验"
 
 #: app/templates/privacy-policy.html:117
@@ -8926,7 +8926,7 @@ msgstr "7. 数据安全"
 
 #: app/templates/privacy-policy.html:212
 msgid ""
-"We implement appropriate technical and organizational measures to protect "
+"We implement appropriate technical and organisational measures to protect "
 "your personal data, including:"
 msgstr "我们采取适当的技术和组织措施来保护您的个人数据，包括："
 
@@ -9176,7 +9176,7 @@ msgstr ""
 msgid ""
 "4.2 Your Content: While you retain ownership of content you create, by "
 "submitting content to discussions you grant us and other users the right to "
-"view, analyze, and interact with that content as part of the collective "
+"view, analyse, and interact with that content as part of the collective "
 "discussion process."
 msgstr "4.2 您的内容：虽然您保留所创建内容的所有权，但通过向讨论提交内容，您授予我们和其他用户有权在集体讨论过程中查看、分析和交互该内容。"
 
@@ -9297,7 +9297,7 @@ msgid "Violation of these Terms"
 msgstr "违反这些条款"
 
 #: app/templates/terms-and-conditions.html:106
-msgid "Abusive behavior in discussions"
+msgid "Abusive behaviour in discussions"
 msgstr "在讨论中的辱骂行为"
 
 #: app/templates/terms-and-conditions.html:107
@@ -9461,10 +9461,6 @@ msgstr "个人"
 #: app/templates/components/profile_avatar.html:20
 msgid "Company logo"
 msgstr "公司标志"
-
-#: app/templates/auth/dashboard.html:117
-msgid "Organisation"
-msgstr "组织"
 
 #: app/templates/auth/dashboard.html:124 app/templates/auth/dashboard.html:660
 #: app/templates/auth/discussions.html:55
@@ -10703,7 +10699,7 @@ msgid "Full Archive Access"
 msgstr "完整档案访问"
 
 #: app/templates/brief/landing.html:480 app/templates/brief/no_brief.html:203
-msgid "Browse past briefs anytime to catch up on what you missed."
+msgid "Browse past briefs any time to catch up on what you missed."
 msgstr "随时浏览过去的摘要，了解你错过的内容。"
 
 #: app/templates/brief/landing.html:493 app/templates/brief/no_brief.html:216
@@ -10791,7 +10787,7 @@ msgid ""
 msgstr "是的。我们仅存储提供简报所需的信息（电邮、时区、偏好设置）。我们不出售您的数据，也不跟踪您的阅读行为。详见我们的隐私政策。"
 
 #: app/templates/brief/landing.html:559 app/templates/brief/no_brief.html:278
-msgid "Can I unsubscribe anytime?"
+msgid "Can I unsubscribe any time?"
 msgstr "我可以随时退订吗？"
 
 #: app/templates/brief/landing.html:560 app/templates/brief/no_brief.html:279
@@ -11065,7 +11061,7 @@ msgstr "透明度"
 #: app/templates/brief/methodology.html:372
 msgid ""
 "Society Speaks is built with transparency in mind. Our code is publicly "
-"available under the AGPL-3.0 license, which means you can inspect exactly "
+"available under the AGPL-3.0 licence, which means you can inspect exactly "
 "how our AI systems work and suggest improvements. We believe civic "
 "technology should be accountable."
 msgstr ""
@@ -11488,7 +11484,7 @@ msgid ""
 msgstr "早间投递包含昨日故事作为补充；晚间投递包含当日最新报道。"
 
 #: app/templates/brief/subscribe.html:118
-msgid "No credit card required. Unsubscribe anytime with one click."
+msgid "No credit card required. Unsubscribe any time with one click."
 msgstr "无需信用卡。可随时一键退订。"
 
 #: app/templates/brief/subscribe.html:208
@@ -11599,7 +11595,7 @@ msgid "Check your inbox for a welcome email with your magic link"
 msgstr "查看您的收件箱，获取包含魔法链接的欢迎电子邮件"
 
 #: app/templates/brief/subscribe_success.html:30
-msgid "Use the magic link to access your personalised brief anytime"
+msgid "Use the magic link to access your personalised brief any time"
 msgstr "使用魔法链接随时访问您的个性化简报"
 
 #: app/templates/brief/subscribe_success.html:34
@@ -11692,7 +11688,7 @@ msgstr "改用每周简报"
 
 #: app/templates/brief/unsubscribed.html:40
 msgid ""
-"Changed your mind? You can always resubscribe to the daily brief anytime."
+"Changed your mind? You can always resubscribe to the daily brief any time."
 msgstr "改变主意了？您可以随时重新订阅每日简报。"
 
 #: app/templates/brief/unsubscribed.html:44
@@ -12004,7 +12000,7 @@ msgid_plural "%(num)d sources configured"
 msgstr[0] "%(num)d 个已配置的来源"
 
 #: app/templates/briefing/_template_card.html:36
-msgid "Organizations"
+msgid "Organisations"
 msgstr "组织"
 
 #: app/templates/briefing/_template_card.html:36
@@ -12447,7 +12443,7 @@ msgstr "<strong>第一步：</strong>在下方创建您的简报，设置基本�
 #: app/templates/briefing/create.html:35
 msgid ""
 "<strong>Step 2:</strong> On the next screen, you'll add content sources (RSS"
-" feeds, curated sources, or documents) and customize AI settings."
+" feeds, curated sources, or documents) and customise AI settings."
 msgstr "<strong>第二步：</strong>在下一个屏幕上，您将添加内容来源（RSS订阅、精选来源或文档）并自定义AI设置。"
 
 #: app/templates/briefing/create.html:46 app/templates/briefing/edit.html:25
@@ -13174,7 +13170,7 @@ msgid "Current logo"
 msgstr "当前徽标"
 
 #: app/templates/briefing/edit.html:248
-msgid "Color used for headers, links, and accents"
+msgid "Colour used for headers, links, and accents"
 msgstr "用于标题、链接和强调的颜色"
 
 #: app/templates/briefing/edit.html:253
@@ -13395,7 +13391,7 @@ msgstr "如果我不喜欢怎么办？"
 
 #: app/templates/briefing/landing.html:101
 #: app/templates/briefing/landing.html:1771
-msgid "Cancel anytime, no questions asked. 30-day free trial."
+msgid "Cancel any time, no questions asked. 30-day free trial."
 msgstr "随时取消，无需解释。30 天免费试用。"
 
 #: app/templates/briefing/landing.html:106
@@ -14337,7 +14333,7 @@ msgstr "上传PDF、研究论文、内部报告。我们将在您的公开信息
 #: app/templates/briefing/landing.html:1245
 msgid ""
 "Daily at 7am? Weekly on Monday? You decide when and how often. Pause "
-"anytime."
+"any time."
 msgstr "每天早上7点？周一每周一次？由您决定时间和频率。随时暂停。"
 
 #: app/templates/briefing/landing.html:1256
@@ -14475,7 +14471,7 @@ msgid "No card needed"
 msgstr "无需信用卡"
 
 #: app/templates/briefing/landing.html:1375
-msgid "Cancel anytime"
+msgid "Cancel any time"
 msgstr "随时取消"
 
 #: app/templates/briefing/landing.html:1385
@@ -14533,7 +14529,7 @@ msgstr "PDF文档上传"
 
 #: app/templates/briefing/landing.html:1436
 #: app/templates/briefing/landing.html:1510
-msgid "30-day free trial, cancel anytime"
+msgid "30-day free trial, cancel any time"
 msgstr "30天免费试用，随时取消"
 
 #: app/templates/briefing/landing.html:1439
@@ -14704,7 +14700,7 @@ msgstr "符合GDPR"
 
 #: app/templates/briefing/landing.html:1685
 msgid ""
-"UK/EU compliant by design. Export or delete your data anytime. Right to be "
+"UK/EU compliant by design. Export or delete your data any time. Right to be "
 "forgotten honoured."
 msgstr "按设计符合英国/欧盟规范。随时导出或删除您的数据。尊重被遗忘权。"
 
@@ -14781,7 +14777,7 @@ msgid "Start free 30-day trial"
 msgstr "开始 30 天免费试用"
 
 #: app/templates/briefing/landing.html:1813
-msgid "Cancel anytime."
+msgid "Cancel any time."
 msgstr "随时取消。"
 
 #: app/templates/briefing/landing.html:1826
@@ -14815,7 +14811,7 @@ msgstr "您的免费试用在%(days)s天内结束"
 
 #: app/templates/briefing/list.html:37
 msgid ""
-"Your trial is active. Add a payment method anytime so briefings continue "
+"Your trial is active. Add a payment method any time so briefings continue "
 "smoothly after it ends."
 msgstr "您的试用期已激活。随时添加付款方式，以便在试用期结束后继续顺利接收简报。"
 
@@ -15009,11 +15005,11 @@ msgstr "尝试调整您的筛选条件或从头创建简报。"
 #: app/templates/briefing/organization_settings.html:2
 #: app/templates/briefing/organization_settings.html:13
 #: app/templates/briefing/organization_settings.html:15
-msgid "Organization Settings"
+msgid "Organisation Settings"
 msgstr "组织设置"
 
 #: app/templates/briefing/organization_settings.html:16
-msgid "Manage your team subscription and organization details."
+msgid "Manage your team subscription and organisation details."
 msgstr "管理您的团队订阅和组织详情。"
 
 #: app/templates/briefing/organization_settings.html:21
@@ -15039,15 +15035,15 @@ msgid "Manage billing →"
 msgstr "管理账单 →"
 
 #: app/templates/briefing/organization_settings.html:54
-msgid "Organization Details"
+msgid "Organisation Details"
 msgstr "组织详情"
 
 #: app/templates/briefing/organization_settings.html:60
-msgid "Organization Name"
+msgid "Organisation Name"
 msgstr "组织名称"
 
 #: app/templates/briefing/organization_settings.html:69
-msgid "Brief description of your organization"
+msgid "Brief description of your organisation"
 msgstr "组织的简要描述"
 
 #: app/templates/briefing/organization_settings.html:88
@@ -15109,7 +15105,7 @@ msgid "Send Invite"
 msgstr "发送邀请"
 
 #: app/templates/briefing/organization_settings.html:185
-msgid "They'll receive an email with a link to join your organization."
+msgid "They'll receive an email with a link to join your organisation."
 msgstr "他们将收到一封包含加入您组织链接的电子邮件。"
 
 #: app/templates/briefing/organization_settings.html:189
@@ -15224,7 +15220,7 @@ msgid "AI Guidance"
 msgstr "AI 指导"
 
 #: app/templates/briefing/preview_template.html:163
-msgid "You can customize this prompt after creating your briefing."
+msgid "You can customise this prompt after creating your briefing."
 msgstr "您可以在创建简报后自定义此提示。"
 
 #: app/templates/briefing/preview_template.html:171
@@ -15327,7 +15323,7 @@ msgstr "您的更改是私密的"
 
 #: app/templates/briefing/preview_template.html:282
 msgid ""
-"Any customizations you make only affect your personal briefing. The original"
+"Any customisations you make only affect your personal briefing. The original"
 " template stays unchanged for everyone else."
 msgstr "您所做的任何自定义仅影响您的个人简报。原始模板对其他所有人保持不变。"
 
@@ -15682,7 +15678,7 @@ msgid "Delete"
 msgstr "删除"
 
 #: app/templates/briefing/sources.html:85
-msgid "Organization Sources"
+msgid "Organisation Sources"
 msgstr "组织来源"
 
 #: app/templates/briefing/sources.html:139
@@ -15898,7 +15894,7 @@ msgid "Default: 6:00 PM - a popular time for end-of-day reading"
 msgstr "默认：下午 6:00 - 适合工作日末尾阅读的热门时间"
 
 #: app/templates/briefing/use_template.html:133
-msgid "Organization Only"
+msgid "Organisation Only"
 msgstr "仅限组织"
 
 #: app/templates/briefing/use_template.html:145
@@ -15948,7 +15944,7 @@ msgstr "添加发送域名"
 
 #: app/templates/briefing/domains/add.html:16
 msgid ""
-"Configure a custom domain to send briefs from your organization's email "
+"Configure a custom domain to send briefs from your organisation's email "
 "address"
 msgstr "配置自定义域名，以从组织的电子邮件地址发送简报"
 
@@ -15980,7 +15976,7 @@ msgid "Once verified, you can send briefs from this domain"
 msgstr "验证后，您可以从该域名发送简报"
 
 #: app/templates/briefing/domains/list.html:17
-msgid "Manage custom email domains for your organization"
+msgid "Manage custom email domains for your organisation"
 msgstr "为组织管理自定义电子邮件域名"
 
 #: app/templates/briefing/domains/list.html:18
@@ -16362,7 +16358,7 @@ msgid "Dive deeper with AI:"
 msgstr "深入探索："
 
 #: app/templates/components/dive_deeper_links.html:16
-msgid "Analyze this news story:"
+msgid "Analyse this news story:"
 msgstr "分析这则新闻故事："
 
 #: app/templates/components/dive_deeper_links.html:40
@@ -16417,7 +16413,7 @@ msgid "Subscribe Free"
 msgstr "免费订阅"
 
 #: app/templates/components/email_capture.html:40
-msgid "Free forever. Unsubscribe anytime. We respect your inbox."
+msgid "Free forever. Unsubscribe any time. We respect your inbox."
 msgstr "永久免费。随时取消订阅。我们尊重你的收件箱。"
 
 #: app/templates/components/email_capture.html:42
@@ -16952,7 +16948,7 @@ msgid "Email Preferences"
 msgstr "邮件偏好设置"
 
 #: app/templates/daily/preferences.html:12
-msgid "Customize how you receive questions from Society Speaks"
+msgid "Customise how you receive questions from Society Speaks"
 msgstr "自定义您从 Society Speaks 接收议题的方式"
 
 #: app/templates/daily/preferences.html:31
@@ -17370,7 +17366,7 @@ msgstr "讨论"
 
 #: app/templates/daily/results.html:555
 #: app/templates/daily/weekly_batch.html:329
-msgid "Analyze"
+msgid "Analyse"
 msgstr "分析"
 
 #: app/templates/daily/results.html:572
@@ -17641,7 +17637,7 @@ msgid "Magic link — no password needed"
 msgstr "魔法链接 — 无需密码"
 
 #: app/templates/daily/subscribe.html:125
-msgid "Change preferences anytime from any email"
+msgid "Change preferences any time from any email"
 msgstr "随时从任何邮件更改偏好设置"
 
 #: app/templates/daily/subscribe.html:132
@@ -17706,7 +17702,7 @@ msgstr "— 使用 %(tz)s"
 
 #: app/templates/daily/subscribe_success.html:43
 msgid ""
-"You can change frequency, day, time, and time zone anytime from the "
+"You can change frequency, day, time, and time zone any time from the "
 "preferences link in any email we send."
 msgstr "您可以随时从我们发送的任何邮件中的偏好设置链接更改频率、日期、时间和时区。"
 
@@ -18463,7 +18459,7 @@ msgid ""
 msgstr "本分析涵盖了 %(analysed)d 条陈述；%(current)d 条正在直播。请联系讨论主持人重新运行以刷新数据。"
 
 #: app/templates/discussions/consensus_results.html:185
-msgid "Opinion Groups Visualization"
+msgid "Opinion Groups Visualisation"
 msgstr "观点群组可视化"
 
 #: app/templates/discussions/consensus_results.html:191
@@ -18900,7 +18896,7 @@ msgid "You"
 msgstr "你"
 
 #: app/templates/discussions/consensus_results.html:775
-msgid "Error loading visualization"
+msgid "Error loading visualisation"
 msgstr "加载可视化失败"
 
 #: app/templates/discussions/create_discussion.html:18
@@ -18937,7 +18933,7 @@ msgid "✓ Built-in voting (Agree/Disagree/Unsure)"
 msgstr "✓ 内置投票（同意/不同意/不确定）"
 
 #: app/templates/discussions/create_discussion.html:103
-msgid "✓ Consensus clustering and visualization"
+msgid "✓ Consensus clustering and visualisation"
 msgstr "✓ 共识聚类和可视化"
 
 #: app/templates/discussions/create_discussion.html:104
@@ -20640,7 +20636,7 @@ msgstr "添加付款方式以便每天早上收到简报 — 您的信息源、�
 
 #: app/templates/emails/briefing_trial_payment.html:40
 #, python-format
-msgid "Just %(price)s per month after your trial. Cancel anytime."
+msgid "Just %(price)s per month after your trial. Cancel any time."
 msgstr "试用期后仅需 %(price)s 每月。随时取消。"
 
 #: app/templates/emails/briefing_trial_payment.html:45
@@ -20700,7 +20696,7 @@ msgstr "您的个人简报试用已暂停数周。无压力——只是想说您
 #: app/templates/emails/briefing_winback.html:27
 msgid ""
 "If you'd like to pick it up, add a card and tomorrow's brief lands as if "
-"nothing happened. £4.99/month, cancel anytime."
+"nothing happened. £4.99/month, cancel any time."
 msgstr "如果您想继续，添加一张卡片，明天的简报就会照常发送。£4.99/月，随时可取消。"
 
 #: app/templates/emails/briefing_winback.html:39
@@ -20846,7 +20842,7 @@ msgstr "欢迎来到%(cadence)s - Society Speaks"
 #: app/templates/emails/daily_brief_welcome.html:7
 msgid ""
 "Your free access is now active! Here's your magic link to access briefs "
-"anytime."
+"any time."
 msgstr "您的免费访问权限现已激活！这是您随时访问简报的魔力链接。"
 
 #: app/templates/emails/daily_brief_welcome.html:14
@@ -20883,7 +20879,7 @@ msgstr "免费访问（永不过期）"
 
 #: app/templates/emails/daily_brief_welcome.html:46
 msgid ""
-"<strong>Your magic link</strong> gives you instant access to briefs anytime "
+"<strong>Your magic link</strong> gives you instant access to briefs any time "
 "- no login required. Bookmark it or save this email:"
 msgstr "<strong>您的魔力链接</strong>让您随时即时访问简报 - 无需登录。将其加入书签或保存此邮件："
 
@@ -21374,7 +21370,7 @@ msgstr "缺少的信息："
 
 #: app/templates/emails/profile_completion_reminder.html:33
 msgid ""
-"This is a one-time reminder. You can update your profile anytime from your "
+"This is a one-time reminder. You can update your profile any time from your "
 "account settings."
 msgstr "这是一次性提醒。您可以随时从账户设置中更新您的个人资料。"
 
@@ -22500,7 +22496,7 @@ msgid ""
 msgstr "你的社会属于你：为它命名，看着你的选择塑造它的象征，发现你成为了什么样的领导者。"
 
 #: app/templates/game/hub.html:224
-msgid "Replay any past scenario anytime — no streak."
+msgid "Replay any past scenario any time — no streak."
 msgstr "随时重放过去的任何情景 — 无连胜限制。"
 
 #: app/templates/game/hub.html:252 app/templates/game/outcome.html:318
@@ -22608,7 +22604,7 @@ msgstr "谁面对了这场危机"
 
 #: app/templates/game/outcome.html:152
 #, python-format
-msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
+msgid "You leaned more towards %(dir)s than %(pct)d%% of leaders %(scope)s."
 msgstr "你在%(dir)s上的倾向程度超过了%(scope)s中%(pct)d%%的领导人。"
 
 #: app/templates/game/outcome.html:157
@@ -23199,7 +23195,7 @@ msgid "✓ Evidence linking (citations, files)"
 msgstr "✓ 证据链接（引用、文件）"
 
 #: app/templates/help/creating_discussions.html:73
-msgid "✓ Consensus visualization"
+msgid "✓ Consensus visualisation"
 msgstr "✓ 共识可视化"
 
 #: app/templates/help/creating_discussions.html:74
@@ -23228,7 +23224,7 @@ msgid "✓ Simple agree/disagree/pass"
 msgstr "✓ 简单的同意/不同意/跳过"
 
 #: app/templates/help/creating_discussions.html:94
-msgid "✓ Instant visualization"
+msgid "✓ Instant visualisation"
 msgstr "✓ 即时可视化"
 
 #: app/templates/help/creating_discussions.html:95
@@ -23361,7 +23357,7 @@ msgid "Key features of Pol.is:"
 msgstr "Pol.is 的主要功能："
 
 #: app/templates/help/creating_discussions.html:199
-msgid "Real-time visualization of opinions"
+msgid "Real-time visualisation of opinions"
 msgstr "实时观点可视化"
 
 #: app/templates/help/creating_discussions.html:200
@@ -23719,7 +23715,7 @@ msgstr "管理讨论 — Society Speaks 帮助"
 msgid ""
 "Learn how to monitor and maintain engaging discussions on Society Speaks. "
 "Track participation, promote engagement, and understand consensus "
-"visualizations."
+"visualisations."
 msgstr "了解如何在 Society Speaks 上监测和维持引人入胜的讨论。追踪参与情况、促进参与度，并理解共识可视化。"
 
 #: app/templates/help/managing_discussions.html:13
@@ -23757,7 +23753,7 @@ msgstr "理解结果"
 
 #: app/templates/help/managing_discussions.html:29
 msgid ""
-"Interpret opinion groups, consensus statements, and visualizations to derive"
+"Interpret opinion groups, consensus statements, and visualisations to derive"
 " insights."
 msgstr "解读意见群组、共识陈述和可视化，以获得洞见。"
 
@@ -23814,7 +23810,7 @@ msgid "Understanding Results"
 msgstr "理解结果"
 
 #: app/templates/help/managing_discussions.html:81
-msgid "Interpreting Pol.is Visualizations:"
+msgid "Interpreting Pol.is Visualisations:"
 msgstr "解读 Pol.is 可视化："
 
 #: app/templates/help/managing_discussions.html:85
@@ -23822,7 +23818,7 @@ msgid "Groups are formed automatically based on voting patterns"
 msgstr "群组根据投票模式自动形成"
 
 #: app/templates/help/managing_discussions.html:86
-msgid "Each color represents a distinct opinion group"
+msgid "Each colour represents a distinct opinion group"
 msgstr "每种颜色代表一个不同的意见群组"
 
 #: app/templates/help/managing_discussions.html:87
@@ -23938,7 +23934,7 @@ msgstr "原生辩论系统 - Society Speaks | 高级共识建立功能"
 msgid ""
 "Learn about Society Speaks' advanced native debate system with real-time "
 "voting, threaded responses, evidence linking, and interactive consensus "
-"visualization."
+"visualisation."
 msgstr "了解 Society Speaks 的高级原生辩论系统，具备实时投票、分层回复、证据链接和交互式共识可视化。"
 
 #: app/templates/help/native_system.html:14
@@ -23989,7 +23985,7 @@ msgid "Add detailed pro/con responses with evidence"
 msgstr "添加详细的赞成/反对回复及证据"
 
 #: app/templates/help/native_system.html:60
-msgid "Interactive consensus visualizations"
+msgid "Interactive consensus visualisations"
 msgstr "交互式共识可视化"
 
 #: app/templates/help/native_system.html:61
@@ -24027,7 +24023,7 @@ msgid "Votes update <strong>instantly</strong> without page reload"
 msgstr "投票<strong>即时</strong>更新，无需页面刷新"
 
 #: app/templates/help/native_system.html:90
-msgid "You can change your vote anytime"
+msgid "You can change your vote any time"
 msgstr "您可以随时改变投票意见"
 
 #: app/templates/help/native_system.html:100
@@ -24098,7 +24094,7 @@ msgid "Identify \"bridge\" statements that unite groups"
 msgstr "识别能够团结各群体的\"桥梁\"观点"
 
 #: app/templates/help/native_system.html:147
-msgid "View interactive scatter plot visualization"
+msgid "View interactive scatter plot visualisation"
 msgstr "查看交互式散点图可视化"
 
 #: app/templates/help/native_system.html:158
@@ -24523,7 +24519,7 @@ msgid "Good"
 msgstr "良好"
 
 #: app/templates/help/native_system.html:465
-msgid "✓ Tailwind optimized"
+msgid "✓ Tailwind optimised"
 msgstr "✓ Tailwind 优化"
 
 #: app/templates/help/native_system.html:468
@@ -24587,7 +24583,7 @@ msgstr ""
 #: app/templates/help/news_dashboard.html:18
 msgid ""
 "No sign-up required. It supports the same civic goal as our discussions: "
-"understand issues from multiple angles before forming judgment."
+"understand issues from multiple angles before forming judgement."
 msgstr "无需注册。它支持与我们讨论相同的公民目标：从多个角度理解问题，然后形成判断。"
 
 #: app/templates/help/news_dashboard.html:22
@@ -24652,7 +24648,7 @@ msgstr "我们的话题来源"
 msgid ""
 "We monitor <strong>140+ quality news sources</strong> across the political "
 "spectrum to find topics worth debating. Our sources include mainstream news,"
-" policy analysis, investigative journalism, think tanks, data organizations,"
+" policy analysis, investigative journalism, think tanks, data organisations,"
 " and intellectual podcasts."
 msgstr ""
 "我们监测<strong>来自政治光谱各端的 140+ "
@@ -25046,7 +25042,7 @@ msgstr "UMAP（统一流形近似和投影）"
 msgid ""
 "UMAP helps visualize complex relationships between opinions while preserving"
 " important structures in the data. This creates the opinion group "
-"visualizations you see in Pol.is."
+"visualisations you see in Pol.is."
 msgstr "UMAP 帮助可视化意见之间的复杂关系，同时保留数据中的重要结构。这创建了您在 Pol.is 中看到的意见组可视化。"
 
 #: app/templates/help/polis_algorithms.html:106
@@ -25104,7 +25100,7 @@ msgid "Provides immediate insights as participants engage"
 msgstr "在参与者参与时提供即时洞察"
 
 #: app/templates/help/polis_algorithms.html:175
-msgid "Understanding the Visualizations"
+msgid "Understanding the Visualisations"
 msgstr "理解可视化"
 
 #: app/templates/help/polis_algorithms.html:180
@@ -25116,7 +25112,7 @@ msgid "What You'll See"
 msgstr "您将看到的内容"
 
 #: app/templates/help/polis_algorithms.html:185
-msgid "Colored clusters representing different opinion groups"
+msgid "Coloured clusters representing different opinion groups"
 msgstr "代表不同意见群体的彩色集群"
 
 #: app/templates/help/polis_algorithms.html:186
@@ -25162,7 +25158,7 @@ msgid ""
 msgstr "当群体距离较近或相互重叠时，表明存在共同观点和达成一致的可能性"
 
 #: app/templates/help/polis_algorithms.html:212
-msgid "Polarization"
+msgid "Polarisation"
 msgstr "极化"
 
 #: app/templates/help/polis_algorithms.html:213
@@ -25218,7 +25214,7 @@ msgid "Healthy Patterns"
 msgstr "健康模式"
 
 #: app/templates/help/polis_algorithms.html:246
-msgid "Multiple distinct but not extremely polarized groups"
+msgid "Multiple distinct but not extremely polarised groups"
 msgstr "多个不同但不是极端极化的群体"
 
 #: app/templates/help/polis_algorithms.html:247
@@ -25238,7 +25234,7 @@ msgid "Warning Signs"
 msgstr "警告信号"
 
 #: app/templates/help/polis_algorithms.html:255
-msgid "Extreme polarization with no bridging views"
+msgid "Extreme polarisation with no bridging views"
 msgstr "极端极化且没有桥接观点"
 
 #: app/templates/help/polis_algorithms.html:256
@@ -25345,10 +25341,6 @@ msgid ""
 "only accessible to the owner and stewards."
 msgstr ""
 "公开项目出现在公共目录中，任何人都可以访问。未列出项目不会出现在目录中，但任何有直接链接的人都可以访问。仅邀请项目是隐藏的，只有您明确邀请的用户才能访问。私密项目只有所有者和管理员可以访问。"
-
-#: app/templates/help/programmes.html:49
-msgid "← Help Center"
-msgstr "← 帮助中心"
 
 #: app/templates/help/programmes.html:51
 msgid ""
@@ -26068,11 +26060,6 @@ msgstr ""
 msgid "Today's Coverage Balance"
 msgstr "今日新闻覆盖平衡"
 
-#: app/templates/news/dashboard.html:79
-#, python-format
-msgid "%(pct)s%% Center (%(count)d)"
-msgstr "%(pct)s%% 中立 (%(count)d)"
-
 #: app/templates/news/dashboard.html:100
 msgid "Search by headline, summary, or source..."
 msgstr "按标题、摘要或来源搜索..."
@@ -26089,7 +26076,7 @@ msgstr "左倾 (%(count)d)"
 
 #: app/templates/news/dashboard.html:144
 #, python-format
-msgid "Center (%(count)d)"
+msgid "Centre (%(count)d)"
 msgstr "中立 (%(count)d)"
 
 #: app/templates/news/dashboard.html:150
@@ -26117,10 +26104,6 @@ msgstr "筛选来源"
 msgid "Select Sources"
 msgstr "选择来源"
 
-#: app/templates/news/dashboard.html:257
-msgid "Center"
-msgstr "中立"
-
 #: app/templates/news/dashboard.html:314
 msgid "Left-Leaning Sources"
 msgstr "左倾来源"
@@ -26144,7 +26127,7 @@ msgid "Civic Relevance: %(pct)s%%"
 msgstr "公民相关度：%(pct)s%%"
 
 #: app/templates/news/dashboard.html:393
-msgid "Center Sources"
+msgid "Centre Sources"
 msgstr "中立来源"
 
 #: app/templates/news/dashboard.html:472
@@ -26179,7 +26162,7 @@ msgstr "28%% 左倾"
 
 #: app/templates/news/landing.html:62
 #, python-format
-msgid "44%% Center"
+msgid "44%% Centre"
 msgstr "44%% 中立"
 
 #: app/templates/news/landing.html:63
@@ -26204,7 +26187,7 @@ msgid "AI-scored for sensationalism"
 msgstr "AI 评分耸人听闻程度"
 
 #: app/templates/news/landing.html:144
-msgid "Unsubscribe anytime"
+msgid "Unsubscribe any time"
 msgstr "随时取消订阅"
 
 #: app/templates/news/landing.html:153
@@ -26288,7 +26271,7 @@ msgstr "开源、透明、非营利"
 
 #: app/templates/news/landing.html:254
 msgid ""
-"Our entire codebase is open source under the AGPL-3.0 license. Anyone can "
+"Our entire codebase is open source under the AGPL-3.0 licence. Anyone can "
 "inspect, fork, or contribute to our consensus-building tools. No hidden "
 "algorithms, no black boxes."
 msgstr "我们的整个代码库以 AGPL-3.0 许可证开源。任何人都可以检查、复刻或为我们的共识构建工具贡献代码。没有隐藏算法，没有黑箱。"
@@ -26317,7 +26300,7 @@ msgid "Open Source"
 msgstr "开源"
 
 #: app/templates/news/landing.html:302
-msgid "AGPL-3.0 License"
+msgid "AGPL-3.0 Licence"
 msgstr "AGPL-3.0 许可证"
 
 #: app/templates/news/landing.html:306
@@ -27085,7 +27068,7 @@ msgid "<code>discussion_not_found</code> - Discussion does not exist"
 msgstr "<code>discussion_not_found</code> - 讨论不存在"
 
 #: app/templates/partner/api_docs.html:624
-msgid "Customize the embed appearance with URL parameters."
+msgid "Customise the embed appearance with URL parameters."
 msgstr "使用 URL 参数自定义嵌入外观。"
 
 #: app/templates/partner/api_docs.html:625
@@ -27106,11 +27089,11 @@ msgstr ""
 "预设主题：<code>default</code>、<code>dark</code>、<code>editorial</code>、<code>minimal</code>、<code>bold</code>、<code>muted</code>"
 
 #: app/templates/partner/api_docs.html:649
-msgid "Primary color (hex without #)"
+msgid "Primary colour (hex without #)"
 msgstr "主色（十六进制，不含 #）"
 
 #: app/templates/partner/api_docs.html:654
-msgid "Background color (hex without #)"
+msgid "Background colour (hex without #)"
 msgstr "背景颜色（十六进制，不含 #）"
 
 #: app/templates/partner/api_docs.html:659
@@ -27271,7 +27254,7 @@ msgid "Request Body"
 msgstr "请求正文"
 
 #: app/templates/partner/api_docs.html:869
-msgid "Canonical article URL (normalized if provided)"
+msgid "Canonical article URL (normalised if provided)"
 msgstr "规范文章 URL（如提供则标准化）"
 
 #: app/templates/partner/api_docs.html:874
@@ -27808,7 +27791,7 @@ msgstr "嵌入代码生成器 - Society Speaks"
 #: app/templates/partner/embed_generator.html:5
 msgid ""
 "Generate embed code for Society Speaks. Publishers can add a clean voting "
-"widget to articles, with developer-friendly customization and clear audience"
+"widget to articles, with developer-friendly customisation and clear audience"
 " insight for editors."
 msgstr ""
 "为 Society Speaks 生成嵌入代码。发布商可以将简洁的投票小组件添加到文章中，提供开发者友好的自定义功能和编辑人员清晰的受众洞察。"
@@ -27820,7 +27803,7 @@ msgstr "嵌入代码生成器"
 #: app/templates/partner/embed_generator.html:20
 msgid ""
 "Add a Society Speaks voting widget to your article in minutes. Developers "
-"get a clean iframe and customization controls. Editors get structured "
+"get a clean iframe and customisation controls. Editors get structured "
 "insight, not comment noise."
 msgstr ""
 "在几分钟内将 Society Speaks 投票小组件添加到您的文章。开发者获得简洁的 iframe 和自定义控制。编辑获得结构化洞察，而非评论噪音。"
@@ -27945,11 +27928,11 @@ msgid "2. Choose a Theme"
 msgstr "2. 选择主题"
 
 #: app/templates/partner/embed_generator.html:193
-msgid "Or customize colors:"
+msgid "Or customise colours:"
 msgstr "或自定义颜色："
 
 #: app/templates/partner/embed_generator.html:196
-msgid "Primary Color"
+msgid "Primary Colour"
 msgstr "主色"
 
 #: app/templates/partner/embed_generator.html:206
@@ -28965,12 +28948,12 @@ msgstr ""
 "是的。在合作伙伴门户中配置 webhook 端点，以接收讨论更新和相关生命周期变化的签名事件。这样您的新闻编辑部系统可以保持同步，而无需轮询。"
 
 #: app/templates/partner/hub.html:1020
-msgid "Can I customize the embed appearance?"
+msgid "Can I customise the embed appearance?"
 msgstr "我可以自定义嵌入的外观吗？"
 
 #: app/templates/partner/hub.html:1022
 msgid ""
-"Yes. Choose from preset themes or set custom primary/background colors and "
+"Yes. Choose from preset themes or set custom primary/background colours and "
 "fonts."
 msgstr "可以。从预设主题中选择，或设置自定义的主色、背景色和字体。"
 
@@ -29113,7 +29096,7 @@ msgstr "<strong>链接</strong>到讨论、共识页面和 Society Speaks 主页
 
 #: app/templates/partner/rules.html:117
 msgid ""
-"<strong>Customize</strong> embed colors and fonts to match your site's "
+"<strong>Customise</strong> embed colours and fonts to match your site's "
 "design using supported parameters"
 msgstr "<strong>自定义</strong>嵌入颜色和字体，使用支持的参数来匹配您网站的设计"
 
@@ -29973,7 +29956,7 @@ msgstr "启用后,读者可以从嵌入内容中提议声明(遵守相同的10-5
 #: app/templates/partner/portal/discussion_detail.html:178
 msgid ""
 "This discussion is closed. Reopen it before changing embed submission "
-"behavior."
+"behaviour."
 msgstr "此讨论已关闭。重新打开后才能修改嵌入提交行为。"
 
 #: app/templates/partner/portal/discussion_detail.html:182
@@ -30709,7 +30692,7 @@ msgid "Get your test API key in minutes. No credit card required."
 msgstr "数分钟内获取测试 API 密钥。无需信用卡。"
 
 #: app/templates/partner/portal/signup.html:21
-msgid "Organization name"
+msgid "Organisation name"
 msgstr "组织名称"
 
 #: app/templates/partner/portal/signup.html:22
@@ -30943,7 +30926,7 @@ msgstr "组织档案，公司档案，%(name)s，SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:20
 msgid ""
-"An organization on SocietySpeaks contributing to public discourse and "
+"An organisation on SocietySpeaks contributing to public discourse and "
 "meaningful change."
 msgstr "SocietySpeaks 上为公共讨论和有意义的变革做出贡献的组织。"
 
@@ -31193,7 +31176,7 @@ msgid ""
 msgstr "适合希望与社区互动的企业、组织、政府机构和机构。"
 
 #: app/templates/profiles/select_profile_type.html:126
-msgid "Official organization presence"
+msgid "Official organisation presence"
 msgstr "官方组织账户"
 
 #: app/templates/profiles/select_profile_type.html:132
@@ -31760,7 +31743,7 @@ msgstr "通过此次议题中的所有陈述"
 #: app/templates/programmes/view.html:282
 #, python-format
 msgid ""
-"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is "
+"Each theme is quick (~%(mins)d minutes). Take breaks any time — nothing is "
 "gated."
 msgstr "每个主题很快（约 %(mins)d 分钟）。随时休息——无任何强制限制。"
 
@@ -31799,7 +31782,7 @@ msgstr "希望获得完成此旅程的提醒吗？"
 
 #: app/templates/programmes/view.html:385
 msgid ""
-"Short email nudges — pick cadence and time. One tap unsubscribe anytime."
+"Short email nudges — pick cadence and time. One tap unsubscribe any time."
 msgstr "简短的电子邮件提醒 — 选择频率和时间。随时一键取消订阅。"
 
 #: app/templates/programmes/view.html:390
@@ -31830,7 +31813,7 @@ msgid "Turn on reminders"
 msgstr "开启提醒"
 
 #: app/templates/programmes/view.html:428
-msgid "We only send journey nudges. Unsubscribe anytime from our emails."
+msgid "We only send journey nudges. Unsubscribe any time from our emails."
 msgstr "我们只发送旅程提醒。您可以随时从我们的邮件中取消订阅。"
 
 #: app/templates/programmes/view.html:432
@@ -31937,7 +31920,7 @@ msgid "• Keys are validated before saving"
 msgstr "• 密钥在保存前会被验证"
 
 #: app/templates/settings/add_api_key.html:27
-msgid "• You can disable or delete keys anytime"
+msgid "• You can disable or delete keys any time"
 msgstr "• 你可以随时禁用或删除密钥"
 
 #: app/templates/settings/add_api_key.html:28
@@ -32073,7 +32056,7 @@ msgid "• Validation only checks if the key is active"
 msgstr "• 验证仅检查密钥是否有效"
 
 #: app/templates/settings/add_api_key.html:112
-msgid "• You can delete your key anytime"
+msgid "• You can delete your key any time"
 msgstr "• 您可以随时删除密钥"
 
 #: app/templates/settings/add_api_key.html:113
@@ -32295,7 +32278,7 @@ msgstr "认领 %(name)s - SocietySpeaks"
 #: app/templates/sources/claim.html:5
 #, python-format
 msgid ""
-"Request to claim %(name)s as your organization's source profile on "
+"Request to claim %(name)s as your organisation's source profile on "
 "SocietySpeaks."
 msgstr "请求将 %(name)s 认领为您的组织在 SocietySpeaks 上的来源资料。"
 
@@ -32345,7 +32328,7 @@ msgstr "所有来自您内容的讨论都将被展示"
 #: app/templates/sources/claim.html:94
 #, python-format
 msgid ""
-"By submitting this claim, you confirm that you are authorized to represent "
+"By submitting this claim, you confirm that you are authorised to represent "
 "%(name)s. False claims may result in account suspension."
 msgstr "提交此认领即表示您确认您被授权代表 %(name)s。虚假认领可能导致账户被暂停。"
 
@@ -32356,7 +32339,7 @@ msgstr "提交认领申请"
 #: app/templates/sources/index.html:4
 msgid ""
 "Explore news sources and podcasts on SocietySpeaks. Discover discussions "
-"from your favorite media outlets."
+"from your favourite media outlets."
 msgstr "在 SocietySpeaks 上探索新闻来源和播客。发现来自您喜爱媒体机构的讨论。"
 
 #: app/templates/sources/index.html:5

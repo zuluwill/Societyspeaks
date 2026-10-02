@@ -1,0 +1,82 @@
+{% extends "consultations/_base_host.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md, btn_secondary_sm, link_primary %}
+{% from "consultations/_macros.html" import stepper, next_panel, copy_button with context %}
+{% set host_nav = 'mine' %}
+
+{% block title %}{{ _('Share your consultation') }} | Society Speaks{% endblock %}
+
+{% block host_content %}
+{{ stepper('share') }}
+<div class="grid gap-8 lg:grid-cols-3">
+  <div class="lg:col-span-2 space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{{ _('Share it with your audience') }}</h1>
+      <p class="mt-2 text-gray-600">{{ consultation.question }}</p>
+    </div>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="share-link-heading">
+      <h2 id="share-link-heading" class="text-base font-semibold text-gray-900">{{ _('Your link') }}</h2>
+      <div class="mt-3 flex flex-col gap-3 sm:flex-row">
+        <input id="participant-url" type="text" readonly value="{{ participant_url }}"
+               class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm text-gray-900" aria-label="{{ _('Participant link') }}">
+        {{ copy_button('participant-url', _('Copy link')) }}
+      </div>
+      <p class="mt-3 text-sm text-gray-600">
+        <a href="{{ participant_url }}" target="_blank" rel="noopener" class="{{ link_primary() }}">{{ _('Open it and try it on your own phone') }}</a>
+        <span class="text-gray-400">·</span>
+        {{ _('your own answers count, so answer as you really would.') }}
+      </p>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="share-qr-heading">
+      <h2 id="share-qr-heading" class="text-base font-semibold text-gray-900">{{ _('QR code') }}</h2>
+      <div class="mt-3 flex flex-col gap-5 sm:flex-row sm:items-center">
+        <img src="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='svg') }}" width="176" height="176"
+             alt="{{ _('QR code that opens your consultation') }}" class="h-44 w-44 rounded-lg border border-gray-200 bg-white p-2">
+        <div class="space-y-3">
+          <p class="text-sm text-gray-600">{{ _('Put it on a slide, a poster or a table card. People point their phone camera at it and start answering.') }}</p>
+          <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('consultations.present', consultation_id=consultation.id) }}" target="_blank" rel="noopener" class="{{ btn_primary_md() }}">{{ _('Show full screen') }}</a>
+            <a href="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='png', download=1) }}" class="{{ btn_secondary_md() }}">{{ _('Download PNG') }}</a>
+            <a href="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='svg', download=1) }}" class="{{ btn_secondary_md() }}">{{ _('Download SVG') }}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="share-invite-heading">
+      <div class="flex items-center justify-between gap-3">
+        <h2 id="share-invite-heading" class="text-base font-semibold text-gray-900">{{ _('An invitation you can paste') }}</h2>
+        {{ copy_button('invitation-text') }}
+      </div>
+      <textarea id="invitation-text" rows="8" readonly class="mt-3 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-900">{{ invitation_text }}</textarea>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="share-reminder-heading">
+      <div class="flex items-center justify-between gap-3">
+        <h2 id="share-reminder-heading" class="text-base font-semibold text-gray-900">{{ _('A reminder for later') }}</h2>
+        {{ copy_button('reminder-text') }}
+      </div>
+      <p class="mt-1 text-sm text-gray-600">{{ _('One reminder, a few days in, usually brings in as many people again.') }}</p>
+      <textarea id="reminder-text" rows="6" readonly class="mt-3 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-900">{{ reminder_text }}</textarea>
+    </section>
+
+    <a href="{{ url_for('consultations.dashboard', consultation_id=consultation.id) }}" class="{{ btn_primary_md() }} min-h-11">{{ _('Go to your dashboard') }}</a>
+  </div>
+
+  <div class="space-y-4">
+    {% call next_panel(_('Watch the answers come in')) %}
+      <p>{{ _('Your dashboard shows how many people have taken part and the results so far.') }}</p>
+      <p>{{ _('We email you when the first answers arrive, if turnout looks low the day before closing, and when your report is ready.') }}</p>
+    {% endcall %}
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-semibold text-gray-900">{{ _('Link gone somewhere it should not?') }}</p>
+      <p class="mt-1 text-sm text-gray-600">{{ _('Create a new link. The old link and QR code stop working at once. Answers already given are kept.') }}</p>
+      <form method="post" action="{{ url_for('consultations.rotate_link', consultation_id=consultation.id) }}" class="mt-3">
+        {{ action_form.hidden_tag() }}
+        <button type="submit" class="{{ btn_secondary_sm() }}" data-confirm="{{ _('Create a new link? The current link and QR code will stop working.') }}">{{ _('Create a new link') }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

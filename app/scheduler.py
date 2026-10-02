@@ -610,6 +610,51 @@ def init_scheduler(app):
                 _send_ops_alert(message)
 
 
+    @scheduler.scheduled_job('interval', minutes=2, id='consultation_sweep', max_instances=1, coalesce=True)
+    def consultation_sweep():
+        """Close consultations that are due and send their time-based notices."""
+        if not app.config.get('CONSULTATIONS_SELF_SERVE_ENABLED'):
+            return
+        with app.app_context():
+            from app import db
+            try:
+                from app.consultations.jobs import run_sweep
+                result = run_sweep()
+                if result['closed'] or result['notices']:
+                    logger.info('Consultation sweep: %s', result)
+            except Exception:
+                db.session.rollback()
+                logger.exception('Consultation sweep failed')
+
+
+    @scheduler.scheduled_job('interval', minutes=5, id='background_job_health', max_instances=1, coalesce=True)
+    def background_job_health():
+        """Requeue jobs whose worker died, and alert if the queue is stuck.
+
+        Drafting, screening and report jobs drain in the consensus worker. If
+        it stops, a host is left watching a progress message that never ends.
+        """
+        with app.app_context():
+            from app import db
+            from app.lib.job_queue import get_queue_metrics, recover_stale_jobs
+            try:
+                recovered = recover_stale_jobs()
+                metrics = get_queue_metrics()
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Background job health check failed: {e}", exc_info=True)
+                return
+            if recovered:
+                logger.warning(f"Requeued {recovered} background jobs that timed out")
+            threshold = int(app.config.get('BACKGROUND_QUEUE_LAG_ALERT_SECONDS', 120) or 120)
+            for message in build_queue_lag_alerts(
+                'BACKGROUND', metrics, threshold,
+                heartbeat_ok=_consensus_worker_heartbeat_ok(),
+            ):
+                logger.warning(message)
+                _send_ops_alert(message)
+
+
     @scheduler.scheduled_job('interval', minutes=1, id='process_programme_export_queue', max_instances=1, coalesce=True)
     def process_programme_export_queue():
         """Process queued async programme export jobs."""
@@ -950,6 +995,26 @@ def init_scheduler(app):
             from app.billing.service import reconcile_partner_subscriptions
             updated = reconcile_partner_subscriptions()
             logger.info(f"Partner billing reconciliation complete (updated={updated})")
+
+    @scheduler.scheduled_job('cron', hour=4, minute=30, id='reconcile_consultation_plans', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def reconcile_consultation_plans():
+        """Re-read consultation plans and purchases from Stripe (webhook safety net)."""
+        with app.app_context():
+            from app import db
+            try:
+                from app.consultations.billing import reconcile_plans
+                changed = reconcile_plans()
+                logger.info(f"Consultation plan reconciliation complete (changed={changed})")
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Consultation plan reconciliation failed: {e}", exc_info=True)
+            try:
+                from app.consultations.billing import reconcile_purchases
+                changed = reconcile_purchases()
+                logger.info(f"Consultation purchase reconciliation complete (changed={changed})")
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Consultation purchase reconciliation failed: {e}", exc_info=True)
 
     @scheduler.scheduled_job('cron', hour=5, minute=15, id='reconcile_briefing_subscriptions', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def reconcile_briefing_subscriptions_job():

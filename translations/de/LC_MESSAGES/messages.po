@@ -201,7 +201,7 @@ msgstr ""
 
 #: app/api/errors.py:25
 msgid ""
-"The server could not verify that you are authorized to access the URL "
+"The server could not verify that you are authorised to access the URL "
 "requested."
 msgstr ""
 "Der Server konnte nicht überprüfen, dass Sie berechtigt sind, auf die "
@@ -575,7 +575,7 @@ msgstr "Ungültige Checkout-Sitzung."
 #: app/billing/routes.py:301
 msgid ""
 "Welcome! Your team subscription is now active. You can invite team members "
-"from your organization settings."
+"from your organisation settings."
 msgstr ""
 "Willkommen! Ihr Team-Abonnement ist jetzt aktiv. Sie können Teamkollegen aus"
 " Ihren Organisationseinstellungen einladen."
@@ -1041,15 +1041,15 @@ msgstr ""
 
 #: app/briefing/routes.py:1390
 msgid ""
-"This template is only available for organizations. You need to be part of an"
-" organization to use it."
+"This template is only available for organisations. You need to be part of an"
+" organisation to use it."
 msgstr ""
 "Diese Vorlage ist nur für Organisationen verfügbar. Sie müssen Teil einer "
 "Organisation sein, um sie zu verwenden."
 
 #: app/briefing/routes.py:1410
 msgid ""
-"You need to be part of an organization to create organization briefings"
+"You need to be part of an organisation to create organisation briefings"
 msgstr ""
 "Sie müssen Teil einer Organisation sein, um Organisations-Briefings zu "
 "erstellen"
@@ -1080,7 +1080,7 @@ msgstr ""
 "versuchen Sie es erneut."
 
 #: app/briefing/routes.py:1609
-msgid "You need to be part of an organization to create org briefings"
+msgid "You need to be part of an organisation to create org briefings"
 msgstr ""
 "Sie müssen Teil einer Organisation sein, um Organisations-Briefings zu "
 "erstellen"
@@ -1193,7 +1193,7 @@ msgid "An error occurred while deleting the source"
 msgstr "Bei der Löschung der Quelle ist ein Fehler aufgetreten"
 
 #: app/briefing/routes.py:2231
-msgid "You need to be part of an organization to create org sources"
+msgid "You need to be part of an organisation to create org sources"
 msgstr ""
 "Sie müssen Teil einer Organisation sein, um Organisations-Quellen zu "
 "erstellen"
@@ -1589,21 +1589,21 @@ msgstr "Sie haben keine Berechtigung, dieses Briefing anzuzeigen"
 
 #: app/briefing/routes.py:4073 app/briefing/routes.py:4130
 msgid ""
-"Organization settings are only available for Team and Enterprise plans."
+"Organisation settings are only available for Team and Enterprise plans."
 msgstr ""
 "Organisationseinstellungen sind nur für Team- und Enterprise-Pläne "
 "verfügbar."
 
 #: app/briefing/routes.py:4090
-msgid "No organization found. Please contact support."
+msgid "No organisation found. Please contact support."
 msgstr "Keine Organisation gefunden. Bitte kontaktieren Sie den Support."
 
 #: app/briefing/routes.py:4135
-msgid "You don't have permission to edit this organization."
+msgid "You don't have permission to edit this organisation."
 msgstr "Sie haben keine Berechtigung, diese Organisation zu bearbeiten."
 
 #: app/briefing/routes.py:4146
-msgid "Organization details updated successfully."
+msgid "Organisation details updated successfully."
 msgstr "Organisationsdetails erfolgreich aktualisiert."
 
 #: app/briefing/routes.py:4157 app/briefing/routes.py:4223
@@ -1613,7 +1613,7 @@ msgstr "Teamverwaltung ist nur für Team- und Enterprise-Pläne verfügbar."
 
 #: app/briefing/routes.py:4165 app/briefing/routes.py:4231
 #: app/briefing/routes.py:4258
-msgid "No organization found."
+msgid "No organisation found."
 msgstr "Keine Organisation gefunden."
 
 #: app/briefing/routes.py:4179
@@ -3915,7 +3915,7 @@ msgstr "Uneinigkeit wieder sinnvoll machen"
 
 #: app/templates/about.html:55
 msgid ""
-"Open-source civic infrastructure for structured public judgment — and the "
+"Open-source civic infrastructure for structured public judgement — and the "
 "daily habits that feed it."
 msgstr ""
 "Open-Source-Infrastruktur für strukturierte öffentliche Urteilsbildung — und"
@@ -3972,12 +3972,12 @@ msgid "Our theory of change"
 msgstr "Unsere Theorie des Wandels"
 
 #: app/templates/about.html:110
-msgid "How participation becomes better judgment"
+msgid "How participation becomes better judgement"
 msgstr "Wie Beteiligung zu besseren Urteilen wird"
 
 #: app/templates/about.html:113
 msgid ""
-"We are building toward a more accurate, transparent view of public opinion "
+"We are building towards a more accurate, transparent view of public opinion "
 "on the issues people engage with here — not another comment section, but a "
 "shared reasoning layer. Each product is a step in the same chain."
 msgstr ""
@@ -6170,7 +6170,7 @@ msgstr "Kann ich jederzeit kündigen?"
 
 #: app/templates/faq.html:461
 msgid ""
-"Yes. Cancel anytime from your account settings. There are no lock-in "
+"Yes. Cancel any time from your account settings. There are no lock-in "
 "periods. If you cancel during a trial, you will not be charged."
 msgstr ""
 "Ja. Du kannst jederzeit in deinen Kontoeinstellungen kündigen. Es gibt keine"
@@ -7058,7 +7058,7 @@ msgid "Get by Email"
 msgstr "Per E-Mail erhalten"
 
 #: app/templates/index.html:569
-msgid "5 questions weekly by default · Adjust frequency anytime"
+msgid "5 questions weekly by default · Adjust frequency any time"
 msgstr ""
 "5 Fragen pro Woche standardmäßig · Passen Sie die Häufigkeit jederzeit an"
 
@@ -7677,7 +7677,7 @@ msgid "Terms of Service"
 msgstr "Nutzungsbedingungen"
 
 #: app/templates/layout.html:1335
-msgid "SocietySpeaks inquiry"
+msgid "SocietySpeaks enquiry"
 msgstr "Society Speaks Anfrage"
 
 #: app/templates/layout.html:1337 app/templates/partner/api_docs.html:44
@@ -9008,7 +9008,7 @@ msgstr ""
 "Advisory Ltd"
 
 #: app/templates/privacy-policy.html:18
-msgid "<strong>For data privacy inquiries:</strong> info@societyspeaks.io"
+msgid "<strong>For data privacy enquiries:</strong> info@societyspeaks.io"
 msgstr "<strong>Für Datenschutzanfragen:</strong> info@societyspeaks.io"
 
 #: app/templates/privacy-policy.html:19
@@ -9449,7 +9449,7 @@ msgid "Provide customer support"
 msgstr "Bereitstellung von Kundenunterstützung"
 
 #: app/templates/privacy-policy.html:116
-msgid "Analyze usage patterns and improve user experience"
+msgid "Analyse usage patterns and improve user experience"
 msgstr ""
 "Analyse von Nutzungsmustern und Verbesserung der Benutzerfreundlichkeit"
 
@@ -9694,7 +9694,7 @@ msgstr "7. Datensicherheit"
 
 #: app/templates/privacy-policy.html:212
 msgid ""
-"We implement appropriate technical and organizational measures to protect "
+"We implement appropriate technical and organisational measures to protect "
 "your personal data, including:"
 msgstr ""
 "Wir implementieren angemessene technische und organisatorische Maßnahmen zum"
@@ -10000,7 +10000,7 @@ msgstr ""
 msgid ""
 "4.2 Your Content: While you retain ownership of content you create, by "
 "submitting content to discussions you grant us and other users the right to "
-"view, analyze, and interact with that content as part of the collective "
+"view, analyse, and interact with that content as part of the collective "
 "discussion process."
 msgstr ""
 "4.2 Deine Inhalte: Während du das Eigentum an den von dir erstellten "
@@ -10147,7 +10147,7 @@ msgid "Violation of these Terms"
 msgstr "Verstoß gegen diese Bedingungen"
 
 #: app/templates/terms-and-conditions.html:106
-msgid "Abusive behavior in discussions"
+msgid "Abusive behaviour in discussions"
 msgstr "Belästigendes Verhalten in Diskussionen"
 
 #: app/templates/terms-and-conditions.html:107
@@ -11694,7 +11694,7 @@ msgid "Full Archive Access"
 msgstr "Vollständiger Archivzugriff"
 
 #: app/templates/brief/landing.html:480 app/templates/brief/no_brief.html:203
-msgid "Browse past briefs anytime to catch up on what you missed."
+msgid "Browse past briefs any time to catch up on what you missed."
 msgstr ""
 "Browsen Sie jederzeit frühere Zusammenfassungen, um aufzuholen, was Sie "
 "verpasst haben."
@@ -11810,7 +11810,7 @@ msgstr ""
 "Datenschutzrichtlinie."
 
 #: app/templates/brief/landing.html:559 app/templates/brief/no_brief.html:278
-msgid "Can I unsubscribe anytime?"
+msgid "Can I unsubscribe any time?"
 msgstr "Kann ich mich jederzeit abmelden?"
 
 #: app/templates/brief/landing.html:560 app/templates/brief/no_brief.html:279
@@ -12128,7 +12128,7 @@ msgstr "Transparenz"
 #: app/templates/brief/methodology.html:372
 msgid ""
 "Society Speaks is built with transparency in mind. Our code is publicly "
-"available under the AGPL-3.0 license, which means you can inspect exactly "
+"available under the AGPL-3.0 licence, which means you can inspect exactly "
 "how our AI systems work and suggest improvements. We believe civic "
 "technology should be accountable."
 msgstr ""
@@ -12576,7 +12576,7 @@ msgstr ""
 " Abendlieferungen bringen die aktuellsten Coverage des Tages."
 
 #: app/templates/brief/subscribe.html:118
-msgid "No credit card required. Unsubscribe anytime with one click."
+msgid "No credit card required. Unsubscribe any time with one click."
 msgstr "Keine Kreditkarte erforderlich. Jederzeit mit einem Klick abmelden."
 
 #: app/templates/brief/subscribe.html:208
@@ -12701,7 +12701,7 @@ msgstr ""
 "Schau in dein Postfach nach einer Willkommens-E-Mail mit deinem Magic Link"
 
 #: app/templates/brief/subscribe_success.html:30
-msgid "Use the magic link to access your personalised brief anytime"
+msgid "Use the magic link to access your personalised brief any time"
 msgstr ""
 "Nutze den Magic Link, um dein personalisiertes Brief jederzeit zu lesen"
 
@@ -12804,7 +12804,7 @@ msgstr "Zu Weekly Brief wechseln"
 
 #: app/templates/brief/unsubscribed.html:40
 msgid ""
-"Changed your mind? You can always resubscribe to the daily brief anytime."
+"Changed your mind? You can always resubscribe to the daily brief any time."
 msgstr ""
 "Deine Meinung geändert? Du kannst dich jederzeit wieder zum Daily Brief "
 "abonnieren."
@@ -13140,7 +13140,7 @@ msgstr[0] "%(num)d Quelle konfiguriert"
 msgstr[1] "%(num)d Quellen konfiguriert"
 
 #: app/templates/briefing/_template_card.html:36
-msgid "Organizations"
+msgid "Organisations"
 msgstr "Organisationen"
 
 #: app/templates/briefing/_template_card.html:36
@@ -13609,7 +13609,7 @@ msgstr ""
 #: app/templates/briefing/create.html:35
 msgid ""
 "<strong>Step 2:</strong> On the next screen, you'll add content sources (RSS"
-" feeds, curated sources, or documents) and customize AI settings."
+" feeds, curated sources, or documents) and customise AI settings."
 msgstr ""
 "<strong>Schritt 2:</strong> Auf dem nächsten Bildschirm fügen Sie "
 "Inhaltsquellen (RSS-Feeds, kuratierte Quellen oder Dokumente) hinzu und "
@@ -14398,7 +14398,7 @@ msgid "Current logo"
 msgstr "Aktuelles Logo"
 
 #: app/templates/briefing/edit.html:248
-msgid "Color used for headers, links, and accents"
+msgid "Colour used for headers, links, and accents"
 msgstr "Farbe für Kopfzeilen, Links und Akzente"
 
 #: app/templates/briefing/edit.html:253
@@ -14652,7 +14652,7 @@ msgstr "Was ist, wenn mir das nicht gefällt?"
 
 #: app/templates/briefing/landing.html:101
 #: app/templates/briefing/landing.html:1771
-msgid "Cancel anytime, no questions asked. 30-day free trial."
+msgid "Cancel any time, no questions asked. 30-day free trial."
 msgstr "Kündigen Sie jederzeit ohne Fragen. 30-Tage-Kostenlos-Testversion."
 
 #: app/templates/briefing/landing.html:106
@@ -15687,7 +15687,7 @@ msgstr ""
 #: app/templates/briefing/landing.html:1245
 msgid ""
 "Daily at 7am? Weekly on Monday? You decide when and how often. Pause "
-"anytime."
+"any time."
 msgstr ""
 "Täglich um 7 Uhr? Wöchentlich am Montag? Sie bestimmen, wann und wie oft. "
 "Jederzeit pausierbar."
@@ -15852,7 +15852,7 @@ msgid "No card needed"
 msgstr "Keine Karte erforderlich"
 
 #: app/templates/briefing/landing.html:1375
-msgid "Cancel anytime"
+msgid "Cancel any time"
 msgstr "Jederzeit kündbar"
 
 #: app/templates/briefing/landing.html:1385
@@ -15912,7 +15912,7 @@ msgstr "PDF-Dokument-Uploads"
 
 #: app/templates/briefing/landing.html:1436
 #: app/templates/briefing/landing.html:1510
-msgid "30-day free trial, cancel anytime"
+msgid "30-day free trial, cancel any time"
 msgstr "30 Tage kostenlos testen, jederzeit kündbar"
 
 #: app/templates/briefing/landing.html:1439
@@ -16095,7 +16095,7 @@ msgstr "GDPR-konform"
 
 #: app/templates/briefing/landing.html:1685
 msgid ""
-"UK/EU compliant by design. Export or delete your data anytime. Right to be "
+"UK/EU compliant by design. Export or delete your data any time. Right to be "
 "forgotten honoured."
 msgstr ""
 "UK/EU-konform von Grund auf. Exportieren oder löschen Sie Ihre Daten "
@@ -16191,7 +16191,7 @@ msgid "Start free 30-day trial"
 msgstr "Kostenlose 30-Tage-Testversion starten"
 
 #: app/templates/briefing/landing.html:1813
-msgid "Cancel anytime."
+msgid "Cancel any time."
 msgstr "Jederzeit kündbar."
 
 #: app/templates/briefing/landing.html:1826
@@ -16227,7 +16227,7 @@ msgstr "Ihre kostenlose Testphase endet in %(days)s Tagen"
 
 #: app/templates/briefing/list.html:37
 msgid ""
-"Your trial is active. Add a payment method anytime so briefings continue "
+"Your trial is active. Add a payment method any time so briefings continue "
 "smoothly after it ends."
 msgstr ""
 "Ihre Testversion ist aktiv. Fügen Sie jederzeit eine Zahlungsmethode hinzu, "
@@ -16440,11 +16440,11 @@ msgstr ""
 #: app/templates/briefing/organization_settings.html:2
 #: app/templates/briefing/organization_settings.html:13
 #: app/templates/briefing/organization_settings.html:15
-msgid "Organization Settings"
+msgid "Organisation Settings"
 msgstr "Organisationseinstellungen"
 
 #: app/templates/briefing/organization_settings.html:16
-msgid "Manage your team subscription and organization details."
+msgid "Manage your team subscription and organisation details."
 msgstr "Verwalten Sie Ihr Team-Abonnement und die Details Ihrer Organisation."
 
 #: app/templates/briefing/organization_settings.html:21
@@ -16470,15 +16470,15 @@ msgid "Manage billing →"
 msgstr "Abrechnung verwalten →"
 
 #: app/templates/briefing/organization_settings.html:54
-msgid "Organization Details"
+msgid "Organisation Details"
 msgstr "Organisationsdetails"
 
 #: app/templates/briefing/organization_settings.html:60
-msgid "Organization Name"
+msgid "Organisation Name"
 msgstr "Organisationsname"
 
 #: app/templates/briefing/organization_settings.html:69
-msgid "Brief description of your organization"
+msgid "Brief description of your organisation"
 msgstr "Kurze Beschreibung Ihrer Organisation"
 
 #: app/templates/briefing/organization_settings.html:72
@@ -16550,7 +16550,7 @@ msgid "Send Invite"
 msgstr "Einladung senden"
 
 #: app/templates/briefing/organization_settings.html:185
-msgid "They'll receive an email with a link to join your organization."
+msgid "They'll receive an email with a link to join your organisation."
 msgstr ""
 "Sie erhalten eine E-Mail mit einem Link zum Beitreten Ihrer Organisation."
 
@@ -16670,7 +16670,7 @@ msgid "AI Guidance"
 msgstr "KI-Anleitung"
 
 #: app/templates/briefing/preview_template.html:163
-msgid "You can customize this prompt after creating your briefing."
+msgid "You can customise this prompt after creating your briefing."
 msgstr ""
 "Sie können diese Aufforderung nach der Erstellung Ihres Briefings anpassen."
 
@@ -16789,7 +16789,7 @@ msgstr "Ihre Änderungen sind privat"
 
 #: app/templates/briefing/preview_template.html:282
 msgid ""
-"Any customizations you make only affect your personal briefing. The original"
+"Any customisations you make only affect your personal briefing. The original"
 " template stays unchanged for everyone else."
 msgstr ""
 "Alle Anpassungen, die Sie vornehmen, betreffen nur Ihr persönliches "
@@ -17168,7 +17168,7 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: app/templates/briefing/sources.html:85
-msgid "Organization Sources"
+msgid "Organisation Sources"
 msgstr "Organisationsquellen"
 
 #: app/templates/briefing/sources.html:139
@@ -17398,10 +17398,6 @@ msgstr "Beschreibung (optional)"
 msgid "Add a description for your briefing"
 msgstr "Fügen Sie eine Beschreibung für Ihr Briefing hinzu"
 
-#: app/templates/briefing/use_template.html:63
-msgid "Organization"
-msgstr "Organisation"
-
 #: app/templates/briefing/use_template.html:90
 #, python-format
 msgid "Frequency: %(cadence)s (fixed for this template)"
@@ -17412,7 +17408,7 @@ msgid "Default: 6:00 PM - a popular time for end-of-day reading"
 msgstr "Standard: 18:00 Uhr – eine beliebte Zeit zum Lesen am Ende des Tages"
 
 #: app/templates/briefing/use_template.html:133
-msgid "Organization Only"
+msgid "Organisation Only"
 msgstr "Nur Organisation"
 
 #: app/templates/briefing/use_template.html:145
@@ -17464,7 +17460,7 @@ msgstr "Versanddomäne hinzufügen"
 
 #: app/templates/briefing/domains/add.html:16
 msgid ""
-"Configure a custom domain to send briefs from your organization's email "
+"Configure a custom domain to send briefs from your organisation's email "
 "address"
 msgstr ""
 "Konfigurieren Sie eine benutzerdefinierte Domäne, um Briefs von der E-Mail-"
@@ -17501,7 +17497,7 @@ msgid "Once verified, you can send briefs from this domain"
 msgstr "Nach der Bestätigung können Sie Briefs von dieser Domäne versenden"
 
 #: app/templates/briefing/domains/list.html:17
-msgid "Manage custom email domains for your organization"
+msgid "Manage custom email domains for your organisation"
 msgstr "Verwalten Sie benutzerdefinierte E-Mail-Domänen für Ihre Organisation"
 
 #: app/templates/briefing/domains/list.html:18
@@ -17916,7 +17912,7 @@ msgid "Dive deeper with AI:"
 msgstr "Tiefer einsteigen mit KI:"
 
 #: app/templates/components/dive_deeper_links.html:16
-msgid "Analyze this news story:"
+msgid "Analyse this news story:"
 msgstr "Diese Nachricht analysieren:"
 
 #: app/templates/components/dive_deeper_links.html:40
@@ -17975,7 +17971,7 @@ msgid "Subscribe Free"
 msgstr "Kostenlos abonnieren"
 
 #: app/templates/components/email_capture.html:40
-msgid "Free forever. Unsubscribe anytime. We respect your inbox."
+msgid "Free forever. Unsubscribe any time. We respect your inbox."
 msgstr ""
 "Kostenlos für immer. Jederzeit abmelden. Wir respektieren Ihren Posteingang."
 
@@ -18528,7 +18524,7 @@ msgid "Email Preferences"
 msgstr "E-Mail-Einstellungen"
 
 #: app/templates/daily/preferences.html:12
-msgid "Customize how you receive questions from Society Speaks"
+msgid "Customise how you receive questions from Society Speaks"
 msgstr "Passen Sie an, wie Sie Fragen von Society Speaks erhalten"
 
 #: app/templates/daily/preferences.html:31
@@ -18974,7 +18970,7 @@ msgstr "Diskutieren"
 
 #: app/templates/daily/results.html:555
 #: app/templates/daily/weekly_batch.html:329
-msgid "Analyze"
+msgid "Analyse"
 msgstr "Analysieren"
 
 #: app/templates/daily/results.html:572
@@ -19269,7 +19265,7 @@ msgid "Magic link — no password needed"
 msgstr "Magic Link — kein Passwort erforderlich"
 
 #: app/templates/daily/subscribe.html:125
-msgid "Change preferences anytime from any email"
+msgid "Change preferences any time from any email"
 msgstr "Ändern Sie Einstellungen jederzeit von einer beliebigen E-Mail aus"
 
 #: app/templates/daily/subscribe.html:132
@@ -19339,7 +19335,7 @@ msgstr "— mit %(tz)s"
 
 #: app/templates/daily/subscribe_success.html:43
 msgid ""
-"You can change frequency, day, time, and time zone anytime from the "
+"You can change frequency, day, time, and time zone any time from the "
 "preferences link in any email we send."
 msgstr ""
 "Du kannst Häufigkeit, Tag, Zeit und Zeitzone jederzeit über den "
@@ -20166,7 +20162,7 @@ msgstr ""
 "Ansicht zu aktualisieren."
 
 #: app/templates/discussions/consensus_results.html:185
-msgid "Opinion Groups Visualization"
+msgid "Opinion Groups Visualisation"
 msgstr "Visualisierung von Meinungsgruppen"
 
 #: app/templates/discussions/consensus_results.html:191
@@ -20668,7 +20664,7 @@ msgid "Position"
 msgstr "Position"
 
 #: app/templates/discussions/consensus_results.html:775
-msgid "Error loading visualization"
+msgid "Error loading visualisation"
 msgstr "Fehler beim Laden der Visualisierung"
 
 #: app/templates/discussions/create_discussion.html:18
@@ -20705,7 +20701,7 @@ msgid "✓ Built-in voting (Agree/Disagree/Unsure)"
 msgstr "✓ Integrierte Abstimmung (Zustimmung/Ablehnung/Unsicher)"
 
 #: app/templates/discussions/create_discussion.html:103
-msgid "✓ Consensus clustering and visualization"
+msgid "✓ Consensus clustering and visualisation"
 msgstr "✓ Konsensclustering und Visualisierung"
 
 #: app/templates/discussions/create_discussion.html:104
@@ -22636,7 +22632,7 @@ msgstr ""
 
 #: app/templates/emails/briefing_trial_payment.html:40
 #, python-format
-msgid "Just %(price)s per month after your trial. Cancel anytime."
+msgid "Just %(price)s per month after your trial. Cancel any time."
 msgstr "Nur %(price)s pro Monat nach Ihrer Testversion. Jederzeit kündbar."
 
 #: app/templates/emails/briefing_trial_payment.html:45
@@ -22709,7 +22705,7 @@ msgstr ""
 #: app/templates/emails/briefing_winback.html:27
 msgid ""
 "If you'd like to pick it up, add a card and tomorrow's brief lands as if "
-"nothing happened. £4.99/month, cancel anytime."
+"nothing happened. £4.99/month, cancel any time."
 msgstr ""
 "Wenn Sie es wieder aufgreifen möchten, hinterlegen Sie eine Karte und "
 "morgens kommt Ihr Brief, als hätte es keine Unterbrechung gegeben. "
@@ -22871,7 +22867,7 @@ msgstr "Willkommen bei %(cadence)s - Society Speaks"
 #: app/templates/emails/daily_brief_welcome.html:7
 msgid ""
 "Your free access is now active! Here's your magic link to access briefs "
-"anytime."
+"any time."
 msgstr ""
 "Dein kostenloser Zugang ist jetzt aktiv! Hier ist dein magischer Link, um "
 "jederzeit auf Briefs zuzugreifen."
@@ -22913,7 +22909,7 @@ msgstr "Kostenloser Zugang (ohne Ablauf)"
 
 #: app/templates/emails/daily_brief_welcome.html:46
 msgid ""
-"<strong>Your magic link</strong> gives you instant access to briefs anytime "
+"<strong>Your magic link</strong> gives you instant access to briefs any time "
 "- no login required. Bookmark it or save this email:"
 msgstr ""
 "<strong>Dein magischer Link</strong> gibt dir sofortigen Zugriff auf Briefs "
@@ -23480,7 +23476,7 @@ msgstr "Fehlende Informationen:"
 
 #: app/templates/emails/profile_completion_reminder.html:33
 msgid ""
-"This is a one-time reminder. You can update your profile anytime from your "
+"This is a one-time reminder. You can update your profile any time from your "
 "account settings."
 msgstr ""
 "Dies ist eine einmalige Erinnerung. Sie können Ihr Profil jederzeit in Ihren"
@@ -24806,7 +24802,7 @@ msgstr ""
 " deinen Entscheidungen formt, und entdecke, was für ein Anführer du wirst."
 
 #: app/templates/game/hub.html:224
-msgid "Replay any past scenario anytime — no streak."
+msgid "Replay any past scenario any time — no streak."
 msgstr ""
 "Spiele jedes vergangene Szenario jederzeit erneut — keine Erfolgssträhne."
 
@@ -24923,7 +24919,7 @@ msgstr "wer diese Krise angegangen ist"
 
 #: app/templates/game/outcome.html:152
 #, python-format
-msgid "You leaned more toward %(dir)s than %(pct)d%% of leaders %(scope)s."
+msgid "You leaned more towards %(dir)s than %(pct)d%% of leaders %(scope)s."
 msgstr ""
 "Du hast dich mehr zu %(dir)s geneigt als %(pct)d%% der Anführer %(scope)s."
 
@@ -26542,7 +26538,7 @@ msgstr ""
 " zu laden"
 
 #: app/templates/help/native_system.html:90
-msgid "You can change your vote anytime"
+msgid "You can change your vote any time"
 msgstr "Sie können Ihre Abstimmung jederzeit ändern"
 
 #: app/templates/help/native_system.html:100
@@ -27118,7 +27114,7 @@ msgid "Good"
 msgstr "Gut"
 
 #: app/templates/help/native_system.html:465
-msgid "✓ Tailwind optimized"
+msgid "✓ Tailwind optimised"
 msgstr "✓ Tailwind-optimiert"
 
 #: app/templates/help/native_system.html:468
@@ -27190,7 +27186,7 @@ msgstr ""
 #: app/templates/help/news_dashboard.html:18
 msgid ""
 "No sign-up required. It supports the same civic goal as our discussions: "
-"understand issues from multiple angles before forming judgment."
+"understand issues from multiple angles before forming judgement."
 msgstr ""
 "Keine Anmeldung erforderlich. Es unterstützt dasselbe "
 "bürgerbeteiligungsorientierte Ziel wie unsere Diskussionen: Verstehe Themen "
@@ -27269,7 +27265,7 @@ msgstr "Wo wir unsere Themen beziehen"
 msgid ""
 "We monitor <strong>140+ quality news sources</strong> across the political "
 "spectrum to find topics worth debating. Our sources include mainstream news,"
-" policy analysis, investigative journalism, think tanks, data organizations,"
+" policy analysis, investigative journalism, think tanks, data organisations,"
 " and intellectual podcasts."
 msgstr ""
 "Wir überwachen <strong>über 140 hochwertige Nachrichtenquellen</strong> aus "
@@ -27792,7 +27788,7 @@ msgid "Provides immediate insights as participants engage"
 msgstr "Liefert sofortige Einblicke, während Teilnehmende sich beteiligen"
 
 #: app/templates/help/polis_algorithms.html:175
-msgid "Understanding the Visualizations"
+msgid "Understanding the Visualisations"
 msgstr "Die Visualisierungen verstehen"
 
 #: app/templates/help/polis_algorithms.html:180
@@ -27804,7 +27800,7 @@ msgid "What You'll See"
 msgstr "Was du sehen wirst"
 
 #: app/templates/help/polis_algorithms.html:185
-msgid "Colored clusters representing different opinion groups"
+msgid "Coloured clusters representing different opinion groups"
 msgstr "Farbige Cluster, die verschiedene Meinungsgruppen darstellen"
 
 #: app/templates/help/polis_algorithms.html:186
@@ -27855,7 +27851,7 @@ msgstr ""
 "gemeinsame Ansichten und Einigungspotenzial hin"
 
 #: app/templates/help/polis_algorithms.html:212
-msgid "Polarization"
+msgid "Polarisation"
 msgstr "Polarisierung"
 
 #: app/templates/help/polis_algorithms.html:213
@@ -27919,7 +27915,7 @@ msgid "Healthy Patterns"
 msgstr "Gesunde Muster"
 
 #: app/templates/help/polis_algorithms.html:246
-msgid "Multiple distinct but not extremely polarized groups"
+msgid "Multiple distinct but not extremely polarised groups"
 msgstr "Mehrere unterschiedliche, aber nicht extrem polarisierte Gruppen"
 
 #: app/templates/help/polis_algorithms.html:247
@@ -27939,7 +27935,7 @@ msgid "Warning Signs"
 msgstr "Warnsignale"
 
 #: app/templates/help/polis_algorithms.html:255
-msgid "Extreme polarization with no bridging views"
+msgid "Extreme polarisation with no bridging views"
 msgstr "Extreme Polarisierung ohne Brückenmeinungen"
 
 #: app/templates/help/polis_algorithms.html:256
@@ -28075,10 +28071,6 @@ msgstr ""
 " jeden mit dem direkten Link zugänglich. Programme mit Einladung sind "
 "verborgen und nur für Nutzer zugänglich, die Sie explizit einladen. Private "
 "Programme sind nur für den Eigentümer und Verwalter zugänglich."
-
-#: app/templates/help/programmes.html:49
-msgid "← Help Center"
-msgstr "← Hilfe-Center"
 
 #: app/templates/help/programmes.html:51
 msgid ""
@@ -28965,11 +28957,6 @@ msgstr ""
 msgid "Today's Coverage Balance"
 msgstr "Heutige Abdeckungsbilanz"
 
-#: app/templates/news/dashboard.html:79
-#, python-format
-msgid "%(pct)s%% Center (%(count)d)"
-msgstr "%(pct)s%% Mitte (%(count)d)"
-
 #: app/templates/news/dashboard.html:100
 msgid "Search by headline, summary, or source..."
 msgstr "Nach Schlagzeile, Zusammenfassung oder Quelle suchen..."
@@ -28986,7 +28973,7 @@ msgstr "Links (%(count)d)"
 
 #: app/templates/news/dashboard.html:144
 #, python-format
-msgid "Center (%(count)d)"
+msgid "Centre (%(count)d)"
 msgstr "Mitte (%(count)d)"
 
 #: app/templates/news/dashboard.html:150
@@ -29014,10 +29001,6 @@ msgstr "Quellen filtern"
 msgid "Select Sources"
 msgstr "Quellen auswählen"
 
-#: app/templates/news/dashboard.html:257
-msgid "Center"
-msgstr "Mitte"
-
 #: app/templates/news/dashboard.html:314
 msgid "Left-Leaning Sources"
 msgstr "Linke Quellen"
@@ -29041,7 +29024,7 @@ msgid "Civic Relevance: %(pct)s%%"
 msgstr "Bürgerbeteiligung: %(pct)s%%"
 
 #: app/templates/news/dashboard.html:393
-msgid "Center Sources"
+msgid "Centre Sources"
 msgstr "Mittlere Quellen"
 
 #: app/templates/news/dashboard.html:472
@@ -29082,7 +29065,7 @@ msgstr "28%% Links"
 
 #: app/templates/news/landing.html:62
 #, python-format
-msgid "44%% Center"
+msgid "44%% Centre"
 msgstr "44%% Mitte"
 
 #: app/templates/news/landing.html:63
@@ -29107,7 +29090,7 @@ msgid "AI-scored for sensationalism"
 msgstr "KI-bewertet auf Sensationalismus"
 
 #: app/templates/news/landing.html:144
-msgid "Unsubscribe anytime"
+msgid "Unsubscribe any time"
 msgstr "Jederzeit abmelden"
 
 #: app/templates/news/landing.html:153
@@ -29211,7 +29194,7 @@ msgstr "Open Source, transparent, gemeinnützig"
 
 #: app/templates/news/landing.html:254
 msgid ""
-"Our entire codebase is open source under the AGPL-3.0 license. Anyone can "
+"Our entire codebase is open source under the AGPL-3.0 licence. Anyone can "
 "inspect, fork, or contribute to our consensus-building tools. No hidden "
 "algorithms, no black boxes."
 msgstr ""
@@ -29245,7 +29228,7 @@ msgid "Open Source"
 msgstr "Open Source"
 
 #: app/templates/news/landing.html:302
-msgid "AGPL-3.0 License"
+msgid "AGPL-3.0 Licence"
 msgstr "AGPL-3.0-Lizenz"
 
 #: app/templates/news/landing.html:306
@@ -30101,7 +30084,7 @@ msgid "<code>discussion_not_found</code> - Discussion does not exist"
 msgstr "<code>discussion_not_found</code> - Diskussion existiert nicht"
 
 #: app/templates/partner/api_docs.html:624
-msgid "Customize the embed appearance with URL parameters."
+msgid "Customise the embed appearance with URL parameters."
 msgstr "Passen Sie das Embed-Erscheinungsbild mit URL-Parametern an."
 
 #: app/templates/partner/api_docs.html:625
@@ -30124,11 +30107,11 @@ msgstr ""
 "<code>muted</code>"
 
 #: app/templates/partner/api_docs.html:649
-msgid "Primary color (hex without #)"
+msgid "Primary colour (hex without #)"
 msgstr "Primärfarbe (Hex ohne #)"
 
 #: app/templates/partner/api_docs.html:654
-msgid "Background color (hex without #)"
+msgid "Background colour (hex without #)"
 msgstr "Hintergrundfarbe (Hex ohne #)"
 
 #: app/templates/partner/api_docs.html:659
@@ -30316,7 +30299,7 @@ msgid "Request Body"
 msgstr "Request-Body"
 
 #: app/templates/partner/api_docs.html:869
-msgid "Canonical article URL (normalized if provided)"
+msgid "Canonical article URL (normalised if provided)"
 msgstr "Kanonische Artikel-URL (normalisiert falls vorhanden)"
 
 #: app/templates/partner/api_docs.html:874
@@ -30908,7 +30891,7 @@ msgstr "Embed-Code-Generator – Society Speaks"
 #: app/templates/partner/embed_generator.html:5
 msgid ""
 "Generate embed code for Society Speaks. Publishers can add a clean voting "
-"widget to articles, with developer-friendly customization and clear audience"
+"widget to articles, with developer-friendly customisation and clear audience"
 " insight for editors."
 msgstr ""
 "Generieren Sie Embed-Code für Society Speaks. Verleger können ein sauberes "
@@ -30922,7 +30905,7 @@ msgstr "Embed-Code-Generator"
 #: app/templates/partner/embed_generator.html:20
 msgid ""
 "Add a Society Speaks voting widget to your article in minutes. Developers "
-"get a clean iframe and customization controls. Editors get structured "
+"get a clean iframe and customisation controls. Editors get structured "
 "insight, not comment noise."
 msgstr ""
 "Fügen Sie in wenigen Minuten ein Society Speaks-Abstimmungs-Widget zu Ihrem "
@@ -31065,11 +31048,11 @@ msgid "2. Choose a Theme"
 msgstr "2. Wählen Sie ein Theme"
 
 #: app/templates/partner/embed_generator.html:193
-msgid "Or customize colors:"
+msgid "Or customise colours:"
 msgstr "Oder passen Sie die Farben an:"
 
 #: app/templates/partner/embed_generator.html:196
-msgid "Primary Color"
+msgid "Primary Colour"
 msgstr "Primärfarbe"
 
 #: app/templates/partner/embed_generator.html:206
@@ -32217,12 +32200,12 @@ msgstr ""
 "zu erhalten. So bleiben Ihre Newsroom-Systeme synchron, ohne zu polling."
 
 #: app/templates/partner/hub.html:1020
-msgid "Can I customize the embed appearance?"
+msgid "Can I customise the embed appearance?"
 msgstr "Kann ich das Embed-Erscheinungsbild anpassen?"
 
 #: app/templates/partner/hub.html:1022
 msgid ""
-"Yes. Choose from preset themes or set custom primary/background colors and "
+"Yes. Choose from preset themes or set custom primary/background colours and "
 "fonts."
 msgstr ""
 "Ja. Wählen Sie aus vordefinierten Themes oder legen Sie benutzerdefinierte "
@@ -32396,7 +32379,7 @@ msgstr ""
 
 #: app/templates/partner/rules.html:117
 msgid ""
-"<strong>Customize</strong> embed colors and fonts to match your site's "
+"<strong>Customise</strong> embed colours and fonts to match your site's "
 "design using supported parameters"
 msgstr ""
 "<strong>Passen Sie</strong> Farben und Schriftarten des Embeds an Ihr Design"
@@ -33356,7 +33339,7 @@ msgstr ""
 #: app/templates/partner/portal/discussion_detail.html:178
 msgid ""
 "This discussion is closed. Reopen it before changing embed submission "
-"behavior."
+"behaviour."
 msgstr ""
 "Diese Diskussion ist geschlossen. Öffnen Sie sie erneut, bevor Sie das "
 "Verhalten der Einbettungsrichtlinie ändern."
@@ -34197,7 +34180,7 @@ msgstr ""
 "Kreditkarte erforderlich."
 
 #: app/templates/partner/portal/signup.html:21
-msgid "Organization name"
+msgid "Organisation name"
 msgstr "Organisationsname"
 
 #: app/templates/partner/portal/signup.html:22
@@ -34447,7 +34430,7 @@ msgstr "Organisationsprofil, Unternehmenserofil, %(name)s, SocietySpeaks"
 
 #: app/templates/profiles/company_profile.html:20
 msgid ""
-"An organization on SocietySpeaks contributing to public discourse and "
+"An organisation on SocietySpeaks contributing to public discourse and "
 "meaningful change."
 msgstr ""
 "Eine Organisation auf SocietySpeaks, die zum öffentlichen Diskurs und zu "
@@ -34735,7 +34718,7 @@ msgstr ""
 "sich mit ihrer Community austauschen möchten."
 
 #: app/templates/profiles/select_profile_type.html:126
-msgid "Official organization presence"
+msgid "Official organisation presence"
 msgstr "Offizielle Präsenz einer Organisation"
 
 #: app/templates/profiles/select_profile_type.html:132
@@ -35373,7 +35356,7 @@ msgstr "Machen Sie Fortschritte durch alle Aussagen in dieser Reise"
 #: app/templates/programmes/view.html:282
 #, python-format
 msgid ""
-"Each theme is quick (~%(mins)d minutes). Take breaks anytime — nothing is "
+"Each theme is quick (~%(mins)d minutes). Take breaks any time — nothing is "
 "gated."
 msgstr ""
 "Jedes Thema ist schnell (~%(mins)d Minuten). Machen Sie jederzeit Pausen — "
@@ -35416,7 +35399,7 @@ msgstr "Möchten Sie Erinnerungen zum Abschluss dieser Reise?"
 
 #: app/templates/programmes/view.html:385
 msgid ""
-"Short email nudges — pick cadence and time. One tap unsubscribe anytime."
+"Short email nudges — pick cadence and time. One tap unsubscribe any time."
 msgstr ""
 "Kurze E-Mail-Anstupser – wählen Sie Rhythmus und Zeitpunkt. Mit nur einem "
 "Fingertipp können Sie sich jederzeit abmelden."
@@ -35449,7 +35432,7 @@ msgid "Turn on reminders"
 msgstr "Erinnerungen aktivieren"
 
 #: app/templates/programmes/view.html:428
-msgid "We only send journey nudges. Unsubscribe anytime from our emails."
+msgid "We only send journey nudges. Unsubscribe any time from our emails."
 msgstr ""
 "Wir versenden nur Reise-Nudges. Sie können sich jederzeit von unseren "
 "E-Mails abmelden."
@@ -35566,7 +35549,7 @@ msgid "• Keys are validated before saving"
 msgstr "• Schlüssel werden vor dem Speichern validiert"
 
 #: app/templates/settings/add_api_key.html:27
-msgid "• You can disable or delete keys anytime"
+msgid "• You can disable or delete keys any time"
 msgstr "• Du kannst Schlüssel jederzeit deaktivieren oder löschen"
 
 #: app/templates/settings/add_api_key.html:28
@@ -35704,7 +35687,7 @@ msgid "• Validation only checks if the key is active"
 msgstr "• Validierung prüft nur, ob der Schlüssel aktiv ist"
 
 #: app/templates/settings/add_api_key.html:112
-msgid "• You can delete your key anytime"
+msgid "• You can delete your key any time"
 msgstr "• Sie können Ihren Schlüssel jederzeit löschen"
 
 #: app/templates/settings/add_api_key.html:113
@@ -35975,7 +35958,7 @@ msgstr "Claim %(name)s - SocietySpeaks"
 #: app/templates/sources/claim.html:5
 #, python-format
 msgid ""
-"Request to claim %(name)s as your organization's source profile on "
+"Request to claim %(name)s as your organisation's source profile on "
 "SocietySpeaks."
 msgstr ""
 "Anfrage zur Übernahme von %(name)s als Quellenprofil deiner Organisation auf"
@@ -36030,7 +36013,7 @@ msgstr ""
 #: app/templates/sources/claim.html:94
 #, python-format
 msgid ""
-"By submitting this claim, you confirm that you are authorized to represent "
+"By submitting this claim, you confirm that you are authorised to represent "
 "%(name)s. False claims may result in account suspension."
 msgstr ""
 "Durch die Einreichung dieses Anspruchs bestätigst du, dass du %(name)s "
@@ -36043,7 +36026,7 @@ msgstr "Anspruch einreichen"
 #: app/templates/sources/index.html:4
 msgid ""
 "Explore news sources and podcasts on SocietySpeaks. Discover discussions "
-"from your favorite media outlets."
+"from your favourite media outlets."
 msgstr ""
 "Entdecke Nachrichtenquellen und Podcasts auf SocietySpeaks. Erkunde "
 "Diskussionen von deinen Lieblings-Medienunternehmen."

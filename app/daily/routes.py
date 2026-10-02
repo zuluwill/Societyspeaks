@@ -142,7 +142,7 @@ def get_related_discussions(question, limit=3):
                 Discussion.topic == source_topic,
                 Discussion.id != question.source_discussion_id,
                 Discussion.has_native_statements == True,
-                Discussion.partner_env != 'test'
+                Discussion.publicly_listable()
             ).order_by(Discussion.created_at.desc()).limit(limit).all()
     
     if len(related) < limit:
@@ -153,7 +153,7 @@ def get_related_discussions(question, limit=3):
         
         query = Discussion.query.filter(
             Discussion.has_native_statements == True,
-            Discussion.partner_env != 'test'
+            Discussion.publicly_listable()
         )
         if exclude_ids:
             query = query.filter(Discussion.id.notin_(exclude_ids))

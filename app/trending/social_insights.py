@@ -723,7 +723,7 @@ def generate_weekly_insights_thread() -> List[str]:
     recent_discussions = Discussion.query.filter(
         Discussion.created_at >= week_ago,
         Discussion.has_native_statements == True,
-        Discussion.partner_env != 'test'
+        Discussion.publicly_listable()
     ).all()
     
     # Calculate insights

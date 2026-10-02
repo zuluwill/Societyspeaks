@@ -49,7 +49,7 @@ def compute_topic_rankings(limit: int = 15) -> List[dict[str, Any]]:
         .join(Statement, StatementVote.statement_id == Statement.id)
         .filter(
             Discussion.topic.isnot(None),
-            Discussion.partner_env != "test",
+            Discussion.publicly_listable(),
             *_vis,
         )
         .group_by(Discussion.topic)
@@ -60,7 +60,7 @@ def compute_topic_rankings(limit: int = 15) -> List[dict[str, Any]]:
         db.session.query(Discussion.topic, func.count(Discussion.id))
         .filter(
             Discussion.topic.isnot(None),
-            Discussion.partner_env != "test",
+            Discussion.publicly_listable(),
         )
         .group_by(Discussion.topic)
         .all()
