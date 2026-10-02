@@ -2,6 +2,7 @@
 import hashlib
 import json
 import secrets
+from datetime import timedelta
 
 import pytest
 from flask import g
@@ -173,25 +174,16 @@ def test_host_goes_from_question_to_shared_report(app, enabled, host, client, mo
         'open_days': '5', 'allow_audience_statements': 'y',
     }).status_code == 302
 
-    # Not entitled yet: the page offers both ways to pay and does not go live.
+    # A verified email goes live on the trial. Paying is offered, not required.
     pay = client.get(f'/consultations/{consultation.id}/go-live').get_data(as_text=True)
-    assert '£249' in pay and '£950' in pay
-    client.post(f'/consultations/{consultation.id}/go-live', data={})
-    assert Consultation.query.one().is_draft
-
-    db_purchase = ConsultationPurchase(
-        user_id=host.id, stripe_checkout_session_id='cs_test_1', stripe_payment_intent_id='pi_1',
-        amount_pence=24900,
-    )
-    from app import db
-    db.session.add(db_purchase)
-    db.session.commit()
-
+    assert '£99' in pay and '£600' in pay and '14-day live trial' in pay
     live = client.post(f'/consultations/{consultation.id}/go-live', data={})
     assert live.headers['Location'].endswith(f'/consultations/{consultation.id}/share')
     consultation = Consultation.query.one()
-    assert consultation.is_live and consultation.covered_by == 'purchase'
-    assert db_purchase.consumed_at is not None and not db_purchase.is_unused
+    assert consultation.is_live and consultation.covered_by == 'trial'
+    from app.models import ConsultationTrial
+    trial = ConsultationTrial.query.one()
+    assert consultation.closes_at <= trial.ends_at
     assert 'Your consultation is live' in enabled
 
     share = client.get(f'/consultations/{consultation.id}/share').get_data(as_text=True)
@@ -302,6 +294,8 @@ def test_participant_page_needs_no_session_and_loads_no_trackers(app, enabled, h
     assert cookies == {'ss_voter_client_id'}, 'the page promises exactly one cookie'
     assert 'no-store' in response.headers['Cache-Control']
     assert 'noindex' in response.headers['X-Robots-Tag']
+    assert 'Run your own consultation' in body
+    assert 'vote-btn-agree' in body.split('Run your own consultation')[0]
 
 
 def test_a_live_consultation_with_nothing_left_to_vote_on_says_so(app, enabled, host, client, monkeypatch):
@@ -655,7 +649,10 @@ def test_the_sweep_closes_due_consultations_and_sends_each_notice_once(app, enab
 def test_deleting_a_consultation_removes_its_votes_and_keeps_the_purchase_spent(app, enabled, host, monkeypatch):
     from app import db
     consultation = _draft_consultation(host, monkeypatch)
-    purchase = ConsultationPurchase(user_id=host.id, stripe_checkout_session_id='cs_del', amount_pence=24900)
+    purchase = ConsultationPurchase(
+        user_id=host.id, stripe_checkout_session_id='cs_del', amount_pence=24900,
+        valid_until=utcnow_naive() + timedelta(days=30),
+    )
     db.session.add(purchase)
     db.session.commit()
     billing.go_live(consultation, host)
@@ -677,7 +674,8 @@ def test_product_page_states_prices_and_meets_seo_rules(app, enabled, client):
     html = client.get('/consultations/self-serve').get_data(as_text=True)
 
     assert 'See where your audience agrees, disagrees or is unsure.' in html
-    assert '£249' in html and '£950' in html and '£2,500' in html
+    assert '£99' in html and '£600' in html and '£2,500' in html
+    assert '14-day live trial' in html
     assert html.count('rel="canonical"') == 1
     assert 'href="http://localhost/consultations/self-serve"' in html
     for block in ('og:title', 'og:description', 'twitter:title', 'twitter:description'):
@@ -689,7 +687,7 @@ def test_product_page_states_prices_and_meets_seo_rules(app, enabled, client):
     assert 'Run a consultation' in home
     assert '/consultations/self-serve' in home
     platform = client.get('/platform').get_data(as_text=True)
-    assert 'Run a consultation with your own audience from £249' in platform
+    assert 'Consultations: 14 days free, then £99 for 30 days' in platform
     # The facilitated page points across, and only while the product is on.
     facilitated = client.get('/consultations').get_data(as_text=True)
     assert 'Would you rather run one yourself?' in facilitated
@@ -948,6 +946,8 @@ def test_the_worked_example_obeys_the_same_rules_as_a_real_report(app, enabled, 
     assert page.status_code == 200
     assert 'made-up organisation and made-up votes' in text and 'This example uses made-up votes' in text
     assert 'Control and openness' in text and 'Where participants are split' in text
+    assert 'How many took part, and what this does not show' in text
+    assert 'Who took part, and what this does not show' not in text
 
 
 def test_anyone_can_try_the_participant_page_and_nothing_is_recorded(app, enabled):
@@ -971,8 +971,69 @@ def test_the_product_page_leads_to_the_example_the_demo_and_sign_up(app, enabled
 
     for href in ('/consultations/start', '/consultations/example-report', '/consultations/demo'):
         assert f'href="{href}"' in page
-    assert 'no card needed' in page
+    assert 'No card needed' in page
+    assert 'Continue for £99 for 30 days or £600 a year' in page
     assert 'Why not a survey or a live poll?' in page
+
+
+def test_the_product_page_examples_obey_the_same_rules_as_a_real_report(app, enabled, client):
+    from app.consultations import example
+
+    with app.test_request_context():
+        cases = example.use_case_examples()
+        highlights = example.example_highlights()
+
+    # Each example, and the four statements a visitor can answer, shows one finding of each kind.
+    four = ['agrees', 'disagrees', 'unsure', 'split']
+    assert [row['verdict'] for row in highlights] == four
+    for case in cases:
+        assert [row['verdict'] for row in case['findings']] == four, case['key']
+        assert all(row['total'] <= case['participant_count'] for row in case['findings']), case['key']
+
+    page = client.get('/consultations/self-serve').get_data(as_text=True)
+    for case in cases:
+        assert case['question'] in page and case['findings'][0]['action'] in page
+    assert 'Made-up examples, not customer results.' in page
+    assert 'Nothing you tap is recorded.' in page
+    assert 'Every question you take live in the next 30 days, for one organisation.' in page
+    assert 'What if my event has several sessions?' in page
+    assert 'A 30-day pass covers every talk you run in that time.' in page
+    assert '£99 for 30 days, any number of participants' in page
+
+
+def test_the_big_screen_shows_the_code_then_the_results(app, db, enabled, host, client, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    for _ in range(12):
+        _vote_all(_participant(app), consultation, lambda s: 1)
+    _login(client, host)
+    base = f'/consultations/{consultation.id}/present'
+
+    join = client.get(base)
+    page = join.get_data(as_text=True)
+    assert join.status_code == 200 and join.headers['Cache-Control'] == 'private, no-store'
+    assert f'/c/{consultation.access_token}' in page and 'answered so far' in page
+    assert page.count('<main') == 1 and 'Or type this address' in page
+    assert 'id="join" class=" grid' in page and 'id="results-view" class="hidden ' in page
+    for tracker in ('posthog', 'googletagmanager'):
+        assert tracker not in page.lower()
+
+    # The host chooses when the room sees the results.
+    assert 'id="results-view" class=" flex' in client.get(f'{base}?view=results').get_data(as_text=True)
+    fragment = client.get(f'{base}?fragment=1').get_data(as_text=True)
+    assert '<html' not in fragment and 'They agree' in fragment and 'statements' in fragment
+    assert DRAFTED[0]['content'] in fragment
+
+    # Once voting has closed the code no longer works, so only the results are shown.
+    service.close(consultation)
+    closed = client.get(base).get_data(as_text=True)
+    assert 'id="join"' not in closed and 'took part' in closed
+
+    stranger = User(username='other', email='other@example.org', password='x', email_verified=True)
+    db.session.add(stranger)
+    db.session.commit()
+    visitor = app.test_client()
+    _login(visitor, stranger)
+    assert visitor.get(base).status_code == 404
 
 
 def test_host_screens_do_not_send_their_content_to_analytics(app, enabled, host, client, monkeypatch):
@@ -1011,6 +1072,67 @@ def _admin(db):
     db.session.add(admin)
     db.session.commit()
     return admin
+
+
+def test_consultation_analytics_does_not_send_the_question(app, monkeypatch):
+    sent = {}
+
+    class _PostHog:
+        project_api_key = 'phc_test'
+
+    def _capture(**kwargs):
+        sent.update(kwargs)
+        return True
+
+    monkeypatch.setitem(__import__('sys').modules, 'posthog', _PostHog)
+    monkeypatch.setattr('app.lib.posthog_utils.safe_posthog_capture', _capture)
+    from app.consultations.analytics import capture_consultation_event
+
+    capture_consultation_event(
+        'consultation_created',
+        user_id=4,
+        insert_id='consultation_created:9',
+        properties={
+            'consultation_id': 9,
+            'question': 'Should we raise the membership fee?',
+            'organisation_name': 'Riverside Members Club',
+        },
+    )
+
+    assert sent['event'] == 'consultation_created'
+    assert sent['distinct_id'] == '4'
+    assert sent['properties'] == {'consultation_id': 9}
+    assert 'membership fee' not in str(sent) and 'Riverside' not in str(sent)
+
+
+def test_an_admin_can_draft_past_the_daily_cap(app, enabled, host, db):
+    host.is_admin = True
+    db.session.commit()
+    app.config['CONSULTATION_DRAFTS_PER_DAY'] = 0
+    consultation = service.create_consultation(host, question='What should we change first?', organisation_name='Org')
+
+    _job, created = jobs.enqueue_drafting(consultation)
+
+    assert created is True
+
+
+def test_the_admin_consultations_page_counts_without_the_question(app, db, enabled, host, client, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    _login(client, _admin(db))
+
+    page = client.get('/admin/consultations')
+    dashboard = client.get('/admin/dashboard')
+
+    assert page.status_code == 200
+    body = page.get_data(as_text=True)
+    assert 'Live now' in body and '30-day passes' in body and 'Paid within 60 days' in body
+    assert 'Trials started' in dashboard.get_data(as_text=True)
+    assert consultation.question not in body
+    assert host.email not in body
+    assert 'Consultations' in dashboard.get_data(as_text=True)
+
+    _login(client, host)
+    assert client.get('/admin/consultations').status_code == 302
 
 
 def test_site_admins_cannot_see_or_change_a_customers_consultation(app, db, enabled, host, client, monkeypatch):

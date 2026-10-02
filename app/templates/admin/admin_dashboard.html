@@ -90,6 +90,36 @@
     </div>
 </div>
 
+<!-- Consultations: counts only. The questions themselves stay off this page. -->
+<div class="mt-8">
+    <div class="flex items-baseline justify-between mb-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Consultations</h3>
+        <a href="{{ url_for('admin.consultation_metrics_page') }}" class="text-sm font-medium text-primary-600 hover:text-primary-700">View consultations</a>
+    </div>
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div class="bg-white overflow-hidden shadow rounded-lg p-5">
+            <p class="text-sm font-medium text-gray-500">Trials started</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ consultations.trials_started }}</p>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg p-5">
+            <p class="text-sm font-medium text-gray-500">Open trials</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ consultations.open_trials }}</p>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg p-5">
+            <p class="text-sm font-medium text-gray-500">Live now</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ consultations.live }}</p>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg p-5">
+            <p class="text-sm font-medium text-gray-500">30-day passes, 30 days</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ consultations.passes_30d }}</p>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg p-5">
+            <p class="text-sm font-medium text-gray-500">Annual plans</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ consultations.active_plans }}</p>
+        </div>
+    </div>
+</div>
+
 <!-- Quick Actions -->
 <div class="mt-8">
     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>

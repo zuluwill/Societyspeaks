@@ -5,6 +5,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # Only import routes after blueprint creation
 from . import routes
+from . import consultations  # noqa: F401  (registers /admin/consultations)
 
 # Import Polymarket admin routes (optional - only if module exists)
 try:

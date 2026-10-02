@@ -1,0 +1,153 @@
+{% extends "admin/_admin_base.html" %}
+
+{% block title %}Consultations - Society Speaks{% endblock %}
+
+{% block admin_content %}
+<div class="px-4 sm:px-0">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Consultations</h1>
+        <p class="mt-1 text-sm text-gray-500">Counts and payments, as of {{ now.strftime('%Y-%m-%d %H:%M') }} UTC. A customer's question and report are not shown here.</p>
+    </div>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">The first {{ review_cohort }} live trials</h2>
+    <p class="text-sm text-gray-600 mb-4">An initial review, not a verdict. A trial is counted as paid only after its 60 days are over. {{ trials_window_open }} still have that window open.</p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-sm p-4 ring-2 ring-primary-400">
+            <p class="text-sm text-gray-500">Trials started</p>
+            <p class="text-2xl font-bold text-primary-600">{{ trials_started }} <span class="text-base font-medium text-gray-400">/ {{ review_cohort }}</span></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Open now</p>
+            <p class="text-2xl font-bold text-gray-900">{{ open_trials }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">60 days complete</p>
+            <p class="text-2xl font-bold text-gray-900">{{ trials_window_complete }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Paid within 60 days</p>
+            <p class="text-2xl font-bold text-gray-900">{{ paid_within_60 }}{% if trials_window_complete %} <span class="text-base font-medium text-gray-400">of {{ trials_window_complete }}</span>{% endif %}</p>
+        </div>
+    </div>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">What those trials did</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Completed consultations</p>
+            <p class="text-2xl font-bold text-gray-900">{{ completed }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Reports built</p>
+            <p class="text-2xl font-bold text-gray-900">{{ reports }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Hosts who ran another</p>
+            <p class="text-2xl font-bold text-gray-900">{{ returning_hosts }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Repeated work domains</p>
+            <p class="text-2xl font-bold text-gray-900">{{ repeated_domains }}</p>
+        </div>
+    </div>
+    <p class="text-xs text-gray-400 mb-8">A repeated work domain is an abuse signal. It does not stop the trial. Domain names are not listed here. Model use below is the recorded token count for consultations, not a pound cost, and it does not include card fees.</p>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Where trials came from</h2>
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
+        {% if acquisition %}
+        <ul class="divide-y divide-gray-100">
+            {% for row in acquisition %}
+            <li class="flex items-baseline justify-between py-2 text-sm">
+                <span class="font-medium text-gray-900">{{ row.source }}</span>
+                <span class="text-gray-600">{{ row.trials }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <p class="text-xs text-gray-400 mt-2">direct means the link had no campaign source when the trial started.</p>
+        {% else %}
+        <p class="text-sm text-gray-500">No trials yet.</p>
+        {% endif %}
+    </div>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Model use, last 30 days</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Calls</p>
+            <p class="text-2xl font-bold text-gray-900">{{ '{:,}'.format(llm_calls_30d) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Input tokens</p>
+            <p class="text-2xl font-bold text-gray-900">{{ '{:,}'.format(llm_input_tokens_30d) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Output tokens</p>
+            <p class="text-2xl font-bold text-gray-900">{{ '{:,}'.format(llm_output_tokens_30d) }}</p>
+        </div>
+    </div>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Hosts who started a consultation</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-sm p-4 ring-2 ring-primary-400">
+            <p class="text-sm text-gray-500">First consultation, 7 days</p>
+            <p class="text-2xl font-bold text-primary-600">{{ hosts_7d }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4 ring-2 ring-primary-400">
+            <p class="text-sm text-gray-500">First consultation, 30 days</p>
+            <p class="text-2xl font-bold text-primary-600">{{ hosts_30d }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Hosts, all time</p>
+            <p class="text-2xl font-bold text-gray-900">{{ hosts }}</p>
+        </div>
+    </div>
+    <p class="text-xs text-gray-400 -mt-6 mb-8">An email sign-up that has not started a consultation yet is the PostHog event <code class="bg-gray-100 px-1 rounded">consultation_signed_up</code>.</p>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Consultations</h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Draft</p>
+            <p class="text-2xl font-bold text-gray-900">{{ drafts }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Live now</p>
+            <p class="text-2xl font-bold text-gray-900">{{ live }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Closed</p>
+            <p class="text-2xl font-bold text-gray-900">{{ closed }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Taken live, 7 days</p>
+            <p class="text-2xl font-bold text-gray-900">{{ went_live_7d }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Taken live, 30 days</p>
+            <p class="text-2xl font-bold text-gray-900">{{ went_live_30d }}</p>
+        </div>
+    </div>
+
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Payments, last 30 days</h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">30-day passes</p>
+            <p class="text-2xl font-bold text-gray-900">{{ passes_30d }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Pass revenue</p>
+            <p class="text-2xl font-bold text-gray-900">£{{ '%.2f'|format(revenue_30d_pence / 100) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Refunds</p>
+            <p class="text-2xl font-bold text-gray-900">{{ refunds_30d }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Annual plans started</p>
+            <p class="text-2xl font-bold text-gray-900">{{ plans_started_30d }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <p class="text-sm text-gray-500">Annual plans in force</p>
+            <p class="text-2xl font-bold text-gray-900">{{ active_plans }}</p>
+        </div>
+    </div>
+    <p class="text-xs text-gray-400 mt-3">A 30-day pass is £99, paid once. The annual plan is £600 and renews. Pass revenue is what was paid and not refunded, excluding VAT. Annual revenue is not added here, because the charge sits on the Stripe subscription.</p>
+</div>
+{% endblock %}

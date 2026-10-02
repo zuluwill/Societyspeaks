@@ -353,8 +353,13 @@ class Config:
     )
     # Prices in pence, excluding VAT. A Stripe Price id, when set, wins over the
     # inline amount (use one to keep the Stripe dashboard to a single product).
-    CONSULTATION_PRICE_SINGLE_PENCE = _env_int('CONSULTATION_PRICE_SINGLE_PENCE', 24900)
-    CONSULTATION_PRICE_ANNUAL_PENCE = _env_int('CONSULTATION_PRICE_ANNUAL_PENCE', 95000)
+    # £99 for 30 days; £600 a year. Six passes are £594, so the year wins at the seventh.
+    CONSULTATION_PRICE_SINGLE_PENCE = _env_int('CONSULTATION_PRICE_SINGLE_PENCE', 9900)
+    CONSULTATION_PRICE_ANNUAL_PENCE = _env_int('CONSULTATION_PRICE_ANNUAL_PENCE', 60000)
+    # How long a one-off payment covers every consultation the organisation takes live.
+    CONSULTATION_PASS_DAYS = _env_int('CONSULTATION_PASS_DAYS', 30)
+    # Live trial from the first go-live. No card. Same features as a paid window.
+    CONSULTATION_TRIAL_DAYS = _env_int('CONSULTATION_TRIAL_DAYS', 14)
     CONSULTATION_STRIPE_PRICE_SINGLE = os.getenv('CONSULTATION_STRIPE_PRICE_SINGLE') or None
     CONSULTATION_STRIPE_PRICE_ANNUAL = os.getenv('CONSULTATION_STRIPE_PRICE_ANNUAL') or None
     # Turn on once the company is VAT registered and Stripe Tax is configured.

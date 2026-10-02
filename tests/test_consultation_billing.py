@@ -69,16 +69,139 @@ def test_an_unpaid_checkout_grants_nothing(host):
     assert billing.entitlement(host) is None
 
 
-def test_one_purchase_takes_one_consultation_live(host):
+def test_a_second_payment_starts_when_the_current_pass_ends(host):
+    from datetime import timedelta
+
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_1', payment_intent='pi_1'))
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_2', payment_intent='pi_2'))
+    first, second = ConsultationPurchase.query.order_by(ConsultationPurchase.id).all()
+
+    assert second.valid_from == first.valid_until
+    assert second.valid_until == first.valid_until + timedelta(days=30)
+    assert second.is_scheduled and not second.is_current
+    assert billing.entitlement(host) == 'purchase'
+
+    billing.go_live(_draft(host), host)
+    billing.go_live(_draft(host), host)
+    assert first.consumed_at is not None and second.consumed_at is None
+    assert billing.entitlement(host) == 'purchase'
+
+
+def test_refunding_an_unused_pass_brings_the_next_one_forward(host, db, monkeypatch):
+    from datetime import timedelta
+
+    class _Refund:
+        @staticmethod
+        def create(**kwargs):
+            pass
+
+    class _Stripe:
+        Refund = _Refund
+
+    monkeypatch.setattr(billing, 'get_stripe', lambda: _Stripe)
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_1', payment_intent='pi_1'))
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_2', payment_intent='pi_2'))
+    first, second = ConsultationPurchase.query.order_by(ConsultationPurchase.id).all()
+
+    billing.refund_purchase(host, first.id)
+
+    # The later pass moves up to today, still 30 days long, and not 60.
+    moved = db.session.get(ConsultationPurchase, second.id)
+    assert moved.is_current and not moved.is_scheduled
+    assert moved.valid_until - moved.valid_from == timedelta(days=30)
+    assert billing.entitlement(host) == 'purchase'
+
+
+def test_checkout_refuses_a_pass_while_one_is_open_or_the_annual_plan_is_active(app, host, monkeypatch):
+    monkeypatch.setattr(billing, 'get_stripe', lambda: pytest.fail('Stripe must not be called'))
     billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
+
+    with app.test_request_context():
+        with pytest.raises(billing.BillingError, match='already have a pass'):
+            billing.create_single_checkout(host)
+
+    billing.handle_stripe_event('customer.subscription.created', _subscription(host))
+    with pytest.raises(billing.BillingError, match='annual plan'):
+        billing.create_single_checkout(host)
+
+
+def test_starting_a_pass_checkout_closes_other_pass_payment_pages(app, host, db, monkeypatch):
+    host.stripe_customer_id = 'cus_1'
+    db.session.commit()
+    expired = []
+
+    class _Session:
+        @staticmethod
+        def list(**kwargs):
+            return {'data': [
+                {'id': 'cs_open_single', 'metadata': {'purpose': billing.PURPOSE_SINGLE}},
+                {'id': 'cs_open_annual', 'metadata': {'purpose': billing.PURPOSE_ANNUAL}},
+            ]}
+
+        @staticmethod
+        def expire(session_id):
+            expired.append(session_id)
+
+        @staticmethod
+        def create(**kwargs):
+            return {'id': 'cs_new', 'url': 'https://checkout.stripe.test/cs_new'}
+
+    class _Stripe:
+        class checkout:
+            Session = _Session
+
+    class _Customer:
+        id = 'cus_1'
+
+    monkeypatch.setattr(billing, 'get_stripe', lambda: _Stripe)
+    monkeypatch.setattr(billing, 'get_or_create_stripe_customer', lambda user: _Customer)
+
+    with app.test_request_context():
+        billing.create_single_checkout(host)
+
+    assert expired == ['cs_open_single']
+
+
+def test_an_admin_goes_live_without_paying_or_spending_a_pass(host, db):
+    host.is_admin = True
+    db.session.commit()
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
+    consultation = _draft(host)
+
+    billing.go_live(consultation, host)
+
+    assert consultation.covered_by == 'complimentary'
+    assert ConsultationPurchase.query.one().consumed_at is None
+    assert billing.entitlement(host) == 'complimentary'
+
+
+def test_a_pass_covers_every_consultation_until_it_expires(host, db):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
+    purchase = ConsultationPurchase.query.one()
+    assert purchase.valid_until is not None and purchase.is_current
     first, second = _draft(host), _draft(host)
 
     billing.go_live(first, host)
+    billing.go_live(second, host)
 
-    assert first.is_live and first.covered_by == 'purchase'
+    assert first.is_live and second.is_live
+    assert first.covered_by == second.covered_by == 'purchase'
+    assert first.covered_by_purchase_id == second.covered_by_purchase_id == purchase.id
+    assert purchase.consumed_at is not None
+    assert billing.entitlement(host) == 'purchase'
     with pytest.raises(billing.BillingError):
-        billing.go_live(second, host)
-    assert second.is_draft
+        billing.refund_purchase(host, purchase.id)
+
+    purchase.valid_until = utcnow_naive() - timedelta(seconds=1)
+    db.session.commit()
+    third = _draft(host)
+    with pytest.raises(billing.BillingError):
+        billing.go_live(third, host)
+    assert third.is_draft and billing.entitlement(host) is None
 
 
 def test_a_purchase_is_not_spent_when_the_consultation_cannot_go_live(host):
@@ -294,13 +417,14 @@ def test_someone_elses_checkout_session_is_not_accepted(app, host, db, client, m
 
 
 def test_the_account_page_shows_the_plan_purchases_and_refund(app, host, client):
-    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_now', payment_intent='pi_now'))
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_later', payment_intent='pi_later'))
     _login(client, host)
 
     page = client.get('/consultations/account').get_data(as_text=True)
 
-    assert '£249.00' in page and 'Not used yet' in page and 'Refund' in page
-    assert 'Annual plan: £950 a year' in page
+    assert '£249.00' in page and 'Not used yet' in page and 'Starts on' in page and 'Refund' in page
+    assert 'Annual plan: £600 a year' in page
     assert 'Manage billing' in page
 
 
@@ -371,21 +495,29 @@ def test_an_account_is_not_deleted_if_its_plan_cannot_be_cancelled(app, host, db
 
 # ── Races and out-of-order events ───────────────────────────────────────────
 
-def test_a_purchase_another_request_just_spent_is_not_spent_again(host, db, monkeypatch):
+def test_a_pass_that_expires_before_it_is_locked_is_not_used(host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+
     billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
     purchase = ConsultationPurchase.query.one()
-    first, second = _draft(host), _draft(host)
-    # The second request read the purchase as unused before the first committed.
-    stale = [purchase]
-    billing.go_live(first, host)
-    monkeypatch.setattr(billing, 'unused_purchases', lambda user: stale)
+    draft = _draft(host)
+
+    def expire_before_the_lock(user):
+        # The request saw a live pass, then the window ended before the row was locked.
+        purchase.valid_until = utcnow_naive() - timedelta(seconds=1)
+        db.session.commit()
+        return [purchase]
+
+    monkeypatch.setattr(billing, 'active_passes', expire_before_the_lock)
 
     with pytest.raises(billing.BillingError):
-        billing.go_live(second, host)
+        billing.go_live(draft, host)
 
-    db.session.expire_all()
-    assert Consultation.query.filter_by(status='live').count() == 1
-    assert ConsultationPurchase.query.one().consultation_id == first.id
+    assert draft.is_draft
+    assert purchase.consumed_at is None
+    assert purchase.consultation_id is None
 
 
 def test_a_purchase_being_refunded_cannot_take_a_consultation_live(host, db, monkeypatch):
@@ -599,9 +731,19 @@ def test_an_account_is_kept_when_its_unused_purchase_cannot_be_refunded(app, hos
 
 
 def test_a_refund_or_dispute_made_in_stripe_is_found_without_a_webhook(host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+
     billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_a', payment_intent='pi_refunded'))
     billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_b', payment_intent='pi_disputed'))
     billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_c', payment_intent='pi_fine'))
+    # These three are already-open passes, not a chain of future windows.
+    now = utcnow_naive()
+    for purchase in ConsultationPurchase.query:
+        purchase.valid_from = now - timedelta(days=1)
+        purchase.valid_until = now + timedelta(days=29)
+    db.session.commit()
     charges = {
         'pi_refunded': {'id': 'ch_1', 'refunded': True, 'disputed': False},
         'pi_disputed': {'id': 'ch_2', 'refunded': False, 'disputed': True},
@@ -718,3 +860,456 @@ def test_an_account_is_kept_when_an_unused_payment_has_no_stripe_charge(app, hos
 
     assert db.session.get(User, host.id) is not None
     assert ConsultationPurchase.query.one().status == 'paid'
+
+
+# ── The live trial ──────────────────────────────────────────────────────────
+
+def test_the_first_go_live_starts_a_trial_and_cannot_outlive_it(host):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    consultation = _draft(host)
+    consultation.closes_at = utcnow_naive() + timedelta(days=40)
+
+    billing.go_live(consultation, host)
+
+    trial = ConsultationTrial.query.one()
+    assert consultation.covered_by == 'trial'
+    assert trial.ends_at - trial.started_at == timedelta(days=14)
+    # The date they chose is kept. The sweep closes it if access ends first.
+    assert consultation.closes_at > trial.ends_at
+    assert billing.entitlement(host) == 'trial'
+
+
+def test_a_colleague_at_the_same_work_domain_can_start_a_trial(host, db, caplog):
+    billing.go_live(_draft(host), host)
+    colleague = User(
+        username='colleague', email='colleague@example.org', password='x', email_verified=True,
+    )
+    db.session.add(colleague)
+    db.session.commit()
+
+    billing.go_live(_draft(colleague), colleague)
+
+    assert billing.entitlement(colleague) == 'trial'
+    assert billing.work_domain_repeat(colleague) is True
+    assert 'repeats work domain example.org' in caplog.text
+
+
+def test_personal_inboxes_can_each_have_a_trial(host, db):
+    host.email = 'ada@gmail.com'
+    db.session.commit()
+    billing.go_live(_draft(host), host)
+    other = User(username='other', email='grace@gmail.com', password='x', email_verified=True)
+    db.session.add(other)
+    db.session.commit()
+
+    billing.go_live(_draft(other), other)
+
+    assert billing.entitlement(host) == 'trial'
+    assert billing.entitlement(other) == 'trial'
+
+
+def test_an_unverified_email_cannot_start_a_trial(host, db):
+    host.email_verified = False
+    db.session.commit()
+
+    with pytest.raises(billing.BillingError, match='pay'):
+        billing.go_live(_draft(host), host)
+    assert billing.entitlement(host) is None
+
+
+def test_an_open_consultation_closes_when_the_trial_ends(host, db):
+    from datetime import timedelta
+
+    from app.consultations import jobs
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    consultation = _draft(host)
+    billing.go_live(consultation, host)
+    trial = ConsultationTrial.query.one()
+    trial.ends_at = utcnow_naive() - timedelta(seconds=1)
+    consultation.closes_at = utcnow_naive() + timedelta(days=5)
+    db.session.commit()
+
+    jobs.run_sweep()
+
+    assert consultation.status == 'closed'
+
+
+def test_paying_keeps_a_later_closing_date_open(host, db):
+    from datetime import timedelta
+
+    from app.consultations import jobs
+    from app.lib.time import utcnow_naive
+
+    consultation = _draft(host)
+    billing.go_live(consultation, host)
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_extend'))
+    consultation.closes_at = utcnow_naive() + timedelta(days=40)
+    db.session.commit()
+
+    jobs.run_sweep()
+
+    assert consultation.status == 'live'
+    assert billing.access_ends_at(host) > consultation.closes_at
+
+
+def test_an_access_warning_is_sent_once(host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    consultation = _draft(host)
+    billing.go_live(consultation, host)
+    trial = ConsultationTrial.query.one()
+    trial.ends_at = utcnow_naive() + timedelta(days=1)
+    db.session.commit()
+    sent = []
+    monkeypatch.setattr(
+        'app.consultations.emails.notify_access_ending',
+        lambda *args, **kwargs: sent.append(kwargs) or True,
+    )
+
+    assert billing.warn_expiring_access() == 1
+    assert billing.warn_expiring_access() == 0
+    assert len(sent) == 1
+    assert trial.ending_notified_at is not None
+
+
+def test_the_admin_review_waits_for_each_trials_sixty_days(host, db):
+    from datetime import timedelta
+
+    from app.admin.consultations import consultation_metrics
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial, LLMUsage
+
+    billing.go_live(_draft(host), host)
+    colleague = User(
+        username='colleague', email='colleague@example.org', password='x', email_verified=True,
+    )
+    db.session.add(colleague)
+    db.session.commit()
+    billing.go_live(_draft(colleague), colleague)
+    service.publish(_draft(host), covered_by='trial')
+
+    early = ConsultationTrial.query.filter_by(user_id=host.id).one()
+    early.started_at = utcnow_naive() - timedelta(days=70)
+    early.ends_at = early.started_at + timedelta(days=14)
+    db.session.add(ConsultationPurchase(
+        user_id=host.id,
+        stripe_checkout_session_id='cs_review',
+        amount_pence=9900,
+        currency='gbp',
+        status=ConsultationPurchase.STATUS_PAID,
+        created_at=early.started_at + timedelta(days=20),
+        valid_from=early.started_at + timedelta(days=20),
+        valid_until=early.started_at + timedelta(days=50),
+    ))
+    late = ConsultationTrial.query.filter_by(user_id=colleague.id).one()
+    late.started_at = utcnow_naive() - timedelta(days=80)
+    db.session.add(ConsultationPlan(
+        user_id=colleague.id,
+        status='active',
+        created_at=late.started_at + timedelta(days=70),
+    ))
+    db.session.add(LLMUsage(
+        purpose='consultation_report', provider='anthropic', model='test',
+        input_tokens=1000, output_tokens=200,
+        consultation_id=Consultation.query.filter_by(owner_user_id=host.id).first().id,
+    ))
+    db.session.commit()
+
+    metrics = consultation_metrics()
+
+    assert metrics['trials_started'] == 2
+    assert metrics['trials_window_complete'] == 2
+    assert metrics['paid_within_60'] == 1
+    assert metrics['returning_hosts'] == 1
+    assert metrics['repeated_domains'] == 1
+    assert metrics['llm_input_tokens_30d'] == 1000
+    assert metrics['acquisition'] == [{'source': 'direct', 'trials': 2}]
+    assert 'example.org' not in str(metrics)
+
+
+def test_an_open_pass_is_credited_only_once_the_annual_plan_starts(app, host, db, monkeypatch):
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
+    purchase = ConsultationPurchase.query.one()
+    created = {}
+
+    class _Coupon:
+        @staticmethod
+        def create(**kwargs):
+            created['coupon'] = kwargs
+            return {'id': 'coupon_1'}
+
+    class _Session:
+        @staticmethod
+        def list(**kwargs):
+            return {'data': []}
+
+        @staticmethod
+        def create(**kwargs):
+            created['session'] = kwargs
+            return {'id': 'cs_annual'}
+
+    class _Stripe:
+        Coupon = _Coupon
+
+        class checkout:
+            Session = _Session
+
+    class _Customer:
+        id = 'cus_1'
+
+    monkeypatch.setattr(billing, 'get_stripe', lambda: _Stripe)
+    monkeypatch.setattr(billing, 'get_or_create_stripe_customer', lambda user: _Customer)
+
+    with app.test_request_context():
+        billing.create_annual_checkout(host)
+
+    assert created['coupon']['amount_off'] == purchase.amount_pence
+    assert created['session']['discounts'] == [{'coupon': 'coupon_1'}]
+    assert 'billing_cycle_anchor' not in created['session'].get('subscription_data', {})
+    assert purchase.credited_at is None
+
+    metadata = created['session']['subscription_data']['metadata']
+    billing.handle_stripe_event(
+        'customer.subscription.created', {**_subscription(host), 'metadata': metadata},
+    )
+
+    assert purchase.credited_at is not None
+    assert billing.uncredited_pass_credit(host) == (0, [])
+
+
+# ── Access edges found in review ────────────────────────────────────────────
+
+def test_a_consultation_paid_for_before_passes_runs_to_its_own_closing_date(host, db):
+    from app.consultations import jobs
+    from app.lib.time import utcnow_naive
+
+    consultation = _draft(host)
+    service.publish(consultation, covered_by=Consultation.COVERED_BY_PURCHASE)
+    db.session.add(ConsultationPurchase(
+        user_id=host.id, stripe_checkout_session_id='cs_old', amount_pence=24900,
+        consumed_at=utcnow_naive(), consultation_id=consultation.id,
+    ))
+    db.session.commit()
+
+    jobs.run_sweep()
+
+    assert billing.entitlement(host) is None, 'the old payment is not a pass'
+    assert consultation.status == 'live' and not billing.access_lapsed(consultation)
+
+
+def test_an_account_that_used_the_trial_can_be_deleted(app, host, db, monkeypatch):
+    from app.settings.routes import purge_user_account
+
+    class _Stripe:
+        class error:
+            InvalidRequestError = type('InvalidRequestError', (Exception,), {})
+
+    monkeypatch.setattr(billing, 'get_stripe', lambda: _Stripe)
+    monkeypatch.setattr('app.billing.service.get_stripe', lambda: _Stripe)
+    billing.go_live(_draft(host), host)
+    host_id = host.id
+
+    purge_user_account(host)
+    db.session.commit()
+
+    assert db.session.get(User, host_id) is None
+
+
+def test_a_pass_taken_off_the_annual_plan_cannot_also_be_refunded(app, host, db, monkeypatch):
+    from app.lib.time import utcnow_naive
+
+    monkeypatch.setattr(billing, 'get_stripe', lambda: pytest.fail('Stripe must not be called'))
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host))
+    purchase = ConsultationPurchase.query.one()
+    assert purchase.is_unused
+    purchase.credited_at = utcnow_naive()
+    db.session.commit()
+
+    assert not purchase.is_unused and billing.unused_purchases(host) == []
+    with app.test_request_context():
+        with pytest.raises(billing.BillingError, match='already been used'):
+            billing.refund_purchase(host, purchase.id)
+    assert purchase.status == ConsultationPurchase.STATUS_PAID
+
+
+def test_a_pass_that_keeps_a_trial_consultation_open_has_been_used(app, host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.consultations import jobs
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    consultation = _draft(host)
+    billing.go_live(consultation, host)
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_after_trial'))
+    purchase = ConsultationPurchase.query.one()
+    assert purchase.is_scheduled and purchase.is_unused, 'bought during the trial, it has not started'
+
+    # The trial ends and the pass begins. The consultation is still open.
+    now = utcnow_naive()
+    ConsultationTrial.query.one().ends_at = now - timedelta(seconds=1)
+    purchase.valid_from = now - timedelta(seconds=1)
+    purchase.valid_until = now + timedelta(days=30)
+    consultation.closes_at = now + timedelta(days=10)
+    db.session.commit()
+
+    jobs.run_sweep()
+
+    assert consultation.status == 'live'
+    assert consultation.covered_by == 'purchase' and consultation.covered_by_purchase_id == purchase.id
+    assert not purchase.is_unused
+    monkeypatch.setattr(billing, 'get_stripe', lambda: pytest.fail('Stripe must not be called'))
+    with app.test_request_context():
+        with pytest.raises(billing.BillingError, match='already been used'):
+            billing.refund_purchase(host, purchase.id)
+
+
+def test_a_refund_is_refused_as_soon_as_the_pass_is_what_keeps_a_consultation_open(app, host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    consultation = _draft(host)
+    billing.go_live(consultation, host)
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_after_trial'))
+    purchase = ConsultationPurchase.query.one()
+    now = utcnow_naive()
+    ConsultationTrial.query.one().ends_at = now - timedelta(seconds=1)
+    purchase.valid_from = now - timedelta(seconds=1)
+    purchase.valid_until = now + timedelta(days=30)
+    db.session.commit()
+
+    # No sweep has run yet: the refund itself notices the pass is in use.
+    monkeypatch.setattr(billing, 'get_stripe', lambda: pytest.fail('Stripe must not be called'))
+    with app.test_request_context():
+        with pytest.raises(billing.BillingError, match='already been used'):
+            billing.refund_purchase(host, purchase.id)
+    assert db.session.get(ConsultationPurchase, purchase.id).consumed_at is not None
+
+
+def test_a_plan_that_renews_is_not_told_its_access_is_ending(host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+
+    billing.handle_stripe_event('customer.subscription.created', _subscription(host))
+    billing.go_live(_draft(host), host)
+    plan = ConsultationPlan.query.one()
+    plan.current_period_end = utcnow_naive() + timedelta(days=1)
+    db.session.commit()
+    monkeypatch.setattr(
+        'app.consultations.emails.notify_access_ending',
+        lambda *args, **kwargs: pytest.fail('a renewing plan is not ending'),
+    )
+
+    assert billing.access_ends_at(host) is None
+    assert billing.warn_expiring_access() == 0
+
+    plan.cancel_at_period_end = True
+    db.session.commit()
+    assert billing.access_ends_at(host) == plan.current_period_end
+
+
+def test_a_closed_consultation_cannot_be_reopened_without_access(app, host, db, client):
+    from datetime import timedelta
+
+    from app.consultations import jobs
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    consultation = _draft(host)
+    billing.go_live(consultation, host)
+    ConsultationTrial.query.one().ends_at = utcnow_naive() - timedelta(seconds=1)
+    db.session.commit()
+    jobs.run_sweep()
+    assert consultation.status == 'closed'
+    _login(client, host)
+
+    response = client.post(f'/consultations/{consultation.id}/extend', data={'days': 7})
+
+    assert response.status_code == 302 and response.headers['Location'].endswith('/consultations/account')
+    assert db.session.get(Consultation, consultation.id).status == 'closed'
+
+
+def test_the_next_pass_can_be_bought_in_the_last_week_of_the_open_one(app, host, db, client):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_1', payment_intent='pi_1'))
+    purchase = ConsultationPurchase.query.one()
+
+    def account_page():
+        _login(client, host)
+        response = client.get('/consultations/account')
+        assert response.status_code == 200
+        return response.get_data(as_text=True)
+
+    with app.test_request_context():
+        assert billing.pass_purchase_blocker(host) is not None
+    assert 'Buy a 30-day pass' not in account_page()
+
+    purchase.valid_until = utcnow_naive() + timedelta(days=3)
+    db.session.commit()
+    with app.test_request_context():
+        assert billing.pass_purchase_blocker(host) is None
+    assert 'Buy a 30-day pass' in account_page()
+
+    # Once the next one is paid for, a third is refused until that one is nearly over.
+    billing.handle_stripe_event('checkout.session.completed', _checkout_session(host, session_id='cs_2', payment_intent='pi_2'))
+    second = ConsultationPurchase.query.order_by(ConsultationPurchase.id.desc()).first()
+    assert second.valid_from == purchase.valid_until
+    with app.test_request_context():
+        assert billing.pass_purchase_blocker(host) is not None
+
+
+def test_a_host_on_the_trial_can_buy_a_pass_from_the_account_page(app, host, db, client):
+    billing.go_live(_draft(host), host)
+    _login(client, host)
+
+    response = client.get('/consultations/account')
+    page = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'Buy a 30-day pass' in page and 'name="plan" value="single"' in page
+
+
+def test_an_access_warning_that_fails_to_send_is_tried_again(host, db, monkeypatch):
+    from datetime import timedelta
+
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+
+    billing.go_live(_draft(host), host)
+    trial = ConsultationTrial.query.one()
+    trial.ends_at = utcnow_naive() + timedelta(days=1)
+    db.session.commit()
+    outcomes = iter([False, True])
+    monkeypatch.setattr(
+        'app.consultations.emails.notify_access_ending', lambda *args, **kwargs: next(outcomes),
+    )
+
+    assert billing.warn_expiring_access() == 0
+    assert ConsultationTrial.query.one().ending_notified_at is None
+    assert billing.warn_expiring_access() == 1
+    assert ConsultationTrial.query.one().ending_notified_at is not None
+
+
+def test_a_disposable_inbox_cannot_start_a_trial(host, db):
+    host.email = 'someone@mailinator.com'
+    db.session.commit()
+
+    assert not billing.trial_available(host)
+    with pytest.raises(billing.BillingError):
+        billing.go_live(_draft(host), host)
+    assert Consultation.query.one().status == 'draft'

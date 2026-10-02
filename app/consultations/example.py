@@ -141,3 +141,173 @@ def example_narrative() -> dict:
             _('Which fees matter most to members?'),
         ],
     }
+
+
+# ── The product page ────────────────────────────────────────────────────────
+
+# One statement for each kind of finding, in the order the product page lets a
+# visitor answer them.
+_HIGHLIGHT_IDS = (1, 4, 7, 2)
+
+
+def example_highlights() -> list:
+    """Four rows of the worked example, one per kind of finding."""
+    rows = {row['statement_id']: row for row in example_report_data()['statements']}
+    return [rows[statement_id] for statement_id in _HIGHLIGHT_IDS]
+
+
+def _use_cases() -> list:
+    """``(key, sector, question, how it was shared, took part, findings)``.
+
+    Each finding is ``(wording, agree, disagree, unsure, what it lets you do)``.
+    """
+    return [
+        (
+            'members', _('Membership bodies'),
+            _('Should we raise membership fees next year?'),
+            _('Link in the members’ newsletter, open for a week'), 212,
+            [
+                (_('A rise of up to £10 a year is acceptable if services are protected.'), 156, 30, 26,
+                 _('Take a rise of up to £10 to the AGM, tied to protecting services.')),
+                (_('Fees should be frozen, even if it means cutting the events programme.'), 40, 150, 22,
+                 _('Take the freeze off the table.')),
+                (_('Paying monthly would make membership easier to afford.'), 52, 38, 122,
+                 _('Explain how monthly payments would work, then ask again.')),
+                (_('Members under 30 should pay a lower fee.'), 96, 88, 28,
+                 _('Do not force a vote yet. Find out what each side is worried about.')),
+            ],
+        ),
+        (
+            'charities', _('Charities and trustees'),
+            _('Where should we focus over the next three years?'),
+            _('Emailed to staff and volunteers before the board away-day'), 86,
+            [
+                (_('We should do fewer things and do them better.'), 64, 10, 12,
+                 _('Give the board a mandate to shorten the programme list.')),
+                (_('We should open a second site.'), 14, 58, 14,
+                 _('Drop the second site from the draft strategy.')),
+                (_('Our reserves are large enough for us to take more risk.'), 15, 17, 54,
+                 _('Share the reserves position in plain figures before asking again.')),
+                (_('We should take on more government contracts.'), 36, 38, 12,
+                 _('Put contracts on the away-day agenda as an open question.')),
+            ],
+        ),
+        (
+            'teams', _('Teams and staff'),
+            _('How should we work together from January?'),
+            _('Link in the all-staff message, open for three days'), 58,
+            [
+                (_('Two fixed office days a week would work for me.'), 41, 9, 8,
+                 _('Set two fixed days, knowing most of the team is behind it.')),
+                (_('Everyone should be in the office five days a week.'), 5, 48, 5,
+                 _('Stop spending meetings on a full return.')),
+                (_('It is clear what is expected of me on the days I work from home.'), 12, 14, 32,
+                 _('Write down what a home-working day should look like.')),
+                (_('Each team should choose its own office days.'), 25, 24, 9,
+                 _('Try both ways in two teams before choosing.')),
+            ],
+        ),
+        (
+            'events', _('Events and conferences'),
+            _('What should our sector do about AI this year?'),
+            _('QR code on the opening slide of the closing panel'), 118,
+            [
+                (_('Every organisation here needs a written AI policy this year.'), 92, 12, 14,
+                 _('Open the panel with it: the room has already decided.')),
+                (_('We should stop using AI tools until regulation catches up.'), 13, 90, 15,
+                 _('Skip the debate about a ban.')),
+                (_('I understand how AI tools use my organisation’s data.'), 20, 24, 74,
+                 _('Plan a follow-up session on data.')),
+                (_('AI will cut the number of jobs in our sector within five years.'), 50, 47, 21,
+                 _('Hand the split to the panel as its first question.')),
+            ],
+        ),
+        (
+            'research', _('Think tanks and researchers'),
+            _('How should the city pay for better buses?'),
+            _('Sent to newsletter readers alongside the draft paper'), 326,
+            [
+                (_('Bus fares should be capped at £2.'), 251, 40, 35,
+                 _('Lead the paper with the proposal readers back.')),
+                (_('Cutting quiet routes to pay for busier ones is acceptable.'), 46, 232, 48,
+                 _('Record it as a red line.')),
+                (_('Franchising would give the city better buses than it has now.'), 62, 49, 215,
+                 _('Explain franchising before asking for a view on it.')),
+                (_('A workplace parking levy is a fair way to pay for buses.'), 137, 142, 47,
+                 _('Run a second, narrower consultation on the levy.')),
+            ],
+        ),
+        (
+            'publishers', _('Publishers and podcasts'),
+            _('Should the voting age be lowered to 16?'),
+            _('Link in the show notes after the episode'), 540,
+            [
+                (_('Schools should teach pupils how to register and vote.'), 464, 38, 38,
+                 _('Report back what your audience agrees on in the next episode.')),
+                (_('Sixteen-year-olds are too easily influenced to vote.'), 152, 313, 75,
+                 _('Say plainly that your audience rejects the argument.')),
+                (_('Lowering the voting age would change who wins elections.'), 108, 97, 335,
+                 _('Make the evidence the subject of an episode.')),
+                (_('The voting age should be 16 for every UK election.'), 232, 227, 81,
+                 _('Invite a guest from each side of the split.')),
+            ],
+        ),
+    ]
+
+
+def _use_case_stories() -> dict:
+    """``key -> (the situation the question comes out of, what the findings add up to)``."""
+    return {
+        'members': (
+            _('The AGM is three weeks away, costs are up, and the loudest members want a freeze.'),
+            _('A modest rise has a mandate. The freeze the loudest members wanted does not.'),
+        ),
+        'charities': (
+            _('The board sets the strategy next month. Staff and volunteers have views nobody has asked for.'),
+            _('People want focus, not growth. On reserves they need figures, not persuasion.'),
+        ),
+        'teams': (
+            _('The lease is up for renewal. Everyone has a view on office days and nobody says it in the all-hands.'),
+            _('Two fixed days is settled. The real argument is over who chooses them.'),
+        ),
+        'events': (
+            _('Three hundred people, one panel, forty minutes. The same five would ask all the questions.'),
+            _('The room wants a policy, not a ban, and is unsure how AI tools use its data.'),
+        ),
+        'research': (
+            _('The draft paper makes four proposals. You want to know which will land before you publish.'),
+            _('The fare cap is the headline. The parking levy needs more work before it goes in the paper.'),
+        ),
+        'publishers': (
+            _('The episode drew more replies than any other. Replies only tell you what the keenest listeners think.'),
+            _('Your audience agrees on teaching it in schools and is evenly divided on the vote itself.'),
+        ),
+    }
+
+
+def use_case_examples() -> list:
+    """Made-up consultations for the product page, one per kind of organisation.
+
+    Each shows one finding of each kind, worked out by ``classify`` like the
+    worked example above.
+    """
+    examples = []
+    stories = _use_case_stories()
+    for key, sector, question, how, participants, findings in _use_cases():
+        rows = []
+        for index, (content, agree, disagree, unsure, action) in enumerate(findings, start=1):
+            row = classify(StatementTally(index, agree=agree, disagree=disagree, unsure=unsure)).to_dict()
+            row['content'] = content
+            row['action'] = action
+            rows.append(row)
+        examples.append({
+            'key': key,
+            'sector': sector,
+            'question': question,
+            'situation': stories[key][0],
+            'takeaway': stories[key][1],
+            'how': how,
+            'participant_count': participants,
+            'findings': rows,
+        })
+    return examples

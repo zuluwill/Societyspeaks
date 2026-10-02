@@ -58,6 +58,8 @@ def _log_admin_audit_event(action, target_type=None, target_id=None, metadata=No
 @login_required
 @admin_required
 def dashboard():
+    from app.admin.consultations import consultation_metrics
+
     users_count = User.query.count()
     individual_profiles_count = IndividualProfile.query.count()
     company_profiles_count = CompanyProfile.query.count()
@@ -68,7 +70,8 @@ def dashboard():
         users_count=users_count,
         individual_profiles_count=individual_profiles_count,
         company_profiles_count=company_profiles_count,
-        discussions_count=discussions_count
+        discussions_count=discussions_count,
+        consultations=consultation_metrics(),
     )
 
 

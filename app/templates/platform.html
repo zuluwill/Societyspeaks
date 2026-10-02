@@ -1022,7 +1022,7 @@
       <h2 class="text-3xl font-bold text-gray-900">{{ _('Who pays?') }}</h2>
       <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">
         {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
-        {{ _('Free for citizens. Run a consultation with your own audience from £249. Facilitated plans for public bodies. Publisher embeds from £49 a month.') }}
+        {{ _('Free for citizens. Consultations: %(days)d days free, then £%(price)s for 30 days. Facilitated plans for public bodies. Publisher embeds from £49 a month.', days=config.CONSULTATION_TRIAL_DAYS, price=config.CONSULTATION_PRICE_SINGLE_PENCE // 100) }}
         {% else %}
         {{ _('Free for citizens. Facilitated plans for public bodies. Separate self-serve pricing for publisher embeds.') }}
         {% endif %}
@@ -1047,9 +1047,9 @@
           {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
           <tr class="hover:bg-gray-50">
             <td class="px-5 py-4 text-gray-900 font-medium align-top">{{ _('Membership bodies, charities, teams and events') }}</td>
-            <td class="px-5 py-4 text-gray-600 align-top">{{ _('Ask your own members, staff or audience one question and get a report') }}</td>
+            <td class="px-5 py-4 text-gray-600 align-top">{{ _('A 30-day pass: ask your own members, staff or audience, with a report for each question') }}</td>
             <td class="px-5 py-4 text-right font-semibold text-gray-900 whitespace-nowrap align-top">
-              <a href="{{ url_for('consultations.landing') }}" class="text-primary-600 hover:underline">{{ _('from £249') }}</a>
+              <a href="{{ url_for('consultations.landing') }}" class="text-primary-600 hover:underline">{{ _('£%(price)s', price=config.CONSULTATION_PRICE_SINGLE_PENCE // 100) }}</a>
             </td>
           </tr>
           {% endif %}

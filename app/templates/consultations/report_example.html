@@ -12,25 +12,48 @@
 
 {% block content %}
 <div class="bg-gray-50">
-  <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-    <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 print:hidden">
-      <p class="text-sm font-semibold text-blue-900">{{ _('This is an example') }}</p>
+  <div class="bg-slate-950 text-white print:hidden">
+    <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+      <p class="text-sm font-semibold uppercase tracking-wider text-blue-300">{{ _('This is an example') }}</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{{ _('The report you get back') }}</h1>
       {% if illustration %}
-      <p class="mt-1 text-sm leading-relaxed text-blue-900">{{ _('It is the report you receive, shown with a made-up organisation and made-up votes. The results are worked out by the same rules as a real report. Yours is built from your own audience’s answers to your own question.') }}</p>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{{ _('It is the report you receive, shown with a made-up organisation and made-up votes. The results are worked out by the same rules as a real report. Yours is built from your own audience’s answers to your own question.') }}</p>
       {% else %}
-      <p class="mt-1 text-sm leading-relaxed text-blue-900">{{ _('It is the report format you receive, built from the real votes on a public Society Speaks discussion. Yours is built from your own audience’s answers to your own question.') }}</p>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{{ _('It is the report format you receive, built from the real votes on a public Society Speaks discussion. Yours is built from your own audience’s answers to your own question.') }}</p>
       {% endif %}
-      <p class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-        <a href="{{ url_for('consultations.landing') }}" class="{{ link_primary() }}">{{ _('How consultations work and what they cost') }} →</a>
-        {% if illustration %}<a href="{{ url_for('consultations.demo') }}" class="{{ link_primary() }}">{{ _('Answer this one as a participant') }} →</a>{% endif %}
+      <ol class="mt-8 grid gap-3 sm:grid-cols-2">
+        {% for anchor, title, text in [
+          ('ssr-glance', _('Start with the headline'), _('One sentence, the four counts and the themes. Often all a board needs.')),
+          ('ssr-agrees', _('Then what you can act on'), _('The statements a clear majority agreed with, strongest first.')),
+          ('ssr-split', _('Then what needs more work'), _('Where people are split or unsure, with a suggestion of what to ask next.')),
+          ('ssr-limits', _('And what it cannot tell you'), _('How many people took part, and the limits of the results, said plainly.')),
+        ] %}
+        <li>
+          <a href="#{{ anchor }}" class="flex h-full gap-3 rounded-2xl bg-white/5 p-4 ring-1 ring-inset ring-white/10 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 motion-reduce:transition-none">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold" aria-hidden="true">{{ loop.index }}</span>
+            <span>
+              <span class="block font-semibold">{{ title }}</span>
+              <span class="mt-0.5 block text-sm leading-snug text-slate-300">{{ text }}</span>
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+      <p class="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        <a href="{{ url_for('consultations.landing') }}" class="font-semibold text-blue-300 hover:text-white hover:underline">{{ _('How consultations work and what they cost') }} →</a>
+        {% if illustration %}<a href="{{ url_for('consultations.demo') }}" class="font-semibold text-blue-300 hover:text-white hover:underline">{{ _('Answer this one as a participant') }} →</a>{% endif %}
       </p>
     </div>
-    <div class="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-10 print:border-0 print:p-0 print:shadow-none">
+  </div>
+  <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-lg sm:p-10 print:border-0 print:p-0 print:shadow-none">
       {% include "consultations/_report_body.html" %}
     </div>
-    <div class="mt-8 text-center print:hidden">
-      <a href="{{ url_for('consultations.start') }}" class="{{ btn_primary_lg() }}" data-ph-capture-attribute-cta="example-report-start">{{ _('Run one with your own audience') }}</a>
-      <p class="mt-3 text-sm text-gray-500">{{ _('Free to set up. Pay when you go live.') }}</p>
+    <div class="mt-8 rounded-2xl bg-slate-950 px-6 py-10 text-center text-white print:hidden">
+      <p class="text-2xl font-bold tracking-tight">{{ _('Now picture it with your own question') }}</p>
+      <p class="mx-auto mt-2 max-w-xl text-slate-300">{{ _('Write your question, see the statements drafted for you, and decide then.') }}</p>
+      <a href="{{ url_for('consultations.start') }}" class="{{ btn_primary_lg() }} mt-6" data-ph-capture-attribute-cta="example-report-start">{{ _('Run one with your own audience') }}</a>
+      <p class="mt-3 text-sm text-slate-400">{{ _('Try it with your real audience, free for %(days)d days. No card needed. Then %(single)s for 30 days or %(annual)s a year.', days=trial_days, single=price_single, annual=price_annual) }}</p>
     </div>
   </div>
 </div>

@@ -36,7 +36,7 @@
         <div class="space-y-3">
           <p class="text-sm text-gray-600">{{ _('Put it on a slide, a poster or a table card. People point their phone camera at it and start answering.') }}</p>
           <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('consultations.present', consultation_id=consultation.id) }}" target="_blank" rel="noopener" class="{{ btn_primary_md() }}">{{ _('Show full screen') }}</a>
+            <a href="{{ url_for('consultations.present', consultation_id=consultation.id) }}" target="_blank" rel="noopener" class="{{ btn_primary_md() }}">{{ _('Show on a big screen') }}</a>
             <a href="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='png', download=1) }}" class="{{ btn_secondary_md() }}">{{ _('Download PNG') }}</a>
             <a href="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='svg', download=1) }}" class="{{ btn_secondary_md() }}">{{ _('Download SVG') }}</a>
           </div>

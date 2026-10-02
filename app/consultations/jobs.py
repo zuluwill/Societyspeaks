@@ -59,7 +59,8 @@ def enqueue_drafting(consultation: Consultation):
     active = latest_job(JOB_DRAFT, consultation.id)
     if active is not None and active.is_active:
         return active, False
-    if drafts_used_today(consultation.owner_user_id) >= limit:
+    owner = consultation.owner
+    if not getattr(owner, 'is_admin', False) and drafts_used_today(consultation.owner_user_id) >= limit:
         return None, False
     return enqueue_job(
         JOB_DRAFT,
@@ -297,6 +298,24 @@ def run_sweep() -> dict:
             db.session.rollback()
             logger.exception('Sweep could not close consultation %s', consultation_id)
 
+    # Access can end before the closing date (a trial or a pass runs out, or a
+    # plan stops). Close those too, and build the report.
+    from app.consultations.billing import access_lapsed, mark_passes_in_use
+    live_ids_for_access = [
+        c.id for c in Consultation.query.filter_by(status=Consultation.STATUS_LIVE).all()
+    ]
+    for consultation_id in live_ids_for_access:
+        try:
+            consultation = db.session.get(Consultation, consultation_id)
+            if consultation is not None and consultation.is_live and mark_passes_in_use(consultation.owner):
+                db.session.commit()
+            if consultation is not None and access_lapsed(consultation):
+                close_and_report(consultation)
+                closed += 1
+        except Exception:
+            db.session.rollback()
+            logger.exception('Sweep could not close consultation %s after access ended', consultation_id)
+
     notices = 0
     live_ids = [c.id for c in Consultation.query.filter_by(status=Consultation.STATUS_LIVE).all()]
     for consultation_id in live_ids:
@@ -308,9 +327,14 @@ def run_sweep() -> dict:
             db.session.rollback()
             logger.exception('Sweep could not send notices for consultation %s', consultation_id)
 
-    try:
-        from app.consultations.billing import settle_pending_refunds
+    from app.consultations.billing import settle_pending_refunds, warn_expiring_access
 
+    try:
+        warn_expiring_access()
+    except Exception:
+        db.session.rollback()
+        logger.exception('Sweep could not warn hosts that access is ending')
+    try:
         refunds = settle_pending_refunds()
     except Exception:
         db.session.rollback()

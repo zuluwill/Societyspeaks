@@ -15,8 +15,8 @@
 {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
   {% set items = items + [
     ('self_serve', url_for('consultations.landing'), _('Run a consultation'),
-     _('from %(price)s', price='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100)),
-     _('Ask your own members, staff or audience one question and get a report.')),
+     _('%(days)d days free', days=config.CONSULTATION_TRIAL_DAYS),
+     _('Then %(price)s for 30 days, with a report for each question.', price='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100))),
   ] %}
 {% endif %}
 {% set items = items + [

@@ -274,6 +274,9 @@ def publish(consultation: Consultation, *, covered_by: str) -> Consultation:
     consultation.published_at = now
     if consultation.closes_at is None or consultation.closes_at <= now:
         consultation.closes_at = default_closes_at()
+    # The host's closing date is kept even when it sits past the end of access.
+    # The sweep closes an open consultation when access ends, and a later
+    # payment keeps it open until the date they chose.
     consultation.discussion.is_closed = False
     db.session.commit()
     return consultation
@@ -291,7 +294,11 @@ def close(consultation: Consultation) -> Consultation:
 
 
 def set_closing_time(consultation: Consultation, closes_at) -> Consultation:
-    """Move the closing time; reopens a closed consultation."""
+    """Move the closing time; reopens a closed consultation.
+
+    A date past the end of access is allowed. Voting still stops when access
+    ends, unless the host pays and the new window covers this date.
+    """
     if consultation.is_draft:
         consultation.closes_at = closes_at
         db.session.commit()

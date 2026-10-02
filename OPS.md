@@ -704,7 +704,14 @@ Existing consultations are kept.
 6. **VAT**: leave `STRIPE_AUTOMATIC_TAX_ENABLED` unset until the company is
    VAT registered and Stripe Tax is configured, then set it to `true`.
 7. **Optional**: `CONSULTATION_STRIPE_PRICE_SINGLE` / `_ANNUAL` to bill
-   against fixed Stripe Prices instead of inline amounts;
+   against the fixed Stripe Prices created on 2 Oct 2026 (£99 one-off,
+   £600 a year) instead of inline amounts. Live:
+   `price_1UMBAnAjRojnyfWfn5MimYrY` and `price_1UMBAoAjRojnyfWfqHYo72w7`.
+   Test: `price_1UMBAoAjRojnyfWfpWjsVfPm` and `price_1UMBApAjRojnyfWf50ondCbz`.
+   If an older Price id is still set, checkout keeps charging the old amount.
+   Also set `CONSULTATION_PRICE_SINGLE_PENCE=9900` and
+   `CONSULTATION_PRICE_ANNUAL_PENCE=60000` if those were overridden.
+   `CONSULTATION_TRIAL_DAYS` defaults to 14.
    `CONSULTATION_EXAMPLE_DISCUSSION_ID` to build the example report from a
    real public discussion. Without it the product page uses the built-in
    made-up example (`app/consultations/example.py`), which also drives the
@@ -744,9 +751,30 @@ table the worker reads will do the same; it is harmless, but expect the errors.
 - **Deleting an account** cancels its annual plan and refunds any purchase
   it paid for and never used. If Stripe cannot confirm either, the account
   is kept.
+- **A one-off payment is a 30-day pass.** `valid_from` / `valid_until` are
+  the window, measured from when the payment is recorded. It covers every
+  consultation taken live in that window. A second payment that arrives
+  while a pass is still open starts when that pass ends (`valid_from` in
+  the future). Refunding the earlier one brings the later pass forward
+  without making it longer. Checkout refuses a pass on top of the annual
+  plan, a pass while another is waiting to start, and a pass while the
+  open one has more than seven days left; in its last week the next one
+  can be bought from the account page. `consumed_at` is what blocks a
+  refund. It is set on the first consultation taken live on the pass, and
+  also when the pass becomes what keeps an already-open consultation open
+  (one started on the trial, or reopened). A pass taken off the annual
+  plan (`credited_at`) cannot be refunded either. Deleting a consultation
+  does not hand the money back. A consultation closes when the account's
+  access ends, whatever closing date was set, and extending or reopening
+  one needs access.
+- **Payments from before passes.** A consultation paid for singly
+  (`covered_by = 'purchase'` with no `covered_by_purchase_id`) runs to its
+  own closing date and is not closed by the access sweep. A single payment
+  that was never used becomes a pass for the 30 days after the migration
+  runs.
 - **Refunds** are claimed first (`consultation_purchase.status =
-  'refunding'`), then requested from Stripe, so a purchase cannot be refunded
-  and spent at once. The sweep completes a refund whose request died halfway.
+  'refunding'`), then requested from Stripe, so a pass cannot be refunded
+  and used at once. The sweep completes a refund whose request died halfway.
 - **Nothing here needs a person.** Drafting failure hands the host a blank
   page with guidance; a failed narrative leaves the template; a failed PDF
   leaves the print view; low turnout still produces a report.
@@ -769,6 +797,15 @@ table the worker reads will do the same; it is harmless, but expect the errors.
 - Host screens count page views only: analytics autocapture and session
   recording are switched off there (`consultations/_base_host.html`), because
   those screens show the customer's question, statements and results.
+  Server-side PostHog events (`consultation_signed_up`,
+  `consultation_created`, `consultation_checkout_started`,
+  `consultation_pass_purchased`, `consultation_plan_started`,
+  `consultation_went_live`, `consultation_pass_refunded`) carry the account
+  id and the kind of payment only.
+- `/admin/consultations` counts hosts, status and payments. It does not list
+  a customer's question, organisation or report. A site admin uses the
+  product on their own account without paying, and without the daily
+  drafting cap.
 - Link tokens are removed from error reports before they are sent to Sentry
   (`scrub_capability_urls`). They still appear in web server and edge access
   logs, as any address does.

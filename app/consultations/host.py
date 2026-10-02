@@ -55,10 +55,14 @@ def _no_index(response):
     return response
 
 
-def _price(config_key: str) -> str:
-    """A configured price in pence as ``£249`` or ``£249.50``."""
-    pounds = current_app.config[config_key] / 100
+def _pounds(pence: int) -> str:
+    pounds = pence / 100
     return f'£{pounds:,.0f}' if pounds == int(pounds) else f'£{pounds:,.2f}'
+
+
+def _price(config_key: str) -> str:
+    """A configured price in pence as ``£99`` or ``£99.50``."""
+    return _pounds(current_app.config[config_key])
 
 
 @consultations_bp.context_processor
@@ -66,6 +70,24 @@ def _prices():
     return {
         'price_single': _price('CONSULTATION_PRICE_SINGLE_PENCE'),
         'price_annual': _price('CONSULTATION_PRICE_ANNUAL_PENCE'),
+        'trial_days': current_app.config.get('CONSULTATION_TRIAL_DAYS', 14),
+    }
+
+
+def _access_notice(user, closes_at=None) -> dict:
+    """When this account's access ends, and whether a chosen close sits past it.
+
+    Before the first go-live, the date is the trial end if they went live now.
+    """
+    end = billing.access_ends_at(user)
+    starts_on_go_live = False
+    if end is None and not getattr(user, 'is_admin', False) and billing.trial_available(user):
+        end = utcnow_naive() + timedelta(days=current_app.config.get('CONSULTATION_TRIAL_DAYS', 14))
+        starts_on_go_live = True
+    return {
+        'access_until': format_date(end, 'd MMMM y') if end else None,
+        'access_ends_before_close': bool(end and closes_at and closes_at > end),
+        'access_starts_on_go_live': starts_on_go_live,
     }
 
 
@@ -76,7 +98,18 @@ def landing():
     has_consultations = current_user.is_authenticated and db.session.query(
         Consultation.query.filter_by(owner_user_id=current_user.id).exists()
     ).scalar()
-    return render_template('consultations/landing.html', has_consultations=bool(has_consultations))
+    from app.consultations import example
+
+    data = example.example_report_data()
+    return render_template(
+        'consultations/landing.html',
+        has_consultations=bool(has_consultations),
+        example_data=data,
+        example_narrative=example.example_narrative(),
+        example_groups=statements_by_verdict(data),
+        example_highlights=example.example_highlights(),
+        use_cases=example.use_case_examples(),
+    )
 
 
 # ── Getting in ──────────────────────────────────────────────────────────────
@@ -114,6 +147,13 @@ def start():
             current_app.logger.exception('Could not create consultation host account')
             flash(_('Something went wrong. Please try again in a moment.'), 'error')
             return render_template('consultations/start.html', form=form)
+        from app.consultations.analytics import capture_consultation_event
+        capture_consultation_event(
+            'consultation_signed_up',
+            user_id=user.id,
+            insert_id=f'consultation_signed_up:{user.id}',
+            durable=True,
+        )
 
     next_url = url_for('consultations.new')
     session['pending_post_auth_redirect'] = next_url
@@ -174,6 +214,13 @@ def new():
             context=form.context.data,
             audience_label=form.audience_label.data,
             audience_size=form.audience_size.data,
+        )
+        from app.consultations.analytics import capture_consultation_event
+        capture_consultation_event(
+            'consultation_created',
+            user_id=current_user.id,
+            insert_id=f'consultation_created:{consultation.id}',
+            properties={'consultation_id': consultation.id},
         )
         jobs.enqueue_drafting(consultation)
         return redirect(url_for('consultations.statements', consultation_id=consultation.id))
@@ -317,7 +364,13 @@ def settings(consultation_id):
         consultation.show_results_to_participants = form.show_results_to_participants.data
         service.set_closing_time(consultation, utcnow_naive() + timedelta(days=form.open_days.data))
         return redirect(url_for('consultations.go_live', consultation_id=consultation.id))
-    return render_template('consultations/settings.html', form=form, consultation=consultation, step='settings')
+    return render_template(
+        'consultations/settings.html',
+        form=form,
+        consultation=consultation,
+        step='settings',
+        **_access_notice(current_user, consultation.closes_at),
+    )
 
 
 # ── Step 4: go live ─────────────────────────────────────────────────────────
@@ -336,21 +389,27 @@ def go_live(consultation_id):
         if blocker:
             flash(blocker, 'error')
             return redirect(url_for('consultations.statements', consultation_id=consultation.id))
-        if covered_by is None:
+        if covered_by is None and not billing.trial_available(current_user):
             flash(_('Choose how you would like to pay to take this consultation live.'), 'info')
         else:
             return _take_live(consultation)
 
+    current_pass = billing.active_pass(current_user) if covered_by == Consultation.COVERED_BY_PURCHASE else None
+    trial = billing.active_trial(current_user)
     return render_template(
         'consultations/go_live.html',
         consultation=consultation,
         form=form,
         blocker=blocker,
         covered_by=covered_by,
+        trial_offer=billing.trial_available(current_user),
+        trial_until=format_date(trial.ends_at, 'd MMMM y') if trial else None,
+        pass_until=format_date(current_pass.valid_until, 'd MMMM y') if current_pass and current_pass.valid_until else None,
         statement_count=len(service.published_statements(consultation)),
         open_days=max(1, (consultation.closes_at - utcnow_naive()).days + 1) if consultation.closes_at
         else current_app.config.get('CONSULTATION_DEFAULT_OPEN_DAYS', 7),
         step='go_live',
+        **_access_notice(current_user, consultation.closes_at),
     )
 
 
@@ -384,6 +443,17 @@ def checkout():
     create = billing.create_annual_checkout if plan == 'annual' else billing.create_single_checkout
     try:
         checkout_session = create(current_user, consultation_id=consultation_id)
+        session_id = getattr(checkout_session, 'id', None)
+        if session_id is None and isinstance(checkout_session, dict):
+            session_id = checkout_session.get('id')
+        if session_id:
+            from app.consultations.analytics import capture_consultation_event
+            capture_consultation_event(
+                'consultation_checkout_started',
+                user_id=current_user.id,
+                insert_id=f'consultation_checkout_started:{session_id}',
+                properties={'plan': 'annual' if plan == 'annual' else 'single'},
+            )
     except billing.BillingError as exc:
         flash(str(exc), 'error')
         return redirect(url_for('consultations.account'))
@@ -479,15 +549,24 @@ def qr_code(consultation_id, fmt):
 @consultations_bp.route('/consultations/<int:consultation_id>/present')
 @login_required
 def present(consultation_id):
-    """A full-screen QR code and link, for a slide or a shared screen."""
+    """The big-screen view: the code to join, then the results when the host reveals them."""
     consultation = _owned_or_404(consultation_id)
     if consultation.is_draft:
         return redirect(url_for('consultations.go_live', consultation_id=consultation.id))
-    return _no_index(Response(render_template(
-        'consultations/present.html',
-        consultation=consultation,
-        participant_url=url_for('consultations.participate', token=consultation.access_token, _external=True),
-    )))
+    data = _live_results(consultation)
+    context = {'consultation': consultation, 'data': data, 'groups': statements_by_verdict(data)}
+    if request.args.get('fragment'):
+        # Only the results, re-fetched by the page while voting is open.
+        response = Response(render_template('consultations/_present_results.html', **context))
+    else:
+        response = Response(render_template(
+            'consultations/present.html',
+            view='join' if consultation.is_live and request.args.get('view') != 'results' else 'results',
+            participant_url=url_for('consultations.participate', token=consultation.access_token, _external=True),
+            **context,
+        ))
+    response.headers['Cache-Control'] = 'private, no-store'
+    return _no_index(response)
 
 
 # ── Dashboard ───────────────────────────────────────────────────────────────
@@ -526,6 +605,7 @@ def dashboard(consultation_id):
         now=utcnow_naive(),
         closes_on=format_date(consultation.closes_at, 'd MMMM') if consultation.closes_at else '',
         closed_on=format_date(consultation.closed_at, 'd MMMM y') if consultation.closed_at else '',
+        **_access_notice(current_user, consultation.closes_at),
     )
 
 
@@ -562,10 +642,27 @@ def extend(consultation_id):
     days = request.form.get('days', type=int)
     if consultation.is_draft or not days or not 1 <= days <= 90:
         abort(400)
+    if not billing.may_keep_open(consultation, current_user):
+        flash(_(
+            'Your access has ended, so this consultation cannot stay open. '
+            'Continue for %(single)s for 30 days or %(annual)s a year.',
+            single=_price('CONSULTATION_PRICE_SINGLE_PENCE'), annual=_price('CONSULTATION_PRICE_ANNUAL_PENCE'),
+        ), 'error')
+        return redirect(url_for('consultations.account'))
     base = max(consultation.closes_at or utcnow_naive(), utcnow_naive())
     try:
         service.set_closing_time(consultation, base + timedelta(days=days))
-        flash(_('The consultation is open for longer. People can keep taking part.'), 'success')
+        if billing.mark_passes_in_use(current_user):
+            db.session.commit()
+        end = billing.access_ends_at(current_user)
+        if end is not None and consultation.closes_at and consultation.closes_at > end:
+            flash(_(
+                'The closing date is later than your access, which ends on %(date)s. '
+                'Voting closes then and the report is built, unless you pay to continue.',
+                date=format_date(end, 'd MMMM y'),
+            ), 'info')
+        else:
+            flash(_('The consultation is open for longer. People can keep taking part.'), 'success')
     except service.ConsultationError as exc:
         flash(str(exc), 'error')
     return redirect(url_for('consultations.dashboard', consultation_id=consultation.id))
@@ -819,9 +916,13 @@ def account():
         .order_by(ConsultationPurchase.id.desc())
         .all()
     )
+    credit_pence, _passes = billing.uncredited_pass_credit(current_user)
     return render_template(
         'consultations/account.html',
         plan=billing.active_plan(current_user),
+        trial=billing.active_trial(current_user),
+        can_buy_pass=billing.pass_purchase_blocker(current_user) is None,
+        pass_credit=_pounds(credit_pence) if credit_pence else None,
         purchases=purchases,
         has_billing_history=bool(current_user.stripe_customer_id),
         action_form=ActionForm(),

@@ -39,6 +39,7 @@ class Consultation(db.Model):
     COVERED_BY_PURCHASE = 'purchase'
     COVERED_BY_PLAN = 'plan'
     COVERED_BY_COMPLIMENTARY = 'complimentary'
+    COVERED_BY_TRIAL = 'trial'
 
     id = db.Column(db.Integer, primary_key=True)
     discussion_id = db.Column(
@@ -71,6 +72,19 @@ class Consultation(db.Model):
 
     # What entitled this consultation to go live.
     covered_by = db.Column(db.String(20), nullable=True)
+    # The 30-day pass this consultation was taken live on. Many consultations
+    # can share one pass; deleting one must not refund the pass.
+    covered_by_purchase_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'consultation_purchase.id',
+            ondelete='SET NULL',
+            use_alter=True,
+            name='fk_consultation_covered_by_purchase',
+        ),
+        nullable=True,
+        index=True,
+    )
 
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive, onupdate=utcnow_naive)
@@ -161,10 +175,18 @@ class ConsultationReport(db.Model):
 
 
 class ConsultationPurchase(db.Model):
-    """A one-off payment for one consultation.
+    """A one-off payment for a 30-day pass.
+
+    The pass covers every consultation the organisation takes live from
+    ``valid_from`` until ``valid_until``. A second payment starts when the
+    earlier pass ends, so two charges never cover the same days. ``consumed_at``
+    is set on the first consultation and is what ends the right to a refund:
+    deleting a consultation must not hand the money back, and the window itself
+    stays open until ``valid_until``.
 
     Unique on the Stripe checkout session, so a replayed webhook cannot credit
-    the same payment twice.
+    the same payment twice. ``consultation_id`` is the legacy one-purchase-one-
+    consultation link; new passes leave it empty and point from the consultation.
     """
     __tablename__ = 'consultation_purchase'
     __table_args__ = (
@@ -187,23 +209,63 @@ class ConsultationPurchase(db.Model):
     currency = db.Column(db.String(3), nullable=False, default='gbp')
     status = db.Column(db.String(20), nullable=False, default=STATUS_PAID)
 
-    # Set when the purchase is spent on a consultation going live. ``consumed_at``
-    # is what marks it spent: deleting the consultation must not hand it back.
+    # Set on the first consultation taken live on this pass. That locks the
+    # refund. The pass keeps covering further consultations until ``valid_until``.
     consumed_at = db.Column(db.DateTime, nullable=True)
+    # ``valid_from`` is empty on a pass bought before the window was recorded;
+    # those are treated as already started. A pass bought while another is
+    # still open has ``valid_from`` in the future and cannot be used yet.
+    valid_from = db.Column(db.DateTime, nullable=True)
+    valid_until = db.Column(db.DateTime, nullable=True)
     consultation_id = db.Column(
         db.Integer, db.ForeignKey('consultation.id', ondelete='SET NULL'), nullable=True, unique=True,
     )
     refunded_at = db.Column(db.DateTime, nullable=True)
+    # Set when this pass has been taken off an annual plan. Until then, an open
+    # pass can still be credited if the account upgrades during the window.
+    credited_at = db.Column(db.DateTime, nullable=True)
+    # Set once the host has been emailed that this window is about to end.
+    ending_notified_at = db.Column(db.DateTime, nullable=True)
 
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive, onupdate=utcnow_naive)
 
     user = db.relationship('User', backref=db.backref('consultation_purchases', passive_deletes=True))
-    consultation = db.relationship('Consultation', backref=db.backref('purchase', uselist=False))
+    consultation = db.relationship(
+        'Consultation',
+        foreign_keys=[consultation_id],
+        backref=db.backref('purchase', uselist=False),
+    )
 
     @property
     def is_unused(self) -> bool:
-        return self.status == self.STATUS_PAID and self.consumed_at is None
+        """Paid, never used to keep a consultation open, and not taken off an
+        annual plan, so it can be refunded."""
+        return self.status == self.STATUS_PAID and self.consumed_at is None and self.credited_at is None
+
+    @property
+    def has_started(self) -> bool:
+        return self.valid_from is None or self.valid_from <= utcnow_naive()
+
+    @property
+    def is_scheduled(self) -> bool:
+        """Paid, and the window has not started yet."""
+        return (
+            self.status == self.STATUS_PAID
+            and self.valid_from is not None
+            and self.valid_until is not None
+            and self.valid_from > utcnow_naive()
+        )
+
+    @property
+    def is_current(self) -> bool:
+        """Paid and inside the window, whether or not it has been used."""
+        return (
+            self.status == self.STATUS_PAID
+            and self.has_started
+            and self.valid_until is not None
+            and self.valid_until > utcnow_naive()
+        )
 
 
 class ConsultationPlan(db.Model):
@@ -222,6 +284,7 @@ class ConsultationPlan(db.Model):
     status = db.Column(db.String(30), nullable=False, default='inactive')
     current_period_end = db.Column(db.DateTime, nullable=True)
     cancel_at_period_end = db.Column(db.Boolean, nullable=False, default=False)
+    ending_notified_at = db.Column(db.DateTime, nullable=True)
 
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive, onupdate=utcnow_naive)
@@ -326,3 +389,33 @@ class LLMUsage(db.Model):
         db.Integer, db.ForeignKey('consultation.id', ondelete='SET NULL'), nullable=True,
     )
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+
+
+class ConsultationTrial(db.Model):
+    """One live trial per account. Starts at the first go-live, no card.
+
+    ``email_key`` is the normalised address, so a second trial from the same
+    inbox is refused. ``domain`` is stored for a work address so a run of
+    trials from one organisation can be reviewed. It does not block them:
+    a university or a publisher can have several buyers.
+    """
+    __tablename__ = 'consultation_trial'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, unique=True,
+    )
+    email_key = db.Column(db.String(320), nullable=False, unique=True)
+    domain = db.Column(db.String(253), nullable=True, index=True)
+    # Campaign source on the link when the trial started, or ``direct``.
+    acquisition_source = db.Column(db.String(80), nullable=True)
+    started_at = db.Column(db.DateTime, nullable=False)
+    ends_at = db.Column(db.DateTime, nullable=False, index=True)
+    ending_notified_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+
+    user = db.relationship('User', backref=db.backref('consultation_trial', uselist=False, passive_deletes=True))
+
+    @property
+    def is_open(self) -> bool:
+        return self.ends_at > utcnow_naive()

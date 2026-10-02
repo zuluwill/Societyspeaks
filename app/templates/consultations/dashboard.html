@@ -21,11 +21,18 @@
         {{ _('Closed on %(date)s.', date=closed_on) }}
       {% endif %}
     </p>
+    {% if consultation.is_live and access_ends_before_close %}
+    <p class="mt-2 text-sm text-amber-800" id="access-ends">
+      {{ _('Access ends on %(date)s. Voting closes then and the report is built, unless you pay to continue. People can keep taking part until then.', date=access_until) }}
+      <a href="{{ url_for('consultations.account') }}" class="font-semibold underline">{{ _('Continue for %(single)s for 30 days or %(annual)s a year.', single=price_single, annual=price_annual) }}</a>
+    </p>
+    {% endif %}
   </div>
   <div class="flex flex-wrap gap-2">
     {% if consultation.is_live %}
     <a href="{{ url_for('consultations.share', consultation_id=consultation.id) }}" class="{{ btn_primary_md() }}">{{ _('Link and QR code') }}</a>
     {% endif %}
+    <a href="{{ url_for('consultations.present', consultation_id=consultation.id) }}" target="_blank" rel="noopener" class="{{ btn_secondary_md() }}">{{ _('Show on a big screen') }}</a>
     {% if report or consultation.is_closed %}
     <a href="{{ url_for('consultations.report', consultation_id=consultation.id) }}" class="{{ btn_primary_md() if consultation.is_closed else btn_secondary_md() }}">{{ _('Your report') }}</a>
     {% endif %}

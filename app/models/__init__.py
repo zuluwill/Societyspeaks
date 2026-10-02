@@ -41,6 +41,7 @@ from app.models.consultation import (  # noqa: F401
     ConsultationReport,
     ConsultationPurchase,
     ConsultationPlan,
+    ConsultationTrial,
     BackgroundJob,
     LLMUsage,
 )

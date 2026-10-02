@@ -22,6 +22,18 @@
           <span class="text-gray-600">{{ _('days') }}</span>
         </div>
         <p class="mt-2 text-sm text-gray-500">{{ _('Voting closes automatically and your report is built straight away. For an event, one day is enough. For a membership, a week gives people time to see a reminder.') }}</p>
+        {% if access_until %}
+        <p class="mt-2 text-sm text-gray-700" id="access-ends">
+          {% if access_starts_on_go_live %}
+            {{ _('Going live starts %(days)d days of access, ending %(date)s. A later closing date still stops then, unless you pay to continue.', days=trial_days, date=access_until) }}
+          {% elif access_ends_before_close %}
+            {{ _('Your access ends on %(date)s, before this closing date. Voting closes then and the report is built, unless you pay to continue.', date=access_until) }}
+          {% else %}
+            {{ _('Your access ends on %(date)s.', date=access_until) }}
+          {% endif %}
+          <a href="{{ url_for('consultations.account') }}" class="font-semibold underline">{{ _('Continue for %(single)s for 30 days or %(annual)s a year.', single=price_single, annual=price_annual) }}</a>
+        </p>
+        {% endif %}
         {{ field_errors(form.open_days) }}
       </div>
 

@@ -1,20 +1,176 @@
 <!doctype html>
-{# Full-screen QR code for a slide or shared screen. #}
-<html lang="{{ current_lang|default('en') }}" class="h-full">
+{#
+  The big-screen view, for a projector or a shared screen. First the code to
+  join, with a live count; then the results, when the host chooses to reveal
+  them. Standalone: no site header and no analytics.
+#}
+<html lang="{{ current_lang|default('en') }}" dir="{{ (supported_languages|default({})).get(current_lang|default('en'), {}).get('dir', 'ltr') }}" class="h-full">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
   <title>{{ consultation.question }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}?v={{ css_version }}">
+  <style nonce="{{ csp_nonce() }}">
+    .ps-stage {
+      background-color: #020617;
+      background-image: radial-gradient(70vw 40vh at 85% -5%, rgba(37, 99, 235, 0.4), transparent 70%), radial-gradient(50vw 35vh at -5% 110%, rgba(124, 58, 237, 0.2), transparent 70%);
+    }
+  </style>
 </head>
-<body class="flex min-h-full flex-col items-center justify-center bg-white p-8 text-center text-gray-900">
-  <p class="text-lg font-semibold uppercase tracking-wider text-gray-500">{{ consultation.organisation_name }}</p>
-  <h1 class="mt-3 max-w-4xl text-3xl font-bold leading-tight sm:text-5xl">{{ consultation.question }}</h1>
-  <img src="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='svg') }}" alt="{{ _('QR code that opens the consultation') }}"
-       class="mt-8 h-[min(52vh,26rem)] w-[min(52vh,26rem)]">
-  <p class="mt-6 text-2xl font-semibold">{{ _('Point your phone camera at the code') }}</p>
-  <p class="mt-2 text-lg text-gray-600">{{ _('Two minutes. No login. Anonymous.') }}</p>
-  <p class="mt-6 break-all font-mono text-base text-gray-500">{{ participant_url }}</p>
+<body class="ps-stage flex min-h-full flex-col text-white antialiased">
+
+  <header class="px-[4vw] pt-[3vh]">
+    <p class="text-[clamp(0.8rem,1.2vw,1.5rem)] font-semibold uppercase tracking-widest text-blue-200">{{ consultation.organisation_name }}</p>
+  </header>
+
+  <p id="view-status" class="sr-only" role="status"></p>
+
+  <main class="flex flex-1 flex-col">
+  {# ── The code ───────────────────────────────────────────────────────── #}
+  {% if consultation.is_live %}
+  {% set bare_url = participant_url|replace('https://', '')|replace('http://', '') %}
+  {% set url_parts = bare_url.split('/c/', 1) %}
+  <section id="join" class="{{ 'hidden' if view != 'join' }} grid flex-1 items-center gap-[4vw] px-[4vw] py-[3vh] lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+    <div>
+      <h1 tabindex="-1" class="text-[clamp(2rem,4.6vw,6rem)] font-bold leading-[1.08] tracking-tight focus:outline-none">{{ consultation.question }}</h1>
+      <ol class="mt-[4vh] space-y-[1.6vh] text-[clamp(1.1rem,2vw,2.6rem)] font-semibold">
+        <li class="flex items-center gap-[1vw]"><span class="flex h-[1.7em] w-[1.7em] shrink-0 items-center justify-center rounded-full bg-primary-600 text-[0.75em] font-bold" aria-hidden="true">1</span>{{ _('Point your phone camera at the code') }}</li>
+        <li class="flex items-center gap-[1vw]"><span class="flex h-[1.7em] w-[1.7em] shrink-0 items-center justify-center rounded-full bg-primary-600 text-[0.75em] font-bold" aria-hidden="true">2</span>{{ _('Tap Agree, Disagree or Unsure') }}</li>
+      </ol>
+      <p class="mt-[3vh] text-[clamp(1rem,1.5vw,2rem)] text-slate-300">{{ _('Two minutes. No login. Anonymous.') }}</p>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="rounded-[2vw] bg-white p-[1.6vw] shadow-2xl">
+        <img src="{{ url_for('consultations.qr_code', consultation_id=consultation.id, fmt='svg') }}" alt="{{ _('QR code that opens the consultation') }}"
+             class="h-[min(56vh,36vw)] w-[min(56vh,36vw)] max-lg:h-[min(50vh,70vw)] max-lg:w-[min(50vh,70vw)]">
+      </div>
+      <p class="mt-[2vh] max-w-full text-center">
+        <span class="block text-[clamp(0.9rem,1.3vw,1.7rem)] text-slate-300">{{ _('Or type this address') }}</span>
+        {% if url_parts|length == 2 %}
+        <span class="mt-[0.4vh] block font-mono text-[clamp(0.8rem,1.1vw,1.4rem)] text-slate-400">{{ url_parts[0] }}</span>
+        <span class="mt-[0.2vh] block break-all font-mono text-[clamp(1.15rem,2vw,2.6rem)] font-semibold leading-tight tracking-tight text-white">/c/{{ url_parts[1] }}</span>
+        {% else %}
+        <span class="mt-[0.4vh] block break-all font-mono text-[clamp(1rem,1.6vw,2rem)] font-semibold text-white">{{ bare_url }}</span>
+        {% endif %}
+      </p>
+    </div>
+  </section>
+  {% endif %}
+
+  {# ── The results ────────────────────────────────────────────────────── #}
+  <section id="results-view" class="{{ 'hidden' if view != 'results' }} flex flex-1 flex-col px-[4vw] py-[1.5vh]">
+    <h1 tabindex="-1" class="text-[clamp(1.4rem,2.2vw,3rem)] font-bold leading-tight tracking-tight focus:outline-none">{{ consultation.question }}</h1>
+    <div id="results" class="mt-[1.6vh] flex flex-1 flex-col">{% include "consultations/_present_results.html" %}</div>
+  </section>
+  </main>
+
+  <footer class="flex flex-wrap items-center justify-between gap-x-[2vw] gap-y-2 px-[4vw] pb-[2.5vh] pt-[1vh]">
+    <p class="flex items-center gap-[0.8vw] text-[clamp(1rem,1.7vw,2.2rem)] font-semibold" role="status">
+      {% if consultation.is_live %}
+      <span class="inline-flex h-[0.55em] w-[0.55em] rounded-full bg-emerald-400" aria-hidden="true"></span>
+      {% endif %}
+      <span><span id="participant-count" class="tabular-nums">{{ data.participant_count }}</span> {{ _('answered so far') if consultation.is_live else _('took part') }}</span>
+    </p>
+    <div class="flex items-center gap-3 text-sm">
+      {% if consultation.is_live %}
+      <a href="?view={{ 'join' if view == 'results' else 'results' }}" id="view-toggle" class="inline-flex min-h-11 items-center rounded-lg bg-white px-4 font-semibold text-slate-900 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
+        <span data-label="results" class="{{ 'hidden' if view == 'results' }}">{{ _('Show results') }} <kbd class="ml-1 font-sans text-slate-500">R</kbd></span>
+        <span data-label="join" class="{{ 'hidden' if view != 'results' }}">{{ _('Show the code') }} <kbd class="ml-1 font-sans text-slate-500">R</kbd></span>
+      </a>
+      {% endif %}
+      <button type="button" id="fullscreen-button" class="hidden min-h-11 items-center rounded-lg px-4 font-semibold text-white ring-1 ring-inset ring-white/30 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300">{{ _('Full screen') }} <kbd class="ml-1 font-sans text-slate-400">F</kbd></button>
+      <span class="hidden text-slate-400 sm:inline">{{ _('Made with Society Speaks') }}</span>
+    </div>
+  </footer>
+
+  <script nonce="{{ csp_nonce() }}">
+  (function () {
+    'use strict';
+    var join = document.getElementById('join');
+    var resultsView = document.getElementById('results-view');
+    var results = document.getElementById('results');
+    var toggle = document.getElementById('view-toggle');
+    var count = document.getElementById('participant-count');
+    var viewStatus = document.getElementById('view-status');
+    var view = {{ view|tojson }};
+    var live = {{ consultation.is_live|tojson }};
+    var viewLabels = {
+      results: {{ _('Showing the results')|tojson }},
+      join: {{ _('Showing the code')|tojson }}
+    };
+    var requestId = 0;
+    var latestHtml = '';
+
+    function refreshResults() {
+      var id = ++requestId;
+      fetch('{{ url_for("consultations.present", consultation_id=consultation.id, fragment=1) }}', { credentials: 'same-origin' })
+        .then(function (response) { return response.ok ? response.text() : null; })
+        .then(function (html) {
+          if (html === null || id !== requestId || html === latestHtml) return;
+          latestHtml = html;
+          results.innerHTML = html;
+        })
+        .catch(function () { /* try again next time */ });
+    }
+
+    function show(next) {
+      view = next;
+      if (join) join.classList.toggle('hidden', view !== 'join');
+      resultsView.classList.toggle('hidden', view !== 'results');
+      if (toggle) {
+        toggle.querySelector('[data-label="results"]').classList.toggle('hidden', view === 'results');
+        toggle.querySelector('[data-label="join"]').classList.toggle('hidden', view !== 'results');
+      }
+      if (viewStatus) viewStatus.textContent = viewLabels[view] || '';
+      window.history.replaceState(null, '', '?view=' + view);
+      if (view === 'results') refreshResults();
+    }
+
+    if (toggle) {
+      toggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        show(view === 'results' ? 'join' : 'results');
+      });
+    }
+
+    var fullscreen = document.getElementById('fullscreen-button');
+    function toggleFullscreen() {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen().catch(function () { /* the browser said no */ });
+    }
+    if (document.documentElement.requestFullscreen) {
+      fullscreen.classList.remove('hidden');
+      fullscreen.classList.add('inline-flex');
+      fullscreen.addEventListener('click', toggleFullscreen);
+    }
+
+    document.addEventListener('keydown', function (event) {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+      var tag = event.target && event.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (event.target && event.target.isContentEditable)) return;
+      var key = event.key.toLowerCase();
+      if (key === 'r' && toggle) show(view === 'results' ? 'join' : 'results');
+      else if (key === 'f' && document.documentElement.requestFullscreen) toggleFullscreen();
+    });
+
+    // Keep the count, and the results while they are showing, up to date.
+    if (live) {
+      window.setInterval(function () {
+        if (document.hidden) return;
+        fetch('{{ url_for("consultations.status", consultation_id=consultation.id) }}', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+          .then(function (response) { return response.ok ? response.json() : null; })
+          .then(function (state) {
+            if (!state) return;
+            if (state.status !== 'live') { window.location.replace('?view=results'); return; }
+            if (String(state.participants) !== count.textContent) count.textContent = state.participants;
+            if (view === 'results') refreshResults();
+          })
+          .catch(function () { /* try again next time */ });
+      }, 5000);
+    }
+  })();
+  </script>
 </body>
 </html>

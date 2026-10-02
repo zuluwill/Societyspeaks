@@ -261,7 +261,7 @@
     <div class="mx-auto mt-10 max-w-3xl rounded-2xl border-l-4 border-primary-600 bg-blue-50 p-6">
       <p class="text-base font-semibold text-gray-900">{{ _('Would you rather run one yourself?') }}</p>
       <p class="mt-1 text-gray-700">
-        {{ _('Ask your own members, staff or audience one question and get the report, without a scoping call. From %(price)s per consultation.', price='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100)) }}
+        {{ _('Ask your own members, staff or audience a question and get the report, without a scoping call. From %(price)s for 30 days.', price='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100)) }}
       </p>
       <a href="{{ url_for('consultations.landing') }}" class="mt-3 inline-block {{ link_primary() }}" data-ph-capture-attribute-cta="facilitated-to-self-serve">{{ _('See how to run one yourself') }} →</a>
     </div>

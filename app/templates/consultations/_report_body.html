@@ -29,17 +29,29 @@
 
 {% macro percent(share) %}{{ (share * 100)|round|int }}%{% endmacro %}
 
-{% macro bar(row) %}
+{# The one share a finding rests on, e.g. "89% agree". Empty where there is no single figure. #}
+{% macro key_figure(row, verdict) %}
+{%- if verdict == 'agrees' %}{{ _('%(share)s agree', share=percent(row.agree_share)|trim) }}
+{%- elif verdict == 'disagrees' %}{{ _('%(share)s disagree', share=percent(row.disagree_share)|trim) }}
+{%- elif verdict == 'unsure' %}{{ _('%(share)s unsure', share=percent(row.unsure_share)|trim) }}
+{%- elif verdict in ('split', 'no_clear_result') %}{{ _('%(agree)s agree, %(disagree)s disagree', agree=percent(row.agree_share)|trim, disagree=percent(row.disagree_share)|trim) }}
+{%- endif %}
+{% endmacro %}
+
+{% macro bar(row, small=false) %}
 {% set a = (row.agree_share * 100)|round(2) %}
 {% set d = (row.disagree_share * 100)|round(2) %}
 {% set u = (100 - a - d)|round(2) if row.total else 0 %}
-<svg class="ssr-bar" viewBox="0 0 100 4" preserveAspectRatio="none" role="img"
+<svg class="ssr-bar{{ ' ssr-bar--small' if small else '' }}" viewBox="0 0 100 4" preserveAspectRatio="none" role="img"
      aria-label="{{ _('%(agree)s agree, %(disagree)s disagree, %(unsure)s unsure', agree=percent(row.agree_share)|trim, disagree=percent(row.disagree_share)|trim, unsure=percent(row.unsure_share)|trim) }}">
   <rect x="0" y="0" width="100" height="4" fill="#f3f4f6"/>
   {% if row.total %}
   <rect x="0" y="0" width="{{ a }}" height="4" fill="#059669"/>
   <rect x="{{ a }}" y="0" width="{{ d }}" height="4" fill="#dc2626"/>
   <rect x="{{ a + d }}" y="0" width="{{ u if u > 0 else 0 }}" height="4" fill="#d97706"/>
+  {# Hairlines between the three answers, so they read apart without relying on colour. #}
+  {% if a > 0 and a < 100 %}<rect x="{{ a - 0.25 }}" y="0" width="0.5" height="4" fill="#fff"/>{% endif %}
+  {% if u > 0 and d > 0 %}<rect x="{{ a + d - 0.25 }}" y="0" width="0.5" height="4" fill="#fff"/>{% endif %}
   {% endif %}
 </svg>
 {% endmacro %}
@@ -91,21 +103,53 @@
       {% endfor %}
     </div>
     {% endif %}
+
+    {% set pictured = namespace(any=false) %}
+    {% for verdict, rows in groups %}{% if rows and verdict != 'too_few_votes' %}{% set pictured.any = true %}{% endif %}{% endfor %}
+    {% if pictured.any %}
+    <div class="ssr-picture">
+      <h3>{{ _('Every statement at a glance') }}</h3>
+      <table>
+        {% for verdict, rows in groups %}{% if rows and verdict != 'too_few_votes' %}
+        <tbody>
+          <tr><th colspan="3" scope="rowgroup"><span class="ssr-chip ssr-chip--{{ verdict }}"><span class="ssr-marker ssr-marker--{{ verdict }}" aria-hidden="true"></span>{{ verdict_titles[verdict] }}</span></th></tr>
+          {% for row in rows %}
+          <tr>
+            <td class="ssr-picture-text">{{ row.content }}</td>
+            <td class="ssr-picture-bar">{{ bar(row, small=true) }}</td>
+            <td class="ssr-picture-figure">{{ key_figure(row, verdict) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% endif %}{% endfor %}
+      </table>
+      <p class="ssr-picture-key">
+        <span><span class="ssr-key ssr-key--agree" aria-hidden="true"></span>{{ _('Agree') }}</span>
+        <span><span class="ssr-key ssr-key--disagree" aria-hidden="true"></span>{{ _('Disagree') }}</span>
+        <span><span class="ssr-key ssr-key--unsure" aria-hidden="true"></span>{{ _('Unsure') }}</span>
+      </p>
+    </div>
+    {% endif %}
   </section>
 
   {% for verdict, rows in groups %}
   {% if rows or verdict in ('agrees', 'disagrees', 'unsure', 'split') %}
   <section class="ssr-section" aria-labelledby="ssr-{{ verdict }}">
-    <h2 id="ssr-{{ verdict }}"><span class="ssr-marker ssr-marker--{{ verdict }}" aria-hidden="true"></span>{{ verdict_titles[verdict] }}</h2>
+    <h2 id="ssr-{{ verdict }}" class="ssr-finding ssr-finding--{{ verdict }}">{{ verdict_titles[verdict] }}{% if rows %} <span class="ssr-count">{{ rows|length }}</span>{% endif %}</h2>
     {% if rows %}
     <p class="ssr-lead">{{ verdict_leads[verdict] }}</p>
     <ol class="ssr-statements">
       {% for row in rows %}
       <li class="ssr-statement">
-        <p class="ssr-statement-text">
-          {{ row.content }}
-          {% if row.source == 'user_submitted' %}<span class="ssr-audience-tag">{{ _('Suggested by a participant') }}</span>{% endif %}
-        </p>
+        <div class="ssr-statement-head">
+          {% if verdict in ('agrees', 'disagrees', 'unsure') %}
+          <p class="ssr-lead-figure" aria-hidden="true">{{ percent(row.agree_share if verdict == 'agrees' else (row.disagree_share if verdict == 'disagrees' else row.unsure_share))|trim }}</p>
+          {% endif %}
+          <p class="ssr-statement-text">
+            {{ row.content }}
+            {% if row.source == 'user_submitted' %}<span class="ssr-audience-tag">{{ _('Suggested by a participant') }}</span>{% endif %}
+          </p>
+        </div>
         {% if verdict == 'too_few_votes' %}
         <p class="ssr-figures">
           {% if row.total %}
@@ -147,7 +191,7 @@
   {% endif %}
 
   <section class="ssr-section ssr-limits" aria-labelledby="ssr-limits">
-    <h2 id="ssr-limits">{{ _('Who took part, and what this does not show') }}</h2>
+    <h2 id="ssr-limits">{{ _('How many took part, and what this does not show') }}</h2>
     <ul>
       <li>{{ ngettext(
         'These results describe the %(num)d person who took part. People choose whether to take part, so participants may differ from those who did not. This is not a poll of everyone who was invited, or of the public.',

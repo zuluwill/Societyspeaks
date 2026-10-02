@@ -2,7 +2,7 @@
 import logging
 from typing import List, Optional
 
-from flask_babel import force_locale, gettext as _, ngettext
+from flask_babel import force_locale, format_date, gettext as _, ngettext
 
 from app.lib.locale_utils import resolve_user_locale
 from app.lib.url_utils import route_url
@@ -110,6 +110,33 @@ def notify_first_responses(consultation, participants: int) -> bool:
             ],
             cta_label=_('Open the dashboard'),
             cta_url=_host_url('consultations.dashboard', consultation),
+        )
+
+
+def notify_access_ending(user, ends_at, *, question: str) -> bool:
+    """Tell the host that open consultations close when access ends."""
+    from app.resend_client import _send_user_transactional_email
+
+    if user is None:
+        return False
+    with force_locale(resolve_user_locale(user)):
+        when = format_date(ends_at, 'd MMMM y')
+        return _send_user_transactional_email(
+            user,
+            'emails/consultation_notice.html',
+            _('Your consultation access ends on %(date)s', date=when),
+            {
+                'heading': _('Your access ends on %(date)s', date=when),
+                'question': question,
+                'paragraphs': [
+                    _('Any consultation still open will close then, and the report will be built.'),
+                    _('You can keep it open by paying for 30 days or for the year. People can keep taking part until you do, and afterwards.'),
+                    _('A report that has already been built stays readable and downloadable.'),
+                ],
+                'quote': None,
+                'cta_label': _('Continue for 30 days or a year'),
+                'cta_url': route_url(get_base_url(), 'consultations.account'),
+            },
         )
 
 

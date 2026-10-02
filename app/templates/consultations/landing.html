@@ -6,6 +6,8 @@
    _('A poll answers the question you thought to ask. Here your audience responds to a dozen or so short statements that cover your question from different angles, so you see where they agree, where they disagree, where they do not know, and where they are divided. Then you get the write-up, not a results screen.')),
   (_('How many people do I need?'),
    _('Clear results usually need 30 or more participants. With fewer you still get a report: it shows the counts and explains why few results can be called. There is no upper limit and no charge per participant.')),
+  (_('Can I try it before I pay?'),
+   _('Yes. The first time you go live, a verified email gets %(days)d days with every feature and no card. One trial per email. Another person at the same organisation can start their own. When those days end, an open consultation closes and the report is produced. You can still read and download it afterwards. Paying before then keeps it open.', days=trial_days)),
   (_('Is it anonymous?'),
    _('Yes. Participants need no account. Answers are stored against a random ID on their device, not a name or email, and you see results, never who answered what. The participant page carries no analytics or advertising scripts.')),
   (_('Who can see my consultation?'),
@@ -15,16 +17,18 @@
   (_('Can participants add their own statements?'),
    _('If you switch it on. Every suggestion is screened, then waits for your approval before anyone else sees it.')),
   (_('What does the report claim?'),
-   _('Only what the votes support. Each result is counted directly from the votes and is called only when it is clear, allowing for how many people took part. The report says who took part and what it does not show: it describes participants, not everyone you invited and not the public.')),
+   _('Only what the votes support. Each result is counted directly from the votes and is called only when it is clear, allowing for how many people took part. The report says how many people took part and what it does not show: it describes participants, not everyone you invited and not the public.')),
   (_('What does “unlimited” mean?'),
-   _('Every consultation your organisation runs with its own audiences in the year, with no cap on consultations or participants. The annual plan is for one organisation; it does not cover running consultations on behalf of clients.')),
+   _('A 30-day pass covers every question you take live in those 30 days. The annual plan covers every consultation your organisation runs with its own audiences in the year. Neither has a cap on participants, and neither covers running consultations on behalf of clients.')),
+  (_('What if my event has several sessions?'),
+   _('Each question is its own consultation: its own statements and its own report. A 30-day pass covers every question you take live in that time. The annual plan covers the whole year, which is the better fit if you consult outside that month as well.')),
   (_('Can I get a refund?'),
-   _('A single consultation is refunded in full, from your account page, at any time before it goes live. The annual plan can be cancelled at any time and runs to the end of the year you have paid for.')),
+   _('A 30-day pass is refunded in full, from your account page, at any time before a consultation is open on it. Once one is, the pass is not refundable. The annual plan can be cancelled at any time and runs to the end of the year you have paid for.')),
 ] %}
 
 {% block title %}{{ _('See where your audience agrees — Society Speaks') }}{% endblock %}
 {% block canonical %}{{ url_for('consultations.landing', _external=True) }}{% endblock %}
-{% block meta_description %}{{ _('Ask your members, staff or audience one question. They answer on their phones in two minutes. You get a report showing where they agree, disagree, are unsure or are split. %(single)s per consultation, or %(annual)s a year unlimited.', single=price_single, annual=price_annual) }}{% endblock %}
+{% block meta_description %}{{ _('Ask your members, staff or audience one question. They answer on their phones in two minutes. You get a report showing where they agree, disagree, are unsure or are split. %(days)d days free when you go live, then %(single)s for 30 days, or %(annual)s a year.', days=trial_days, single=price_single, annual=price_annual) }}{% endblock %}
 {% block og_title %}{{ _('See where your audience agrees, disagrees or is unsure') }}{% endblock %}
 {% block og_description %}{{ _('Ask one question. Your audience answers on their phones in two minutes. You get a report you can forward.') }}{% endblock %}
 {% block twitter_title %}{{ _('See where your audience agrees, disagrees or is unsure') }}{% endblock %}
@@ -52,19 +56,112 @@
   ]
 }
 </script>
+<style>
+  .ssl-hero {
+    background-color: #020617;
+    background-image:
+      radial-gradient(56rem 30rem at 85% -10%, rgba(37, 99, 235, 0.45), transparent 70%),
+      radial-gradient(40rem 26rem at -5% 115%, rgba(124, 58, 237, 0.22), transparent 70%);
+  }
+  .ssl-stage {
+    background-color: #020617;
+    background-image: radial-gradient(48rem 26rem at 50% 0%, rgba(37, 99, 235, 0.35), transparent 70%);
+  }
+  .ssl-grid {
+    background-image: linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+  }
+  @keyframes ssl-grow { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes ssl-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes ssl-seat { to { background-color: var(--c); } }
+  .ssl-grow { animation: ssl-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .ssl-rise { animation: ssl-rise 0.35s ease-out both; }
+  .ssl-seat { background-color: var(--c); }
+  .ssl-armed .ssl-seat { background-color: #334155; }
+  .ssl-armed.ssl-on .ssl-seat { animation: ssl-seat 0.35s ease-out forwards; animation-delay: var(--d); }
+  .ssl-armed .ssl-room-bar { clip-path: inset(0 100% 0 0); }
+  .ssl-armed.ssl-on .ssl-room-bar { animation: ssl-grow 3.6s linear 0.2s both; }
+  .ssl-armed .ssl-room-figures { opacity: 0; }
+  .ssl-armed.ssl-on .ssl-room-figures { animation: ssl-rise 0.4s ease-out 3.4s both; }
+  @media (prefers-reduced-motion: reduce) {
+    .ssl-grow, .ssl-rise { animation: none; }
+    .ssl-armed .ssl-seat { background-color: var(--c); animation: none !important; }
+    .ssl-armed .ssl-room-bar { clip-path: none; animation: none !important; }
+    .ssl-armed .ssl-room-figures { opacity: 1; animation: none !important; }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 
+{# Every figure on this page comes from consultations/example.py, where it is
+   classified by the same code as a real report. #}
+{% set verdicts = {
+  'agrees': {'label': _('They agree'), 'dot': 'bg-emerald-600', 'chip': 'bg-emerald-50 text-emerald-800 ring-emerald-600/20', 'edge': 'border-emerald-600', 'tint': 'bg-emerald-50'},
+  'disagrees': {'label': _('They disagree'), 'dot': 'bg-red-600', 'chip': 'bg-red-50 text-red-800 ring-red-600/20', 'edge': 'border-red-600', 'tint': 'bg-red-50'},
+  'unsure': {'label': _('They are unsure'), 'dot': 'bg-amber-500', 'chip': 'bg-amber-50 text-amber-900 ring-amber-600/20', 'edge': 'border-amber-500', 'tint': 'bg-amber-50'},
+  'split': {'label': _('They are split'), 'dot': 'bg-violet-600', 'chip': 'bg-violet-50 text-violet-800 ring-violet-600/20', 'edge': 'border-violet-600', 'tint': 'bg-violet-50'},
+  'no_clear_result': {'label': _('No clear result'), 'dot': 'bg-gray-400', 'chip': 'bg-gray-100 text-gray-700 ring-gray-500/20', 'edge': 'border-gray-400', 'tint': 'bg-gray-50'},
+} %}
+
+{% macro icon(path, classes='h-5 w-5') %}<svg class="{{ classes }}" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="{{ path }}"/></svg>{% endmacro %}
+
+{% macro chip(verdict) %}<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {{ verdicts[verdict].chip }}"><span class="h-1.5 w-1.5 rounded-full {{ verdicts[verdict].dot }}" aria-hidden="true"></span>{{ verdicts[verdict].label }}</span>{% endmacro %}
+
+{# Agree, disagree, unsure as one bar. The figures beside it carry the numbers. #}
+{% macro bar(row, classes='h-2.5') %}
+<span class="flex {{ classes }} w-full gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
+  {% if row.agree_share %}<span class="bg-emerald-600" style="flex: {{ (row.agree_share * 100)|round(1) }} 1 0%"></span>{% endif %}
+  {% if row.disagree_share %}<span class="bg-red-600" style="flex: {{ (row.disagree_share * 100)|round(1) }} 1 0%"></span>{% endif %}
+  {% if row.unsure_share %}<span class="bg-amber-500" style="flex: {{ (row.unsure_share * 100)|round(1) }} 1 0%"></span>{% endif %}
+</span>
+{% endmacro %}
+
+{% macro figures(row, classes='text-xs text-gray-600') %}
+<span class="flex flex-wrap gap-x-3 gap-y-0.5 tabular-nums {{ classes }}">
+  <span class="whitespace-nowrap"><span class="mr-1 inline-block h-2 w-2 rounded-sm bg-emerald-600" aria-hidden="true"></span>{{ _('%(share)s agree', share=(row.agree_share * 100)|round|int ~ '%') }}</span>
+  <span class="whitespace-nowrap"><span class="mr-1 inline-block h-2 w-2 rounded-sm bg-red-600" aria-hidden="true"></span>{{ _('%(share)s disagree', share=(row.disagree_share * 100)|round|int ~ '%') }}</span>
+  <span class="whitespace-nowrap"><span class="mr-1 inline-block h-2 w-2 rounded-sm bg-amber-500" aria-hidden="true"></span>{{ _('%(share)s unsure', share=(row.unsure_share * 100)|round|int ~ '%') }}</span>
+</span>
+{% endmacro %}
+
+{# A picture of a QR code. Deliberately not a real one: it opens nothing. #}
+{% macro qr_picture(classes='h-28 w-28') %}
+<svg class="{{ classes }}" viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true">
+  <rect width="25" height="25" fill="#fff"/>
+  {% for y in range(21) %}{% for x in range(21) %}
+    {% set in_finder = (x < 8 and y < 8) or (x > 12 and y < 8) or (x < 8 and y > 12) %}
+    {% if not in_finder and ((x * 7 + y * 13 + x * y * 3 + (x % 3) * (y % 4)) % 5) < 2 %}<rect x="{{ x + 2 }}" y="{{ y + 2 }}" width="1" height="1" fill="#0f172a"/>{% endif %}
+  {% endfor %}{% endfor %}
+  {% for fx, fy in [(2, 2), (16, 2), (2, 16)] %}
+  <rect x="{{ fx }}" y="{{ fy }}" width="7" height="7" fill="#0f172a"/>
+  <rect x="{{ fx + 1 }}" y="{{ fy + 1 }}" width="5" height="5" fill="#fff"/>
+  <rect x="{{ fx + 2 }}" y="{{ fy + 2 }}" width="3" height="3" fill="#0f172a"/>
+  {% endfor %}
+</svg>
+{% endmacro %}
+
+{% set i_check = 'M5 13l4 4L19 7' %}
+{% set i_arrow = 'M17 8l4 4m0 0l-4 4m4-4H3' %}
+
 {# ── Hero ─────────────────────────────────────────────────────────────── #}
-<section class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white" aria-labelledby="hero-heading">
-  <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-24">
+<section class="ssl-hero relative isolate overflow-hidden text-white" aria-labelledby="hero-heading">
+  <div class="ssl-grid pointer-events-none absolute inset-0 -z-10" aria-hidden="true"></div>
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:px-8 lg:py-20">
     <div>
-      <p class="inline-flex rounded-full bg-primary-100 px-3 py-1 text-sm font-semibold text-primary-700">{{ _('For membership bodies, charities, teams and events') }}</p>
-      <h1 id="hero-heading" class="mt-5 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+      <p class="inline-flex rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-blue-100 ring-1 ring-inset ring-white/20">{{ _('For membership bodies, charities, teams and events') }}</p>
+      <h1 id="hero-heading" class="mt-5 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
         {{ _('See where your audience agrees, disagrees or is unsure.') }}
       </h1>
-      <p class="mt-6 text-xl leading-relaxed text-gray-600">
+      <div class="mt-6 flex h-1.5 w-40 gap-1" aria-hidden="true">
+        <span class="flex-[5] rounded-full bg-emerald-500"></span>
+        <span class="flex-[2] rounded-full bg-red-500"></span>
+        <span class="flex-[1] rounded-full bg-amber-400"></span>
+        <span class="flex-[2] rounded-full bg-violet-500"></span>
+      </div>
+      <p class="mt-6 max-w-xl text-xl leading-relaxed text-slate-300">
         {{ _('Ask one question. Your members, staff or audience answer on their phones in two minutes. You get a report you can forward.') }}
       </p>
       <div class="mt-8 flex flex-wrap gap-4">
@@ -72,213 +169,607 @@
         <a href="{{ url_for('consultations.example_report') }}" class="{{ btn_secondary_lg() }} min-h-11" data-ph-capture-attribute-cta="consultations-hero-example">{{ _('See an example report') }}</a>
       </div>
       {% if has_consultations %}
-      <p class="mt-5 text-sm text-gray-700">
-        <a href="{{ url_for('consultations.mine') }}" class="{{ link_primary() }} font-semibold" data-ph-capture-attribute-cta="consultations-hero-mine">{{ _('Go to your consultations') }} →</a>
+      <p class="mt-5 text-sm">
+        <a href="{{ url_for('consultations.mine') }}" class="font-semibold text-blue-300 hover:text-white hover:underline" data-ph-capture-attribute-cta="consultations-hero-mine">{{ _('Go to your consultations') }} →</a>
       </p>
       {% endif %}
-      <p class="mt-5 text-sm text-gray-500">{{ _('Free to set up, no card needed. Pay when you go live. No charge per participant.') }}</p>
-      <p class="mt-2 text-sm text-gray-600">
-        {{ _('Not sure yet?') }}
-        <a href="{{ url_for('consultations.demo') }}" class="{{ link_primary() }}" data-ph-capture-attribute-cta="consultations-hero-demo">{{ _('Answer one yourself in a minute') }} →</a>
-      </p>
-    </div>
-
-    {# Illustration of the report. Labelled as an example: these are not real results. #}
-    <figure class="mx-auto w-full max-w-md" aria-label="{{ _('Example of a report') }}">
-      <div class="rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ _('Consultation report') }}</p>
-        <p class="mt-1 text-lg font-bold text-gray-900">{{ _('How should we use next year’s surplus?') }}</p>
-        <div class="mt-4 grid grid-cols-4 gap-2 text-center">
-          {% for number, label, colour in [('5', _('agree'), 'border-t-emerald-600'), ('2', _('disagree'), 'border-t-red-600'), ('1', _('unsure'), 'border-t-amber-600'), ('2', _('split'), 'border-t-violet-600')] %}
-          <div class="rounded-lg border border-t-4 border-gray-200 {{ colour }} px-1 py-2">
-            <p class="text-xl font-bold text-gray-900">{{ number }}</p>
-            <p class="text-xs text-gray-600">{{ label }}</p>
-          </div>
-          {% endfor %}
-        </div>
-        {% for text, a, d in [
-          (_('Members should vote on any spending above £10,000.'), 81, 9),
-          (_('The surplus should stay in reserves until the lease is renewed.'), 44, 41),
+      <p class="mt-5 text-sm text-slate-400">{{ _('Try Society Speaks with your real audience, free for %(days)d days. The complete experience and report. No card needed. Continue for %(single)s for 30 days or %(annual)s a year.', days=trial_days, single=price_single, annual=price_annual) }}</p>
+      <dl class="mt-10 grid max-w-xl grid-cols-3 gap-6 border-t border-white/10 pt-6">
+        {% for value, label in [
+          (_('5 min'), _('to set up, with statements drafted for you')),
+          (_('2 min'), _('for each person to answer, on a phone')),
+          (_('0'), _('logins, apps or names asked of them')),
         ] %}
-        <div class="mt-4 border-t border-gray-100 pt-3">
-          <p class="text-sm font-semibold text-gray-900">{{ text }}</p>
-          <div class="mt-2 flex h-2.5 overflow-hidden rounded-full bg-gray-100" aria-hidden="true">
-            <span class="bg-emerald-600" style="width: {{ a }}%"></span>
-            <span class="bg-red-600" style="width: {{ d }}%"></span>
-            <span class="bg-amber-500" style="width: {{ 100 - a - d }}%"></span>
-          </div>
-          <p class="mt-1 text-xs text-gray-600">{{ a }}% {{ _('agree') }} · {{ d }}% {{ _('disagree') }} · {{ 100 - a - d }}% {{ _('unsure') }}</p>
+        <div>
+          <dt class="text-2xl font-bold tabular-nums sm:text-3xl">{{ value }}</dt>
+          <dd class="mt-1 text-sm leading-snug text-slate-400">{{ label }}</dd>
         </div>
         {% endfor %}
+      </dl>
+    </div>
+
+    {# The participant page in miniature. Four statements from the worked
+       example, one of each kind of finding. Nothing is sent anywhere. #}
+    <div class="mx-auto w-full max-w-sm" data-try>
+      <p class="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-blue-200">
+        <span class="relative flex h-2.5 w-2.5" aria-hidden="true"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span></span>
+        {{ _('Try it: tap an answer') }}
+      </p>
+      <div class="rounded-[2.75rem] bg-slate-900 p-3 shadow-2xl ring-1 ring-white/20">
+        <div class="overflow-hidden rounded-[2rem] bg-gray-50 text-gray-900">
+          <div class="bg-primary-700 px-5 pb-4 pt-5 text-white">
+            <p class="text-[0.7rem] font-semibold uppercase tracking-wider text-blue-100">{{ example_data.organisation_name }}</p>
+            <p class="mt-1 text-lg font-bold leading-snug">{{ example_data.question }}</p>
+          </div>
+
+          {% for row in example_highlights %}
+          {% set step = loop.index %}
+          <div class="px-5 pb-5 pt-4 {% if not loop.first %}hidden{% endif %}" data-try-step>
+            <div class="flex items-center justify-between text-xs text-gray-600">
+              <p>{{ _('Statement %(current)s of %(total)s', current=loop.index, total=example_highlights|length) }}</p>
+              <span class="flex gap-1" aria-hidden="true">
+                {% for n in range(example_highlights|length) %}<span class="h-1.5 w-5 rounded-full {{ 'bg-primary-600' if n < step else 'bg-gray-200' }}"></span>{% endfor %}
+              </span>
+            </div>
+            <div class="mt-3 flex min-h-[7.5rem] items-center rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <p class="text-lg font-semibold leading-snug" tabindex="-1" data-try-statement>{{ row.content }}</p>
+            </div>
+
+            <div class="mt-3 grid h-[16rem] grid-rows-3 gap-2.5" data-try-ask>
+              <button type="button" data-vote="1" class="rounded-xl border-2 border-emerald-300 bg-white text-base font-semibold text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 motion-reduce:transition-none">{{ _('Agree') }}</button>
+              <button type="button" data-vote="-1" class="rounded-xl border-2 border-red-300 bg-white text-base font-semibold text-red-700 transition hover:border-red-500 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 motion-reduce:transition-none">{{ _('Disagree') }}</button>
+              <button type="button" data-vote="0" class="rounded-xl border-2 border-amber-300 bg-white text-base font-semibold text-amber-700 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-2 motion-reduce:transition-none">{{ _('Unsure') }}</button>
+            </div>
+
+            <div class="ssl-rise mt-3 hidden min-h-[16rem] flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm" data-try-result tabindex="-1">
+              <p class="text-xs text-gray-600">
+                <span data-said="1" class="hidden">{{ _('You said agree.') }}</span>
+                <span data-said="-1" class="hidden">{{ _('You said disagree.') }}</span>
+                <span data-said="0" class="hidden">{{ _('You said unsure.') }}</span>
+                {{ ngettext('Here is how %(num)d member answered in our example:', 'Here is how %(num)d members answered in our example:', row.total) }}
+              </p>
+              <div class="ssl-grow mt-3">{{ bar(row, 'h-3.5') }}</div>
+              <div class="mt-2">{{ figures(row) }}</div>
+              <p class="mt-3">{{ chip(row.verdict) }}</p>
+              <p class="mt-2 text-sm leading-snug text-gray-700">
+                {% if row.verdict == 'agrees' %}{{ _('A clear majority. This is ground you can build on.') }}
+                {% elif row.verdict == 'disagrees' %}{{ _('A clear majority against. An idea you can drop.') }}
+                {% elif row.verdict == 'unsure' %}{{ _('Most people do not know yet. They need information, not a vote.') }}
+                {% else %}{{ _('Both sides are large and close. A real division, not indecision.') }}{% endif %}
+              </p>
+              <span class="mt-auto block pt-3"><button type="button" data-try-next class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2">
+                {% if loop.last %}{{ _('See what you get back') }}{% else %}{{ _('Next statement') }}{% endif %}
+                {{ icon(i_arrow, 'h-4 w-4') }}
+              </button></span>
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="ssl-rise hidden min-h-[27.75rem] px-5 pb-5 pt-4" data-try-done>
+            <p class="text-lg font-bold leading-snug" tabindex="-1" data-try-done-heading>{{ _('Four taps, four kinds of finding.') }}</p>
+            <p class="mt-1 text-sm leading-snug text-gray-600">{{ _('The report sorts every statement the same way, so you can see at a glance what to act on.') }}</p>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              {% for key in ['agrees', 'disagrees', 'unsure', 'split'] %}
+              <div class="rounded-xl border-t-4 {{ verdicts[key].edge }} bg-white px-3 py-2.5 shadow-sm ring-1 ring-gray-200">
+                <p class="text-2xl font-bold tabular-nums">{{ example_data.counts[key] }}</p>
+                <p class="text-xs text-gray-600">{{ verdicts[key].label }}</p>
+              </div>
+              {% endfor %}
+            </div>
+            <a href="{{ url_for('consultations.example_report') }}" class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2" data-ph-capture-attribute-cta="consultations-try-report">{{ _('Read the full report') }}</a>
+            <button type="button" data-try-again class="mt-1 min-h-11 w-full rounded-xl text-sm font-medium text-gray-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Go through it again') }}</button>
+          </div>
+        </div>
       </div>
-      <figcaption class="mt-3 text-center text-xs text-gray-500">{{ _('Illustration. Your report is built from your own audience’s answers.') }}</figcaption>
-    </figure>
+      <p class="mt-4 text-center text-xs leading-relaxed text-slate-400">
+        {{ _('A made-up example. Nothing you tap is recorded.') }}
+        <a href="{{ url_for('consultations.demo') }}" class="font-semibold text-blue-300 hover:text-white hover:underline" data-ph-capture-attribute-cta="consultations-hero-demo">{{ _('Answer all twelve on your phone') }} →</a>
+      </p>
+    </div>
   </div>
 </section>
 
 {# ── How it works ─────────────────────────────────────────────────────── #}
-<section id="how-it-works" class="bg-white py-16 sm:py-20" aria-labelledby="how-heading">
+<section id="how-it-works" class="bg-white py-16 sm:py-24" aria-labelledby="how-heading">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <h2 id="how-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('From question to report in three steps') }}</h2>
-    <ol class="mt-10 grid gap-8 md:grid-cols-3">
-      {% for title, text, detail in [
-        (_('Ask your question'), _('Tell us what you want to know. We draft a balanced set of short statements; you edit and approve them.'), _('About five minutes.')),
-        (_('Share a link or QR code'), _('People answer Agree, Disagree or Unsure, one statement at a time. No login, no app, nothing to install.'), _('About two minutes each.')),
-        (_('Get the report'), _('What they agree on, what they reject, where they are unsure and where they are split, with the numbers and the statements behind each finding.'), _('Built the moment voting closes.')),
-      ] %}
-      <li class="rounded-2xl bg-gray-50 p-8">
-        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-lg font-bold text-white" aria-hidden="true">{{ loop.index }}</span>
-        <h3 class="mt-5 text-xl font-semibold text-gray-900">{{ title }}</h3>
-        <p class="mt-2 leading-relaxed text-gray-600">{{ text }}</p>
-        <p class="mt-3 text-sm font-medium text-primary-700">{{ detail }}</p>
+    <p class="text-sm font-semibold uppercase tracking-wider text-primary-700">{{ _('How it works') }}</p>
+    <h2 id="how-heading" class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('From question to report in three steps') }}</h2>
+    <p class="mt-4 max-w-3xl text-lg leading-relaxed text-gray-600">{{ _('A consultation is one question, about a dozen short statements that people agree or disagree with, and the report that comes out of their answers.') }}</p>
+    <ol class="mt-12 grid gap-6 lg:grid-cols-3">
+
+      <li class="flex flex-col overflow-hidden rounded-3xl bg-gray-50 ring-1 ring-gray-200">
+        <div class="flex h-52 items-center justify-center sm:h-64 bg-gradient-to-br from-blue-50 to-blue-100 p-6" aria-hidden="true">
+          <div class="w-full max-w-xs space-y-2">
+            <div class="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200">{{ example_data.question }}</div>
+            <p class="flex items-center gap-1.5 pl-1 text-xs font-semibold text-primary-700">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l1.8 5.2L17 8l-5.2 1.8L10 15l-1.8-5.2L3 8l5.2-1.8L10 1zm6 11l.9 2.1L19 15l-2.1.9L16 18l-.9-2.1L13 15l2.1-.9L16 12z"/></svg>
+              {{ _('Drafted for you') }}
+            </p>
+            {% for row in example_highlights[:3] %}
+            <div class="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs leading-snug text-gray-700 shadow-sm ring-1 ring-gray-200">
+              <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">{{ icon(i_check, 'h-3 w-3') }}</span>
+              <span class="truncate">{{ row.content }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="flex flex-1 flex-col p-8">
+          <p class="text-sm font-bold tabular-nums text-primary-700">01</p>
+          <h3 class="mt-1 text-xl font-semibold text-gray-900">{{ _('Ask your question') }}</h3>
+          <p class="mt-2 leading-relaxed text-gray-600">{{ _('Tell us what you want to know. We draft a balanced set of short statements. Edit them, remove them, add your own, or write them all yourself.') }}</p>
+          <p class="mt-auto pt-4 text-sm font-medium text-primary-700">{{ _('About five minutes.') }}</p>
+        </div>
       </li>
-      {% endfor %}
+
+      <li class="flex flex-col overflow-hidden rounded-3xl bg-gray-50 ring-1 ring-gray-200">
+        <div class="flex h-52 items-center justify-center sm:h-64 gap-5 bg-gradient-to-br from-emerald-50 to-teal-100 p-6" aria-hidden="true">
+          <div class="rounded-2xl bg-white p-3 shadow-md ring-1 ring-gray-200">{{ qr_picture('h-28 w-28') }}</div>
+          <div class="w-28 rounded-[1.25rem] bg-slate-900 p-1.5 shadow-lg">
+            <div class="space-y-1.5 rounded-[0.9rem] bg-white p-2">
+              <div class="h-1 w-8 rounded-full bg-primary-600"></div>
+              <div class="space-y-1 rounded-md bg-gray-100 p-1.5"><div class="h-1 rounded bg-gray-400"></div><div class="h-1 w-4/5 rounded bg-gray-400"></div><div class="h-1 w-3/5 rounded bg-gray-400"></div></div>
+              <div class="h-5 rounded-md border-2 border-emerald-400"></div>
+              <div class="h-5 rounded-md border-2 border-red-300"></div>
+              <div class="h-5 rounded-md border-2 border-amber-300"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-1 flex-col p-8">
+          <p class="text-sm font-bold tabular-nums text-primary-700">02</p>
+          <h3 class="mt-1 text-xl font-semibold text-gray-900">{{ _('Share a link or QR code') }}</h3>
+          <p class="mt-2 leading-relaxed text-gray-600">{{ _('People answer Agree, Disagree or Unsure, one statement at a time. No login, no app, nothing to install.') }}</p>
+          <p class="mt-auto pt-4 text-sm font-medium text-primary-700">{{ _('About two minutes each.') }}</p>
+        </div>
+      </li>
+
+      <li class="flex flex-col overflow-hidden rounded-3xl bg-gray-50 ring-1 ring-gray-200">
+        <div class="flex h-52 items-center justify-center sm:h-64 bg-gradient-to-br from-violet-50 to-indigo-100 p-6" aria-hidden="true">
+          <div class="w-full max-w-xs rounded-xl bg-white p-4 shadow-md ring-1 ring-gray-200">
+            <p class="text-[0.65rem] font-bold uppercase tracking-wider text-gray-500">{{ _('Consultation report') }}</p>
+            <div class="mt-2 grid grid-cols-4 gap-1.5 text-center">
+              {% for key in ['agrees', 'disagrees', 'unsure', 'split'] %}
+              <div class="rounded-md border-t-[3px] {{ verdicts[key].edge }} {{ verdicts[key].tint }} py-1.5 text-base font-bold text-gray-900">{{ example_data.counts[key] }}</div>
+              {% endfor %}
+            </div>
+            <div class="mt-3 space-y-2">
+              {% for row in example_highlights %}{{ bar(row, 'h-2') }}{% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-1 flex-col p-8">
+          <p class="text-sm font-bold tabular-nums text-primary-700">03</p>
+          <h3 class="mt-1 text-xl font-semibold text-gray-900">{{ _('Get the report') }}</h3>
+          <p class="mt-2 leading-relaxed text-gray-600">{{ _('What they agree on, what they reject, where they are unsure and where they are split, with the numbers and the statements behind each finding.') }}</p>
+          <p class="mt-auto pt-4 text-sm font-medium text-primary-700">{{ _('Built the moment voting closes.') }}</p>
+        </div>
+      </li>
     </ol>
   </div>
 </section>
 
-{# ── What you learn ───────────────────────────────────────────────────── #}
-<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="learn-heading">
+{# ── What the data looks like ─────────────────────────────────────────── #}
+<section id="picture" class="bg-gray-50 py-16 sm:py-24" aria-labelledby="learn-heading">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl">
-      <h2 id="learn-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('A poll gives you a number. This gives you the picture.') }}</h2>
+      <p class="text-sm font-semibold uppercase tracking-wider text-primary-700">{{ _('What the data looks like') }}</p>
+      <h2 id="learn-heading" class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('A poll gives you a number. This gives you the picture.') }}</h2>
       <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('A poll answers the question you thought to ask. A consultation covers your question from a dozen angles and sorts every statement into one of four findings.') }}</p>
     </div>
-    <dl class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {% for title, text, colour in [
-        (_('Where they agree'), _('The ground you can build on. Often more than you expected.'), 'border-t-emerald-600'),
-        (_('Where they disagree'), _('The ideas your audience has clearly rejected.'), 'border-t-red-600'),
-        (_('Where they are unsure'), _('Where people need more information before they can take a view.'), 'border-t-amber-600'),
-        (_('Where they are split'), _('The real divisions, which are different from not knowing.'), 'border-t-violet-600'),
+
+    <div class="mt-10 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)]">
+      <figure class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
+        <p class="text-xs font-bold uppercase tracking-wider text-gray-500">{{ _('A poll') }}</p>
+        <p class="mt-3 text-lg font-semibold text-gray-900">{{ _('Should we spend the surplus?') }}</p>
+        <div class="mt-5 space-y-3" aria-hidden="true">
+          <div><div class="h-9 rounded-lg bg-gray-400" style="width: 58%"></div></div>
+          <div><div class="h-9 rounded-lg bg-gray-300" style="width: 42%"></div></div>
+        </div>
+        <p class="mt-3 text-sm tabular-nums text-gray-600">{{ _('Yes') }} 58% · {{ _('No') }} 42%</p>
+        <figcaption class="mt-6 border-t border-gray-100 pt-4 text-sm leading-relaxed text-gray-600">{{ _('Spend it on what? Who decides? Is the minority opposed, or just not told enough? The number cannot say.') }}</figcaption>
+      </figure>
+
+      <figure class="rounded-3xl bg-white p-6 shadow-md ring-2 ring-primary-600 sm:p-8">
+        <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <p class="text-xs font-bold uppercase tracking-wider text-primary-700">{{ _('A consultation') }}</p>
+          <p class="text-xs text-gray-500">{{ ngettext('%(num)d member, twelve statements', '%(num)d members, twelve statements', example_data.participant_count) }}</p>
+        </div>
+        <p class="mt-3 text-lg font-semibold text-gray-900">{{ example_data.question }}</p>
+        <div class="mt-5 space-y-5">
+          {% for verdict, rows in example_groups %}{% if rows %}
+          <div>
+            <p>{{ chip(verdict) }}</p>
+            <ul class="mt-2 space-y-2">
+              {% for row in rows %}
+              <li class="grid items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_9rem_6.5rem]">
+                <span class="text-sm leading-snug text-gray-800">{{ row.content }}</span>
+                {{ bar(row, 'h-2.5') }}
+                <span class="whitespace-nowrap text-xs tabular-nums text-gray-600 sm:text-right">
+                  {% if verdict == 'disagrees' %}{{ _('%(share)s disagree', share=(row.disagree_share * 100)|round|int ~ '%') }}
+                  {% elif verdict == 'unsure' %}{{ _('%(share)s unsure', share=(row.unsure_share * 100)|round|int ~ '%') }}
+                  {% elif verdict == 'agrees' %}{{ _('%(share)s agree', share=(row.agree_share * 100)|round|int ~ '%') }}
+                  {% else %}<span class="sr-only">{{ _('agree, then disagree:') }}</span>{{ (row.agree_share * 100)|round|int }}% / {{ (row.disagree_share * 100)|round|int }}%{% endif %}
+                </span>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}{% endfor %}
+        </div>
+        <figcaption class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 pt-4 text-xs text-gray-500">
+          <span class="whitespace-nowrap"><span class="mr-1 inline-block h-2 w-2 rounded-sm bg-emerald-600" aria-hidden="true"></span>{{ _('Agree') }}</span>
+          <span class="whitespace-nowrap"><span class="mr-1 inline-block h-2 w-2 rounded-sm bg-red-600" aria-hidden="true"></span>{{ _('Disagree') }}</span>
+          <span class="whitespace-nowrap"><span class="mr-1 inline-block h-2 w-2 rounded-sm bg-amber-500" aria-hidden="true"></span>{{ _('Unsure') }}</span>
+          <span>{{ _('Illustration with made-up votes, sorted by the same rules as a real report.') }}</span>
+        </figcaption>
+      </figure>
+    </div>
+
+    <h3 class="mt-16 text-2xl font-bold tracking-tight text-gray-900">{{ _('Four findings, and what each lets you do') }}</h3>
+    <dl class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {% for key, title, text, verb, action in [
+        ('agrees', _('Where they agree'), _('The ground you can build on. Often more than you expected.'), _('Act on it'), _('Announce it, build on it, and stop re-arguing it.')),
+        ('disagrees', _('Where they disagree'), _('The ideas your audience has clearly rejected.'), _('Drop it'), _('Take it off the agenda, and say that you have.')),
+        ('unsure', _('Where they are unsure'), _('Where people need more information before they can take a view.'), _('Explain it'), _('Give people the facts they are missing, then ask again.')),
+        ('split', _('Where they are split'), _('The real divisions, which are different from not knowing.'), _('Explore it'), _('Do not force a vote. Find out what each side is worried about.')),
       ] %}
-      <div class="rounded-2xl border-t-4 {{ colour }} bg-white p-6 shadow-sm ring-1 ring-gray-200">
+      <div class="flex flex-col rounded-2xl border-t-4 {{ verdicts[key].edge }} bg-white p-6 shadow-sm ring-1 ring-gray-200">
         <dt class="text-lg font-semibold text-gray-900">{{ title }}</dt>
-        <dd class="mt-2 leading-relaxed text-gray-600">{{ text }}</dd>
+        <dd class="mt-2 flex flex-1 flex-col">
+          <span class="leading-relaxed text-gray-600">{{ text }}</span>
+          <span class="mt-auto block pt-5">
+            <span class="block rounded-xl {{ verdicts[key].tint }} p-4">
+              <span class="block text-sm font-bold text-gray-900">{{ verb }}</span>
+              <span class="mt-1 block text-sm leading-snug text-gray-700">{{ action }}</span>
+            </span>
+          </span>
+        </dd>
       </div>
       {% endfor %}
     </dl>
-    <p class="mt-8 max-w-3xl leading-relaxed text-gray-600">{{ _('The report also suggests what to ask next, clearly marked as suggestions. It does not tell you what to do, and it says plainly who took part and what the results do not show.') }}</p>
+    <p class="mt-8 max-w-3xl leading-relaxed text-gray-600">{{ _('The report also suggests what to ask next, clearly marked as suggestions. It does not tell you what to do, and it says plainly how many people took part and what the results do not show.') }}</p>
   </div>
 </section>
 
-{# ── See it for yourself ──────────────────────────────────────────────── #}
-<section id="example" class="bg-white py-16 sm:py-20" aria-labelledby="example-heading">
+{# ── Examples across the spectrum ─────────────────────────────────────── #}
+{% set use_case_icons = {
+  'members': 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+  'charities': 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+  'teams': 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z',
+  'events': 'M8 13v-1m4 1v-3m4 3V8M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
+  'research': 'M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z',
+  'publishers': 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z',
+} %}
+<section id="examples" class="bg-white py-16 sm:py-24" aria-labelledby="who-heading" data-uc>
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl">
-      <h2 id="example-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('See both sides before you sign up') }}</h2>
-      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('One made-up consultation, from the question your audience answers to the report you receive. No account needed.') }}</p>
+      <p class="text-sm font-semibold uppercase tracking-wider text-primary-700">{{ _('Examples') }}</p>
+      <h2 id="who-heading" class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Use it when you need to know where people stand') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('Six situations you may recognise: the question each organisation asked, what it found, and what that let it do next.') }}</p>
     </div>
-    <div class="mt-10 grid gap-6 md:grid-cols-2">
-      <a href="{{ url_for('consultations.demo') }}" class="group rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:ring-2 hover:ring-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 motion-reduce:transition-none" data-ph-capture-attribute-cta="consultations-example-demo">
-        <p class="text-sm font-semibold uppercase tracking-wide text-primary-700">{{ _('What your audience sees') }}</p>
-        <h3 class="mt-2 text-xl font-semibold text-gray-900">{{ _('Answer it as a participant') }}</h3>
-        <p class="mt-2 leading-relaxed text-gray-600">{{ _('Twelve short statements, one tap each. Best tried on your phone, the way your audience will. Nothing you answer is recorded.') }}</p>
-        <p class="mt-4 font-semibold text-primary-700 group-hover:underline">{{ _('Try it, about a minute') }} →</p>
-      </a>
-      <a href="{{ url_for('consultations.example_report') }}" class="group rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:ring-2 hover:ring-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 motion-reduce:transition-none" data-ph-capture-attribute-cta="consultations-example-report">
-        <p class="text-sm font-semibold uppercase tracking-wide text-primary-700">{{ _('What you get back') }}</p>
-        <h3 class="mt-2 text-xl font-semibold text-gray-900">{{ _('Read the report') }}</h3>
-        <p class="mt-2 leading-relaxed text-gray-600">{{ _('The headline, the themes, every statement with its numbers, and a plain account of who took part and what the results do not show.') }}</p>
-        <p class="mt-4 font-semibold text-primary-700 group-hover:underline">{{ _('See the example report') }} →</p>
-      </a>
+
+    <div class="-mx-4 mt-8 hidden gap-2 overflow-x-auto px-4 py-1 sm:mx-0 sm:flex-wrap sm:px-0" role="tablist" aria-label="{{ _('Kinds of organisation') }}" data-uc-tabs>
+      {% for case in use_cases %}
+      <button type="button" role="tab" id="uc-tab-{{ case.key }}" aria-controls="uc-panel-{{ case.key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" {% if not loop.first %}tabindex="-1"{% endif %}
+              class="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 aria-selected:bg-gray-900 aria-selected:text-white aria-selected:ring-gray-900 motion-reduce:transition-none"
+              data-uc-tab="{{ case.key }}" data-ph-capture-attribute-cta="consultations-example-{{ case.key }}">
+        {{ icon(use_case_icons[case.key], 'h-4 w-4') }}{{ case.sector }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <noscript><style>[data-uc-panel] { display: block !important; }</style></noscript>
+    <div class="mt-6 space-y-6">
+      {% for case in use_cases %}
+      <div id="uc-panel-{{ case.key }}" class="overflow-hidden rounded-3xl bg-gray-50 ring-1 ring-gray-200{% if not loop.first %} hidden{% endif %}" data-uc-panel="{{ case.key }}" aria-labelledby="uc-tab-{{ case.key }}">
+        <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.9fr)]">
+          <div class="flex flex-col bg-slate-900 p-6 text-white sm:p-8">
+            <p class="flex items-center gap-2 text-sm font-semibold text-blue-200">
+              <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">{{ icon(use_case_icons[case.key]) }}</span>
+              {{ case.sector }}
+            </p>
+            <p class="mt-6 text-xs font-bold uppercase tracking-wider text-slate-400">{{ _('The situation') }}</p>
+            <p class="mt-2 leading-relaxed text-slate-200">{{ case.situation }}</p>
+            <p class="mt-6 text-xs font-bold uppercase tracking-wider text-slate-400">{{ _('The question') }}</p>
+            <h3 class="mt-2 text-2xl font-bold leading-tight sm:text-3xl">{{ case.question }}</h3>
+            <dl class="mt-auto space-y-3 pt-8 text-sm">
+              <div class="flex gap-3">
+                <dt class="w-20 shrink-0 text-slate-400">{{ _('Shared') }}</dt>
+                <dd class="text-slate-100">{{ case.how }}</dd>
+              </div>
+              <div class="flex gap-3">
+                <dt class="w-20 shrink-0 text-slate-400">{{ _('Took part') }}</dt>
+                <dd class="tabular-nums text-slate-100">{{ case.participant_count }}</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="p-4 sm:p-6">
+          <p class="text-xs font-bold uppercase tracking-wider text-gray-500">{{ _('What they found') }}</p>
+          <p class="mt-1 text-xl font-bold leading-snug text-gray-900 sm:text-2xl">{{ case.takeaway }}</p>
+          <ul class="mt-5 grid gap-4 sm:grid-cols-2">
+            {% for row in case.findings %}
+            <li class="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
+              <p>{{ chip(row.verdict) }}</p>
+              <p class="mt-3 font-semibold leading-snug text-gray-900">{{ row.content }}</p>
+              <div class="mt-3">{{ bar(row, 'h-2.5') }}</div>
+              <div class="mt-2">{{ figures(row) }}</div>
+              <p class="mt-auto pt-4">
+                <span class="flex gap-2 rounded-xl {{ verdicts[row.verdict].tint }} p-3 text-sm leading-snug text-gray-800">
+                  <span class="mt-0.5 shrink-0 text-gray-500">{{ icon(i_arrow, 'h-4 w-4') }}</span>
+                  <span><span class="sr-only">{{ _('What it lets you do:') }}</span> {{ row.action }}</span>
+                </span>
+              </p>
+            </li>
+            {% endfor %}
+          </ul>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="mt-4 text-sm text-gray-500">{{ _('Made-up examples, not customer results. The figures are sorted into findings by the same rules as a real report.') }}</p>
+  </div>
+</section>
+
+{# ── In the room ──────────────────────────────────────────────────────── #}
+{% set room = use_cases|selectattr('key', 'equalto', 'events')|first %}
+{% set room_row = room.findings[0] %}
+<section id="live" class="ssl-stage relative isolate overflow-hidden py-16 text-white sm:py-24" aria-labelledby="live-heading" data-room>
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-wider text-blue-300">{{ _('Live audiences') }}</p>
+      <h2 id="live-heading" class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{{ _('Put the code on a slide. Know where the room stands before the session ends.') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-slate-300">{{ _('A show of hands tells you who is confident. This tells you what everyone thinks, including the people who would never raise a hand.') }}</p>
+      <p class="mt-3 text-base leading-relaxed text-slate-300">{{ _('Each talk is its own question and its own report. A 30-day pass covers every talk you run in that time.') }}</p>
+      <ol class="mt-8 space-y-5">
+        {% for when, title, text in [
+          (_('0:00'), _('The code goes on screen'), _('One click opens a full-screen view with your question, the QR code and a live count of who has answered.')),
+          (_('0:30'), _('The room starts answering'), _('No login and no app, so nobody is left behind. One tap per statement, and it is anonymous.')),
+          (_('2:00'), _('Reveal the results on the same screen'), _('One key switches from the code to the results, sorted into the four findings. You choose the moment, so nobody is swayed while they are still answering.')),
+          (_('After'), _('Close voting and the report is built'), _('Read the headline out before people leave, then send the link round.')),
+        ] %}
+        <li class="flex gap-4">
+          <span class="w-12 shrink-0 pt-0.5 text-sm font-bold tabular-nums text-blue-300">{{ when }}</span>
+          <span>
+            <span class="block font-semibold">{{ title }}</span>
+            <span class="mt-1 block leading-relaxed text-slate-400">{{ text }}</span>
+          </span>
+        </li>
+        {% endfor %}
+      </ol>
+      <p class="mt-8 rounded-2xl bg-white/5 p-4 text-sm leading-relaxed text-slate-300 ring-1 ring-inset ring-white/10">
+        <span class="font-semibold text-white">{{ _('Let the room add to it.') }}</span>
+        {{ _('Switch on suggestions and people can propose statements of their own. Each one waits for your approval before anyone else sees it.') }}
+      </p>
+    </div>
+
+    <figure class="mx-auto w-full max-w-xl">
+      <div class="rounded-2xl bg-white p-6 text-center text-gray-900 shadow-2xl ring-1 ring-white/20 sm:p-8" aria-hidden="true">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ _('Annual conference') }}</p>
+        <p class="mx-auto mt-2 max-w-sm text-xl font-bold leading-tight sm:text-2xl">{{ room.question }}</p>
+        <div class="mt-4 flex justify-center">{{ qr_picture('h-32 w-32 sm:h-36 sm:w-36') }}</div>
+        <p class="mt-3 text-base font-semibold">{{ _('Point your phone camera at the code') }}</p>
+        <p class="text-sm text-gray-600">{{ _('Two minutes. No login. Anonymous.') }}</p>
+      </div>
+      <div class="mx-auto h-3 w-2/3 rounded-b-xl bg-slate-800" aria-hidden="true"></div>
+
+      <div class="mt-6 rounded-2xl bg-slate-900/80 p-5 ring-1 ring-inset ring-white/10">
+        <div class="flex items-baseline justify-between gap-4">
+          <p class="text-sm leading-snug text-slate-300">{{ room_row.content }}</p>
+          <p class="shrink-0 text-sm text-slate-400"><span class="text-2xl font-bold tabular-nums text-white" data-room-count="{{ room_row.total }}" aria-hidden="true">{{ room_row.total }}</span> <span class="sr-only">{{ ngettext('%(num)d person answered', '%(num)d people answered', room_row.total) }}</span><span aria-hidden="true">{{ _('answered') }}</span></p>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-1.5" aria-hidden="true">
+          {% set agree_n, disagree_n = room_row.agree, room_row.disagree %}
+          {% for i in range(room_row.total) %}
+          {% set order = (i * 47) % room_row.total %}
+          <span class="ssl-seat h-3 w-3 rounded-full" style="--c: {{ '#10b981' if order < agree_n else ('#ef4444' if order < agree_n + disagree_n else '#f59e0b') }}; --d: {{ ((i * 29) % room_row.total) * 30 }}ms"></span>
+          {% endfor %}
+        </div>
+        <div class="ssl-room-bar mt-4">{{ bar(room_row, 'h-3') }}</div>
+        <div class="ssl-room-figures mt-2">{{ figures(room_row, 'text-xs text-slate-300') }}</div>
+      </div>
+      <figcaption class="mt-3 text-center text-xs text-slate-400">{{ _('Illustration: one dot for each person in a made-up room.') }}</figcaption>
+    </figure>
+  </div>
+</section>
+
+{# ── The report ───────────────────────────────────────────────────────── #}
+<section id="example" class="bg-white py-16 sm:py-24" aria-labelledby="example-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <p class="text-sm font-semibold uppercase tracking-wider text-primary-700">{{ _('What you get back') }}</p>
+      <h2 id="example-heading" class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('A report you can forward, not a spreadsheet to decode') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('Written in plain English, with every number counted directly from the votes. Send it to your board as it is.') }}</p>
+    </div>
+
+    <div class="mt-10 grid items-start gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <figure class="rounded-3xl bg-gradient-to-br from-slate-100 to-blue-100 p-4 sm:p-8">
+        <div class="rounded-xl bg-white p-6 shadow-xl ring-1 ring-gray-200 sm:p-8">
+          <p class="text-xs font-bold uppercase tracking-wider text-gray-500">{{ _('Consultation report') }}</p>
+          <p class="mt-1 text-2xl font-extrabold tracking-tight text-gray-900">{{ example_data.question }}</p>
+          <p class="mt-1 text-sm text-gray-600">{{ example_data.organisation_name }} · {{ example_data.audience_label }}</p>
+          <dl class="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-b-2 border-gray-900 pb-4">
+            {% for label, value in [
+              (_('Took part'), example_data.participant_count),
+              (_('Votes cast'), example_data.vote_count),
+              (_('Response rate'), (example_data.response_rate * 100)|round|int ~ '%'),
+            ] %}
+            <div><dt class="text-[0.7rem] font-semibold uppercase tracking-wide text-gray-500">{{ label }}</dt><dd class="text-xl font-bold tabular-nums text-gray-900">{{ value }}</dd></div>
+            {% endfor %}
+          </dl>
+          <div class="relative mt-5 pl-9">
+            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white ring-2 ring-white" aria-hidden="true">1</span>
+            <p class="rounded-lg bg-blue-50 p-4 text-base font-semibold leading-snug text-gray-900">{{ example_narrative.headline }}</p>
+          </div>
+          <div class="relative mt-5 pl-9">
+            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white ring-2 ring-white" aria-hidden="true">2</span>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {% for key in ['agrees', 'disagrees', 'unsure', 'split'] %}
+              <div class="rounded-lg border-t-4 {{ verdicts[key].edge }} {{ verdicts[key].tint }} px-3 py-2">
+                <p class="text-2xl font-extrabold tabular-nums text-gray-900">{{ example_data.counts[key] }}</p>
+                <p class="text-xs text-gray-700">{{ verdicts[key].label }}</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="relative mt-5 space-y-3 pl-9">
+            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white ring-2 ring-white" aria-hidden="true">3</span>
+            {% for theme in example_narrative.themes[:3] %}
+            <div class="border-l-4 {{ verdicts[theme.verdict].edge }} pl-3">
+              <p class="text-sm font-bold text-gray-900">{{ theme.title }}</p>
+              <p class="text-sm text-gray-600">{{ theme.summary }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="relative mt-5 border-t border-gray-100 pl-9 pt-4">
+            <span class="absolute left-0 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white ring-2 ring-white" aria-hidden="true">4</span>
+            {% set first_row = example_groups[0][1][0] %}
+            <p class="text-sm font-semibold text-gray-900">{{ first_row.content }}</p>
+            <div class="mt-2">{{ bar(first_row, 'h-2.5') }}</div>
+            <div class="mt-1.5">{{ figures(first_row) }}</div>
+          </div>
+        </div>
+        <figcaption class="mt-4 text-center text-xs text-gray-600">{{ _('Illustration. Your report is built from your own audience’s answers.') }}</figcaption>
+      </figure>
+
+      <div>
+        <ol class="space-y-6">
+          {% for title, text in [
+            (_('A headline you can read out'), _('One sentence that says where your audience stands. Written by AI from the results, then checked by software so it adds nothing the votes do not show.')),
+            (_('The four findings, counted'), _('How many statements they agree with, reject, are unsure about or are split on.')),
+            (_('Themes, not a wall of charts'), _('Related statements are grouped, so a pattern reads as one finding.')),
+            (_('Every statement, with its numbers'), _('The evidence behind each finding, and a plain account of how many people took part and what the results do not show.')),
+          ] %}
+          <li class="flex gap-4">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white" aria-hidden="true">{{ loop.index }}</span>
+            <span>
+              <span class="block font-semibold text-gray-900">{{ title }}</span>
+              <span class="mt-1 block leading-relaxed text-gray-600">{{ text }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ol>
+
+        <h3 class="mt-10 text-sm font-semibold uppercase tracking-wider text-gray-500">{{ _('Then put it to work') }}</h3>
+        <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          {% for path, title, text in [
+            ('M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', _('Share by link'), _('Private until you choose to share it.')),
+            ('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', _('Download the PDF'), _('For the board pack or the minutes.')),
+            ('M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', _('Export the CSV'), _('Every figure, for your own analysis.')),
+            ('M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', _('Ask the next question'), _('The report suggests what to ask next.')),
+          ] %}
+          <li class="flex gap-3 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-200">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-primary-700 ring-1 ring-gray-200">{{ icon(path) }}</span>
+            <span>
+              <span class="block text-sm font-semibold text-gray-900">{{ title }}</span>
+              <span class="block text-sm leading-snug text-gray-600">{{ text }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="{{ url_for('consultations.example_report') }}" class="{{ btn_primary_md() }} min-h-11" data-ph-capture-attribute-cta="consultations-example-report">{{ _('See the example report') }}</a>
+          <a href="{{ url_for('consultations.demo') }}" class="{{ btn_secondary_md() }} min-h-11" data-ph-capture-attribute-cta="consultations-example-demo">{{ _('Answer it as a participant') }}</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 {# ── Compared with a survey or a live poll ────────────────────────────── #}
-<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="compare-heading">
+<section class="bg-gray-50 py-16 sm:py-24" aria-labelledby="compare-heading">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl">
-      <h2 id="compare-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Why not a survey or a live poll?') }}</h2>
-      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('Both are good at what they do. Neither hands you a finished account of where a group stands.') }}</p>
+      <p class="text-sm font-semibold uppercase tracking-wider text-primary-700">{{ _('Why this, not that') }}</p>
+      <h2 id="compare-heading" class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Why not a survey or a live poll?') }}</h2>
+      <p class="mt-4 text-lg leading-relaxed text-gray-600">{{ _('They are good tools, and for some jobs the better choice. None of them hands you a finished account of where a group stands.') }}</p>
     </div>
+    {# Rows: label, Slido, Mentimeter, survey forms, ours. Competitor facts are
+       limited to what each publishes about itself; review them when prices change. #}
     {% set comparison = [
-      (_('Setting up'), _('You write and test every question'), _('You write each question and its options'), _('You write one question; the statements are drafted for you to approve')),
-      (_('Taking part'), _('Pages of questions to work through'), _('One tap, usually during a live session'), _('One tap per statement, in about two minutes, whenever suits them')),
-      (_('What you get'), _('A spreadsheet and charts to interpret'), _('A bar chart per question'), _('A written report you can forward as it is')),
-      (_('Divided, or just undecided?'), _('Only if you analyse it yourself'), _('Not shown'), _('Shown separately for every statement')),
-      (_('Too few answers to be sure?'), _('Left for you to judge'), _('Left for you to judge'), _('Said plainly, statement by statement')),
-      (_('Price'), _('Usually by seat or by response'), _('Usually by seat or audience size'), _('Per consultation, any number of participants')),
+      (_('Built for'), _('Live Q&A, quick polls and quizzes in a meeting'), _('Interactive slides: word clouds, quizzes and polls'), _('Long questionnaires with branching and written answers'), _('Finding where a group stands on one contested question')),
+      (_('You prepare'), _('Each poll and its options'), _('A slide for each question'), _('Every question, written and tested'), _('One question. The statements are drafted for you to edit')),
+      (_('You walk away with'), _('A chart for each poll, and an export'), _('A chart for each slide, and an export'), _('A spreadsheet and charts to interpret'), _('A written report you can forward as it is')),
+      (_('Divided, or just undecided?'), _('Yours to work out from the charts'), _('Yours to work out from the charts'), _('Yours to work out from the data'), _('Shown separately for every statement')),
+      (_('Too few answers to be sure?'), _('Left for you to judge'), _('Left for you to judge'), _('Left for you to judge'), _('Said plainly, statement by statement')),
+      (_('Priced by'), _('Plan, each with a cap on participants'), _('Presenter seat'), _('Seat, often with a limit on responses'), _('%(price)s for 30 days, any number of participants', price=price_single)),
+      (_('Choose it when'), _('You want the audience’s questions, voted up'), _('You want a lively, interactive presentation'), _('You need detailed answers from each person'), _('You have a decision to make and need to know where people stand')),
     ] %}
+    {% set rivals = ['Slido', 'Mentimeter', _('Survey forms')] %}
 
-    {# Phones: one card per row, so the consultation column is never off-screen. #}
-    <dl class="mt-10 space-y-4 md:hidden">
-      {% for label, survey, poll, ours in comparison %}
+    {# Below large screens: one card per row, so our column is never off-screen. #}
+    <dl class="mt-10 grid gap-4 sm:grid-cols-2 lg:hidden">
+      {% for label, slido, menti, survey, ours in comparison %}
       <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
         <dt class="text-base font-semibold text-gray-900">{{ label }}</dt>
         <dd class="mt-3 space-y-2 text-sm">
-          <p class="text-gray-600"><span class="font-medium text-gray-900">{{ _('Survey form') }}:</span> {{ survey }}</p>
-          <p class="text-gray-600"><span class="font-medium text-gray-900">{{ _('Live poll') }}:</span> {{ poll }}</p>
-          <p class="rounded-lg bg-blue-50 p-3 font-medium text-gray-900"><span class="text-primary-700">{{ _('Consultation') }}:</span> {{ ours }}</p>
+          <p class="text-gray-600"><span class="font-medium text-gray-900">Slido:</span> {{ slido }}</p>
+          <p class="text-gray-600"><span class="font-medium text-gray-900">Mentimeter:</span> {{ menti }}</p>
+          <p class="text-gray-600"><span class="font-medium text-gray-900">{{ _('Survey forms') }}:</span> {{ survey }}</p>
+          <p class="rounded-lg bg-blue-50 p-3 font-medium text-gray-900"><span class="text-primary-700">Society Speaks:</span> {{ ours }}</p>
         </dd>
       </div>
       {% endfor %}
     </dl>
 
-    <div class="mt-10 hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 md:block">
-      <table class="w-full text-left text-sm">
-        <caption class="sr-only">{{ _('A consultation compared with a survey form and a live poll') }}</caption>
+    <div class="mt-10 hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 lg:block">
+      <table class="w-full table-fixed text-left text-sm">
+        <caption class="sr-only">{{ _('Society Speaks compared with Slido, Mentimeter and survey forms') }}</caption>
         <thead>
           <tr class="border-b border-gray-200 text-gray-900">
-            <td class="p-4"></td>
-            <th scope="col" class="p-4 font-semibold">{{ _('Survey form') }}</th>
-            <th scope="col" class="p-4 font-semibold">{{ _('Live poll') }}</th>
-            <th scope="col" class="bg-blue-50 p-4 font-semibold text-primary-700">{{ _('Consultation') }}</th>
+            <th scope="col" class="w-[15%] p-4"><span class="sr-only">{{ _('Compared on') }}</span></th>
+            {% for name in rivals %}<th scope="col" class="p-4 font-semibold">{{ name }}</th>{% endfor %}
+            <th scope="col" class="w-[26%] bg-primary-600 p-4 font-semibold text-white">Society Speaks</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 text-gray-600">
-          {% for label, survey, poll, ours in comparison %}
+          {% for label, slido, menti, survey, ours in comparison %}
           <tr>
             <th scope="row" class="p-4 align-top font-semibold text-gray-900">{{ label }}</th>
+            <td class="p-4 align-top">{{ slido }}</td>
+            <td class="p-4 align-top">{{ menti }}</td>
             <td class="p-4 align-top">{{ survey }}</td>
-            <td class="p-4 align-top">{{ poll }}</td>
             <td class="bg-blue-50 p-4 align-top font-medium text-gray-900">{{ ours }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="mt-4 text-sm text-gray-500">{{ _('If you need long written answers, or questions that branch, a survey form is the better tool.') }}</p>
-  </div>
-</section>
-
-{# ── Who it is for ────────────────────────────────────────────────────── #}
-<section class="bg-white py-16 sm:py-20" aria-labelledby="who-heading">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <h2 id="who-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Use it when you need to know where people stand') }}</h2>
-    <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {% for title, text in [
-        (_('Membership bodies'), _('Priorities for the year, a change to fees, a position on a policy. Hear from the members who never speak at the AGM.')),
-        (_('Charities and trustees'), _('Test a strategy with staff, volunteers or the people you serve before the board decides.')),
-        (_('Teams and staff'), _('Find out what a room full of polite nodding hides, without anyone having to say it out loud.')),
-        (_('Events and conferences'), _('Put the QR code on a slide. By the end of the session you know where the room stands.')),
-        (_('Think tanks and researchers'), _('A fast read on how an audience responds to a set of proposals, with every figure exportable.')),
-        (_('Publishers and podcasts'), _('Ask your audience what they think of the issue you just covered, and report back what you found.')),
-      ] %}
-      <li class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
-        <p class="mt-2 leading-relaxed text-gray-600">{{ text }}</p>
-      </li>
-      {% endfor %}
-    </ul>
+    <p class="mt-4 max-w-3xl text-sm leading-relaxed text-gray-500">{{ _('Many organisations use more than one: a live poll to warm up the room, a consultation for the question that matters. Survey forms here means tools such as Google Forms, Microsoft Forms and SurveyMonkey.') }}</p>
+    <p class="mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">{{ _('Based on each company’s published plans in October 2026. Slido and Mentimeter are trademarks of their owners, who have not endorsed this comparison.') }}</p>
   </div>
 </section>
 
 {# ── Pricing ──────────────────────────────────────────────────────────── #}
-<section id="pricing" class="bg-gray-50 py-16 sm:py-20" aria-labelledby="pricing-heading">
+<section id="pricing" class="bg-white py-16 sm:py-24" aria-labelledby="pricing-heading">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">
       <h2 id="pricing-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Pay for the consultation, never the participant') }}</h2>
-      <p class="mt-4 text-lg text-gray-600">{{ _('Setting up is free. You pay when you go live.') }}</p>
+      <p class="mt-4 text-lg text-gray-600">{{ _('The first time you go live is a %(days)d-day trial, no card. Or pay for 30 days, or for the year. Same features, and the report stays readable afterwards.', days=trial_days) }}</p>
     </div>
-    <div class="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-3">
+    <div class="mx-auto mt-12 grid max-w-6xl gap-8 lg:grid-cols-2 xl:grid-cols-4">
 
-      <div class="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900">{{ _('One consultation') }}</h3>
-        <p class="mt-4"><span class="text-4xl font-bold tracking-tight text-gray-900">{{ price_single }}</span></p>
-        <p class="mt-3 leading-relaxed text-gray-600">{{ _('One question, one audience, the full report.') }}</p>
+      <div class="relative flex h-full flex-col rounded-2xl bg-white p-8 shadow-md ring-2 ring-primary-600">
+        <span class="absolute -top-3 left-8 rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white">{{ _('Start here') }}</span>
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('%(days)d-day live trial', days=trial_days) }}</h3>
+        <p class="mt-4"><span class="text-4xl font-bold tracking-tight text-gray-900">{{ _('Free') }}</span></p>
+        <p class="mt-3 leading-relaxed text-gray-600">{{ _('Every feature, from the first time you go live. No card. One trial per verified email.') }}</p>
         <ul class="mt-6 space-y-3 text-sm text-gray-700">
-          {% for item in [_('Any number of participants'), _('AI-drafted statements you approve'), _('Link and QR code'), _('Report, PDF and CSV'), _('Refunded in full if you do not go live')] %}
+          {% for item in [_('Any number of questions'), _('Any number of participants'), _('Complete report and exports'), _('Report stays readable afterwards')] %}
+          <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        <div class="mt-auto pt-8">
+          <a href="{{ start_url }}" class="{{ btn_primary_md() }} w-full min-h-11" data-ph-capture-attribute-cta="consultations-pricing-trial">{{ _('Start free') }}</a>
+        </div>
+      </div>
+
+      <div class="flex h-full flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">{{ _('30 days') }}</h3>
+        <p class="mt-4"><span class="text-4xl font-bold tracking-tight text-gray-900">{{ price_single }}</span></p>
+        <p class="mt-3 leading-relaxed text-gray-600">{{ _('Every question you take live in the next 30 days, for one organisation. Each question gets its own report.') }}</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+          {% for item in [_('Any number of questions'), _('Any number of participants'), _('AI-drafted statements you approve'), _('Link and QR code'), _('Report, PDF and CSV'), _('Refunded in full before the first goes live')] %}
           <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>{{ item }}</li>
           {% endfor %}
         </ul>
@@ -287,13 +778,13 @@
         </div>
       </div>
 
-      <div class="relative flex flex-col rounded-2xl bg-white p-8 shadow-md ring-2 ring-primary-600">
-        <span class="absolute -top-3 left-8 rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white">{{ _('Best value from four a year') }}</span>
-        <h3 class="text-lg font-semibold text-gray-900">{{ _('Unlimited, for a year') }}</h3>
+      <div class="relative flex h-full flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <span class="absolute -top-3 left-8 rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white">{{ _('Cheaper from seven passes') }}</span>
+        <h3 class="mt-2 text-lg font-semibold text-gray-900">{{ _('Unlimited, for a year') }}</h3>
         <p class="mt-4"><span class="text-4xl font-bold tracking-tight text-gray-900">{{ price_annual }}</span> <span class="text-gray-600">{{ _('a year') }}</span></p>
         <p class="mt-3 leading-relaxed text-gray-600">{{ _('Every consultation your organisation runs with its own audiences.') }}</p>
         <ul class="mt-6 space-y-3 text-sm text-gray-700">
-          {% for item in [_('Everything in a single consultation'), _('No limit on consultations'), _('No limit on participants'), _('Cancel any time')] %}
+          {% for item in [_('Everything in a 30-day pass'), _('No limit on consultations'), _('No limit on participants'), _('Cancel any time')] %}
           <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>{{ item }}</li>
           {% endfor %}
         </ul>
@@ -302,7 +793,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+      <div class="flex h-full flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
         <h3 class="text-lg font-semibold text-gray-900">{{ _('Facilitated') }}</h3>
         <p class="mt-4"><span class="text-sm text-gray-600">{{ _('from') }}</span> <span class="text-4xl font-bold tracking-tight text-gray-900">£2,500</span></p>
         <p class="mt-3 leading-relaxed text-gray-600">{{ _('We design it, run it and present the findings with you. For public bodies and larger programmes.') }}</p>
@@ -316,23 +807,24 @@
         </div>
       </div>
     </div>
-    <p class="mt-8 text-center text-sm text-gray-500">{{ _('Prices exclude VAT. The annual plan is for one organisation and its own audiences.') }}</p>
+    <p class="mt-8 text-center text-sm text-gray-500">{{ _('Prices exclude VAT. A 30-day pass does not renew. If you start the annual plan while that pass is still open, what you paid is taken off the first year. Completed reports stay readable after access ends.') }}</p>
   </div>
 </section>
 
 {# ── Trust ────────────────────────────────────────────────────────────── #}
-<section class="bg-white py-16 sm:py-20" aria-labelledby="trust-heading">
+<section class="border-t border-gray-200 bg-white py-16 sm:py-24" aria-labelledby="trust-heading">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <h2 id="trust-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Built so people answer honestly') }}</h2>
-    <dl class="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-      {% for title, text in [
-        (_('Anonymous'), _('No accounts and no names. You see results, never who answered what.')),
-        (_('Link-only'), _('Never listed or searchable. Replace the link at any time and the old one stops working.')),
-        (_('No trackers'), _('The page participants see carries no analytics or advertising scripts.')),
-        (_('Honest about limits'), _('Every report says who took part, how many, and what the results do not show.')),
+    <dl class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {% for path, title, text in [
+        ('M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21', _('Anonymous'), _('No accounts and no names. You see results, never who answered what.')),
+        ('M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', _('Link-only'), _('Never listed or searchable. Replace the link at any time and the old one stops working.')),
+        ('M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', _('No trackers'), _('The page participants see carries no analytics or advertising scripts.')),
+        ('M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3', _('Honest about limits'), _('Every report says how many people took part, never who, and what the results do not show.')),
       ] %}
-      <div>
-        <dt class="text-lg font-semibold text-gray-900">{{ title }}</dt>
+      <div class="rounded-2xl bg-gray-50 p-6 ring-1 ring-gray-200">
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary-700 ring-1 ring-gray-200"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="{{ path }}"/></svg></span>
+        <dt class="mt-4 text-lg font-semibold text-gray-900">{{ title }}</dt>
         <dd class="mt-2 leading-relaxed text-gray-600">{{ text }}</dd>
       </div>
       {% endfor %}
@@ -346,7 +838,7 @@
 </section>
 
 {# ── FAQ ──────────────────────────────────────────────────────────────── #}
-<section class="bg-gray-50 py-16 sm:py-20" aria-labelledby="faq-heading">
+<section class="bg-gray-50 py-16 sm:py-24" aria-labelledby="faq-heading">
   <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
     <h2 id="faq-heading" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Questions') }}</h2>
     <div class="mt-8 space-y-3">
@@ -364,13 +856,113 @@
 </section>
 
 {# ── Final call to action ─────────────────────────────────────────────── #}
-<section class="bg-primary-600 py-14" aria-labelledby="cta-heading">
+<section class="ssl-hero py-16 sm:py-20" aria-labelledby="cta-heading">
   <div class="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
     <h2 id="cta-heading" class="text-3xl font-bold tracking-tight text-white">{{ _('Have your statements drafted in the next five minutes') }}</h2>
-    <p class="mt-3 text-lg text-blue-100">{{ _('Write your question, see the statements, and decide then. It costs nothing until you go live.') }}</p>
-    <a href="{{ start_url }}" class="mt-8 inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-6 py-3.5 text-base font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600" data-ph-capture-attribute-cta="consultations-final-start">{{ _('Start free') }}</a>
+    <p class="mt-3 text-lg text-slate-300">{{ _('Write your question, see the statements, and decide then. The first time you go live is free for %(days)d days, with no card.', days=trial_days) }}</p>
+    <a href="{{ start_url }}" class="mt-8 inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-6 py-3.5 text-base font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950" data-ph-capture-attribute-cta="consultations-final-start">{{ _('Start free') }}</a>
   </div>
 </section>
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  'use strict';
+
+  // The four statements in the phone. Nothing is sent anywhere.
+  var tryIt = document.querySelector('[data-try]');
+  if (tryIt) {
+    var steps = Array.prototype.slice.call(tryIt.querySelectorAll('[data-try-step]'));
+    var done = tryIt.querySelector('[data-try-done]');
+    var show = function (index) {
+      steps.forEach(function (step, n) { step.classList.toggle('hidden', n !== index); });
+      done.classList.toggle('hidden', index < steps.length);
+      var target = index < steps.length ? steps[index].querySelector('[data-try-statement]') : done.querySelector('[data-try-done-heading]');
+      target.focus({ preventScroll: true });
+    };
+    steps.forEach(function (step, index) {
+      var ask = step.querySelector('[data-try-ask]');
+      var result = step.querySelector('[data-try-result]');
+      Array.prototype.forEach.call(ask.querySelectorAll('[data-vote]'), function (button) {
+        button.addEventListener('click', function () {
+          Array.prototype.forEach.call(result.querySelectorAll('[data-said]'), function (said) {
+            said.classList.toggle('hidden', said.dataset.said !== button.dataset.vote);
+          });
+          ask.classList.add('hidden');
+          result.classList.remove('hidden');
+          result.classList.add('flex');
+          result.focus({ preventScroll: true });
+        });
+      });
+      result.querySelector('[data-try-next]').addEventListener('click', function () { show(index + 1); });
+    });
+    tryIt.querySelector('[data-try-again]').addEventListener('click', function () {
+      steps.forEach(function (step) {
+        step.querySelector('[data-try-ask]').classList.remove('hidden');
+        step.querySelector('[data-try-result]').classList.add('hidden');
+        step.querySelector('[data-try-result]').classList.remove('flex');
+      });
+      show(0);
+    });
+  }
+
+  // The examples become tabs. Without this script they are a list.
+  var examples = document.querySelector('[data-uc]');
+  if (examples) {
+    var tabList = examples.querySelector('[data-uc-tabs]');
+    var tabs = Array.prototype.slice.call(examples.querySelectorAll('[data-uc-tab]'));
+    var panels = Array.prototype.slice.call(examples.querySelectorAll('[data-uc-panel]'));
+    var select = function (key, moveFocus) {
+      tabs.forEach(function (tab) {
+        var on = tab.dataset.ucTab === key;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.tabIndex = on ? 0 : -1;
+        if (on && moveFocus) tab.focus();
+      });
+      panels.forEach(function (panel) { panel.classList.toggle('hidden', panel.dataset.ucPanel !== key); });
+    };
+    panels.forEach(function (panel) {
+      panel.setAttribute('role', 'tabpanel');
+      panel.tabIndex = 0;
+    });
+    tabList.classList.remove('hidden');
+    tabList.classList.add('flex');
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener('click', function () { select(tab.dataset.ucTab, false); });
+      tab.addEventListener('keydown', function (event) {
+        var keys = { ArrowRight: 1, ArrowLeft: -1, Home: 'home', End: 'end' };
+        if (!(event.key in keys)) return;
+        event.preventDefault();
+        var next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1] : tabs[(index + keys[event.key] + tabs.length) % tabs.length];
+        if (next !== tab) select(next.dataset.ucTab, true);
+      });
+    });
+    select(tabs[0].dataset.ucTab, false);
+  }
+
+  // The room fills in when it scrolls into view.
+  var room = document.querySelector('[data-room]');
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (room && !still && 'IntersectionObserver' in window) {
+    var counter = room.querySelector('[data-room-count]');
+    var total = parseInt(counter.dataset.roomCount, 10);
+    room.classList.add('ssl-armed');
+    counter.textContent = '0';
+    var observer = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      observer.disconnect();
+      room.classList.add('ssl-on');
+      var began = null;
+      var tick = function (now) {
+        if (began === null) began = now;
+        var progress = Math.min((now - began) / 3800, 1);
+        counter.textContent = Math.round(progress * total);
+        if (progress < 1) window.requestAnimationFrame(tick);
+      };
+      window.requestAnimationFrame(tick);
+    }, { threshold: 0.35 });
+    observer.observe(room.querySelector('figure'));
+  }
+})();
+</script>
 {% from "components/_offers.html" import offers %}
 {{ offers(current='self_serve') }}
 {% endblock %}
