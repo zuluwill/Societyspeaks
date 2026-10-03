@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 {% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_secondary_lg, btn_secondary_md, link_primary %}
 {% set start_url = url_for('consultations.start') %}
 {% set faqs = [
@@ -275,6 +276,11 @@
     <p class="text-sm font-semibold uppercase tracking-wider text-primary-700">{{ _('How it works') }}</p>
     <h2 id="how-heading" class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('From question to report in three steps') }}</h2>
     <p class="mt-4 max-w-3xl text-lg leading-relaxed text-gray-600">{{ _('A consultation is one question, about a dozen short statements that people agree or disagree with, and the report that comes out of their answers.') }}</p>
+    {% if marketing_film('consultation') %}
+    <div class="mt-10 max-w-4xl">
+      {{ film_player('consultation', cta_url=start_url, cta_label=_('Start free'), cta_id='consultations-film') }}
+    </div>
+    {% endif %}
     <ol class="mt-12 grid gap-6 lg:grid-cols-3">
 
       <li class="flex flex-col overflow-hidden rounded-3xl bg-gray-50 ring-1 ring-gray-200">

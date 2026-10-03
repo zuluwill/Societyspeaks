@@ -212,7 +212,7 @@ hard way on 2026-07-11).
 - Cache rule `cache-static-assets`: eligible for cache on
   `/assets/*`, `/images/*`, `/css/*`, `/js/*`, `/fonts/*`, `/icons/*`,
   `/logos/*`, `/data/*`, `/dist/*`, `/profiles/assets/*`,
-  `/profiles/get-image/*`, `/favicon.ico`, `/favicon.png`, `/favicon.svg`;
+  `/profiles/get-image/*`, `/media/*`, `/favicon.ico`, `/favicon.png`, `/favicon.svg`;
   Edge TTL **Respect origin**; enable **Cache eligibility: Eligible for
   cache**. Origin sends `public, max-age=86400, s-maxage=604800` and strips
   `Vary: Cookie` / `Set-Cookie` on these paths (`app/lib/cdn_cache.py`) so
@@ -836,6 +836,51 @@ consultation and per purpose, with the typical and heaviest consultation.
 Multiply by the provider's current prices. Database transfer for the period
 is on the Neon bill (see "Neon egress").
 
+
+## Product films
+
+The films on the home, About, consultations, publishers, platform, brief and
+help pages come from the video studio (`../societyspeaks-video-studio`). The
+code is `app/lib/marketing_films.py`, `components/film.html` and
+`static/js/film_player.js`. Pages show a poster until someone presses play,
+so a film costs nothing until it is watched. While `MARKETING_FILMS_ENABLED`
+is off, every page keeps its usual layout (the home page keeps its hero image).
+
+### Publishing or replacing films
+
+1. In the studio: `node production/web-export.mjs` (all films) or name the
+   films that changed. It writes `deliverables/web/` with content-hashed
+   names, so a new cut gets a new URL and nothing needs purging.
+2. Upload, then record the manifest:
+   `python3 scripts/publish_marketing_films.py --source ../societyspeaks-video-studio/deliverables/web --dry-run`,
+   then without `--dry-run`, with the production `AWS_*` variables. Files
+   already in the bucket are skipped.
+3. Commit `app/lib/marketing_films.json` and deploy. **Upload before
+   deploying the manifest**, or the posters 404.
+4. First time only: set `MARKETING_FILMS_ENABLED=true` on Render, and add
+   `/media/*` to the Cloudflare cache rule above.
+
+For local development, `--local` copies the files to `app/static/films/`
+(git-ignored) and the same `/media/films/` URLs serve them.
+
+### Serving
+
+`/media/films/<name>` streams from S3 `marketing_films/` and answers byte
+ranges (206), which Safari needs to play at all and every browser uses to
+seek. Responses are `public, max-age=31536000, immutable`, without cookies,
+so Cloudflare holds them after the first request. To move video traffic off
+the app entirely (e.g. Cloudflare R2 with a custom domain, or if Cloudflare's
+CDN terms on video become a concern), copy the same files there and set
+`MARKETING_FILMS_BASE_URL`; nothing else changes. That host must send CORS
+headers for the `.vtt` captions.
+
+### Measuring
+
+PostHog events `film_played`, `film_progress` (25/50/75), `film_completed`
+and `film_cta_clicked`, each with `film`, `format` and `page`. The end-card
+button also carries `data-ph-capture-attribute-cta="film-end-<id>"`. Compare
+sign-ups from visitors who played a film with those who did not before
+judging whether a page's film earns its place.
 
 ## Opinion groups are published only when the votes show them
 

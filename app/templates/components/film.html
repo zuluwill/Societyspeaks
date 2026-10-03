@@ -1,0 +1,72 @@
+{#
+  Product film, shown as a poster with a play button until the visitor chooses to watch.
+  Nothing heavier than the poster loads until then (the films are 3–40 MB), and the
+  film plays with sound, from the start, with English captions on narrated films.
+
+  Import with context (the "film in English" note reads current_lang):
+    {% from "components/film.html" import film_player with context %}
+    {{ film_player('home', cta_url=..., cta_label=_('...'), cta_id='home-film', eager=True) }}
+
+  Renders nothing while MARKETING_FILMS_ENABLED is off or the film is not published,
+  so callers wrap it in {% if marketing_film('slug') %} when the space needs a fallback.
+
+  cta_url / cta_label: the one next step offered when the film ends.
+  eager: the poster is the page's main image (above the fold); loads at high priority.
+  text: show the transcript (narrated films) or the film's on-screen words (silent films).
+  dark: the film sits on a dark background (caption colours).
+  Behaviour, sources and analytics: static/js/film_player.js.
+#}
+{% macro film_player(slug, cta_url=None, cta_label=None, cta_id=None, eager=False, text=True, dark=False, frame_class='rounded-2xl shadow-xl ring-1 ring-slate-900/10') -%}
+{%- set film = marketing_film(slug) -%}
+{%- if film -%}
+<figure class="ss-film" data-film="{{ film.slug }}"
+        data-title="{{ film.title }}"
+        data-src-hd="{{ film.url('wide_1080') }}"
+        data-src-sd="{{ film.url('wide_720') }}"
+        data-src-square="{{ film.url('square_720') }}"
+        {% if film.has('captions_vtt') %}data-captions="{{ film.url('captions_vtt') }}" data-captions-label="{{ _('English') }}"{% endif %}
+        {% if config.MARKETING_FILMS_BASE_URL %}data-crossorigin="1"{% endif %}
+        {% if cta_url and cta_label %}data-cta-url="{{ cta_url }}" data-cta-label="{{ cta_label }}" data-cta-id="{{ cta_id or film.slug }}"{% endif %}
+        data-replay-label="{{ _('Watch again') }}">
+  <div class="ss-film__frame relative isolate overflow-hidden bg-slate-900 aspect-[1/1] sm:aspect-[16/9] {{ frame_class }}">
+    <picture>
+      <source media="(min-width: 640px)" type="image/webp" srcset="{{ film.url('poster_wide_webp') }}" width="1280" height="720">
+      <source media="(min-width: 640px)" srcset="{{ film.url('poster_wide_jpg') }}" width="1280" height="720">
+      <source type="image/webp" srcset="{{ film.url('poster_square_webp') }}">
+      <img src="{{ film.url('poster_square_jpg') }}" alt="" width="720" height="720"
+           class="absolute inset-0 h-full w-full object-cover"
+           decoding="async" {% if eager %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+    </picture>
+    <button type="button"
+            class="ss-film__play group absolute inset-0 flex items-end justify-start p-3 sm:p-6 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary-500"
+            aria-label="{{ _('Play the film: %(title)s, %(duration)s', title=film.title, duration=film.duration_label) }}">
+      <span class="inline-flex items-center gap-3 rounded-full bg-white/95 py-1.5 pl-1.5 pr-5 text-sm font-semibold text-slate-900 shadow-lg ring-1 ring-black/5 transition-transform duration-200 group-hover:scale-[1.03] group-hover:bg-white motion-reduce:transition-none motion-reduce:group-hover:scale-100">
+        <span class="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-primary-600 text-white sm:h-10 sm:w-10" aria-hidden="true">
+          <svg class="ml-0.5 h-4 w-4" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11a.5.5 0 0 0 .76.43l9-5.5a.5.5 0 0 0 0-.86l-9-5.5A.5.5 0 0 0 4 2.5Z"/></svg>
+        </span>
+        <span aria-hidden="true">{{ _('Watch the film') }}</span>
+        <span class="font-medium tabular-nums text-slate-500" aria-hidden="true">{{ film.duration_label }}</span>
+      </span>
+    </button>
+  </div>
+  {%- if text %}
+  <figcaption class="mt-3 text-sm {{ 'text-slate-300' if dark else 'text-slate-600' }}">
+    <details class="group">
+      <summary class="inline-flex cursor-pointer select-none items-center gap-1.5 rounded font-medium {{ 'text-slate-200 hover:text-white' if dark else 'text-slate-700 hover:text-slate-900' }} focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+        <svg class="h-4 w-4 text-slate-400 transition-transform group-open:rotate-90 motion-reduce:transition-none" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.2 14.8a.75.75 0 0 1 0-1.06L10.94 10 7.2 6.26a.75.75 0 1 1 1.06-1.06l4.27 4.27a.75.75 0 0 1 0 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0Z" clip-rule="evenodd"/></svg>
+        {% if film.narrated %}{{ _('Read the transcript') }}{% else %}{{ _('Read what the film shows') }}{% endif %}
+        {%- if current_lang and current_lang != 'en' %}<span class="font-normal {{ 'text-slate-400' if dark else 'text-slate-500' }}"> · {{ _('The film is in English') }}</span>{% endif %}
+      </summary>
+      <div lang="en-GB" class="mt-3 max-w-prose space-y-2 border-l-2 {{ 'border-white/20' if dark else 'border-slate-200' }} pl-4 leading-relaxed">
+        {%- for line in (film.transcript or film.shows) %}
+        <p>{{ line }}</p>
+        {%- endfor %}
+      </div>
+    </details>
+  </figcaption>
+  {%- endif %}
+  <script type="application/ld+json">{{ film.json_ld()|tojson }}</script>
+</figure>
+<script src="{{ url_for('static', filename='js/film_player.js') }}?v=2" defer></script>
+{%- endif -%}
+{%- endmacro %}

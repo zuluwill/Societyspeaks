@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 {% from "components/ui_tokens.html" import btn_primary_lg, btn_secondary_lg, link_primary %}
 
 {% block title %}{{ _('About Society Speaks — Civic Technology for Sense-Making') }}{% endblock %}
@@ -63,6 +64,11 @@
                 </a>
             </div>
         </div>
+        {% if marketing_film('narrated') %}
+        <div class="mt-12 text-left">
+            {{ film_player('narrated', cta_url=journey_url, cta_label=_('Take the Big Questions Journey'), cta_id='about-film') }}
+        </div>
+        {% endif %}
     </div>
 </div>
 

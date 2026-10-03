@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 {% from "components/ui_tokens.html" import btn_primary_lg, link_primary %}
 
 {% block title %}{{ _('Example consultation report') }} | Society Speaks{% endblock %}
@@ -20,6 +21,12 @@
       <p class="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{{ _('It is the report you receive, shown with a made-up organisation and made-up votes. The results are worked out by the same rules as a real report. Yours is built from your own audience’s answers to your own question.') }}</p>
       {% else %}
       <p class="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{{ _('It is the report format you receive, built from the real votes on a public Society Speaks discussion. Yours is built from your own audience’s answers to your own question.') }}</p>
+      {% endif %}
+      {# The film shows the worked example's figures, so only beside the worked example. #}
+      {% if illustration and marketing_film('consultation-report') %}
+      <div class="mt-8">
+        {{ film_player('consultation-report', cta_url=url_for('consultations.start'), cta_label=_('Run one with your own audience'), cta_id='example-report-film', dark=True, frame_class='rounded-2xl shadow-2xl ring-1 ring-white/15') }}
+      </div>
       {% endif %}
       <ol class="mt-8 grid gap-3 sm:grid-cols-2">
         {% for anchor, title, text in [

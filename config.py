@@ -379,6 +379,13 @@ class Config:
     # A public discussion whose results are shown as the example report.
     CONSULTATION_EXAMPLE_DISCUSSION_ID = _env_int('CONSULTATION_EXAMPLE_DISCUSSION_ID', 0) or None
 
+    # Product films on the marketing pages (app/lib/marketing_films.py). Off until the files
+    # are uploaded with scripts/publish_marketing_films.py; pages then show their usual hero.
+    MARKETING_FILMS_ENABLED = os.getenv('MARKETING_FILMS_ENABLED', 'false').lower() == 'true'
+    # Serve the films from a CDN or public bucket (e.g. an R2 custom domain) instead of
+    # /media/films/ on this app. The files keep the same names, so only the prefix changes.
+    MARKETING_FILMS_BASE_URL = (os.getenv('MARKETING_FILMS_BASE_URL') or '').rstrip('/') or None
+
     # Bare or "Name <addr>" — used by brief senders and safe-sender UI/email copy.
     BRIEF_FROM_EMAIL = os.getenv('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
     # Model override for first-brief synchronous generation. Falls back to the briefing's normal model.

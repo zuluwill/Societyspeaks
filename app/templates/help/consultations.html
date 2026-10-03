@@ -1,6 +1,7 @@
 {# templates/help/consultations.html #}
 {% extends "layout.html" %}
 {% from "help/macros.html" import help_page_header, help_section_card %}
+{% from "components/film.html" import film_player with context %}
 {% from "components/ui_tokens.html" import btn_primary_md, link_primary %}
 
 {% block title %}{{ _('Running a consultation — Society Speaks Help') }}{% endblock %}
@@ -15,6 +16,18 @@
 <div class="bg-gray-50">
 <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
   {{ help_page_header(_('Running a consultation'), _('Ask your own audience one question, and get a report that shows where they agree, disagree, are unsure or are split.')) }}
+
+  {% set participant_film = marketing_film('consultation-participant') %}
+  {% if participant_film %}
+  <section class="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="participant-film-heading">
+    <h2 id="participant-film-heading" class="text-lg font-semibold text-gray-900">{{ _('What your audience will see') }}</h2>
+    <p class="mt-1 mb-5 text-sm leading-relaxed text-gray-600">{{ _('Play this before you share the link, or put it on a slide, so people know it takes two minutes and asks for no login.') }}</p>
+    {{ film_player('consultation-participant', cta_url=url_for('consultations.demo'), cta_label=_('Try it yourself'), cta_id='help-consultations-film', frame_class='rounded-xl ring-1 ring-slate-900/10') }}
+    <p class="mt-3 text-sm">
+      <a href="{{ participant_film.url('wide_1080') }}" download="society-speaks-taking-part.mp4" class="{{ link_primary() }}" data-ph-capture-attribute-cta="help-consultations-film-download">{{ _('Download the film for a slide (MP4, 1080p)') }}</a>
+    </p>
+  </section>
+  {% endif %}
 
   <nav aria-label="{{ _('On this page') }}" class="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
     <p class="text-sm font-semibold text-gray-900">{{ _('On this page') }}</p>

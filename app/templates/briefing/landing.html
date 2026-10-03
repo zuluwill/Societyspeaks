@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 {% block title %}{{ _('Personal Briefs: one daily brief from the sources you trust') }} | Society Speaks{% endblock %}
 {% block meta_description %}{{ _('Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. Used by policy researchers, analysts, and think tanks.') }}{% endblock %}
 {% block og_title %}{{ _('Personal Briefs - One daily brief from sources you trust') }}{% endblock %}
@@ -283,6 +284,16 @@
     </div>
   </section>
 </div>
+
+{% if marketing_film('personal-briefs') %}
+<!-- Film: the product in under half a minute -->
+<div class="bg-white">
+  <section class="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8" aria-labelledby="pb-film-heading">
+    <h2 id="pb-film-heading" class="mb-8 text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{{ _('How Personal Briefs work') }}</h2>
+    {{ film_player('personal-briefs', cta_url=primary_cta_url|default('#pricing'), cta_label=_('Build your brief'), cta_id='briefing-landing-film') }}
+  </section>
+</div>
+{% endif %}
 
 <!-- GLOBAL SOURCES STRIP
      Replaces the bare stats trio. A dual-row CSS marquee of the most

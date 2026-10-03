@@ -443,6 +443,14 @@ def serve_asset(filename):
     return _serve_object_storage_asset(filename)
 
 
+@main_bp.route('/media/films/<path:filename>', methods=['GET', 'HEAD'])
+@limiter.exempt  # seeking issues many range requests; responses are immutable and edge-cached
+def serve_film_file(filename):
+    """Product films and their posters and captions (app/lib/marketing_films.py)."""
+    from app.lib.marketing_films import serve_film_file as _serve
+    return _serve(filename)
+
+
 @main_bp.route('/images/<path:filename>')
 def serve_static_image(filename):
     """Back-compat image route served from object storage."""

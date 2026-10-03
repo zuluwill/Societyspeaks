@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 {% from "components/ui_tokens.html" import btn_primary_md, btn_primary_sm, btn_secondary_md, btn_secondary_sm %}
 
 {% block title %}{{ _('For Publishers - Society Speaks') }}{% endblock %}
@@ -290,6 +291,16 @@
     </div>
   </div>
 </div>
+
+{% if marketing_film('publishers') %}
+<!-- Film -->
+<section class="bg-white border-b" aria-labelledby="publishers-film-heading">
+  <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <h2 id="publishers-film-heading" class="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl mb-8">{{ _('From comment section to evidence') }}</h2>
+    {{ film_player('publishers', cta_url=url_for('partner.portal_signup'), cta_label=_('Get Started Free'), cta_id='publishers-film') }}
+  </div>
+</section>
+{% endif %}
 
 <!-- Live Demo -->
 <div class="bg-gradient-to-b from-gray-50 to-white border-b">

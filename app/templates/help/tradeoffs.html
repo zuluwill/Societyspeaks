@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from "help/macros.html" import help_page_header, help_footer_cta %}
+{% from "components/film.html" import film_player with context %}
 
 {% block title %}{{ _('Tradeoffs — Help | Society Speaks') }}{% endblock %}
 {% block meta_description %}{{ _('Tradeoffs on Society Speaks: daily governing scenarios, five turns, streaks, friend challenges, privacy, and links to real deliberation.') }}{% endblock %}
@@ -17,6 +18,9 @@
   ) }}
 
   <div class="space-y-6 text-gray-700">
+    {% if marketing_film('tradeoffs') %}
+    {{ film_player('tradeoffs', cta_url=url_for('game.index'), cta_label=_("Play today's scenario"), cta_id='help-tradeoffs-film') }}
+    {% endif %}
     <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
       <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ _('How play works') }}</h2>
       <ul class="list-disc pl-5 space-y-2">

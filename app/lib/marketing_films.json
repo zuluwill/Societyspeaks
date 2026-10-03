@@ -1,0 +1,420 @@
+{
+ "films": {
+  "councils": {
+   "duration": 43.8,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "councils-wide-1080.8c5d8a47e8.mp4",
+     "bytes": 17091349
+    },
+    "wide_720": {
+     "name": "councils-wide-720.5aede5a666.mp4",
+     "bytes": 3945042
+    },
+    "square_720": {
+     "name": "councils-square-720.41634dd4a9.mp4",
+     "bytes": 3226651
+    },
+    "poster_wide_jpg": {
+     "name": "councils-poster-wide.06e9f52c47.jpg",
+     "bytes": 106844
+    },
+    "poster_wide_webp": {
+     "name": "councils-poster-wide.412fb9d4bf.webp",
+     "bytes": 39104
+    },
+    "poster_square_jpg": {
+     "name": "councils-poster-square.63678736f4.jpg",
+     "bytes": 86030
+    },
+    "poster_square_webp": {
+     "name": "councils-poster-square.c09789db53.webp",
+     "bytes": 32344
+    }
+   }
+  },
+  "home": {
+   "duration": 60.6,
+   "narrated": true,
+   "transcript": [
+    "Online debate tells you who is loudest. It rarely tells you what most people think.",
+    "Society Speaks starts with a statement and three buttons.",
+    "You can agree, disagree, or say you are unsure. Each vote takes a second, and you do not need an account.",
+    "As the votes come in, people are grouped by how they vote, not by who they are. Then it shows you three things.",
+    "First, where people agree. Second, the ideas that win support in every group. And third, where the real divisions lie.",
+    "Readers answer a new question every day. Publishers put it under their articles. And organisations, from councils to clubs, use it to hear from the people they serve.",
+    "Society Speaks. Making disagreement useful again."
+   ],
+   "files": {
+    "wide_1080": {
+     "name": "home-wide-1080.1b7aaa4db6.mp4",
+     "bytes": 21330011
+    },
+    "wide_720": {
+     "name": "home-wide-720.980d39973d.mp4",
+     "bytes": 4926272
+    },
+    "square_720": {
+     "name": "home-square-720.b99332332f.mp4",
+     "bytes": 4117932
+    },
+    "poster_wide_jpg": {
+     "name": "home-poster-wide.1c7332c6ae.jpg",
+     "bytes": 105747
+    },
+    "poster_wide_webp": {
+     "name": "home-poster-wide.e7a080944c.webp",
+     "bytes": 39638
+    },
+    "poster_square_jpg": {
+     "name": "home-poster-square.324e7f884a.jpg",
+     "bytes": 84896
+    },
+    "poster_square_webp": {
+     "name": "home-poster-square.ad20b0f64b.webp",
+     "bytes": 32606
+    },
+    "captions_vtt": {
+     "name": "home.en-GB.8122452115.vtt",
+     "bytes": 1269
+    }
+   }
+  },
+  "consultation": {
+   "duration": 55.2,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "consultation-wide-1080.b481f7623d.mp4",
+     "bytes": 28584515
+    },
+    "wide_720": {
+     "name": "consultation-wide-720.b988e294bc.mp4",
+     "bytes": 6754567
+    },
+    "square_720": {
+     "name": "consultation-square-720.090210fb5f.mp4",
+     "bytes": 5897620
+    },
+    "poster_wide_jpg": {
+     "name": "consultation-poster-wide.832fe4e561.jpg",
+     "bytes": 66822
+    },
+    "poster_wide_webp": {
+     "name": "consultation-poster-wide.068f3655b5.webp",
+     "bytes": 25096
+    },
+    "poster_square_jpg": {
+     "name": "consultation-poster-square.80db7c44cb.jpg",
+     "bytes": 51140
+    },
+    "poster_square_webp": {
+     "name": "consultation-poster-square.95fd33097e.webp",
+     "bytes": 20582
+    }
+   }
+  },
+  "consultation-report": {
+   "duration": 43.8,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "consultation-report-wide-1080.3d28f25e48.mp4",
+     "bytes": 25732606
+    },
+    "wide_720": {
+     "name": "consultation-report-wide-720.ac7f9a7d35.mp4",
+     "bytes": 6006898
+    },
+    "square_720": {
+     "name": "consultation-report-square-720.5c698030da.mp4",
+     "bytes": 5117254
+    },
+    "poster_wide_jpg": {
+     "name": "consultation-report-poster-wide.4dc411702c.jpg",
+     "bytes": 79486
+    },
+    "poster_wide_webp": {
+     "name": "consultation-report-poster-wide.e0a2ff22fa.webp",
+     "bytes": 29420
+    },
+    "poster_square_jpg": {
+     "name": "consultation-report-poster-square.76118b5561.jpg",
+     "bytes": 60512
+    },
+    "poster_square_webp": {
+     "name": "consultation-report-poster-square.8716951b6f.webp",
+     "bytes": 23662
+    }
+   }
+  },
+  "publishers": {
+   "duration": 45,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "publishers-wide-1080.c333e86cd5.mp4",
+     "bytes": 15709331
+    },
+    "wide_720": {
+     "name": "publishers-wide-720.7b61a05dc6.mp4",
+     "bytes": 3486301
+    },
+    "square_720": {
+     "name": "publishers-square-720.acfd47e8ad.mp4",
+     "bytes": 2845807
+    },
+    "poster_wide_jpg": {
+     "name": "publishers-poster-wide.e888451842.jpg",
+     "bytes": 75582
+    },
+    "poster_wide_webp": {
+     "name": "publishers-poster-wide.5a925606e5.webp",
+     "bytes": 22580
+    },
+    "poster_square_jpg": {
+     "name": "publishers-poster-square.c2fe6a75a1.jpg",
+     "bytes": 57266
+    },
+    "poster_square_webp": {
+     "name": "publishers-poster-square.feac6208e9.webp",
+     "bytes": 17352
+    }
+   }
+  },
+  "method": {
+   "duration": 39,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "method-wide-1080.e0c31a6468.mp4",
+     "bytes": 13616768
+    },
+    "wide_720": {
+     "name": "method-wide-720.28f84ddfb0.mp4",
+     "bytes": 3254414
+    },
+    "square_720": {
+     "name": "method-square-720.c0799a3642.mp4",
+     "bytes": 2695744
+    },
+    "poster_wide_jpg": {
+     "name": "method-poster-wide.d2f06d13f9.jpg",
+     "bytes": 160557
+    },
+    "poster_wide_webp": {
+     "name": "method-poster-wide.9d71f3aca1.webp",
+     "bytes": 43912
+    },
+    "poster_square_jpg": {
+     "name": "method-poster-square.5f784799ca.jpg",
+     "bytes": 125184
+    },
+    "poster_square_webp": {
+     "name": "method-poster-square.c70c956055.webp",
+     "bytes": 35260
+    }
+   }
+  },
+  "tradeoffs": {
+   "duration": 26.4,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "tradeoffs-wide-1080.1bba3d3ea2.mp4",
+     "bytes": 8649016
+    },
+    "wide_720": {
+     "name": "tradeoffs-wide-720.3f46c84bb4.mp4",
+     "bytes": 2253805
+    },
+    "square_720": {
+     "name": "tradeoffs-square-720.e9481deeeb.mp4",
+     "bytes": 1825912
+    },
+    "poster_wide_jpg": {
+     "name": "tradeoffs-poster-wide.7e4497dfb8.jpg",
+     "bytes": 64182
+    },
+    "poster_wide_webp": {
+     "name": "tradeoffs-poster-wide.0cffde11e1.webp",
+     "bytes": 23232
+    },
+    "poster_square_jpg": {
+     "name": "tradeoffs-poster-square.5c4a3bc3e5.jpg",
+     "bytes": 46662
+    },
+    "poster_square_webp": {
+     "name": "tradeoffs-poster-square.5b84c691a0.webp",
+     "bytes": 17988
+    }
+   }
+  },
+  "narrated": {
+   "duration": 106.8,
+   "narrated": true,
+   "transcript": [
+    "Online debate tells you who is loudest. It rarely tells you what most people think.",
+    "Society Speaks starts with a statement and three buttons.",
+    "You can agree, disagree, or say you are unsure. Each vote takes a second, and you do not need an account.",
+    "As the votes come in, people are grouped by how they vote, not by who they are. Then it shows you three things.",
+    "First, where people agree. Second, the ideas that win support in every group. And third, where the real divisions lie.",
+    "Every figure carries its margin of error, and the code is open for anyone to check.",
+    "For readers, there is a question to answer each day, and a free daily brief that shows how left, centre and right are covering the news.",
+    "And if you want more, a paid personal brief turns the sources you choose into one email each morning.",
+    "For publishers, the same voting sits under an article, in place of the comment section.",
+    "Councils and public bodies can run a full consultation, across several questions at once.",
+    "And now any organisation can run one itself, with a 14-day free trial. Ask one question, then share a link or put a QR code on the big screen. The report shows where your audience agrees, disagrees, is unsure or is split.",
+    "There is even a daily game, where you govern and every choice costs something.",
+    "Society Speaks. Making disagreement useful again."
+   ],
+   "files": {
+    "wide_1080": {
+     "name": "narrated-wide-1080.0310b3c983.mp4",
+     "bytes": 41611127
+    },
+    "wide_720": {
+     "name": "narrated-wide-720.89b0e507b4.mp4",
+     "bytes": 9357420
+    },
+    "square_720": {
+     "name": "narrated-square-720.baf3a9b58b.mp4",
+     "bytes": 7535236
+    },
+    "poster_wide_jpg": {
+     "name": "narrated-poster-wide.1c7332c6ae.jpg",
+     "bytes": 105747
+    },
+    "poster_wide_webp": {
+     "name": "narrated-poster-wide.e7a080944c.webp",
+     "bytes": 39638
+    },
+    "poster_square_jpg": {
+     "name": "narrated-poster-square.324e7f884a.jpg",
+     "bytes": 84896
+    },
+    "poster_square_webp": {
+     "name": "narrated-poster-square.ad20b0f64b.webp",
+     "bytes": 32606
+    },
+    "captions_vtt": {
+     "name": "narrated.en-GB.5515b6c20a.vtt",
+     "bytes": 2210
+    }
+   }
+  },
+  "personal-briefs": {
+   "duration": 26.4,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "personal-briefs-wide-1080.6651ee08bd.mp4",
+     "bytes": 10884303
+    },
+    "wide_720": {
+     "name": "personal-briefs-wide-720.de4da4a28f.mp4",
+     "bytes": 2493825
+    },
+    "square_720": {
+     "name": "personal-briefs-square-720.73ef12351d.mp4",
+     "bytes": 2108732
+    },
+    "poster_wide_jpg": {
+     "name": "personal-briefs-poster-wide.ba31242e2e.jpg",
+     "bytes": 74426
+    },
+    "poster_wide_webp": {
+     "name": "personal-briefs-poster-wide.c50ebf3b78.webp",
+     "bytes": 27596
+    },
+    "poster_square_jpg": {
+     "name": "personal-briefs-poster-square.85e25e9c06.jpg",
+     "bytes": 58686
+    },
+    "poster_square_webp": {
+     "name": "personal-briefs-poster-square.d7eadbe7e6.webp",
+     "bytes": 22558
+    }
+   }
+  },
+  "brief": {
+   "duration": 32.4,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "brief-wide-1080.59c0d595a3.mp4",
+     "bytes": 12790996
+    },
+    "wide_720": {
+     "name": "brief-wide-720.a459b6e799.mp4",
+     "bytes": 2964146
+    },
+    "square_720": {
+     "name": "brief-square-720.9a0180712c.mp4",
+     "bytes": 2434811
+    },
+    "poster_wide_jpg": {
+     "name": "brief-poster-wide.d6a28b9751.jpg",
+     "bytes": 105233
+    },
+    "poster_wide_webp": {
+     "name": "brief-poster-wide.3e71d9a25c.webp",
+     "bytes": 41644
+    },
+    "poster_square_jpg": {
+     "name": "brief-poster-square.d3c39c9a8a.jpg",
+     "bytes": 82058
+    },
+    "poster_square_webp": {
+     "name": "brief-poster-square.e75185d161.webp",
+     "bytes": 34640
+    }
+   }
+  },
+  "consultation-participant": {
+   "duration": 18.6,
+   "narrated": false,
+   "transcript": null,
+   "files": {
+    "wide_1080": {
+     "name": "consultation-participant-wide-1080.0e361abdc7.mp4",
+     "bytes": 6665191
+    },
+    "wide_720": {
+     "name": "consultation-participant-wide-720.29bdd822d9.mp4",
+     "bytes": 1678767
+    },
+    "square_720": {
+     "name": "consultation-participant-square-720.74184b9129.mp4",
+     "bytes": 1416817
+    },
+    "poster_wide_jpg": {
+     "name": "consultation-participant-poster-wide.6d36adeffd.jpg",
+     "bytes": 85317
+    },
+    "poster_wide_webp": {
+     "name": "consultation-participant-poster-wide.8522014eaf.webp",
+     "bytes": 32306
+    },
+    "poster_square_jpg": {
+     "name": "consultation-participant-poster-square.a285f40839.jpg",
+     "bytes": 67558
+    },
+    "poster_square_webp": {
+     "name": "consultation-participant-poster-square.211c6976ae.webp",
+     "bytes": 26916
+    }
+   }
+  }
+ },
+ "generated": "2026-10-03T08:37:34.126Z"
+}

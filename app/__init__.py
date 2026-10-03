@@ -788,6 +788,9 @@ def create_app():
     from flask_babel import gettext as gettext_js
     app.jinja_env.globals['gettext_js'] = gettext_js
 
+    from app.lib.marketing_films import get_film as _marketing_film
+    app.jinja_env.globals['marketing_film'] = _marketing_film
+
     def ngettext_js_forms(singular, plural):
         """Plural forms of one msgid pair, keyed by CLDR plural category.
 

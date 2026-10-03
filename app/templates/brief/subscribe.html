@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 
 {% block title %}{{ _('Subscribe to Daily Brief - Society Speaks') }}{% endblock %}
 
@@ -125,6 +126,9 @@
 
             <div class="space-y-6">
                 
+                {% if marketing_film('brief') %}
+                {{ film_player('brief', cta_url='#email', cta_label=_('Sign Up Free'), cta_id='brief-subscribe-film') }}
+                {% else %}
                 <!-- Email Mockup Preview -->
                 <div class="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-4 shadow-xl">
                     <div class="bg-white rounded-xl overflow-hidden shadow-lg">
@@ -177,6 +181,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Mobile feature pills -->
                 <div class="flex flex-wrap gap-2">
@@ -307,6 +312,12 @@
                         </svg>
                     </a>
                 </div>
+
+                {# The paid product, kept clearly apart from the free brief. #}
+                <p class="text-sm text-gray-600">
+                    {{ _('Want a brief written from your own sources and topics?') }}
+                    <a href="{{ url_for('briefing.landing') }}" class="font-semibold text-primary-600 hover:text-primary-800 hover:underline" data-ph-capture-attribute-cta="brief-subscribe-personal-briefs">{{ _('See Personal Briefs') }} →</a>
+                </p>
             </div>
         </div>
 

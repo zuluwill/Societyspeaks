@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/film.html" import film_player with context %}
 {% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_secondary_lg, btn_secondary_md, link_primary %}
 
 {% block title %}{{ _('Facilitated consultations for public bodies — Society Speaks') }}{% endblock %}
@@ -90,6 +91,11 @@
         {{ _('Free to take part. Paid public-sector plans keep it that way.') }}
       </p>
     </div>
+    {% if marketing_film('councils') %}
+    <div class="mx-auto mt-14 max-w-4xl">
+      {{ film_player('councils', cta_url='mailto:info@societyspeaks.io?subject=' ~ (_('Consultation scoping call')|urlencode), cta_label=_('Book a scoping call'), cta_id='councils-film') }}
+    </div>
+    {% endif %}
   </div>
 </section>
 

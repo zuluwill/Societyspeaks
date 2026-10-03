@@ -29,6 +29,11 @@ Guidance for AI tools and developers working in this repository (Flask, Flask-Ba
 - **Social (OG/Twitter):** indexable templates with `{% block canonical %}` must also set `og_title`, `og_description`, `twitter_title`, and `twitter_description` — never rely on layout defaults on public pages.
 - **GEO:** keep `app/static/llms.txt` aligned with canonical URL patterns (dated permalinks, not redirect aliases). Linked from `robots.txt` as `LLMsTXT`. Site-wide `meta name="ai-model-context"` lives in `layout.html`.
 
+## Product films
+
+- Embed films only through `components/film.html` (`film_player(slug, ...)`, imported `with context`): poster first, nothing heavier loads until play, no autoplay. Wrap in `{% if marketing_film('slug') %}` where the space needs a fallback. Runbook: OPS.md "Product films".
+- A new film needs a translated title and description in `FILMS` (`app/lib/marketing_films.py`) before its files are published.
+
 ## Participation & vote semantics
 
 - **Published vs audit:** Participant-facing counts and aligned aggregates exclude votes on deleted or negatively moderated statements (`visible_statement_vote_filters` in `app/lib/participation_metrics.py`). Raw `statement_vote` rows may still exist for audit; do not mix definitions without labelling the export or UI. Full rationale: [adr/0001-published-vs-audit-vote-semantics.md](./adr/0001-published-vs-audit-vote-semantics.md).

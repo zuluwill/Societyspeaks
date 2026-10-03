@@ -19,6 +19,7 @@ from typing import Iterable
 # Keep in sync with Cloudflare Cache Rule ``cache-static-assets`` in OPS.md.
 _CDN_CACHEABLE_PREFIXES: tuple[str, ...] = (
     '/assets/',
+    '/media/',          # product films: hashed names, immutable Cache-Control set by the view
     '/images/',
     '/css/',
     '/js/',

@@ -190,3 +190,6 @@ still-fire_*.dump
 
 # Local Claude Code / agent tooling config
 .claude/
+
+# Local copies of the product films (scripts/publish_marketing_films.py --local)
+app/static/films/
