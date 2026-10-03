@@ -6,6 +6,7 @@ consultation through these routes.
 import csv
 import io
 from datetime import timedelta
+from typing import Optional
 
 import segno
 from flask import (
@@ -50,6 +51,20 @@ def _owned_or_404(consultation_id: int) -> Consultation:
     if consultation is None or consultation.owner_user_id != current_user.id:
         abort(404)
     return consultation
+
+
+def _track_once(consultation: Consultation, event: str, *, key: str, properties: Optional[dict] = None) -> None:
+    """A funnel step that counts once per consultation (and key), however often the page is opened.
+
+    The insert id is deterministic, so PostHog drops repeats.
+    """
+    from app.consultations.analytics import capture_consultation_event
+    capture_consultation_event(
+        event,
+        user_id=consultation.owner_user_id,
+        insert_id=f'{event}:{consultation.id}:{key}',
+        properties={'consultation_id': consultation.id, **(properties or {})},
+    )
 
 
 def _no_index(response):
@@ -97,6 +112,8 @@ def _access_notice(user, closes_at=None) -> dict:
 
 @consultations_bp.route('/consultations/self-serve')
 def landing():
+    from app.lib.utm import stash_utms_from_querystring
+    stash_utms_from_querystring()
     has_consultations = current_user.is_authenticated and db.session.query(
         Consultation.query.filter_by(owner_user_id=current_user.id).exists()
     ).scalar()
@@ -121,8 +138,11 @@ def landing():
 @limiter.limit('10 per hour', methods=['POST'])
 def start():
     """Entry point from the marketing page. Signs a new host in by email alone."""
+    from app.consultations.analytics import campaign_params, capture_consultation_event
+    from app.lib.utm import stash_utms_from_querystring
+    stash_utms_from_querystring()
     if current_user.is_authenticated:
-        return redirect(url_for('consultations.new'))
+        return redirect(url_for('consultations.new', **campaign_params()))
 
     form = StartForm()
     if not form.validate_on_submit():
@@ -141,6 +161,7 @@ def start():
         return render_template('consultations/start.html', form=form)
 
     user = find_user_by_canonical_email(email)
+    existing_account = user is not None
     if user is None:
         try:
             user = create_passwordless_user(normalize_trial_email(email))
@@ -149,15 +170,22 @@ def start():
             current_app.logger.exception('Could not create consultation host account')
             flash(_('Something went wrong. Please try again in a moment.'), 'error')
             return render_template('consultations/start.html', form=form)
-        from app.consultations.analytics import capture_consultation_event
-        capture_consultation_event(
-            'consultation_signed_up',
-            user_id=user.id,
-            insert_id=f'consultation_signed_up:{user.id}',
-            durable=True,
-        )
+        from app.consultations.analytics import acquisition_properties
+        from app.lib.identity_analytics import SIGNUP_METHOD_CONSULTATION, track_user_signed_up
+        track_user_signed_up(user, signup_method=SIGNUP_METHOD_CONSULTATION, properties=acquisition_properties())
+    # Once per account: the first time this person asks to run a consultation.
+    capture_consultation_event(
+        'consultation_signed_up',
+        user_id=user.id,
+        insert_id=f'consultation_signed_up:{user.id}',
+        properties={'existing_account': existing_account},
+        durable=True,
+        attribution=True,
+    )
 
-    next_url = url_for('consultations.new')
+    # The campaign rides on the sign-in link, so it survives the host opening
+    # the email on another device (the session that stored it stays behind).
+    next_url = url_for('consultations.new', **campaign_params())
     session['pending_post_auth_redirect'] = next_url
     sent = dispatch_magic_login_email(
         user,
@@ -207,6 +235,8 @@ def _last_organisation_name() -> str:
 def new():
     form = QuestionForm()
     if request.method == 'GET':
+        from app.lib.utm import stash_utms_from_querystring
+        stash_utms_from_querystring()
         form.organisation_name.data = _last_organisation_name()
     if form.validate_on_submit():
         consultation = service.create_consultation(
@@ -222,7 +252,11 @@ def new():
             'consultation_created',
             user_id=current_user.id,
             insert_id=f'consultation_created:{consultation.id}',
-            properties={'consultation_id': consultation.id},
+            properties={
+                'consultation_id': consultation.id,
+                # 1 for a first consultation: repeat use without cohort logic.
+                'consultation_number': Consultation.query.filter_by(owner_user_id=current_user.id).count(),
+            },
         )
         jobs.enqueue_drafting(consultation)
         return redirect(url_for('consultations.statements', consultation_id=consultation.id))
@@ -518,6 +552,7 @@ def share(consultation_id):
     if consultation.is_draft:
         return redirect(url_for('consultations.go_live', consultation_id=consultation.id))
     participant_url = url_for('consultations.participate', token=consultation.access_token, _external=True)
+    _track_once(consultation, 'consultation_shared', key='share_page', properties={'channel': 'share_page'})
     return render_template(
         'consultations/share.html',
         consultation=consultation,
@@ -549,6 +584,7 @@ def qr_code(consultation_id, fmt):
     response.headers['Cache-Control'] = 'private, no-store'
     if request.args.get('download'):
         response.headers['Content-Disposition'] = f'attachment; filename="consultation-qr.{fmt}"'
+        _track_once(consultation, 'consultation_shared', key='qr_download', properties={'channel': 'qr_download'})
     return response
 
 
@@ -573,6 +609,7 @@ def present(consultation_id):
         # Only the results, re-fetched by the page while voting is open.
         response = Response(render_template('consultations/_present_results.html', **context))
     else:
+        _track_once(consultation, 'consultation_shared', key='big_screen', properties={'channel': 'big_screen'})
         response = Response(render_template(
             'consultations/present.html',
             view='join' if consultation.is_live and request.args.get('view') != 'results' else 'results',
@@ -644,7 +681,7 @@ def status(consultation_id):
 def close(consultation_id):
     consultation = _owned_or_404(consultation_id)
     if ActionForm().validate_on_submit() and consultation.is_live:
-        jobs.close_and_report(consultation)
+        jobs.close_and_report(consultation, closed_by='host')
         flash(_('Voting has closed. Your report is being built.'), 'success')
         return redirect(url_for('consultations.report', consultation_id=consultation.id))
     return redirect(url_for('consultations.dashboard', consultation_id=consultation.id))
@@ -777,6 +814,10 @@ def report(consultation_id):
             'consultations/report_pending.html',
             consultation=consultation, report_state=state, action_form=ActionForm(),
         )
+    _track_once(
+        consultation, 'consultation_report_viewed', key=f'report:{current.id}',
+        properties={'report_kind': current.kind},
+    )
     return render_template(
         'consultations/report.html',
         consultation=consultation,
@@ -821,6 +862,7 @@ def share_report(consultation_id, action):
                 earlier.unshare()
             db.session.flush()
             current.share(token)
+            _track_once(consultation, 'consultation_report_shared', key=f'report:{current.id}')
         flash(_('Anyone with the link can now read this report.'), 'success')
     else:
         for report_row in shared:
@@ -847,7 +889,9 @@ def report_pdf_download(consultation_id):
     current = _current_report(consultation)
     if current is None:
         abort(404)
-    return _pdf_response(current)
+    response = _pdf_response(current)
+    _track_once(consultation, 'consultation_report_downloaded', key=f'pdf:{current.id}', properties={'format': 'pdf'})
+    return response
 
 
 @consultations_bp.route('/consultations/<int:consultation_id>/results.csv')
@@ -862,6 +906,10 @@ def results_csv(consultation_id):
     writer = csv.writer(buffer)
     for row in report_csv_rows(data):
         writer.writerow([excel_safe_text(cell) if isinstance(cell, str) else cell for cell in row])
+    _track_once(
+        consultation, 'consultation_report_downloaded',
+        key=f'csv:{current.id if current else "live"}', properties={'format': 'csv'},
+    )
     response = Response('﻿' + buffer.getvalue(), mimetype='text/csv; charset=utf-8')
     response.headers['Content-Disposition'] = 'attachment; filename="consultation-results.csv"'
     response.headers['Cache-Control'] = 'private, no-store'

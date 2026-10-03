@@ -91,7 +91,7 @@
         {% else %}
         <h2 id="done-heading" tabindex="-1" class="mt-4 text-xl font-bold text-gray-900 focus:outline-none">{{ _('Thank you. Your answers are in.') }}</h2>
         <p class="mt-2 text-gray-600">{{ _('%(organisation)s will see the overall results, never who answered what.', organisation=consultation.organisation_name) }}</p>
-        <p class="mt-4 text-xs text-gray-500">{{ _('Made with') }} <a href="{{ url_for('consultations.landing') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a>. <a href="{{ url_for('consultations.start') }}" class="font-semibold text-gray-700 hover:underline">{{ _('Run your own consultation') }}</a></p>
+        <p class="mt-4 text-xs text-gray-500">{{ _('Made with') }} <a href="{{ url_for('consultations.landing', utm_source='made_with', utm_medium='participant_page', utm_campaign='consultation', utm_content='done') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a>. <a href="{{ url_for('consultations.start', utm_source='made_with', utm_medium='participant_page', utm_campaign='consultation', utm_content='done') }}" class="font-semibold text-gray-700 hover:underline">{{ _('Run your own consultation') }}</a></p>
         <button type="button" id="review-button" class="mt-4 min-h-11 rounded-lg px-4 text-sm font-medium text-primary-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">{{ _('Change an answer') }}</button>
         {% endif %}
       </div>
@@ -128,7 +128,7 @@
 
     <footer class="mt-10 text-center text-xs leading-relaxed text-gray-500">
       {% if not demo %}<p>{{ _('Your answers are stored against a random ID on this device, not your name or email.') }}</p>{% endif %}
-      <p class="mt-1">{{ _('Made with') }} <a href="{{ url_for('consultations.landing') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a>{% if not demo %} · <a href="{{ url_for('consultations.start') }}" class="font-semibold text-gray-700 hover:underline">{{ _('Run your own consultation') }}</a>{% endif %}</p>
+      <p class="mt-1">{{ _('Made with') }} <a href="{{ url_for('consultations.landing', utm_source='made_with', utm_medium='participant_page', utm_campaign='consultation', utm_content='footer') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a>{% if not demo %} · <a href="{{ url_for('consultations.start', utm_source='made_with', utm_medium='participant_page', utm_campaign='consultation', utm_content='footer') }}" class="font-semibold text-gray-700 hover:underline">{{ _('Run your own consultation') }}</a>{% endif %}</p>
     </footer>
   </main>
 

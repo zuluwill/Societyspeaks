@@ -274,10 +274,29 @@ def _screening_gave_up(job):
 
 # ── The sweep ───────────────────────────────────────────────────────────────
 
-def close_and_report(consultation: Consultation) -> None:
-    """Close voting and start the final report."""
+def close_and_report(consultation: Consultation, *, closed_by: str = 'schedule') -> None:
+    """Close voting and start the final report.
+
+    ``closed_by`` is ``host``, ``schedule`` (the closing date) or ``access_ended``.
+    """
     service.close(consultation)
     enqueue_report(consultation, kind=ConsultationReport.KIND_FINAL)
+    try:
+        from app.consultations.analytics import capture_consultation_event
+        counts = service.participation(consultation)
+        capture_consultation_event(
+            'consultation_closed',
+            user_id=consultation.owner_user_id,
+            insert_id=f'consultation_closed:{consultation.id}',
+            properties={
+                'consultation_id': consultation.id,
+                'closed_by': closed_by,
+                'participant_count': counts.get('participants'),
+                'vote_count': counts.get('votes'),
+            },
+        )
+    except Exception:
+        logger.warning('Could not record the close of consultation %s', consultation.id, exc_info=True)
 
 
 def run_sweep() -> dict:
@@ -310,7 +329,7 @@ def run_sweep() -> dict:
             if consultation is not None and consultation.is_live and mark_passes_in_use(consultation.owner):
                 db.session.commit()
             if consultation is not None and access_lapsed(consultation):
-                close_and_report(consultation)
+                close_and_report(consultation, closed_by='access_ended')
                 closed += 1
         except Exception:
             db.session.rollback()

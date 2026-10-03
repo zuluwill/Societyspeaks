@@ -29,7 +29,7 @@
       <p class="mt-2 text-gray-600">{{ _('%(organisation)s has not opened this for answers yet. Please try the link again later.', organisation=consultation.organisation_name) }}</p>
       {% endif %}
     </div>
-    <p class="mt-10 text-center text-xs text-gray-500">{{ _('Made with') }} <a href="{{ url_for('consultations.landing') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a></p>
+    <p class="mt-10 text-center text-xs text-gray-500">{{ _('Made with') }} <a href="{{ url_for('consultations.landing', utm_source='made_with', utm_medium='participant_page', utm_campaign='consultation', utm_content='closed') }}" class="font-semibold text-gray-700 hover:underline">Society Speaks</a></p>
   </main>
 </body>
 </html>

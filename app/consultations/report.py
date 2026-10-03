@@ -14,6 +14,7 @@ from app import db
 from app.discussions.thresholds import RESULT_MIN_VOTES
 from app.lib.statement_results import VERDICT_ORDER, results_for_discussion
 from app.lib.time import utcnow_naive
+from app.lib.utm import with_utm_params
 from app.models import ConsultationReport, Statement
 
 REPORT_VERSION = 1
@@ -153,6 +154,12 @@ def report_view_context(data: dict, narrative: dict, narrative_source: str, *, i
         'groups': statements_by_verdict(data),
         'is_interim': is_interim,
         'product_url': route_url(get_base_url(), 'consultations.landing'),
+        # The footer link is how a report's readers find the product; tag it so
+        # hosts who arrive this way are counted, without changing the printed address.
+        'product_link': with_utm_params(
+            route_url(get_base_url(), 'consultations.landing'),
+            utm_source='made_with', utm_medium='report', utm_campaign='consultation',
+        ),
     }
 
 

@@ -444,6 +444,7 @@ def go_live(consultation: Consultation, user) -> Consultation:
         raise service.ConsultationError(blocker)
 
     repeated_domain = False
+    trial_started = False
     if active_plan(user):
         covered_by = Consultation.COVERED_BY_PLAN
     elif getattr(user, 'is_admin', False):
@@ -456,6 +457,7 @@ def go_live(consultation: Consultation, user) -> Consultation:
         repeated_domain = work_domain_repeat(user)
         try:
             start_trial(user)
+            trial_started = True
         except IntegrityError:
             db.session.rollback()
             raise BillingError(_('This email address has already used the free trial.'))
@@ -486,6 +488,19 @@ def go_live(consultation: Consultation, user) -> Consultation:
         },
         durable=True,
     )
+    if trial_started:
+        # Trial to paid within 60 days is the measure the trial review uses.
+        capture_consultation_event(
+            'consultation_trial_started',
+            user_id=user.id,
+            insert_id=f'consultation_trial_started:{user.id}',
+            properties={
+                'consultation_id': published.id,
+                'trial_days': int(current_app.config.get('CONSULTATION_TRIAL_DAYS', 14)),
+            },
+            durable=True,
+            attribution=True,
+        )
     return published
 
 
@@ -821,10 +836,33 @@ def record_single_purchase(checkout_session) -> Optional[ConsultationPurchase]:
         'consultation_pass_purchased',
         user_id=user.id,
         insert_id=f'consultation_pass_purchased:{session_id}',
-        properties={'amount_pence': purchase.amount_pence, 'currency': purchase.currency},
+        properties=_revenue_properties(
+            'single',
+            _get_stripe_field(checkout_session, 'amount_total') or purchase.amount_pence,
+            purchase.currency,
+        ),
         durable=True,
     )
     return purchase
+
+
+def _revenue_properties(plan: str, amount_pence, currency) -> dict:
+    """Plan, amount and currency, with ``revenue`` in major units for PostHog revenue insights."""
+    pence = int(amount_pence or 0)
+    props = {'plan': plan, 'currency': (currency or 'gbp')[:3]}
+    if pence:
+        props.update(amount_pence=pence, revenue=round(pence / 100, 2))
+    return props
+
+
+def _subscription_amount(stripe_subscription) -> tuple:
+    """(unit amount in pence, currency) of the subscription's first item, if Stripe sent it."""
+    items = _get_stripe_field(stripe_subscription, 'items') or {}
+    data = _get_stripe_field(items, 'data') or []
+    price = _get_stripe_field(data[0], 'price') if data else None
+    if not price:
+        return 0, _get_stripe_field(stripe_subscription, 'currency')
+    return _get_stripe_field(price, 'unit_amount') or 0, _get_stripe_field(price, 'currency')
 
 
 def _period_end(stripe_subscription) -> Optional[datetime]:
@@ -866,6 +904,7 @@ def sync_plan(stripe_subscription, *, user: Optional[User] = None) -> Optional[C
     ):
         # Events can arrive out of order. An ended subscription stays ended.
         return plan
+    previous_period_end = plan.current_period_end
     plan.stripe_subscription_id = subscription_id
     plan.status = status
     plan.current_period_end = _period_end(stripe_subscription)
@@ -877,7 +916,22 @@ def sync_plan(stripe_subscription, *, user: Optional[User] = None) -> Optional[C
             'consultation_plan_started',
             user_id=plan.user_id,
             insert_id=f'consultation_plan_started:{subscription_id}',
-            properties={'plan': 'annual'},
+            properties=_revenue_properties('annual', *_subscription_amount(stripe_subscription)),
+            durable=True,
+        )
+    renewed = (
+        plan.grants_access
+        and previous_status in ConsultationPlan.ACCESS_STATUSES
+        and previous_period_end and plan.current_period_end
+        and plan.current_period_end - previous_period_end > timedelta(days=300)
+    )
+    if renewed:
+        from app.consultations.analytics import capture_consultation_event
+        capture_consultation_event(
+            'consultation_plan_renewed',
+            user_id=plan.user_id,
+            insert_id=f'consultation_plan_renewed:{subscription_id}:{plan.current_period_end.date()}',
+            properties=_revenue_properties('annual', *_subscription_amount(stripe_subscription)),
             durable=True,
         )
     if plan.grants_access:

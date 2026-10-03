@@ -216,7 +216,7 @@
   </section>
 
   <footer class="ssr-footer">
-    <span>{{ _('Made with Society Speaks') }} · <a href="{{ product_url }}">{{ product_url|replace('https://', '')|replace('http://', '') }}</a></span>
+    <span>{{ _('Made with Society Speaks') }} · <a href="{{ product_link|default(product_url) }}">{{ product_url|replace('https://', '')|replace('http://', '') }}</a></span>
     <span>{{ _('Generated %(date)s', date=generated_label) }}</span>
   </footer>
 </article>

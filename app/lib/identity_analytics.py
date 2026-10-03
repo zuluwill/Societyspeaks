@@ -20,6 +20,7 @@ from app.lib.posthog_utils import safe_posthog_capture
 SIGNUP_METHOD_REGISTER = 'register'
 SIGNUP_METHOD_TRIAL_MAGIC_LINK = 'trial_magic_link'
 SIGNUP_METHOD_ADMIN = 'admin'
+SIGNUP_METHOD_CONSULTATION = 'consultation_magic_link'
 
 VERIFICATION_METHOD_EMAIL_LINK = 'email_link'
 VERIFICATION_METHOD_MAGIC_LINK = 'magic_link'

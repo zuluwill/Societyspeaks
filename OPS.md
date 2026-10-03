@@ -836,6 +836,33 @@ consultation and per purpose, with the typical and heaviest consultation.
 Multiply by the provider's current prices. Database transfer for the period
 is on the Neon bill (see "Neon egress").
 
+### The funnel in PostHog
+
+Server events, all under the host's account id (`app/consultations/analytics.py`,
+whitelisted properties only, never the question or organisation):
+
+`consultation_signed_up` (once per account; `existing_account`,
+`acquisition_source`, `utm_*`) → `consultation_created` (`consultation_number`)
+→ `consultation_went_live` (`covered_by`) → `consultation_trial_started` →
+`consultation_shared` (`channel`: share_page, qr_download, big_screen) →
+`consultation_closed` (`closed_by`, `participant_count`, `vote_count`) →
+`consultation_report_viewed` / `_downloaded` (`format`) / `_shared` →
+`consultation_checkout_started` → `consultation_pass_purchased` or
+`consultation_plan_started`, then `consultation_plan_renewed` (each with
+`plan`, `amount_pence`, `revenue` in pounds). New accounts also fire the
+site-wide `user_signed_up` with `signup_method=consultation_magic_link`.
+
+Attribution: the campaign on the visit is stored on the product page and the
+start page, carried through the sign-in link (`next=/consultations/new?utm_…`)
+so it survives a different device, sent on sign-up and trial start, and set
+once on the person as `first_consultation_source` / `_medium` / `_campaign`.
+Break revenue down by `first_consultation_source`. The "Made with Society
+Speaks" links on participant pages and reports carry `utm_source=made_with`
+(`utm_medium` participant_page or report), so hosts recruited by another
+host's consultation show up as their own source: that is the growth loop to
+watch. Participant pages still load no analytics. Host pages strip the page
+title (which holds the question) from browser events in `layout.html`.
+
 
 ## Product films
 

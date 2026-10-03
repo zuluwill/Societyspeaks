@@ -363,6 +363,12 @@
               return null;
             }
           }
+          // A host's consultation pages put the customer's question in <title>.
+          // Consultation analytics never carry the question (consultations/analytics.py).
+          if (event.properties && /^\/consultations\/\d/.test(window.location.pathname)) {
+            delete event.properties.title;
+            delete event.properties.$title;
+          }
           if (event.event === "$exception") {
             // posthog-js now puts the useful text on $exception_list /
             // $exception_values, not the legacy singular $exception_message.
@@ -667,6 +673,7 @@
                 {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
                 <a
                   href="{{ url_for('consultations.landing') }}"
+                  data-ph-capture-attribute-cta="nav-consultations"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
@@ -1104,6 +1111,7 @@
               {% if config.get('CONSULTATIONS_SELF_SERVE_ENABLED') %}
               <a
                 href="{{ url_for('consultations.landing') }}"
+                data-ph-capture-attribute-cta="mobile-nav-consultations"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-primary-500"
               >
                 {{ _('Run a consultation') }}
@@ -1433,6 +1441,7 @@
               <li>
                 <a
                   href="{{ url_for('consultations.landing') }}"
+                  data-ph-capture-attribute-cta="footer-consultations"
                   class="text-gray-400 hover:text-white transition"
                   >{{ _('Run a consultation') }}
                   <span class="text-xs text-primary-400">{{ _('Pro') }}</span></a
