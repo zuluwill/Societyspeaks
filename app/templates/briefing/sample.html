@@ -19,7 +19,7 @@
       </p>
       <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
         {% if template_name %}
-        {{ _('Today\'s %(name)s brief', name=template_name)|escape_i18n }}
+        {{ _('Today\'s %(name)s brief', name=template_name) }}
         {% else %}
         {{ _("Today's brief") }}
         {% endif %}

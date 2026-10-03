@@ -114,3 +114,32 @@ def test_sample_renders_demo_briefing_run_when_available(trial_app, db):
     body = resp.get_data(as_text=True)
     assert 'DEMO RUN HTML' in body
     assert 'FALLBACK' not in body
+
+
+def test_sample_heading_escapes_the_template_name_once(trial_app, db):
+    """'AI & Technology' must reach the page as one entity, not '&amp;amp;' (shown as '&amp;')."""
+    with trial_app.app_context():
+        _seed_template_with_sample(db)
+        db.session.commit()
+    trial_app.config['BRIEFING_SAMPLE_DEMO_BRIEFING_ID'] = None
+    body = trial_app.test_client().get('/briefings/sample').get_data(as_text=True)
+    assert 'AI &amp; Technology brief' in body
+    assert '&amp;amp;' not in body
+
+
+def test_refresh_brief_template_samples_changes_only_the_example(app, db):
+    """The CLI updates sample_output and leaves admin-edited fields alone."""
+    from app.models.briefing import BriefTemplate
+    with app.app_context():
+        tpl = _seed_template_with_sample(db, sample_html='<p>OLD</p>')
+        tpl.name = 'Edited in admin'
+        db.session.commit()
+        runner = app.test_cli_runner()
+        dry = runner.invoke(args=['refresh-brief-template-samples', '--dry-run'])
+        assert 'would update' in dry.output
+        assert db.session.get(BriefTemplate, tpl.id).sample_output == '<p>OLD</p>'
+        result = runner.invoke(args=['refresh-brief-template-samples'])
+        assert result.exit_code == 0, result.output
+        fresh = db.session.get(BriefTemplate, tpl.id)
+        assert 'Larkspur Labs' in fresh.sample_output and 'OpenAI' not in fresh.sample_output
+        assert fresh.name == 'Edited in admin'

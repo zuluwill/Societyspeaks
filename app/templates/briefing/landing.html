@@ -234,12 +234,13 @@
                 <div class="flex items-center gap-2 mb-2">
                   <span class="text-xs font-bold uppercase text-primary-600">{{ _('Lead Story') }}</span>
                 </div>
-                <h4 class="font-bold text-slate-900 text-base mb-2">{{ _("Frontier labs publish updated capability disclosures — what changed and what's missing") }}</h4>
-                <p class="text-sm text-slate-600 leading-relaxed">{{ _('OpenAI, Anthropic and Google DeepMind each released new evaluation reports this week. Three patterns repeat across all three labs — and one notable omission. <span class="text-primary-600 font-medium">Why operators should care…</span>')|safe }}</p>
+                <h4 class="font-bold text-slate-900 text-base mb-2">{{ _("Three model labs publish safety evaluations — what changed and what's missing") }}</h4>
+                <p class="text-sm text-slate-600 leading-relaxed">{{ _('Three of the largest model labs released new evaluation reports this week. Three patterns repeat across all of them — and one notable omission. <span class="text-primary-600 font-medium">Why operators should care…</span>')|safe }}</p>
                 <div class="flex items-center gap-3 mt-3 text-xs text-slate-500">
-                  <span class="bg-slate-100 px-2 py-0.5 rounded">Stratechery</span>
-                  <span class="bg-slate-100 px-2 py-0.5 rounded">MIT Tech Review</span>
-                  <span class="bg-slate-100 px-2 py-0.5 rounded">The Information</span>
+                  {# Kinds of source, not named outlets: the story above is illustrative. #}
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">{{ _('Your newsletter') }}</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">{{ _('Trade press') }}</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">{{ _('Research blog') }}</span>
                 </div>
               </div>
 
@@ -249,8 +250,8 @@
                   <span class="text-xs font-bold uppercase text-emerald-600">{{ _('From Your PDFs') }}</span>
                   <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">{{ _('Your upload') }}</span>
                 </div>
-                <h4 class="font-bold text-slate-900 text-base mb-1">{{ _('McKinsey: enterprise AI adoption crosses 50%% across all major regions') }}</h4>
-                <p class="text-sm text-slate-600">{{ _('Highest growth: APAC services (+18pp YoY). Slowest: European manufacturing (+4pp)…') }}</p>
+                <h4 class="font-bold text-slate-900 text-base mb-1">{{ _('Your industry survey: AI adoption passes half of the firms you track') }}</h4>
+                <p class="text-sm text-slate-600">{{ _('Fastest growth in services, slowest in manufacturing. Pulled from the PDF you uploaded on Monday…') }}</p>
               </div>
 
               <!-- Why this matters box -->

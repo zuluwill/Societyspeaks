@@ -1154,6 +1154,42 @@ def init_commands(app):
 
     _seed_journey_variant_choice = click.Choice(sorted(_GUIDED_JOURNEY_VARIANTS))
 
+    @app.cli.command('refresh-brief-template-samples')
+    @click.option('--dry-run', is_flag=True, default=False, help='Report what would change; write nothing')
+    def refresh_brief_template_samples_cmd(dry_run):
+        """Update each brief template's example output from scripts/seed_brief_templates.py.
+
+        Only ``sample_output`` changes, so names, prompts and sources edited in the
+        admin are kept (the full seed script would overwrite them).
+        """
+        import importlib.util
+        import os
+        from app.models import BriefTemplate
+
+        path = os.path.join(os.path.dirname(current_app.root_path), 'scripts', 'seed_brief_templates.py')
+        spec = importlib.util.spec_from_file_location('seed_brief_templates', path)
+        seed = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(seed)
+
+        changed = 0
+        for slug, html in seed.SAMPLE_OUTPUTS.items():
+            template = BriefTemplate.query.filter_by(slug=slug).first()
+            if template is None:
+                click.echo(f"- {slug}: no such template, skipped")
+                continue
+            if template.sample_output == html:
+                click.echo(f"= {slug}: already current")
+                continue
+            changed += 1
+            click.echo(f"{'~' if dry_run else '✓'} {slug}: {'would update' if dry_run else 'updated'}")
+            if not dry_run:
+                template.sample_output = html
+        if dry_run:
+            db.session.rollback()
+        else:
+            db.session.commit()
+        click.echo(f"{changed} template(s) {'would change' if dry_run else 'changed'}.")
+
     @app.cli.command('seed-guided-journey')
     @click.option(
         '--variant',
