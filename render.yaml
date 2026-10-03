@@ -41,6 +41,11 @@ envVarGroups:
       # to hide the product again; existing consultations are kept.
       - key: CONSULTATIONS_SELF_SERVE_ENABLED
         value: "true"
+      # Product films on the marketing pages. On as of 3 Oct 2026, after the
+      # files were uploaded to S3 marketing_films/ (OPS.md "Product films").
+      # "false" restores each page's usual layout.
+      - key: MARKETING_FILMS_ENABLED
+        value: "true"
       - key: POSTHOG_HOST
         value: https://eu.i.posthog.com
       - key: BRIEF_FROM_EMAIL
