@@ -43907,3 +43907,336 @@ msgid ""
 msgstr ""
 "Bluesky स्वचालित रूप से पोस्ट करता है। X पूर्व-भरे गए पाठ के साथ एक नई टैब "
 "में खुलता है।"
+
+#: app/lib/marketing_films.py:47
+msgid "Society Speaks in one minute"
+msgstr "एक मिनट में Society Speaks"
+
+#: app/lib/marketing_films.py:48
+msgid "How Society Speaks turns quick votes on short statements into a map of where people agree, which ideas win support in every group, and where the real divisions lie."
+msgstr "Society Speaks छोटे कथनों पर किए गए त्वरित वोटों को एक ऐसे नक्शे में कैसे बदलता है, जो दिखाता है कि लोग कहाँ सहमत हैं, कौन-से विचार हर समूह में समर्थन पाते हैं, और असली मतभेद कहाँ हैं।"
+
+#: app/lib/marketing_films.py:51
+msgid "Everything Society Speaks does"
+msgstr "Society Speaks क्या-क्या करता है"
+
+#: app/lib/marketing_films.py:52
+msgid "A tour of Society Speaks: the daily question, the free Daily Brief, Personal Briefs, voting under news articles, consultations for councils and organisations, and the Tradeoffs game."
+msgstr "Society Speaks की एक झलक: दैनिक प्रश्न, मुफ्त दैनिक संक्षिप्त, व्यक्तिगत ब्रीफ़, समाचार लेखों के नीचे वोटिंग, परिषदों और संगठनों के लिए परामर्श, और Tradeoffs गेम।"
+
+#: app/lib/marketing_films.py:56
+msgid "Ask one question, share a link or a QR code, and get a report on where your audience agrees, disagrees, is unsure or is split."
+msgstr "एक प्रश्न पूछें, लिंक या QR कोड साझा करें, और ऐसी रिपोर्ट पाएँ जो बताए कि आपके दर्शक कहाँ सहमत हैं, कहाँ असहमत, कहाँ अनिश्चित और कहाँ बँटे हुए हैं।"
+
+#: app/lib/marketing_films.py:66
+msgid "The consultation report"
+msgstr "परामर्श रिपोर्ट"
+
+#: app/lib/marketing_films.py:67
+msgid "What you get back from a consultation: the headline, the themes, every statement at a glance, what to ask next, and what the results do not show."
+msgstr "परामर्श से आपको क्या मिलता है: मुख्य निष्कर्ष, विषय, हर कथन एक नज़र में, आगे क्या पूछें, और नतीजे क्या नहीं दिखाते।"
+
+#: app/lib/marketing_films.py:77
+msgid "What taking part looks like"
+msgstr "भाग लेना कैसा दिखता है"
+
+#: app/lib/marketing_films.py:78
+msgid "What your audience sees: scan the code, answer one statement at a time, done. No login, and anonymous."
+msgstr "आपके दर्शक क्या देखते हैं: कोड स्कैन करें, एक बार में एक कथन का जवाब दें, बस। कोई लॉग इन नहीं, और गुमनाम।"
+
+#: app/lib/marketing_films.py:85
+msgid "Consultations for councils and public bodies"
+msgstr "परिषदों और सार्वजनिक निकायों के लिए परामर्श"
+
+#: app/lib/marketing_films.py:86
+msgid "Put a whole plan to residents, see the opinion groups behind the totals, and get a report you can put in front of members."
+msgstr "पूरी योजना निवासियों के सामने रखें, कुल आँकड़ों के पीछे के राय समूह देखें, और ऐसी रिपोर्ट पाएँ जिसे आप सदस्यों के सामने रख सकें।"
+
+#: app/lib/marketing_films.py:95
+msgid "Society Speaks for publishers"
+msgstr "प्रकाशकों के लिए Society Speaks"
+
+#: app/lib/marketing_films.py:96
+msgid "Replace the comment section with structured voting under any article, styled to match your pages, with data your newsroom can report on."
+msgstr "किसी भी लेख के नीचे टिप्पणी अनुभाग की जगह संरचित वोटिंग लाएँ, जो आपके पेजों के अनुरूप दिखे और जिसके डेटा पर आपका न्यूज़रूम रिपोर्ट कर सके।"
+
+#: app/lib/marketing_films.py:106
+msgid "The day’s news with how left, centre and right are framing it, then a question to answer and how everyone else voted."
+msgstr "दिन की खबरें और वाम, मध्य व दक्षिणपंथ उन्हें कैसे पेश कर रहे हैं, फिर जवाब देने के लिए एक प्रश्न और बाकी सबने कैसे वोट दिया।"
+
+#: app/lib/marketing_films.py:115
+msgid "One calm brief each morning, written from the sources and topics you choose."
+msgstr "हर सुबह एक शांत ब्रीफ़, आपके चुने हुए स्रोतों और विषयों से लिखा गया।"
+
+#: app/lib/marketing_films.py:123
+msgid "How the analysis works"
+msgstr "विश्लेषण कैसे काम करता है"
+
+#: app/lib/marketing_films.py:124
+msgid "From the vote matrix to opinion groups, margins of error and a test against chance, with the code open for anyone to check."
+msgstr "वोट मैट्रिक्स से लेकर राय समूहों, त्रुटि की सीमा और संयोग के विरुद्ध परीक्षण तक, ऐसे कोड के साथ जिसे कोई भी जाँच सकता है।"
+
+#: app/lib/marketing_films.py:132
+msgid "Tradeoffs, the daily game"
+msgstr "Tradeoffs, रोज़ का गेम"
+
+#: app/lib/marketing_films.py:133
+msgid "You govern for five turns, and every decision costs something. A new scenario every day."
+msgstr "आप पाँच बारी तक शासन करते हैं, और हर फ़ैसले की कोई कीमत होती है। हर दिन एक नया परिदृश्य।"
+
+#: app/templates/index.html:175
+msgid "Answer today's question"
+msgstr "आज के प्रश्न का जवाब दें"
+
+#: app/templates/platform.html:223
+msgid "Read the code"
+msgstr "कोड पढ़ें"
+
+#: app/templates/brief/subscribe.html:318
+msgid "Want a brief written from your own sources and topics?"
+msgstr "क्या आप अपने खुद के स्रोतों और विषयों से लिखा ब्रीफ़ चाहते हैं?"
+
+#: app/templates/brief/subscribe.html:319
+msgid "See Personal Briefs"
+msgstr "व्यक्तिगत ब्रीफ़ देखें"
+
+#: app/templates/briefing/landing.html:292
+msgid "How Personal Briefs work"
+msgstr "व्यक्तिगत ब्रीफ़ कैसे काम करते हैं"
+
+#: app/templates/components/film.html:27
+msgid "English"
+msgstr "अंग्रेज़ी"
+
+#: app/templates/components/film.html:30
+msgid "Watch again"
+msgstr "फिर से देखें"
+
+#: app/templates/components/film.html:42
+#, python-format
+msgid "Play the film: %(title)s, %(duration)s"
+msgstr "फ़िल्म चलाएँ: %(title)s, %(duration)s"
+
+#: app/templates/components/film.html:47
+msgid "Watch the film"
+msgstr "फ़िल्म देखें"
+
+#: app/templates/components/film.html:57
+msgid "Read the transcript"
+msgstr "ट्रांसक्रिप्ट पढ़ें"
+
+#: app/templates/components/film.html:57
+msgid "Read what the film shows"
+msgstr "पढ़ें कि फ़िल्म में क्या दिखाया गया है"
+
+#: app/templates/components/film.html:58
+msgid "The film is in English"
+msgstr "यह फ़िल्म अंग्रेज़ी में है"
+
+#: app/templates/help/consultations.html:23
+msgid "What your audience will see"
+msgstr "आपके दर्शक क्या देखेंगे"
+
+#: app/templates/help/consultations.html:24
+msgid "Play this before you share the link, or put it on a slide, so people know it takes two minutes and asks for no login."
+msgstr "लिंक साझा करने से पहले इसे चलाएँ, या किसी स्लाइड पर लगाएँ, ताकि लोग जानें कि इसमें दो मिनट लगते हैं और लॉग इन की ज़रूरत नहीं है।"
+
+#: app/templates/help/consultations.html:25
+msgid "Try it yourself"
+msgstr "खुद आज़माएँ"
+
+#: app/templates/help/consultations.html:27
+msgid "Download the film for a slide (MP4, 1080p)"
+msgstr "स्लाइड के लिए फ़िल्म डाउनलोड करें (MP4, 1080p)"
+
+#: app/templates/partner/hub.html:299
+msgid "From comment section to evidence"
+msgstr "टिप्पणी अनुभाग से प्रमाण तक"
+
+#: app/consultations/sharing.py:45
+#, python-format
+msgid "%(organisation)s is asking: “%(question)s”. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s पूछ रहा है: “%(question)s”। आपके फ़ोन पर दो मिनट। कोई लॉग इन नहीं, और आपके जवाब गुमनाम रहते हैं।"
+
+#: app/consultations/sharing.py:88
+msgid "Send the link"
+msgstr "लिंक भेजें"
+
+#: app/consultations/sharing.py:89
+msgid "The question shows as a preview when the link is pasted."
+msgstr "लिंक पेस्ट करने पर प्रश्न प्रीव्यू के रूप में दिखता है।"
+
+#: app/consultations/sharing.py:93
+msgid "Copy for Slack"
+msgstr "Slack के लिए कॉपी करें"
+
+#: app/consultations/sharing.py:99
+msgid "Post it"
+msgstr "पोस्ट करें"
+
+#: app/consultations/sharing.py:110
+msgid "A caption to paste"
+msgstr "पेस्ट करने के लिए कैप्शन"
+
+#: app/consultations/sharing.py:111
+msgid "On TikTok and Instagram, put the QR code on screen or the link in your bio."
+msgstr "TikTok और Instagram पर QR कोड स्क्रीन पर दिखाएँ या लिंक अपने बायो में डालें।"
+
+#: app/consultations/sharing.py:113
+msgid "Copy for TikTok"
+msgstr "TikTok के लिए कॉपी करें"
+
+#: app/consultations/sharing.py:114
+msgid "Copy for Instagram"
+msgstr "Instagram के लिए कॉपी करें"
+
+#: app/consultations/sharing.py:129
+msgid "Two minutes · No login · Anonymous"
+msgstr "दो मिनट · कोई लॉग इन नहीं · गुमनाम"
+
+#: app/templates/about.html:85 app/templates/index.html:215
+msgid "No ads · Votes never sold"
+msgstr "कोई विज्ञापन नहीं · वोट कभी नहीं बेचे जाते"
+
+#: app/templates/auth/dashboard.html:640
+msgid "See where your audience agrees"
+msgstr "देखें कि आपके दर्शक कहाँ सहमत हैं"
+
+#: app/templates/auth/dashboard.html:641
+msgid "Ask your members, staff or audience one question. They answer on their phones in two minutes, with no login. You get a report showing where they agree, disagree or are unsure."
+msgstr "अपने सदस्यों, कर्मचारियों या दर्शकों से एक प्रश्न पूछें। वे दो मिनट में अपने फ़ोन पर, बिना लॉग इन के जवाब देते हैं। आपको एक रिपोर्ट मिलती है जो दिखाती है कि वे कहाँ सहमत, असहमत या अनिश्चित हैं।"
+
+#: app/templates/auth/dashboard.html:652
+#, python-format
+msgid "You have %(num)d of these with your audience."
+msgid_plural "You have %(num)d of these with your audience."
+msgstr[0] "आपके दर्शकों के साथ आपका %(num)d परामर्श है।"
+msgstr[1] "आपके दर्शकों के साथ आपके %(num)d परामर्श हैं।"
+
+#: app/templates/auth/dashboard.html:654
+#, python-format
+msgid "Your free trial is running. To keep going, it is %(single)s for 30 days or %(annual)s a year."
+msgstr "आपका मुफ्त ट्रायल चल रहा है। जारी रखने के लिए 30 दिनों के %(single)s या सालाना %(annual)s लगते हैं।"
+
+#: app/templates/auth/dashboard.html:661
+msgid "Open yours"
+msgstr "अपने परामर्श खोलें"
+
+#: app/templates/auth/dashboard.html:667
+#, python-format
+msgid "Continue for %(price)s"
+msgstr "%(price)s में जारी रखें"
+
+#: app/templates/auth/dashboard.html:672
+msgid "Ask another question"
+msgstr "एक और प्रश्न पूछें"
+
+#: app/templates/auth/dashboard.html:677
+#, python-format
+msgid "Free for %(days)d days with your real audience. No card. Then %(single)s for 30 days, or %(annual)s a year."
+msgstr "अपने असली दर्शकों के साथ %(days)d दिन मुफ्त। कोई कार्ड नहीं। फिर 30 दिनों के %(single)s, या सालाना %(annual)s।"
+
+#: app/templates/auth/dashboard.html:682
+msgid "Try it free"
+msgstr "मुफ्त में आज़माएँ"
+
+#: app/templates/briefing/landing.html:237
+msgid "Three model labs publish safety evaluations — what changed and what's missing"
+msgstr "तीन मॉडल लैब ने सुरक्षा मूल्यांकन प्रकाशित किए — क्या बदला और क्या छूट गया"
+
+#: app/templates/briefing/landing.html:238
+msgid "Three of the largest model labs released new evaluation reports this week. Three patterns repeat across all of them — and one notable omission. <span class=\"text-primary-600 font-medium\">Why operators should care…</span>"
+msgstr "तीन सबसे बड़ी मॉडल लैब ने इस हफ़्ते नई मूल्यांकन रिपोर्टें जारी कीं। तीन पैटर्न सभी में दोहराए गए हैं — और एक उल्लेखनीय चूक भी। <span class=\"text-primary-600 font-medium\">ऑपरेटरों को इसकी परवाह क्यों करनी चाहिए…</span>"
+
+#: app/templates/briefing/landing.html:241
+msgid "Your newsletter"
+msgstr "आपका न्यूज़लेटर"
+
+#: app/templates/briefing/landing.html:242
+msgid "Trade press"
+msgstr "उद्योग प्रेस"
+
+#: app/templates/briefing/landing.html:243
+msgid "Research blog"
+msgstr "रिसर्च ब्लॉग"
+
+#: app/templates/briefing/landing.html:253
+msgid "Your industry survey: AI adoption passes half of the firms you track"
+msgstr "आपका उद्योग सर्वे: आप जिन फ़र्मों पर नज़र रखते हैं, उनमें से आधी से ज़्यादा ने AI अपनाया"
+
+#: app/templates/briefing/landing.html:254
+msgid "Fastest growth in services, slowest in manufacturing. Pulled from the PDF you uploaded on Monday…"
+msgstr "सबसे तेज़ बढ़त सेवाओं में, सबसे धीमी विनिर्माण में। सोमवार को अपलोड किए गए आपके PDF से…"
+
+#: app/templates/consultations/_link_preview.html:3
+#, python-format
+msgid "%(organisation)s is asking for your view. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s आपकी राय जानना चाहता है। आपके फ़ोन पर दो मिनट। कोई लॉग इन नहीं, और आपके जवाब गुमनाम रहते हैं।"
+
+#: app/templates/consultations/_present_results.html:9
+msgid "Even so far"
+msgstr "अब तक बराबर"
+
+#: app/templates/consultations/_present_results.html:10
+msgid "No votes on these yet"
+msgstr "इन पर अभी कोई वोट नहीं"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Agree, so far"
+msgstr "सहमत, अब तक"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Disagree, so far"
+msgstr "असहमत, अब तक"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Unsure, so far"
+msgstr "अनिश्चित, अब तक"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Split, so far"
+msgstr "बँटे हुए, अब तक"
+
+#: app/templates/consultations/_present_results.html:43
+#, python-format
+msgid "%(num)d person has answered."
+msgid_plural "%(num)d people have answered."
+msgstr[0] "%(num)d व्यक्ति ने जवाब दिया है।"
+msgstr[1] "%(num)d लोगों ने जवाब दिया है।"
+
+#: app/templates/consultations/_present_results.html:44
+#, python-format
+msgid "Each number above is how many statements lean that way so far. A clear result is called once %(n)d people have answered a statement."
+msgstr "ऊपर दी गई हर संख्या बताती है कि अब तक कितने कथन उस ओर झुके हैं। किसी कथन पर %(n)d लोगों के जवाब देने के बाद ही स्पष्ट नतीजा घोषित होता है।"
+
+#: app/templates/consultations/_present_results.html:85
+#, python-format
+msgid "%(agree)d agree, %(disagree)d disagree, %(unsure)d unsure"
+msgstr "%(agree)d सहमत, %(disagree)d असहमत, %(unsure)d अनिश्चित"
+
+#: app/templates/consultations/_report_body.html:22
+#, python-format
+msgid "Fewer than %(n)d people voted on these statements. The counts are shown, with no conclusion drawn."
+msgstr "इन कथनों पर %(n)d से कम लोगों ने वोट दिया। गिनती दिखाई गई है, कोई निष्कर्ष नहीं निकाला गया।"
+
+#: app/templates/consultations/dashboard.html:89
+#, python-format
+msgid "A clear result is called once %(n)d people have answered a statement. Until then, these are the votes so far."
+msgstr "किसी कथन पर %(n)d लोगों के जवाब देने के बाद स्पष्ट नतीजा घोषित होता है। तब तक, ये अब तक के वोट हैं।"
+
+#: app/templates/consultations/participate.html:101
+msgid "What you answered"
+msgstr "आपने क्या जवाब दिया"
+
+#: app/templates/consultations/settings.html:55
+#, python-format
+msgid "After someone has answered, they see the running totals, including in a small team. A clear result is called once %(n)d people have answered a statement. Leave this off if you would rather show the results only on your own screen."
+msgstr "जवाब देने के बाद लोग चल रहे कुल आँकड़े देखते हैं, छोटी टीम में भी। किसी कथन पर %(n)d लोगों के जवाब देने के बाद स्पष्ट नतीजा घोषित होता है। अगर आप नतीजे केवल अपनी स्क्रीन पर दिखाना चाहते हैं, तो इसे बंद रखें।"
+
+#: app/templates/consultations/share.html:23
+msgid "Share from this device"
+msgstr "इस डिवाइस से साझा करें"
+
+#: app/templates/help/consultations.html:74
+msgid "You get a link, a QR code and an invitation to paste into an email or message. In a room, use “Show on a big screen” and people scan the code with their phone camera. Press R when you want the room to see the results. The screen updates every few seconds, and it shows where the votes lean from the first answers, before a result is called."
+msgstr "आपको एक लिंक, एक QR कोड और ईमेल या संदेश में पेस्ट करने के लिए एक निमंत्रण मिलता है। किसी कमरे में “बड़ी स्क्रीन पर दिखाएँ” का उपयोग करें और लोग अपने फ़ोन कैमरे से कोड स्कैन करें। जब आप चाहें कि कमरे में सब नतीजे देखें, तो R दबाएँ। स्क्रीन हर कुछ सेकंड में अपडेट होती है, और नतीजा घोषित होने से पहले, पहले जवाबों से ही दिखाती है कि वोट किस ओर झुक रहे हैं।"

@@ -40539,3 +40539,334 @@ msgstr "Xでシェア"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "BlueSkyは自動的に投稿されます。Xは新しいタブで事前入力されたテキストとともに開きます。"
+
+#: app/lib/marketing_films.py:47
+msgid "Society Speaks in one minute"
+msgstr "1分でわかる Society Speaks"
+
+#: app/lib/marketing_films.py:48
+msgid "How Society Speaks turns quick votes on short statements into a map of where people agree, which ideas win support in every group, and where the real divisions lie."
+msgstr "短い主張へのすばやい投票から、人々がどこで一致し、どのアイデアがすべてのグループで支持され、本当の対立がどこにあるのかを示すマップを Society Speaks がどう作るのか。"
+
+#: app/lib/marketing_films.py:51
+msgid "Everything Society Speaks does"
+msgstr "Society Speaks でできること"
+
+#: app/lib/marketing_films.py:52
+msgid "A tour of Society Speaks: the daily question, the free Daily Brief, Personal Briefs, voting under news articles, consultations for councils and organisations, and the Tradeoffs game."
+msgstr "Society Speaks のご紹介：毎日の質問、無料デイリーブリーフ、パーソナルブリーフ、ニュース記事の下での投票、自治体や団体向けのコンサルテーション、そしてゲーム「Tradeoffs」。"
+
+#: app/lib/marketing_films.py:56
+msgid "Ask one question, share a link or a QR code, and get a report on where your audience agrees, disagrees, is unsure or is split."
+msgstr "質問を1つ用意し、リンクか QR コードを共有するだけ。参加者が賛成・反対・わからない・意見が割れている点をまとめたレポートが届きます。"
+
+#: app/lib/marketing_films.py:66
+msgid "The consultation report"
+msgstr "コンサルテーションのレポート"
+
+#: app/lib/marketing_films.py:67
+msgid "What you get back from a consultation: the headline, the themes, every statement at a glance, what to ask next, and what the results do not show."
+msgstr "コンサルテーションで得られるもの：要点、テーマ、すべての主張の一覧、次に聞くべきこと、そして結果からはわからないこと。"
+
+#: app/lib/marketing_films.py:77
+msgid "What taking part looks like"
+msgstr "参加するとこうなります"
+
+#: app/lib/marketing_films.py:78
+msgid "What your audience sees: scan the code, answer one statement at a time, done. No login, and anonymous."
+msgstr "参加者に見える画面：コードを読み取り、主張に1つずつ答えるだけ。ログイン不要、匿名です。"
+
+#: app/lib/marketing_films.py:85
+msgid "Consultations for councils and public bodies"
+msgstr "自治体・公共機関向けコンサルテーション"
+
+#: app/lib/marketing_films.py:86
+msgid "Put a whole plan to residents, see the opinion groups behind the totals, and get a report you can put in front of members."
+msgstr "計画全体を住民に問いかけ、集計の裏にある意見グループを把握し、議員に提出できるレポートを手に入れましょう。"
+
+#: app/lib/marketing_films.py:95
+msgid "Society Speaks for publishers"
+msgstr "パブリッシャー向け Society Speaks"
+
+#: app/lib/marketing_films.py:96
+msgid "Replace the comment section with structured voting under any article, styled to match your pages, with data your newsroom can report on."
+msgstr "コメント欄の代わりに、どの記事の下にも構造化された投票を。デザインはサイトに合わせられ、編集部が記事にできるデータが得られます。"
+
+#: app/lib/marketing_films.py:106
+msgid "The day’s news with how left, centre and right are framing it, then a question to answer and how everyone else voted."
+msgstr "その日のニュースを、左派・中道・右派がそれぞれどう伝えているかとともに。続いて答える質問と、ほかの人の投票結果も。"
+
+#: app/lib/marketing_films.py:115
+msgid "One calm brief each morning, written from the sources and topics you choose."
+msgstr "毎朝届く落ち着いたブリーフ。あなたが選んだ情報源とトピックから作成されます。"
+
+#: app/lib/marketing_films.py:123
+msgid "How the analysis works"
+msgstr "分析の仕組み"
+
+#: app/lib/marketing_films.py:124
+msgid "From the vote matrix to opinion groups, margins of error and a test against chance, with the code open for anyone to check."
+msgstr "投票マトリクスから意見グループ、誤差の範囲、偶然との比較検定まで。コードは公開されており、誰でも確認できます。"
+
+#: app/lib/marketing_films.py:132
+msgid "Tradeoffs, the daily game"
+msgstr "毎日のゲーム「Tradeoffs」"
+
+#: app/lib/marketing_films.py:133
+msgid "You govern for five turns, and every decision costs something. A new scenario every day."
+msgstr "5ターンの間、あなたが統治します。どの決断にも代償があります。シナリオは毎日新しくなります。"
+
+#: app/templates/index.html:175
+msgid "Answer today's question"
+msgstr "今日の質問に答える"
+
+#: app/templates/platform.html:223
+msgid "Read the code"
+msgstr "コードを見る"
+
+#: app/templates/brief/subscribe.html:318
+msgid "Want a brief written from your own sources and topics?"
+msgstr "自分で選んだ情報源とトピックでブリーフを作りませんか？"
+
+#: app/templates/brief/subscribe.html:319
+msgid "See Personal Briefs"
+msgstr "パーソナルブリーフを見る"
+
+#: app/templates/briefing/landing.html:292
+msgid "How Personal Briefs work"
+msgstr "パーソナルブリーフの仕組み"
+
+#: app/templates/components/film.html:27
+msgid "English"
+msgstr "英語"
+
+#: app/templates/components/film.html:30
+msgid "Watch again"
+msgstr "もう一度見る"
+
+#: app/templates/components/film.html:42
+#, python-format
+msgid "Play the film: %(title)s, %(duration)s"
+msgstr "動画を再生：%(title)s、%(duration)s"
+
+#: app/templates/components/film.html:47
+msgid "Watch the film"
+msgstr "動画を見る"
+
+#: app/templates/components/film.html:57
+msgid "Read the transcript"
+msgstr "文字起こしを読む"
+
+#: app/templates/components/film.html:57
+msgid "Read what the film shows"
+msgstr "動画の内容を文字で読む"
+
+#: app/templates/components/film.html:58
+msgid "The film is in English"
+msgstr "動画は英語です"
+
+#: app/templates/help/consultations.html:23
+msgid "What your audience will see"
+msgstr "参加者に表示される画面"
+
+#: app/templates/help/consultations.html:24
+msgid "Play this before you share the link, or put it on a slide, so people know it takes two minutes and asks for no login."
+msgstr "リンクを共有する前に再生するか、スライドに入れておきましょう。所要時間は2分、ログイン不要だと伝わります。"
+
+#: app/templates/help/consultations.html:25
+msgid "Try it yourself"
+msgstr "自分で試す"
+
+#: app/templates/help/consultations.html:27
+msgid "Download the film for a slide (MP4, 1080p)"
+msgstr "スライド用に動画をダウンロード（MP4、1080p）"
+
+#: app/templates/partner/hub.html:299
+msgid "From comment section to evidence"
+msgstr "コメント欄から、エビデンスへ"
+
+#: app/consultations/sharing.py:45
+#, python-format
+msgid "%(organisation)s is asking: “%(question)s”. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s からの質問：「%(question)s」。スマートフォンで2分。ログイン不要、回答は匿名です。"
+
+#: app/consultations/sharing.py:88
+msgid "Send the link"
+msgstr "リンクを送る"
+
+#: app/consultations/sharing.py:89
+msgid "The question shows as a preview when the link is pasted."
+msgstr "リンクを貼り付けると、質問がプレビュー表示されます。"
+
+#: app/consultations/sharing.py:93
+msgid "Copy for Slack"
+msgstr "Slack 用にコピー"
+
+#: app/consultations/sharing.py:99
+msgid "Post it"
+msgstr "投稿する"
+
+#: app/consultations/sharing.py:110
+msgid "A caption to paste"
+msgstr "貼り付け用のキャプション"
+
+#: app/consultations/sharing.py:111
+msgid "On TikTok and Instagram, put the QR code on screen or the link in your bio."
+msgstr "TikTok と Instagram では、QR コードを画面に映すか、リンクをプロフィールに載せてください。"
+
+#: app/consultations/sharing.py:113
+msgid "Copy for TikTok"
+msgstr "TikTok 用にコピー"
+
+#: app/consultations/sharing.py:114
+msgid "Copy for Instagram"
+msgstr "Instagram 用にコピー"
+
+#: app/consultations/sharing.py:129
+msgid "Two minutes · No login · Anonymous"
+msgstr "2分 · ログイン不要 · 匿名"
+
+#: app/templates/about.html:85 app/templates/index.html:215
+msgid "No ads · Votes never sold"
+msgstr "広告なし · 投票データは販売しません"
+
+#: app/templates/auth/dashboard.html:640
+msgid "See where your audience agrees"
+msgstr "参加者の意見が一致する点を知る"
+
+#: app/templates/auth/dashboard.html:641
+msgid "Ask your members, staff or audience one question. They answer on their phones in two minutes, with no login. You get a report showing where they agree, disagree or are unsure."
+msgstr "会員、スタッフ、参加者に質問を1つ。ログイン不要、スマートフォンで2分で回答できます。賛成・反対・わからないがどこに集まるかを示すレポートが届きます。"
+
+#: app/templates/auth/dashboard.html:652
+#, python-format
+msgid "You have %(num)d of these with your audience."
+msgid_plural "You have %(num)d of these with your audience."
+msgstr[0] "参加者向けのコンサルテーションが %(num)d 件あります。"
+
+#: app/templates/auth/dashboard.html:654
+#, python-format
+msgid "Your free trial is running. To keep going, it is %(single)s for 30 days or %(annual)s a year."
+msgstr "無料トライアル期間中です。継続するには30日間 %(single)s、または年間 %(annual)s です。"
+
+#: app/templates/auth/dashboard.html:661
+msgid "Open yours"
+msgstr "自分のものを開く"
+
+#: app/templates/auth/dashboard.html:667
+#, python-format
+msgid "Continue for %(price)s"
+msgstr "%(price)s で継続する"
+
+#: app/templates/auth/dashboard.html:672
+msgid "Ask another question"
+msgstr "別の質問をする"
+
+#: app/templates/auth/dashboard.html:677
+#, python-format
+msgid "Free for %(days)d days with your real audience. No card. Then %(single)s for 30 days, or %(annual)s a year."
+msgstr "実際の参加者を相手に %(days)d 日間無料。カード登録不要。その後は30日間 %(single)s、または年間 %(annual)s。"
+
+#: app/templates/auth/dashboard.html:682
+msgid "Try it free"
+msgstr "無料で試す"
+
+#: app/templates/briefing/landing.html:237
+msgid "Three model labs publish safety evaluations — what changed and what's missing"
+msgstr "大手モデル開発3社が安全性評価を公表 — 何が変わり、何が欠けているか"
+
+#: app/templates/briefing/landing.html:238
+msgid "Three of the largest model labs released new evaluation reports this week. Three patterns repeat across all of them — and one notable omission. <span class=\"text-primary-600 font-medium\">Why operators should care…</span>"
+msgstr "大手モデル開発企業3社が今週、新しい評価レポートを公表しました。3社すべてに共通するパターンが3つ、そして注目すべき欠落が1つあります。<span class=\"text-primary-600 font-medium\">運用者が注目すべき理由…</span>"
+
+#: app/templates/briefing/landing.html:241
+msgid "Your newsletter"
+msgstr "あなたのニュースレター"
+
+#: app/templates/briefing/landing.html:242
+msgid "Trade press"
+msgstr "業界紙"
+
+#: app/templates/briefing/landing.html:243
+msgid "Research blog"
+msgstr "研究ブログ"
+
+#: app/templates/briefing/landing.html:253
+msgid "Your industry survey: AI adoption passes half of the firms you track"
+msgstr "業界調査：追跡中の企業の半数超が AI を導入"
+
+#: app/templates/briefing/landing.html:254
+msgid "Fastest growth in services, slowest in manufacturing. Pulled from the PDF you uploaded on Monday…"
+msgstr "伸びが最も大きいのはサービス業、最も小さいのは製造業。月曜日にアップロードした PDF から抽出…"
+
+#: app/templates/consultations/_link_preview.html:3
+#, python-format
+msgid "%(organisation)s is asking for your view. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s があなたの意見を求めています。スマートフォンで2分。ログイン不要、回答は匿名です。"
+
+#: app/templates/consultations/_present_results.html:9
+msgid "Even so far"
+msgstr "今のところ拮抗"
+
+#: app/templates/consultations/_present_results.html:10
+msgid "No votes on these yet"
+msgstr "これらにはまだ投票がありません"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Agree, so far"
+msgstr "今のところ賛成"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Disagree, so far"
+msgstr "今のところ反対"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Unsure, so far"
+msgstr "今のところわからない"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Split, so far"
+msgstr "今のところ割れている"
+
+#: app/templates/consultations/_present_results.html:43
+#, python-format
+msgid "%(num)d person has answered."
+msgid_plural "%(num)d people have answered."
+msgstr[0] "%(num)d 人が回答しました。"
+
+#: app/templates/consultations/_present_results.html:44
+#, python-format
+msgid "Each number above is how many statements lean that way so far. A clear result is called once %(n)d people have answered a statement."
+msgstr "上の各数字は、現時点でその方向に傾いている主張の数です。1つの主張に %(n)d 人が回答した時点で、明確な結果として判定されます。"
+
+#: app/templates/consultations/_present_results.html:85
+#, python-format
+msgid "%(agree)d agree, %(disagree)d disagree, %(unsure)d unsure"
+msgstr "賛成 %(agree)d、反対 %(disagree)d、わからない %(unsure)d"
+
+#: app/templates/consultations/_report_body.html:22
+#, python-format
+msgid "Fewer than %(n)d people voted on these statements. The counts are shown, with no conclusion drawn."
+msgstr "これらの主張に投票したのは %(n)d 人未満です。票数のみを示し、結論は出していません。"
+
+#: app/templates/consultations/dashboard.html:89
+#, python-format
+msgid "A clear result is called once %(n)d people have answered a statement. Until then, these are the votes so far."
+msgstr "1つの主張に %(n)d 人が回答した時点で、明確な結果として判定されます。それまでは現時点の投票を表示します。"
+
+#: app/templates/consultations/participate.html:101
+msgid "What you answered"
+msgstr "あなたの回答"
+
+#: app/templates/consultations/settings.html:55
+#, python-format
+msgid "After someone has answered, they see the running totals, including in a small team. A clear result is called once %(n)d people have answered a statement. Leave this off if you would rather show the results only on your own screen."
+msgstr "回答した人には、その時点の集計が表示されます（少人数のチームでも同様です）。1つの主張に %(n)d 人が回答した時点で、明確な結果として判定されます。結果を自分の画面だけで見せたい場合は、オフのままにしてください。"
+
+#: app/templates/consultations/share.html:23
+msgid "Share from this device"
+msgstr "この端末から共有"
+
+#: app/templates/help/consultations.html:74
+msgid "You get a link, a QR code and an invitation to paste into an email or message. In a room, use “Show on a big screen” and people scan the code with their phone camera. Press R when you want the room to see the results. The screen updates every few seconds, and it shows where the votes lean from the first answers, before a result is called."
+msgstr "リンク、QR コード、メールやメッセージに貼り付けられる招待文が手に入ります。会場では「大画面で表示する」を使い、参加者にスマートフォンのカメラでコードを読み取ってもらいます。会場に結果を見せたいときは R キーを押してください。画面は数秒ごとに更新され、結果が判定される前から、最初の回答をもとに票の傾向を表示します。"

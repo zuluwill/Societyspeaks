@@ -43091,3 +43091,344 @@ msgstr "مشاركة على X"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky ينشر تلقائيًا. X يفتح في علامة تبويب جديدة مع نص معبأ مسبقًا."
+
+#: app/lib/marketing_films.py:47
+msgid "Society Speaks in one minute"
+msgstr "Society Speaks في دقيقة واحدة"
+
+#: app/lib/marketing_films.py:48
+msgid "How Society Speaks turns quick votes on short statements into a map of where people agree, which ideas win support in every group, and where the real divisions lie."
+msgstr "كيف يحوّل Society Speaks التصويت السريع على تصريحات قصيرة إلى خريطة تُبيّن أين يتفق الناس، وأي الأفكار تحظى بالتأييد في كل مجموعة، وأين تكمن الخلافات الحقيقية."
+
+#: app/lib/marketing_films.py:51
+msgid "Everything Society Speaks does"
+msgstr "كل ما يقدّمه Society Speaks"
+
+#: app/lib/marketing_films.py:52
+msgid "A tour of Society Speaks: the daily question, the free Daily Brief, Personal Briefs, voting under news articles, consultations for councils and organisations, and the Tradeoffs game."
+msgstr "جولة في Society Speaks: السؤال اليومي، والموجز اليومي المجاني، والموجزات الشخصية، والتصويت أسفل المقالات الإخبارية، والاستشارات للمجالس والمؤسسات، ولعبة Tradeoffs."
+
+#: app/lib/marketing_films.py:56
+msgid "Ask one question, share a link or a QR code, and get a report on where your audience agrees, disagrees, is unsure or is split."
+msgstr "اطرح سؤالًا واحدًا، وشارك رابطًا أو رمز QR، واحصل على تقرير يُبيّن أين يتفق جمهورك وأين يختلف، وأين هو غير متأكد أو منقسم."
+
+#: app/lib/marketing_films.py:66
+msgid "The consultation report"
+msgstr "تقرير الاستشارة"
+
+#: app/lib/marketing_films.py:67
+msgid "What you get back from a consultation: the headline, the themes, every statement at a glance, what to ask next, and what the results do not show."
+msgstr "ما تحصل عليه من الاستشارة: الخلاصة الرئيسية، والمحاور، وكل التصريحات في لمحة واحدة، وما يجدر سؤاله لاحقًا، وما لا تُظهره النتائج."
+
+#: app/lib/marketing_films.py:77
+msgid "What taking part looks like"
+msgstr "كيف تبدو المشاركة"
+
+#: app/lib/marketing_films.py:78
+msgid "What your audience sees: scan the code, answer one statement at a time, done. No login, and anonymous."
+msgstr "ما يراه جمهورك: امسح الرمز، وأجب عن تصريح واحد في كل مرة، وانتهى الأمر. دون تسجيل دخول، وبهوية مجهولة."
+
+#: app/lib/marketing_films.py:85
+msgid "Consultations for councils and public bodies"
+msgstr "استشارات للمجالس والهيئات العامة"
+
+#: app/lib/marketing_films.py:86
+msgid "Put a whole plan to residents, see the opinion groups behind the totals, and get a report you can put in front of members."
+msgstr "اعرض خطة كاملة على السكان، واطّلع على مجموعات الرأي وراء الأرقام الإجمالية، واحصل على تقرير يمكنك تقديمه إلى الأعضاء."
+
+#: app/lib/marketing_films.py:95
+msgid "Society Speaks for publishers"
+msgstr "Society Speaks للناشرين"
+
+#: app/lib/marketing_films.py:96
+msgid "Replace the comment section with structured voting under any article, styled to match your pages, with data your newsroom can report on."
+msgstr "استبدل قسم التعليقات بتصويت منظّم أسفل أي مقالة، بتصميم يتناسب مع صفحاتك، وببيانات يمكن لغرفة الأخبار لديك أن تبني عليها تقاريرها."
+
+#: app/lib/marketing_films.py:106
+msgid "The day’s news with how left, centre and right are framing it, then a question to answer and how everyone else voted."
+msgstr "أخبار اليوم وكيف يقدّمها اليسار والوسط واليمين، ثم سؤال للإجابة عنه، وكيف صوّت الآخرون."
+
+#: app/lib/marketing_films.py:115
+msgid "One calm brief each morning, written from the sources and topics you choose."
+msgstr "موجز هادئ واحد كل صباح، مكتوب من المصادر والموضوعات التي تختارها."
+
+#: app/lib/marketing_films.py:123
+msgid "How the analysis works"
+msgstr "كيف يعمل التحليل"
+
+#: app/lib/marketing_films.py:124
+msgid "From the vote matrix to opinion groups, margins of error and a test against chance, with the code open for anyone to check."
+msgstr "من مصفوفة الأصوات إلى مجموعات الرأي وهوامش الخطأ واختبار مقابل الصدفة، مع شيفرة مفتوحة يمكن لأي شخص التحقق منها."
+
+#: app/lib/marketing_films.py:132
+msgid "Tradeoffs, the daily game"
+msgstr "Tradeoffs، اللعبة اليومية"
+
+#: app/lib/marketing_films.py:133
+msgid "You govern for five turns, and every decision costs something. A new scenario every day."
+msgstr "تحكم لخمس جولات، وكل قرار له ثمن. سيناريو جديد كل يوم."
+
+#: app/templates/index.html:175
+msgid "Answer today's question"
+msgstr "أجب عن سؤال اليوم"
+
+#: app/templates/platform.html:223
+msgid "Read the code"
+msgstr "اطّلع على الشيفرة"
+
+#: app/templates/brief/subscribe.html:318
+msgid "Want a brief written from your own sources and topics?"
+msgstr "هل تريد موجزًا مكتوبًا من مصادرك وموضوعاتك الخاصة؟"
+
+#: app/templates/brief/subscribe.html:319
+msgid "See Personal Briefs"
+msgstr "اطّلع على الموجزات الشخصية"
+
+#: app/templates/briefing/landing.html:292
+msgid "How Personal Briefs work"
+msgstr "كيف تعمل الموجزات الشخصية"
+
+#: app/templates/components/film.html:27
+msgid "English"
+msgstr "الإنجليزية"
+
+#: app/templates/components/film.html:30
+msgid "Watch again"
+msgstr "شاهد مرة أخرى"
+
+#: app/templates/components/film.html:42
+#, python-format
+msgid "Play the film: %(title)s, %(duration)s"
+msgstr "تشغيل الفيلم: %(title)s، %(duration)s"
+
+#: app/templates/components/film.html:47
+msgid "Watch the film"
+msgstr "شاهد الفيلم"
+
+#: app/templates/components/film.html:57
+msgid "Read the transcript"
+msgstr "اقرأ النص"
+
+#: app/templates/components/film.html:57
+msgid "Read what the film shows"
+msgstr "اقرأ ما يعرضه الفيلم"
+
+#: app/templates/components/film.html:58
+msgid "The film is in English"
+msgstr "الفيلم باللغة الإنجليزية"
+
+#: app/templates/help/consultations.html:23
+msgid "What your audience will see"
+msgstr "ما سيراه جمهورك"
+
+#: app/templates/help/consultations.html:24
+msgid "Play this before you share the link, or put it on a slide, so people know it takes two minutes and asks for no login."
+msgstr "شغّل هذا قبل مشاركة الرابط، أو ضعه في شريحة عرض، ليعرف الناس أن الأمر يستغرق دقيقتين ولا يتطلب تسجيل دخول."
+
+#: app/templates/help/consultations.html:25
+msgid "Try it yourself"
+msgstr "جرّبه بنفسك"
+
+#: app/templates/help/consultations.html:27
+msgid "Download the film for a slide (MP4, 1080p)"
+msgstr "نزّل الفيلم لاستخدامه في شريحة عرض (MP4، 1080p)"
+
+#: app/templates/partner/hub.html:299
+msgid "From comment section to evidence"
+msgstr "من قسم التعليقات إلى الأدلة"
+
+#: app/consultations/sharing.py:45
+#, python-format
+msgid "%(organisation)s is asking: “%(question)s”. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "تسأل %(organisation)s: «%(question)s». دقيقتان على هاتفك. دون تسجيل دخول، وإجاباتك مجهولة الهوية."
+
+#: app/consultations/sharing.py:88
+msgid "Send the link"
+msgstr "أرسل الرابط"
+
+#: app/consultations/sharing.py:89
+msgid "The question shows as a preview when the link is pasted."
+msgstr "يظهر السؤال كمعاينة عند لصق الرابط."
+
+#: app/consultations/sharing.py:93
+msgid "Copy for Slack"
+msgstr "نسخ لـ Slack"
+
+#: app/consultations/sharing.py:99
+msgid "Post it"
+msgstr "انشره"
+
+#: app/consultations/sharing.py:110
+msgid "A caption to paste"
+msgstr "تعليق جاهز للصق"
+
+#: app/consultations/sharing.py:111
+msgid "On TikTok and Instagram, put the QR code on screen or the link in your bio."
+msgstr "على TikTok وInstagram، اعرض رمز QR على الشاشة أو ضع الرابط في نبذتك التعريفية."
+
+#: app/consultations/sharing.py:113
+msgid "Copy for TikTok"
+msgstr "نسخ لـ TikTok"
+
+#: app/consultations/sharing.py:114
+msgid "Copy for Instagram"
+msgstr "نسخ لـ Instagram"
+
+#: app/consultations/sharing.py:129
+msgid "Two minutes · No login · Anonymous"
+msgstr "دقيقتان · دون تسجيل دخول · مجهول الهوية"
+
+#: app/templates/about.html:85 app/templates/index.html:215
+msgid "No ads · Votes never sold"
+msgstr "بلا إعلانات · لا نبيع الأصوات أبدًا"
+
+#: app/templates/auth/dashboard.html:640
+msgid "See where your audience agrees"
+msgstr "اكتشف أين يتفق جمهورك"
+
+#: app/templates/auth/dashboard.html:641
+msgid "Ask your members, staff or audience one question. They answer on their phones in two minutes, with no login. You get a report showing where they agree, disagree or are unsure."
+msgstr "اطرح سؤالًا واحدًا على أعضائك أو موظفيك أو جمهورك. يجيبون من هواتفهم في دقيقتين دون تسجيل دخول. وتحصل على تقرير يُبيّن أين يتفقون وأين يختلفون وأين هم غير متأكدين."
+
+#: app/templates/auth/dashboard.html:652
+#, python-format
+msgid "You have %(num)d of these with your audience."
+msgid_plural "You have %(num)d of these with your audience."
+msgstr[0] "لديك %(num)d استشارة مع جمهورك."
+msgstr[1] "لديك %(num)d استشارة مع جمهورك."
+msgstr[2] "لديك %(num)d استشارتان مع جمهورك."
+msgstr[3] "لديك %(num)d استشارات مع جمهورك."
+msgstr[4] "لديك %(num)d استشارة مع جمهورك."
+msgstr[5] "لديك %(num)d استشارة مع جمهورك."
+
+#: app/templates/auth/dashboard.html:654
+#, python-format
+msgid "Your free trial is running. To keep going, it is %(single)s for 30 days or %(annual)s a year."
+msgstr "فترتك التجريبية المجانية جارية. للاستمرار، التكلفة %(single)s لمدة 30 يومًا أو %(annual)s سنويًا."
+
+#: app/templates/auth/dashboard.html:661
+msgid "Open yours"
+msgstr "افتح استشاراتك"
+
+#: app/templates/auth/dashboard.html:667
+#, python-format
+msgid "Continue for %(price)s"
+msgstr "تابِع مقابل %(price)s"
+
+#: app/templates/auth/dashboard.html:672
+msgid "Ask another question"
+msgstr "اطرح سؤالًا آخر"
+
+#: app/templates/auth/dashboard.html:677
+#, python-format
+msgid "Free for %(days)d days with your real audience. No card. Then %(single)s for 30 days, or %(annual)s a year."
+msgstr "مجانًا لمدة %(days)d يومًا مع جمهورك الحقيقي. دون بطاقة. ثم %(single)s لمدة 30 يومًا، أو %(annual)s سنويًا."
+
+#: app/templates/auth/dashboard.html:682
+msgid "Try it free"
+msgstr "جرّبه مجانًا"
+
+#: app/templates/briefing/landing.html:237
+msgid "Three model labs publish safety evaluations — what changed and what's missing"
+msgstr "ثلاثة مختبرات نماذج تنشر تقييمات السلامة — ما الذي تغيّر وما الذي ينقص"
+
+#: app/templates/briefing/landing.html:238
+msgid "Three of the largest model labs released new evaluation reports this week. Three patterns repeat across all of them — and one notable omission. <span class=\"text-primary-600 font-medium\">Why operators should care…</span>"
+msgstr "أصدرت ثلاثة من أكبر مختبرات النماذج تقارير تقييم جديدة هذا الأسبوع. تتكرر ثلاثة أنماط فيها جميعًا — مع إغفال لافت واحد. <span class=\"text-primary-600 font-medium\">لماذا يجب أن يهتم المشغّلون…</span>"
+
+#: app/templates/briefing/landing.html:241
+msgid "Your newsletter"
+msgstr "نشرتك الإخبارية"
+
+#: app/templates/briefing/landing.html:242
+msgid "Trade press"
+msgstr "الصحافة المتخصصة"
+
+#: app/templates/briefing/landing.html:243
+msgid "Research blog"
+msgstr "مدونة بحثية"
+
+#: app/templates/briefing/landing.html:253
+msgid "Your industry survey: AI adoption passes half of the firms you track"
+msgstr "استطلاع قطاعك: اعتماد الذكاء الاصطناعي يتجاوز نصف الشركات التي تتابعها"
+
+#: app/templates/briefing/landing.html:254
+msgid "Fastest growth in services, slowest in manufacturing. Pulled from the PDF you uploaded on Monday…"
+msgstr "أسرع نمو في قطاع الخدمات، وأبطؤه في التصنيع. مأخوذ من ملف PDF الذي رفعته يوم الاثنين…"
+
+#: app/templates/consultations/_link_preview.html:3
+#, python-format
+msgid "%(organisation)s is asking for your view. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "تطلب %(organisation)s رأيك. دقيقتان على هاتفك. دون تسجيل دخول، وإجاباتك مجهولة الهوية."
+
+#: app/templates/consultations/_present_results.html:9
+msgid "Even so far"
+msgstr "متعادلة حتى الآن"
+
+#: app/templates/consultations/_present_results.html:10
+msgid "No votes on these yet"
+msgstr "لا أصوات على هذه بعد"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Agree, so far"
+msgstr "موافقة، حتى الآن"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Disagree, so far"
+msgstr "رفض، حتى الآن"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Unsure, so far"
+msgstr "غير متأكدين، حتى الآن"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Split, so far"
+msgstr "منقسمون، حتى الآن"
+
+#: app/templates/consultations/_present_results.html:43
+#, python-format
+msgid "%(num)d person has answered."
+msgid_plural "%(num)d people have answered."
+msgstr[0] "أجاب %(num)d شخص."
+msgstr[1] "أجاب %(num)d شخص."
+msgstr[2] "أجاب %(num)d شخصان."
+msgstr[3] "أجاب %(num)d أشخاص."
+msgstr[4] "أجاب %(num)d شخصًا."
+msgstr[5] "أجاب %(num)d شخص."
+
+#: app/templates/consultations/_present_results.html:44
+#, python-format
+msgid "Each number above is how many statements lean that way so far. A clear result is called once %(n)d people have answered a statement."
+msgstr "يُشير كل رقم أعلاه إلى عدد التصريحات التي تميل في هذا الاتجاه حتى الآن. تُعلَن نتيجة واضحة بمجرد أن يجيب %(n)d أشخاص عن التصريح."
+
+#: app/templates/consultations/_present_results.html:85
+#, python-format
+msgid "%(agree)d agree, %(disagree)d disagree, %(unsure)d unsure"
+msgstr "%(agree)d يوافقون، %(disagree)d لا يوافقون، %(unsure)d غير متأكدين"
+
+#: app/templates/consultations/_report_body.html:22
+#, python-format
+msgid "Fewer than %(n)d people voted on these statements. The counts are shown, with no conclusion drawn."
+msgstr "صوّت أقل من %(n)d أشخاص على هذه التصريحات. تُعرض الأعداد دون استخلاص أي نتيجة."
+
+#: app/templates/consultations/dashboard.html:89
+#, python-format
+msgid "A clear result is called once %(n)d people have answered a statement. Until then, these are the votes so far."
+msgstr "تُعلَن نتيجة واضحة بمجرد أن يجيب %(n)d أشخاص عن التصريح. وحتى ذلك الحين، هذه هي الأصوات حتى الآن."
+
+#: app/templates/consultations/participate.html:101
+msgid "What you answered"
+msgstr "ما أجبت به"
+
+#: app/templates/consultations/settings.html:55
+#, python-format
+msgid "After someone has answered, they see the running totals, including in a small team. A clear result is called once %(n)d people have answered a statement. Leave this off if you would rather show the results only on your own screen."
+msgstr "بعد أن يجيب أحدهم، يرى المجاميع الجارية، حتى في فريق صغير. تُعلَن نتيجة واضحة بمجرد أن يجيب %(n)d أشخاص عن التصريح. اترك هذا الخيار معطّلًا إذا كنت تفضّل عرض النتائج على شاشتك فقط."
+
+#: app/templates/consultations/share.html:23
+msgid "Share from this device"
+msgstr "شارك من هذا الجهاز"
+
+#: app/templates/help/consultations.html:74
+msgid "You get a link, a QR code and an invitation to paste into an email or message. In a room, use “Show on a big screen” and people scan the code with their phone camera. Press R when you want the room to see the results. The screen updates every few seconds, and it shows where the votes lean from the first answers, before a result is called."
+msgstr "تحصل على رابط ورمز QR ودعوة للصقها في بريد إلكتروني أو رسالة. في القاعة، استخدم «اعرضها على شاشة كبيرة» ليمسح الحاضرون الرمز بكاميرا هواتفهم. اضغط R عندما تريد أن يرى الحاضرون النتائج. تتحدّث الشاشة كل بضع ثوانٍ، وتُظهر اتجاه الأصوات منذ الإجابات الأولى، قبل إعلان أي نتيجة."

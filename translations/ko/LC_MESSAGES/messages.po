@@ -40905,3 +40905,334 @@ msgstr "X에서 공유"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky에 자동으로 게시됩니다. X는 미리 작성된 텍스트와 함께 새 탭에서 열립니다."
+
+#: app/lib/marketing_films.py:47
+msgid "Society Speaks in one minute"
+msgstr "1분 만에 보는 Society Speaks"
+
+#: app/lib/marketing_films.py:48
+msgid "How Society Speaks turns quick votes on short statements into a map of where people agree, which ideas win support in every group, and where the real divisions lie."
+msgstr "Society Speaks가 짧은 진술에 대한 빠른 투표를 바탕으로 사람들이 어디서 동의하는지, 어떤 아이디어가 모든 그룹에서 지지를 얻는지, 진짜 갈등은 어디에 있는지 보여 주는 지도를 만드는 방법."
+
+#: app/lib/marketing_films.py:51
+msgid "Everything Society Speaks does"
+msgstr "Society Speaks가 하는 모든 것"
+
+#: app/lib/marketing_films.py:52
+msgid "A tour of Society Speaks: the daily question, the free Daily Brief, Personal Briefs, voting under news articles, consultations for councils and organisations, and the Tradeoffs game."
+msgstr "Society Speaks 둘러보기: 오늘의 질문, 무료 일일 브리프, 개인 브리핑, 뉴스 기사 아래 투표, 지방의회와 기관을 위한 의견 수렴, 그리고 Tradeoffs 게임."
+
+#: app/lib/marketing_films.py:56
+msgid "Ask one question, share a link or a QR code, and get a report on where your audience agrees, disagrees, is unsure or is split."
+msgstr "질문 하나를 던지고 링크나 QR 코드를 공유하면, 청중이 어디서 동의하고 반대하는지, 어디서 확신하지 못하거나 의견이 갈리는지 보여 주는 보고서를 받을 수 있습니다."
+
+#: app/lib/marketing_films.py:66
+msgid "The consultation report"
+msgstr "의견 수렴 보고서"
+
+#: app/lib/marketing_films.py:67
+msgid "What you get back from a consultation: the headline, the themes, every statement at a glance, what to ask next, and what the results do not show."
+msgstr "의견 수렴으로 받게 되는 것: 핵심 결과, 주제, 모든 진술을 한눈에, 다음에 물어볼 것, 그리고 결과가 보여 주지 않는 것."
+
+#: app/lib/marketing_films.py:77
+msgid "What taking part looks like"
+msgstr "참여는 이렇게 진행됩니다"
+
+#: app/lib/marketing_films.py:78
+msgid "What your audience sees: scan the code, answer one statement at a time, done. No login, and anonymous."
+msgstr "청중이 보게 되는 화면: 코드를 스캔하고, 진술에 하나씩 답하면 끝. 로그인 없이 익명으로 참여합니다."
+
+#: app/lib/marketing_films.py:85
+msgid "Consultations for councils and public bodies"
+msgstr "지방의회와 공공기관을 위한 의견 수렴"
+
+#: app/lib/marketing_films.py:86
+msgid "Put a whole plan to residents, see the opinion groups behind the totals, and get a report you can put in front of members."
+msgstr "계획 전체를 주민에게 묻고, 합계 뒤에 있는 의견 그룹을 확인하고, 의원들에게 제출할 수 있는 보고서를 받으세요."
+
+#: app/lib/marketing_films.py:95
+msgid "Society Speaks for publishers"
+msgstr "퍼블리셔를 위한 Society Speaks"
+
+#: app/lib/marketing_films.py:96
+msgid "Replace the comment section with structured voting under any article, styled to match your pages, with data your newsroom can report on."
+msgstr "어떤 기사 아래에서든 댓글란을 구조화된 투표로 바꾸세요. 페이지에 맞는 디자인으로, 뉴스룸이 보도할 수 있는 데이터를 제공합니다."
+
+#: app/lib/marketing_films.py:106
+msgid "The day’s news with how left, centre and right are framing it, then a question to answer and how everyone else voted."
+msgstr "오늘의 뉴스와 진보·중도·보수가 이를 어떻게 다루는지, 이어서 답할 질문과 다른 사람들의 투표 결과까지."
+
+#: app/lib/marketing_films.py:115
+msgid "One calm brief each morning, written from the sources and topics you choose."
+msgstr "매일 아침 차분한 브리핑 하나. 직접 고른 출처와 주제로 작성됩니다."
+
+#: app/lib/marketing_films.py:123
+msgid "How the analysis works"
+msgstr "분석 방식"
+
+#: app/lib/marketing_films.py:124
+msgid "From the vote matrix to opinion groups, margins of error and a test against chance, with the code open for anyone to check."
+msgstr "투표 행렬에서 의견 그룹, 오차 범위, 우연과 비교하는 검정까지. 누구나 확인할 수 있도록 코드가 공개되어 있습니다."
+
+#: app/lib/marketing_films.py:132
+msgid "Tradeoffs, the daily game"
+msgstr "매일 하는 게임, Tradeoffs"
+
+#: app/lib/marketing_films.py:133
+msgid "You govern for five turns, and every decision costs something. A new scenario every day."
+msgstr "다섯 턴 동안 통치하며, 모든 결정에는 대가가 따릅니다. 매일 새로운 시나리오."
+
+#: app/templates/index.html:175
+msgid "Answer today's question"
+msgstr "오늘의 질문에 답하기"
+
+#: app/templates/platform.html:223
+msgid "Read the code"
+msgstr "코드 보기"
+
+#: app/templates/brief/subscribe.html:318
+msgid "Want a brief written from your own sources and topics?"
+msgstr "직접 고른 출처와 주제로 작성된 브리핑을 받아 보시겠어요?"
+
+#: app/templates/brief/subscribe.html:319
+msgid "See Personal Briefs"
+msgstr "개인 브리핑 보기"
+
+#: app/templates/briefing/landing.html:292
+msgid "How Personal Briefs work"
+msgstr "개인 브리핑 작동 방식"
+
+#: app/templates/components/film.html:27
+msgid "English"
+msgstr "영어"
+
+#: app/templates/components/film.html:30
+msgid "Watch again"
+msgstr "다시 보기"
+
+#: app/templates/components/film.html:42
+#, python-format
+msgid "Play the film: %(title)s, %(duration)s"
+msgstr "영상 재생: %(title)s, %(duration)s"
+
+#: app/templates/components/film.html:47
+msgid "Watch the film"
+msgstr "영상 보기"
+
+#: app/templates/components/film.html:57
+msgid "Read the transcript"
+msgstr "스크립트 읽기"
+
+#: app/templates/components/film.html:57
+msgid "Read what the film shows"
+msgstr "영상 내용을 글로 읽기"
+
+#: app/templates/components/film.html:58
+msgid "The film is in English"
+msgstr "영상은 영어로 되어 있습니다"
+
+#: app/templates/help/consultations.html:23
+msgid "What your audience will see"
+msgstr "청중이 보게 될 화면"
+
+#: app/templates/help/consultations.html:24
+msgid "Play this before you share the link, or put it on a slide, so people know it takes two minutes and asks for no login."
+msgstr "링크를 공유하기 전에 재생하거나 슬라이드에 넣어 두세요. 2분이면 끝나고 로그인이 필요 없다는 것을 알 수 있습니다."
+
+#: app/templates/help/consultations.html:25
+msgid "Try it yourself"
+msgstr "직접 해 보기"
+
+#: app/templates/help/consultations.html:27
+msgid "Download the film for a slide (MP4, 1080p)"
+msgstr "슬라이드용 영상 내려받기 (MP4, 1080p)"
+
+#: app/templates/partner/hub.html:299
+msgid "From comment section to evidence"
+msgstr "댓글란에서 근거로"
+
+#: app/consultations/sharing.py:45
+#, python-format
+msgid "%(organisation)s is asking: “%(question)s”. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s의 질문: “%(question)s” 휴대폰으로 2분이면 됩니다. 로그인 없이, 답변은 익명으로 처리됩니다."
+
+#: app/consultations/sharing.py:88
+msgid "Send the link"
+msgstr "링크 보내기"
+
+#: app/consultations/sharing.py:89
+msgid "The question shows as a preview when the link is pasted."
+msgstr "링크를 붙여 넣으면 질문이 미리 보기로 표시됩니다."
+
+#: app/consultations/sharing.py:93
+msgid "Copy for Slack"
+msgstr "Slack용으로 복사"
+
+#: app/consultations/sharing.py:99
+msgid "Post it"
+msgstr "게시하기"
+
+#: app/consultations/sharing.py:110
+msgid "A caption to paste"
+msgstr "붙여 넣을 캡션"
+
+#: app/consultations/sharing.py:111
+msgid "On TikTok and Instagram, put the QR code on screen or the link in your bio."
+msgstr "TikTok과 Instagram에서는 QR 코드를 화면에 띄우거나 링크를 프로필에 넣으세요."
+
+#: app/consultations/sharing.py:113
+msgid "Copy for TikTok"
+msgstr "TikTok용으로 복사"
+
+#: app/consultations/sharing.py:114
+msgid "Copy for Instagram"
+msgstr "Instagram용으로 복사"
+
+#: app/consultations/sharing.py:129
+msgid "Two minutes · No login · Anonymous"
+msgstr "2분 · 로그인 없음 · 익명"
+
+#: app/templates/about.html:85 app/templates/index.html:215
+msgid "No ads · Votes never sold"
+msgstr "광고 없음 · 투표는 절대 판매하지 않음"
+
+#: app/templates/auth/dashboard.html:640
+msgid "See where your audience agrees"
+msgstr "청중이 어디서 동의하는지 확인하세요"
+
+#: app/templates/auth/dashboard.html:641
+msgid "Ask your members, staff or audience one question. They answer on their phones in two minutes, with no login. You get a report showing where they agree, disagree or are unsure."
+msgstr "회원, 직원 또는 청중에게 질문 하나를 던지세요. 로그인 없이 휴대폰으로 2분이면 답할 수 있습니다. 어디서 동의하고 반대하는지, 어디서 확신하지 못하는지 보여 주는 보고서를 받게 됩니다."
+
+#: app/templates/auth/dashboard.html:652
+#, python-format
+msgid "You have %(num)d of these with your audience."
+msgid_plural "You have %(num)d of these with your audience."
+msgstr[0] "청중과 진행 중인 의견 수렴이 %(num)d건 있습니다."
+
+#: app/templates/auth/dashboard.html:654
+#, python-format
+msgid "Your free trial is running. To keep going, it is %(single)s for 30 days or %(annual)s a year."
+msgstr "무료 체험이 진행 중입니다. 계속 이용하려면 30일 %(single)s 또는 연간 %(annual)s입니다."
+
+#: app/templates/auth/dashboard.html:661
+msgid "Open yours"
+msgstr "내 의견 수렴 열기"
+
+#: app/templates/auth/dashboard.html:667
+#, python-format
+msgid "Continue for %(price)s"
+msgstr "%(price)s에 계속하기"
+
+#: app/templates/auth/dashboard.html:672
+msgid "Ask another question"
+msgstr "다른 질문하기"
+
+#: app/templates/auth/dashboard.html:677
+#, python-format
+msgid "Free for %(days)d days with your real audience. No card. Then %(single)s for 30 days, or %(annual)s a year."
+msgstr "실제 청중과 함께 %(days)d일 무료. 카드 등록 불필요. 이후 30일 %(single)s, 또는 연간 %(annual)s."
+
+#: app/templates/auth/dashboard.html:682
+msgid "Try it free"
+msgstr "무료로 체험하기"
+
+#: app/templates/briefing/landing.html:237
+msgid "Three model labs publish safety evaluations — what changed and what's missing"
+msgstr "모델 연구소 세 곳, 안전성 평가 공개 — 무엇이 바뀌었고 무엇이 빠졌나"
+
+#: app/templates/briefing/landing.html:238
+msgid "Three of the largest model labs released new evaluation reports this week. Three patterns repeat across all of them — and one notable omission. <span class=\"text-primary-600 font-medium\">Why operators should care…</span>"
+msgstr "최대 모델 연구소 세 곳이 이번 주 새 평가 보고서를 공개했습니다. 세 보고서 모두에서 세 가지 패턴이 반복되며, 눈에 띄는 누락이 하나 있습니다. <span class=\"text-primary-600 font-medium\">운영자가 주목해야 하는 이유…</span>"
+
+#: app/templates/briefing/landing.html:241
+msgid "Your newsletter"
+msgstr "내 뉴스레터"
+
+#: app/templates/briefing/landing.html:242
+msgid "Trade press"
+msgstr "업계 전문지"
+
+#: app/templates/briefing/landing.html:243
+msgid "Research blog"
+msgstr "연구 블로그"
+
+#: app/templates/briefing/landing.html:253
+msgid "Your industry survey: AI adoption passes half of the firms you track"
+msgstr "업계 설문: 추적 중인 기업의 절반 이상이 AI 도입"
+
+#: app/templates/briefing/landing.html:254
+msgid "Fastest growth in services, slowest in manufacturing. Pulled from the PDF you uploaded on Monday…"
+msgstr "서비스업 성장이 가장 빠르고 제조업이 가장 느립니다. 월요일에 업로드한 PDF에서 가져옴…"
+
+#: app/templates/consultations/_link_preview.html:3
+#, python-format
+msgid "%(organisation)s is asking for your view. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s에서 의견을 묻고 있습니다. 휴대폰으로 2분이면 됩니다. 로그인 없이, 답변은 익명으로 처리됩니다."
+
+#: app/templates/consultations/_present_results.html:9
+msgid "Even so far"
+msgstr "현재까지 비등"
+
+#: app/templates/consultations/_present_results.html:10
+msgid "No votes on these yet"
+msgstr "아직 투표가 없는 진술"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Agree, so far"
+msgstr "현재까지 동의"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Disagree, so far"
+msgstr "현재까지 반대"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Unsure, so far"
+msgstr "현재까지 잘 모르겠음"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Split, so far"
+msgstr "현재까지 의견 갈림"
+
+#: app/templates/consultations/_present_results.html:43
+#, python-format
+msgid "%(num)d person has answered."
+msgid_plural "%(num)d people have answered."
+msgstr[0] "%(num)d명이 답했습니다."
+
+#: app/templates/consultations/_present_results.html:44
+#, python-format
+msgid "Each number above is how many statements lean that way so far. A clear result is called once %(n)d people have answered a statement."
+msgstr "위의 각 숫자는 현재까지 그쪽으로 기운 진술의 수입니다. 한 진술에 %(n)d명이 답하면 명확한 결과로 판정됩니다."
+
+#: app/templates/consultations/_present_results.html:85
+#, python-format
+msgid "%(agree)d agree, %(disagree)d disagree, %(unsure)d unsure"
+msgstr "동의 %(agree)d, 반대 %(disagree)d, 잘 모르겠음 %(unsure)d"
+
+#: app/templates/consultations/_report_body.html:22
+#, python-format
+msgid "Fewer than %(n)d people voted on these statements. The counts are shown, with no conclusion drawn."
+msgstr "이 진술들에 투표한 사람은 %(n)d명 미만입니다. 집계만 표시하며 결론은 내리지 않습니다."
+
+#: app/templates/consultations/dashboard.html:89
+#, python-format
+msgid "A clear result is called once %(n)d people have answered a statement. Until then, these are the votes so far."
+msgstr "한 진술에 %(n)d명이 답하면 명확한 결과로 판정됩니다. 그전까지는 현재까지의 투표가 표시됩니다."
+
+#: app/templates/consultations/participate.html:101
+msgid "What you answered"
+msgstr "내 답변"
+
+#: app/templates/consultations/settings.html:55
+#, python-format
+msgid "After someone has answered, they see the running totals, including in a small team. A clear result is called once %(n)d people have answered a statement. Leave this off if you would rather show the results only on your own screen."
+msgstr "답한 사람은 소규모 팀이라도 현재 집계를 보게 됩니다. 한 진술에 %(n)d명이 답하면 명확한 결과로 판정됩니다. 결과를 내 화면에서만 보여 주고 싶다면 이 옵션을 꺼 두세요."
+
+#: app/templates/consultations/share.html:23
+msgid "Share from this device"
+msgstr "이 기기에서 공유"
+
+#: app/templates/help/consultations.html:74
+msgid "You get a link, a QR code and an invitation to paste into an email or message. In a room, use “Show on a big screen” and people scan the code with their phone camera. Press R when you want the room to see the results. The screen updates every few seconds, and it shows where the votes lean from the first answers, before a result is called."
+msgstr "링크, QR 코드, 이메일이나 메시지에 붙여 넣을 초대 문구를 받게 됩니다. 현장에서는 ‘큰 화면에 표시’를 사용하고, 참석자는 휴대폰 카메라로 코드를 스캔합니다. 참석자에게 결과를 보여 주고 싶을 때 R을 누르세요. 화면은 몇 초마다 갱신되며, 결과가 판정되기 전에도 첫 응답부터 투표가 어느 쪽으로 기우는지 보여 줍니다."

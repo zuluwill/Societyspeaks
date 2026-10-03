@@ -39968,3 +39968,334 @@ msgstr "在 X 上分享"
 msgid ""
 "Bluesky posts automatically. X opens in a new tab with pre-filled text."
 msgstr "Bluesky 将自动发布。X 会在新标签页中打开，预填充文本。"
+
+#: app/lib/marketing_films.py:47
+msgid "Society Speaks in one minute"
+msgstr "一分钟了解 Society Speaks"
+
+#: app/lib/marketing_films.py:48
+msgid "How Society Speaks turns quick votes on short statements into a map of where people agree, which ideas win support in every group, and where the real divisions lie."
+msgstr "Society Speaks 如何把对简短陈述的快速投票，变成一张地图：人们在哪些方面意见一致，哪些想法在每个群体中都获得支持，真正的分歧又在哪里。"
+
+#: app/lib/marketing_films.py:51
+msgid "Everything Society Speaks does"
+msgstr "Society Speaks 的全部功能"
+
+#: app/lib/marketing_films.py:52
+msgid "A tour of Society Speaks: the daily question, the free Daily Brief, Personal Briefs, voting under news articles, consultations for councils and organisations, and the Tradeoffs game."
+msgstr "Society Speaks 一览：每日问题、免费的每日简报、个人简报、新闻文章下方的投票、面向议会和机构的意见征询，以及权衡游戏 Tradeoffs。"
+
+#: app/lib/marketing_films.py:56
+msgid "Ask one question, share a link or a QR code, and get a report on where your audience agrees, disagrees, is unsure or is split."
+msgstr "提出一个问题，分享链接或 二维码，即可获得一份报告，了解您的受众在哪些方面同意、反对、不确定或存在分歧。"
+
+#: app/lib/marketing_films.py:66
+msgid "The consultation report"
+msgstr "意见征询报告"
+
+#: app/lib/marketing_films.py:67
+msgid "What you get back from a consultation: the headline, the themes, every statement at a glance, what to ask next, and what the results do not show."
+msgstr "意见征询结束后您将获得：核心结论、主题、所有陈述一目了然、下一步该问什么，以及结果无法说明的内容。"
+
+#: app/lib/marketing_films.py:77
+msgid "What taking part looks like"
+msgstr "参与过程是什么样的"
+
+#: app/lib/marketing_films.py:78
+msgid "What your audience sees: scan the code, answer one statement at a time, done. No login, and anonymous."
+msgstr "您的受众看到的是：扫描二维码，逐条回应陈述，即可完成。无需登录，完全匿名。"
+
+#: app/lib/marketing_films.py:85
+msgid "Consultations for councils and public bodies"
+msgstr "面向议会和公共机构的意见征询"
+
+#: app/lib/marketing_films.py:86
+msgid "Put a whole plan to residents, see the opinion groups behind the totals, and get a report you can put in front of members."
+msgstr "将整份规划交给居民表态，看清总数背后的意见群组，并获得一份可以提交给议员的报告。"
+
+#: app/lib/marketing_films.py:95
+msgid "Society Speaks for publishers"
+msgstr "面向出版方的 Society Speaks"
+
+#: app/lib/marketing_films.py:96
+msgid "Replace the comment section with structured voting under any article, styled to match your pages, with data your newsroom can report on."
+msgstr "在任何文章下方用结构化投票取代评论区，样式与您的页面一致，并提供可供编辑部报道的数据。"
+
+#: app/lib/marketing_films.py:106
+msgid "The day’s news with how left, centre and right are framing it, then a question to answer and how everyone else voted."
+msgstr "当天的新闻，以及左、中、右各方如何解读，接着是一道问题供您回答，并展示其他人的投票结果。"
+
+#: app/lib/marketing_films.py:115
+msgid "One calm brief each morning, written from the sources and topics you choose."
+msgstr "每天早上一份从容的简报，根据您选择的信息来源和主题撰写。"
+
+#: app/lib/marketing_films.py:123
+msgid "How the analysis works"
+msgstr "分析的工作原理"
+
+#: app/lib/marketing_films.py:124
+msgid "From the vote matrix to opinion groups, margins of error and a test against chance, with the code open for anyone to check."
+msgstr "从投票矩阵到意见群组、误差范围以及与随机结果的对比检验，代码公开，任何人都可以核查。"
+
+#: app/lib/marketing_films.py:132
+msgid "Tradeoffs, the daily game"
+msgstr "每日游戏 Tradeoffs（权衡）"
+
+#: app/lib/marketing_films.py:133
+msgid "You govern for five turns, and every decision costs something. A new scenario every day."
+msgstr "您将执政五个回合，每个决定都有代价。每天一个新情景。"
+
+#: app/templates/index.html:175
+msgid "Answer today's question"
+msgstr "回答今天的问题"
+
+#: app/templates/platform.html:223
+msgid "Read the code"
+msgstr "查看代码"
+
+#: app/templates/brief/subscribe.html:318
+msgid "Want a brief written from your own sources and topics?"
+msgstr "想要一份根据您自己的信息来源和主题撰写的简报吗？"
+
+#: app/templates/brief/subscribe.html:319
+msgid "See Personal Briefs"
+msgstr "查看个人简报"
+
+#: app/templates/briefing/landing.html:292
+msgid "How Personal Briefs work"
+msgstr "个人简报如何运作"
+
+#: app/templates/components/film.html:27
+msgid "English"
+msgstr "英语"
+
+#: app/templates/components/film.html:30
+msgid "Watch again"
+msgstr "再看一遍"
+
+#: app/templates/components/film.html:42
+#, python-format
+msgid "Play the film: %(title)s, %(duration)s"
+msgstr "播放视频：%(title)s，%(duration)s"
+
+#: app/templates/components/film.html:47
+msgid "Watch the film"
+msgstr "观看视频"
+
+#: app/templates/components/film.html:57
+msgid "Read the transcript"
+msgstr "阅读文字稿"
+
+#: app/templates/components/film.html:57
+msgid "Read what the film shows"
+msgstr "阅读视频中显示的内容"
+
+#: app/templates/components/film.html:58
+msgid "The film is in English"
+msgstr "视频为英文"
+
+#: app/templates/help/consultations.html:23
+msgid "What your audience will see"
+msgstr "您的受众将看到什么"
+
+#: app/templates/help/consultations.html:24
+msgid "Play this before you share the link, or put it on a slide, so people know it takes two minutes and asks for no login."
+msgstr "在分享链接前播放这段视频，或放进幻灯片里，让大家知道只需两分钟，而且无需登录。"
+
+#: app/templates/help/consultations.html:25
+msgid "Try it yourself"
+msgstr "亲自试试"
+
+#: app/templates/help/consultations.html:27
+msgid "Download the film for a slide (MP4, 1080p)"
+msgstr "下载视频用于幻灯片（MP4，1080p）"
+
+#: app/templates/partner/hub.html:299
+msgid "From comment section to evidence"
+msgstr "从评论区到证据"
+
+#: app/consultations/sharing.py:45
+#, python-format
+msgid "%(organisation)s is asking: “%(question)s”. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s 想问您：“%(question)s”。用手机只需两分钟。无需登录，您的回答完全匿名。"
+
+#: app/consultations/sharing.py:88
+msgid "Send the link"
+msgstr "发送链接"
+
+#: app/consultations/sharing.py:89
+msgid "The question shows as a preview when the link is pasted."
+msgstr "粘贴链接后，问题会以预览形式显示。"
+
+#: app/consultations/sharing.py:93
+msgid "Copy for Slack"
+msgstr "复制到 Slack"
+
+#: app/consultations/sharing.py:99
+msgid "Post it"
+msgstr "发布"
+
+#: app/consultations/sharing.py:110
+msgid "A caption to paste"
+msgstr "可粘贴的配文"
+
+#: app/consultations/sharing.py:111
+msgid "On TikTok and Instagram, put the QR code on screen or the link in your bio."
+msgstr "在 TikTok 和 Instagram 上，请把二维码放在画面中，或把链接放在个人简介里。"
+
+#: app/consultations/sharing.py:113
+msgid "Copy for TikTok"
+msgstr "复制到 TikTok"
+
+#: app/consultations/sharing.py:114
+msgid "Copy for Instagram"
+msgstr "复制到 Instagram"
+
+#: app/consultations/sharing.py:129
+msgid "Two minutes · No login · Anonymous"
+msgstr "两分钟 · 无需登录 · 匿名"
+
+#: app/templates/about.html:85 app/templates/index.html:215
+msgid "No ads · Votes never sold"
+msgstr "无广告 · 绝不出售投票数据"
+
+#: app/templates/auth/dashboard.html:640
+msgid "See where your audience agrees"
+msgstr "了解您的受众在哪些方面达成共识"
+
+#: app/templates/auth/dashboard.html:641
+msgid "Ask your members, staff or audience one question. They answer on their phones in two minutes, with no login. You get a report showing where they agree, disagree or are unsure."
+msgstr "向您的成员、员工或受众提出一个问题。他们用手机两分钟即可作答，无需登录。您将获得一份报告，显示他们在哪些方面同意、反对或不确定。"
+
+#: app/templates/auth/dashboard.html:652
+#, python-format
+msgid "You have %(num)d of these with your audience."
+msgid_plural "You have %(num)d of these with your audience."
+msgstr[0] "您有 %(num)d 个面向受众的意见征询。"
+
+#: app/templates/auth/dashboard.html:654
+#, python-format
+msgid "Your free trial is running. To keep going, it is %(single)s for 30 days or %(annual)s a year."
+msgstr "您的免费试用正在进行中。如需继续使用，30 天 %(single)s，或每年 %(annual)s。"
+
+#: app/templates/auth/dashboard.html:661
+msgid "Open yours"
+msgstr "打开您的意见征询"
+
+#: app/templates/auth/dashboard.html:667
+#, python-format
+msgid "Continue for %(price)s"
+msgstr "以 %(price)s 继续"
+
+#: app/templates/auth/dashboard.html:672
+msgid "Ask another question"
+msgstr "再提一个问题"
+
+#: app/templates/auth/dashboard.html:677
+#, python-format
+msgid "Free for %(days)d days with your real audience. No card. Then %(single)s for 30 days, or %(annual)s a year."
+msgstr "面向真实受众免费使用 %(days)d 天，无需绑卡。之后 30 天 %(single)s，或每年 %(annual)s。"
+
+#: app/templates/auth/dashboard.html:682
+msgid "Try it free"
+msgstr "免费试用"
+
+#: app/templates/briefing/landing.html:237
+msgid "Three model labs publish safety evaluations — what changed and what's missing"
+msgstr "三家模型实验室发布安全评估——有何变化，缺了什么"
+
+#: app/templates/briefing/landing.html:238
+msgid "Three of the largest model labs released new evaluation reports this week. Three patterns repeat across all of them — and one notable omission. <span class=\"text-primary-600 font-medium\">Why operators should care…</span>"
+msgstr "三家最大的模型实验室本周发布了新的评估报告。三份报告中反复出现三种模式——还有一处值得注意的遗漏。<span class=\"text-primary-600 font-medium\">运营方为何应当关注…</span>"
+
+#: app/templates/briefing/landing.html:241
+msgid "Your newsletter"
+msgstr "您的新闻通讯"
+
+#: app/templates/briefing/landing.html:242
+msgid "Trade press"
+msgstr "行业媒体"
+
+#: app/templates/briefing/landing.html:243
+msgid "Research blog"
+msgstr "研究博客"
+
+#: app/templates/briefing/landing.html:253
+msgid "Your industry survey: AI adoption passes half of the firms you track"
+msgstr "您的行业调查：所跟踪企业中已有过半采用 AI"
+
+#: app/templates/briefing/landing.html:254
+msgid "Fastest growth in services, slowest in manufacturing. Pulled from the PDF you uploaded on Monday…"
+msgstr "服务业增长最快，制造业最慢。摘自您周一上传的 PDF……"
+
+#: app/templates/consultations/_link_preview.html:3
+#, python-format
+msgid "%(organisation)s is asking for your view. Two minutes on your phone. No login, and your answers are anonymous."
+msgstr "%(organisation)s 想听听您的看法。用手机只需两分钟。无需登录，您的回答完全匿名。"
+
+#: app/templates/consultations/_present_results.html:9
+msgid "Even so far"
+msgstr "目前势均力敌"
+
+#: app/templates/consultations/_present_results.html:10
+msgid "No votes on these yet"
+msgstr "这些尚无投票"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Agree, so far"
+msgstr "目前同意"
+
+#: app/templates/consultations/_present_results.html:13
+msgid "Disagree, so far"
+msgstr "目前不同意"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Unsure, so far"
+msgstr "目前不确定"
+
+#: app/templates/consultations/_present_results.html:14
+msgid "Split, so far"
+msgstr "目前存在分歧"
+
+#: app/templates/consultations/_present_results.html:43
+#, python-format
+msgid "%(num)d person has answered."
+msgid_plural "%(num)d people have answered."
+msgstr[0] "已有 %(num)d 人作答。"
+
+#: app/templates/consultations/_present_results.html:44
+#, python-format
+msgid "Each number above is how many statements lean that way so far. A clear result is called once %(n)d people have answered a statement."
+msgstr "上方每个数字表示目前倾向该方向的陈述数量。一条陈述有 %(n)d 人作答后，才会判定明确结果。"
+
+#: app/templates/consultations/_present_results.html:85
+#, python-format
+msgid "%(agree)d agree, %(disagree)d disagree, %(unsure)d unsure"
+msgstr "%(agree)d 同意，%(disagree)d 不同意，%(unsure)d 不确定"
+
+#: app/templates/consultations/_report_body.html:22
+#, python-format
+msgid "Fewer than %(n)d people voted on these statements. The counts are shown, with no conclusion drawn."
+msgstr "对这些陈述投票的人少于 %(n)d 人。此处仅显示票数，不作结论。"
+
+#: app/templates/consultations/dashboard.html:89
+#, python-format
+msgid "A clear result is called once %(n)d people have answered a statement. Until then, these are the votes so far."
+msgstr "一条陈述有 %(n)d 人作答后，才会判定明确结果。在此之前，这里显示的是目前的投票。"
+
+#: app/templates/consultations/participate.html:101
+msgid "What you answered"
+msgstr "您的回答"
+
+#: app/templates/consultations/settings.html:55
+#, python-format
+msgid "After someone has answered, they see the running totals, including in a small team. A clear result is called once %(n)d people have answered a statement. Leave this off if you would rather show the results only on your own screen."
+msgstr "作答后，参与者会看到实时汇总，即使在小团队中也是如此。一条陈述有 %(n)d 人作答后，才会判定明确结果。如果您希望只在自己的屏幕上展示结果，请保持关闭。"
+
+#: app/templates/consultations/share.html:23
+msgid "Share from this device"
+msgstr "从此设备分享"
+
+#: app/templates/help/consultations.html:74
+msgid "You get a link, a QR code and an invitation to paste into an email or message. In a room, use “Show on a big screen” and people scan the code with their phone camera. Press R when you want the room to see the results. The screen updates every few seconds, and it shows where the votes lean from the first answers, before a result is called."
+msgstr "您会获得一个链接、一个二维码，以及一段可粘贴到邮件或消息中的邀请文字。在现场，请使用“在大屏幕上显示”，大家用手机相机扫描二维码即可。想让现场看到结果时，按 R 键。屏幕每隔几秒更新一次，在判定结果之前，就会从最初的回答开始显示投票倾向。"
