@@ -20,7 +20,27 @@
         <input id="participant-url" type="text" readonly value="{{ participant_url }}"
                class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm text-gray-900" aria-label="{{ _('Participant link') }}">
         {{ copy_button('participant-url', _('Copy link')) }}
+        <button type="button" id="native-share" class="hidden {{ btn_primary_md() }} min-h-11">{{ _('Share from this device') }}</button>
       </div>
+
+      {% for group in share_groups %}
+      <div class="mt-5">
+        <h3 class="text-sm font-semibold text-gray-900">{{ group.title }}</h3>
+        {% if group.hint %}<p class="mt-1 text-sm text-gray-600">{{ group.hint }}</p>{% endif %}
+        <div class="mt-2 flex flex-wrap gap-2">
+          {% for item in group['items'] %}
+          {% if item.href %}
+          <a href="{{ item.href }}" target="_blank" rel="noopener noreferrer" class="{{ btn_secondary_md() }} min-h-11">{{ item.label }}</a>
+          {% else %}
+          {% set copy_id = 'share-copy-' ~ item.id %}
+          <button type="button" class="{{ btn_secondary_md() }} min-h-11" data-copy-target="{{ copy_id }}" data-copied-label="{{ _('Copied') }}">{{ item.label }}</button>
+          <textarea id="{{ copy_id }}" class="sr-only" readonly tabindex="-1" aria-hidden="true">{{ item.text }}</textarea>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
       <p class="mt-3 text-sm text-gray-600">
         <a href="{{ participant_url }}" target="_blank" rel="noopener" class="{{ link_primary() }}">{{ _('Open it and try it on your own phone') }}</a>
         <span class="text-gray-400">·</span>
@@ -79,4 +99,20 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block host_scripts %}
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  var button = document.getElementById('native-share');
+  if (!button || !navigator.share) return;
+  var payload = {{ {'title': consultation.question, 'text': share_text, 'url': participant_url}|tojson }};
+  button.classList.remove('hidden');
+  button.addEventListener('click', function () {
+    navigator.share(payload).catch(function (err) {
+      if (err && err.name === 'AbortError') return;
+    });
+  });
+})();
+</script>
 {% endblock %}

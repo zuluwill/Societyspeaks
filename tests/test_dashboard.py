@@ -175,6 +175,7 @@ def test_dashboard_stay_informed_section_shows_three_cards(app, db):
     assert 'Daily Question' in body
     assert 'Paid Briefings' in body
     assert 'See where your audience agrees' not in body
+    assert 'href="/consultations/mine"' not in body
 
 
 def test_dashboard_offers_a_consultation_when_the_product_is_on(app, db):
@@ -193,6 +194,8 @@ def test_dashboard_offers_a_consultation_when_the_product_is_on(app, db):
     assert 'Try it free' in body
     assert '£99 for 30 days, or £600 a year' in body
     assert 'href="/consultations/new"' in body
+    assert 'Your consultations' in body
+    assert 'href="/consultations/mine"' in body
     assert 'href="/consultations/example-report"' in body
     assert '14 days' in body
 

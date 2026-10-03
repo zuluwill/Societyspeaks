@@ -52,7 +52,7 @@
           {{ form.show_results_to_participants(class_='mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500') }}
           <span>
             <span class="block text-sm font-medium text-gray-900">{{ form.show_results_to_participants.label.text }}</span>
-            <span class="mt-1 block text-sm text-gray-500">{{ _('Good for an event, where people want to see the room. Leave it off if you would rather present the results yourself. Results are only ever shown after someone has answered.') }}</span>
+            <span class="mt-1 block text-sm text-gray-500">{{ _('After someone has answered, they see the running totals, including in a small team. A clear result is called once %(n)d people have answered a statement. Leave this off if you would rather show the results only on your own screen.', n=result_min_votes) }}</span>
           </span>
         </label>
       </div>

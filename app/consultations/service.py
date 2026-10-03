@@ -62,6 +62,7 @@ def create_consultation(
         organisation_name=' '.join((organisation_name or '').split()),
         audience_label=(audience_label or '').strip() or None,
         audience_size=audience_size,
+        show_results_to_participants=True,
     )
     db.session.add(consultation)
     db.session.commit()

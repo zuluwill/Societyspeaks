@@ -12,6 +12,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#1d4ed8">
   <title>{{ consultation.question }} | {{ consultation.organisation_name }}</title>
+  {% include "consultations/_link_preview.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}?v={{ css_version }}">
 </head>
 <body class="min-h-full bg-gray-50 text-gray-900 antialiased">
@@ -95,6 +96,13 @@
         {% endif %}
       </div>
 
+      {% if not demo %}
+      <div id="your-answers" class="mt-6 hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 class="text-base font-semibold text-gray-900">{{ _('What you answered') }}</h3>
+        <ul id="your-answers-list" class="mt-3 divide-y divide-gray-100"></ul>
+      </div>
+      {% endif %}
+
       {% if consultation.show_results_to_participants and not preview %}
       <div id="results-panel" class="mt-6 hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 class="text-base font-semibold text-gray-900">{{ _('How others have answered so far') }}</h3>
@@ -134,8 +142,13 @@
     "resultsUrl": {{ (url_for('consultations.participant_results', token=consultation.access_token) if consultation.show_results_to_participants and not preview else '')|tojson }},
     "i18n": {
       "progress": {{ gettext_js('Statement {current} of {total}')|tojson }},
-      "notEnough": {{ gettext_js('Not enough votes yet to show')|tojson }},
+      "onlyYou": {{ gettext_js('So far, only you have answered this.')|tojson }},
+      "soFar": {{ gettext_js('{count} people so far: {agree} agree · {disagree} disagree · {unsure} unsure')|tojson }},
       "share": {{ gettext_js('{agree} agree · {disagree} disagree · {unsure} unsure')|tojson }},
+      "youAgree": {{ gettext_js('You agreed')|tojson }},
+      "youDisagree": {{ gettext_js('You disagreed')|tojson }},
+      "youUnsure": {{ gettext_js('You were unsure')|tojson }},
+      "youSkipped": {{ gettext_js('You skipped this')|tojson }},
       "suggestThanks": {{ gettext_js('Thank you. The organiser will review your suggestion.')|tojson }},
       "suggestProblem": {{ gettext_js('We could not send that. Please try again.')|tojson }},
       "suggestShort": {{ gettext_js('Write at least 10 characters.')|tojson }},
@@ -188,11 +201,41 @@
       if (moveFocus) statementEl.focus({ preventScroll: false });
     }
 
+    function voteLabel(value) {
+      if (value === 1) return config.i18n.youAgree;
+      if (value === -1) return config.i18n.youDisagree;
+      if (value === 0) return config.i18n.youUnsure;
+      return config.i18n.youSkipped;
+    }
+
+    function showYourAnswers() {
+      var panel = document.getElementById('your-answers');
+      var list = document.getElementById('your-answers-list');
+      if (!panel || !list) return;
+      list.textContent = '';
+      statements.forEach(function (statement) {
+        var item = document.createElement('li');
+        item.className = 'py-3';
+        var text = document.createElement('p');
+        text.className = 'text-sm font-medium text-gray-900';
+        text.textContent = statement.content;
+        var detail = document.createElement('p');
+        detail.className = 'mt-1 text-sm text-gray-600';
+        var mine = votes[String(statement.id)];
+        detail.textContent = voteLabel(mine === undefined ? null : mine);
+        item.appendChild(text);
+        item.appendChild(detail);
+        list.appendChild(item);
+      });
+      panel.classList.remove('hidden');
+    }
+
     function showDone() {
       voteView.classList.add('hidden');
       doneView.classList.remove('hidden');
       progressBar.style.width = '100%';
       document.getElementById('done-heading').focus();
+      showYourAnswers();
       loadResults();
     }
 
@@ -312,18 +355,29 @@
             text.textContent = row.content;
             var detail = document.createElement('p');
             detail.className = 'mt-1 text-sm text-gray-600';
-            detail.textContent = row.enough_votes
-              ? config.i18n.share
-                  .replace('{agree}', Math.round(row.agree_share * 100) + '%')
-                  .replace('{disagree}', Math.round(row.disagree_share * 100) + '%')
-                  .replace('{unsure}', Math.round(row.unsure_share * 100) + '%')
-              : config.i18n.notEnough;
+            if (!row.total || row.total < 2) {
+              detail.textContent = config.i18n.onlyYou;
+            } else {
+              var line = (row.enough_votes ? config.i18n.share : config.i18n.soFar)
+                .replace('{count}', row.total)
+                .replace('{agree}', Math.round(row.agree_share * 100) + '%')
+                .replace('{disagree}', Math.round(row.disagree_share * 100) + '%')
+                .replace('{unsure}', Math.round(row.unsure_share * 100) + '%');
+              detail.textContent = line;
+            }
             item.appendChild(text);
             item.appendChild(detail);
             list.appendChild(item);
           });
           panel.classList.remove('hidden');
         }).catch(function () { /* results are optional */ });
+    }
+
+    if (config.resultsUrl) {
+      window.setInterval(function () {
+        if (document.hidden || doneView.classList.contains('hidden')) return;
+        loadResults();
+      }, 5000);
     }
 
     var suggestForm = document.getElementById('suggest-form');

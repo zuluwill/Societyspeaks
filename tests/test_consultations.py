@@ -294,7 +294,11 @@ def test_participant_page_needs_no_session_and_loads_no_trackers(app, enabled, h
     assert cookies == {'ss_voter_client_id'}, 'the page promises exactly one cookie'
     assert 'no-store' in response.headers['Cache-Control']
     assert 'noindex' in response.headers['X-Robots-Tag']
+    assert 'property="og:title"' in body
+    assert 'property="og:description"' in body
+    assert f'/c/{consultation.access_token}/card.png' in body
     assert 'Run your own consultation' in body
+    assert 'What you answered' in body
     assert 'vote-btn-agree' in body.split('Run your own consultation')[0]
 
 
@@ -749,7 +753,8 @@ def test_help_guide_explains_the_result_rules(app, enabled, client):
     html = client.get('/help/consultations').get_data(as_text=True)
 
     assert 'How results are called' in html
-    assert 'Fewer than 10 people voted on the statement' in html
+    assert 'Fewer than 5 people voted on the statement' in html
+    assert 'from the first answers' in html
     assert 'at least 35%' in html
 
 
@@ -798,6 +803,9 @@ def test_interim_report_is_marked_as_interim(app, enabled, host, client, monkeyp
 def test_participants_see_others_results_only_when_allowed_and_after_voting(app, enabled, host, monkeypatch):
     from app import db
     consultation = _live_consultation(host, monkeypatch)
+    assert consultation.show_results_to_participants is True
+    consultation.show_results_to_participants = False
+    db.session.commit()
     participant = _participant(app)
     url = f'/c/{consultation.access_token}/results.json'
     assert participant.get(url).status_code == 404
@@ -809,7 +817,9 @@ def test_participants_see_others_results_only_when_allowed_and_after_voting(app,
     _vote_all(participant, consultation, lambda s: 1)
     rows = participant.get(url).get_json()['results']
     assert len(rows) == len(service.published_statements(consultation))
-    assert all(row['enough_votes'] is False for row in rows), 'one voter is too few to show shares'
+    assert all(row['total'] == 1 and row['agree'] == 1 for row in rows)
+    assert all(row['agree_share'] is None for row in rows), 'one voter is not shown as a crowd percentage'
+    assert all(row['enough_votes'] is False for row in rows)
 
 
 # ── Guards ──────────────────────────────────────────────────────────────────
@@ -1001,6 +1011,79 @@ def test_the_product_page_examples_obey_the_same_rules_as_a_real_report(app, ena
     assert '£99 for 30 days, any number of participants' in page
 
 
+def test_the_share_page_opens_the_places_people_actually_send_a_link(app, enabled, host, client, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    _login(client, host)
+
+    page = client.get(f'/consultations/{consultation.id}/share').get_data(as_text=True)
+
+    token = consultation.access_token
+    for piece in (
+        'https://wa.me/?text=',
+        'https://teams.microsoft.com/share?href=',
+        'https://t.me/share/url?url=',
+        'https://x.com/intent/tweet?text=',
+        'https://www.facebook.com/sharer/sharer.php?u=',
+        'https://www.threads.net/intent/post?text=',
+        'https://bsky.app/intent/compose?text=',
+        'https://www.linkedin.com/sharing/share-offsite/?url=',
+        'mailto:?subject=',
+        'Copy for Slack',
+        'Copy for TikTok',
+        'Copy for Instagram',
+        'put the QR code on screen or the link in your bio',
+        f'/c/{token}',
+    ):
+        assert piece in page, piece
+    assert 'Share from this device' in page
+
+
+def test_a_pasted_link_previews_the_question_and_not_the_votes(app, enabled, host, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    token = consultation.access_token
+    preview = app.test_client()
+
+    page = preview.get(f'/c/{token}', headers={'User-Agent': 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)'})
+
+    body = page.get_data(as_text=True)
+    assert page.status_code == 200
+    assert 'max-age=600' in page.headers['Cache-Control']
+    assert 'noindex' in page.headers['X-Robots-Tag']
+    cookies = {cookie.split('=')[0] for cookie in page.headers.getlist('Set-Cookie')}
+    assert 'ss_voter_client_id' not in cookies
+    assert f'property="og:title" content="{consultation.question}"' in body
+    assert 'Two minutes on your phone' in body
+    assert 'og:description' in body
+
+    card = preview.get(f'/c/{token}/card.png', headers={'User-Agent': 'Slackbot-LinkExpanding 1.0'})
+    card_cookies = {cookie.split('=')[0] for cookie in card.headers.getlist('Set-Cookie')}
+    assert 'ss_voter_client_id' not in card_cookies
+    from app.lib.og_card_render import is_available
+    if is_available():
+        assert card.status_code == 200 and card.mimetype == 'image/png'
+        assert card.data.startswith(b'\x89PNG')
+        assert 'max-age=3600' in card.headers['Cache-Control']
+    else:
+        assert card.status_code == 302
+        assert 'rod-long-optimized-1200x628.jpg' in card.headers['Location']
+
+
+def test_the_share_card_is_a_png_of_the_question_when_rendering_is_available(app, enabled, host, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    monkeypatch.setattr(
+        'app.consultations.sharing.render_share_card',
+        lambda consultation: b'\x89PNG\r\n\x1a\nquestion-card',
+    )
+
+    card = app.test_client().get(f'/c/{consultation.access_token}/card.png')
+
+    assert card.status_code == 200
+    assert card.mimetype == 'image/png'
+    assert card.data.startswith(b'\x89PNG')
+    assert 'max-age=3600' in card.headers['Cache-Control']
+    assert 'noindex' in card.headers['X-Robots-Tag']
+
+
 def test_the_big_screen_shows_the_code_then_the_results(app, db, enabled, host, client, monkeypatch):
     consultation = _live_consultation(host, monkeypatch)
     for _ in range(12):
@@ -1022,6 +1105,7 @@ def test_the_big_screen_shows_the_code_then_the_results(app, db, enabled, host, 
     fragment = client.get(f'{base}?fragment=1').get_data(as_text=True)
     assert '<html' not in fragment and 'They agree' in fragment and 'statements' in fragment
     assert DRAFTED[0]['content'] in fragment
+    assert ', 2000)' in page, 'the big screen refreshes the room every two seconds'
 
     # Once voting has closed the code no longer works, so only the results are shown.
     service.close(consultation)
@@ -1034,6 +1118,22 @@ def test_the_big_screen_shows_the_code_then_the_results(app, db, enabled, host, 
     visitor = app.test_client()
     _login(visitor, stranger)
     assert visitor.get(base).status_code == 404
+
+
+def test_the_big_screen_shows_where_a_small_room_leans(app, enabled, host, client, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    for _number in range(2):
+        _vote_all(_participant(app), consultation, lambda s: 1)
+    _login(client, host)
+
+    fragment = client.get(f'/consultations/{consultation.id}/present?fragment=1').get_data(as_text=True)
+
+    assert 'Agree, so far' in fragment
+    assert 'They agree' not in fragment
+    assert f'{len(DRAFTED)} statements: Agree' in fragment
+    assert '2 agree · 0 disagree · 0 unsure' in fragment
+    assert '2 people have answered' in fragment
+    assert 'once 5 people have answered a statement' in fragment
 
 
 def test_host_screens_do_not_send_their_content_to_analytics(app, enabled, host, client, monkeypatch):
@@ -1301,7 +1401,7 @@ def test_the_audience_cannot_resubmit_what_the_host_turned_down(app, enabled, ho
 
 # ── Participant privacy and abuse ───────────────────────────────────────────
 
-def test_results_for_participants_withhold_shares_until_enough_people_have_voted(app, enabled, host, monkeypatch):
+def test_participants_see_the_running_split_from_the_second_person(app, enabled, host, monkeypatch):
     consultation = _live_consultation(host, monkeypatch)
     consultation.show_results_to_participants = True
     from app import db
@@ -1312,8 +1412,24 @@ def test_results_for_participants_withhold_shares_until_enough_people_have_voted
 
     rows = second.get(f'/c/{consultation.access_token}/results.json').get_json()['results']
 
-    assert rows and all(row['enough_votes'] is False for row in rows)
-    assert all(row['agree_share'] is None and row['disagree_share'] is None for row in rows)
+    assert rows and all(row['total'] == 2 for row in rows)
+    assert all(row['enough_votes'] is False for row in rows), 'two people is not yet a called result'
+    assert all(row['agree_share'] == 0.5 and row['disagree_share'] == 0.5 for row in rows)
+
+
+def test_a_clear_result_is_shown_once_five_people_agree(app, enabled, host, monkeypatch):
+    consultation = _live_consultation(host, monkeypatch)
+    consultation.show_results_to_participants = True
+    from app import db
+    db.session.commit()
+    last = None
+    for _number in range(5):
+        last = _participant(app)
+        _vote_all(last, consultation, lambda s: 1)
+
+    rows = last.get(f'/c/{consultation.access_token}/results.json').get_json()['results']
+
+    assert rows and all(row['enough_votes'] is True and row['agree_share'] == 1 for row in rows)
 
 
 def test_a_vote_needs_the_cookie_the_page_sets(app, enabled, host, monkeypatch):

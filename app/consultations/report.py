@@ -11,6 +11,7 @@ from typing import Optional
 from flask import current_app
 
 from app import db
+from app.discussions.thresholds import RESULT_MIN_VOTES
 from app.lib.statement_results import VERDICT_ORDER, results_for_discussion
 from app.lib.time import utcnow_naive
 from app.models import ConsultationReport, Statement
@@ -71,6 +72,7 @@ def build_report_data(
         'recommended_participants': recommended,
         'is_low_turnout': summary.participant_count < recommended,
         'counts': summary.counts_by_verdict(),
+        'result_min_votes': RESULT_MIN_VOTES,
         'statements': rows,
     }
 
@@ -86,6 +88,46 @@ def statements_by_verdict(data: dict) -> list:
     for row in data.get('statements') or []:
         grouped.setdefault(row['verdict'], []).append(row)
     return [(verdict.value, grouped[verdict.value]) for verdict in VERDICT_ORDER]
+
+
+def live_board(data: dict) -> dict:
+    """What the big screen shows while people are still answering.
+
+    A called result stays in its verdict. Statements that do not have one yet
+    are grouped by where the votes lean, so two people do not leave the screen
+    as four zeroes. A tie is kept separate from a called split.
+    """
+    buckets = {
+        'agrees': [], 'disagrees': [], 'unsure': [], 'split': [],
+        'even': [], 'no_clear_result': [], 'waiting': [],
+    }
+    lean_bucket = {'agree': 'agrees', 'disagree': 'disagrees', 'unsure': 'unsure'}
+    called = {'agrees', 'disagrees', 'unsure', 'split'}
+    for row in data.get('statements') or []:
+        shown = dict(row)
+        verdict = shown.get('verdict')
+        if verdict in called:
+            shown['called'] = True
+            buckets[verdict].append(shown)
+        elif verdict == 'no_clear_result':
+            # Enough people to show the full split. There is no side to call.
+            shown['called'] = True
+            buckets['no_clear_result'].append(shown)
+        elif shown.get('total'):
+            shown['called'] = False
+            buckets[lean_bucket.get(shown.get('lean'), 'even')].append(shown)
+        else:
+            shown['called'] = False
+            buckets['waiting'].append(shown)
+    order = ('agrees', 'disagrees', 'unsure', 'split', 'even', 'no_clear_result', 'waiting')
+    headline = ('agrees', 'disagrees', 'unsure', 'split')
+    return {
+        'counts': {key: len(buckets[key]) for key in headline},
+        'groups': [(key, buckets[key]) for key in order if buckets[key]],
+        'provisional': any(
+            not row['called'] and row.get('total') for key in order for row in buckets[key]
+        ),
+    }
 
 
 def report_view_context(data: dict, narrative: dict, narrative_source: str, *, is_interim: bool = False) -> dict:

@@ -18,7 +18,7 @@ from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 from app import csrf, db, limiter
-from app.consultations import consultations_bp, service
+from app.consultations import consultations_bp, service, sharing
 from app.lib.content_spam import assess_user_content_spam
 from app.lib.session_policy import user_agent_is_bot
 from app.lib.statement_results import StatementTally, Verdict, classify, tallies_for_discussion
@@ -70,6 +70,16 @@ def _private(response):
     # The address is the key to the consultation: never pass it on as a referrer.
     g.referrer_policy = 'no-referrer'
     return set_voter_client_cookies_if_needed(response, include_authenticated=True, canonical_only=True)
+
+
+def _finish_page(response):
+    """A person gets the private page. A chat app expanding the link may cache the preview."""
+    if sharing.is_link_preview(request.headers.get('User-Agent')):
+        response.headers['Cache-Control'] = 'public, max-age=600'
+        response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+        g.referrer_policy = 'no-referrer'
+        return response
+    return _private(response)
 
 
 def _own_votes(consultation: Consultation, fingerprint: str) -> dict:
@@ -124,7 +134,7 @@ def participate(token):
     preview = _is_owner_preview(consultation)
 
     if consultation.is_closed or (consultation.is_draft and not preview):
-        return _private(make_response(render_template(
+        return _finish_page(make_response(render_template(
             'consultations/participate_unavailable.html',
             consultation=consultation,
             reason='closed' if consultation.is_closed else 'not_open',
@@ -135,7 +145,7 @@ def participate(token):
     if not statements:
         # Withdrawing every statement after go-live must not tell people their
         # answers were received. There was nothing to answer.
-        return _private(make_response(render_template(
+        return _finish_page(make_response(render_template(
             'consultations/participate_unavailable.html',
             consultation=consultation,
             reason='empty',
@@ -145,7 +155,7 @@ def participate(token):
     random.Random(fingerprint).shuffle(statements)
     votes = {} if preview else _own_votes(consultation, fingerprint)
 
-    return _private(make_response(render_template(
+    return _finish_page(make_response(render_template(
         'consultations/participate.html',
         consultation=consultation,
         statements=[{'id': s.id, 'content': s.content} for s in statements],
@@ -154,6 +164,24 @@ def participate(token):
         minutes=max(1, round(len(statements) * 10 / 60)),
         suggestions_enabled=consultation.allow_audience_statements and not preview,
     )))
+
+
+@consultations_bp.route('/c/<token>/card.png')
+@limiter.limit('120 per minute', key_func=get_remote_address)
+def share_card(token):
+    """The image chat apps show beside a pasted link. The question only."""
+    from flask import redirect, url_for
+
+    consultation = _consultation_or_404(token)
+    png = sharing.render_share_card(consultation)
+    if png is None:
+        return redirect(url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg'))
+    response = make_response(png)
+    response.mimetype = 'image/png'
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    g.referrer_policy = 'no-referrer'
+    return response
 
 
 @consultations_bp.route('/c/<token>/vote', methods=['POST'])
@@ -237,17 +265,22 @@ def participant_results(token):
             continue
         result = classify(tallies.get(statement.id) or StatementTally(statement.id))
         row = result.to_dict()
-        enough = result.verdict != Verdict.TOO_FEW_VOTES
+        # One voter would turn "100%" into a picture of a crowd. From the
+        # second person, show the running split and say how many people it is.
+        # A called result still waits for RESULT_MIN_VOTES.
+        show_shares = row['total'] >= 2
         rows.append({
             'statement_id': statement.id,
             'content': statement.content,
             'your_vote': votes[statement.id],
-            'enough_votes': enough,
-            # With only a few votes in, the shares would give away how
-            # individual people answered, so they are withheld.
-            'agree_share': row['agree_share'] if enough else None,
-            'disagree_share': row['disagree_share'] if enough else None,
-            'unsure_share': row['unsure_share'] if enough else None,
+            'enough_votes': result.verdict != Verdict.TOO_FEW_VOTES,
+            'total': row['total'],
+            'agree': row['agree'],
+            'disagree': row['disagree'],
+            'unsure': row['unsure'],
+            'agree_share': row['agree_share'] if show_shares else None,
+            'disagree_share': row['disagree_share'] if show_shares else None,
+            'unsure_share': row['unsure_share'] if show_shares else None,
         })
     return _private(jsonify({'results': rows}))
 

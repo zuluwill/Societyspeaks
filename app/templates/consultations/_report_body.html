@@ -19,7 +19,7 @@
   'unsure': _('“Unsure” was the most common answer to these statements.'),
   'split': _('Agreement and disagreement were both substantial, and close to each other.'),
   'no_clear_result': _('The votes lean one way, but not clearly enough to call.'),
-  'too_few_votes': _('Fewer than ten people voted on these statements. The counts are shown, with no conclusion drawn.'),
+  'too_few_votes': _('Fewer than %(n)d people voted on these statements. The counts are shown, with no conclusion drawn.', n=data.result_min_votes|default(5)),
 } %}
 {% set lean_labels = {
   'agree': _('Leans towards agreement.'),

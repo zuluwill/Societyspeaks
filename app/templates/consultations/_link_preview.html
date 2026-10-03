@@ -1,0 +1,17 @@
+{# What a chat app shows when the link is pasted. The question and who is asking, never the statements. #}
+{% if not demo|default(false) and not preview|default(false) %}
+{% set share_description = _('%(organisation)s is asking for your view. Two minutes on your phone. No login, and your answers are anonymous.', organisation=consultation.organisation_name) %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Society Speaks">
+<meta property="og:title" content="{{ consultation.question }}">
+<meta property="og:description" content="{{ share_description|escape_i18n }}">
+<meta property="og:url" content="{{ url_for('consultations.participate', token=consultation.access_token, _external=True) }}">
+<meta property="og:image" content="{{ url_for('consultations.share_card', token=consultation.access_token, _external=True) }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ consultation.question }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ consultation.question }}">
+<meta name="twitter:description" content="{{ share_description|escape_i18n }}">
+<meta name="twitter:image" content="{{ url_for('consultations.share_card', token=consultation.access_token, _external=True) }}">
+{% endif %}

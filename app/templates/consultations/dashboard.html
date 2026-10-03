@@ -81,9 +81,14 @@
 
     <section aria-labelledby="results-heading" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="results-heading" class="text-lg font-semibold text-gray-900">
-          {% if consultation.is_live %}{{ _('Results so far') }}{% else %}{{ _('Results') }}{% endif %}
-        </h2>
+        <div>
+          <h2 id="results-heading" class="text-lg font-semibold text-gray-900">
+            {% if consultation.is_live %}{{ _('Results so far') }}{% else %}{{ _('Results') }}{% endif %}
+          </h2>
+          {% if data.vote_count and data.counts.too_few_votes %}
+          <p class="mt-1 text-sm text-gray-500">{{ _('A clear result is called once %(n)d people have answered a statement. Until then, these are the votes so far.', n=result_min_votes) }}</p>
+          {% endif %}
+        </div>
         <a href="{{ url_for('consultations.results_csv', consultation_id=consultation.id) }}" class="text-sm {{ link_primary() }}">{{ _('Download CSV') }}</a>
       </div>
       {% if data.vote_count == 0 %}

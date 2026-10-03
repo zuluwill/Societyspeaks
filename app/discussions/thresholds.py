@@ -28,9 +28,10 @@ def consensus_thresholds_dict():
 # One statement, one verdict, from the shares of everyone who voted on it
 # (unsure included). See ``app/lib/statement_results.py``.
 
-# Below this many votes a statement is reported as counts, with no percentage
-# and no verdict.
-RESULT_MIN_VOTES = 10
+# Below this many votes a statement is reported as counts, with no called
+# verdict. Five is the smallest room in which a unanimous result is still a
+# stable majority. Smaller rooms see the running counts, not a conclusion.
+RESULT_MIN_VOTES = 5
 # "Agrees" / "disagrees": the 95% lower bound of that share reaches a majority.
 RESULT_MAJORITY_SHARE = 0.50
 # "Unsure": unsure is the largest response and its lower bound reaches a third.

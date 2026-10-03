@@ -60,7 +60,7 @@ class Consultation(db.Model):
     access_token = db.Column(db.String(64), nullable=False, unique=True, default=_new_token)
 
     allow_audience_statements = db.Column(db.Boolean, nullable=False, default=False)
-    show_results_to_participants = db.Column(db.Boolean, nullable=False, default=False)
+    show_results_to_participants = db.Column(db.Boolean, nullable=False, default=True)
 
     closes_at = db.Column(db.DateTime, nullable=True)
     published_at = db.Column(db.DateTime, nullable=True)

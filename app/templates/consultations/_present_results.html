@@ -6,14 +6,20 @@
 #}
 {% set titles = {
   'agrees': _('They agree'), 'disagrees': _('They disagree'), 'unsure': _('They are unsure'),
-  'split': _('They are split'), 'no_clear_result': _('No clear result yet'), 'too_few_votes': _('Too few votes to say'),
+  'split': _('They are split'), 'even': _('Even so far'), 'no_clear_result': _('No clear result yet'),
+  'waiting': _('No votes on these yet'), 'too_few_votes': _('Too few votes to say'),
+} %}
+{% set so_far = {
+  'agrees': _('Agree, so far'), 'disagrees': _('Disagree, so far'),
+  'unsure': _('Unsure, so far'), 'split': _('Split, so far'),
 } %}
 {% set card_labels = {
   'agrees': _('Agree'), 'disagrees': _('Disagree'), 'unsure': _('Unsure'), 'split': _('Split'),
 } %}
 {% set dots = {
   'agrees': 'bg-emerald-500', 'disagrees': 'bg-red-500', 'unsure': 'bg-amber-400',
-  'split': 'bg-violet-500', 'no_clear_result': 'bg-slate-400', 'too_few_votes': 'bg-slate-500',
+  'split': 'bg-violet-500', 'even': 'bg-slate-400', 'no_clear_result': 'bg-slate-400',
+  'waiting': 'bg-slate-500', 'too_few_votes': 'bg-slate-500',
 } %}
 {% set edges = {'agrees': 'border-emerald-500', 'disagrees': 'border-red-500', 'unsure': 'border-amber-400', 'split': 'border-violet-500'} %}
 
@@ -23,30 +29,36 @@
 <div class="grid grid-cols-2 gap-[1.2vw] lg:grid-cols-4">
   {% for key in ['agrees', 'disagrees', 'unsure', 'split'] %}
   <div class="rounded-xl border-t-4 {{ edges[key] }} bg-white/5 px-[1.2vw] py-[0.7vw] ring-1 ring-inset ring-white/10" role="group"
-       aria-label="{{ ngettext('%(num)d statement: %(label)s', '%(num)d statements: %(label)s', data.counts[key], label=card_labels[key]) }}">
+       aria-label="{{ ngettext('%(num)d statement: %(label)s', '%(num)d statements: %(label)s', board_counts[key], label=card_labels[key]) }}">
     <p class="text-[clamp(0.75rem,1vw,1.25rem)] font-bold uppercase tracking-wider text-slate-300" aria-hidden="true">{{ card_labels[key] }}</p>
     <p class="mt-[0.25vw] flex items-baseline gap-[0.45vw]" aria-hidden="true">
-      <span class="text-[clamp(1.6rem,2.6vw,3.4rem)] font-extrabold leading-none tabular-nums">{{ data.counts[key] }}</span>
-      <span class="text-[clamp(0.9rem,1.25vw,1.7rem)] font-semibold text-slate-200">{{ ngettext('statement', 'statements', data.counts[key]) }}</span>
+      <span class="text-[clamp(1.6rem,2.6vw,3.4rem)] font-extrabold leading-none tabular-nums">{{ board_counts[key] }}</span>
+      <span class="text-[clamp(0.9rem,1.25vw,1.7rem)] font-semibold text-slate-200">{{ ngettext('statement', 'statements', board_counts[key]) }}</span>
     </p>
   </div>
   {% endfor %}
 </div>
+{% if provisional %}
+<p class="mt-[0.8vw] text-[clamp(0.8rem,1.05vw,1.35rem)] text-slate-300">
+  {{ ngettext('%(num)d person has answered.', '%(num)d people have answered.', data.participant_count) }}
+  {{ _('Each number above is how many statements lean that way so far. A clear result is called once %(n)d people have answered a statement.', n=result_min_votes) }}
+</p>
+{% endif %}
 
 <div class="mt-[1.4vw] gap-x-[3.5vw] lg:columns-2">
   {% for verdict, rows in groups %}{% if rows %}
   {# A group may run on into the second column, so each row carries its finding's dot. #}
+  {% set called_count = rows|selectattr('called')|list|length %}
   <div class="pb-[1.1vw]">
   <p class="mb-[0.4vw] flex break-after-avoid items-center gap-2 text-[clamp(0.8rem,1.05vw,1.35rem)] font-bold uppercase tracking-wider text-slate-300">
-    <span class="h-[0.8em] w-[0.8em] rounded-full {{ dots[verdict] }}" aria-hidden="true"></span>{{ titles[verdict] }}
+    <span class="h-[0.8em] w-[0.8em] rounded-full {{ dots[verdict] }}" aria-hidden="true"></span>
+    {% if called_count == 0 and verdict in so_far %}{{ so_far[verdict] }}{% else %}{{ titles[verdict] }}{% endif %}
   </p>
   {% for row in rows %}
+  {% if row.called %}
   <div class="grid break-inside-avoid grid-cols-[auto_minmax(0,1fr)_minmax(4.5rem,18%)_auto] items-center gap-x-[1.2vw] border-t border-white/10 py-[0.45vw] text-[clamp(0.9rem,1.2vw,1.6rem)]">
     <span class="h-[0.5em] w-[0.5em] rounded-full {{ dots[verdict] }}" aria-hidden="true"></span>
     <p class="font-medium leading-snug">{{ row.content }}</p>
-    {% if verdict == 'too_few_votes' %}
-    <span class="col-span-2 text-right text-[0.75em] text-slate-400">{{ ngettext('%(num)d vote', '%(num)d votes', row.total) }}</span>
-    {% else %}
     <span class="flex h-[0.7em] gap-0.5 overflow-hidden rounded-full" role="img"
           aria-label="{{ _('%(agree)s agree, %(disagree)s disagree, %(unsure)s unsure', agree=(row.agree_share * 100)|round|int ~ '%', disagree=(row.disagree_share * 100)|round|int ~ '%', unsure=(row.unsure_share * 100)|round|int ~ '%') }}">
       {% if row.agree_share %}<span class="bg-emerald-500" style="flex: {{ (row.agree_share * 100)|round(1) }} 1 0%"></span>{% endif %}
@@ -59,8 +71,28 @@
       {% elif verdict == 'agrees' %}{{ (row.agree_share * 100)|round|int }}%
       {% else %}<span class="text-[0.8em] font-semibold text-slate-300">{{ (row.agree_share * 100)|round|int }}% / {{ (row.disagree_share * 100)|round|int }}%</span>{% endif %}
     </span>
-    {% endif %}
   </div>
+  {% else %}
+  <div class="break-inside-avoid border-t border-white/10 py-[0.55vw] text-[clamp(0.9rem,1.2vw,1.6rem)]">
+    <div class="flex items-start gap-[1.2vw]">
+      <span class="mt-[0.45em] h-[0.5em] w-[0.5em] shrink-0 rounded-full {{ dots[verdict] }}" aria-hidden="true"></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-medium leading-snug">{{ row.content }}</p>
+        {% if not row.total %}
+        <p class="mt-[0.2vw] text-[0.75em] text-slate-400">{{ _('No votes yet') }}</p>
+        {% else %}
+        <div class="mt-[0.35vw] flex h-[0.45em] gap-0.5 overflow-hidden rounded-full" role="img"
+             aria-label="{{ _('%(agree)d agree, %(disagree)d disagree, %(unsure)d unsure', agree=row.agree, disagree=row.disagree, unsure=row.unsure) }}">
+          {% if row.agree %}<span class="bg-emerald-500" style="flex: {{ row.agree }} 1 0%"></span>{% endif %}
+          {% if row.disagree %}<span class="bg-red-500" style="flex: {{ row.disagree }} 1 0%"></span>{% endif %}
+          {% if row.unsure %}<span class="bg-amber-400" style="flex: {{ row.unsure }} 1 0%"></span>{% endif %}
+        </div>
+        <p class="mt-[0.25vw] text-[0.75em] font-semibold tabular-nums text-slate-200">{{ _('%(agree)d agree · %(disagree)d disagree · %(unsure)d unsure', agree=row.agree, disagree=row.disagree, unsure=row.unsure) }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
   {% endfor %}
   </div>
   {% endif %}{% endfor %}

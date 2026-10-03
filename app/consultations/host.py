@@ -25,17 +25,19 @@ from flask_babel import format_date, gettext as _
 from flask_login import current_user, login_required
 
 from app import db, limiter
-from app.consultations import billing, consultations_bp, emails, jobs, service
+from app.consultations import billing, consultations_bp, emails, jobs, service, sharing
 from app.consultations.drafting import statement_warnings
 from app.consultations.forms import ActionForm, QuestionForm, SettingsForm, StartForm
 from app.consultations.pdf import pdf_rendering_available, report_pdf
 from app.consultations.report import (
     build_report_data,
     latest_report,
+    live_board,
     report_csv_rows,
     report_view_context,
     statements_by_verdict,
 )
+from app.discussions.thresholds import RESULT_MIN_VOTES
 from app.lib.time import utcnow_naive
 from app.models import Consultation, ConsultationPurchase, ConsultationReport, Discussion
 
@@ -369,6 +371,7 @@ def settings(consultation_id):
         form=form,
         consultation=consultation,
         step='settings',
+        result_min_votes=RESULT_MIN_VOTES,
         **_access_notice(current_user, consultation.closes_at),
     )
 
@@ -514,12 +517,15 @@ def share(consultation_id):
     consultation = _owned_or_404(consultation_id)
     if consultation.is_draft:
         return redirect(url_for('consultations.go_live', consultation_id=consultation.id))
+    participant_url = url_for('consultations.participate', token=consultation.access_token, _external=True)
     return render_template(
         'consultations/share.html',
         consultation=consultation,
-        participant_url=url_for('consultations.participate', token=consultation.access_token, _external=True),
+        participant_url=participant_url,
         invitation_text=emails.invitation_text(consultation),
         reminder_text=emails.reminder_text(consultation),
+        share_text=sharing.short_message(consultation),
+        share_groups=sharing.share_groups(consultation, participant_url),
         action_form=ActionForm(),
         step='share',
     )
@@ -554,7 +560,15 @@ def present(consultation_id):
     if consultation.is_draft:
         return redirect(url_for('consultations.go_live', consultation_id=consultation.id))
     data = _live_results(consultation)
-    context = {'consultation': consultation, 'data': data, 'groups': statements_by_verdict(data)}
+    board = live_board(data)
+    context = {
+        'consultation': consultation,
+        'data': data,
+        'groups': board['groups'],
+        'board_counts': board['counts'],
+        'provisional': board['provisional'],
+        'result_min_votes': RESULT_MIN_VOTES,
+    }
     if request.args.get('fragment'):
         # Only the results, re-fetched by the page while voting is open.
         response = Response(render_template('consultations/_present_results.html', **context))
@@ -595,6 +609,7 @@ def dashboard(consultation_id):
         consultation=consultation,
         data=data,
         groups=statements_by_verdict(data),
+        result_min_votes=RESULT_MIN_VOTES,
         pending_count=len(service.pending_statements(consultation)),
         report=latest_report(consultation, kind=ConsultationReport.KIND_FINAL),
         report_state=jobs.report_state(consultation),
