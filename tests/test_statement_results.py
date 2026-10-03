@@ -15,6 +15,7 @@ from app.lib.statement_results import (
     results_for_discussion,
     tallies_for_discussion,
 )
+from app.discussions.thresholds import RESULT_MIN_VOTES
 from app.models import Statement, StatementVote
 from tests.test_consensus_report_and_export import _create_user, _discussion, _statement
 
@@ -26,8 +27,10 @@ def _verdict(agree, disagree, unsure):
 # ── The rules ───────────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize('agree, disagree, unsure, expected', [
-    (4, 2, 0, Verdict.TOO_FEW_VOTES),          # 6 votes: counts only
-    (9, 0, 0, Verdict.TOO_FEW_VOTES),          # unanimous, still too few
+    (2, 2, 0, Verdict.TOO_FEW_VOTES),          # 4 votes: counts only
+    (4, 0, 0, Verdict.TOO_FEW_VOTES),          # unanimous, still too few
+    (4, 2, 0, Verdict.NO_CLEAR_RESULT),        # 6 votes: called, but no majority
+    (9, 0, 0, Verdict.AGREES),                 # unanimous small room is a result
     (24, 4, 2, Verdict.AGREES),                # 80% of 30
     (9, 1, 0, Verdict.AGREES),                 # 9 of 10
     (4, 24, 2, Verdict.DISAGREES),
@@ -122,7 +125,7 @@ def test_an_unsure_audience_is_unsure_not_split(participants):
 
 
 def test_a_small_audience_gets_no_verdict_rather_than_a_wrong_one():
-    rates = _verdict_rates(8, 0.80, 0.12)
+    rates = _verdict_rates(RESULT_MIN_VOTES - 1, 0.80, 0.12)
     assert rates[Verdict.TOO_FEW_VOTES] == 1.0
 
 
