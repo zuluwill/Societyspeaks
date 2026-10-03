@@ -121,9 +121,12 @@ def test_donate_page_renders_funding_story_and_seo(client, db):
     assert 'Donate to Society Speaks' in html
     assert html.count('<h1') == 1
     assert 'Why donate?' in html
-    assert 'How we sustain the platform' in html
-    assert 'Personal Briefs' in html
-    assert 'Publisher partners' in html
+    assert 'civic infrastructure' in html.lower()
+    main = html.split('id="main-content"', 1)[1].split('</main>', 1)[0]
+    assert 'How we sustain the platform' not in main
+    assert 'Personal Briefs' not in main
+    assert 'Publisher partners' not in main
+    assert 'Publisher plans' not in main
     assert 'Donate securely with Stripe' in html
     assert html.count('rel="canonical"') == 1
     assert 'property="og:title"' in html

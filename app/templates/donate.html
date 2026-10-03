@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% from "components/ui_tokens.html" import btn_secondary_sm, link_primary %}
+{% from "components/ui_tokens.html" import btn_primary_lg, btn_secondary_sm, focus_ring_input_2 %}
 
 {% block title %}{{ _('Donate | Society Speaks') }}{% endblock %}
 {% block meta_description %}{{ _('Support Society Speaks with a one-time donation. Your gift helps keep deliberation free, ad-free, and open source for everyone.') }}{% endblock %}
@@ -11,7 +11,7 @@
 
 {% block content %}
 <section class="bg-white border-b border-gray-200">
-  <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8 text-center">
+  <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 text-center">
     <p class="text-xs font-semibold text-primary-600 uppercase tracking-widest mb-3">{{ _('Support the mission') }}</p>
     <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ _('Donate to Society Speaks') }}</h1>
     <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
@@ -20,12 +20,13 @@
   </div>
 </section>
 
-<div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 pb-16 space-y-8">
+<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 pb-16">
+  <div class="grid items-start gap-8 lg:grid-cols-5">
 
-  <div class="rounded-2xl border border-gray-200 bg-gray-50 p-6 sm:p-8">
+  <div class="order-2 rounded-2xl border border-gray-200 bg-gray-50 p-6 sm:p-8 lg:order-1 lg:col-span-2">
     <h2 class="text-lg font-bold text-gray-900 mb-3">{{ _('Why donate?') }}</h2>
     <p class="text-gray-700 leading-relaxed">
-      {{ _('Running deliberation at scale costs real money — servers, email delivery, machine-learning analysis, moderation tooling, and engineering time. We do not sell your data and we do not show adverts. Donations from supporters like you help close the gap between what civic features need and what subscriptions alone cover.') }}
+      {{ _('Running civic infrastructure costs real money — servers, email delivery, machine-learning analysis, moderation tooling, and engineering time. We do not sell your data and we do not show adverts. A donation keeps those free tools online and the open-source project moving.') }}
     </p>
     <ul class="mt-4 space-y-2 text-sm text-gray-700">
       <li class="flex gap-2">
@@ -43,71 +44,46 @@
     </ul>
   </div>
 
-  <div class="rounded-2xl border border-primary-100 bg-primary-50 p-6 sm:p-8">
-    <h2 class="text-lg font-bold text-gray-900 mb-3">{{ _('How we sustain the platform') }}</h2>
-    <p class="text-gray-700 text-sm leading-relaxed mb-4">
-      {{ _('We are transparent about revenue. Society Speaks is funded in three ways — you only pay if you use a paid product or are a publisher partner:') }}
-    </p>
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div class="rounded-xl bg-white border border-gray-200 p-4">
-        <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ _('Donations') }}</h3>
-        <p class="text-xs text-gray-600">{{ _('Optional one-off gifts from anyone who wants civic tech to thrive without ads.') }}</p>
-      </div>
-      <div class="rounded-xl bg-white border border-gray-200 p-4">
-        <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ _('Personal Briefs') }}</h3>
-        <p class="text-xs text-gray-600">{{ _('Paid custom digests from £4.99/month for people who want their own sources — subscriptions fund free civic features.') }}</p>
-      </div>
-      <div class="rounded-xl bg-white border border-gray-200 p-4">
-        <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ _('Publisher partners') }}</h3>
-        <p class="text-xs text-gray-600">{{ _('Media and organisations subscribe for live embeds and the Partner API (from £49/month; free tier for testing).') }}</p>
-      </div>
-    </div>
-    <p class="mt-4 text-xs text-gray-600">
-      <a href="{{ url_for('main.faq') }}" class="{{ link_primary() }}">{{ _('See funding and publisher pricing in our FAQ') }}</a>
-      ·
-      <a href="{{ url_for('partner.hub') }}#pricing" class="{{ link_primary() }}">{{ _('Publisher plans') }}</a>
-    </p>
-  </div>
-
-  <div class="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
+  <div id="donate-form" class="order-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8 lg:order-2 lg:col-span-3">
     <h2 class="text-xl font-bold text-gray-900 mb-1">{{ _('Make a donation') }}</h2>
     <p class="text-sm text-gray-600 mb-6">
-      {{ _('Choose an amount below. Every contribution goes directly to running and improving Society Speaks.') }}
+      {{ _('Choose an amount. Your gift supports the civic infrastructure and the open-source project.') }}
     </p>
 
     <form action="{{ url_for('billing.donate_checkout') }}" method="POST" class="space-y-6">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <div>
-        <p class="text-sm font-semibold text-gray-900">{{ _('Choose an amount') }}</p>
-        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <label class="preset-label cursor-pointer rounded-lg border border-gray-200 p-3 text-center hover:border-primary-400">
+      <fieldset>
+        <legend class="text-sm font-semibold text-gray-900">{{ _('Choose an amount') }}</legend>
+        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4" role="presentation">
+          <label class="preset-label flex min-h-12 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 text-center hover:border-primary-400 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2">
             <input class="donation-preset sr-only" type="radio" name="amount_pence" value="500">
             <span class="font-semibold text-gray-900">£5</span>
           </label>
-          <label class="preset-label cursor-pointer rounded-lg border border-primary-500 bg-blue-50 p-3 text-center">
+          <label class="preset-label flex min-h-12 cursor-pointer items-center justify-center rounded-lg border border-primary-500 bg-blue-50 p-3 text-center focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2">
             <input class="donation-preset sr-only" type="radio" name="amount_pence" value="1000" checked>
             <span class="font-semibold text-primary-700">£10</span>
           </label>
-          <label class="preset-label cursor-pointer rounded-lg border border-gray-200 p-3 text-center hover:border-primary-400">
+          <label class="preset-label flex min-h-12 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 text-center hover:border-primary-400 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2">
             <input class="donation-preset sr-only" type="radio" name="amount_pence" value="2500">
             <span class="font-semibold text-gray-900">£25</span>
           </label>
-          <label class="preset-label cursor-pointer rounded-lg border border-gray-200 p-3 text-center hover:border-primary-400">
+          <label class="preset-label flex min-h-12 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 text-center hover:border-primary-400 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2">
             <input class="donation-preset sr-only" type="radio" name="amount_pence" value="5000">
             <span class="font-semibold text-gray-900">£50</span>
           </label>
         </div>
-        <p class="mt-3 text-sm text-gray-500">{{ _('Or enter a custom amount in GBP:') }}</p>
+        <label for="amount-gbp" class="mt-4 block text-sm text-gray-500">{{ _('Or enter a custom amount in GBP') }}</label>
         <input
           id="amount-gbp"
           name="amount_gbp"
           type="text"
           inputmode="decimal"
+          autocomplete="transaction-amount"
           placeholder="{{ _('e.g. 12.50') }}"
-          class="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          class="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 {{ focus_ring_input_2() }}"
         >
-      </div>
+      </fieldset>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
@@ -117,7 +93,8 @@
             name="donor_name"
             type="text"
             maxlength="255"
-            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            autocomplete="name"
+            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 {{ focus_ring_input_2() }}"
           >
         </div>
         <div>
@@ -127,7 +104,8 @@
             name="donor_email"
             type="email"
             maxlength="255"
-            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            autocomplete="email"
+            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 {{ focus_ring_input_2() }}"
           >
         </div>
       </div>
@@ -139,7 +117,7 @@
           name="donor_message"
           rows="4"
           maxlength="2000"
-          class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 {{ focus_ring_input_2() }}"
         ></textarea>
       </div>
 
@@ -148,10 +126,7 @@
         {{ _('Make this donation anonymous') }}
       </label>
 
-      <button
-        type="submit"
-        class="inline-flex w-full sm:w-auto items-center justify-center rounded-lg bg-primary-600 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
-      >
+      <button type="submit" class="{{ btn_primary_lg() }} w-full">
         {{ _('Donate securely with Stripe') }}
       </button>
     </form>
@@ -160,9 +135,10 @@
       {{ _('Donations are processed securely by Stripe. Minimum donation is £1.') }}
     </p>
   </div>
+  </div>
 
-  <div class="text-center text-sm text-gray-600">
-    <p>{{ _('Not ready to donate? You can still help by using the platform, sharing discussions, or subscribing to a Personal Brief.') }}</p>
+  <div class="mt-10 text-center text-sm text-gray-600">
+    <p>{{ _('Not ready to donate? You can still help by using the platform, sharing a discussion, or supporting the open-source project.') }}</p>
     <div class="mt-3 flex flex-wrap justify-center gap-3">
       <a href="https://github.com/zuluwill/Societyspeaks" target="_blank" rel="noopener noreferrer" class="{{ btn_secondary_sm() }}">{{ _('View on GitHub') }}</a>
       <a href="{{ url_for('main.about') }}" class="{{ btn_secondary_sm() }}">{{ _('About Society Speaks') }}</a>
