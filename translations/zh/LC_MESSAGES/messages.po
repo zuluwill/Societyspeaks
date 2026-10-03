@@ -10564,20 +10564,22 @@ msgid ""
 msgstr "Society Speaks 隐私政策说明我们如何收集、使用、存储和保护您的个人数据。"
 
 #: app/templates/privacy-policy.html:15
-msgid "Effective Date: 12 July 2026"
-msgstr "生效日期：2026 年 7 月 12 日"
+#: app/templates/terms-and-conditions.html:15
+msgid "Effective Date: 3 October 2026"
+msgstr "生效日期：2026 年 10 月 3 日"
 
 #: app/templates/privacy-policy.html:17
 msgid ""
-"William Roberts Coaching and Advisory Ltd (\"we\", \"us\", or \"our\"), a "
-"company incorporated in England (company number 15629688), operates "
-"SocietySpeaks.io (the \"website\"). SocietySpeaks.io is a platform for "
-"community discussion and collective intelligence. We are committed to "
-"protecting and respecting your privacy. This Privacy Policy sets out how we "
-"collect, use, and protect your personal data."
+"Kelmoss Ltd (\"we\", \"us\", or \"our\"), a company incorporated in "
+"England (company number 15629688) with its registered office at 124 City "
+"Road, London, EC1V 2NX, operates SocietySpeaks.io (the \"website\"). "
+"SocietySpeaks.io is a platform for community discussion and collective "
+"intelligence. We are committed to protecting and respecting your privacy."
+" This Privacy Policy sets out how we collect, use, and protect your "
+"personal data."
 msgstr ""
-"William Roberts Coaching and Advisory Ltd（“我们”或“我们的”）是一家在英格兰注册成立的公司（公司编号 "
-"15629688），运营 SocietySpeaks.io（“网站”）。SocietySpeaks.io "
+"Kelmoss Ltd（“我们”或“我们的”）是一家在英格兰注册成立的公司（公司编号 15629688，注册地址：124 City Road, "
+"London, EC1V 2NX），运营 SocietySpeaks.io（“网站”）。SocietySpeaks.io "
 "是一个用于社区讨论和集体智慧的平台。我们致力于保护和尊重您的隐私。本隐私政策说明我们如何收集、使用和保护您的个人数据。"
 
 #: app/templates/privacy-policy.html:19
@@ -10586,8 +10588,9 @@ msgstr "关键联系方式"
 
 #: app/templates/privacy-policy.html:22
 msgid ""
-"<strong>Data Controller:</strong> William Roberts Coaching and Advisory Ltd"
-msgstr "<strong>数据控制者：</strong>William Roberts Coaching and Advisory Ltd"
+"<strong>Data Controller:</strong> Kelmoss Ltd, 124 City Road, London, "
+"EC1V 2NX"
+msgstr "<strong>数据控制者：</strong>Kelmoss Ltd, 124 City Road, London, EC1V 2NX"
 
 #: app/templates/privacy-policy.html:23
 msgid "<strong>For data privacy enquiries:</strong> info@societyspeaks.io"
@@ -11601,11 +11604,12 @@ msgstr "数据保护"
 
 #: app/templates/security.html:146
 msgid ""
-"Controller: William Roberts Coaching and Advisory Ltd (England, company no. "
-"15629688), processing under UK GDPR and the Data Protection Act 2018."
+"Controller: Kelmoss Ltd (England, company no. 15629688; registered office"
+" 124 City Road, London, EC1V 2NX), processing under UK GDPR and the Data "
+"Protection Act 2018."
 msgstr ""
-"控制者：William Roberts Coaching and Advisory Ltd（英格兰，公司编号 15629688），依据英国 GDPR "
-"和《2018 年数据保护法》处理数据。"
+"控制者：Kelmoss Ltd（英格兰，公司编号 15629688，注册地址：124 City Road, London, EC1V "
+"2NX），依据英国 GDPR 和《2018 年数据保护法》处理数据。"
 
 #: app/templates/security.html:147
 msgid ""
@@ -11708,24 +11712,21 @@ msgstr "Society Speaks条款和条件涵盖平台使用、账户、支付以及�
 msgid "Terms and Conditions"
 msgstr "条款和条件"
 
-#: app/templates/terms-and-conditions.html:15
-msgid "Effective Date: 9 July 2026"
-msgstr "生效日期：2026 年 7 月 9 日"
-
 #: app/templates/terms-and-conditions.html:17
 msgid ""
-"SocietySpeaks.io (\"we\", \"us\", or \"our\") is operated by William Roberts"
-" Coaching and Advisory Ltd, a company incorporated in England (company "
-"number 15629688). Our platform provides community discussion and collective "
-"intelligence gathering. The platform is hosted on infrastructure in the "
-"United Kingdom and the European Economic Area, as described in our Privacy "
-"Policy. By using the Website, you agree to be bound by these Terms and "
-"Conditions (the \"Terms\"). If you do not agree with these Terms, you must "
-"not use the website."
+"SocietySpeaks.io (\"we\", \"us\", or \"our\") is operated by Kelmoss Ltd,"
+" a company incorporated in England (company number 15629688) with its "
+"registered office at 124 City Road, London, EC1V 2NX. Our platform "
+"provides community discussion and collective intelligence gathering. The "
+"platform is hosted on infrastructure in the United Kingdom and the "
+"European Economic Area, as described in our Privacy Policy. By using the "
+"Website, you agree to be bound by these Terms and Conditions (the "
+"\"Terms\"). If you do not agree with these Terms, you must not use the "
+"website."
 msgstr ""
-"SocietySpeaks.io（“我们”或“我们的”）由 William Roberts Coaching and Advisory Ltd "
-"运营，该公司在英格兰注册成立（公司编号 "
-"15629688）。我们的平台提供社区讨论和集体智慧收集服务。如我们的隐私政策所述，平台托管在英国和欧洲经济区的基础设施上。使用本网站即表示您同意受本条款和条件（“条款”）约束。如果您不同意这些条款，则不得使用本网站。"
+"SocietySpeaks.io（“我们”或“我们的”）由 Kelmoss Ltd 运营，该公司在英格兰注册成立（公司编号 "
+"15629688，注册地址：124 City Road, London, EC1V "
+"2NX）。我们的平台提供社区讨论和集体智慧收集服务。如我们的隐私政策所述，平台托管在英国和欧洲经济区的基础设施上。使用本网站即表示您同意受本条款和条件（“条款”）约束。如果您不同意这些条款，则不得使用本网站。"
 
 #: app/templates/terms-and-conditions.html:19
 msgid "1. Definitions"
@@ -11853,11 +11854,8 @@ msgstr "4. 知识产权"
 #: app/templates/terms-and-conditions.html:62
 msgid ""
 "4.1 Our Intellectual Property: The platform, including all software, "
-"designs, text, and graphics, is owned by William Roberts Coaching and "
-"Advisory Ltd or our licensors."
-msgstr ""
-"4.1 我们的知识产权：该平台，包括所有软件、设计、文本和图形，由 William Roberts Coaching and Advisory Ltd "
-"或我们的许可方拥有。"
+"designs, text, and graphics, is owned by Kelmoss Ltd or our licensors."
+msgstr "4.1 我们的知识产权：该平台，包括所有软件、设计、文本和图形，由 Kelmoss Ltd 或我们的许可方拥有。"
 
 #: app/templates/terms-and-conditions.html:64
 msgid ""

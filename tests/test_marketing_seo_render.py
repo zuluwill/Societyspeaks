@@ -199,6 +199,16 @@ def test_consultations_page_seo_and_pricing(client, db):
     assert {'FAQPage', 'Service', 'BreadcrumbList'} <= types, f"consultations JSON-LD types: {types}"
 
 
+def test_legal_pages_name_the_operating_company(client, db):
+    """Privacy, terms, and security must name the same controller and registered office."""
+    for path in ("/privacy-policy", "/terms-and-conditions", "/security"):
+        html = _get(client, db, path)
+        assert "Kelmoss Ltd" in html, path
+        assert "124 City Road, London, EC1V 2NX" in html, path
+        assert "15629688" in html, path
+        assert "William Roberts Coaching and Advisory" not in html, path
+
+
 def test_security_page_residency_and_subprocessors(client, db):
     """Trust page: UK residency claims and the subprocessor list stay in step
     with the privacy policy (procurement teams cross-check both)."""

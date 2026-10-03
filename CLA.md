@@ -4,7 +4,7 @@
 
 ---
 
-Thank you for your interest in contributing to Society Speaks (the "Project"), maintained by **William Roberts Coaching and Advisory Ltd**, a company registered in England and Wales (company no. 15629688), trading as Society Speaks (the "Company", "We", "Us" — including the Company's successors and assigns). This Contributor Licence Agreement (the "Agreement") documents the rights You grant Us in Your contributions. It is a legally binding agreement — please read it before accepting.
+Thank you for your interest in contributing to Society Speaks (the "Project"), maintained by **Kelmoss Ltd**, a company registered in England and Wales (company no. 15629688; registered office 124 City Road, London, EC1V 2NX), trading as Society Speaks (the "Company", "We", "Us" — including the Company's successors and assigns). This Contributor Licence Agreement (the "Agreement") documents the rights You grant Us in Your contributions. It is a legally binding agreement — please read it before accepting.
 
 ## 1. Definitions
 
