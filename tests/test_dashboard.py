@@ -174,6 +174,55 @@ def test_dashboard_stay_informed_section_shows_three_cards(app, db):
     assert 'Daily Brief' in body
     assert 'Daily Question' in body
     assert 'Paid Briefings' in body
+    assert 'See where your audience agrees' not in body
+
+
+def test_dashboard_offers_a_consultation_when_the_product_is_on(app, db):
+    app.config['CONSULTATIONS_SELF_SERVE_ENABLED'] = True
+    with app.app_context():
+        user = _create_user(db, 'consult_dash', 'consult_dash@example.com')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    body = client.get('/auth/dashboard').get_data(as_text=True)
+
+    assert 'See where your audience agrees' in body
+    assert 'They answer on their phones in two minutes' in body
+    assert 'Try it free' in body
+    assert '£99 for 30 days, or £600 a year' in body
+    assert 'href="/consultations/new"' in body
+    assert 'href="/consultations/example-report"' in body
+    assert '14 days' in body
+
+    from app.consultations import service
+    with app.app_context():
+        owner = db.session.get(User, user_id)
+        service.create_consultation(owner, question='How should we use the surplus?', organisation_name='Riverside')
+
+    body = client.get('/auth/dashboard').get_data(as_text=True)
+    assert 'Open yours' in body
+    assert 'Ask another question' in body
+    assert 'href="/consultations/mine"' in body
+    assert 'How should we use the surplus?' not in body
+
+    from datetime import timedelta
+    from app.lib.time import utcnow_naive
+    from app.models import ConsultationTrial
+    with app.app_context():
+        now = utcnow_naive()
+        db.session.add(ConsultationTrial(
+            user_id=user_id,
+            email_key='consult_dash@example.com',
+            started_at=now,
+            ends_at=now + timedelta(days=14),
+        ))
+        db.session.commit()
+    body = client.get('/auth/dashboard').get_data(as_text=True)
+    assert 'Your free trial is running' in body
+    assert 'Continue for £99' in body
+    assert 'href="/consultations/account"' in body
 
 
 def test_dashboard_detects_existing_email_subscriptions_and_active_briefings_plan(app, db):

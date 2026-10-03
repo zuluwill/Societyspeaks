@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import urlparse
 from app import db, cache
-from app.models import User, PendingRegistration, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, generate_unique_slug
+from app.models import User, PendingRegistration, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, Consultation, generate_unique_slug
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func, or_
 from datetime import date, datetime, timedelta
@@ -1057,6 +1057,16 @@ def dashboard():
 
     brief_sub = DailyBriefSubscriber.query.filter_by(email=current_user.email).first()
     dq_sub = DailyQuestionSubscriber.query.filter_by(email=current_user.email).first()
+    consultation_count = 0
+    consultation_live = 0
+    if current_app.config.get('CONSULTATIONS_SELF_SERVE_ENABLED'):
+        owned = Consultation.query.filter_by(owner_user_id=current_user.id)
+        consultation_count = owned.count()
+        consultation_live = owned.filter_by(status=Consultation.STATUS_LIVE).count()
+    consultation_on_trial = False
+    if consultation_count:
+        from app.consultations.billing import entitlement
+        consultation_on_trial = entitlement(current_user) == Consultation.COVERED_BY_TRIAL
     active_subscription = get_active_subscription(current_user)
     has_briefings_plan = bool(active_subscription)
     participating_discussions = _recent_participating_discussions(current_user, limit=6)
@@ -1099,6 +1109,9 @@ def dashboard():
         total_programmes=total_programmes,
         brief_sub=brief_sub,
         dq_sub=dq_sub,
+        consultation_count=consultation_count,
+        consultation_live=consultation_live,
+        consultation_on_trial=consultation_on_trial,
         has_briefings_plan=has_briefings_plan,
         active_subscription=active_subscription,
         participating_discussions=participating_discussions,
