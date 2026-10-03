@@ -59,7 +59,7 @@
                 <a href="{{ journey_url }}" class="{{ btn_primary_lg() }}">
                     {{ _('Take the Big Questions Journey') }}
                 </a>
-                <a href="{{ url_for('help.civic_infrastructure') }}" class="{{ btn_secondary_lg() }}">
+                <a href="{{ url_for('consultations.landing') if config.CONSULTATIONS_SELF_SERVE_ENABLED else url_for('help.civic_infrastructure') }}" class="{{ btn_secondary_lg() }}" data-ph-capture-attribute-cta="about-hero-consultations">
                     {{ _('Run your own consultation') }}
                 </a>
             </div>
@@ -217,6 +217,20 @@
             </li>
         </ol>
     </section>
+
+    {% if config.CONSULTATIONS_SELF_SERVE_ENABLED %}
+    <!-- Self-serve consultations: the product for organisations -->
+    <section class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm sm:p-10" aria-labelledby="about-consult-heading">
+        <p class="text-xs font-semibold uppercase tracking-widest text-primary-600 mb-2">{{ _('For membership bodies, charities, teams and events') }}</p>
+        <h2 id="about-consult-heading" class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ _('See where your audience agrees, disagrees or is unsure.') }}</h2>
+        <p class="mt-4 max-w-3xl text-lg leading-relaxed text-gray-600">{{ _('Ask one question. Your members, staff or audience answer on their phones in two minutes. You get a report you can forward.') }}</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+            <a href="{{ url_for('consultations.start') }}" class="{{ btn_primary_lg() }}" data-ph-capture-attribute-cta="about-consultations-start">{{ _('Start free') }}</a>
+            <a href="{{ url_for('consultations.landing') }}" class="{{ btn_secondary_lg() }}" data-ph-capture-attribute-cta="about-consultations-landing">{{ _('How consultations work and what they cost') }}</a>
+        </div>
+        <p class="mt-4 text-sm text-gray-500">{{ _('Try Society Speaks with your real audience, free for %(days)d days. The complete experience and report. No card needed. Continue for %(single)s for 30 days or %(annual)s a year.', days=config.CONSULTATION_TRIAL_DAYS, single='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100), annual='£%d'|format(config.CONSULTATION_PRICE_ANNUAL_PENCE // 100)) }}</p>
+    </section>
+    {% endif %}
 
     <!-- Civic infrastructure (flagship for orgs) -->
     <section class="rounded-2xl bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-8 sm:p-10 text-white" aria-labelledby="about-civic-heading">

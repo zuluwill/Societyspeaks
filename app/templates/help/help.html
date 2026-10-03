@@ -32,7 +32,7 @@
       "name": _('Can I run my own consultation on Society Speaks?'),
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": _('Yes. Create discussions or full programmes with your own seed statements, visibility controls, stewards, and data export. Publishers can embed voting via the Partner API. See Civic infrastructure in the Help Centre.')
+        "text": ((_('Ask one question. Your members, staff or audience answer on their phones in two minutes. You get a report you can forward.') ~ ' ' ~ _('Try Society Speaks with your real audience, free for %(days)d days. The complete experience and report. No card needed. Continue for %(single)s for 30 days or %(annual)s a year.', days=config.CONSULTATION_TRIAL_DAYS, single='£%d'|format(config.CONSULTATION_PRICE_SINGLE_PENCE // 100), annual='£%d'|format(config.CONSULTATION_PRICE_ANNUAL_PENCE // 100))) if config.CONSULTATIONS_SELF_SERVE_ENABLED else _('Yes. Create discussions or full programmes with your own seed statements, visibility controls, stewards, and data export. Publishers can embed voting via the Partner API. See Civic infrastructure in the Help Centre.'))
       }
     }
   ]
@@ -51,7 +51,12 @@
     <div class="mt-6 flex flex-wrap justify-center gap-3">
       <a href="{{ url_for('main.faq') }}" class="{{ btn_secondary_sm() }}">{{ _('FAQ') }}</a>
       <a href="{{ url_for('main.about') }}" class="{{ btn_secondary_sm() }}">{{ _('About Society Speaks') }}</a>
+      {% if config.CONSULTATIONS_SELF_SERVE_ENABLED %}
+      <a href="{{ url_for('help.consultations') }}" class="{{ btn_primary_sm() }}" data-ph-capture-attribute-cta="help-hub-consultations">{{ _('Running a consultation') }}</a>
+      <a href="{{ url_for('help.civic_infrastructure') }}" class="{{ btn_secondary_sm() }}">{{ _('Civic infrastructure') }}</a>
+      {% else %}
       <a href="{{ url_for('help.civic_infrastructure') }}" class="{{ btn_primary_sm() }}">{{ _('Civic infrastructure') }}</a>
+      {% endif %}
     </div>
   </div>
 </div>

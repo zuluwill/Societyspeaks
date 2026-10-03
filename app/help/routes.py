@@ -106,7 +106,9 @@ def _help_categories():
         },
     ]
     if current_app.config.get('CONSULTATIONS_SELF_SERVE_ENABLED'):
-        cats.append({
+        # First card in "Build & run consultations": the product most visitors here want.
+        build_at = next(i for i, c in enumerate(cats) if c['section'] == 'build')
+        cats.insert(build_at, {
             'key': 'consultations',
             'title': _('Running a consultation'),
             'description': _('Ask your own audience one question and get a report you can forward'),
